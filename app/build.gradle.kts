@@ -4,18 +4,21 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 android {
     namespace = "br.acerola.manga"
     compileSdk {
-        version = release(36)
+        version = release(34)
     }
 
     defaultConfig {
         applicationId = "br.acerola.manga"
         minSdk = 24
-        targetSdk = 36
+        //noinspection OldTargetApi
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -45,6 +48,9 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schema")
+}
 
 dependencies {
     // Core Android
@@ -68,6 +74,16 @@ dependencies {
 
     // Leitor de mangá
     implementation(libs.junrar)
+
+    // Datastore
+    implementation(libs.androidx.datastore)
+    implementation(libs.androidx.documentfile)
+
+    //  ROOM + SQLITE
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.sqlite.bundled)
+    implementation(libs.androidx.room.sqlite.wrapper)
 
     // Testes
     testImplementation(libs.junit)

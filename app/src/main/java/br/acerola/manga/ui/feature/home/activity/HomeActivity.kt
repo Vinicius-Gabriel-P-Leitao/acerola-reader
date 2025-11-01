@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.home
+package br.acerola.manga.ui.feature.home.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,19 +22,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import br.acerola.manga.R
+import br.acerola.manga.domain.permission.FolderAccessManager
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.component.SmartCard
 import br.acerola.manga.ui.common.layout.AcerolaScaffold
 import br.acerola.manga.ui.common.theme.AcerolaTheme
+import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
+import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
+import br.acerola.manga.ui.feature.home.screen.FolderAccessScreen
 
 // @formatter:off
 class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+
+        val manager = FolderAccessManager(applicationContext)
+        val viewModel = ViewModelProvider(
+            this,  FolderAccessViewModelFactory(application, manager)
+        )[FolderAccessViewModel::class.java]
+
         setContent {
             AcerolaTheme(dynamicColor = false) {
                 AcerolaScaffold() {
@@ -60,6 +72,7 @@ class HomeActivity : ComponentActivity() {
                         }
                         CardDynamicImagePreview()
                         CardDynamicContentPreview()
+                        FolderAccessScreen(viewModel = viewModel)
                     }
                 }
             }
