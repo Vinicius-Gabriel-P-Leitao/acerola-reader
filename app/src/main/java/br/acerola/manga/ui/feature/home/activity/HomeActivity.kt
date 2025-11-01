@@ -35,7 +35,6 @@ import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
 import br.acerola.manga.ui.feature.home.screen.FolderAccessScreen
 
-// @formatter:off
 class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +43,7 @@ class HomeActivity : ComponentActivity() {
 
         val manager = FolderAccessManager(applicationContext)
         val viewModel = ViewModelProvider(
-            this,  FolderAccessViewModelFactory(application, manager)
+            this, FolderAccessViewModelFactory(application, manager)
         )[FolderAccessViewModel::class.java]
 
         setContent {
@@ -55,30 +54,31 @@ class HomeActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         topBar = {
                             Text(
-                                text = "Testando",
-                                modifier = Modifier.statusBarsPadding()
+                                text = "Testando", modifier = Modifier.statusBarsPadding()
                             )
                         },
                     ) { innerPadding ->
-                        SmartButton(
-                            onClick = { println("Clicou no ícone!") },
-                            type = ButtonType.ICON_TEXT,
-                            text = "Botão",
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Favorite,
-                                contentDescription = "Favorito"
-                            )
+                        Column() {
+                            SmartButton(
+                                onClick = { println("Clicou no ícone!") },
+                                type = ButtonType.ICON_TEXT,
+                                text = "Botão",
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Favorite, contentDescription = "Favorito"
+                                )
+                            }
+                            CardDynamicImagePreview()
+                            CardDynamicContentPreview()
+                            FolderAccessScreen(viewModel = viewModel)
                         }
-                        CardDynamicImagePreview()
-                        CardDynamicContentPreview()
-                        FolderAccessScreen(viewModel = viewModel)
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 @Preview(showBackground = true, name = "Card de imagem")
@@ -88,8 +88,11 @@ fun CardDynamicImagePreview() {
             type = CardType.IMAGE,
             title = "Paisagem Montanhosa",
             imagePainter = painterResource(id = R.drawable.ic_launcher_background),
-            footerText = "Foto tirada nos Alpes Suíços",
-            modifier = Modifier.width(width = 200.dp).height(height = 350.dp).padding(all = 16.dp)
+            footerText = "Imagem de exemplo",
+            modifier = Modifier
+                .width(width = 200.dp)
+                .height(height = 350.dp)
+                .padding(all = 16.dp)
         ) {
             println("Card com imagem")
         }
@@ -105,7 +108,9 @@ fun CardDynamicContentPreview() {
             title = "Jetpack Compose",
             contentText = "Jetpack Compose é um kit de ferramentas de UI moderno para criar apps Android nativos. Ele simplifica e acelera o desenvolvimento da UI no Android.",
             footerText = "Publicado em: 30 de Outubro de 2025",
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             println("Card sem imagem")
         }
