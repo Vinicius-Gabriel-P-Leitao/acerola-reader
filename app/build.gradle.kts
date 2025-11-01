@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 android {
@@ -45,6 +47,9 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schema")
+}
 
 dependencies {
     // Core Android
@@ -59,6 +64,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Material Design 3
     implementation(libs.androidx.material3)
@@ -67,6 +73,16 @@ dependencies {
 
     // Leitor de mangá
     implementation(libs.junrar)
+
+    // Datastore
+    implementation(libs.androidx.datastore)
+    implementation(libs.androidx.documentfile)
+
+    //  ROOM + SQLITE
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.sqlite.bundled)
+    implementation(libs.androidx.room.sqlite.wrapper)
 
     // Testes
     testImplementation(libs.junit)
