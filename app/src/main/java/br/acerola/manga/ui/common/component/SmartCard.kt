@@ -82,7 +82,7 @@ fun SmartCard(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(height = 8.dp))
                     }
@@ -115,7 +115,7 @@ fun SmartCard(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(height = 8.dp))
                     }

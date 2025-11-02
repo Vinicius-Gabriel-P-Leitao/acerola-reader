@@ -26,6 +26,11 @@
             android:name=".ui.feature.config.activity.ConfigActivity"
             android:label="@string/label_config_activity"
             android:theme="@style/Theme.Acerola" />
+
+        <activity
+            android:name=".ui.feature.history.activity.HistoryActivity"
+            android:label="@string/label_history_activity"
+            android:theme="@style/Theme.Acerola" />
     </application>
 
 </manifest>

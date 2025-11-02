@@ -21,6 +21,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +36,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.R
 import br.acerola.manga.domain.permission.FolderAccessManager
+import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
@@ -40,7 +45,9 @@ import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
 import br.acerola.manga.ui.feature.config.screen.FolderAccessScreen
 
-class ConfigActivity(override val startDestination: String = "config") : BaseActivity() {
+class ConfigActivity(
+    override val startDestinationRes: Int = Destination.CONFIG.route
+) : BaseActivity() {
     private val folderAccessViewModel: FolderAccessViewModel by lazy {
         ViewModelProvider(
             owner = this, factory = FolderAccessViewModelFactory(
@@ -49,27 +56,25 @@ class ConfigActivity(override val startDestination: String = "config") : BaseAct
         )[FolderAccessViewModel::class.java]
     }
 
-    override fun NavGraphBuilder.setupNavGraph(navController: NavHostController) {
-        composable(route = "config") {
-            configScreen()
-        }
+    override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+        composable(route = context.getString(Destination.CONFIG.route)) { ConfigScreen() }
     }
 
     @Composable
-    fun configScreen() {
+    fun ConfigScreen() {
         val context = LocalContext.current
 
         AcerolaTheme {
-            Scaffold(modifier = Modifier.padding(all = 6.dp)) {
+            Scaffold(modifier = Modifier.padding(all = 6.dp)) { _padding ->
                 Column {
                     SmartCard(
                         type = CardType.CONTENT,
                         title = context.getString(R.string.description_title_text_archive_configs_in_app),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.onBackground
+                            containerColor = MaterialTheme.colorScheme.surface
                         ),
                     ) {
-                        selectFolderCard(context)
+                        SelectFolderCard(context)
                     }
 
                     Spacer(modifier = Modifier.height(height = 12.dp))
@@ -78,7 +83,7 @@ class ConfigActivity(override val startDestination: String = "config") : BaseAct
                         type = CardType.CONTENT,
                         title = context.getString(R.string.description_title_text_mangadex_configs_in_app),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.onBackground
+                            containerColor = MaterialTheme.colorScheme.surface
                         ),
                     ) {
 
@@ -89,15 +94,14 @@ class ConfigActivity(override val startDestination: String = "config") : BaseAct
     }
 
     @Composable
-    fun selectFolderCard(context: Context) {
+    fun SelectFolderCard(context: Context) {
+        var selectedFolderUri by remember { mutableStateOf<String?>(null) }
+
         SmartCard(
-            type = CardType.CONTENT,
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.onSurface
-            ),
-            elevation = CardDefaults.elevatedCardElevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 12.dp
+            type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ), elevation = CardDefaults.elevatedCardElevation(
+                defaultElevation = 8.dp, pressedElevation = 12.dp
             )
         ) {
             Row(
@@ -118,6 +122,7 @@ class ConfigActivity(override val startDestination: String = "config") : BaseAct
                         Icon(
                             imageVector = Icons.Filled.Folder,
                             contentDescription = "Pasta",
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .size(size = 40.dp)
                                 .padding(all = 4.dp),
@@ -129,12 +134,12 @@ class ConfigActivity(override val startDestination: String = "config") : BaseAct
                     Column {
                         Text(
                             text = context.getString(R.string.description_title_text_config_select_path_manga),
-                            color = MaterialTheme.colorScheme.surface,
+                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
                             text = context.getString(R.string.description_text_config_select_path_manga),
-                            color = MaterialTheme.colorScheme.surface,
+                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -142,7 +147,18 @@ class ConfigActivity(override val startDestination: String = "config") : BaseAct
 
                 Spacer(modifier = Modifier.width(width = 12.dp))
 
-                FolderAccessScreen(viewModel = folderAccessViewModel)
+                FolderAccessScreen(context = context, viewModel = folderAccessViewModel) { uri ->
+                    selectedFolderUri = uri
+                }
+            }
+
+            // TODO: Fazer uma vizualização melhor disso, e fazer ele pegar também dá que está no datastore.
+            Spacer(modifier = Modifier.height(height = 12.dp))
+
+            selectedFolderUri?.let { uri ->
+                Text(
+                    text = "Pasta selecionada: $uri", color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }

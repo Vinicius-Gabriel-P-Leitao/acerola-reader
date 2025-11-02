@@ -9,19 +9,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import br.acerola.manga.R
+import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun TopBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit = {}) {
+fun NavigationTopBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit = {}) {
     val context = LocalContext.current
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     TopAppBar(
-        title = { Text(text = "Acerola") },
+        title = {
+            Destination.entries.find {
+                context.getString(it.route) == currentRoute
+            }?.let {
+                context.getString(it.label)
+            } ?: "Acerola"
+        },
         actions = extraActions,
         navigationIcon = {
             SmartButton(type = ButtonType.ICON, onClick = {

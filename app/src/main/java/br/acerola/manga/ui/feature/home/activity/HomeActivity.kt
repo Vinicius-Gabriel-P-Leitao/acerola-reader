@@ -1,6 +1,6 @@
 package br.acerola.manga.ui.feature.home.activity
 
-import android.content.Intent
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
@@ -11,38 +11,33 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.R
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.domain.permission.FolderAccessManager
+import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.theme.AcerolaTheme
-import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
-import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
-import br.acerola.manga.ui.feature.config.activity.ConfigActivity
-import br.acerola.manga.ui.feature.config.screen.FolderAccessScreen
 
-class HomeActivity(override val startDestination: String = "home") : BaseActivity() {
+class HomeActivity(
+    override val startDestinationRes: Int = Destination.HOME.route
+) : BaseActivity() {
 
     private val database by lazy {
         AcerolaDatabase.getInstance(applicationContext)
     }
 
-    override fun NavGraphBuilder.setupNavGraph(navController: NavHostController) {
-        composable(route = "home") {
-            homeScreen()
-        }
+    override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+        composable(route = context.getString(Destination.HOME.route)) { HomeScreen() }
     }
 
     @Composable
-    fun homeScreen() {
+    fun HomeScreen() {
         AcerolaTheme {
-            Scaffold() {
+            Scaffold() { _padding ->
                 Column {
                     SmartButton(type = ButtonType.ICON_TEXT, onClick = { println("Clicou!") }, text = "Botão") {
                         Icon(
@@ -57,15 +52,14 @@ class HomeActivity(override val startDestination: String = "home") : BaseActivit
 
     @Composable
     @OptIn(ExperimentalMaterial3Api::class)
-    override fun navigationBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit) {
-        super.navigationBar(navController) {
-            filterButton()
-            settingsNavigation()
+    override fun TopBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit) {
+        super.TopBar(navController) {
+            FilterButton()
         }
     }
 
     @Composable
-    fun filterButton() {
+    fun FilterButton() {
         val context = LocalContext.current
 
         SmartButton(type = ButtonType.ICON, onClick = {

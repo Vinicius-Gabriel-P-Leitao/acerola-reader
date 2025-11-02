@@ -1,5 +1,6 @@
 package br.acerola.manga.ui.feature.config.screen
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,23 +23,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 
 @Composable
-fun FolderAccessScreen(viewModel: FolderAccessViewModel) {
-    val folderUri by remember { derivedStateOf { viewModel.folderUri } }
-    val scannedFiles by remember { derivedStateOf { viewModel.scannedFiles } }
-
+fun FolderAccessScreen(context: Context, viewModel: FolderAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        viewModel.saveFolderUri(uri)
-    }
+        contract = ActivityResultContracts.OpenDocumentTree(),
+        onResult = { uri ->
+            viewModel.saveFolderUri(uri)
+            uri?.let { onFolderSelected(it.toString()) }
+        }
+    )
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadSavedFolder()
+        viewModel.folderUri?.let { onFolderSelected(it.toString()) }
     }
 
     Column {
@@ -56,20 +57,12 @@ fun FolderAccessScreen(viewModel: FolderAccessViewModel) {
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Adicionar pasta",
+                    contentDescription = context.getString(R.string.description_icon_select_folder_mangas),
                     modifier = Modifier
                         .size(size = 40.dp)
                         .padding(all = 4.dp),
                 )
             }
         }
-
-        folderUri?.let { uri ->
-            Text(text = "Pasta selecionada: $uri")
-        }
-
-//        scannedFiles.forEach { fileUri ->
-//            Text(text = fileUri.lastPathSegment ?: "Arquivo")
-//        }
     }
 }

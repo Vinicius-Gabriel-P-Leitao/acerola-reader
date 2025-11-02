@@ -1,5 +1,6 @@
 package br.acerola.manga.ui.common.activity
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,34 +23,36 @@ import androidx.navigation.compose.rememberNavController
 import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
-import br.acerola.manga.ui.common.layout.TopBar
 import br.acerola.manga.ui.common.layout.AcerolaScaffold
+import br.acerola.manga.ui.common.layout.NavigationBottomBar
+import br.acerola.manga.ui.common.layout.NavigationTopBar
 import br.acerola.manga.ui.common.theme.AcerolaTheme
 import br.acerola.manga.ui.feature.config.activity.ConfigActivity
 
 abstract class BaseActivity : ComponentActivity() {
-    abstract val startDestination: String
+    abstract val startDestinationRes: Int
 
-    open fun NavGraphBuilder.setupNavGraph(navController: NavHostController) {
+    open fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AcerolaTheme() {
                 val navController = rememberNavController()
+                val startDestination = getString(startDestinationRes)
 
                 AcerolaScaffold {
                     Scaffold(
-                        topBar = { navigationBar(navController) }
-                    ) { padding ->
+                        topBar = { TopBar(navController) },
+                        bottomBar = { NavigationBottomBar(navController) }) { padding ->
                         Box(modifier = Modifier.padding(paddingValues = padding)) {
                             NavHost(
-                                navController = navController,
-                                startDestination = startDestination
+                                navController, startDestination
                             ) {
-                                setupNavGraph(navController)
+                                setupNavGraph(context = this@BaseActivity, navController)
                             }
                         }
                     }
@@ -59,22 +62,7 @@ abstract class BaseActivity : ComponentActivity() {
     }
 
     @Composable
-    open fun navigationBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit = {}) {
-        TopBar(navController, extraActions)
-    }
-
-    @Composable
-    fun settingsNavigation() {
-        val context = LocalContext.current
-
-        SmartButton(type = ButtonType.ICON, onClick = {
-            val intent = Intent(context, ConfigActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = context.getString(R.string.description_icon_settings_activity)
-            )
-        }
+    open fun TopBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit = {}) {
+        NavigationTopBar(navController, extraActions)
     }
 }
