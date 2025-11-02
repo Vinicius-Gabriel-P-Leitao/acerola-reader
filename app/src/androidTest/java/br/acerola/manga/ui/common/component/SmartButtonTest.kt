@@ -9,11 +9,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import br.acerola.manga.ui.common.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
 class SmartButtonTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -21,16 +21,18 @@ class SmartButtonTest {
     fun testIconSmartButton_isDisplayed() {
         var clicked = false
         composeTestRule.setContent {
-            SmartButton(
-                type = ButtonType.ICON,
-                onClick = { clicked = true },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Icon"
-                    )
-                }
-            )
+            AcerolaTheme {
+                SmartButton(
+                    type = ButtonType.ICON,
+                    onClick = { clicked = true },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Icon"
+                        )
+                    }
+                )
+            }
         }
 
         composeTestRule.onNodeWithContentDescription("Add Icon").assertIsDisplayed()
@@ -42,11 +44,13 @@ class SmartButtonTest {
     fun testTextSmartButton_isDisplayed() {
         var clicked = false
         composeTestRule.setContent {
-            SmartButton(
-                type = ButtonType.TEXT,
-                onClick = { clicked = true },
-                text = "Click Me"
-            )
+            AcerolaTheme {
+                SmartButton(
+                    type = ButtonType.TEXT,
+                    onClick = { clicked = true },
+                    text = "Click Me"
+                )
+            }
         }
 
         composeTestRule.onNodeWithText("Click Me").assertIsDisplayed()
@@ -58,17 +62,19 @@ class SmartButtonTest {
     fun testIconTextSmartButton_isDisplayed() {
         var clicked = false
         composeTestRule.setContent {
-            SmartButton(
-                type = ButtonType.ICON_TEXT,
-                onClick = { clicked = true },
-                text = "Click Me",
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Icon"
-                    )
-                }
-            )
+            AcerolaTheme {
+                SmartButton(
+                    type = ButtonType.ICON_TEXT,
+                    onClick = { clicked = true },
+                    text = "Click Me",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Icon"
+                        )
+                    }
+                )
+            }
         }
 
         composeTestRule.onNodeWithText("Click Me").assertIsDisplayed()
