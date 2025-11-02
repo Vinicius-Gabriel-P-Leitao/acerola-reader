@@ -16,6 +16,8 @@ composeBom = "2025.10.01"
 activityCompose = "1.11.0"
 lifecycleRuntimeKtx = "2.9.4"
 material3AdaptiveNavigationSuite = "1.5.0-alpha07"
+navigationCommonKtx = "2.9.5"
+navigationCompose = "2.9.5"
 
 [libraries]
 androidx-compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
@@ -42,6 +44,8 @@ androidx-room-sqlite-wrapper = { module = "androidx.room:room-sqlite-wrapper", v
 junrar = { module = "com.github.junrar:junrar", version.ref = "junrar" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+androidx-navigation-common-ktx = { group = "androidx.navigation", name = "navigation-common-ktx", version.ref = "navigationCommonKtx" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

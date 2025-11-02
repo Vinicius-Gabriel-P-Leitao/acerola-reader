@@ -21,6 +21,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.feature.config.activity.ConfigActivity"
+            android:label="@string/label_config_activity"
+            android:theme="@style/Theme.Acerola" />
     </application>
 
 </manifest>

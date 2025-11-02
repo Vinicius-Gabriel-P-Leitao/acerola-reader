@@ -20,7 +20,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -54,8 +53,8 @@ room {
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Jetpack Compose BOM
     implementation(platform(libs.androidx.compose.bom))
@@ -77,6 +76,10 @@ dependencies {
     // Datastore
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.documentfile)
+
+    // Navigation
+    implementation(libs.androidx.navigation.common.ktx)
+    implementation(libs.androidx.navigation.compose)
 
     //  ROOM + SQLITE
     ksp(libs.androidx.room.compiler)

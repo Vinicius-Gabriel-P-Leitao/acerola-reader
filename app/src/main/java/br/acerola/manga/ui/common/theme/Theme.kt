@@ -13,29 +13,37 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = Overlay0,
-    secondary = Teal,
-    tertiary = Pink,
-    background = Base,
-    surface = Mantle,
     onPrimary = Text,
+    secondary = Teal,
     onSecondary = Base,
-    onTertiary = Base
+    tertiary = Pink,
+    onTertiary = Base,
+    background = Base,
+    onBackground = Text,
+    surface = Mantle,
+    onSurface = Text,
+    error = Red,
+    onError = Base
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Surface0,
-    secondary = Sky,
-    tertiary = Peach,
-    background = Text,
-    surface = Subtext0,
+    primary = Surface,
     onPrimary = Text,
+    secondary = Sapphire,
     onSecondary = Base,
-    onTertiary = Base
+    tertiary = Peach,
+    onTertiary = Base,
+    background = Text,
+    onBackground = Base,
+    surface = Subtext,
+    onSurface = Base,
+    error = Red,
+    onError = Base
 )
 
 @Composable
 fun AcerolaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(), dynamicColor: Boolean = true, content: @Composable () -> Unit
+    darkTheme: Boolean = isSystemInDarkTheme(), dynamicColor: Boolean = false, content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {

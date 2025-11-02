@@ -10,41 +10,51 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.R
 
 enum class CardType {
-    IMAGE, CONTENT
+    IMAGE, TEXT, CONTENT
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SmartCard(
     type: CardType,
-    title: String,
-    imagePainter: Painter? = null,
-    contentText: String? = null,
-    footerText: String? = null,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    colors: CardColors = CardDefaults.elevatedCardColors(),
+    elevation: CardElevation = CardDefaults.elevatedCardElevation(),
+    title: String? = null,
+    footer: String? = null,
+    image: Painter? = null,
+    text: String? = null,
+    content: @Composable () -> Unit = {},
 ) {
+    val context = LocalContext.current
+
     ElevatedCard(
+        colors = colors,
         onClick = onClick,
-        modifier = modifier
+        modifier = modifier,
+        elevation = elevation,
     ) {
         when (type) {
             CardType.IMAGE -> {
-                requireNotNull(value = imagePainter) { "imagePainter não pode ser nulo para CardType.IMAGE" }
+                // TODO: Criar exception personalizada para isso no código.
+                requireNotNull(value = image) { context.getString(R.string.message_image_parameter_required_smart_card) }
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     Image(
-                        painter = imagePainter,
+                        painter = image,
                         contentDescription = title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    if (footerText != null) {
+                    if (footer != null) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -53,9 +63,44 @@ fun SmartCard(
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
                             Text(
-                                text = footerText, style = MaterialTheme.typography.bodyMedium, color = Color.White
+                                text = footer,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
+                    }
+                }
+            }
+
+            CardType.TEXT -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(all = 16.dp)
+                ) {
+                    if (title !== null) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(height = 8.dp))
+                    }
+
+                    if (text !== null) {
+                        Text(text = text, style = MaterialTheme.typography.bodyMedium)
+                    }
+
+                    if (footer !== null) {
+                        Spacer(modifier = Modifier.height(height = 16.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(height = 16.dp))
+                        Text(
+                            text = footer,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
                     }
                 }
             }
@@ -66,26 +111,26 @@ fun SmartCard(
                         .fillMaxWidth()
                         .padding(all = 16.dp)
                 ) {
-                    Text(
-                        text = title, style = MaterialTheme.typography.titleLarge
-                    )
-
-                    if (contentText != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    if (title !== null) {
                         Text(
-                            text = contentText, style = MaterialTheme.typography.bodyMedium
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
+                        Spacer(modifier = Modifier.height(height = 8.dp))
                     }
 
-                    if (footerText != null) {
+                    content()
+
+                    if (footer !== null) {
                         Spacer(modifier = Modifier.height(height = 16.dp))
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(height = 16.dp))
                         Text(
-                            text = footerText,
-                            style = MaterialTheme.typography.labelSmall,
+                            text = footer,
                             textAlign = TextAlign.End,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.labelSmall,
                         )
                     }
                 }
