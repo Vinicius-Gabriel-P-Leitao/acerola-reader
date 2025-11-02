@@ -32,12 +32,7 @@ class FolderAccessViewModel(
         }
     }
 
-    fun loadSavedFolder() {
-        viewModelScope.launch {
-            manager.loadFolderUri()
-            folderUri?.let {
-                scannedFiles = scanFolder(context, it)
-            }
-        }
+    suspend fun loadSavedFolder() {
+        manager.loadFolderUri()
     }
 }

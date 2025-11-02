@@ -1,6 +1,7 @@
 package br.acerola.manga.ui.feature.config.activity
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -142,6 +145,21 @@ class ConfigActivity(
                             color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.bodyMedium,
                         )
+
+                        Spacer(modifier = Modifier.height(height = 12.dp))
+
+                        selectedFolderUri?.let { uriString ->
+                            val uri = Uri.parse(uriString)
+                            val documentFile = DocumentFile.fromTreeUri(context, uri)
+
+                            Text(
+                                text = "Pasta selecionada: ${documentFile?.name ?: "Pasta não encontrada"}",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
 
@@ -150,15 +168,6 @@ class ConfigActivity(
                 FolderAccessScreen(context = context, viewModel = folderAccessViewModel) { uri ->
                     selectedFolderUri = uri
                 }
-            }
-
-            // TODO: Fazer uma vizualização melhor disso, e fazer ele pegar também dá que está no datastore.
-            Spacer(modifier = Modifier.height(height = 12.dp))
-
-            selectedFolderUri?.let { uri ->
-                Text(
-                    text = "Pasta selecionada: $uri", color = MaterialTheme.colorScheme.onSurface
-                )
             }
         }
     }
