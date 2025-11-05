@@ -28,39 +28,41 @@ fun NavigationBottomBar(navController: NavHostController) {
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Destination.entries.forEachIndexed { index, destination ->
-            val routeString = context.getString(destination.route)
+            if (destination === Destination.HOME || destination === Destination.HISTORY || destination === Destination.CONFIG) {
+                val routeString = context.getString(destination.route)
 
-            NavigationBarItem(
-                selected = currentRoute == routeString,
-                label = { Text(text = context.getString(destination.label)) },
-                onClick = {
-                    if (currentRoute != routeString) {
-                        destination.activityClass?.java?.let { activityClass ->
-                            val intent = Intent(context, activityClass).apply {
-                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                            }
-
-                            context.startActivity(intent)
-                            activity?.let {
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                    it.overrideActivityTransition(
-                                        Activity.OVERRIDE_TRANSITION_OPEN, 0, 0
-                                    )
-                                } else {
-                                    @Suppress("DEPRECATION") it.overridePendingTransition(0, 0)
+                NavigationBarItem(
+                    selected = currentRoute == routeString,
+                    label = { Text(text = context.getString(destination.label)) },
+                    onClick = {
+                        if (currentRoute != routeString) {
+                            destination.activityClass?.java?.let { activityClass ->
+                                val intent = Intent(context, activityClass).apply {
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                                 }
+
+                                context.startActivity(intent)
+                                activity?.let {
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                        it.overrideActivityTransition(
+                                            Activity.OVERRIDE_TRANSITION_OPEN, 0, 0
+                                        )
+                                    } else {
+                                        @Suppress("DEPRECATION") it.overridePendingTransition(0, 0)
+                                    }
+                                }
+                                activity?.finish()
                             }
-                            activity?.finish()
                         }
-                    }
-                },
-                icon = {
-                    Icon(
-                        imageVector = destination.icon,
-                        contentDescription = context.getString(destination.contentDescriptionRes)
-                    )
-                },
-            )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = destination.icon,
+                            contentDescription = context.getString(destination.contentDescriptionRes)
+                        )
+                    },
+                )
+            }
         }
     }
 }
