@@ -1,7 +1,6 @@
 package br.acerola.manga.ui.common.activity
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,25 +8,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import br.acerola.manga.R
-import br.acerola.manga.ui.common.component.ButtonType
-import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.layout.AcerolaScaffold
-import br.acerola.manga.ui.common.layout.NavigationBottomBar
-import br.acerola.manga.ui.common.layout.NavigationTopBar
 import br.acerola.manga.ui.common.theme.AcerolaTheme
-import br.acerola.manga.ui.feature.config.activity.ConfigActivity
 
 abstract class BaseActivity : ComponentActivity() {
     abstract val startDestinationRes: Int
@@ -47,7 +36,7 @@ abstract class BaseActivity : ComponentActivity() {
                 AcerolaScaffold {
                     Scaffold(
                         topBar = { TopBar(navController) },
-                        bottomBar = { NavigationBottomBar(navController) }) { padding ->
+                        bottomBar = { BottomBar(navController) }) { padding ->
                         Box(modifier = Modifier.padding(paddingValues = padding)) {
                             NavHost(
                                 navController, startDestination
@@ -62,7 +51,10 @@ abstract class BaseActivity : ComponentActivity() {
     }
 
     @Composable
-    open fun TopBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit = {}) {
-        NavigationTopBar(navController, extraActions)
+    open fun TopBar(navController: NavHostController) {
+    }
+
+    @Composable
+    open fun BottomBar(navController: NavHostController) {
     }
 }

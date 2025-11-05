@@ -21,19 +21,20 @@ fun SmartButton(
     type: ButtonType,
     onClick: () -> Unit,
     text: String? = null,
+    modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null,
 ) {
     when (type) {
         ButtonType.ICON -> {
             require(value = icon != null) { "IconButton precisa de um ícone" }
-            IconButton(onClick = onClick) {
+            IconButton(onClick = onClick, modifier = modifier) {
                 icon()
             }
         }
 
         ButtonType.TEXT -> {
             require(value = text != null) { "TextButton precisa de texto" }
-            Button(onClick = onClick) {
+            Button(onClick = onClick, modifier = modifier) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
@@ -45,7 +46,7 @@ fun SmartButton(
 
         ButtonType.ICON_TEXT -> {
             require(value = icon != null && text != null) { "Button com ícone + texto precisa de ambos" }
-            Button(onClick = onClick) {
+            Button(onClick = onClick, modifier = modifier) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center

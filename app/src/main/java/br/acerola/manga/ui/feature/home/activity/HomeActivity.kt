@@ -6,20 +6,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -40,14 +39,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.R
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.domain.service.archive.ArchiveMangaService
+import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.component.SmartCard
+import br.acerola.manga.ui.common.layout.NavigationBottomBar
+import br.acerola.manga.ui.common.layout.NavigationTopBar
 import br.acerola.manga.ui.common.theme.AcerolaTheme
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
@@ -89,6 +90,19 @@ class HomeActivity(
     }
 
     @Composable
+    override fun TopBar(navController: NavHostController) {
+        NavigationTopBar(navController, extraActions = {
+            FilterButton()
+            ResetIndexManga()
+        })
+    }
+
+    @Composable
+    override fun BottomBar(navController: NavHostController) {
+        NavigationBottomBar(navController)
+    }
+
+    @Composable
     fun HomeScreen() {
         val context = LocalContext.current
 
@@ -112,10 +126,6 @@ class HomeActivity(
 
                     error?.let {
                         Text(text = "Erro: ${it.message}", color = Color.Red)
-                    }
-
-                    Button(onClick = { mangaLibraryViewModel.indexLibraryFromSavedFolder() }) {
-                        Text(text = "Reindexar biblioteca")
                     }
 
                     LazyVerticalGrid(
@@ -173,10 +183,13 @@ class HomeActivity(
     }
 
     @Composable
-    @OptIn(ExperimentalMaterial3Api::class)
-    override fun TopBar(navController: NavHostController, extraActions: @Composable RowScope.() -> Unit) {
-        super.TopBar(navController) {
-            FilterButton()
+    fun ResetIndexManga() {
+        SmartButton(type = ButtonType.ICON, modifier = Modifier.size(size = 48.dp), onClick = {
+            mangaLibraryViewModel.indexLibraryFromSavedFolder()
+        }) {
+            Icon(
+                imageVector = Icons.Default.RestartAlt, contentDescription = "Reset dos mangás"
+            )
         }
     }
 
@@ -184,7 +197,8 @@ class HomeActivity(
     fun FilterButton() {
         val context = LocalContext.current
 
-        SmartButton(type = ButtonType.ICON, onClick = {
+        SmartButton(
+            type = ButtonType.ICON, modifier = Modifier.size(size = 48.dp), onClick = {
             println("Filtrar")
         }) {
             Icon(

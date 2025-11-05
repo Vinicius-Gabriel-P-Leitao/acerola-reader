@@ -46,6 +46,8 @@ import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.Divider
 import br.acerola.manga.ui.common.component.SmartCard
+import br.acerola.manga.ui.common.layout.NavigationBottomBar
+import br.acerola.manga.ui.common.layout.NavigationTopBar
 import br.acerola.manga.ui.common.theme.AcerolaTheme
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
@@ -70,6 +72,16 @@ class ConfigActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CONFIG.route)) { ConfigScreen() }
+    }
+
+    @Composable
+    override fun TopBar(navController: NavHostController) {
+        NavigationTopBar(navController)
+    }
+
+    @Composable
+    override fun BottomBar(navController: NavHostController) {
+        NavigationBottomBar(navController)
     }
 
     @Composable
