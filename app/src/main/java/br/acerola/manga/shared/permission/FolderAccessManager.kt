@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.permission
+package br.acerola.manga.shared.permission
 
 import android.content.Context
 import android.content.Intent

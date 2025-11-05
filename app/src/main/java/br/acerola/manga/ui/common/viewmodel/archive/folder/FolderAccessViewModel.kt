@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.domain.permission.FolderAccessManager
+import br.acerola.manga.shared.permission.FolderAccessManager
 import kotlinx.coroutines.launch
 
 class FolderAccessViewModel(

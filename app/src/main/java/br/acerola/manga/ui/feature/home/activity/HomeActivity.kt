@@ -40,7 +40,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.R
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.domain.permission.FolderAccessManager
+import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.domain.service.archive.ArchiveMangaService
 import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity

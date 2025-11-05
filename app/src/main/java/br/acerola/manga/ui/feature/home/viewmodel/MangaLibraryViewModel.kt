@@ -1,12 +1,11 @@
 package br.acerola.manga.ui.feature.home.viewmodel
 
 import android.app.Application
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.domain.model.archive.ChapterFile
-import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.archive.ArchiveMangaService
+import br.acerola.manga.shared.dto.archive.ChapterFileDto
+import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,32 +30,26 @@ class MangaLibraryViewModel(
 
     val progress: StateFlow<Int> = archiveService.progress
 
-    val library: StateFlow<Map<MangaFolder, List<ChapterFile>>> = archiveService.getFoldersWithChapters().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-        initialValue = emptyMap()
-    )
-
-    val folders: StateFlow<List<MangaFolder>> = archiveService.getAllFolders().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-        initialValue = emptyList()
-    )
-
     private val _selectedFolderId = MutableStateFlow<Long?>(value = null)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFile>> = _selectedFolderId.flatMapLatest { folderId ->
-        folderId?.let { archiveService.getAllChaptersByFolder(folderId = it) } ?: flowOf(value = emptyList())
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-        initialValue = emptyList()
-    )
-
     fun selectFolder(folderId: Long) {
         _selectedFolderId.value = folderId
     }
+
+    val folders: StateFlow<List<MangaFolderDto>> = archiveService.getAllFoldersDto().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        initialValue = emptyList()
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { folderId ->
+        folderId?.let { id ->
+            archiveService.getChaptersByFolderDto(folderId = id)
+        } ?: flowOf(value = emptyList())
+    }.stateIn(
+        scope = viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        initialValue = emptyList()
+    )
 
     // TODO: Adicionar validaçõa de erro personalizada.
     fun indexLibraryFromSavedFolder() {
@@ -71,23 +64,6 @@ class MangaLibraryViewModel(
                 } ?: run {
                     _error.value = IllegalStateException("Nenhuma pasta salva encontrada.")
                 }
-            } catch (exception: Exception) {
-                _error.value = exception
-            } finally {
-                _isIndexing.value = false
-            }
-        }
-    }
-
-    // TODO: Adicionar validaçõa de erro personalizada.
-    fun indexLibrary(uri: Uri) {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            _error.value = null
-
-            try {
-                archiveService.indexLibrary(baseUri = uri)
-                folderAccessViewModel.saveFolderUri(uri)
             } catch (exception: Exception) {
                 _error.value = exception
             } finally {

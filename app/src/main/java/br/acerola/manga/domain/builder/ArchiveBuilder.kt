@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.model.archive.MangaFolder
 
-object MangaLibraryBuilder {
+object ArchiveBuilder {
     fun buildLibrary(context: Context, rootUri: Uri): List<MangaFolder> {
         val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
 

@@ -12,7 +12,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.domain.permission.FolderAccessManager
+import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.domain.service.archive.ArchiveMangaService
 import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
@@ -51,22 +51,23 @@ class ChaptersActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CHAPTERS.route)) { backStackEntry ->
             val folderId = intent?.getLongExtra("folderId", -1L) ?: -1L
+            // NOTE: Pega o id do intent para fazer a busca dos capilutos
             if (folderId != -1L) mangaLibraryViewModel.selectFolder(folderId)
 
-            ChaptersScreen(folderId = folderId)
+            ChaptersScreen()
         }
     }
 
     @Composable
-    fun ChaptersScreen(folderId: Long) {
+    fun ChaptersScreen() {
         val chapters by mangaLibraryViewModel.chapters.collectAsState()
 
         Column() {
             if (chapters.isEmpty()) {
-                Text("Nenhum capítulo encontrado")
+                Text(text = "Nenhum capítulo encontrado")
             } else {
                 chapters.forEach { ch ->
-                    Text("• ${ch.chapter}", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "• ${ch.name}", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
