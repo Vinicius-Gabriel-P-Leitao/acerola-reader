@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MangaFolderDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMangaFolder(manga: MangaFolder)
+    suspend fun insertMangaFolder(manga: MangaFolder): Long
 
     @Update
     suspend fun updateMangaFolder(manga: MangaFolder)

@@ -18,13 +18,19 @@
     <string name="description_icon_settings_activity">Icone do botão que leva a tela de configuração.</string>
     <string name="description_icon_filter_mangas_catalog">Icone do botão que abre o modal que filtra os mangás.</string>
     <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
-    <!-- Text -->
+    <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o manga.</string>
+    <!-- Text title -->
     <string name="description_title_text_archive_configs_in_app">Configuração dos arquivos</string>
     <string name="description_title_text_mangadex_configs_in_app">Configuração do mangadex</string>
     <string name="description_title_text_config_select_path_manga">Pasta dos mangás</string>
+    <string name="description_title_preference_file_extension">Tipo do arquivo a ser salvo</string>
+    <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
+    <string name="description_text_selected_manga_folder">Pasta selecionada: %1$s</string>
+    <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
 
     <!-- Error messages -->
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nulo para CardType.IMAGE</string>
+    <string name="message_path_not_found">Pasta não encontrada.</string>
 </resources>

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChapterMetadataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChapterMetadata(manga: ChapterMetadata)
+    suspend fun insertChapterMetadata(manga: ChapterMetadata): Long
 
     @Update
     suspend fun updateChapterMetadata(manga: ChapterMetadata)

@@ -1,0 +1,34 @@
+package br.acerola.manga.domain.builder
+
+import android.content.Context
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
+import br.acerola.manga.domain.model.archive.MangaFolder
+
+object MangaLibraryBuilder {
+    fun buildLibrary(context: Context, rootUri: Uri): List<MangaFolder> {
+        val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
+
+        return pickedDir.listFiles().filter { it.isDirectory }.map { folder ->
+            val banner = folder.listFiles().firstOrNull { isBanner(file = it) }
+            val cover = folder.listFiles().firstOrNull { isCover(file = it) }
+            MangaFolder(
+                name = folder.name ?: "Unknown",
+                path = folder.uri.toString(),
+                cover = cover != null,
+                banner = banner != null,
+                lastModified = folder.lastModified()
+            )
+        }
+    }
+
+    private fun isCover(file: DocumentFile): Boolean {
+        val name = file.name?.lowercase() ?: return false
+        return name.contains(other = "cover") && name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png")
+    }
+
+    private fun isBanner(file: DocumentFile): Boolean {
+        val name = file.name?.lowercase() ?: return false
+        return name.contains(other = "banner") && name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png")
+    }
+}

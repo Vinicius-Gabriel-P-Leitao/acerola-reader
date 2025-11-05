@@ -14,6 +14,8 @@ class FolderAccessViewModelFactory(
             @Suppress("UNCHECKED_CAST")
             return FolderAccessViewModel(application, manager) as T
         }
+
+        // TODO: Tratar erro de forma melhor
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

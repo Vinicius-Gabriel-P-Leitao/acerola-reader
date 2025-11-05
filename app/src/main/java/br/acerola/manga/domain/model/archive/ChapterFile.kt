@@ -19,7 +19,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ChapterFile(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
     @ColumnInfo(name = "chapter")
@@ -29,5 +29,5 @@ data class ChapterFile(
     val path: String,
 
     @ColumnInfo(name = "folder_path_fk")
-    val folderPathFk: Int,
+    val folderPathFk: Long,
 )
