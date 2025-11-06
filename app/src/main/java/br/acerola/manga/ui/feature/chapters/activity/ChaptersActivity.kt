@@ -12,14 +12,15 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.domain.service.archive.ArchiveMangaService
+import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
+import br.acerola.manga.ui.common.layout.NavigationTopBar
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
-import br.acerola.manga.ui.feature.home.viewmodel.MangaLibraryViewModel
-import br.acerola.manga.ui.feature.home.viewmodel.MangaLibraryViewModelFactory
+import br.acerola.manga.ui.feature.main.home.viewmodel.MangaLibraryViewModel
+import br.acerola.manga.ui.feature.main.home.viewmodel.MangaLibraryViewModelFactory
 
 class ChaptersActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
@@ -54,12 +55,17 @@ class ChaptersActivity(
             // NOTE: Pega o id do intent para fazer a busca dos capilutos
             if (folderId != -1L) mangaLibraryViewModel.selectFolder(folderId)
 
-            ChaptersScreen()
+            Screen()
         }
     }
 
     @Composable
-    fun ChaptersScreen() {
+    override fun TopBar(navController: NavHostController) {
+        NavigationTopBar(navController)
+    }
+
+    @Composable
+    fun Screen() {
         val chapters by mangaLibraryViewModel.chapters.collectAsState()
 
         Column() {

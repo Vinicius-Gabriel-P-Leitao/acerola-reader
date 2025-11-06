@@ -1,7 +1,6 @@
 package br.acerola.manga.ui.common.layout
 
 import android.app.Activity
-import android.content.Intent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -18,7 +17,6 @@ import br.acerola.manga.shared.route.Destination
 @Composable
 fun NavigationBottomBar(navController: NavHostController) {
     val context = LocalContext.current
-    val activity = context as? Activity
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -36,22 +34,10 @@ fun NavigationBottomBar(navController: NavHostController) {
                     label = { Text(text = context.getString(destination.label)) },
                     onClick = {
                         if (currentRoute != routeString) {
-                            destination.activityClass?.java?.let { activityClass ->
-                                val intent = Intent(context, activityClass).apply {
-                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                                }
-
-                                context.startActivity(intent)
-                                activity?.let {
-                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                        it.overrideActivityTransition(
-                                            Activity.OVERRIDE_TRANSITION_OPEN, 0, 0
-                                        )
-                                    } else {
-                                        @Suppress("DEPRECATION") it.overridePendingTransition(0, 0)
-                                    }
-                                }
-                                activity?.finish()
+                            navController.navigate(routeString) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
                     },

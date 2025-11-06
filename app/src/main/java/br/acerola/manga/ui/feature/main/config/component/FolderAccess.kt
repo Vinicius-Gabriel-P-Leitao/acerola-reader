@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.config.screen
+package br.acerola.manga.ui.feature.main.config.component
 
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
