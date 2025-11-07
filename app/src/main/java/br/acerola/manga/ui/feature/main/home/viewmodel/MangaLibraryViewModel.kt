@@ -1,6 +1,7 @@
 package br.acerola.manga.ui.feature.main.home.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.archive.ArchiveMangaService
@@ -8,6 +9,7 @@ import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +37,7 @@ class MangaLibraryViewModel(
         _selectedFolderId.value = folderId
     }
 
-    val folders: StateFlow<List<MangaFolderDto>> = archiveService.getAllFoldersDto().stateIn(
+    val folders: StateFlow<List<MangaFolderDto>> = archiveService.getAllFolders().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
         initialValue = emptyList()
@@ -44,31 +46,59 @@ class MangaLibraryViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { folderId ->
         folderId?.let { id ->
-            archiveService.getChaptersByFolderDto(folderId = id)
+            archiveService.getChaptersByFolder(folderId = id)
         } ?: flowOf(value = emptyList())
     }.stateIn(
         scope = viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
         initialValue = emptyList()
     )
 
-    // TODO: Adicionar validaçõa de erro personalizada.
-    fun indexLibraryFromSavedFolder() {
+    private fun runIndexing(block: suspend () -> Unit) {
         viewModelScope.launch {
             _isIndexing.value = true
             _error.value = null
-
+            val startTime = System.currentTimeMillis()
             try {
-                folderAccessViewModel.loadSavedFolder()
-                folderAccessViewModel.folderUri?.let { uri ->
-                    archiveService.indexLibrary(baseUri = uri)
-                } ?: run {
-                    _error.value = IllegalStateException("Nenhuma pasta salva encontrada.")
-                }
-            } catch (exception: Exception) {
-                _error.value = exception
+                block()
+            } catch (e: Exception) {
+                _error.value = e
             } finally {
+                val duration = System.currentTimeMillis() - startTime
+                val minDisplayTime = 500L // 0.5 seconds
+                if (duration < minDisplayTime) {
+                    delay(minDisplayTime - duration)
+                }
                 _isIndexing.value = false
             }
+        }
+    }
+
+    private suspend fun getFolderUri(): Uri {
+        folderAccessViewModel.loadSavedFolder()
+        return folderAccessViewModel.folderUri ?: throw IllegalStateException("Nenhuma pasta salva encontrada.")
+    }
+
+    fun indexLibraryFromSavedFolder() {
+        runIndexing {
+            archiveService.indexLibrary(baseUri = getFolderUri())
+        }
+    }
+
+    fun quickIndexLibraryFromSavedFolder() {
+        runIndexing {
+            archiveService.quickIndexLibrary(baseUri = getFolderUri())
+        }
+    }
+
+    fun indexLibrary(uri: Uri) {
+        runIndexing {
+            archiveService.indexLibrary(baseUri = uri)
+        }
+    }
+
+    fun quickIndexLibrary(uri: Uri) {
+        runIndexing {
+            archiveService.quickIndexLibrary(baseUri = uri)
         }
     }
 }

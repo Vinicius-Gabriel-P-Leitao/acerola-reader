@@ -20,9 +20,9 @@ interface MangaFolderDao {
     @Delete
     suspend fun deleteMangaFolder(manga: MangaFolder)
 
-    @Query("SELECT * FROM manga_folder ORDER BY id ASC")
+    @Query(value = "SELECT * FROM manga_folder ORDER BY id ASC")
     fun getAllMangasFolders(): Flow<List<MangaFolder>>
 
-    @Query("SELECT * FROM manga_folder WHERE id = :mangaId")
+    @Query(value = "SELECT * FROM manga_folder WHERE id = :mangaId")
     fun getMangaFolderById(mangaId: Int): Flow<MangaFolder?>
 }

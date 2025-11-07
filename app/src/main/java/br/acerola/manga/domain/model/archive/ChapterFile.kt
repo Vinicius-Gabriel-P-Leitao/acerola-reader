@@ -8,7 +8,9 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "chapter_file",
-    indices = [Index("folder_path_fk")],
+    indices = [
+        Index(value = ["folder_path_fk", "chapter"], unique = true)
+    ],
     foreignKeys = [
         ForeignKey(
             entity = MangaFolder::class,

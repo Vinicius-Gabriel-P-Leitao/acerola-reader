@@ -12,22 +12,25 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChapterFileDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChapterFile(manga: ChapterFile): Long
+    suspend fun insertChapterFile(chapter: ChapterFile): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(chapters: List<ChapterFile>)
 
     @Update
-    suspend fun updateChapterFile(manga: ChapterFile)
+    suspend fun updateChapterFile(chapter: ChapterFile)
 
     @Delete
-    suspend fun deleteChapterFile(manga: ChapterFile)
+    suspend fun deleteChapterFile(chapter: ChapterFile)
+
+    @Query(value = "DELETE FROM chapter_file WHERE folder_path_fk = :folderId")
+    suspend fun deleteChaptersByFolderId(folderId: Long)
 
     @Query(value = "SELECT * FROM chapter_file ORDER BY chapter ASC")
     fun getAllChapterFiles(): Flow<List<ChapterFile>>
 
-    @Query(value = "SELECT * FROM chapter_file WHERE id = :mangaId")
-    fun getChaptersFileById(mangaId: Int): Flow<ChapterFile?>
+    @Query(value = "SELECT * FROM chapter_file WHERE id = :chapterId")
+    fun getChaptersFileById(chapterId: Int): Flow<ChapterFile?>
 
     @Query(value = "SELECT * FROM chapter_file WHERE folder_path_fk = :folderId ORDER BY chapter ASC")
     fun getChaptersByFolder(folderId: Long): Flow<List<ChapterFile>>

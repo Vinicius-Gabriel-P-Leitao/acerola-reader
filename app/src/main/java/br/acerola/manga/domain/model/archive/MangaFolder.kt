@@ -2,10 +2,12 @@ package br.acerola.manga.domain.model.archive
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "manga_folder"
+    tableName = "manga_folder",
+    indices = [Index(value = ["name"], unique = true)]
 )
 data class MangaFolder(
     @PrimaryKey(autoGenerate = true)
@@ -18,10 +20,10 @@ data class MangaFolder(
     val path: String,
 
     @ColumnInfo(name = "cover")
-    val cover: Boolean,
+    val cover: String?,
 
     @ColumnInfo(name = "banner")
-    val banner: Boolean,
+    val banner: String?,
 
     @ColumnInfo(name = "last_modified")
     val lastModified: Long

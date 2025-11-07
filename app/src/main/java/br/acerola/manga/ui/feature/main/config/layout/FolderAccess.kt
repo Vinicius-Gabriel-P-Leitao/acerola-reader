@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.config.component
+package br.acerola.manga.ui.feature.main.config.layout
 
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,7 +25,7 @@ import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 
 @Composable
-fun FolderAccessScreen(context: Context, viewModel: FolderAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
+fun FolderAccess(context: Context, viewModel: FolderAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri ->

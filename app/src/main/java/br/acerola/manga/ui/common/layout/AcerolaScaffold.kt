@@ -1,6 +1,5 @@
 package br.acerola.manga.ui.common.layout
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope

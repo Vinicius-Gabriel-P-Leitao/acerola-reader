@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.config.component
+package br.acerola.manga.ui.feature.main.config.layout
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
@@ -10,7 +10,7 @@ import br.acerola.manga.ui.common.component.RadioGroup
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 
 @Composable
-fun FilePreferenceScreen(viewModel: FilePreferencesViewModel = viewModel()) {
+fun FilePreference(viewModel: FilePreferencesViewModel = viewModel()) {
     val selected by viewModel.selectedExtension.collectAsState(initial = null)
     val options = FileExtensions.comicBookFormats
 

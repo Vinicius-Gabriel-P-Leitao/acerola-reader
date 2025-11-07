@@ -5,9 +5,9 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.builder.ArchiveBuilder
-import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.database.dao.archive.ChapterFileDao
 import br.acerola.manga.domain.database.dao.archive.MangaFolderDao
+import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.shared.config.FileExtensions
@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
+import java.util.concurrent.atomic.AtomicInteger
 
 class ArchiveMangaService(
     private val context: Context, private val folderDao: MangaFolderDao, private val chapterDao: ChapterFileDao
@@ -38,10 +38,10 @@ class ArchiveMangaService(
     val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val CHUNK_SIZE = 50
-    private val CONCURRENCY = 4
+    private val PROGRESS_THRESHOLD = 5
 
     suspend fun indexLibrary(baseUri: Uri) = withContext(context = Dispatchers.IO) {
-        val folders = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
+        val folders: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
         if (folders.isEmpty()) {
             _progress.value = -1
             return@withContext
@@ -49,55 +49,124 @@ class ArchiveMangaService(
 
         val existingFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
         val total = folders.size
-        var processed = 0
+        val showProgress = total >= PROGRESS_THRESHOLD
 
+        if (!showProgress) {
+            folders.chunked(CHUNK_SIZE).forEach { batch ->
+                coroutineScope {
+                    batch.map { folder ->
+                        async(context = Dispatchers.IO) {
+                            processSingleFolder(folder, existingFolders)
+                        }
+                    }.awaitAll()
+                }
+            }
+
+            delay(timeMillis = 250)
+            _progress.value = -1
+            return@withContext
+        }
+
+        val processed = AtomicInteger(0)
+
+        _progress.value = 0
         folders.chunked(CHUNK_SIZE).forEach { batch ->
             coroutineScope {
                 batch.map { folder ->
                     async(context = Dispatchers.IO) {
-                        processSingleFolder(folder, existingFolders)
+                        try {
+                            processSingleFolder(folder, existingFolders)
+                        } finally {
+                            val current = processed.incrementAndGet()
+                            _progress.value = ((current.toFloat() / total) * 100).toInt()
+                        }
                     }
-                }.chunked(CONCURRENCY).flatMap { it.awaitAll() }
-
-                processed += batch.size
-                _progress.value = (processed * 100 / total).coerceIn(0, 100)
-                yield()
+                }.awaitAll()
             }
         }
-
         _progress.value = 100
+
         delay(timeMillis = 250)
         _progress.value = -1
     }
 
-    private suspend fun processSingleFolder(folder: MangaFolder, existingFolders: List<MangaFolder>) {
-        val existing = existingFolders.find { it.path == folder.path }
-        if (existing != null && existing.lastModified == folder.lastModified) return
+    suspend fun quickIndexLibrary(baseUri: Uri) = withContext(context = Dispatchers.IO) {
+        val folders: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
+        if (folders.isEmpty()) {
+            _progress.value = -1
+            return@withContext
+        }
 
-        val folderId: Long = folderDao.insertMangaFolder(manga = folder)
-        val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return
+        val existingFolders: List<MangaFolder> = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+        val existingFoldersMap: Map<String, MangaFolder> = existingFolders.associateBy { it.path }
 
-        val files = folderDoc.listFiles().asSequence().filter { it.isFile }.filter { file ->
-            FileExtensions.comicBookFormats.any { ext ->
-                file.name?.endsWith(ext, ignoreCase = true) == true
-            }
-        }.toList()
+        val foldersToProcess = folders.filter { folder ->
+            val existing: MangaFolder? = existingFoldersMap[folder.path]
 
-        val chapters = files.chunked(CHUNK_SIZE).flatMap { chunk ->
-            chunk.map { file ->
-                ChapterFile(
-                    chapter = file.name ?: "Unknown", path = file.uri.toString(), folderPathFk = folderId
-                )
+            when {
+                existing == null -> true
+                existing.lastModified < folder.lastModified -> true
+                existing.cover != folder.cover || existing.banner != folder.banner -> true
+                else -> false
             }
         }
 
-        if (chapters.isNotEmpty()) {
-            chapterDao.insertAll(chapters)
+        val currentPaths = folders.map { it.path }.toSet()
+        val removedFolders = existingFolders.filter { it.path !in currentPaths }
+
+        if (removedFolders.isNotEmpty()) {
+            removedFolders.forEach { folder ->
+                folderDao.deleteMangaFolder(manga = folder)
+            }
         }
+
+        if (foldersToProcess.isEmpty()) {
+            return@withContext
+        }
+
+        val total = foldersToProcess.size
+        val showProgress = total >= PROGRESS_THRESHOLD
+
+        if (!showProgress) {
+            foldersToProcess.chunked(CHUNK_SIZE).forEach { batch ->
+                coroutineScope {
+                    batch.map { folder ->
+                        async(context = Dispatchers.IO) {
+                            processSingleFolder(folder, existingFolders)
+                        }
+                    }.awaitAll()
+                }
+            }
+
+            delay(timeMillis = 250)
+            _progress.value = -1
+            return@withContext
+        }
+
+        val processed = AtomicInteger(0)
+        _progress.value = 0
+        foldersToProcess.chunked(CHUNK_SIZE).forEach { batch ->
+            coroutineScope {
+                batch.map { folder ->
+                    async(context = Dispatchers.IO) {
+                        try {
+                            processSingleFolder(folder, existingFolders)
+                        } finally {
+                            val current = processed.incrementAndGet()
+                            _progress.value = ((current.toFloat() / total) * 100).toInt()
+                        }
+                    }
+                }.awaitAll()
+            }
+        }
+        _progress.value = 100
+
+        delay(timeMillis = 250)
+        _progress.value = -1
     }
 
-    fun getAllFoldersDto(): StateFlow<List<MangaFolderDto>> {
-        return folderDao.getAllMangasFolders().combine(chapterDao.getAllChapterFiles()) { folders, chapters ->
+    fun getAllFolders(): StateFlow<List<MangaFolderDto>> {
+        return folderDao.getAllMangasFolders().combine(flow = chapterDao.getAllChapterFiles()) { folders, chapters ->
             folders.map { folder ->
                 folder.toDto(chapters.filter { it.folderPathFk == folder.id })
             }
@@ -108,7 +177,7 @@ class ArchiveMangaService(
         )
     }
 
-    fun getChaptersByFolderDto(folderId: Long): StateFlow<List<ChapterFileDto>> {
+    fun getChaptersByFolder(folderId: Long): StateFlow<List<ChapterFileDto>> {
         return chapterDao.getChaptersByFolder(folderId).map { list ->
             list.map { it.toDto() }
         }.stateIn(
@@ -116,5 +185,36 @@ class ArchiveMangaService(
             started = SharingStarted.Lazily,
             initialValue = emptyList()
         )
+    }
+
+    private suspend fun processSingleFolder(folder: MangaFolder, existingFolders: List<MangaFolder>) {
+        val existing = existingFolders.find { it.path == folder.path }
+
+        val folderId: Long = if (existing != null) {
+            folderDao.updateMangaFolder(manga = folder.copy(id = existing.id))
+            existing.id
+        } else {
+            folderDao.insertMangaFolder(manga = folder)
+        }
+
+        val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return
+
+        val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
+            FileExtensions.comicBookFormats.any { ext ->
+                file.name?.endsWith(suffix = ext, ignoreCase = true) == true
+            }
+        }
+
+        chapterDao.deleteChaptersByFolderId(folderId)
+
+        val chapters = chapterFiles.map { file ->
+            ChapterFile(
+                chapter = file.name ?: "Unknown", path = file.uri.toString(), folderPathFk = folderId
+            )
+        }
+
+        if (chapters.isNotEmpty()) {
+            chapterDao.insertAll(chapters)
+        }
     }
 }

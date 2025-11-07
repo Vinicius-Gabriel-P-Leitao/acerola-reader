@@ -12,8 +12,8 @@ fun MangaFolder.toDto(chapters: List<ChapterFile>): MangaFolderDto {
         name = name,
         path = path,
         lastModified = lastModified,
-        coverUri = if (cover) "$path/cover.jpg".toUri() else null,
-        bannerUri = if (banner) "$path/banner.jpg".toUri() else null,
+        coverUri = cover?.toUri(),
+        bannerUri = banner?.toUri(),
         chapters = chapters.map { it.toDto() })
 }
 
@@ -21,8 +21,8 @@ fun MangaFolderDto.toModel(): MangaFolder {
     return MangaFolder(
         name = name,
         path = path,
-        cover = coverUri != null,
-        banner = bannerUri != null,
+        cover = coverUri?.toString(),
+        banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis()
     )
 }

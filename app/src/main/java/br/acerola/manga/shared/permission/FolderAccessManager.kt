@@ -12,19 +12,44 @@ class FolderAccessManager(private val context: Context) {
         private set
 
     suspend fun saveFolderUri(uri: Uri?) {
-        uri?.let {
-            folderUri = it
-            FolderPreferences.saveFolderUri(context, uri = it.toString())
-            context.contentResolver.takePersistableUriPermission(
-                it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                folderUri = uri
+                FolderPreferences.saveFolderUri(context, uri.toString())
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+                folderUri = null
+            }
+        } else {
+            folderUri = null
+            FolderPreferences.clearFolderUri(context)
         }
     }
-
     suspend fun loadFolderUri() {
         FolderPreferences.folderUriFlow(context)
             .firstOrNull()?.let { uriString ->
-                folderUri = uriString.toUri()
+                val uri = uriString.toUri()
+                if (hasPermission(uri)) {
+                    folderUri = uri
+                } else {
+                    FolderPreferences.clearFolderUri(context)
+                    folderUri = null
+                }
             }
     }
+
+    fun hasPermission(uri: Uri?): Boolean {
+        uri ?: return false
+
+        val persistedUris = context.contentResolver.persistedUriPermissions
+        return persistedUris.any { permission ->
+            permission.uri == uri &&
+                    permission.isReadPermission &&
+                    permission.isWritePermission
+        }
+    }
+
 }

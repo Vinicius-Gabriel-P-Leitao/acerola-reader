@@ -17,6 +17,12 @@ object FolderPreferences {
         }
     }
 
+    suspend fun clearFolderUri(context: Context) {
+        context.dataStore.edit { prefs ->
+            prefs.remove(key = FOLDER_URI)
+        }
+    }
+
     fun folderUriFlow(context: Context): Flow<String?> =
         context.dataStore.data.map { prefs -> prefs[FOLDER_URI] }
 }
