@@ -8,10 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Divider() {
+fun Divider(modifier: Modifier = Modifier) {
     HorizontalDivider(
         thickness = 1.dp,
         color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.padding(vertical = 8.dp)
+        modifier = modifier.padding(vertical = 8.dp)
     )
 }
