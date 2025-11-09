@@ -2,9 +2,6 @@ package br.acerola.manga.ui.common.viewmodel.archive.folder
 
 import android.app.Application
 import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.shared.permission.FolderAccessManager
@@ -15,8 +12,6 @@ class FolderAccessViewModel(
     private val manager: FolderAccessManager
 ) : AndroidViewModel(application) {
     val folderUri get() = manager.folderUri
-    var scannedFiles by mutableStateOf<List<Uri>>(value = emptyList())
-        private set
 
     fun saveFolderUri(uri: Uri?) {
         viewModelScope.launch {

@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -77,12 +78,12 @@ fun SelectFolder(
 
                 Column {
                     Text(
-                        text = context.getString(R.string.description_title_text_config_select_path_manga),
+                        text = stringResource(id = R.string.title_text_config_select_path_manga),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge,
                     )
                     Text(
-                        text = context.getString(R.string.description_text_config_select_path_manga),
+                        text = stringResource(id = R.string.description_text_config_select_path_manga),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -106,9 +107,9 @@ fun SelectFolder(
             Divider()
 
             Text(
-                text = context.getString(
-                    R.string.description_text_selected_manga_folder,
-                    documentFile?.name ?: context.getString(R.string.message_path_not_found)
+                text = stringResource(
+                    id = R.string.description_text_selected_manga_folder,
+                    documentFile?.name ?: stringResource(id = R.string.message_path_not_found)
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium,

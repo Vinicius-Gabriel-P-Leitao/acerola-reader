@@ -1,17 +1,17 @@
 <resources>
     <string name="app_name">acerola</string>
     <!-- UI description -->
-    <!-- Activity navigation -->
+    <!-- Screen navigation -->
     <string name="navigation_home_activity">home</string>
     <string name="navigation_config_activity">config</string>
     <string name="navigation_history_activity">history</string>
     <string name="navigation_chapters_activity">chapters</string>
-    <!-- Activity label -->
+    <!-- Screen label -->
     <string name="label_home_activity">home</string>
     <string name="label_config_activity">configurações</string>
     <string name="label_history_activity">histórico</string>
     <string name="label_chapters_activity">capitulos</string>
-    <!-- Activity content description -->
+    <!-- Screen content description -->
     <string name="description_home_activity">Tela de inicio que lista os mangás.</string>
     <string name="description_config_activity">Tela de configurações</string>
     <string name="description_history_activity">Tela de historico de mangás lidos</string>
@@ -22,15 +22,27 @@
     <string name="description_icon_filter_mangas_catalog">Icone do botão que abre o modal que filtra os mangás.</string>
     <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
     <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o manga.</string>
+    <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
+    <string name="description_icon_home_change_layout">Mudar Visualização</string>
+    <string name="description_icon_home_filter">Filtro</string>
     <!-- Text title -->
-    <string name="description_title_text_archive_configs_in_app">Configuração dos arquivos</string>
-    <string name="description_title_text_mangadex_configs_in_app">Configuração do mangadex</string>
-    <string name="description_title_text_config_select_path_manga">Pasta dos mangás</string>
-    <string name="description_title_preference_file_extension">Tipo do arquivo a ser salvo</string>
+    <string name="title_text_archive_configs_in_app">Configuração dos arquivos</string>
+    <string name="title_text_mangadex_configs_in_app">Configuração do mangadex</string>
+    <string name="title_text_config_select_path_manga">Pasta dos mangás</string>
+    <string name="title_preference_file_extension">Tipo do arquivo a ser salvo</string>
+    <string name="title_home_sync_modal">Sincronizar mangás</string>
     <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
     <string name="description_text_selected_manga_folder">Pasta selecionada: %1$s</string>
     <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
+    <string name="description_text_home_search_placeholder">Buscar mangá...</string>
+    <string name="description_text_home_sync_label">Sync</string>
+    <string name="description_text_home_layout_list_label">Lista</string>
+    <string name="description_text_home_layout_grid_label">Grade</string>
+    <string name="description_text_home_filter_label">Filter</string>
+    <string name="description_text_home_deep_sync">Sincronização profunda</string>
+    <string name="description_text_home_quick_sync">Sincronização rápida</string>
+    <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
 
     <!-- Error messages -->
     <!-- Components -->

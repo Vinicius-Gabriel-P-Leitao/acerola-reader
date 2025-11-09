@@ -24,5 +24,5 @@ interface MangaFolderDao {
     fun getAllMangasFolders(): Flow<List<MangaFolder>>
 
     @Query(value = "SELECT * FROM manga_folder WHERE id = :mangaId")
-    fun getMangaFolderById(mangaId: Int): Flow<MangaFolder?>
+    suspend fun getMangaFolderById(mangaId: Long): MangaFolder?
 }

@@ -10,6 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.CardType
@@ -31,7 +32,7 @@ fun ConfigScreen(
             Column {
                 SmartCard(
                     type = CardType.CONTENT,
-                    title = context.getString(R.string.description_title_text_archive_configs_in_app),
+                    title = stringResource(id = R.string.title_text_archive_configs_in_app),
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
@@ -53,7 +54,7 @@ fun ConfigScreen(
 
                 SmartCard(
                     type = CardType.CONTENT,
-                    title = context.getString(R.string.description_title_text_mangadex_configs_in_app),
+                    title = stringResource(id = R.string.title_text_mangadex_configs_in_app),
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),

@@ -69,7 +69,7 @@ fun SelectedPreferSavedFile(
 
                 Column {
                     Text(
-                        text = context.getString(R.string.description_title_preference_file_extension),
+                        text = context.getString(R.string.title_preference_file_extension),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleMedium
                     )

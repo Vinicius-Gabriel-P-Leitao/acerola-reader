@@ -21,7 +21,7 @@ fun uriToPainter(context: Context, uri: Uri): BitmapPainter? {
                     return null
                 }
 
-                if (mimeType?.startsWith("image/") == false) {
+                if (mimeType?.startsWith(prefix = "image/") == false) {
                     return null
                 }
             }

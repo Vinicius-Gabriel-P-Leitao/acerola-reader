@@ -1,6 +1,7 @@
 package br.acerola.manga.ui.feature.main.home.screen
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,15 +36,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import br.acerola.manga.R
+import br.acerola.manga.shared.config.HomeLayoutType
 import br.acerola.manga.ui.common.component.FloatingTool
 import br.acerola.manga.ui.common.component.FloatingToolItem
 import br.acerola.manga.ui.common.component.Modal
+import br.acerola.manga.ui.common.layout.DockedSearch
 import br.acerola.manga.ui.common.layout.TopCenterProgressIndicator
 import br.acerola.manga.ui.common.theme.AcerolaTheme
 import br.acerola.manga.ui.feature.chapters.activity.ChaptersActivity
@@ -55,53 +54,43 @@ import br.acerola.manga.ui.feature.main.home.viewmodel.MangaLibraryViewModel
 
 @Composable
 fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
-
-    val isIndexing by mangaLibraryViewModel.isIndexing.collectAsState()
-    val folders by mangaLibraryViewModel.folders.collectAsState()
 
     val progress by mangaLibraryViewModel.progress.collectAsState()
     val error by mangaLibraryViewModel.error.collectAsState()
 
-    var isGridView by remember { mutableStateOf(false) }
+    val layout by mangaLibraryViewModel.selectedHomeLayout.collectAsState()
+    val isIndexing by mangaLibraryViewModel.isIndexing.collectAsState()
+    val folders by mangaLibraryViewModel.folders.collectAsState()
+
     var showSyncList by remember { mutableStateOf(value = false) }
-
-    LaunchedEffect(key1 = Unit) {
-        mangaLibraryViewModel.indexLibraryFromSavedFolder()
-    }
-
-    DisposableEffect(key1 = lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                mangaLibraryViewModel.quickIndexLibraryFromSavedFolder()
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
 
     AcerolaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-                error?.let {
-                    Text(text = "Erro: ${it.message}", color = Color.Red)
-                }
+
+                DockedSearch(
+                    items = folders,
+                    itemLabel = { it.name },
+                    placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
+                    onItemSelected = { selected ->
+                        Log.d("Search", "Selecionado: $selected")
+                    }
+                )
 
                 if (folders.isEmpty() && !isIndexing) {
-                    EmptyState()
+                    EmptyState(error)
                 } else {
-                    val gridCells = if (isGridView) GridCells.Adaptive(120.dp) else GridCells.Fixed(1)
+                    val gridCells = when (layout) {
+                        HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
+                        HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
+                    }
 
                     LazyVerticalGrid(
                         columns = gridCells,
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(all = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                     ) {
                         items(items = folders) { folder ->
                             val onClick = {
@@ -111,11 +100,9 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
                                 context.startActivity(intent)
                             }
 
-                            // TODO: Salvar prenferencia no dataStore
-                            if (isGridView) {
-                                MangaGridItem(folder = folder, onClick = onClick)
-                            } else {
-                                MangaListItem(folder = folder, onClick = onClick)
+                            when (layout) {
+                                HomeLayoutType.GRID -> MangaGridItem(folder = folder, onClick = onClick)
+                                HomeLayoutType.LIST -> MangaListItem(context, folder = folder, onClick = onClick)
                             }
                         }
                     }
@@ -128,29 +115,35 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
             )
 
             FloatingTool(
-                icon = { Icon(imageVector = Icons.Default.Edit, contentDescription = "Abrir hub") },
+                icon = { Icon(imageVector = Icons.Default.Edit, contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)) },
                 items = listOf(
                     FloatingToolItem(
-                        icon = { Icon(imageVector = Icons.Default.Sync, contentDescription = "Sync") },
-                        label = "Sync",
+                        icon = { Icon(imageVector = Icons.Default.Sync, contentDescription = stringResource(id = R.string.description_text_home_sync_label)) },
+                        label = stringResource(id = R.string.description_text_home_sync_label),
                         onClick = { showSyncList = true }
                     ),
 
-                    // TODO: Usar o dataStore para salvar essa preferencia
                     FloatingToolItem(
-                        label = if (isGridView) "Lista" else "Grade",
-                        onClick = { isGridView = !isGridView },
+                        label = if (layout == HomeLayoutType.GRID) stringResource(id = R.string.description_text_home_layout_list_label) else stringResource(id = R.string.description_text_home_layout_grid_label),
+                        onClick = {
+                            mangaLibraryViewModel.updateHomeLayout(
+                                layout = when (layout) {
+                                    HomeLayoutType.LIST -> HomeLayoutType.GRID
+                                    HomeLayoutType.GRID -> HomeLayoutType.LIST
+                                }
+                            )
+                        },
                         icon = {
                             Icon(
-                                imageVector = if (isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
-                                contentDescription = "Mudar Visualização"
+                                imageVector = if (layout == HomeLayoutType.GRID) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
+                                contentDescription = stringResource(id = R.string.description_icon_home_change_layout)
                             )
                         },
                     ),
 
                     FloatingToolItem(
-                        icon = { Icon(imageVector = Icons.Default.FilterList, contentDescription = "Filtro") },
-                        label = "Filter",
+                        icon = { Icon(imageVector = Icons.Default.FilterList, contentDescription = stringResource(id = R.string.description_icon_home_filter)) },
+                        label = stringResource(id = R.string.description_text_home_filter_label),
                         onClick = { println("Filtrar") }
                     )
                 )
@@ -158,7 +151,7 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
 
             Modal(
                 show = showSyncList,
-                title = "Sincronizar mangás",
+                title = stringResource(id = R.string.title_home_sync_modal),
                 onDismiss = { showSyncList = false },
             ) {
                 Row(
@@ -170,13 +163,13 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
                     listOf(
                         Triple(
                             first = Icons.Default.SyncProblem,
-                            second = "Sincronização demorada",
-                            third = { mangaLibraryViewModel.indexLibraryFromSavedFolder() }
+                            second = stringResource(id = R.string.description_text_home_deep_sync),
+                            third = { mangaLibraryViewModel.rescanLibrary() }
                         ),
                         Triple(
                             first = Icons.Default.Sync,
-                            second = "Sincronização rápida",
-                            third = { mangaLibraryViewModel.quickIndexLibraryFromSavedFolder() }
+                            second = stringResource(id = R.string.description_text_home_quick_sync),
+                            third = { mangaLibraryViewModel.syncLibrary() }
                         )
                     ).forEach { (icon, label, action) ->
                         Column(
@@ -221,21 +214,24 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(error: Throwable?) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Nenhum mangá na biblioteca",
+                text = stringResource(id = R.string.description_text_home_empty_state),
                 style = MaterialTheme.typography.headlineSmall
             )
-            Text(
-                text = "Adicione uma pasta com seus mangás nas configurações.",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+
+            error?.let {
+                Text(
+                    text = it.message.toString(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }

@@ -30,7 +30,10 @@ interface ChapterFileDao {
     fun getAllChapterFiles(): Flow<List<ChapterFile>>
 
     @Query(value = "SELECT * FROM chapter_file WHERE id = :chapterId")
-    fun getChaptersFileById(chapterId: Int): Flow<ChapterFile?>
+    fun getChaptersFileById(chapterId: Long): Flow<ChapterFile?>
+
+    @Query(value = "SELECT COUNT(id) FROM chapter_file WHERE folder_path_fk = :folderId")
+    suspend fun countChaptersByFolder(folderId: Long): Int
 
     @Query(value = "SELECT * FROM chapter_file WHERE folder_path_fk = :folderId ORDER BY chapter ASC")
     fun getChaptersByFolder(folderId: Long): Flow<List<ChapterFile>>
