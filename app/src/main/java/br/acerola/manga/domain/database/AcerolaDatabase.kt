@@ -31,7 +31,7 @@ abstract class AcerolaDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AcerolaDatabase? = null
 
-        fun getInstance(context: Context): AcerolaDatabase = INSTANCE ?: synchronized(this) {
+        fun getInstance(context: Context): AcerolaDatabase = INSTANCE ?: synchronized(lock = this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext, klass = AcerolaDatabase::class.java, name = "acerola_database"
             ).build().also { INSTANCE = it }

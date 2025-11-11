@@ -1,6 +1,10 @@
 package br.acerola.manga.domain.model.metadata
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "chapter_metadata",
@@ -35,9 +39,6 @@ data class ChapterMetadata(
 
     @ColumnInfo(name = "scanlator")
     val scanlator: String? = null,
-
-    @ColumnInfo(name = "read")
-    val read: Boolean = false,
 
     @ColumnInfo(name = "manga_metadata_fk")
     val mangaMetadataFk: Long,
