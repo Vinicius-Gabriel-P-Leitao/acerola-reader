@@ -11,6 +11,7 @@ class FolderAccessManager(private val context: Context) {
     var folderUri: Uri? = null
         private set
 
+    // TODO: Tratar erros de forma melhor e personalizada.
     suspend fun saveFolderUri(uri: Uri?) {
         if (uri != null) {
             try {

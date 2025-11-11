@@ -17,12 +17,16 @@ import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
+import br.acerola.manga.ui.common.viewmodel.library.MangaLibraryViewModel
 import br.acerola.manga.ui.feature.main.config.component.SelectFolder
 import br.acerola.manga.ui.feature.main.config.component.SelectedPreferSavedFile
+import br.acerola.manga.ui.feature.main.config.component.SyncLibrary
 
 @Composable
 fun ConfigScreen(
-    folderAccessViewModel: FolderAccessViewModel, filePreferencesViewModel: FilePreferencesViewModel
+    folderAccessViewModel: FolderAccessViewModel,
+    filePreferencesViewModel: FilePreferencesViewModel,
+    mangaLibraryViewModel: MangaLibraryViewModel
 ) {
     val context = LocalContext.current
 
@@ -35,15 +39,15 @@ fun ConfigScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
             ) {
-                SelectFolder(
-                    context = context, folderAccessViewModel = folderAccessViewModel
-                )
+                SelectFolder(context, folderAccessViewModel = folderAccessViewModel)
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
-                SelectedPreferSavedFile(
-                    context = context, filePreferencesViewModel = filePreferencesViewModel
-                )
+                SelectedPreferSavedFile(filePreferencesViewModel = filePreferencesViewModel)
+
+                Spacer(modifier = Modifier.height(height = 12.dp))
+
+                SyncLibrary(mangaLibraryViewModel = mangaLibraryViewModel)
             }
 
             Spacer(modifier = Modifier.height(height = 12.dp))

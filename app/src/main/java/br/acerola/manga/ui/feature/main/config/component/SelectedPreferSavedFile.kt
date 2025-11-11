@@ -1,6 +1,5 @@
 package br.acerola.manga.ui.feature.main.config.component
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.CardType
@@ -30,7 +30,6 @@ import br.acerola.manga.ui.feature.main.config.layout.FilePreference
 
 @Composable
 fun SelectedPreferSavedFile(
-    context: Context,
     filePreferencesViewModel: FilePreferencesViewModel
 ) {
     SmartCard(
@@ -39,14 +38,12 @@ fun SelectedPreferSavedFile(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 12.dp
+            defaultElevation = 8.dp, pressedElevation = 12.dp
         )
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -59,7 +56,7 @@ fun SelectedPreferSavedFile(
                         imageVector = Icons.Filled.FileOpen,
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(size = 22.dp),
-                        contentDescription = context.getString(
+                        contentDescription = stringResource(
                             R.string.description_icon_select_preference_saved_file
                         ),
                     )
@@ -69,14 +66,14 @@ fun SelectedPreferSavedFile(
 
                 Column {
                     Text(
-                        text = context.getString(R.string.title_preference_file_extension),
+                        text = stringResource(R.string.title_preference_file_extension),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
-                        text = context.getString(
+                        text = stringResource(
                             R.string.description_text_preference_file_extension_default
                         ),
                     )

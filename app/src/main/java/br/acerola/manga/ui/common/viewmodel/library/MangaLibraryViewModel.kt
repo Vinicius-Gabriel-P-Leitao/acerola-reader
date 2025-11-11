@@ -1,11 +1,11 @@
-package br.acerola.manga.ui.feature.main.home.viewmodel
+package br.acerola.manga.ui.common.viewmodel.library
 
 import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.domain.service.archive.ArchiveMangaService
+import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.HomeLayoutPreferences
 import br.acerola.manga.shared.config.HomeLayoutType
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class MangaLibraryViewModel(
     application: Application,
-    private val archiveService: ArchiveMangaService,
+    private val libraryPort: LibraryPort,
     private val folderAccessViewModel: FolderAccessViewModel,
 ) : AndroidViewModel(application) {
     private val context: Context get() = getApplication()
@@ -35,31 +35,27 @@ class MangaLibraryViewModel(
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    val progress: StateFlow<Int> = archiveService.progress
+    val progress: StateFlow<Int> = libraryPort.progress
 
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
     private val _selectedFolderId = MutableStateFlow<Long?>(value = null)
 
-    val folders: StateFlow<List<MangaFolderDto>> = archiveService
-        .getAllFolders()
-        .stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = emptyList()
-        )
+    val folders: StateFlow<List<MangaFolderDto>> = libraryPort.getAllMangas().stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        initialValue = emptyList()
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId
-        .flatMapLatest { id ->
-            id?.let { archiveService.getChaptersByFolder(folderId = it) } ?: flowOf(value = emptyList())
-        }
-        .stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = emptyList()
-        )
+    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
+        id?.let { libraryPort.getChapters(mangaId = it) } ?: flowOf(value = emptyList())
+    }.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        initialValue = emptyList()
+    )
 
     init {
         observeHomeLayout()
@@ -86,24 +82,23 @@ class MangaLibraryViewModel(
 
     fun selectFolder(folderId: Long) {
         _selectedFolderId.value = folderId
-        syncChapters(folderId)
+        syncChaptersByFolder(folderId)
     }
 
-    // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
-    private fun syncChapters(folderId: Long) = viewModelScope.launch {
-        try {
-            archiveService.scanAndSyncChapters(folderId)
-        } catch (e: Exception) {
-            _error.value = e
-        }
-    }
-
-    fun rescanLibrary() = runLibraryTask {
-        archiveService.rescanAllFolders(baseUri = getFolderUri())
+    fun rescanMangas() = runLibraryTask {
+        libraryPort.rescanMangas(baseUri = getFolderUri())
     }
 
     fun syncLibrary() = runLibraryTask {
-        archiveService.syncFolders(baseUri = getFolderUri())
+        libraryPort.syncMangas(baseUri = getFolderUri())
+    }
+
+    fun syncChaptersByFolder(folderId: Long) = runLibraryTask {
+        libraryPort.rescanChaptersByManga(mangaId = folderId)
+    }
+
+    fun deepScanLibrary() = runLibraryTask {
+        libraryPort.deepRescanLibrary(baseUri = getFolderUri())
     }
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
@@ -128,7 +123,6 @@ class MangaLibraryViewModel(
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
     private suspend fun getFolderUri(): Uri {
         folderAccessViewModel.loadSavedFolder()
-        return folderAccessViewModel.folderUri
-            ?: throw IllegalStateException("Nenhuma pasta salva encontrada.")
+        return folderAccessViewModel.folderUri ?: throw IllegalStateException("Nenhuma pasta salva encontrada.")
     }
 }

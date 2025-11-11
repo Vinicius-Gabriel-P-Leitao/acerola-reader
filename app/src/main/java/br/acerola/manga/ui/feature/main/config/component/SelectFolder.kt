@@ -92,10 +92,7 @@ fun SelectFolder(
 
             Spacer(modifier = Modifier.width(width = 12.dp))
 
-            FolderAccess(
-                context = context,
-                viewModel = folderAccessViewModel
-            ) { uri ->
+            FolderAccess(viewModel = folderAccessViewModel) { uri ->
                 selectedFolderUri = uri
             }
         }

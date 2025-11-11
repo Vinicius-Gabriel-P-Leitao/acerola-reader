@@ -14,7 +14,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.domain.service.archive.ArchiveMangaService
+import br.acerola.manga.domain.service.library.archive.ArchiveMangaService
 import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
@@ -22,11 +22,11 @@ import br.acerola.manga.ui.common.layout.NavigationBottomBar
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
+import br.acerola.manga.ui.common.viewmodel.library.MangaLibraryViewModel
+import br.acerola.manga.ui.common.viewmodel.library.MangaLibraryViewModelFactory
 import br.acerola.manga.ui.feature.main.config.screen.ConfigScreen
 import br.acerola.manga.ui.feature.main.history.screen.HistoryScreen
 import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
-import br.acerola.manga.ui.feature.main.home.viewmodel.MangaLibraryViewModel
-import br.acerola.manga.ui.feature.main.home.viewmodel.MangaLibraryViewModelFactory
 
 class MainActivity : BaseActivity() {
     override val startDestinationRes: Int = Destination.HOME.route
@@ -40,7 +40,7 @@ class MainActivity : BaseActivity() {
     private val mangaLibraryViewModel: MangaLibraryViewModel by viewModels {
         val database = AcerolaDatabase.getInstance(context = this)
         MangaLibraryViewModelFactory(
-            application, folderAccessViewModel = folderAccessViewModel, archiveService = ArchiveMangaService(
+            application, folderAccessViewModel = folderAccessViewModel, libraryPort = ArchiveMangaService(
                 context = this,
                 folderDao = database.mangaFolderDao(),
                 chapterDao = database.chapterFileDao()
@@ -49,9 +49,21 @@ class MainActivity : BaseActivity() {
     }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
-        defaultComposable(context, Destination.HOME) { HomeScreen(mangaLibraryViewModel) }
-        defaultComposable(context, Destination.HISTORY) { HistoryScreen() }
-        defaultComposable(context, Destination.CONFIG) { ConfigScreen(folderAccessViewModel, filePreferencesViewModel) }
+        defaultComposable(context, Destination.HOME) {
+            HomeScreen(
+                mangaLibraryViewModel
+            )
+        }
+        defaultComposable(context, Destination.HISTORY) {
+            HistoryScreen()
+        }
+        defaultComposable(context, Destination.CONFIG) {
+            ConfigScreen(
+                folderAccessViewModel,
+                filePreferencesViewModel,
+                mangaLibraryViewModel
+            )
+        }
     }
 
     @Composable
@@ -89,5 +101,4 @@ class MainActivity : BaseActivity() {
             content = content
         )
     }
-
 }

@@ -1,6 +1,5 @@
 package br.acerola.manga.ui.feature.main.config.layout
 
-import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -18,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.ButtonType
@@ -25,7 +25,7 @@ import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 
 @Composable
-fun FolderAccess(context: Context, viewModel: FolderAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
+fun FolderAccess(viewModel: FolderAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri ->
@@ -53,7 +53,7 @@ fun FolderAccess(context: Context, viewModel: FolderAccessViewModel, onFolderSel
             ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowForward,
-                    contentDescription = context.getString(R.string.description_icon_select_folder_mangas),
+                    contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
                     modifier = Modifier
                         .size(size = 40.dp)
                         .padding(all = 4.dp),
