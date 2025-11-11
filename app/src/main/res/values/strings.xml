@@ -43,9 +43,12 @@
     <string name="description_text_home_deep_sync">Sincronização profunda</string>
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
+    <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
 
     <!-- Error messages -->
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nulo para CardType.IMAGE</string>
     <string name="message_path_not_found">Pasta não encontrada.</string>
+    <string name="description_icon_search_close">Fechar busca</string>
+    <string name="description_text_search_no_results">Nenhum resultado encontrado</string>
 </resources>

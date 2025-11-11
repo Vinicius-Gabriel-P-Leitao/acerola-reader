@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
-import br.acerola.manga.ui.common.theme.AcerolaTheme
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.feature.main.config.component.SelectFolder
@@ -27,40 +26,36 @@ fun ConfigScreen(
 ) {
     val context = LocalContext.current
 
-    AcerolaTheme {
-        Scaffold(modifier = Modifier.padding(all = 6.dp)) { _ ->
-            Column {
-                SmartCard(
-                    type = CardType.CONTENT,
-                    title = stringResource(id = R.string.title_text_archive_configs_in_app),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                ) {
-                    SelectFolder(
-                        context = context,
-                        folderAccessViewModel = folderAccessViewModel
-                    )
-
-                    Spacer(modifier = Modifier.height(height = 12.dp))
-
-                    SelectedPreferSavedFile(
-                        context = context,
-                        filePreferencesViewModel = filePreferencesViewModel
-                    )
-                }
+    Scaffold(modifier = Modifier.padding(all = 6.dp)) { _ ->
+        Column {
+            SmartCard(
+                type = CardType.CONTENT,
+                title = stringResource(id = R.string.title_text_archive_configs_in_app),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+            ) {
+                SelectFolder(
+                    context = context, folderAccessViewModel = folderAccessViewModel
+                )
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
-                SmartCard(
-                    type = CardType.CONTENT,
-                    title = stringResource(id = R.string.title_text_mangadex_configs_in_app),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                ) {
-                    // TODO: Conteúdo das configs do MangaDex aqui
-                }
+                SelectedPreferSavedFile(
+                    context = context, filePreferencesViewModel = filePreferencesViewModel
+                )
+            }
+
+            Spacer(modifier = Modifier.height(height = 12.dp))
+
+            SmartCard(
+                type = CardType.CONTENT,
+                title = stringResource(id = R.string.title_text_mangadex_configs_in_app),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+            ) {
+                // TODO: Conteúdo das configs do MangaDex aqui
             }
         }
     }

@@ -1,7 +1,6 @@
 package br.acerola.manga.ui.feature.main.home.screen
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,9 +43,8 @@ import br.acerola.manga.shared.config.HomeLayoutType
 import br.acerola.manga.ui.common.component.FloatingTool
 import br.acerola.manga.ui.common.component.FloatingToolItem
 import br.acerola.manga.ui.common.component.Modal
-import br.acerola.manga.ui.common.layout.DockedSearch
-import br.acerola.manga.ui.common.layout.TopCenterProgressIndicator
-import br.acerola.manga.ui.common.theme.AcerolaTheme
+import br.acerola.manga.ui.common.layout.ProgressIndicator
+import br.acerola.manga.ui.common.layout.SearchBar
 import br.acerola.manga.ui.feature.chapters.activity.ChaptersActivity
 import br.acerola.manga.ui.feature.main.home.component.MangaGridItem
 import br.acerola.manga.ui.feature.main.home.component.MangaListItem
@@ -65,16 +63,26 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
 
     var showSyncList by remember { mutableStateOf(value = false) }
 
-    AcerolaTheme {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-
-                DockedSearch(
+                SearchBar(
                     items = folders,
-                    itemLabel = { it.name },
+                    itemKey = { it.id },
+                    searchKey = { it.name },
                     placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-                    onItemSelected = { selected ->
-                        Log.d("Search", "Selecionado: $selected")
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(all = 6.dp),
+                    itemContent = { folder ->
+                        MangaListItem(
+                            folder = folder,
+                            onClick = {
+                                val intent = Intent(context, ChaptersActivity::class.java).apply {
+                                    putExtra("folderId", folder.id)
+                                }
+                                context.startActivity(intent)
+                            }
+                        )
                     }
                 )
 
@@ -102,20 +110,20 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
 
                             when (layout) {
                                 HomeLayoutType.GRID -> MangaGridItem(folder = folder, onClick = onClick)
-                                HomeLayoutType.LIST -> MangaListItem(context, folder = folder, onClick = onClick)
+                                HomeLayoutType.LIST -> MangaListItem(folder = folder, onClick = onClick)
                             }
                         }
                     }
                 }
             }
 
-            TopCenterProgressIndicator(
-                isLoading = isIndexing,
-                progress = if (progress >= 0) progress / 100f else null
-            )
-
             FloatingTool(
-                icon = { Icon(imageVector = Icons.Default.Edit, contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)
+                    )
+                },
                 items = listOf(
                     FloatingToolItem(
                         icon = { Icon(imageVector = Icons.Default.Sync, contentDescription = stringResource(id = R.string.description_text_home_sync_label)) },
@@ -209,7 +217,18 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
                     }
                 }
             }
-        }
+
+            Box(
+                contentAlignment = Alignment.BottomStart,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(all = 8.dp),
+            ) {
+                ProgressIndicator(
+                    isLoading = isIndexing,
+                    progress = if (progress >= 0) progress / 100f else null,
+                )
+            }
     }
 }
 

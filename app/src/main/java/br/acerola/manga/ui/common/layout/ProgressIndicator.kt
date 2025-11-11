@@ -19,14 +19,16 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-fun TopCenterProgressIndicator(isLoading: Boolean, progress: Float? = null) {
+fun ProgressIndicator(
+    modifier: Modifier = Modifier,
+    progress: Float? = null,
+    isLoading: Boolean,
+) {
     if (!isLoading) return
 
     Box(
-        contentAlignment = Alignment.TopCenter,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp),
+        contentAlignment = Alignment.BottomStart,
+        modifier = modifier.fillMaxWidth()
     ) {
         Card(
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
@@ -34,8 +36,8 @@ fun TopCenterProgressIndicator(isLoading: Boolean, progress: Float? = null) {
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 if (progress == null) {
                     CircularProgressIndicator(

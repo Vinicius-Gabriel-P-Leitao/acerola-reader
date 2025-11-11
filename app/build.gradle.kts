@@ -59,6 +59,9 @@ dependencies {
     // Jetpack Compose BOM
     implementation(platform(libs.androidx.compose.bom))
 
+    // Coil
+    implementation(libs.coil.compose)
+
     // Compose UI
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
