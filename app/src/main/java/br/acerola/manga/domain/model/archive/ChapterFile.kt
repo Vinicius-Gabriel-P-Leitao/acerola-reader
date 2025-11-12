@@ -30,6 +30,9 @@ data class ChapterFile(
     @ColumnInfo(name = "chapter_path")
     val path: String,
 
+    @ColumnInfo(name = "chapter_sort")
+    val chapterSort: String,
+
     @ColumnInfo(name = "folder_path_fk")
     val folderPathFk: Long,
 )

@@ -63,7 +63,7 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
                     MangaListItem(
                         folder = folder, onClick = {
                             val intent = Intent(context, ChaptersActivity::class.java).apply {
-                                putExtra("folderId", folder.id)
+                                putExtra("folder", folder)
                             }
                             context.startActivity(intent)
                         })
@@ -86,7 +86,7 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
                     items(items = folders) { folder ->
                         val onClick = {
                             val intent = Intent(context, ChaptersActivity::class.java).apply {
-                                putExtra("folderId", folder.id)
+                                putExtra("folder", folder)
                             }
                             context.startActivity(intent)
                         }

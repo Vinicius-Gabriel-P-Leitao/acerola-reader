@@ -19,7 +19,7 @@ fun FilePreference(viewModel: FilePreferencesViewModel = viewModel()) {
     Column {
         RadioGroup(
             selectedIndex = selectedIndex,
-            options = options.map { it.ext.lowercase() },
+            options = options.map { it.extension.lowercase() },
             onSelect = { index ->
                 val extension = options[index]
                 viewModel.saveExtension(value = extension)

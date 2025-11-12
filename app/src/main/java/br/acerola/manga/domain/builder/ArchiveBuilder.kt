@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.model.archive.MangaFolder
+import br.acerola.manga.shared.config.FileExtension
+import br.acerola.manga.shared.util.detectTemplate
 
 // TODO: Tratar erros melhor
 object ArchiveBuilder {
@@ -14,12 +16,18 @@ object ArchiveBuilder {
             val banner = folder.listFiles().firstOrNull { isBanner(file = it) }
             val cover = folder.listFiles().firstOrNull { isCover(file = it) }
 
+            val firstChapter = folder.listFiles().firstOrNull { file ->
+                file.isFile && FileExtension.isSupported(ext = file.name)
+            }
+            val detectedTemplate = firstChapter?.name?.let { detectTemplate(fileName = it) }
+
             MangaFolder(
                 name = folder.name ?: "Unknown",
                 path = folder.uri.toString(),
                 cover = cover?.uri?.toString(),
                 banner = banner?.uri?.toString(),
-                lastModified = folder.lastModified()
+                chapterTemplate = detectedTemplate,
+                lastModified = folder.lastModified(),
             )
         }
     }

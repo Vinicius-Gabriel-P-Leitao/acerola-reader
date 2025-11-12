@@ -30,7 +30,8 @@ import coil.size.SizeResolver
 
 @Composable
 fun MangaListItem(
-    folder: MangaFolderDto, onClick: () -> Unit
+    folder: MangaFolderDto,
+    onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current

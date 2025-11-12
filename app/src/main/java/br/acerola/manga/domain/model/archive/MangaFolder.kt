@@ -26,5 +26,8 @@ data class MangaFolder(
     val banner: String?,
 
     @ColumnInfo(name = "last_modified")
-    val lastModified: Long
+    val lastModified: Long,
+
+    @ColumnInfo(name = "chapter_template")
+    val chapterTemplate: String?,
 )

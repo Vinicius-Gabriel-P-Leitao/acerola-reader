@@ -14,6 +14,7 @@ import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.FileExtension
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.util.templateToRegex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -198,9 +199,25 @@ class ArchiveMangaService(
 
         chapterDao.deleteChaptersByFolderId(folderId = mangaId)
 
-        val chapters = chapterFiles.map { file ->
+        // TODO: Fazer lógica de validação melhor
+        val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
+
+        val chapters = chapterFiles.mapNotNull { file ->
+            val name = file.name ?: return@mapNotNull null
+
+            val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
+            val value = match.groups[1]?.value?.toDoubleOrNull() ?: return@mapNotNull null
+
+            val subGroup = if (match.groups.size > 2) match.groups[2] else null
+            val sub = subGroup?.value?.toDoubleOrNull() ?: 0.0
+
+            val chapterSort = "%05.2f".format(value + sub)
+
             ChapterFile(
-                chapter = file.name ?: "Unknown", path = file.uri.toString(), folderPathFk = mangaId
+                chapter = name,
+                path = file.uri.toString(),
+                chapterSort = chapterSort,
+                folderPathFk = mangaId
             )
         }
 
