@@ -23,18 +23,78 @@ interface ChapterFileDao {
     @Delete
     suspend fun deleteChapterFile(chapter: ChapterFile)
 
-    @Query(value = "DELETE FROM chapter_file WHERE folder_path_fk = :folderId")
+    @Query(
+        value = """
+            DELETE FROM
+                chapter_file
+            WHERE
+                folder_path_fk = :folderId
+        """
+    )
     suspend fun deleteChaptersByFolderId(folderId: Long)
 
-    @Query(value = "SELECT * FROM chapter_file ORDER BY chapter ASC")
+    @Query(
+        value = """
+            SELECT
+                *
+            FROM
+                chapter_file
+            ORDER BY
+                chapter ASC
+        """
+    )
     fun getAllChapterFiles(): Flow<List<ChapterFile>>
 
-    @Query(value = "SELECT * FROM chapter_file WHERE id = :chapterId")
+    @Query(
+        value = """
+            SELECT
+                *
+            FROM
+                chapter_file
+            WHERE
+                id = :chapterId
+        """
+    )
     fun getChaptersFileById(chapterId: Long): Flow<ChapterFile?>
 
-    @Query(value = "SELECT COUNT(id) FROM chapter_file WHERE folder_path_fk = :folderId")
+    @Query(
+        value = """
+            SELECT
+                COUNT(id)
+            FROM
+                chapter_file
+            WHERE
+                folder_path_fk = :folderId
+        """
+    )
     suspend fun countChaptersByFolder(folderId: Long): Int
 
-    @Query(value = "SELECT * FROM chapter_file WHERE folder_path_fk = :folderId ORDER BY chapter_sort ASC")
+    @Query(
+        value = """
+            SELECT
+                *
+            FROM
+                chapter_file
+            WHERE
+                folder_path_fk = :folderId
+            ORDER BY
+                chapter_sort ASC
+        """
+    )
     fun getChaptersByFolder(folderId: Long): Flow<List<ChapterFile>>
+
+    @Query(
+        value = """
+            SELECT
+                *
+            FROM
+                chapter_file
+            WHERE
+                folder_path_fk = :folderId
+            ORDER BY
+                chapter_sort ASC
+            LIMIT :pageSize OFFSET :offset
+        """
+    )
+    fun getChaptersPaged(folderId: Long, pageSize: Int, offset: Int): Flow<List<ChapterFile>>
 }

@@ -2,6 +2,7 @@ package br.acerola.manga.shared.util
 
 import br.acerola.manga.shared.config.ChapterTemplateModels
 
+// TODO: Fazer código que vai tratar caso tenha um erro aqui
 fun templateToRegex(template: String = "{value}.cbz"): Regex {
     val regexStr = template
         .replace(oldValue = "{value}", newValue = "(\\d+(?:\\.\\d+)?)")

@@ -4,9 +4,10 @@ import androidx.core.net.toUri
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
+import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 
-fun MangaFolder.toDto(chapters: List<ChapterFile>): MangaFolderDto {
+fun MangaFolder.toDto(firstPage: ChapterPageDto): MangaFolderDto {
     return MangaFolderDto(
         id = id,
         name = name,
@@ -15,7 +16,8 @@ fun MangaFolder.toDto(chapters: List<ChapterFile>): MangaFolderDto {
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
         chapterTemplate = chapterTemplate,
-        chapters = chapters.map { it.toDto() })
+        chapters = firstPage
+    )
 }
 
 fun MangaFolderDto.toModel(): MangaFolder {

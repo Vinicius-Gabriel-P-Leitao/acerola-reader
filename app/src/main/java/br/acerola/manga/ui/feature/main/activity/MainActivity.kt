@@ -28,9 +28,9 @@ import br.acerola.manga.ui.feature.main.config.screen.ConfigScreen
 import br.acerola.manga.ui.feature.main.history.screen.HistoryScreen
 import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
 
-class MainActivity : BaseActivity() {
+class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
-
+) : BaseActivity() {
     private val folderAccessViewModel: FolderAccessViewModel by viewModels {
         FolderAccessViewModelFactory(application, manager = FolderAccessManager(context = this))
     }

@@ -1,6 +1,8 @@
 package br.acerola.manga.shared.config
 
 object ChapterTemplateModels {
+    // NOTE: Talvez fazer lógica que pega isso do banco de dados e permite o usuário criar mais e selecionar por meio
+    // de um select.
     val presets: Map<String, String> = mapOf(
         "Cap. 01" to "Cap. {value}.*.cbz",
         "Ch. 01" to "Ch. {value}.*.cbz",

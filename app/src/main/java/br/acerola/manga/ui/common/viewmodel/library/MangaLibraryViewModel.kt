@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.HomeLayoutPreferences
@@ -22,6 +24,22 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+class MangaLibraryViewModelFactory(
+    private val application: Application,
+    private val libraryPort: LibraryPort,
+    private val folderAccessViewModel: FolderAccessViewModel,
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MangaLibraryViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MangaLibraryViewModel(application, libraryPort, folderAccessViewModel) as T
+        }
+
+        // TODO: Tratar erro de forma melhor
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
 class MangaLibraryViewModel(
     application: Application,
     private val libraryPort: LibraryPort,
@@ -35,14 +53,14 @@ class MangaLibraryViewModel(
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    val progress: StateFlow<Int> = libraryPort.progress
-
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
+    val progress: StateFlow<Int> = libraryPort.progress
+
     private val _selectedFolderId = MutableStateFlow<Long?>(value = null)
 
-    val folders: StateFlow<List<MangaFolderDto>> = libraryPort.getAllMangas().stateIn(
+    val folders: StateFlow<List<MangaFolderDto>> = libraryPort.loadMangas().stateIn(
         viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
         initialValue = emptyList()
@@ -50,7 +68,7 @@ class MangaLibraryViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
-        id?.let { libraryPort.getChapters(mangaId = it) } ?: flowOf(value = emptyList())
+        id?.let { libraryPort.loadChapterByManga(mangaId = it) } ?: flowOf(value = emptyList())
     }.stateIn(
         viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
@@ -82,7 +100,6 @@ class MangaLibraryViewModel(
 
     fun selectFolder(folderId: Long) {
         _selectedFolderId.value = folderId
-        syncChaptersByFolder(folderId)
     }
 
     fun rescanMangas() = runLibraryTask {

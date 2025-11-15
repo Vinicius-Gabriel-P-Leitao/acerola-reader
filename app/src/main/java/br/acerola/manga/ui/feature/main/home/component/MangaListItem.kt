@@ -76,7 +76,7 @@ fun MangaListItem(
                 text = folder.name, style = MaterialTheme.typography.titleMedium, maxLines = 1
             )
             Text(
-                text = stringResource(id = R.string.description_manga_list_item_chapter_count, folder.chapters.size),
+                text = stringResource(id = R.string.description_manga_list_item_chapter_count, folder.chapters.total),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

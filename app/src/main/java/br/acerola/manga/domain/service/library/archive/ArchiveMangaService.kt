@@ -13,6 +13,7 @@ import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.FileExtension
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
+import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.util.templateToRegex
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -202,6 +202,8 @@ class ArchiveMangaService(
         // TODO: Fazer lógica de validação melhor
         val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
 
+        // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
+        //  tem que seguir um formato só, mais de um a lista fica desorganizada.
         val chapters = chapterFiles.mapNotNull { file ->
             val name = file.name ?: return@mapNotNull null
 
@@ -240,10 +242,15 @@ class ArchiveMangaService(
      *
      * @return [StateFlow] contendo a lista de [MangaFolderDto] atualizada em tempo real.
      */
-    override fun getAllMangas(): StateFlow<List<MangaFolderDto>> {
-        return folderDao.getAllMangasFolders().combine(flow = chapterDao.getAllChapterFiles()) { folders, chapters ->
-            folders.map { folder ->
-                folder.toDto(chapters.filter { it.folderPathFk == folder.id })
+    override fun loadMangas(): StateFlow<List<MangaFolderDto>> {
+        return folderDao.getAllMangasFolders().map { folders ->
+            coroutineScope {
+                folders.map { folder ->
+                    async(context = Dispatchers.IO) {
+                        val firstPage: ChapterPageDto = loadFirstPage(folderId = folder.id)
+                        folder.toDto(firstPage)
+                    }
+                }.awaitAll()
             }
         }.stateIn(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
@@ -260,13 +267,28 @@ class ArchiveMangaService(
      * @param mangaId Identificador único do mangá.
      * @return [StateFlow] com a lista de capítulos atualizada dinamicamente.
      */
-    override fun getChapters(mangaId: Long): StateFlow<List<ChapterFileDto>> {
+    override fun loadChapterByManga(mangaId: Long): StateFlow<List<ChapterFileDto>> {
         return chapterDao.getChaptersByFolder(folderId = mangaId).map { list ->
             list.map { it.toDto() }
         }.stateIn(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
             started = SharingStarted.Lazily,
             initialValue = emptyList()
+        )
+    }
+
+    // TODO: Documentar
+    override suspend fun loadNextPage(folderId: Long, total: Int, page: Int, pageSize: Int): ChapterPageDto {
+        val offset = page * pageSize
+        val items = chapterDao.getChaptersPaged(folderId, pageSize, offset).firstOrNull()?.map {
+            it.toDto()
+        } ?: emptyList()
+
+        return ChapterPageDto(
+            items = items,
+            pageSize = pageSize,
+            page = page,
+            total = total
         )
     }
 
@@ -347,5 +369,16 @@ class ArchiveMangaService(
         }
 
         folderDao.insertMangaFolder(manga = folder)
+    }
+
+    // TODO: Documentar
+    private suspend fun loadFirstPage(folderId: Long): ChapterPageDto {
+        val pageSize = 20
+        val total = chapterDao.countChaptersByFolder(folderId)
+        val initial = chapterDao.getChaptersPaged(folderId, pageSize, offset = 0).firstOrNull() ?: emptyList()
+
+        return ChapterPageDto(
+            items = initial.map { it.toDto() }, pageSize = pageSize, page = 0, total = total
+        )
     }
 }
