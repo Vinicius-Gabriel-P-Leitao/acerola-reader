@@ -9,11 +9,17 @@ import kotlinx.coroutines.flow.map
 
 object FolderPreferences {
     private val Context.dataStore by preferencesDataStore(name = "folder_prefs")
-    private val FOLDER_URI = stringPreferencesKey("folder_uri")
+    private val FOLDER_URI = stringPreferencesKey(name = "folder_uri")
 
     suspend fun saveFolderUri(context: Context, uri: String) {
         context.dataStore.edit { prefs ->
             prefs[FOLDER_URI] = uri
+        }
+    }
+
+    suspend fun clearFolderUri(context: Context) {
+        context.dataStore.edit { prefs ->
+            prefs.remove(key = FOLDER_URI)
         }
     }
 

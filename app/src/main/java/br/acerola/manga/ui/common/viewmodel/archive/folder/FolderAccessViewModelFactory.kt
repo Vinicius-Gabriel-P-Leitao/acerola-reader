@@ -3,7 +3,7 @@ package br.acerola.manga.ui.common.viewmodel.archive.folder
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import br.acerola.manga.domain.permission.FolderAccessManager
+import br.acerola.manga.shared.permission.FolderAccessManager
 
 class FolderAccessViewModelFactory(
     private val application: Application,
@@ -14,6 +14,8 @@ class FolderAccessViewModelFactory(
             @Suppress("UNCHECKED_CAST")
             return FolderAccessViewModel(application, manager) as T
         }
+
+        // TODO: Tratar erro de forma melhor
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
