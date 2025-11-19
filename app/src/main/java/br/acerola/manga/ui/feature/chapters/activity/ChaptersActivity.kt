@@ -172,200 +172,203 @@ class ChaptersActivity(
             }
         }
     }
-}
 
-@Composable
-fun MangaHeader(
-    folder: MangaFolderDto, primaryColor: Color, textColor: Color, secondaryTextColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height = 420.dp)
+
+    @Composable
+    fun MangaHeader(
+        folder: MangaFolderDto, primaryColor: Color, textColor: Color, secondaryTextColor: Color
     ) {
-        val bannerModel = folder.bannerUri ?: folder.coverUri
-
-        AsyncImage(
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(data = bannerModel)
-                .crossfade(enable = true).build(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height = 300.dp)
-                .blur(radius = 10.dp)
-                .align(Alignment.TopCenter)
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(height = 300.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.background
+                .height(height = 420.dp)
+        ) {
+            val bannerModel = folder.bannerUri ?: folder.coverUri
+
+            AsyncImage(
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                model = ImageRequest.Builder(context = LocalContext.current)
+                    .data(data = bannerModel)
+                    .crossfade(enable = true).build(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(height = 300.dp)
+                    .blur(radius = 10.dp)
+                    .align(Alignment.TopCenter)
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(height = 300.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.background
+                            )
                         )
                     )
-                )
-        )
+            )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 20.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 20.dp)
             ) {
-                AsyncImage(
-                    contentDescription = "Cover",
-                    contentScale = ContentScale.Crop,
-                    model = ImageRequest.Builder(context = LocalContext.current)
-                        .data(data = folder.coverUri)
-                        .crossfade(enable = true)
-                        .build(),
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(size = 12.dp))
-                        .width(width = 130.dp)
-                        .background(Color.Gray)
-                        .height(height = 190.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom
+                ) {
+                    AsyncImage(
+                        contentDescription = "Cover",
+                        contentScale = ContentScale.Crop,
+                        model = ImageRequest.Builder(context = LocalContext.current)
+                            .data(data = folder.coverUri)
+                            .crossfade(enable = true)
+                            .build(),
+                        modifier = Modifier
+                            .clip(shape = RoundedCornerShape(size = 12.dp))
+                            .width(width = 130.dp)
+                            .background(Color.Gray)
+                            .height(height = 190.dp)
+                    )
 
-                Spacer(modifier = Modifier.width(width = 16.dp))
+                    Spacer(modifier = Modifier.width(width = 16.dp))
+
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .height(height = 170.dp)
+                            .weight(weight = 1f),
+                    ) {
+                        Text(
+                            text = folder.name,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold, color = textColor
+                            ),
+                        )
+
+                        Spacer(modifier = Modifier.height(height = 4.dp))
+
+                        Text(
+                            // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
+                            text = "Unknown Author",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = secondaryTextColor
+                        )
+
+                        Spacer(modifier = Modifier.height(height = 8.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                modifier = Modifier.size(size = 16.dp),
+                                tint = Color(color = 0xFFFFC107),
+                                contentDescription = null,
+                            )
+                            Spacer(modifier = Modifier.width(width = 4.dp))
+                            Text(
+                                // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
+                                text = "Ongoing", style = MaterialTheme.typography.labelLarge, color = textColor
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(height = 8.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(size = 16.dp)
+                            )
+
+                            Text(text = " 8.3", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+
+                            Spacer(modifier = Modifier.width(width = 16.dp))
+
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(size = 16.dp)
+                            )
+
+                            Text(text = " 65k", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(height = 20.dp))
+
+                // TODO: Criar função para pegar o ultimo antes de marcado como lido.
+                SmartButton(
+                    text = "Continue",
+                    type = ButtonType.TEXT,
+                    onClick = { /* TODO: Ação Continuar */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(height = 50.dp),
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun MangaTabs(
+        totalChapters: Int, activeTab: String, textColor: Color, secondaryTextColor: Color, primaryColor: Color
+    ) {
+        // TODO: Criar string
+        val tabs = listOf("Capitulos ($totalChapters)", "Configurações")
+
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp, horizontal = 20.dp),
+        ) {
+            tabs.forEach { tabName ->
+                val isActive = tabName.startsWith(prefix = activeTab)
 
                 Column(
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .height(height = 170.dp)
-                        .weight(weight = 1f),
+                    modifier = Modifier.padding(end = 24.dp), horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = folder.name,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold, color = textColor
+                        text = tabName,
+                        color = if (isActive) textColor else secondaryTextColor,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
                         ),
                     )
 
-                    Spacer(modifier = Modifier.height(height = 4.dp))
-
-                    Text(
-                        // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
-                        text = "Unknown Author", style = MaterialTheme.typography.bodyMedium, color = secondaryTextColor
-                    )
-
-                    Spacer(modifier = Modifier.height(height = 8.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                            modifier = Modifier.size(size = 16.dp),
-                            tint = Color(color = 0xFFFFC107),
-                            contentDescription = null,
-                        )
-                        Spacer(modifier = Modifier.width(width = 4.dp))
-                        Text(
-                            // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
-                            text = "Ongoing", style = MaterialTheme.typography.labelLarge, color = textColor
+                    if (isActive) {
+                        Spacer(modifier = Modifier.height(height = 4.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(width = 20.dp)
+                                .height(height = 3.dp)
+                                .background(primaryColor, shape = RoundedCornerShape(2.dp))
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(height = 8.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(size = 16.dp)
-                        )
-
-                        Text(text = " 8.3", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-
-                        Spacer(modifier = Modifier.width(width = 16.dp))
-
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(size = 16.dp)
-                        )
-
-                        Text(text = " 65k", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(height = 20.dp))
-
-            // TODO: Criar função para pegar o ultimo antes de marcado como lido.
-            SmartButton(
-                text = "Continue",
-                type = ButtonType.TEXT,
-                onClick = { /* TODO: Ação Continuar */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(height = 50.dp),
-            )
-        }
-    }
-}
-
-@Composable
-fun MangaTabs(
-    totalChapters: Int, activeTab: String, textColor: Color, secondaryTextColor: Color, primaryColor: Color
-) {
-    // TODO: Criar string
-    val tabs = listOf("Capitulos ($totalChapters)", "Configurações")
-
-    Row(
-        horizontalArrangement = Arrangement.Start,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 20.dp),
-    ) {
-        tabs.forEach { tabName ->
-            val isActive = tabName.startsWith(prefix = activeTab)
-
-            Column(
-                modifier = Modifier.padding(end = 24.dp), horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = tabName,
-                    color = if (isActive) textColor else secondaryTextColor,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
-                    ),
-                )
-
-                if (isActive) {
-                    Spacer(modifier = Modifier.height(height = 4.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(width = 20.dp)
-                            .height(height = 3.dp)
-                            .background(primaryColor, shape = RoundedCornerShape(2.dp))
-                    )
                 }
             }
         }
     }
-}
 
-@Composable
-fun ChapterListItem(
-    chapter: ChapterFileDto, textColor: Color, onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(size = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+    @Composable
+    fun ChapterListItem(
+        chapter: ChapterFileDto, textColor: Color, onClick: () -> Unit
     ) {
-        ChapterItem(chapter, textColor, onClick)
+        Card(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(size = 0.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        ) {
+            ChapterItem(chapter, textColor, onClick)
+        }
     }
 }
