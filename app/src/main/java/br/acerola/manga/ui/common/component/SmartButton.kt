@@ -24,6 +24,8 @@ fun SmartButton(
     modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null,
 ) {
+    // TODO: Tratar erros melhor e gerar string para cada msg de erro.
+
     when (type) {
         ButtonType.ICON -> {
             require(value = icon != null) { "IconButton precisa de um ícone" }
