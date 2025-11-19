@@ -4,11 +4,10 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.domain.database.dao.archive.ChapterFileDao
-import br.acerola.manga.domain.database.dao.archive.MangaFolderDao
+import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
+import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
-import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.FileExtension
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
@@ -20,20 +19,18 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicInteger
 
 class MangaFolderService(
     private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao
-) : LibraryPort.MangaOperations {
+) : LibraryPort.MangaOperations<MangaFolderDto> {
     /**
      * Reescaneia todos os capítulos vinculados a um mangá específico.
      *

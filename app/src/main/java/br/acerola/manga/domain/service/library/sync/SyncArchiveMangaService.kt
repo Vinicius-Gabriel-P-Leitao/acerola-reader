@@ -3,8 +3,8 @@ package br.acerola.manga.domain.service.library.sync
 import android.content.Context
 import android.net.Uri
 import br.acerola.manga.domain.builder.ArchiveBuilder
-import br.acerola.manga.domain.database.dao.archive.ChapterFileDao
-import br.acerola.manga.domain.database.dao.archive.MangaFolderDao
+import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
+import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.domain.service.library.manga.MangaFolderService

@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.database.dao.metadata
+package br.acerola.manga.domain.database.dao.database.metadata
 
 import androidx.room.Dao
 import androidx.room.Delete

@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.database
+package br.acerola.manga.domain.database.dao.database
 
 import android.content.Context
 import androidx.room.Database
@@ -6,10 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import br.acerola.manga.domain.database.converter.Converters
-import br.acerola.manga.domain.database.dao.archive.ChapterFileDao
-import br.acerola.manga.domain.database.dao.archive.MangaFolderDao
-import br.acerola.manga.domain.database.dao.metadata.ChapterMetadataDao
-import br.acerola.manga.domain.database.dao.metadata.MangaMetadataDao
+import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
+import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
+import br.acerola.manga.domain.database.dao.database.metadata.ChapterMetadataDao
+import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.model.metadata.ChapterMetadata

@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.database.dao.archive
+package br.acerola.manga.domain.database.dao.database.archive
 
 import androidx.room.Dao
 import androidx.room.Delete
