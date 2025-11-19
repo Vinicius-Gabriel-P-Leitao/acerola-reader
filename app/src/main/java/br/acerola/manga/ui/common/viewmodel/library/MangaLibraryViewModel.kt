@@ -27,12 +27,15 @@ import kotlinx.coroutines.launch
 class MangaLibraryViewModelFactory(
     private val application: Application,
     private val libraryPort: LibraryPort,
+    private val mangaOperations: LibraryPort.MangaOperations,
+    private val chapterOperations: LibraryPort.ChapterOperations,
     private val folderAccessViewModel: FolderAccessViewModel,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MangaLibraryViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MangaLibraryViewModel(application, libraryPort, folderAccessViewModel) as T
+            @Suppress("UNCHECKED_CAST") return MangaLibraryViewModel(
+                application, libraryPort, mangaOperations, chapterOperations, folderAccessViewModel
+            ) as T
         }
 
         // TODO: Tratar erro de forma melhor
@@ -43,6 +46,8 @@ class MangaLibraryViewModelFactory(
 class MangaLibraryViewModel(
     application: Application,
     private val libraryPort: LibraryPort,
+    private val mangaOperations: LibraryPort.MangaOperations,
+    private val chapterOperations: LibraryPort.ChapterOperations,
     private val folderAccessViewModel: FolderAccessViewModel,
 ) : AndroidViewModel(application) {
     private val context: Context get() = getApplication()
@@ -60,19 +65,15 @@ class MangaLibraryViewModel(
 
     private val _selectedFolderId = MutableStateFlow<Long?>(value = null)
 
-    val folders: StateFlow<List<MangaFolderDto>> = libraryPort.loadMangas().stateIn(
-        viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-        initialValue = emptyList()
+    val folders: StateFlow<List<MangaFolderDto>> = mangaOperations.loadMangas().stateIn(
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList()
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
-        id?.let { libraryPort.loadChapterByManga(mangaId = it) } ?: flowOf(value = emptyList())
+        id?.let { chapterOperations.loadChapterByManga(mangaId = it) } ?: flowOf(value = emptyList())
     }.stateIn(
-        viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-        initialValue = emptyList()
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList()
     )
 
     init {
@@ -111,7 +112,7 @@ class MangaLibraryViewModel(
     }
 
     fun syncChaptersByFolder(folderId: Long) = runLibraryTask {
-        libraryPort.rescanChaptersByManga(mangaId = folderId)
+        mangaOperations.rescanChaptersByManga(mangaId = folderId)
     }
 
     fun deepScanLibrary() = runLibraryTask {

@@ -28,7 +28,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.R
 import br.acerola.manga.domain.database.AcerolaDatabase
-import br.acerola.manga.domain.service.library.archive.ArchiveMangaService
+import br.acerola.manga.domain.service.library.chapter.ChapterFileService
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
@@ -49,9 +49,7 @@ class ChaptersActivity(
     private val chapterViewModel: ChapterViewModel by viewModels {
         val database = AcerolaDatabase.getInstance(context = this)
         ChapterViewModelFactory(
-            application, libraryPort = ArchiveMangaService(
-                context = this,
-                folderDao = database.mangaFolderDao(),
+            application, chapterOperations = ChapterFileService(
                 chapterDao = database.chapterFileDao()
             )
         )
@@ -97,10 +95,7 @@ class ChaptersActivity(
             val imageSize: Size = with(receiver = density) {
                 Size(width = 120.dp.toPx().toInt(), height = 180.dp.toPx().toInt())
             }
-            ImageRequest.Builder(context)
-                .data(folder.coverUri)
-                .size(resolver = SizeResolver(imageSize))
-                .build()
+            ImageRequest.Builder(context).data(folder.coverUri).size(resolver = SizeResolver(imageSize)).build()
         }
 
         val coverPainter = rememberAsyncImagePainter(
@@ -139,8 +134,7 @@ class ChaptersActivity(
                             chapterViewModel.loadNextPage()
                         }
                         Text(
-                            text = "Carregando mais capítulos...",
-                            modifier = Modifier
+                            text = "Carregando mais capítulos...", modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp)
                         )

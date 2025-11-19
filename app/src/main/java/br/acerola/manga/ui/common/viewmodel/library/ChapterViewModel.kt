@@ -13,12 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ChapterViewModelFactory(
-    private val app: Application, private val libraryPort: LibraryPort
+    private val application: Application,
+    private val chapterOperations: LibraryPort.ChapterOperations,
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChapterViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST") return ChapterViewModel(application = app, libraryPort) as T
+            @Suppress("UNCHECKED_CAST") return ChapterViewModel(application, chapterOperations) as T
         }
 
         // TODO: Tratar erro de forma melhor
@@ -27,7 +28,8 @@ class ChapterViewModelFactory(
 }
 
 class ChapterViewModel(
-    application: Application, private val libraryPort: LibraryPort
+    application: Application,
+    private val chapterOperations: LibraryPort.ChapterOperations,
 ) : AndroidViewModel(application) {
     private val _chapterPage = MutableStateFlow<ChapterPageDto?>(value = null)
     val chapterPage: StateFlow<ChapterPageDto?> = _chapterPage.asStateFlow()
@@ -56,7 +58,7 @@ class ChapterViewModel(
 
     private fun loadPage(page: Int) {
         viewModelScope.launch {
-            val result = libraryPort.loadNextPage(
+            val result = chapterOperations.loadNextPage(
                 folderId = _selectedFolderId.value!!,
                 pageSize = pageSize,
                 page = page,
