@@ -58,8 +58,8 @@ import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.layout.NavigationTopBar
-import br.acerola.manga.ui.common.viewmodel.library.ChapterViewModel
-import br.acerola.manga.ui.common.viewmodel.library.ChapterViewModelFactory
+import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileViewModel
+import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileModelFactory
 import br.acerola.manga.ui.feature.chapters.component.ChapterItem
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -67,9 +67,9 @@ import coil.request.ImageRequest
 class ChaptersActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
 ) : BaseActivity() {
-    private val chapterViewModel: ChapterViewModel by viewModels {
+    private val chapterViewModel: ChapterFileViewModel by viewModels {
         val database = AcerolaDatabase.getInstance(context = this)
-        ChapterViewModelFactory(
+        ChapterFileModelFactory(
             application, chapterOperations = ChapterFileService(
                 chapterDao = database.chapterFileDao()
             )
@@ -99,7 +99,7 @@ class ChaptersActivity(
 
     @Composable
     fun Screen(
-        chapterViewModel: ChapterViewModel, folder: MangaFolderDto
+        chapterViewModel: ChapterFileViewModel, folder: MangaFolderDto
     ) {
         LaunchedEffect(key1 = folder.id) {
             chapterViewModel.init(folderId = folder.id, firstPage = folder.chapters)

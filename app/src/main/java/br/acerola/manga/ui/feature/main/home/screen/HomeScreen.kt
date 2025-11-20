@@ -33,21 +33,21 @@ import br.acerola.manga.ui.common.component.FloatingTool
 import br.acerola.manga.ui.common.component.FloatingToolItem
 import br.acerola.manga.ui.common.layout.ProgressIndicator
 import br.acerola.manga.ui.common.layout.SearchBar
-import br.acerola.manga.ui.common.viewmodel.library.MangaLibraryViewModel
+import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
 import br.acerola.manga.ui.feature.chapters.activity.ChaptersActivity
 import br.acerola.manga.ui.feature.main.home.component.MangaGridItem
 import br.acerola.manga.ui.feature.main.home.component.MangaListItem
 
 @Composable
-fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
+fun HomeScreen(mangaFolderViewModel: MangaFolderViewModel) {
     val context = LocalContext.current
 
-    val progress by mangaLibraryViewModel.progress.collectAsState()
-    val error by mangaLibraryViewModel.error.collectAsState()
+    val progress by mangaFolderViewModel.progress.collectAsState()
+    val error by mangaFolderViewModel.error.collectAsState()
 
-    val layout by mangaLibraryViewModel.selectedHomeLayout.collectAsState()
-    val isIndexing by mangaLibraryViewModel.isIndexing.collectAsState()
-    val folders by mangaLibraryViewModel.folders.collectAsState()
+    val layout by mangaFolderViewModel.selectedHomeLayout.collectAsState()
+    val isIndexing by mangaFolderViewModel.isIndexing.collectAsState()
+    val folders by mangaFolderViewModel.folders.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -112,7 +112,7 @@ fun HomeScreen(mangaLibraryViewModel: MangaLibraryViewModel) {
                         id = R.string.description_text_home_layout_grid_label
                     ),
                     onClick = {
-                        mangaLibraryViewModel.updateHomeLayout(
+                        mangaFolderViewModel.updateHomeLayout(
                             layout = when (layout) {
                                 HomeLayoutType.LIST -> HomeLayoutType.GRID
                                 HomeLayoutType.GRID -> HomeLayoutType.LIST

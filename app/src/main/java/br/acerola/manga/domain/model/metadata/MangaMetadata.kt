@@ -2,10 +2,12 @@ package br.acerola.manga.domain.model.metadata
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "manga_metadata"
+    tableName = "manga_metadata",
+    indices = [Index(value = ["name"], unique = true)]
 )
 data class MangaMetadata(
     @PrimaryKey(autoGenerate = true)

@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.common.viewmodel.library
+package br.acerola.manga.ui.common.viewmodel.library.archive
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -12,14 +12,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ChapterViewModelFactory(
+class ChapterFileModelFactory(
     private val application: Application,
-    private val chapterOperations: LibraryPort.ChapterOperations,
+    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ChapterViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST") return ChapterViewModel(application, chapterOperations) as T
+        if (modelClass.isAssignableFrom(ChapterFileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST") return ChapterFileViewModel(application, chapterOperations) as T
         }
 
         // TODO: Tratar erro de forma melhor
@@ -27,9 +27,9 @@ class ChapterViewModelFactory(
     }
 }
 
-class ChapterViewModel(
+class ChapterFileViewModel(
     application: Application,
-    private val chapterOperations: LibraryPort.ChapterOperations,
+    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
 ) : AndroidViewModel(application) {
     private val _chapterPage = MutableStateFlow<ChapterPageDto?>(value = null)
     val chapterPage: StateFlow<ChapterPageDto?> = _chapterPage.asStateFlow()

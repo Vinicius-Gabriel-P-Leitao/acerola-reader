@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.common.viewmodel.library
+package br.acerola.manga.ui.common.viewmodel.library.archive
 
 import android.app.Application
 import android.content.Context
@@ -11,6 +11,7 @@ import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.HomeLayoutPreferences
 import br.acerola.manga.shared.config.HomeLayoutType
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
+import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,20 +22,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.collections.emptyList
+import kotlin.let
 
-class MangaLibraryViewModelFactory(
+class MangaFolderViewModelFactory(
     private val application: Application,
-    private val libraryPort: LibraryPort,
-    private val mangaOperations: LibraryPort.MangaOperations,
-    private val chapterOperations: LibraryPort.ChapterOperations,
+    private val libraryPort: LibraryPort<MangaFolderDto>,
     private val folderAccessViewModel: FolderAccessViewModel,
+    private val mangaOperations: LibraryPort.MangaOperations<MangaFolderDto>,
+    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MangaLibraryViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST") return MangaLibraryViewModel(
-                application, libraryPort, mangaOperations, chapterOperations, folderAccessViewModel
+        if (modelClass.isAssignableFrom(MangaFolderViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST") return MangaFolderViewModel(
+                application, libraryPort, folderAccessViewModel, mangaOperations, chapterOperations,
             ) as T
         }
 
@@ -43,12 +47,12 @@ class MangaLibraryViewModelFactory(
     }
 }
 
-class MangaLibraryViewModel(
+class MangaFolderViewModel(
     application: Application,
-    private val libraryPort: LibraryPort,
-    private val mangaOperations: LibraryPort.MangaOperations,
-    private val chapterOperations: LibraryPort.ChapterOperations,
+    private val libraryPort: LibraryPort<MangaFolderDto>,
     private val folderAccessViewModel: FolderAccessViewModel,
+    private val mangaOperations: LibraryPort.MangaOperations<MangaFolderDto>,
+    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
 ) : AndroidViewModel(application) {
     private val context: Context get() = getApplication()
 
@@ -70,11 +74,18 @@ class MangaLibraryViewModel(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
-        id?.let { chapterOperations.loadChapterByManga(mangaId = it) } ?: flowOf(value = emptyList())
-    }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList()
-    )
+    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId
+        .flatMapLatest { id ->
+            id?.let {
+                chapterOperations.loadChapterByManga(mangaId = it)
+                    .map { page -> page.items }
+            } ?: flowOf(value = emptyList())
+        }
+        .stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+            initialValue = emptyList()
+        )
 
     init {
         observeHomeLayout()

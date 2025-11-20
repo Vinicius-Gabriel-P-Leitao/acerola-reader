@@ -23,7 +23,7 @@ retrofit = "2.9.0"
 okhttp = "5.0.0-alpha.11"
 converterGson = "2.9.0"
 loggingInterceptor = "5.0.0-alpha.11"
-apollo = "4.3.0"
+apollo = "3.8.6"
 kotlinxSerialization = "1.9.0"
 
 [libraries]

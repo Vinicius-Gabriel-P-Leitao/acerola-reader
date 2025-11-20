@@ -27,4 +27,5 @@
             android:theme="@style/Theme.Acerola" />
     </application>
 
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
