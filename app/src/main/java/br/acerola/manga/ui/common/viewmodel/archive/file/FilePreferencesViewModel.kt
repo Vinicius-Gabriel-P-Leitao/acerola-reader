@@ -4,8 +4,8 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.shared.config.FileExtension
-import br.acerola.manga.shared.config.FilePreferences
+import br.acerola.manga.shared.config.preference.FileExtension
+import br.acerola.manga.shared.config.preference.FilePreferences
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

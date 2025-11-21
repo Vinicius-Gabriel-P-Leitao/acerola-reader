@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -52,7 +52,7 @@ fun FolderAccess(viewModel: FolderAccessViewModel, onFolderSelected: (String) ->
                     .background(color = MaterialTheme.colorScheme.primary),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.ArrowForward,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
                     modifier = Modifier
                         .size(size = 40.dp)

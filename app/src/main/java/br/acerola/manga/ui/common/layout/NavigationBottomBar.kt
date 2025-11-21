@@ -1,6 +1,5 @@
 package br.acerola.manga.ui.common.layout
 
-import android.app.Activity
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import br.acerola.manga.shared.route.Destination
+import br.acerola.manga.ui.common.route.Destination
 
 @Composable
 fun NavigationBottomBar(navController: NavHostController) {

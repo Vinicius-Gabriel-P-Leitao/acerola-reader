@@ -31,10 +31,14 @@ import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.Divider
 import br.acerola.manga.ui.common.component.SmartCard
-import br.acerola.manga.ui.common.viewmodel.library.MangaLibraryViewModel
+import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
+import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModel
 
 @Composable
-fun SyncLibrary(mangaLibraryViewModel: MangaLibraryViewModel) {
+fun SyncLibrary(
+    mangaFolderViewModel: MangaFolderViewModel,
+    mangaMetadataViewModel: MangaMetadataViewModel
+) {
     SmartCard(
         type = CardType.CONTENT,
         colors = CardDefaults.elevatedCardColors(
@@ -78,7 +82,10 @@ fun SyncLibrary(mangaLibraryViewModel: MangaLibraryViewModel) {
             Divider()
 
             ListItem(
-                modifier = Modifier.clickable { mangaLibraryViewModel.deepScanLibrary() },
+                modifier = Modifier.clickable {
+                    mangaFolderViewModel.deepScanLibrary()
+                    mangaMetadataViewModel.loadAndSyncMangas()
+                },
                 headlineContent = {
                     Text(text = stringResource(id = R.string.description_text_home_deep_sync))
                 },
@@ -99,7 +106,7 @@ fun SyncLibrary(mangaLibraryViewModel: MangaLibraryViewModel) {
             HorizontalDivider()
 
             ListItem(
-                modifier = Modifier.clickable { mangaLibraryViewModel.syncLibrary() },
+                modifier = Modifier.clickable { mangaFolderViewModel.syncLibrary() },
                 headlineContent = {
                     Text(text = stringResource(id = R.string.description_text_home_quick_sync))
                 },

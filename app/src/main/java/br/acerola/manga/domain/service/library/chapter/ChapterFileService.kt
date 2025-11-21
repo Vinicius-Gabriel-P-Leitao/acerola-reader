@@ -1,8 +1,6 @@
 package br.acerola.manga.domain.service.library.chapter
 
-import android.content.Context
-import br.acerola.manga.domain.database.dao.archive.ChapterFileDao
-import br.acerola.manga.domain.database.dao.archive.MangaFolderDao
+import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.service.library.LibraryPort
@@ -19,7 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class ChapterFileService(
     private val chapterDao: ChapterFileDao
-) : LibraryPort.ChapterOperations {
+) : LibraryPort.ChapterOperations<ChapterPageDto> {
     /**
      * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico.
      *
@@ -28,28 +26,29 @@ class ChapterFileService(
      * @param mangaId Identificador único do mangá.
      * @return [StateFlow] com a lista de capítulos atualizada dinamicamente.
      */
-    override fun loadChapterByManga(mangaId: Long): StateFlow<List<ChapterFileDto>> {
+    override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterPageDto> {
         return chapterDao.getChaptersByFolder(folderId = mangaId).map { list ->
-            list.map { it.toDto() }
+            ChapterPageDto(
+                items = list.map { it.toDto() }, pageSize = list.size, page = 0, total = list.size
+            )
         }.stateIn(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
             started = SharingStarted.Lazily,
-            initialValue = emptyList()
+            initialValue = ChapterPageDto(items = emptyList(), pageSize = 0, page = 0, total = 0)
         )
     }
 
-    // TODO: Documentar
-    override suspend fun loadNextPage(folderId: Long, total: Int, page: Int, pageSize: Int): ChapterPageDto {
+
+    override suspend fun loadNextPage(
+        folderId: Long, total: Int, page: Int, pageSize: Int
+    ): ChapterPageDto {
         val offset = page * pageSize
         val items = chapterDao.getChaptersPaged(folderId, pageSize, offset).firstOrNull()?.map {
             it.toDto()
         } ?: emptyList()
 
         return ChapterPageDto(
-            items = items,
-            pageSize = pageSize,
-            page = page,
-            total = total
+            items = items, pageSize = pageSize, page = page, total = total
         )
     }
 }

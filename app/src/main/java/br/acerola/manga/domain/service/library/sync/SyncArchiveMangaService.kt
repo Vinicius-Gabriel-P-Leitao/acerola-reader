@@ -2,12 +2,14 @@ package br.acerola.manga.domain.service.library.sync
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.Nullable
 import br.acerola.manga.domain.builder.ArchiveBuilder
-import br.acerola.manga.domain.database.dao.archive.ChapterFileDao
-import br.acerola.manga.domain.database.dao.archive.MangaFolderDao
+import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
+import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.domain.service.library.manga.MangaFolderService
+import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -26,8 +28,12 @@ class SyncArchiveMangaService(
     private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao,
-    private val mangaOps: LibraryPort.MangaOperations = MangaFolderService(context, folderDao, chapterDao),
-) : LibraryPort {
+    private val mangaOps: LibraryPort.MangaOperations<MangaFolderDto> = MangaFolderService(
+        context,
+        folderDao,
+        chapterDao
+    ),
+) : LibraryPort<MangaFolderDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -63,7 +69,12 @@ class SyncArchiveMangaService(
      * @throws java.io.IOException Se ocorrer falha no acesso ao diretório ou leitura de metadados.
      * @throws kotlinx.coroutines.CancellationException Se a coroutine for cancelada durante a sincronização.
      */
-    override suspend fun syncMangas(baseUri: Uri) = withContext(context = Dispatchers.IO) {
+    override suspend fun syncMangas(@Nullable baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+        // TODO: Tratar erro melhor
+        if (baseUri === null) {
+            return@withContext
+        }
+
         val folders: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
         val existingFolders: List<MangaFolder> = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
@@ -72,21 +83,23 @@ class SyncArchiveMangaService(
             return@withContext
         }
 
-        val existingFoldersMap: Map<String, MangaFolder> = existingFolders.associateBy { it.path }
+        val existingFoldersMap = existingFolders.associateBy { normalizeName(it.name) }
+        val foldersMap = folders.associateBy { normalizeName(it.name) }
 
         val foldersToProcess = folders.filter { folder ->
-            val existing: MangaFolder? = existingFoldersMap[folder.path]
+            val normalizedName = normalizeName(folder.name)
+            val existing = existingFoldersMap[normalizedName]
 
             when {
                 existing == null -> true
+                existing.path != folder.path -> true
                 existing.lastModified < folder.lastModified -> true
                 existing.cover != folder.cover || existing.banner != folder.banner -> true
                 else -> false
             }
         }
 
-        val currentPaths = folders.map { it.path }.toSet()
-        val removedFolders = existingFolders.filter { it.path !in currentPaths }
+        val removedFolders = existingFolders.filter { normalizeName(it.name) !in foldersMap }
 
         if (removedFolders.isNotEmpty()) {
             removedFolders.forEach { folder ->
@@ -109,7 +122,12 @@ class SyncArchiveMangaService(
      * @see processFolderList
      * @see syncMangas
      */
-    override suspend fun rescanMangas(baseUri: Uri) = withContext(context = Dispatchers.IO) {
+    override suspend fun rescanMangas(@Nullable baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+        // TODO: Tratar erro melhor
+        if (baseUri === null) {
+            return@withContext
+        }
+
         val foldersToProcess: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
         if (foldersToProcess.isEmpty()) {
             _progress.value = -1
@@ -132,7 +150,7 @@ class SyncArchiveMangaService(
      *
      * @throws kotlinx.coroutines.CancellationException Se a operação for interrompida.
      */
-    override suspend fun deepRescanLibrary(baseUri: Uri) = withContext(context = Dispatchers.IO) {
+    override suspend fun deepRescanLibrary(@Nullable baseUri: Uri?) = withContext(context = Dispatchers.IO) {
         rescanMangas(baseUri)
         val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
@@ -235,7 +253,8 @@ class SyncArchiveMangaService(
      * @param existingFolders Lista completa de pastas persistidas para verificação de duplicidade.
      */
     private suspend fun upsertFolder(folder: MangaFolder, existingFolders: List<MangaFolder>) {
-        val existing = existingFolders.find { it.path == folder.path }
+        val normalizedName = normalizeName(folder.name)
+        val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
 
         if (existing != null) {
             folderDao.updateMangaFolder(manga = folder.copy(id = existing.id))
@@ -243,5 +262,9 @@ class SyncArchiveMangaService(
         }
 
         folderDao.insertMangaFolder(manga = folder)
+    }
+
+    private fun normalizeName(name: String): String {
+        return name.filter { it.isLetterOrDigit() }.lowercase()
     }
 }
