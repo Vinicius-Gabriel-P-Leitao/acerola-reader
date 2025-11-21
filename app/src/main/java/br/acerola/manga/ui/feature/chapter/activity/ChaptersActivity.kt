@@ -116,7 +116,9 @@ class ChaptersActivity(
         }
 
         val chapterPage by chapterViewModel.chapterPage.collectAsState()
-        val chapters = chapterPage?.items ?: emptyList()
+        val chapters = (chapterPage?.items ?: emptyList()).sortedBy {
+            it.chapterSort.replace(oldChar = ',', newChar = '.').toFloatOrNull() ?: 0f
+        }
         val total = chapterPage?.total ?: 0
 
         val backgroundColor = Color(color = 0xFF18181B)
@@ -184,7 +186,7 @@ class ChaptersActivity(
 
         Log.d(
             "ChapterActivity",
-            gsonPretty.toJson(manga)
+            gsonPretty.toJson(manga.metadata)
         )
         Box(
             modifier = Modifier

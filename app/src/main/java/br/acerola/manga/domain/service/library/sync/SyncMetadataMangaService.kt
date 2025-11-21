@@ -12,10 +12,12 @@ import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.MangaDexRequestError
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 class SyncMetadataMangaService(
     private val mangaDao: MangaMetadataDao,
@@ -30,33 +32,50 @@ class SyncMetadataMangaService(
 
     // TODO: Tratar erros melhor
     override suspend fun syncMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+        _progress.value = 0
+
         val folders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
         val titles = folders.map { it.name }
 
         val total = titles.size
         if (total == 0) {
-            _progress.value = -1
+            _progress.value = 100
             return@withContext
         }
 
         val updatedList = mutableListOf<MangaMetadataDto>()
-        titles.forEachIndexed { _, title ->
+        titles.forEachIndexed { index, title ->
+            val currentProgress = ((index.toFloat() / total.toFloat()) * 100).roundToInt()
+            _progress.value = currentProgress
+
+            if (index > 0) delay(timeMillis = 300)
+
             try {
                 val existingMetadata = mangaDao.getMangaMetadataByName(name = title).firstOrNull()
 
-                val fetchedList = fetchManga.searchManga(title = title)
-                val firstResult = fetchedList.firstOrNull() ?: return@forEachIndexed
-                val newModel = firstResult.toModel()
+                val fetchedList: List<MangaMetadataDto> = fetchManga.searchManga(title = title)
+                val folderNameNormalized = title.filter { it.isLetterOrDigit() }.lowercase()
+
+                val bestMatch: MangaMetadataDto? = fetchedList.find { candidate ->
+                    val candidateTitleNormalized = candidate.title.filter { it.isLetterOrDigit() }.lowercase()
+                    val candidateRomanjiNormalized = candidate.romanji?.filter { it.isLetterOrDigit() }?.lowercase()
+
+                    candidateTitleNormalized == folderNameNormalized || candidateRomanjiNormalized == folderNameNormalized
+                } ?: fetchedList.firstOrNull()
+
+                if (bestMatch == null) return@forEachIndexed
+
+                val newModel = bestMatch.toModel()
 
                 if (existingMetadata != null) {
                     val dataToUpdate = newModel.copy(id = existingMetadata.id)
                     mangaDao.updateMangaMetadata(manga = dataToUpdate)
-                    updatedList.add(firstResult)
+                    updatedList.add(bestMatch)
                     return@withContext
                 }
 
-                mangaDao.insertMangaMetadata(manga = firstResult.toModel())
-                updatedList.add(firstResult)
+                mangaDao.insertMangaMetadata(manga = newModel)
+                updatedList.add(bestMatch)
             } catch (mangaDexRequestError: MangaDexRequestError) {
                 throw mangaDexRequestError
             } catch (exception: Exception) {
@@ -69,7 +88,7 @@ class SyncMetadataMangaService(
         }
 
         _mangas.value = updatedList
-        _progress.value = -1
+        _progress.value = 100
     }
 
     override suspend fun rescanMangas(baseUri: Uri?) {

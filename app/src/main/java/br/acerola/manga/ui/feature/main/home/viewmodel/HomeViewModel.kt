@@ -48,9 +48,9 @@ class HomeViewModel(
         flow = mangaFolderViewModel.folders,
         flow2 = mangaMetadataViewModel.metadata
     ) { folders, metadata ->
-        val metadataMap = metadata.associateBy { it.title }
+        val metadataMap = metadata.associateBy { it.title.normalizeKey() }
         folders.map { folder ->
-            MangaDto(folder = folder, metadata = metadataMap[folder.name])
+            MangaDto(folder = folder, metadata = metadataMap[folder.name.normalizeKey()])
         }
     }.stateIn(
         viewModelScope,
@@ -61,6 +61,10 @@ class HomeViewModel(
 
     init {
         observeHomeLayout()
+    }
+
+    fun String.normalizeKey(): String {
+        return this.filter { it.isLetterOrDigit() }.lowercase()
     }
 
     fun updateHomeLayout(layout: HomeLayoutType) {

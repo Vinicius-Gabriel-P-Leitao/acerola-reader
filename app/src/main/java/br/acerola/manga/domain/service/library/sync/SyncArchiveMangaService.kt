@@ -83,21 +83,23 @@ class SyncArchiveMangaService(
             return@withContext
         }
 
-        val existingFoldersMap: Map<String, MangaFolder> = existingFolders.associateBy { it.path }
+        val existingFoldersMap = existingFolders.associateBy { normalizeName(it.name) }
+        val foldersMap = folders.associateBy { normalizeName(it.name) }
 
         val foldersToProcess = folders.filter { folder ->
-            val existing: MangaFolder? = existingFoldersMap[folder.path]
+            val normalizedName = normalizeName(folder.name)
+            val existing = existingFoldersMap[normalizedName]
 
             when {
                 existing == null -> true
+                existing.path != folder.path -> true
                 existing.lastModified < folder.lastModified -> true
                 existing.cover != folder.cover || existing.banner != folder.banner -> true
                 else -> false
             }
         }
 
-        val currentPaths = folders.map { it.path }.toSet()
-        val removedFolders = existingFolders.filter { it.path !in currentPaths }
+        val removedFolders = existingFolders.filter { normalizeName(it.name) !in foldersMap }
 
         if (removedFolders.isNotEmpty()) {
             removedFolders.forEach { folder ->
@@ -251,7 +253,8 @@ class SyncArchiveMangaService(
      * @param existingFolders Lista completa de pastas persistidas para verificação de duplicidade.
      */
     private suspend fun upsertFolder(folder: MangaFolder, existingFolders: List<MangaFolder>) {
-        val existing = existingFolders.find { it.path == folder.path }
+        val normalizedName = normalizeName(folder.name)
+        val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
 
         if (existing != null) {
             folderDao.updateMangaFolder(manga = folder.copy(id = existing.id))
@@ -259,5 +262,9 @@ class SyncArchiveMangaService(
         }
 
         folderDao.insertMangaFolder(manga = folder)
+    }
+
+    private fun normalizeName(name: String): String {
+        return name.filter { it.isLetterOrDigit() }.lowercase()
     }
 }

@@ -78,7 +78,7 @@ interface ChapterFileDao {
             WHERE
                 folder_path_fk = :folderId
             ORDER BY
-                chapter_sort ASC
+               CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
         """
     )
     fun getChaptersByFolder(folderId: Long): Flow<List<ChapterFile>>
@@ -92,7 +92,7 @@ interface ChapterFileDao {
             WHERE
                 folder_path_fk = :folderId
             ORDER BY
-                chapter_sort ASC
+               CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
             LIMIT :pageSize OFFSET :offset
         """
     )
