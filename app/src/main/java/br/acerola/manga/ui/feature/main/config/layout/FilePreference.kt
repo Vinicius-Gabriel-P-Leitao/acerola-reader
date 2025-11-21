@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import br.acerola.manga.shared.config.FileExtension
+import br.acerola.manga.shared.config.preference.FileExtension
 import br.acerola.manga.ui.common.component.RadioGroup
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 

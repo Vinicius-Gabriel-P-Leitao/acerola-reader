@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.dto.manga.MangaDto
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
 import coil.compose.rememberAsyncImagePainter
@@ -25,13 +25,16 @@ import coil.size.SizeResolver
 
 @Composable
 fun MangaGridItem(
-    folder: MangaFolderDto,
+    manga: MangaDto,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val imageRequest = remember(key1 = folder.coverUri) {
+    val coverUri = manga.folder.bannerUri ?: manga.folder.coverUri
+    val title = manga.metadata?.title ?: manga.folder.name
+
+    val imageRequest = remember(key1 = coverUri) {
         val imageSize: Size = with(receiver = density) {
             Size(
                 width = 120.dp.toPx().toInt(),
@@ -39,7 +42,7 @@ fun MangaGridItem(
             )
         }
         ImageRequest.Builder(context)
-            .data(data = folder.coverUri)
+            .data(data = coverUri)
             .size(resolver = SizeResolver(imageSize))
             .build()
     }
@@ -63,7 +66,7 @@ fun MangaGridItem(
         )
 
         Text(
-            text = folder.name,
+            text = title,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,

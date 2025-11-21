@@ -20,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.dto.manga.MangaDto
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
 import coil.compose.rememberAsyncImagePainter
@@ -30,16 +30,19 @@ import coil.size.SizeResolver
 
 @Composable
 fun MangaListItem(
-    folder: MangaFolderDto,
+    manga: MangaDto,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val imageRequest = remember(key1 = folder.coverUri) {
+    val coverUri = manga.folder.bannerUri ?: manga.folder.coverUri
+    val title = manga.metadata?.title ?: manga.folder.name
+
+    val imageRequest = remember(key1 = coverUri) {
         val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
         ImageRequest.Builder(context)
-            .data(data = folder.coverUri)
+            .data(data = coverUri)
             .size(resolver = SizeResolver(imageSize))
             .build()
     }
@@ -73,10 +76,10 @@ fun MangaListItem(
                 .weight(weight = 1f), verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = folder.name, style = MaterialTheme.typography.titleMedium, maxLines = 1
+                text = title, style = MaterialTheme.typography.titleMedium, maxLines = 1
             )
             Text(
-                text = stringResource(id = R.string.description_manga_list_item_chapter_count, folder.chapters.total),
+                text = stringResource(id = R.string.description_manga_list_item_chapter_count, manga.folder.chapters.total),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

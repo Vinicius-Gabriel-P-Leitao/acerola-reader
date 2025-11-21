@@ -12,9 +12,8 @@ plugins {
 android {
     namespace = "br.acerola.manga"
     compileSdk {
-        version = release(36)
+        version = release(version = 36)
     }
-
     defaultConfig {
         applicationId = "br.acerola.manga"
         minSdk = 24
@@ -22,13 +21,16 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
 
+        buildConfigField(type = "String", name = "MANGADEX_BASE_URL", value = "\"https://api.mangadex.org\"")
+        buildConfigField(type = "String", name = "MANGADEX_UPLOAD_URL", value = "\"https://uploads.mangadex.org\"")
+        buildConfigField(type = "String", name = "GITHUB_USER_AGENT", value = "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile(name = "proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
@@ -39,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     kotlin {
         compilerOptions {
@@ -48,7 +51,7 @@ android {
 }
 
 room {
-    schemaDirectory("$projectDir/schema")
+    schemaDirectory(path = "$projectDir/schema")
 }
 
 dependencies {
@@ -101,4 +104,17 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // JSON
+    implementation(libs.kotlinx.serialization.json)
+
+    // GraphQL – Apollo (AniList)
+    implementation(libs.apollo.runtime)
+    implementation(libs.apollo.normalized.cache)
+
+    // REST – Retrofit + OkHttp (MangaDex)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 }

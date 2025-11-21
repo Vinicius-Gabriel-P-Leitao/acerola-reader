@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.model.archive.MangaFolder
-import br.acerola.manga.shared.config.FileExtension
+import br.acerola.manga.shared.config.preference.FileExtension
 import br.acerola.manga.shared.util.detectTemplate
 
 // TODO: Tratar erros melhor
