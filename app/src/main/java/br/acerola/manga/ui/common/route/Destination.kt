@@ -1,4 +1,4 @@
-package br.acerola.manga.shared.route
+package br.acerola.manga.ui.common.route
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons

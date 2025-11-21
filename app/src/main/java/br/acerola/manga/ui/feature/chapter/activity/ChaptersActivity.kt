@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.chapters.activity
+package br.acerola.manga.ui.feature.chapter.activity
 
 import android.content.Context
 import android.os.Build
@@ -53,14 +53,14 @@ import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
 import br.acerola.manga.domain.service.library.chapter.ChapterFileService
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
-import br.acerola.manga.shared.route.Destination
+import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.layout.NavigationTopBar
 import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileViewModel
 import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileModelFactory
-import br.acerola.manga.ui.feature.chapters.component.ChapterItem
+import br.acerola.manga.ui.feature.chapter.component.ChapterItem
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 

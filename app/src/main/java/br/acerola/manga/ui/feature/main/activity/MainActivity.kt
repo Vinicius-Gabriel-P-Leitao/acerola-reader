@@ -18,9 +18,8 @@ import br.acerola.manga.domain.service.library.chapter.ChapterFileService
 import br.acerola.manga.domain.service.library.manga.MangaFolderService
 import br.acerola.manga.domain.service.library.sync.SyncArchiveMangaService
 import br.acerola.manga.domain.service.library.sync.SyncMetadataMangaService
-import br.acerola.manga.domain.service.mangadex.FetchMangaDataMangaDexService
 import br.acerola.manga.shared.permission.FolderAccessManager
-import br.acerola.manga.shared.route.Destination
+import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.layout.NavigationBottomBar
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel

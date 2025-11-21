@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class MangaMetadataService : LibraryPort.MangaOperations<MangaMetadataDto> {
-    private val _mangas = MutableStateFlow<List<MangaMetadataDto>>(emptyList())
+    private val _mangas = MutableStateFlow<List<MangaMetadataDto>>(value = emptyList())
     val mangas: StateFlow<List<MangaMetadataDto>> = _mangas.asStateFlow()
 
     override fun loadMangas(): StateFlow<List<MangaMetadataDto>> {
@@ -18,5 +18,4 @@ class MangaMetadataService : LibraryPort.MangaOperations<MangaMetadataDto> {
     override suspend fun rescanChaptersByManga(mangaId: Long) {
         TODO("Not yet implemented")
     }
-
 }

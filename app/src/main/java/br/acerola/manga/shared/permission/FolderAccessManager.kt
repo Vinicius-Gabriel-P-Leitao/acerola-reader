@@ -52,5 +52,4 @@ class FolderAccessManager(private val context: Context) {
                     permission.isWritePermission
         }
     }
-
 }

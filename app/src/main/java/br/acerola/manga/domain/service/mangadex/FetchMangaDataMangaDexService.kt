@@ -6,6 +6,7 @@ import br.acerola.manga.domain.builder.MetadataBuilder
 import br.acerola.manga.domain.database.dao.api.mangadex.manga.MangaDataMangaDexDao
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.shared.error.MangaDexRequestError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -13,7 +14,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-// TODO: Tratar erro melhor
 class FetchMangaDataMangaDexService(
     baseUrl: String = BuildConfig.MANGADEX_BASE_URL
 ) {
@@ -33,15 +33,24 @@ class FetchMangaDataMangaDexService(
             .create(MangaDataMangaDexDao::class.java)
     }
 
+
+    // TODO: Criar string
     suspend fun searchManga(uri: Uri, limit: Int = 10, offset: Int = 0): List<MangaMetadataDto> {
         return withContext(context = Dispatchers.IO) {
             try {
-                val title = uri.getQueryParameter("title") ?: return@withContext emptyList()
+                val title = uri.getQueryParameter("macaco")
+                    ?: throw MangaDexRequestError(
+                        title = "Requisição de metadados.",
+                        description = "Não foi possivel encontrar o campo na resposta do mangadex."
+                    )
+
                 val response: MangaDexResponse = api.searchMangaByName(title, limit, offset)
                 MetadataBuilder.fromMangaDataList(dataList = response.data)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emptyList()
+            } catch (_: Exception) {
+                throw MangaDexRequestError(
+                    title = "Requisição de metadados.",
+                    description = "Erro ao fazer busca de metadados dentro do mangadex."
+                )
             }
         }
     }

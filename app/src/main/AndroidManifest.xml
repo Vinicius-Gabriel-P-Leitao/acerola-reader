@@ -22,7 +22,7 @@
         </activity>
 
         <activity
-            android:name=".ui.feature.chapters.activity.ChaptersActivity"
+            android:name=".ui.feature.chapter.activity.ChaptersActivity"
             android:label="@string/label_chapters_activity"
             android:theme="@style/Theme.Acerola" />
     </application>

@@ -34,7 +34,7 @@ import br.acerola.manga.ui.common.component.FloatingToolItem
 import br.acerola.manga.ui.common.layout.ProgressIndicator
 import br.acerola.manga.ui.common.layout.SearchBar
 import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
-import br.acerola.manga.ui.feature.chapters.activity.ChaptersActivity
+import br.acerola.manga.ui.feature.chapter.activity.ChaptersActivity
 import br.acerola.manga.ui.feature.main.home.component.MangaGridItem
 import br.acerola.manga.ui.feature.main.home.component.MangaListItem
 

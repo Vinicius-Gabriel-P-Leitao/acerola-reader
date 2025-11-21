@@ -9,11 +9,13 @@ import br.acerola.manga.domain.mapper.toModel
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.domain.service.mangadex.FetchMangaDataMangaDexService
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.shared.error.MangaDexRequestError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+
 
 class SyncMetadataMangaService(
     private val mangaDao: MangaMetadataDao,
@@ -39,18 +41,24 @@ class SyncMetadataMangaService(
 
         val updatedList = mutableListOf<MangaMetadataDto>()
         titles.forEachIndexed { index, title ->
-            val uri = Uri.parse(BuildConfig.MANGADEX_BASE_URL).buildUpon()
-                .appendPath("manga")
-                .appendQueryParameter("title", title)
-                .build()
+            val uri = Uri.parse(BuildConfig.MANGADEX_BASE_URL).buildUpon().appendPath("manga")
+                .appendQueryParameter("title", title).build()
 
-            val fetchedList = fetchManga.searchManga(uri)
-            val firstResult = fetchedList.firstOrNull() ?: return@forEachIndexed
+            try {
+                val fetchedList = fetchManga.searchManga(uri)
+                val firstResult = fetchedList.firstOrNull() ?: return@forEachIndexed
 
-            mangaDao.insertMangaMetadata(manga = firstResult.toModel())
-            updatedList.add(firstResult)
-
-            _progress.value = ((index + 1) * 100 / total)
+                mangaDao.insertMangaMetadata(manga = firstResult.toModel())
+                updatedList.add(firstResult)
+            } catch (mangaDexRequestError: MangaDexRequestError) {
+                throw mangaDexRequestError
+            } catch (exception: Exception) {
+                // TODO: Criar string
+                throw MangaDexRequestError(
+                    title = "Erro ao sincronizar metadados",
+                    description = exception.message ?: "Falha desconhecida no serviço de sincronização."
+                )
+            }
         }
 
         _mangas.value = updatedList
