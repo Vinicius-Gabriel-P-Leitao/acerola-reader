@@ -8,8 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.shared.config.HomeLayoutPreferences
-import br.acerola.manga.shared.config.HomeLayoutType
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
@@ -25,8 +23,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.collections.emptyList
-import kotlin.let
 
 class MangaFolderViewModelFactory(
     private val application: Application,
@@ -54,16 +50,11 @@ class MangaFolderViewModel(
     private val mangaOperations: LibraryPort.MangaOperations<MangaFolderDto>,
     private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
 ) : AndroidViewModel(application) {
-    private val context: Context get() = getApplication()
-
     private val _error = MutableStateFlow<Throwable?>(value = null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
-
-    private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
-    val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
     val progress: StateFlow<Int> = libraryPort.progress
 
@@ -88,27 +79,9 @@ class MangaFolderViewModel(
         )
 
     init {
-        observeHomeLayout()
         syncLibrary()
     }
 
-    private fun observeHomeLayout() {
-        viewModelScope.launch {
-            HomeLayoutPreferences.layoutFlow(context).collect { layout ->
-                if (_selectedHomeLayout.value != layout) {
-                    _selectedHomeLayout.value = layout
-                }
-            }
-        }
-    }
-
-    fun updateHomeLayout(layout: HomeLayoutType) {
-        if (_selectedHomeLayout.value == layout) return
-        _selectedHomeLayout.value = layout
-        viewModelScope.launch {
-            HomeLayoutPreferences.saveLayout(context, layout)
-        }
-    }
 
     fun selectFolder(folderId: Long) {
         _selectedFolderId.value = folderId

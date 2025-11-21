@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
 import br.acerola.manga.domain.service.library.chapter.ChapterFileService
 import br.acerola.manga.domain.service.library.manga.MangaFolderService
+import br.acerola.manga.domain.service.library.manga.MangaMetadataService
 import br.acerola.manga.domain.service.library.sync.SyncArchiveMangaService
 import br.acerola.manga.domain.service.library.sync.SyncMetadataMangaService
 import br.acerola.manga.shared.permission.FolderAccessManager
@@ -31,6 +32,8 @@ import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewMo
 import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModelFactory
 import br.acerola.manga.ui.feature.main.config.screen.ConfigScreen
 import br.acerola.manga.ui.feature.main.history.screen.HistoryScreen
+import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModel
+import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModelFactory
 import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
 
 class MainActivity(
@@ -65,13 +68,26 @@ class MainActivity(
                 folderDao = database.mangaFolderDao(),
                 mangaDao = database.mangaMetadataDao(),
             ),
+            mangaOperations = MangaMetadataService(
+                folderDao = database.mangaFolderDao(),
+                mangaDao = database.mangaMetadataDao(),
+            )
+        )
+    }
+
+    private val homeViewModel: HomeViewModel by viewModels {
+        HomeViewModelFactory(
+            application,
+            mangaFolderViewModel = mangaFolderViewModel,
+            mangaMetadataViewModel = mangaMetadataViewModel
         )
     }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
-                mangaFolderViewModel
+                mangaFolderViewModel,
+                homeViewModel
             )
         }
         defaultComposable(context, Destination.HISTORY) {

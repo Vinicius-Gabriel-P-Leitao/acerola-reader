@@ -26,6 +26,9 @@ data class MangaMetadata(
     @ColumnInfo(name = "gender")
     val gender: String,
 
+    @ColumnInfo(name = "status")
+    val status: String,
+
     @ColumnInfo(name = "publication")
     val publication: Int,
 

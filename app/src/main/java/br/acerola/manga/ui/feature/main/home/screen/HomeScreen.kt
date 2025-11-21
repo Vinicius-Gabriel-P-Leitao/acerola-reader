@@ -35,41 +35,49 @@ import br.acerola.manga.ui.common.layout.ProgressIndicator
 import br.acerola.manga.ui.common.layout.SearchBar
 import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
 import br.acerola.manga.ui.feature.chapter.activity.ChaptersActivity
+import br.acerola.manga.ui.feature.chapter.activity.ChaptersActivity.ChapterExtra
 import br.acerola.manga.ui.feature.main.home.component.MangaGridItem
 import br.acerola.manga.ui.feature.main.home.component.MangaListItem
+import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(mangaFolderViewModel: MangaFolderViewModel) {
+fun HomeScreen(
+    mangaFolderViewModel: MangaFolderViewModel,
+    homeViewModel: HomeViewModel
+) {
     val context = LocalContext.current
 
+    val isIndexing by mangaFolderViewModel.isIndexing.collectAsState()
     val progress by mangaFolderViewModel.progress.collectAsState()
     val error by mangaFolderViewModel.error.collectAsState()
 
-    val layout by mangaFolderViewModel.selectedHomeLayout.collectAsState()
-    val isIndexing by mangaFolderViewModel.isIndexing.collectAsState()
-    val folders by mangaFolderViewModel.folders.collectAsState()
+    val layout by homeViewModel.selectedHomeLayout.collectAsState()
+    val mangas by homeViewModel.mangas.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             SearchBar(
-                items = folders,
-                itemKey = { it.id },
-                searchKey = { it.name },
+                items = mangas,
+                itemKey = { it.folder.id },
+                searchKey = { it.folder.name },
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = 6.dp),
-                itemContent = { folder ->
+                itemContent = { manga ->
                     MangaListItem(
-                        folder = folder, onClick = {
+                        manga = manga,
+                        onClick = {
                             val intent = Intent(context, ChaptersActivity::class.java).apply {
-                                putExtra("folder", folder)
+                                putExtra(ChapterExtra.MANGA, manga)
                             }
                             context.startActivity(intent)
-                        })
-                })
+                        }
+                    )
+                }
+            )
 
-            if (folders.isEmpty() && !isIndexing) {
+            if (mangas.isEmpty() && !isIndexing) {
                 EmptyState(error)
             } else {
                 val gridCells = when (layout) {
@@ -83,17 +91,17 @@ fun HomeScreen(mangaFolderViewModel: MangaFolderViewModel) {
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
-                    items(items = folders) { folder ->
+                    items(items = mangas) { manga ->
                         val onClick = {
                             val intent = Intent(context, ChaptersActivity::class.java).apply {
-                                putExtra("folder", folder)
+                                putExtra(ChapterExtra.MANGA, manga)
                             }
                             context.startActivity(intent)
                         }
 
                         when (layout) {
-                            HomeLayoutType.GRID -> MangaGridItem(folder = folder, onClick = onClick)
-                            HomeLayoutType.LIST -> MangaListItem(folder = folder, onClick = onClick)
+                            HomeLayoutType.GRID -> MangaGridItem(manga = manga, onClick = onClick)
+                            HomeLayoutType.LIST -> MangaListItem(manga = manga, onClick = onClick)
                         }
                     }
                 }
@@ -112,7 +120,7 @@ fun HomeScreen(mangaFolderViewModel: MangaFolderViewModel) {
                         id = R.string.description_text_home_layout_grid_label
                     ),
                     onClick = {
-                        mangaFolderViewModel.updateHomeLayout(
+                        homeViewModel.updateHomeLayout(
                             layout = when (layout) {
                                 HomeLayoutType.LIST -> HomeLayoutType.GRID
                                 HomeLayoutType.GRID -> HomeLayoutType.LIST

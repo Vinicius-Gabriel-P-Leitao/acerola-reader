@@ -35,15 +35,10 @@ class FetchMangaDataMangaDexService(
 
 
     // TODO: Criar string
-    suspend fun searchManga(uri: Uri, limit: Int = 10, offset: Int = 0): List<MangaMetadataDto> {
+    // TODO: Criar uma lógica de catch mais robusta
+    suspend fun searchManga(title: String, limit: Int = 10, offset: Int = 0): List<MangaMetadataDto> {
         return withContext(context = Dispatchers.IO) {
             try {
-                val title = uri.getQueryParameter("macaco")
-                    ?: throw MangaDexRequestError(
-                        title = "Requisição de metadados.",
-                        description = "Não foi possivel encontrar o campo na resposta do mangadex."
-                    )
-
                 val response: MangaDexResponse = api.searchMangaByName(title, limit, offset)
                 MetadataBuilder.fromMangaDataList(dataList = response.data)
             } catch (_: Exception) {

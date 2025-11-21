@@ -1,7 +1,7 @@
 package br.acerola.manga.domain.service.library.sync
 
 import android.net.Uri
-import androidx.annotation.Nullable
+import android.util.Log
 import br.acerola.manga.BuildConfig
 import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
@@ -10,17 +10,17 @@ import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.domain.service.mangadex.FetchMangaDataMangaDexService
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.MangaDexRequestError
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
-
 class SyncMetadataMangaService(
     private val mangaDao: MangaMetadataDao,
     private val folderDao: MangaFolderDao,
-    private val fetchManga: FetchMangaDataMangaDexService = FetchMangaDataMangaDexService(BuildConfig.MANGADEX_BASE_URL)
+    private val fetchManga: FetchMangaDataMangaDexService = FetchMangaDataMangaDexService()
 ) : LibraryPort<MangaMetadataDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress
@@ -40,13 +40,20 @@ class SyncMetadataMangaService(
         }
 
         val updatedList = mutableListOf<MangaMetadataDto>()
-        titles.forEachIndexed { index, title ->
-            val uri = Uri.parse(BuildConfig.MANGADEX_BASE_URL).buildUpon().appendPath("manga")
-                .appendQueryParameter("title", title).build()
-
+        titles.forEachIndexed { _, title ->
             try {
-                val fetchedList = fetchManga.searchManga(uri)
+                val existingMetadata = mangaDao.getMangaMetadataByName(name = title).firstOrNull()
+
+                val fetchedList = fetchManga.searchManga(title = title)
                 val firstResult = fetchedList.firstOrNull() ?: return@forEachIndexed
+                val newModel = firstResult.toModel()
+
+                if (existingMetadata != null) {
+                    val dataToUpdate = newModel.copy(id = existingMetadata.id)
+                    mangaDao.updateMangaMetadata(manga = dataToUpdate)
+                    updatedList.add(firstResult)
+                    return@withContext
+                }
 
                 mangaDao.insertMangaMetadata(manga = firstResult.toModel())
                 updatedList.add(firstResult)

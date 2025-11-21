@@ -3,6 +3,7 @@ package br.acerola.manga.ui.common.layout
 import android.app.Activity
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,7 +42,7 @@ fun NavigationTopBar(navController: NavHostController, extraActions: @Composable
                 }
             }) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = context.getString(R.string.description_icon_navigation_back)
                 )
             }

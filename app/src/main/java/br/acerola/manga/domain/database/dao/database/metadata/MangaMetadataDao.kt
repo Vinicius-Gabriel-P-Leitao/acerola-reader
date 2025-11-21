@@ -20,9 +20,9 @@ interface MangaMetadataDao {
     @Delete
     suspend fun deleteMangaMetadata(manga: MangaMetadata)
 
-    @Query("SELECT * FROM manga_metadata ORDER BY id ASC")
+    @Query(value = "SELECT * FROM manga_metadata ORDER BY id ASC")
     fun getAllMangasMetadata(): Flow<List<MangaMetadata>>
 
-    @Query("SELECT * FROM manga_metadata WHERE id = :mangaId")
-    fun getMangaMetadataById(mangaId: Int): Flow<MangaMetadata?>
+    @Query(value = "SELECT * FROM manga_metadata WHERE name = :name")
+    fun getMangaMetadataByName(name: String): Flow<MangaMetadata?>
 }

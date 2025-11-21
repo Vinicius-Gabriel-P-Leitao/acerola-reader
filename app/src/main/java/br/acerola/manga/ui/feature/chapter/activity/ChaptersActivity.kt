@@ -2,6 +2,7 @@ package br.acerola.manga.ui.feature.chapter.activity
 
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -53,6 +55,7 @@ import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
 import br.acerola.manga.domain.service.library.chapter.ChapterFileService
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.dto.manga.MangaDto
 import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
@@ -63,6 +66,8 @@ import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileModelFact
 import br.acerola.manga.ui.feature.chapter.component.ChapterItem
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 
 class ChaptersActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
@@ -76,18 +81,22 @@ class ChaptersActivity(
         )
     }
 
-    val folder: MangaFolderDto? by lazy {
+    object ChapterExtra {
+        const val MANGA = "MANGA"
+    }
+
+    val folder: MangaDto? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent?.getParcelableExtra("folder", MangaFolderDto::class.java)
+            intent?.getParcelableExtra(ChapterExtra.MANGA, MangaDto::class.java)
         } else {
-            @Suppress("DEPRECATION") intent.getParcelableExtra("folder")
+            @Suppress("DEPRECATION") intent.getParcelableExtra(ChapterExtra.MANGA)
         }
     }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CHAPTERS.route)) {
             folder?.let {
-                Screen(chapterViewModel, folder = it)
+                Screen(chapterViewModel, manga = it)
             }
         }
     }
@@ -99,10 +108,11 @@ class ChaptersActivity(
 
     @Composable
     fun Screen(
-        chapterViewModel: ChapterFileViewModel, folder: MangaFolderDto
+        chapterViewModel: ChapterFileViewModel,
+        manga: MangaDto
     ) {
-        LaunchedEffect(key1 = folder.id) {
-            chapterViewModel.init(folderId = folder.id, firstPage = folder.chapters)
+        LaunchedEffect(key1 = manga.folder.id) {
+            chapterViewModel.init(folderId = manga.folder.id, firstPage = manga.folder.chapters)
         }
 
         val chapterPage by chapterViewModel.chapterPage.collectAsState()
@@ -124,9 +134,8 @@ class ChaptersActivity(
             ) {
                 item {
                     MangaHeader(
-                        folder = folder,
+                        manga = manga,
                         textColor = textColor,
-                        primaryColor = primaryColor,
                         secondaryTextColor = secondaryTextColor
                     )
                 }
@@ -169,14 +178,20 @@ class ChaptersActivity(
 
     @Composable
     fun MangaHeader(
-        folder: MangaFolderDto, primaryColor: Color, textColor: Color, secondaryTextColor: Color
+        manga: MangaDto, textColor: Color, secondaryTextColor: Color
     ) {
+        val gsonPretty = GsonBuilder().setPrettyPrinting().create()
+
+        Log.d(
+            "ChapterActivity",
+            gsonPretty.toJson(manga)
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height = 420.dp)
         ) {
-            val bannerModel = folder.bannerUri ?: folder.coverUri
+            val bannerModel = manga.folder.bannerUri ?: manga.folder.coverUri
 
             AsyncImage(
                 contentDescription = null,
@@ -217,7 +232,7 @@ class ChaptersActivity(
                         contentDescription = "Cover",
                         contentScale = ContentScale.Crop,
                         model = ImageRequest.Builder(context = LocalContext.current)
-                            .data(data = folder.coverUri)
+                            .data(data = manga.folder.coverUri)
                             .crossfade(enable = true)
                             .build(),
                         modifier = Modifier
@@ -236,7 +251,7 @@ class ChaptersActivity(
                             .weight(weight = 1f),
                     ) {
                         Text(
-                            text = folder.name,
+                            text = manga.metadata?.title ?: manga.folder.name,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.headlineSmall.copy(
@@ -248,7 +263,7 @@ class ChaptersActivity(
 
                         Text(
                             // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
-                            text = "Unknown Author",
+                            text = manga.metadata?.status ?: "Unknown",
                             style = MaterialTheme.typography.bodyMedium,
                             color = secondaryTextColor
                         )
@@ -257,15 +272,17 @@ class ChaptersActivity(
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                imageVector = Icons.Filled.Create,
                                 modifier = Modifier.size(size = 16.dp),
                                 tint = Color(color = 0xFFFFC107),
                                 contentDescription = null,
                             )
                             Spacer(modifier = Modifier.width(width = 4.dp))
                             Text(
-                                // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
-                                text = "Ongoing", style = MaterialTheme.typography.labelLarge, color = textColor
+                                // TODO: Verificar se consigo pegar status do mangá
+                                text = manga.metadata?.author ?: "Unknown",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = textColor
                             )
                         }
 
@@ -279,6 +296,7 @@ class ChaptersActivity(
                                 modifier = Modifier.size(size = 16.dp)
                             )
 
+                            // TODO: Pegar do mangadex
                             Text(text = " 8.3", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
 
                             Spacer(modifier = Modifier.width(width = 16.dp))
@@ -290,6 +308,7 @@ class ChaptersActivity(
                                 modifier = Modifier.size(size = 16.dp)
                             )
 
+                            // TODO: Pegar do mangadex
                             Text(text = " 65k", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }

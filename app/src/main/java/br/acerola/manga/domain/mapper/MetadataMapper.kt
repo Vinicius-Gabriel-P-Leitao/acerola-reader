@@ -8,8 +8,9 @@ fun MangaMetadataDto.toModel(): MangaMetadata {
         name = this.title,
         description = this.description,
         romanji = this.romanji.orEmpty(),
-        gender = this.gender.joinToString(", "),
+        gender = this.gender.joinToString(separator = ", "),
         publication = this.year ?: 0,
+        status = this.status,
         author = this.author.orEmpty()
     )
 }
@@ -22,6 +23,7 @@ fun MangaMetadata.toDto(): MangaMetadataDto {
         romanji = this.romanji,
         gender = this.gender.split(",").map { it.trim() }.filter { it.isNotEmpty() },
         year = this.publication.takeIf { it > 0 },
+        status = this.status,
         author = this.author,
     )
 }
