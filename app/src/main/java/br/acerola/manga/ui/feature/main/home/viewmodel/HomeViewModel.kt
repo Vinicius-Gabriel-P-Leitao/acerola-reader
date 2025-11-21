@@ -6,8 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.shared.config.HomeLayoutPreferences
-import br.acerola.manga.shared.config.HomeLayoutType
+import br.acerola.manga.shared.config.preference.HomeLayoutPreferences
+import br.acerola.manga.shared.config.preference.HomeLayoutType
 import br.acerola.manga.shared.dto.manga.MangaDto
 import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
 import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModel

@@ -9,7 +9,7 @@ import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.shared.config.FileExtension
+import br.acerola.manga.shared.config.preference.FileExtension
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.util.templateToRegex

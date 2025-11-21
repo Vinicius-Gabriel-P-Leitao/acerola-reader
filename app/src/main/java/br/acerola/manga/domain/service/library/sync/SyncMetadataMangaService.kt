@@ -1,16 +1,13 @@
 package br.acerola.manga.domain.service.library.sync
 
 import android.net.Uri
-import android.util.Log
-import br.acerola.manga.BuildConfig
 import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.mapper.toModel
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.domain.service.mangadex.FetchMangaDataMangaDexService
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
-import br.acerola.manga.shared.error.MangaDexRequestError
-import com.google.gson.GsonBuilder
+import br.acerola.manga.shared.error.exception.MangaDexRequestError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

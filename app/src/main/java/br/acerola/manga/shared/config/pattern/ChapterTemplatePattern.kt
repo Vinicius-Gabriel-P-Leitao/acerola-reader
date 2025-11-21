@@ -1,6 +1,6 @@
-package br.acerola.manga.shared.config
+package br.acerola.manga.shared.config.pattern
 
-object ChapterTemplateModels {
+object ChapterTemplatePattern {
     // NOTE: Talvez fazer lógica que pega isso do banco de dados e permite o usuário criar mais e selecionar por meio
     // de um select.
     // TODO: Renderizar em interface

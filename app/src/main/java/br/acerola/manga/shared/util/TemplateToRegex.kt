@@ -1,6 +1,6 @@
 package br.acerola.manga.shared.util
 
-import br.acerola.manga.shared.config.ChapterTemplateModels
+import br.acerola.manga.shared.config.pattern.ChapterTemplatePattern
 
 // TODO: Fazer código que vai tratar caso tenha um erro aqui
 fun templateToRegex(template: String = "{value}.cbz"): Regex {
@@ -11,7 +11,7 @@ fun templateToRegex(template: String = "{value}.cbz"): Regex {
 }
 
 fun detectTemplate(fileName: String): String {
-    ChapterTemplateModels.presets.values.forEach { template ->
+    ChapterTemplatePattern.presets.values.forEach { template ->
         if (templateToRegex(template).matches(input = fileName)) return template
     }
 

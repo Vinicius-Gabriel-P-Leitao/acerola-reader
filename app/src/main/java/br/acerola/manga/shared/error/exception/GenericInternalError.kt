@@ -1,4 +1,4 @@
-package br.acerola.manga.shared.error
+package br.acerola.manga.shared.error.exception
 
 
 // TODO: Criar uma string

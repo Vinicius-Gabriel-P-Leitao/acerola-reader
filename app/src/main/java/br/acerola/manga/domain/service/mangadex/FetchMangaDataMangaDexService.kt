@@ -1,13 +1,12 @@
 package br.acerola.manga.domain.service.mangadex
 
-import android.net.Uri
 import br.acerola.manga.BuildConfig
 import br.acerola.manga.domain.builder.MetadataBuilder
 import br.acerola.manga.domain.database.dao.api.mangadex.manga.MangaDataMangaDexDao
-import br.acerola.manga.shared.config.MangaDexInterceptor
+import br.acerola.manga.domain.middleware.MangaDexInterceptor
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
-import br.acerola.manga.shared.error.MangaDexRequestError
+import br.acerola.manga.shared.error.exception.MangaDexRequestError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient

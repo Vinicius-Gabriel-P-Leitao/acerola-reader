@@ -1,4 +1,4 @@
-package br.acerola.manga.shared.config
+package br.acerola.manga.shared.config.preference
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit

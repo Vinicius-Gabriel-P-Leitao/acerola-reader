@@ -1,4 +1,4 @@
-package br.acerola.manga.shared.error
+package br.acerola.manga.shared.error.exception
 
 class MangaDexRequestError(
     override val title: String = "Erro no mangadex.",

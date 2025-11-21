@@ -24,6 +24,7 @@ android {
 
         buildConfigField(type = "String", name = "MANGADEX_BASE_URL", value = "\"https://api.mangadex.org\"")
         buildConfigField(type = "String", name = "MANGADEX_UPLOAD_URL", value = "\"https://uploads.mangadex.org\"")
+        buildConfigField(type = "String", name = "GITHUB_USER_AGENT", value = "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
     }
     buildTypes {
         release {

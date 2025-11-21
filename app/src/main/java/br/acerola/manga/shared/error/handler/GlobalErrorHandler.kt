@@ -1,6 +1,6 @@
 package br.acerola.manga.shared.error.handler
 
-import br.acerola.manga.shared.error.ApplicationException
+import br.acerola.manga.shared.error.exception.ApplicationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 

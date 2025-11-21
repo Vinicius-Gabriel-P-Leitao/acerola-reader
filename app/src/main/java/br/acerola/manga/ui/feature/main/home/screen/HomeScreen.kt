@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
-import br.acerola.manga.shared.config.HomeLayoutType
+import br.acerola.manga.shared.config.preference.HomeLayoutType
 import br.acerola.manga.ui.common.component.FloatingTool
 import br.acerola.manga.ui.common.component.FloatingToolItem
 import br.acerola.manga.ui.common.layout.ProgressIndicator

@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
-import br.acerola.manga.shared.error.ApplicationException
-import br.acerola.manga.shared.error.GenericInternalError
+import br.acerola.manga.shared.error.exception.ApplicationException
+import br.acerola.manga.shared.error.exception.GenericInternalError
 import br.acerola.manga.shared.error.handler.GlobalErrorHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
