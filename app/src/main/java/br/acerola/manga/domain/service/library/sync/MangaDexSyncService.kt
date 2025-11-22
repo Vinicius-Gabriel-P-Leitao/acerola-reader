@@ -5,7 +5,7 @@ import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.mapper.toModel
 import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.domain.service.mangadex.FetchMangaDataMangaDexService
+import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchMangaDataService
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.MangaDexRequestError
 import kotlinx.coroutines.Dispatchers
@@ -16,10 +16,12 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-class SyncMetadataMangaService(
+// TODO: Criar um método privado que vai chamar um futuro serviço
+//  FetchCoverMangaDexService e escrever o arquivo de resultado da API no sistema de arquivos
+class MangaDexSyncService(
     private val mangaDao: MangaMetadataDao,
     private val folderDao: MangaFolderDao,
-    private val fetchManga: FetchMangaDataMangaDexService = FetchMangaDataMangaDexService()
+    private val fetchManga: MangaDexFetchMangaDataService = MangaDexFetchMangaDataService()
 ) : LibraryPort<MangaMetadataDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress

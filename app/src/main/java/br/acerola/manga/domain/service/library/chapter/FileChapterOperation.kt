@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class ChapterFileService(
+class FileChapterOperation(
     private val chapterDao: ChapterFileDao
 ) : LibraryPort.ChapterOperations<ChapterPageDto> {
     /**

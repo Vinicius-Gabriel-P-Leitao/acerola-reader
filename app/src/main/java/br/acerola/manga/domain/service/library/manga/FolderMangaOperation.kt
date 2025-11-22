@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
-class MangaFolderService(
+class FolderMangaOperation(
     private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao

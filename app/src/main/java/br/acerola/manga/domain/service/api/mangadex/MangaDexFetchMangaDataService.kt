@@ -1,9 +1,11 @@
-package br.acerola.manga.domain.service.mangadex
+package br.acerola.manga.domain.service.api.mangadex
 
+import android.util.Log
 import br.acerola.manga.BuildConfig
 import br.acerola.manga.domain.builder.MetadataBuilder
 import br.acerola.manga.domain.database.dao.api.mangadex.manga.MangaDataMangaDexDao
 import br.acerola.manga.domain.middleware.MangaDexInterceptor
+import br.acerola.manga.domain.service.api.ApiPort
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.MangaDexRequestError
@@ -15,9 +17,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-class FetchMangaDataMangaDexService(
+class MangaDexFetchMangaDataService(
     baseUrl: String = BuildConfig.MANGADEX_BASE_URL
-) {
+) : ApiPort.MetadataOperations<MangaMetadataDto, String> {
     private val api: MangaDataMangaDexDao
 
     init {
@@ -39,7 +41,11 @@ class FetchMangaDataMangaDexService(
 
     // TODO: Criar string
     // TODO: Criar uma lógica de catch mais robusta
-    suspend fun searchManga(title: String, limit: Int = 10, offset: Int = 0): List<MangaMetadataDto> {
+    override suspend fun searchManga(
+        title: String, limit: Int, offset: Int, vararg extra: String?
+    ): List<MangaMetadataDto> {
+        Log.d(this.javaClass.name, "Parametro 'extra' não é implementado nesse método. ")
+
         return withContext(context = Dispatchers.IO) {
             try {
                 val response: MangaDexResponse = api.searchMangaByName(title, limit, offset)

@@ -4,8 +4,6 @@ import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.domain.service.mangadex.FetchMangaDataMangaDexService
-import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class MangaMetadataService(
+class MangaDexMangaOperation(
     private val mangaDao: MangaMetadataDao,
     private val folderDao: MangaFolderDao,
 ) : LibraryPort.MangaOperations<MangaMetadataDto> {

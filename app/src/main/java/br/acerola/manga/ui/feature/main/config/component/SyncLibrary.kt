@@ -84,6 +84,7 @@ fun SyncLibrary(
             ListItem(
                 modifier = Modifier.clickable {
                     mangaFolderViewModel.deepScanLibrary()
+                    // TODO: Separar essa lógica em outra config na seção Mangadex ou Metadados já que futuramente tera Anilist
                     mangaMetadataViewModel.loadAndSyncMangas()
                 },
                 headlineContent = {

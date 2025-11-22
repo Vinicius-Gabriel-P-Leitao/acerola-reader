@@ -14,11 +14,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
-import br.acerola.manga.domain.service.library.chapter.ChapterFileService
-import br.acerola.manga.domain.service.library.manga.MangaFolderService
-import br.acerola.manga.domain.service.library.manga.MangaMetadataService
-import br.acerola.manga.domain.service.library.sync.SyncArchiveMangaService
-import br.acerola.manga.domain.service.library.sync.SyncMetadataMangaService
+import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
+import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
+import br.acerola.manga.domain.service.library.manga.MangaDexMangaOperation
+import br.acerola.manga.domain.service.library.sync.ArchiveSyncService
+import br.acerola.manga.domain.service.library.sync.MangaDexSyncService
 import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
@@ -51,24 +51,24 @@ class MainActivity(
         MangaFolderViewModelFactory(
             application,
             folderAccessViewModel = folderAccessViewModel,
-            libraryPort = SyncArchiveMangaService(
+            libraryPort = ArchiveSyncService(
                 context = this, folderDao = database.mangaFolderDao(), chapterDao = database.chapterFileDao(),
-            ), mangaOperations = MangaFolderService(
+            ), mangaOperations = FolderMangaOperation(
                 context = this, folderDao = database.mangaFolderDao(), chapterDao = database.chapterFileDao()
-            ), chapterOperations = ChapterFileService(
+            ), chapterOperations = FileChapterOperation(
                 chapterDao = database.chapterFileDao()
             )
         )
     }
 
-    private val mangaMetadataViewModel: MangaMetadataViewModel by viewModels {
+    private val mangaDexViewModel: MangaMetadataViewModel by viewModels {
         MangaMetadataViewModelFactory(
             application,
-            libraryPort = SyncMetadataMangaService(
+            libraryPort = MangaDexSyncService(
                 folderDao = database.mangaFolderDao(),
                 mangaDao = database.mangaMetadataDao(),
             ),
-            mangaOperations = MangaMetadataService(
+            mangaOperations = MangaDexMangaOperation(
                 folderDao = database.mangaFolderDao(),
                 mangaDao = database.mangaMetadataDao(),
             )
@@ -79,7 +79,7 @@ class MainActivity(
         HomeViewModelFactory(
             application,
             mangaFolderViewModel = mangaFolderViewModel,
-            mangaMetadataViewModel = mangaMetadataViewModel
+            mangaMetadataViewModel = mangaDexViewModel
         )
     }
 
@@ -95,7 +95,7 @@ class MainActivity(
         }
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(
-                folderAccessViewModel, filePreferencesViewModel, mangaFolderViewModel, mangaMetadataViewModel
+                folderAccessViewModel, filePreferencesViewModel, mangaFolderViewModel, mangaDexViewModel
             )
         }
     }

@@ -8,7 +8,7 @@ import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.domain.service.library.manga.MangaFolderService
+import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -24,11 +24,11 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.chunked
 import kotlin.collections.map
 
-class SyncArchiveMangaService(
+class ArchiveSyncService(
     private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao,
-    private val mangaOps: LibraryPort.MangaOperations<MangaFolderDto> = MangaFolderService(
+    private val mangaOps: LibraryPort.MangaOperations<MangaFolderDto> = FolderMangaOperation(
         context,
         folderDao,
         chapterDao
@@ -69,7 +69,7 @@ class SyncArchiveMangaService(
      * @throws java.io.IOException Se ocorrer falha no acesso ao diretório ou leitura de metadados.
      * @throws kotlinx.coroutines.CancellationException Se a coroutine for cancelada durante a sincronização.
      */
-    override suspend fun syncMangas(@Nullable baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+    override suspend fun syncMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
         // TODO: Tratar erro melhor
         if (baseUri === null) {
             return@withContext
@@ -122,7 +122,7 @@ class SyncArchiveMangaService(
      * @see processFolderList
      * @see syncMangas
      */
-    override suspend fun rescanMangas(@Nullable baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+    override suspend fun rescanMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
         // TODO: Tratar erro melhor
         if (baseUri === null) {
             return@withContext
@@ -150,7 +150,7 @@ class SyncArchiveMangaService(
      *
      * @throws kotlinx.coroutines.CancellationException Se a operação for interrompida.
      */
-    override suspend fun deepRescanLibrary(@Nullable baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+    override suspend fun deepRescanLibrary(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
         rescanMangas(baseUri)
         val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
