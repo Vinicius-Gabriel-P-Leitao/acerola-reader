@@ -1,11 +1,12 @@
 package br.acerola.manga.domain.service.library.sync
 
 import android.net.Uri
+import br.acerola.manga.R
 import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.mapper.toModel
-import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchMangaDataService
+import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.MangaDexRequestError
 import kotlinx.coroutines.Dispatchers
@@ -19,9 +20,9 @@ import kotlin.math.roundToInt
 // TODO: Criar um método privado que vai chamar um futuro serviço
 //  FetchCoverMangaDexService e escrever o arquivo de resultado da API no sistema de arquivos
 class MangaDexSyncService(
-    private val mangaDao: MangaMetadataDao,
     private val folderDao: MangaFolderDao,
-    private val fetchManga: MangaDexFetchMangaDataService = MangaDexFetchMangaDataService()
+    private val mangaDao: MangaMetadataDao,
+    private val fetchManga: MangaDexFetchMangaDataService = MangaDexFetchMangaDataService(),
 ) : LibraryPort<MangaMetadataDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress
@@ -30,6 +31,8 @@ class MangaDexSyncService(
     val mangas: StateFlow<List<MangaMetadataDto>> get() = _mangas
 
     // TODO: Tratar erros melhor
+    // TODO: Sync de dados simples, vai buscar de apenas dados novos, caso do DB de folder tenha um que não existe ainda no de metadados
+    //  ele vai fazer um scan só para ele
     override suspend fun syncMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
         _progress.value = 0
 
@@ -77,11 +80,11 @@ class MangaDexSyncService(
                 updatedList.add(bestMatch)
             } catch (mangaDexRequestError: MangaDexRequestError) {
                 throw mangaDexRequestError
-            } catch (exception: Exception) {
+            } catch (_: Exception) {
                 // TODO: Criar string
                 throw MangaDexRequestError(
-                    title = "Erro ao sincronizar metadados",
-                    description = exception.message ?: "Falha desconhecida no serviço de sincronização."
+                    title = R.string.title_error_mangadex_sync,
+                    description = R.string.message_error_mangadex_sync_unknown
                 )
             }
         }
@@ -90,10 +93,12 @@ class MangaDexSyncService(
         _progress.value = 100
     }
 
+    // TODO: Fazer reescan bruto de metados onde vai refazer todas buscas, porem só de mangás
     override suspend fun rescanMangas(baseUri: Uri?) {
         TODO("Not yet implemented")
     }
 
+    // TODO: Fazer uma busca mais bruta ainda, vai buscar tando dos mangas quando dos capitulos
     override suspend fun deepRescanLibrary(baseUri: Uri?) {
         TODO("Not yet implemented")
     }

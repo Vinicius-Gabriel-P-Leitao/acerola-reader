@@ -1,11 +1,12 @@
 package br.acerola.manga.shared.error.exception
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import br.acerola.manga.R
 
-// TODO: Criar uma string
 class PermissionDeniedError(
-    override val title: String = "Erro de permissão.",
-    override val description: String = "Permissão negada.",
+    @param:StringRes override val title: Int = R.string.title_permission_denied_error,
+    @param:StringRes override val description: Int = R.string.description_permission_denied_error,
     override val dismissButton: @Composable (() -> Unit)? = null,
     override val content: (@Composable () -> Unit)? = null
-) : ApplicationException(description = description, content = content)
+) : ApplicationException(content = content)

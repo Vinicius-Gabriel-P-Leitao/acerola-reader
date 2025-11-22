@@ -16,9 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.R
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
@@ -37,8 +39,7 @@ fun ChapterItem(
         ) {
             Column(modifier = Modifier.weight(weight = 1f)) {
                 Text(
-                    // TODO: Criar string
-                    text = "Capitulo ${chapter.chapterSort}",
+                    text = stringResource(id = R.string.title_chapter_item_chapter_number, chapter.chapterSort),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = textColor
                 )

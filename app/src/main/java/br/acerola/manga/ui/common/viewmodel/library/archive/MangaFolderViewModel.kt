@@ -82,26 +82,30 @@ class MangaFolderViewModel(
         syncLibrary()
     }
 
-
     fun selectFolder(folderId: Long) {
         _selectedFolderId.value = folderId
     }
 
-    fun rescanMangas() = runLibraryTask {
-        libraryPort.rescanMangas(baseUri = getFolderUri())
-    }
-
+    // NOTE: Sync básico que vê só novas alterações
     fun syncLibrary() = runLibraryTask {
         libraryPort.syncMangas(baseUri = getFolderUri())
     }
 
+    // NOTE: Sync que vê só mangás novos, não faz sync de capitulos
+    fun rescanMangas() = runLibraryTask {
+        libraryPort.rescanMangas(baseUri = getFolderUri())
+    }
+
+    // NOTE: Sync bruto, busca tudo de novo até os capitulos
+    fun deepScanLibrary() = runLibraryTask {
+        libraryPort.deepRescanLibrary(baseUri = getFolderUri())
+    }
+
+    // TODO: A ser implementado na config de cada manga, só vai buscar os capitulos
     fun syncChaptersByFolder(folderId: Long) = runLibraryTask {
         mangaOperations.rescanChaptersByManga(mangaId = folderId)
     }
 
-    fun deepScanLibrary() = runLibraryTask {
-        libraryPort.deepRescanLibrary(baseUri = getFolderUri())
-    }
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
     private fun runLibraryTask(block: suspend () -> Unit) {

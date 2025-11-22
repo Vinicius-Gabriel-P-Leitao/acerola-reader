@@ -20,9 +20,9 @@ import br.acerola.manga.domain.service.library.manga.MangaDexMangaOperation
 import br.acerola.manga.domain.service.library.sync.ArchiveSyncService
 import br.acerola.manga.domain.service.library.sync.MangaDexSyncService
 import br.acerola.manga.shared.permission.FolderAccessManager
-import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.layout.NavigationBottomBar
+import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
@@ -32,9 +32,9 @@ import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewMo
 import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModelFactory
 import br.acerola.manga.ui.feature.main.config.screen.ConfigScreen
 import br.acerola.manga.ui.feature.main.history.screen.HistoryScreen
+import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
 import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModel
 import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModelFactory
-import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
 
 class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
@@ -86,8 +86,7 @@ class MainActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
-                mangaFolderViewModel,
-                homeViewModel
+                mangaFolderViewModel, homeViewModel
             )
         }
         defaultComposable(context, Destination.HISTORY) {
@@ -95,7 +94,7 @@ class MainActivity(
         }
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(
-                folderAccessViewModel, filePreferencesViewModel, mangaFolderViewModel, mangaDexViewModel
+                filePreferencesViewModel, folderAccessViewModel, mangaFolderViewModel, mangaDexViewModel
             )
         }
     }

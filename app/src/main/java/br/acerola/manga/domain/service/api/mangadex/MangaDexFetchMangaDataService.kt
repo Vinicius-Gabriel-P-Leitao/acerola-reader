@@ -1,6 +1,7 @@
 package br.acerola.manga.domain.service.api.mangadex
 
 import android.util.Log
+import br.acerola.manga.R
 import br.acerola.manga.BuildConfig
 import br.acerola.manga.domain.builder.MetadataBuilder
 import br.acerola.manga.domain.database.dao.api.mangadex.manga.MangaDataMangaDexDao
@@ -44,8 +45,6 @@ class MangaDexFetchMangaDataService(
     override suspend fun searchManga(
         title: String, limit: Int, offset: Int, vararg extra: String?
     ): List<MangaMetadataDto> {
-        Log.d(this.javaClass.name, "Parametro 'extra' não é implementado nesse método. ")
-
         return withContext(context = Dispatchers.IO) {
             try {
                 val response: MangaDexResponse = api.searchMangaByName(title, limit, offset)
@@ -54,13 +53,13 @@ class MangaDexFetchMangaDataService(
                 val code = httpException.code()
 
                 throw MangaDexRequestError(
-                    title = "Erro HTTP $code",
-                    description = if (code == 429) "Muitas requisições. Tente novamente em breve." else "Erro de comunicação com o MangaDex."
+                    title = R.string.title_http_error,
+                    description = if (code == 429) R.string.description_http_error_rate_limit else R.string.description_http_error_generic
                 )
             } catch (_: Exception) {
                 throw MangaDexRequestError(
-                    title = "Requisição de metadados.",
-                    description = "Erro ao fazer busca de metadados dentro do mangadex."
+                    title = R.string.title_metadata_request_error,
+                    description = R.string.description_metadata_request_error
                 )
             }
         }
