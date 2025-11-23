@@ -236,12 +236,11 @@ class ArchiveSyncService(
                 }.awaitAll()
             }
         }
-        _progress.value = 100
 
+        _progress.value = 100
         delay(timeMillis = 250)
         _progress.value = -1
     }
-
 
     /**
      * Insere ou atualiza uma pasta de mangá no banco, conforme sua existência prévia.

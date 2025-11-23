@@ -44,6 +44,36 @@ class HomeViewModel(
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
+    val isIndexing: StateFlow<Boolean> = combine(
+        flow = mangaFolderViewModel.isIndexing,
+        flow2 = mangaMetadataViewModel.isIndexing
+    ) { folderIsIndexing, metadataIsIndexing ->
+        folderIsIndexing || metadataIsIndexing
+    }.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+        initialValue = false
+    )
+
+    val progress: StateFlow<Int> = combine(
+        flow = mangaFolderViewModel.isIndexing,
+        flow2 = mangaFolderViewModel.progress,
+        flow3 = mangaMetadataViewModel.isIndexing,
+        flow4 = mangaMetadataViewModel.progress
+    ) { folderIsIndexing, folderProgress, metadataIsIndexing, metadataProgress ->
+        if (folderIsIndexing) {
+            return@combine folderProgress
+        }
+        if (metadataIsIndexing) {
+            return@combine metadataProgress
+        }
+        return@combine -1
+    }.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+        initialValue = -1
+    )
+
     val mangas: StateFlow<List<MangaDto>> = combine(
         flow = mangaFolderViewModel.folders,
         flow2 = mangaMetadataViewModel.metadata

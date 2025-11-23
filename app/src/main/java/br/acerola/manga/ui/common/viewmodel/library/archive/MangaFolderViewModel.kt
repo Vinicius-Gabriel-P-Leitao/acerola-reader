@@ -11,6 +11,9 @@ import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.error.exception.ApplicationException
+import br.acerola.manga.shared.error.exception.GenericInternalError
+import br.acerola.manga.shared.error.handler.GlobalErrorHandler
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -65,14 +68,11 @@ class MangaFolderViewModel(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId
-        .flatMapLatest { id ->
+    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
             id?.let {
-                chapterOperations.loadChapterByManga(mangaId = it)
-                    .map { page -> page.items }
+                chapterOperations.loadChapterByManga(mangaId = it).map { page -> page.items }
             } ?: flowOf(value = emptyList())
-        }
-        .stateIn(
+        }.stateIn(
             viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             initialValue = emptyList()
@@ -111,16 +111,16 @@ class MangaFolderViewModel(
     private fun runLibraryTask(block: suspend () -> Unit) {
         viewModelScope.launch {
             _isIndexing.value = true
-            _error.value = null
-            val start = System.currentTimeMillis()
+
             try {
                 block()
-            } catch (e: Exception) {
-                _error.value = e
+            } catch (applicationException: ApplicationException) {
+                GlobalErrorHandler.emit(applicationException)
+            } catch (exception: Exception) {
+                GlobalErrorHandler.emit(
+                    exception = GenericInternalError(cause = exception)
+                )
             } finally {
-                val elapsed = System.currentTimeMillis() - start
-                val minTime = 500L
-                if (elapsed < minTime) delay(timeMillis = minTime - elapsed)
                 _isIndexing.value = false
             }
         }

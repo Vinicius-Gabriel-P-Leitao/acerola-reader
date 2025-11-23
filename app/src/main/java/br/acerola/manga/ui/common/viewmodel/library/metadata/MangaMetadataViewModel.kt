@@ -40,24 +40,37 @@ class MangaMetadataViewModel(
     private val mangaOperations: LibraryPort.MangaOperations<MangaMetadataDto>,
 ) : AndroidViewModel(application) {
     val progress: StateFlow<Int> = libraryPort.progress
-    private val _mangas = MutableStateFlow<List<MangaMetadataDto>>(value = emptyList())
-    val mangas: StateFlow<List<MangaMetadataDto>> get() = _mangas.asStateFlow()
+
+    private val _isIndexing = MutableStateFlow(value = false)
+    val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
     val metadata: StateFlow<List<MangaMetadataDto>> = mangaOperations.loadMangas().stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList()
     )
 
-    fun loadAndSyncMangas() {
+    fun loadAndSyncMangas() = runLibraryTask {
+        libraryPort.syncMangas(baseUri = null)
+    }
+
+    // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
+    private fun runLibraryTask(block: suspend () -> Unit) {
         viewModelScope.launch {
+            _isIndexing.value = true
+            val start = System.currentTimeMillis()
             try {
-                libraryPort.syncMangas(baseUri = null)
+                block()
             } catch (applicationException: ApplicationException) {
                 GlobalErrorHandler.emit(applicationException)
             } catch (exception: Exception) {
                 GlobalErrorHandler.emit(
                     exception =
-                        GenericInternalError(cause = exception)
+                    GenericInternalError(cause = exception)
                 )
+            } finally {
+                val elapsed = System.currentTimeMillis() - start
+                val minTime = 500L
+                if (elapsed < minTime) kotlinx.coroutines.delay(timeMillis = minTime - elapsed)
+                _isIndexing.value = false
             }
         }
     }
