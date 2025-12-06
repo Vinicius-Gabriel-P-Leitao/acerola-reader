@@ -14,6 +14,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
+import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
+import br.acerola.manga.domain.service.archive.MangaCoverService
 import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
 import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
 import br.acerola.manga.domain.service.library.manga.MangaDexMangaOperation
@@ -52,9 +54,13 @@ class MainActivity(
             application,
             folderAccessViewModel = folderAccessViewModel,
             libraryPort = ArchiveSyncService(
-                context = this, folderDao = database.mangaFolderDao(), chapterDao = database.chapterFileDao(),
+                context = this,
+                folderDao = database.mangaFolderDao(),
+                chapterDao = database.chapterFileDao(),
             ), mangaOperations = FolderMangaOperation(
-                context = this, folderDao = database.mangaFolderDao(), chapterDao = database.chapterFileDao()
+                context = this,
+                folderDao = database.mangaFolderDao(),
+                chapterDao = database.chapterFileDao()
             ), chapterOperations = FileChapterOperation(
                 chapterDao = database.chapterFileDao()
             )
@@ -65,8 +71,17 @@ class MainActivity(
         MangaMetadataViewModelFactory(
             application,
             libraryPort = MangaDexSyncService(
-                folderDao = database.mangaFolderDao(),
+                context = application,
                 mangaDao = database.mangaMetadataDao(),
+                folderDao = database.mangaFolderDao(),
+                authorDao = database.authorDao(),
+                genderDao = database.genderDao(),
+                mangaCoverService = MangaCoverService(
+                    context = application,
+                    coverDao = database.coverDao(),
+                    folderDao = database.mangaFolderDao(),
+                    downloadService = MangaDexFetchCoverService()
+                )
             ),
             mangaOperations = MangaDexMangaOperation(
                 folderDao = database.mangaFolderDao(),
@@ -94,7 +109,10 @@ class MainActivity(
         }
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(
-                filePreferencesViewModel, folderAccessViewModel, mangaFolderViewModel, mangaDexViewModel
+                filePreferencesViewModel,
+                folderAccessViewModel,
+                mangaFolderViewModel,
+                mangaDexViewModel
             )
         }
     }

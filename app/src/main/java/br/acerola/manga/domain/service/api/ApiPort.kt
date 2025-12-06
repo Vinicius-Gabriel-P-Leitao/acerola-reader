@@ -9,6 +9,6 @@ interface ApiPort {
     }
 
     interface ArchiveOperations<P> {
-        suspend fun searchCover(search: String, vararg extra: P?): ByteArray
+        suspend fun searchCover(url: String, vararg extra: P?): ByteArray
     }
 }

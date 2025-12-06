@@ -8,9 +8,6 @@ import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,13 +23,9 @@ class MangaDexMangaOperation(
     val mangas: StateFlow<List<MangaMetadataDto>> = _mangas.asStateFlow()
 
     override fun loadMangas(): StateFlow<List<MangaMetadataDto>> {
-        return mangaDao.getAllMangasMetadata().map { folders ->
-            coroutineScope {
-                folders.map { folder ->
-                    async(context = Dispatchers.IO) {
-                        folder.toDto()
-                    }
-                }.awaitAll()
+        return mangaDao.getAllMangasWithRelations().map { relationsList ->
+            relationsList.map { relation ->
+                relation.toDto()
             }
         }.stateIn(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),

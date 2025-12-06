@@ -2,7 +2,6 @@ package br.acerola.manga.domain.service.library.sync
 
 import android.content.Context
 import android.net.Uri
-import androidx.annotation.Nullable
 import br.acerola.manga.domain.builder.ArchiveBuilder
 import br.acerola.manga.domain.database.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
@@ -104,7 +103,7 @@ class ArchiveSyncService(
         if (removedFolders.isNotEmpty()) {
             removedFolders.forEach { folder ->
                 // NOTE: Ele deleta os capitulos de forma recursiva, joga pro sqlite
-                folderDao.deleteMangaFolder(manga = folder)
+                folderDao.delete(entity = folder)
             }
         }
 
@@ -256,11 +255,11 @@ class ArchiveSyncService(
         val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
 
         if (existing != null) {
-            folderDao.updateMangaFolder(manga = folder.copy(id = existing.id))
+            folderDao.update(entity = folder.copy(id = existing.id))
             return
         }
 
-        folderDao.insertMangaFolder(manga = folder)
+        folderDao.insert(entity = folder)
     }
 
     private fun normalizeName(name: String): String {

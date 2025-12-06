@@ -34,6 +34,8 @@
     <string name="title_config_sync_modal">Sincronizar mangás</string>
     <string name="title_chapter_item_chapter_number">Capitulo %1$s</string>
     <string name="title_error_mangadex_sync">Erro ao sincronizar metadados</string>
+    <string name="title_sync_metadata">Sincronizar metadados</string>
+    <string name="title_download_error">Erro ao sincronizar as imagens de cover</string>
     <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
     <string name="description_text_selected_manga_folder">Pasta selecionada: %1$s</string>
@@ -49,8 +51,8 @@
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
     <string name="description_mangadex_sync_in_progress">Sincronizando mangás…</string>
-    <string name="title_sync_metadata">Sincronizar metadados</string>
     <string name="description_sync_metadata_supporting">Adiciona apenas metadados a mangás.</string>
+    <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão sendo sincronizados.</string>
 
     <!-- Error messages -->
     <string name="title_folder_access_error">Erro de acesso a pasta</string>

@@ -278,7 +278,7 @@ class ChaptersActivity(
                             Spacer(modifier = Modifier.width(width = 4.dp))
                             Text(
                                 // TODO: Verificar se consigo pegar status do mangá
-                                text = manga.metadata?.author ?: "Unknown",
+                                text = manga.metadata?.authors?.name ?: "Unknown",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = textColor
                             )

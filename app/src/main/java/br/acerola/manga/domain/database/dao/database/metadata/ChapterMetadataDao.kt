@@ -1,24 +1,16 @@
 package br.acerola.manga.domain.database.dao.database.metadata
 
 import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
+import androidx.room.Transaction
+import br.acerola.manga.domain.database.dao.database.BaseDao
 import br.acerola.manga.domain.model.metadata.ChapterMetadata
+import br.acerola.manga.domain.model.relation.MetadataWithRelations
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ChapterMetadataDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChapterMetadata(manga: ChapterMetadata): Long
+interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
 
-    @Update
-    suspend fun updateChapterMetadata(manga: ChapterMetadata)
-
-    @Delete
-    suspend fun deleteChapterMetadata(manga: ChapterMetadata)
 
     @Query("SELECT * FROM chapter_metadata ORDER BY chapter ASC")
     fun getAllChaptersMetadata(): Flow<List<ChapterMetadata>>

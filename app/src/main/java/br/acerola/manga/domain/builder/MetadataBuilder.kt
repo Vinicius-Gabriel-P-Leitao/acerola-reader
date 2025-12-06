@@ -1,35 +1,54 @@
 package br.acerola.manga.domain.builder
 
-import android.util.Log
 import br.acerola.manga.shared.dto.mangadex.MangaData
+import br.acerola.manga.shared.dto.metadata.AuthorDto
+import br.acerola.manga.shared.dto.metadata.CoverDto
+import br.acerola.manga.shared.dto.metadata.GenreDto
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
-import com.google.gson.GsonBuilder
 
 object MetadataBuilder {
     fun fromMangaData(mangaData: MangaData): MangaMetadataDto {
-        val gsonPretty = GsonBuilder().setPrettyPrinting().create()
-
-        Log.d(
-            "MetadataBuilder",
-            gsonPretty.toJson(mangaData)
-        )
-
         val attributes = mangaData.attributes
 
-        val author: String? = mangaData.authorName
-        val genres: List<String> = attributes.tags.mapNotNull { tag -> tag.attributes.name }
-        val romanji: String? = attributes.altTitlesList.flatMap { it.entries }.find { it.key == "ja-ro" }?.value
+        val authors = if (mangaData.authorName != null && mangaData.authorId !=null) {
+            AuthorDto(
+                id = mangaData.authorId!!,
+                name = mangaData.authorName!!,
+                type = mangaData.authorType!!
+            )
+        } else null
+
+        val coverDto = if (mangaData.coverFileName != null && mangaData.coverId != null) {
+            CoverDto(
+                id = mangaData.coverId!!,
+                fileName = mangaData.coverFileName!!,
+                url = mangaData.getCoverUrl() ?: ""
+            )
+        } else null
+
+        val genresList: List<GenreDto> = attributes.tags.mapNotNull { tag ->
+            val name = tag.attributes.name
+            if (!name.isNullOrBlank()) {
+                GenreDto(id = tag.id, name = name)
+            } else null
+        }
+
+        val romanji: String? = attributes.altTitlesList
+            .flatMap { it.entries }
+            .find { it.key == "ja-ro" }?.value
             ?: attributes.titleMap["ja-ro"]
 
+        // TODO: String para valores default
         return MangaMetadataDto(
             id = mangaData.id,
-            title = attributes.title ?: "Untitled",
+            title = attributes.title ?: "Sem Título",
             description = attributes.description ?: "",
             romanji = romanji,
-            gender = genres,
             year = attributes.year,
             status = attributes.status,
-            author = author
+            cover = coverDto,
+            gender = genresList,
+            authors = authors
         )
     }
 

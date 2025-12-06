@@ -52,6 +52,7 @@ class MangaDexFetchMangaDataService(
             } catch (httpException: HttpException) {
                 val code = httpException.code()
 
+                Log.d("searchManga", httpException.message.toString())
                 throw MangaDexRequestError(
                     title = R.string.title_http_error,
                     description = if (code == 429) R.string.description_http_error_rate_limit else R.string.description_http_error_generic

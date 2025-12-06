@@ -1,6 +1,7 @@
 package br.acerola.manga.shared.dto.mangadex
 
 import br.acerola.manga.BuildConfig
+import br.acerola.manga.domain.model.metadata.author.TypeAuthor
 import com.google.gson.annotations.SerializedName
 
 data class MangaDexResponse(
@@ -18,13 +19,19 @@ data class MangaData(
     val attributes: MangaAttributes,
     val relationships: List<Relationship> = emptyList()
 ) {
+
+    private val bestAuthorMatch: Relationship?
+        get() = relationships.find { it.type == TypeAuthor.AUTHOR.type }
+            ?: relationships.find { it.type == TypeAuthor.ARTIST.type }
+
     val authorName: String?
-        get() = relationships.find { it.type == "author" }?.attributes?.name
-            ?: relationships.find { it.type == "artist" }?.attributes?.name
+        get() = bestAuthorMatch?.attributes?.name
 
     val authorId: String?
-        get() = relationships.find { it.type == "author" }?.id
-            ?: relationships.find { it.type == "artist" }?.id
+        get() = bestAuthorMatch?.id
+
+    val authorType: String?
+        get() = bestAuthorMatch?.type
 
     val coverFileName: String?
         get() = relationships.find { it.type == "cover_art" }?.attributes?.fileName
@@ -51,7 +58,8 @@ data class MangaAttributes(
     val latestUploadedChapter: String? = null
 ) {
     val title: String? get() = titleMap["pt-br"] ?: titleMap["en"] ?: titleMap["ja-ro"]
-    val description: String? get() = descriptionMap["pt-br"] ?: descriptionMap["en"] ?: descriptionMap["ja"]
+    val description: String?
+        get() = descriptionMap["pt-br"] ?: descriptionMap["en"] ?: descriptionMap["ja"]
 }
 
 data class Links(
