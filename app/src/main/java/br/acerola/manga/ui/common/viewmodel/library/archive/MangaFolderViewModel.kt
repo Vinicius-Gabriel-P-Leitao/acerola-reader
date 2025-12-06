@@ -88,17 +88,20 @@ class MangaFolderViewModel(
 
     // NOTE: Sync básico que vê só novas alterações
     fun syncLibrary() = runLibraryTask {
-        libraryPort.syncMangas(baseUri = getFolderUri())
+        val uri = getFolderUri() ?: return@runLibraryTask
+        libraryPort.syncMangas(baseUri = uri)
     }
 
     // NOTE: Sync que vê só mangás novos, não faz sync de capitulos
     fun rescanMangas() = runLibraryTask {
-        libraryPort.rescanMangas(baseUri = getFolderUri())
+        val uri = getFolderUri() ?: return@runLibraryTask
+        libraryPort.rescanMangas(baseUri = uri)
     }
 
     // NOTE: Sync bruto, busca tudo de novo até os capitulos
     fun deepScanLibrary() = runLibraryTask {
-        libraryPort.deepRescanLibrary(baseUri = getFolderUri())
+        val uri = getFolderUri() ?: return@runLibraryTask
+        libraryPort.deepRescanLibrary(baseUri = uri)
     }
 
     // TODO: A ser implementado na config de cada manga, só vai buscar os capitulos
@@ -127,8 +130,8 @@ class MangaFolderViewModel(
     }
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
-    private suspend fun getFolderUri(): Uri {
+    private suspend fun getFolderUri(): Uri? {
         folderAccessViewModel.loadSavedFolder()
-        return folderAccessViewModel.folderUri ?: throw IllegalStateException("Nenhuma pasta salva encontrada.")
+        return folderAccessViewModel.folderUri
     }
 }

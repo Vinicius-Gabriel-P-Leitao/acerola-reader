@@ -1,5 +1,6 @@
 package br.acerola.manga.shared.error.exception
 
+import android.util.Log
 import androidx.annotation.StringRes
 import br.acerola.manga.R
 
@@ -11,6 +12,7 @@ class GenericInternalError(
     description = R.string.description_generic_internal_error,
 ) {
     init {
+        Log.e("GenericInternalError", cause.message.toString())
         initCause(cause)
     }
 }
