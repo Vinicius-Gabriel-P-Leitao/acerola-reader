@@ -1,5 +1,6 @@
 package br.acerola.manga.application
 
+import android.util.Log
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -10,7 +11,6 @@ import br.acerola.manga.ui.common.component.Modal
 @Composable
 fun GlobalErrorRenderer() {
     val error = GlobalErrorHandler.errors.collectAsState(initial = null).value
-
     error?.let { exception ->
         Modal(
             show = true,

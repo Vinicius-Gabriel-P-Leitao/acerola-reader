@@ -21,7 +21,7 @@ class MangaDexFetchCoverService : ApiPort.ArchiveOperations<String> {
             .build()
 
         api = Retrofit.Builder()
-            .baseUrl(BuildConfig.MANGADEX_BASE_URL)
+            .baseUrl(BuildConfig.MANGADEX_UPLOAD_URL)
             .client(okHttpClient)
             .build()
             .create(MangaDexDownloadDao::class.java)

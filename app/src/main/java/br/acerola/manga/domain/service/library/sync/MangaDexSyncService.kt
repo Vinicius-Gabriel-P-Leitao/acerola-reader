@@ -85,7 +85,6 @@ class MangaDexSyncService(
             val rootUri = rootPath.toUri()
 
             try {
-                Log.d("syncMangas", title)
                 val fetchedList: List<MangaMetadataDto> = fetchManga.searchManga(title = title)
                 val folderNameNormalized = title.filter { it.isLetterOrDigit() }.lowercase()
 
@@ -95,8 +94,6 @@ class MangaDexSyncService(
 
                     candidateTitleNormalized == folderNameNormalized || candidateRomanjiNormalized == folderNameNormalized
                 } ?: fetchedList.firstOrNull()
-
-                Log.d("MangaDexSyncService", bestMatch.toString())
 
                 if (bestMatch == null) return@forEachIndexed
 
@@ -118,10 +115,6 @@ class MangaDexSyncService(
                     )
                 }
 
-                Log.d("MangaDexSyncService", authorId.toString())
-                Log.d("MangaDexSyncService", genderId.toString())
-                Log.d("MangaDexSyncService", coverId.toString())
-
                 val newMangaEntity = bestMatch.toModel(
                     authorId = authorId, coverId = coverId, genderId = genderId
                 )
@@ -129,9 +122,11 @@ class MangaDexSyncService(
                 mangaDao.insert(entity = newMangaEntity)
             } catch (mangaDexRequestError: MangaDexRequestError) {
                 throw mangaDexRequestError
-            } catch (_: Exception) {
+            } catch (exception: Exception) {
+                println(exception)
                 throw MangaDexRequestError(
-                    title = R.string.title_error_mangadex_sync, description = R.string.message_error_mangadex_sync_unknown
+                    title = R.string.title_error_mangadex_sync,
+                    description = R.string.message_error_mangadex_sync_unknown
                 )
             }
         }
@@ -150,7 +145,6 @@ class MangaDexSyncService(
     override suspend fun deepRescanLibrary(baseUri: Uri?) {
         TODO("Not yet implemented")
     }
-
 
     private suspend fun saveAndGetAuthorId(dto: AuthorDto): Long {
         val insertedId = authorDao.insert(
@@ -179,7 +173,8 @@ class MangaDexSyncService(
         return if (insertedId != -1L) {
             insertedId
         } else {
-            genderDao.getGenderByMirrorId(mirrorId = dto.id)?.id ?: throw IllegalStateException("Gênero deveria existir")
+            genderDao.getGenderByMirrorId(mirrorId = dto.id)?.id
+                ?: throw IllegalStateException("Gênero deveria existir")
         }
     }
 }

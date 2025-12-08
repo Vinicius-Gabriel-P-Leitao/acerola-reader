@@ -30,15 +30,12 @@ class MangaCoverService(
             if (rootDir != null && rootDir.exists()) {
                 var mangaDir = rootDir.findFile(mangaFolderName)
 
-                Log.d("MangaCoverService", mangaDir.toString())
-
                 if (mangaDir == null) {
                     mangaDir = rootDir.createDirectory(mangaFolderName)
                 }
 
                 if (mangaDir != null && mangaDir.canWrite()) {
                     val bytes = downloadService.searchCover(coverDto.url)
-                    Log.d("MangaCoverService", bytes.toString())
                     val finalFileName = "cover.png"
 
                     val oldFile = mangaDir.findFile(finalFileName)
@@ -57,8 +54,7 @@ class MangaCoverService(
                 }
             }
         } catch (exception: Exception) {
-            // TODO: Tratar erros
-            exception.printStackTrace()
+            println(exception)
         }
 
         if (savedUriString != null) {
@@ -68,16 +64,22 @@ class MangaCoverService(
             }
         }
 
-        val coverEntity = Cover(
-            id = folderId,
-            mirrorId = coverDto.id,
-            fileName = "cover.png",
-            url = coverDto.url,
+        val insertedId = coverDao.insert(
+            entity = Cover(
+                mirrorId = coverDto.id,
+                fileName = "cover.png",
+                url = coverDto.url,
+            )
         )
 
-        return run {
-            coverDao.update(coverEntity)
-            coverEntity.id
+        return if (insertedId != -1L) {
+            insertedId
+        } else {
+            val existing = coverDao.getCoverByMirrorId(mirrorId = coverDto.id)
+                ?: throw IllegalStateException("O cover não foi encontrado.: ${coverDto.id}")
+
+            coverDao.update(existing.copy(url = coverDto.url, fileName = "cover.png"))
+            existing.id
         }
     }
 

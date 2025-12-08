@@ -9,8 +9,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "cover",
     indices = [
-        Index(value = ["mirror_id"], unique = true),
-        Index(value = ["file_name"], unique = true)
+        Index(value = ["mirror_id"], unique = true)
     ]
 )
 data class Cover(
