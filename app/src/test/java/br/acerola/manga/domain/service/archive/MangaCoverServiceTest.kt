@@ -3,9 +3,9 @@ package br.acerola.manga.domain.service.archive
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.domain.database.dao.FakeMangaDexDownloadDao
-import br.acerola.manga.domain.database.dao.FakeMangaFolderDao
-import br.acerola.manga.domain.database.dao.database.metadata.cover.CoverDao
+import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDexDownloadDao
+import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
+import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.model.metadata.cover.Cover
 import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService

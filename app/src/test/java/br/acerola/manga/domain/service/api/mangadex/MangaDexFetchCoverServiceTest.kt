@@ -1,6 +1,6 @@
 package br.acerola.manga.domain.service.api.mangadex
 
-import br.acerola.manga.domain.database.dao.FakeMangaDexDownloadDao
+import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDexDownloadDao
 import br.acerola.manga.shared.error.exception.MangaDexRequestError
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals

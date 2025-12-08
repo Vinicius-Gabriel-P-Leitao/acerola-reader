@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.domain.database.dao.FakeChapterFileDao
-import br.acerola.manga.domain.database.dao.FakeMangaFolderDao
+import br.acerola.manga.domain.data.dao.database.FakeChapterFileDao
+import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import io.mockk.every
 import io.mockk.mockk

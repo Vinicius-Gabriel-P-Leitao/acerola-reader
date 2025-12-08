@@ -3,7 +3,7 @@ package br.acerola.manga.domain.service.api.mangadex
 import br.acerola.manga.BuildConfig
 import br.acerola.manga.R
 import br.acerola.manga.domain.builder.MetadataBuilder
-import br.acerola.manga.domain.database.dao.api.mangadex.manga.MangaDataMangaDexDao
+import br.acerola.manga.domain.data.dao.api.mangadex.manga.MangaDataMangaDexDao
 import br.acerola.manga.domain.middleware.MangaDexInterceptor
 import br.acerola.manga.domain.service.api.ApiPort
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse

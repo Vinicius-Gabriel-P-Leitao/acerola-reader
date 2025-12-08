@@ -2,11 +2,11 @@ package br.acerola.manga.domain.service.library.sync
 
 import android.content.Context
 import android.net.Uri
-import br.acerola.manga.domain.database.dao.FakeMangaDataMangaDexDao
-import br.acerola.manga.domain.database.dao.FakeMangaFolderDao
-import br.acerola.manga.domain.database.dao.FakeMangaMetadataDao
-import br.acerola.manga.domain.database.dao.database.metadata.author.AuthorDao
-import br.acerola.manga.domain.database.dao.database.metadata.gender.GenderDao
+import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDataMangaDexDao
+import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
+import br.acerola.manga.domain.data.dao.database.FakeMangaMetadataDao
+import br.acerola.manga.domain.data.dao.database.metadata.author.AuthorDao
+import br.acerola.manga.domain.data.dao.database.metadata.gender.GenderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.model.metadata.author.Author
 import br.acerola.manga.domain.model.metadata.gender.Gender

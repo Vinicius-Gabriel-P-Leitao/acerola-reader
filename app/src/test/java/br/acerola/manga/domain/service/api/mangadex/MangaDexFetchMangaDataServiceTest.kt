@@ -1,6 +1,6 @@
 package br.acerola.manga.domain.service.api.mangadex
 
-import br.acerola.manga.domain.database.dao.FakeMangaDataMangaDexDao
+import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDataMangaDexDao
 import br.acerola.manga.shared.dto.mangadex.MangaAttributes
 import br.acerola.manga.shared.dto.mangadex.MangaData
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse

@@ -13,7 +13,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
+import br.acerola.manga.domain.data.dao.database.AcerolaDatabase
 import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
 import br.acerola.manga.domain.service.archive.MangaCoverService
 import br.acerola.manga.domain.service.library.chapter.FileChapterOperation

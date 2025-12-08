@@ -1,7 +1,7 @@
 package br.acerola.manga.domain.service.library.manga
 
-import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
-import br.acerola.manga.domain.database.dao.database.metadata.MangaMetadataDao
+import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
+import br.acerola.manga.domain.data.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.mapper.toDto
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto

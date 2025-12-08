@@ -1,7 +1,7 @@
 package br.acerola.manga.domain.service.library.manga
 
-import br.acerola.manga.domain.database.dao.FakeMangaFolderDao
-import br.acerola.manga.domain.database.dao.FakeMangaMetadataDao
+import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
+import br.acerola.manga.domain.data.dao.database.FakeMangaMetadataDao
 import br.acerola.manga.domain.model.metadata.MangaMetadata
 import br.acerola.manga.domain.model.relation.MetadataWithRelations
 import kotlinx.coroutines.flow.first

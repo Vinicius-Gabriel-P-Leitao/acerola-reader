@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
+import br.acerola.manga.domain.data.dao.database.AcerolaDatabase
 import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.manga.MangaDto

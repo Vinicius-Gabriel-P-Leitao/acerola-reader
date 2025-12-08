@@ -1,6 +1,6 @@
 package br.acerola.manga.domain.service.library.chapter
 
-import br.acerola.manga.domain.database.dao.FakeChapterFileDao
+import br.acerola.manga.domain.data.dao.database.FakeChapterFileDao
 import br.acerola.manga.domain.model.archive.ChapterFile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

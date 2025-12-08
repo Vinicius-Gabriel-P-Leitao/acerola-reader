@@ -2,10 +2,9 @@ package br.acerola.manga.domain.service.archive
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.domain.database.dao.database.archive.MangaFolderDao
-import br.acerola.manga.domain.database.dao.database.metadata.cover.CoverDao
+import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
+import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.model.metadata.cover.Cover
 import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
 import br.acerola.manga.shared.dto.metadata.CoverDto
