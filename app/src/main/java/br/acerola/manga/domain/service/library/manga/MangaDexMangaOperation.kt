@@ -22,6 +22,10 @@ class MangaDexMangaOperation(
     private val _mangas = MutableStateFlow<List<MangaMetadataDto>>(value = emptyList())
     val mangas: StateFlow<List<MangaMetadataDto>> = _mangas.asStateFlow()
 
+    override suspend fun rescanChaptersByManga(mangaId: Long) {
+
+    }
+
     override fun loadMangas(): StateFlow<List<MangaMetadataDto>> {
         return mangaDao.getAllMangasWithRelations().map { relationsList ->
             relationsList.map { relation ->
@@ -32,9 +36,5 @@ class MangaDexMangaOperation(
             started = SharingStarted.Lazily,
             initialValue = emptyList()
         )
-    }
-
-    override suspend fun rescanChaptersByManga(mangaId: Long) {
-
     }
 }

@@ -1,8 +1,7 @@
 package br.acerola.manga.domain.service.api.mangadex
 
-import android.util.Log
-import br.acerola.manga.R
 import br.acerola.manga.BuildConfig
+import br.acerola.manga.R
 import br.acerola.manga.domain.builder.MetadataBuilder
 import br.acerola.manga.domain.database.dao.api.mangadex.manga.MangaDataMangaDexDao
 import br.acerola.manga.domain.middleware.MangaDexInterceptor
@@ -19,26 +18,30 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 class MangaDexFetchMangaDataService(
-    baseUrl: String = BuildConfig.MANGADEX_BASE_URL
-) : ApiPort.MetadataOperations<MangaMetadataDto, String> {
     private val api: MangaDataMangaDexDao
+) : ApiPort.MetadataOperations<MangaMetadataDto, String> {
 
-    init {
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(interceptor = MangaDexInterceptor())
-            .connectTimeout(timeout = 30, unit = TimeUnit.SECONDS)
-            .writeTimeout(timeout = 30, unit = TimeUnit.SECONDS)
-            .readTimeout(timeout = 30, unit = TimeUnit.SECONDS)
-            .build()
+    constructor(baseUrl: String = BuildConfig.MANGADEX_BASE_URL) : this(
+        api = createDefaultApi(baseUrl)
+    )
 
-        api = Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(MangaDataMangaDexDao::class.java)
+    companion object {
+        private fun createDefaultApi(baseUrl: String): MangaDataMangaDexDao {
+            val okHttpClient = OkHttpClient.Builder()
+                .addInterceptor(interceptor = MangaDexInterceptor())
+                .connectTimeout(timeout = 30, unit = TimeUnit.SECONDS)
+                .writeTimeout(timeout = 30, unit = TimeUnit.SECONDS)
+                .readTimeout(timeout = 30, unit = TimeUnit.SECONDS)
+                .build()
+
+            return Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(MangaDataMangaDexDao::class.java)
+        }
     }
-
 
     // TODO: Criar string
     // TODO: Criar uma lógica de catch mais robusta
@@ -52,7 +55,6 @@ class MangaDexFetchMangaDataService(
             } catch (httpException: HttpException) {
                 val code = httpException.code()
 
-                Log.d("searchManga", httpException.message.toString())
                 throw MangaDexRequestError(
                     title = R.string.title_http_error,
                     description = if (code == 429) R.string.description_http_error_rate_limit else R.string.description_http_error_generic
