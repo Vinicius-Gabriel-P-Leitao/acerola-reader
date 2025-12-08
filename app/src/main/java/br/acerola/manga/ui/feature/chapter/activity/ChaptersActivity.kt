@@ -42,7 +42,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,11 +49,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import br.acerola.manga.R
 import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
-import br.acerola.manga.domain.service.library.chapter.ChapterFileService
+import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.dto.manga.MangaDto
 import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
@@ -66,7 +63,6 @@ import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileModelFact
 import br.acerola.manga.ui.feature.chapter.component.ChapterItem
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
 class ChaptersActivity(
@@ -75,7 +71,7 @@ class ChaptersActivity(
     private val chapterViewModel: ChapterFileViewModel by viewModels {
         val database = AcerolaDatabase.getInstance(context = this)
         ChapterFileModelFactory(
-            application, chapterOperations = ChapterFileService(
+            application, chapterOperations = FileChapterOperation(
                 chapterDao = database.chapterFileDao()
             )
         )
@@ -282,7 +278,7 @@ class ChaptersActivity(
                             Spacer(modifier = Modifier.width(width = 4.dp))
                             Text(
                                 // TODO: Verificar se consigo pegar status do mangá
-                                text = manga.metadata?.author ?: "Unknown",
+                                text = manga.metadata?.authors?.name ?: "Unknown",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = textColor
                             )

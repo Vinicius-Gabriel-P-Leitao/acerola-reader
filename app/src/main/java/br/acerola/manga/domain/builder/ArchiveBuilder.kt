@@ -32,6 +32,7 @@ object ArchiveBuilder {
         }
     }
 
+    // TODO: Fazer "cover" ".jpg" ".png" ser um dicionario desse object, uma constante a ser usada.
     private fun isCover(file: DocumentFile): Boolean {
         val name = file.name?.lowercase() ?: return false
         return name.contains(other = "cover") && (name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png"))

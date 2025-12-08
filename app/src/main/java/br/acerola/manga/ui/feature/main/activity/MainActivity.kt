@@ -14,15 +14,17 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.domain.database.dao.database.AcerolaDatabase
-import br.acerola.manga.domain.service.library.chapter.ChapterFileService
-import br.acerola.manga.domain.service.library.manga.MangaFolderService
-import br.acerola.manga.domain.service.library.manga.MangaMetadataService
-import br.acerola.manga.domain.service.library.sync.SyncArchiveMangaService
-import br.acerola.manga.domain.service.library.sync.SyncMetadataMangaService
+import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
+import br.acerola.manga.domain.service.archive.MangaCoverService
+import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
+import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
+import br.acerola.manga.domain.service.library.manga.MangaDexMangaOperation
+import br.acerola.manga.domain.service.library.sync.ArchiveSyncService
+import br.acerola.manga.domain.service.library.sync.MangaDexSyncService
 import br.acerola.manga.shared.permission.FolderAccessManager
-import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.layout.NavigationBottomBar
+import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.viewmodel.archive.file.FilePreferencesViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModelFactory
@@ -32,9 +34,9 @@ import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewMo
 import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModelFactory
 import br.acerola.manga.ui.feature.main.config.screen.ConfigScreen
 import br.acerola.manga.ui.feature.main.history.screen.HistoryScreen
+import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
 import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModel
 import br.acerola.manga.ui.feature.main.home.viewmodel.HomeViewModelFactory
-import br.acerola.manga.ui.feature.main.home.screen.HomeScreen
 
 class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
@@ -51,24 +53,37 @@ class MainActivity(
         MangaFolderViewModelFactory(
             application,
             folderAccessViewModel = folderAccessViewModel,
-            libraryPort = SyncArchiveMangaService(
-                context = this, folderDao = database.mangaFolderDao(), chapterDao = database.chapterFileDao(),
-            ), mangaOperations = MangaFolderService(
-                context = this, folderDao = database.mangaFolderDao(), chapterDao = database.chapterFileDao()
-            ), chapterOperations = ChapterFileService(
+            libraryPort = ArchiveSyncService(
+                context = this,
+                folderDao = database.mangaFolderDao(),
+                chapterDao = database.chapterFileDao(),
+            ), mangaOperations = FolderMangaOperation(
+                context = this,
+                folderDao = database.mangaFolderDao(),
+                chapterDao = database.chapterFileDao()
+            ), chapterOperations = FileChapterOperation(
                 chapterDao = database.chapterFileDao()
             )
         )
     }
 
-    private val mangaMetadataViewModel: MangaMetadataViewModel by viewModels {
+    private val mangaDexViewModel: MangaMetadataViewModel by viewModels {
         MangaMetadataViewModelFactory(
             application,
-            libraryPort = SyncMetadataMangaService(
-                folderDao = database.mangaFolderDao(),
+            libraryPort = MangaDexSyncService(
+                context = application,
                 mangaDao = database.mangaMetadataDao(),
+                folderDao = database.mangaFolderDao(),
+                authorDao = database.authorDao(),
+                genderDao = database.genderDao(),
+                mangaCoverService = MangaCoverService(
+                    context = application,
+                    coverDao = database.coverDao(),
+                    folderDao = database.mangaFolderDao(),
+                    downloadService = MangaDexFetchCoverService()
+                )
             ),
-            mangaOperations = MangaMetadataService(
+            mangaOperations = MangaDexMangaOperation(
                 folderDao = database.mangaFolderDao(),
                 mangaDao = database.mangaMetadataDao(),
             )
@@ -79,15 +94,14 @@ class MainActivity(
         HomeViewModelFactory(
             application,
             mangaFolderViewModel = mangaFolderViewModel,
-            mangaMetadataViewModel = mangaMetadataViewModel
+            mangaMetadataViewModel = mangaDexViewModel
         )
     }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
-                mangaFolderViewModel,
-                homeViewModel
+                mangaFolderViewModel, homeViewModel
             )
         }
         defaultComposable(context, Destination.HISTORY) {
@@ -95,7 +109,10 @@ class MainActivity(
         }
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(
-                folderAccessViewModel, filePreferencesViewModel, mangaFolderViewModel, mangaMetadataViewModel
+                filePreferencesViewModel,
+                folderAccessViewModel,
+                mangaFolderViewModel,
+                mangaDexViewModel
             )
         }
     }

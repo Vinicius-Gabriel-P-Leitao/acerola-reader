@@ -9,9 +9,9 @@ interface LibraryPort<T> {
 
     val progress: StateFlow<Int>
 
-    suspend fun syncMangas(@Nullable baseUri: Uri?)
-    suspend fun rescanMangas(@Nullable baseUri: Uri?)
-    suspend fun deepRescanLibrary(@Nullable baseUri: Uri?)
+    suspend fun syncMangas(baseUri: Uri?)
+    suspend fun rescanMangas(baseUri: Uri?)
+    suspend fun deepRescanLibrary(baseUri: Uri?)
 
     interface MangaOperations<T> {
         fun loadMangas(): StateFlow<List<T>>

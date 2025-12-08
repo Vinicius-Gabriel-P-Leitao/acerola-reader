@@ -1,5 +1,6 @@
 package br.acerola.manga.shared.error.handler
 
+import android.util.Log
 import br.acerola.manga.shared.error.exception.ApplicationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,6 +11,7 @@ object GlobalErrorHandler {
 
     suspend fun emit(exception: ApplicationException) {
         _errors.emit(value = exception)
+        Log.e("GlobalErrorHandler", exception.message.toString())
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

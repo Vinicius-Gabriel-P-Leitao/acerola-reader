@@ -47,11 +47,11 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
 
-    val isIndexing by mangaFolderViewModel.isIndexing.collectAsState()
-    val progress by mangaFolderViewModel.progress.collectAsState()
     val error by mangaFolderViewModel.error.collectAsState()
 
     val layout by homeViewModel.selectedHomeLayout.collectAsState()
+    val isIndexing by homeViewModel.isIndexing.collectAsState()
+    val progress by homeViewModel.progress.collectAsState()
     val mangas by homeViewModel.mangas.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {

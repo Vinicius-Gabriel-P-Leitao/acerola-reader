@@ -32,6 +32,10 @@
     <string name="title_text_config_select_path_manga">Pasta dos mangás</string>
     <string name="title_preference_file_extension">Tipo do arquivo a ser salvo</string>
     <string name="title_config_sync_modal">Sincronizar mangás</string>
+    <string name="title_chapter_item_chapter_number">Capitulo %1$s</string>
+    <string name="title_error_mangadex_sync">Erro ao sincronizar metadados</string>
+    <string name="title_sync_metadata">Sincronizar metadados</string>
+    <string name="title_download_error">Erro ao sincronizar as imagens de cover</string>
     <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
     <string name="description_text_selected_manga_folder">Pasta selecionada: %1$s</string>
@@ -46,11 +50,28 @@
     <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos.</string>
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
+    <string name="description_mangadex_sync_in_progress">Sincronizando mangás…</string>
+    <string name="description_sync_metadata_supporting">Adiciona apenas metadados a mangás.</string>
+    <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão sendo sincronizados.</string>
 
     <!-- Error messages -->
+    <string name="title_folder_access_error">Erro de acesso a pasta</string>
+    <string name="description_folder_access_error">Não foi possível acessar a pasta.</string>
+    <string name="title_generic_internal_error">Erro interno desconhecido</string>
+    <string name="description_generic_internal_error">Ocorreu um erro interno inesperado.</string>
+    <string name="title_permission_denied_error">Erro de permissão</string>
+    <string name="description_permission_denied_error">Permissão negada.</string>
+    <string name="title_http_error">Erro de Comunicação</string>
+    <string name="description_http_error_rate_limit">Muitas requisições. Tente novamente em breve.</string>
+    <string name="description_http_error_generic">Erro de comunicação com o MangaDex.</string>
+    <string name="title_metadata_request_error">Erro na Busca de Metadados</string>
+    <string name="description_metadata_request_error">Ocorreu um erro ao buscar os metadados no MangaDex.</string>
+
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
     <string name="message_path_not_found">Pasta não encontrada.</string>
     <string name="description_icon_search_close">Fechar busca</string>
     <string name="description_text_search_no_results">Nenhum resultado encontrado</string>
+    <!-- Services -->
+    <string name="message_error_mangadex_sync_unknown">Falha desconhecida no serviço de sincronização.</string>
 </resources>

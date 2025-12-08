@@ -1,6 +1,9 @@
 package br.acerola.manga.shared.error.exception
 
+import androidx.annotation.StringRes
+import br.acerola.manga.R
+
 class MangaDexRequestError(
-    override val title: String = "Erro no mangadex.",
-    override val description: String = "Não foi possível fazer request para o mangadex.",
-) : ApplicationException(description = description)
+    @param:StringRes override val title: Int = R.string.title_error_mangadex_sync,
+    @param:StringRes override val description: Int = R.string.message_error_mangadex_sync_unknown,
+) : ApplicationException()

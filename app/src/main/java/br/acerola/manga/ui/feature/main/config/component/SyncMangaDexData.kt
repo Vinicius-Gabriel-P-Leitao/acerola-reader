@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.SyncLock
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,13 +30,11 @@ import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.Divider
 import br.acerola.manga.ui.common.component.SmartCard
-import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
 import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModel
 
 @Composable
-fun SyncLibrary(
-    mangaFolderViewModel: MangaFolderViewModel,
-    mangaMetadataViewModel: MangaMetadataViewModel
+fun SyncMangaDexData(
+    mangaDexViewModel: MangaMetadataViewModel
 ) {
     SmartCard(
         type = CardType.CONTENT,
@@ -45,8 +42,7 @@ fun SyncLibrary(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 12.dp
+            defaultElevation = 8.dp, pressedElevation = 12.dp
         )
     ) {
         Column {
@@ -82,41 +78,12 @@ fun SyncLibrary(
             Divider()
 
             ListItem(
-                modifier = Modifier.clickable {
-                    mangaFolderViewModel.deepScanLibrary()
-                    mangaMetadataViewModel.loadAndSyncMangas()
-                },
-                headlineContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_deep_sync))
-                },
-                supportingContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_deep_sync_supporting))
-                },
+                modifier = Modifier.clickable { mangaDexViewModel.loadAndSyncMangas() },
+                headlineContent = { Text(text = stringResource(id = R.string.title_sync_metadata)) },
+                supportingContent = { Text(text = stringResource(id = R.string.description_sync_metadata_supporting)) },
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.Default.SyncLock,
-                        contentDescription = null
-                    )
-                },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
-                )
-            )
-
-            HorizontalDivider()
-
-            ListItem(
-                modifier = Modifier.clickable { mangaFolderViewModel.syncLibrary() },
-                headlineContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_quick_sync))
-                },
-                supportingContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_quick_sync_supporting))
-                },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Default.Sync,
-                        contentDescription = null
+                        imageVector = Icons.Default.Sync, contentDescription = null
                     )
                 },
                 colors = ListItemDefaults.colors(

@@ -1,6 +1,7 @@
 package br.acerola.manga.domain.database.converter
 
 import androidx.room.TypeConverter
+import br.acerola.manga.domain.model.metadata.author.TypeAuthor
 
 class Converters {
     @TypeConverter
@@ -8,4 +9,10 @@ class Converters {
 
     @TypeConverter
     fun toStringList(data: String): List<String> = data.split(",")
+
+    @TypeConverter
+    fun toStatusChat(type: String): TypeAuthor = TypeAuthor.getByType(type)
+
+    @TypeConverter
+    fun fromStatusChat(status: TypeAuthor): String = status.type
 }

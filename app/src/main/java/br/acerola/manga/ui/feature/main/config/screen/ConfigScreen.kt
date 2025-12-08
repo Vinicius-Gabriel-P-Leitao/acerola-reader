@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,19 +23,26 @@ import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
 import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.ui.feature.main.config.component.SelectFolder
 import br.acerola.manga.ui.feature.main.config.component.SelectedPreferSavedFile
-import br.acerola.manga.ui.feature.main.config.component.SyncLibrary
+import br.acerola.manga.ui.feature.main.config.component.SyncLibraryArchive
+import br.acerola.manga.ui.feature.main.config.component.SyncMangaDexData
 
 @Composable
 fun ConfigScreen(
-    folderAccessViewModel: FolderAccessViewModel,
     filePreferencesViewModel: FilePreferencesViewModel,
+    folderAccessViewModel: FolderAccessViewModel,
     mangaFolderViewModel: MangaFolderViewModel,
-    mangaMetadataViewModel: MangaMetadataViewModel
+    mangaDexViewModel: MangaMetadataViewModel
 ) {
     val context = LocalContext.current
 
-    Scaffold(modifier = Modifier.padding(all = 6.dp)) { _ ->
-        Column {
+    val scrollState = rememberScrollState()
+
+    Scaffold(modifier = Modifier.padding(all = 6.dp)) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+        ) {
             SmartCard(
                 type = CardType.CONTENT,
                 title = stringResource(id = R.string.title_text_archive_configs_in_app),
@@ -49,7 +58,7 @@ fun ConfigScreen(
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
-                SyncLibrary(mangaFolderViewModel, mangaMetadataViewModel)
+                SyncLibraryArchive(mangaFolderViewModel)
             }
 
             Spacer(modifier = Modifier.height(height = 12.dp))
@@ -61,8 +70,10 @@ fun ConfigScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
             ) {
-                // TODO: Conteúdo das configs do MangaDex aqui
+                SyncMangaDexData(mangaDexViewModel)
             }
+
+            Spacer(modifier = Modifier.height(height = 16.dp))
         }
     }
 }

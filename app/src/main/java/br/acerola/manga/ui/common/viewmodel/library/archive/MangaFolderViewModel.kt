@@ -11,6 +11,9 @@ import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.error.exception.ApplicationException
+import br.acerola.manga.shared.error.exception.GenericInternalError
+import br.acerola.manga.shared.error.handler.GlobalErrorHandler
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -65,14 +68,11 @@ class MangaFolderViewModel(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId
-        .flatMapLatest { id ->
+    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
             id?.let {
-                chapterOperations.loadChapterByManga(mangaId = it)
-                    .map { page -> page.items }
+                chapterOperations.loadChapterByManga(mangaId = it).map { page -> page.items }
             } ?: flowOf(value = emptyList())
-        }
-        .stateIn(
+        }.stateIn(
             viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             initialValue = emptyList()
@@ -82,49 +82,56 @@ class MangaFolderViewModel(
         syncLibrary()
     }
 
-
     fun selectFolder(folderId: Long) {
         _selectedFolderId.value = folderId
     }
 
-    fun rescanMangas() = runLibraryTask {
-        libraryPort.rescanMangas(baseUri = getFolderUri())
-    }
-
+    // NOTE: Sync básico que vê só novas alterações
     fun syncLibrary() = runLibraryTask {
-        libraryPort.syncMangas(baseUri = getFolderUri())
+        val uri = getFolderUri() ?: return@runLibraryTask
+        libraryPort.syncMangas(baseUri = uri)
     }
 
+    // NOTE: Sync que vê só mangás novos, não faz sync de capitulos
+    fun rescanMangas() = runLibraryTask {
+        val uri = getFolderUri() ?: return@runLibraryTask
+        libraryPort.rescanMangas(baseUri = uri)
+    }
+
+    // NOTE: Sync bruto, busca tudo de novo até os capitulos
+    fun deepScanLibrary() = runLibraryTask {
+        val uri = getFolderUri() ?: return@runLibraryTask
+        libraryPort.deepRescanLibrary(baseUri = uri)
+    }
+
+    // TODO: A ser implementado na config de cada manga, só vai buscar os capitulos
     fun syncChaptersByFolder(folderId: Long) = runLibraryTask {
         mangaOperations.rescanChaptersByManga(mangaId = folderId)
     }
 
-    fun deepScanLibrary() = runLibraryTask {
-        libraryPort.deepRescanLibrary(baseUri = getFolderUri())
-    }
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
     private fun runLibraryTask(block: suspend () -> Unit) {
         viewModelScope.launch {
             _isIndexing.value = true
-            _error.value = null
-            val start = System.currentTimeMillis()
+
             try {
                 block()
-            } catch (e: Exception) {
-                _error.value = e
+            } catch (applicationException: ApplicationException) {
+                GlobalErrorHandler.emit(applicationException)
+            } catch (exception: Exception) {
+                GlobalErrorHandler.emit(
+                    exception = GenericInternalError(cause = exception)
+                )
             } finally {
-                val elapsed = System.currentTimeMillis() - start
-                val minTime = 500L
-                if (elapsed < minTime) delay(timeMillis = minTime - elapsed)
                 _isIndexing.value = false
             }
         }
     }
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
-    private suspend fun getFolderUri(): Uri {
+    private suspend fun getFolderUri(): Uri? {
         folderAccessViewModel.loadSavedFolder()
-        return folderAccessViewModel.folderUri ?: throw IllegalStateException("Nenhuma pasta salva encontrada.")
+        return folderAccessViewModel.folderUri
     }
 }

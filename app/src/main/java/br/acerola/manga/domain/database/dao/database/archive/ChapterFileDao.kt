@@ -6,23 +6,13 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import br.acerola.manga.domain.database.dao.database.BaseDao
 import br.acerola.manga.domain.model.archive.ChapterFile
+import br.acerola.manga.domain.model.archive.MangaFolder
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ChapterFileDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChapterFile(chapter: ChapterFile): Long
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(chapters: List<ChapterFile>)
-
-    @Update
-    suspend fun updateChapterFile(chapter: ChapterFile)
-
-    @Delete
-    suspend fun deleteChapterFile(chapter: ChapterFile)
-
+interface ChapterFileDao : BaseDao<ChapterFile> {
     @Query(
         value = """
             DELETE FROM

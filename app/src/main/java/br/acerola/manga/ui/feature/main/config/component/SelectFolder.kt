@@ -50,8 +50,7 @@ fun SelectFolder(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 12.dp
+            defaultElevation = 8.dp, pressedElevation = 12.dp
         )
     ) {
         Row(

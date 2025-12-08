@@ -11,8 +11,32 @@ data class MangaMetadataDto(
     val title: String,
     val description: String,
     val romanji: String? = null,
-    val gender: List<String> = emptyList(),
     val year: Int? = null,
     val status: String,
-    val author: String? = null,
+    val cover: CoverDto? = null,
+    val authors: AuthorDto? = null,
+    val gender: List<GenreDto> = emptyList(),
+) : Parcelable
+
+@Parcelize
+@Immutable
+data class CoverDto(
+    val id: String,
+    val fileName: String,
+    val url: String
+) : Parcelable
+
+@Parcelize
+@Immutable
+data class GenreDto(
+    val id: String,
+    val name: String
+) : Parcelable
+
+@Parcelize
+@Immutable
+data class AuthorDto(
+    val id: String,
+    val name: String,
+    val type: String
 ) : Parcelable

@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
-class MangaFolderService(
+class FolderMangaOperation(
     private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao
@@ -42,54 +42,56 @@ class MangaFolderService(
      * @throws java.io.FileNotFoundException Se a pasta associada ao mangá não for encontrada.
      * @throws SecurityException Se o aplicativo perder a permissão de acesso ao [Uri].
      */
-    override suspend fun rescanChaptersByManga(mangaId: Long) = withContext(context = Dispatchers.IO) {
-        val folder = folderDao.getMangaFolderById(mangaId = mangaId) ?: return@withContext
-        val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@withContext
+    override suspend fun rescanChaptersByManga(mangaId: Long) =
+        withContext(context = Dispatchers.IO) {
+            val folder = folderDao.getMangaFolderById(mangaId = mangaId) ?: return@withContext
+            val folderDoc =
+                DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@withContext
 
-        val chaptersExist = chapterDao.countChaptersByFolder(folderId = mangaId) > 0
+            val chaptersExist = chapterDao.countChaptersByFolder(folderId = mangaId) > 0
 
-        if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
-            return@withContext
+            if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
+                return@withContext
+            }
+
+            val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
+                FileExtension.isSupported(ext = file.name)
+            }
+
+            chapterDao.deleteChaptersByFolderId(folderId = mangaId)
+
+            // TODO: Fazer lógica de validação melhor
+            val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
+
+            // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
+            //  tem que seguir um formato só, mais de um a lista fica desorganizada.
+            val chapters = chapterFiles.mapNotNull { file ->
+                val name = file.name ?: return@mapNotNull null
+
+                val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
+                val value = match.groups[1]?.value?.toDoubleOrNull() ?: return@mapNotNull null
+
+                val subGroup = if (match.groups.size > 2) match.groups[2] else null
+                val sub = subGroup?.value?.toDoubleOrNull() ?: 0.0
+
+                val chapterSort = "%05.2f".format(value + sub)
+
+                ChapterFile(
+                    chapter = name,
+                    path = file.uri.toString(),
+                    chapterSort = chapterSort,
+                    folderPathFk = mangaId
+                )
+            }
+
+            if (chapters.isNotEmpty()) {
+                chapterDao.insertAll(*chapters.toTypedArray())
+            }
+
+            if (folder.lastModified < folderDoc.lastModified()) {
+                folderDao.update(entity = folder.copy(lastModified = folderDoc.lastModified()))
+            }
         }
-
-        val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
-            FileExtension.isSupported(ext = file.name)
-        }
-
-        chapterDao.deleteChaptersByFolderId(folderId = mangaId)
-
-        // TODO: Fazer lógica de validação melhor
-        val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
-
-        // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
-        //  tem que seguir um formato só, mais de um a lista fica desorganizada.
-        val chapters = chapterFiles.mapNotNull { file ->
-            val name = file.name ?: return@mapNotNull null
-
-            val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
-            val value = match.groups[1]?.value?.toDoubleOrNull() ?: return@mapNotNull null
-
-            val subGroup = if (match.groups.size > 2) match.groups[2] else null
-            val sub = subGroup?.value?.toDoubleOrNull() ?: 0.0
-
-            val chapterSort = "%05.2f".format(value + sub)
-
-            ChapterFile(
-                chapter = name,
-                path = file.uri.toString(),
-                chapterSort = chapterSort,
-                folderPathFk = mangaId
-            )
-        }
-
-        if (chapters.isNotEmpty()) {
-            chapterDao.insertAll(chapters)
-        }
-
-        if (folder.lastModified < folderDoc.lastModified()) {
-            folderDao.updateMangaFolder(manga = folder.copy(lastModified = folderDoc.lastModified()))
-        }
-    }
 
     /**
      * Retorna um fluxo reativo contendo todos os mangás e seus capítulos associados.
@@ -122,7 +124,8 @@ class MangaFolderService(
     private suspend fun loadFirstPage(folderId: Long): ChapterPageDto {
         val pageSize = 20
         val total = chapterDao.countChaptersByFolder(folderId)
-        val initial = chapterDao.getChaptersPaged(folderId, pageSize, offset = 0).firstOrNull() ?: emptyList()
+        val initial =
+            chapterDao.getChaptersPaged(folderId, pageSize, offset = 0).firstOrNull() ?: emptyList()
 
         return ChapterPageDto(
             items = initial.map { it.toDto() }, pageSize = pageSize, page = 0, total = total
