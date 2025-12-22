@@ -36,6 +36,8 @@
     <string name="title_error_mangadex_sync">Erro ao sincronizar metadados</string>
     <string name="title_sync_metadata">Sincronizar metadados</string>
     <string name="title_download_error">Erro ao sincronizar as imagens de cover</string>
+    <string name="title_chapter_tabs_chapters">Capítulos (%1$d)</string>
+    <string name="title_chapter_tabs_settings">Configurações</string>
     <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
     <string name="description_text_selected_manga_folder">Pasta selecionada: %1$s</string>

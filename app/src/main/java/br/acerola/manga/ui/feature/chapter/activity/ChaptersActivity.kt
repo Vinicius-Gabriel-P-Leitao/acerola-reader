@@ -2,9 +2,10 @@ package br.acerola.manga.ui.feature.chapter.activity
 
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -42,13 +44,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import br.acerola.manga.R
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.manga.MangaDto
 import br.acerola.manga.ui.common.activity.BaseActivity
@@ -60,7 +63,6 @@ import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileViewModel
 import br.acerola.manga.ui.feature.chapter.component.ChapterItem
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.google.gson.GsonBuilder
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -71,6 +73,10 @@ class ChaptersActivity(
 
     object ChapterExtra {
         const val MANGA = "MANGA"
+    }
+
+    enum class MainTab(@param:StringRes val titleRes: Int) {
+        CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters), SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
     }
 
     val folder: MangaDto? by lazy {
@@ -99,16 +105,20 @@ class ChaptersActivity(
         chapterViewModel: ChapterFileViewModel,
         manga: MangaDto
     ) {
+        var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
+
         LaunchedEffect(key1 = manga.folder.id) {
             chapterViewModel.init(folderId = manga.folder.id, firstPage = manga.folder.chapters)
         }
 
         val chapterPage by chapterViewModel.chapterPage.collectAsState()
+        val total = chapterPage?.total ?: 0
+
         val chapters = (chapterPage?.items ?: emptyList()).sortedBy {
             it.chapterSort.replace(oldChar = ',', newChar = '.').toFloatOrNull() ?: 0f
         }
-        val total = chapterPage?.total ?: 0
 
+        // TODO: Trocar por cor do thema
         val backgroundColor = Color(color = 0xFF18181B)
         val primaryColor = Color(color = 0xFF6C5DD3)
         val textColor = Color.White
@@ -133,29 +143,39 @@ class ChaptersActivity(
                 item {
                     MangaTabs(
                         totalChapters = total,
-                        // TODO: USar a string gerada
-                        activeTab = "Capitulos",
+                        activeTab = selectedTab,
+                        onTabSelected = { selectedTab = it },
                         textColor = textColor,
+                        primaryColor = primaryColor,
                         secondaryTextColor = secondaryTextColor,
-                        primaryColor = primaryColor
                     )
                 }
 
-                items(items = chapters, key = { it.id }) { chapter ->
-                    ChapterListItem(
-                        chapter = chapter, textColor = textColor, onClick = { /* TODO: Navegar para Leitor */ })
-                }
+                when (selectedTab) {
+                    MainTab.CHAPTERS -> {
+                        items(items = chapters, key = { it.id }) { chapter ->
+                            ChapterListItem(
+                                chapter = chapter, textColor = textColor, onClick = { /* Navegar */ })
+                        }
 
-                if (chapters.size < total) {
-                    item {
-                        LaunchedEffect(key1 = Unit) { chapterViewModel.loadNextPage() }
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(all = 16.dp),
-                        ) {
-                            CircularProgressIndicator(color = primaryColor)
+                        if (chapters.size < total) {
+                            item {
+                                LaunchedEffect(Unit) { chapterViewModel.loadNextPage() }
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(all = 16.dp),
+                                ) {
+                                    CircularProgressIndicator(color = primaryColor)
+                                }
+                            }
+                        }
+                    }
+
+                    MainTab.SETTINGS -> {
+                        item {
+                            Text(text = "Texto de teste")
                         }
                     }
                 }
@@ -170,12 +190,6 @@ class ChaptersActivity(
     fun MangaHeader(
         manga: MangaDto, textColor: Color, secondaryTextColor: Color
     ) {
-        val gsonPretty = GsonBuilder().setPrettyPrinting().create()
-
-        Log.d(
-            "ChapterActivity",
-            gsonPretty.toJson(manga.metadata)
-        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -203,8 +217,7 @@ class ChaptersActivity(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.background
+                                Color.Transparent, MaterialTheme.colorScheme.background
                             )
                         )
                     )
@@ -275,32 +288,6 @@ class ChaptersActivity(
                                 color = textColor
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(height = 8.dp))
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(size = 16.dp)
-                            )
-
-                            // TODO: Pegar do mangadex
-                            Text(text = " 8.3", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-
-                            Spacer(modifier = Modifier.width(width = 16.dp))
-
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(size = 16.dp)
-                            )
-
-                            // TODO: Pegar do mangadex
-                            Text(text = " 65k", color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        }
                     }
                 }
 
@@ -321,10 +308,14 @@ class ChaptersActivity(
 
     @Composable
     fun MangaTabs(
-        totalChapters: Int, activeTab: String, textColor: Color, secondaryTextColor: Color, primaryColor: Color
+        totalChapters: Int,
+        activeTab: MainTab,
+        onTabSelected: (MainTab) -> Unit,
+        textColor: Color,
+        secondaryTextColor: Color,
+        primaryColor: Color
     ) {
-        // TODO: Criar string
-        val tabs = listOf("Capitulos ($totalChapters)", "Configurações")
+        val tabs = MainTab.entries.toTypedArray()
 
         Row(
             horizontalArrangement = Arrangement.Start,
@@ -332,14 +323,21 @@ class ChaptersActivity(
                 .fillMaxWidth()
                 .padding(vertical = 16.dp, horizontal = 20.dp),
         ) {
-            tabs.forEach { tabName ->
-                val isActive = tabName.startsWith(prefix = activeTab)
+            tabs.forEach { tab ->
+                val isActive = tab == activeTab
+
+                val title =
+                    tab.takeIf { it == MainTab.CHAPTERS }?.let { stringResource(id = it.titleRes, totalChapters) }
+                        ?: stringResource(id = tab.titleRes)
 
                 Column(
-                    modifier = Modifier.padding(end = 24.dp), horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .padding(end = 24.dp)
+                        .clickable { onTabSelected(tab) },
                 ) {
                     Text(
-                        text = tabName,
+                        text = title,
                         color = if (isActive) textColor else secondaryTextColor,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
@@ -352,7 +350,7 @@ class ChaptersActivity(
                             modifier = Modifier
                                 .width(width = 20.dp)
                                 .height(height = 3.dp)
-                                .background(primaryColor, shape = RoundedCornerShape(2.dp))
+                                .background(primaryColor, shape = RoundedCornerShape(size = 2.dp))
                         )
                     }
                 }

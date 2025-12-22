@@ -32,7 +32,9 @@ fun ChapterItem(
     SmartCard(
         onClick = onClick,
         type = CardType.CONTENT,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp).fillMaxWidth(),
+        modifier = Modifier
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
