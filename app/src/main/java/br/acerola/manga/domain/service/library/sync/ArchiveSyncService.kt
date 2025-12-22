@@ -31,6 +31,9 @@ class ArchiveSyncService @Inject constructor(
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
+    private val _isIndexing = MutableStateFlow(value = false)
+    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
     companion object {
         const val CHUNK_SIZE = 50
         const val PROGRESS_THRESHOLD = 5
@@ -63,46 +66,54 @@ class ArchiveSyncService @Inject constructor(
      * @throws java.io.IOException Se ocorrer falha no acesso ao diretório ou leitura de metadados.
      * @throws kotlinx.coroutines.CancellationException Se a coroutine for cancelada durante a sincronização.
      */
-    override suspend fun syncMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
-        // TODO: Tratar erro melhor
-        if (baseUri === null) {
-            return@withContext
-        }
+    override suspend fun syncMangas(baseUri: Uri?) {
+        _isIndexing.value = true
+        try {
+            withContext(context = Dispatchers.IO) {
+                // TODO: Tratar erro melhor
+                if (baseUri === null) {
+                    return@withContext
+                }
 
-        val folders: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
-        val existingFolders: List<MangaFolder> = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                val folders: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
+                val existingFolders: List<MangaFolder> =
+                    folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
-        if (folders.isEmpty() && existingFolders.isEmpty()) {
-            _progress.value = -1
-            return@withContext
-        }
+                if (folders.isEmpty() && existingFolders.isEmpty()) {
+                    _progress.value = -1
+                    return@withContext
+                }
 
-        val existingFoldersMap = existingFolders.associateBy { normalizeName(it.name) }
-        val foldersMap = folders.associateBy { normalizeName(it.name) }
+                val existingFoldersMap = existingFolders.associateBy { normalizeName(it.name) }
+                val foldersMap = folders.associateBy { normalizeName(it.name) }
 
-        val foldersToProcess = folders.filter { folder ->
-            val normalizedName = normalizeName(folder.name)
-            val existing = existingFoldersMap[normalizedName]
+                val foldersToProcess = folders.filter { folder ->
+                    val normalizedName = normalizeName(folder.name)
+                    val existing = existingFoldersMap[normalizedName]
 
-            when {
-                existing == null -> true
-                existing.path != folder.path -> true
-                existing.lastModified < folder.lastModified -> true
-                existing.cover != folder.cover || existing.banner != folder.banner -> true
-                else -> false
+                    when {
+                        existing == null -> true
+                        existing.path != folder.path -> true
+                        existing.lastModified < folder.lastModified -> true
+                        existing.cover != folder.cover || existing.banner != folder.banner -> true
+                        else -> false
+                    }
+                }
+
+                val removedFolders = existingFolders.filter { normalizeName(it.name) !in foldersMap }
+
+                if (removedFolders.isNotEmpty()) {
+                    removedFolders.forEach { folder ->
+                        // NOTE: Ele deleta os capitulos de forma recursiva, joga pro sqlite
+                        folderDao.delete(entity = folder)
+                    }
+                }
+
+                processFolderList(foldersToProcess, existingFolders)
             }
+        } finally {
+            _isIndexing.value = false
         }
-
-        val removedFolders = existingFolders.filter { normalizeName(it.name) !in foldersMap }
-
-        if (removedFolders.isNotEmpty()) {
-            removedFolders.forEach { folder ->
-                // NOTE: Ele deleta os capitulos de forma recursiva, joga pro sqlite
-                folderDao.delete(entity = folder)
-            }
-        }
-
-        processFolderList(foldersToProcess, existingFolders)
     }
 
     /**
@@ -116,20 +127,28 @@ class ArchiveSyncService @Inject constructor(
      * @see processFolderList
      * @see syncMangas
      */
-    override suspend fun rescanMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
-        // TODO: Tratar erro melhor
-        if (baseUri === null) {
-            return@withContext
-        }
+    override suspend fun rescanMangas(baseUri: Uri?) {
+        _isIndexing.value = true
+        try {
+            withContext(context = Dispatchers.IO) {
+                // TODO: Tratar erro melhor
+                if (baseUri === null) {
+                    return@withContext
+                }
 
-        val foldersToProcess: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
-        if (foldersToProcess.isEmpty()) {
-            _progress.value = -1
-            return@withContext
-        }
+                val foldersToProcess: List<MangaFolder> =
+                    ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
+                if (foldersToProcess.isEmpty()) {
+                    _progress.value = -1
+                    return@withContext
+                }
 
-        val existingFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
-        processFolderList(foldersToProcess, existingFolders)
+                val existingFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                processFolderList(foldersToProcess, existingFolders)
+            }
+        } finally {
+            _isIndexing.value = false
+        }
     }
 
     /**
@@ -144,36 +163,43 @@ class ArchiveSyncService @Inject constructor(
      *
      * @throws kotlinx.coroutines.CancellationException Se a operação for interrompida.
      */
-    override suspend fun deepRescanLibrary(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
-        rescanMangas(baseUri)
-        val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+    override suspend fun deepRescanLibrary(baseUri: Uri?) {
+        _isIndexing.value = true
+        try {
+            withContext(context = Dispatchers.IO) {
+                rescanMangas(baseUri)
+                val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
-        if (allFolders.isEmpty()) {
-            _progress.value = -1
-            return@withContext
-        }
+                if (allFolders.isEmpty()) {
+                    _progress.value = -1
+                    return@withContext
+                }
 
-        val total = allFolders.size
-        val processed = AtomicInteger(0)
-        _progress.value = 0
+                val total = allFolders.size
+                val processed = AtomicInteger(0)
+                _progress.value = 0
 
-        allFolders.chunked(CHUNK_SIZE).forEach { batch ->
-            coroutineScope {
-                batch.map { folder ->
-                    async(context = Dispatchers.IO) {
-                        try {
-                            mangaOps.rescanChaptersByManga(mangaId = folder.id)
-                        } finally {
-                            val current = processed.incrementAndGet()
-                            _progress.value = ((current.toFloat() / total) * 100).toInt()
-                        }
+                allFolders.chunked(CHUNK_SIZE).forEach { batch ->
+                    coroutineScope {
+                        batch.map { folder ->
+                            async(context = Dispatchers.IO) {
+                                try {
+                                    mangaOps.rescanChaptersByManga(mangaId = folder.id)
+                                } finally {
+                                    val current = processed.incrementAndGet()
+                                    _progress.value = ((current.toFloat() / total) * 100).toInt()
+                                }
+                            }
+                        }.awaitAll()
                     }
-                }.awaitAll()
+                }
+                _progress.value = 100
+                delay(timeMillis = 250)
+                _progress.value = -1
             }
+        } finally {
+            _isIndexing.value = false
         }
-        _progress.value = 100
-        delay(timeMillis = 250)
-        _progress.value = -1
     }
 
 

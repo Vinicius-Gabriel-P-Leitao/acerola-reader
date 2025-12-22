@@ -42,37 +42,55 @@ class MangaDexSyncService @Inject constructor(
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
-    override suspend fun syncMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
-        val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
-        val allMetadata = mangaDao.getAllMangasMetadata().firstOrNull() ?: emptyList()
+    private val _isIndexing = MutableStateFlow(value = false)
+    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-        val existingTitles = allMetadata.map { normalizeName(it.name) }.toSet()
+    override suspend fun syncMangas(baseUri: Uri?) {
+        _isIndexing.value = true
 
-        val metadataToSync = allFolders.filter { folder ->
-            normalizeName(folder.name) !in existingTitles
+        try {
+            withContext(context = Dispatchers.IO) {
+                val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                val allMetadata = mangaDao.getAllMangasMetadata().firstOrNull() ?: emptyList()
+
+                val existingTitles = allMetadata.map { normalizeName(it.name) }.toSet()
+
+                val metadataToSync = allFolders.filter { folder ->
+                    normalizeName(folder.name) !in existingTitles
+                }
+
+                if (metadataToSync.isEmpty()) {
+                    _progress.value = -1
+                    return@withContext
+                }
+
+                executeSync(folders = metadataToSync, baseUri)
+            }
+        } finally {
+            _isIndexing.value = false
         }
-
-        if (metadataToSync.isEmpty()) {
-            _progress.value = -1
-            return@withContext
-        }
-
-        executeSync(folders = metadataToSync, baseUri)
     }
 
-    override suspend fun rescanMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
-        val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+    override suspend fun rescanMangas(baseUri: Uri?) {
+        _isIndexing.value = true
+        try {
+            withContext(context = Dispatchers.IO) {
+                val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
-        if (allFolders.isEmpty()) {
-            _progress.value = -1
-            return@withContext
+                if (allFolders.isEmpty()) {
+                    _progress.value = -1
+                    return@withContext
+                }
+
+                executeSync(folders = allFolders, baseUri)
+            }
+        } finally {
+            _isIndexing.value = false
         }
-
-        executeSync(folders = allFolders, baseUri)
     }
 
     // NOTE: Pensar em forma de fazer isso futuramente, mas até agora é função inutil
-    override suspend fun deepRescanLibrary(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+    override suspend fun deepRescanLibrary(baseUri: Uri?) {
         rescanMangas(baseUri)
     }
 

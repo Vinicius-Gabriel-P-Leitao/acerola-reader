@@ -33,10 +33,10 @@ class HomeViewModel @Inject constructor(
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
     val isIndexing: StateFlow<Boolean> = combine(
-        flow = folderPort.progress,
-        flow2 = metadataPort.progress
-    ) { folderProgress, metadataProgress ->
-        folderProgress != -1 || metadataProgress != -1
+        flow = folderPort.isIndexing,
+        flow2 = metadataPort.isIndexing
+    ) { folderIndexing, metadataIndexing ->
+        folderIndexing || metadataIndexing
     }.stateIn(
         viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
@@ -44,12 +44,14 @@ class HomeViewModel @Inject constructor(
     )
 
     val progress: StateFlow<Int> = combine(
-        flow = folderPort.progress,
-        flow2 = metadataPort.progress
-    ) { folderProgress, metadataProgress ->
+        flow = folderPort.isIndexing,
+        flow2 = folderPort.progress,
+        flow3 = metadataPort.isIndexing,
+        flow4 = metadataPort.progress
+    ) { folderBusy, folderProg, metadataBusy, metadataProg ->
         when {
-            folderProgress != -1 -> folderProgress
-            metadataProgress != -1 -> metadataProgress
+            folderBusy && folderProg != -1 -> folderProg
+            metadataBusy && metadataProg != -1 -> metadataProg
             else -> -1
         }
     }.stateIn(

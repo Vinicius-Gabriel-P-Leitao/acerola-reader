@@ -21,10 +21,11 @@ class MangaMetadataViewModel @Inject constructor(
     private val libraryPort: LibraryPort<MangaMetadataDto>,
     private val mangaOperations: LibraryPort.MangaOperations<MangaMetadataDto>,
 ) : ViewModel() {
-    val progress: StateFlow<Int> = libraryPort.progress
-
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
+    val progress: StateFlow<Int> = libraryPort.progress
+
 
     val metadata: StateFlow<List<MangaMetadataDto>> = mangaOperations.loadMangas()
         .stateIn(

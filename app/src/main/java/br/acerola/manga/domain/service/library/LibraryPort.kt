@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface LibraryPort<T> {
 
     val progress: StateFlow<Int>
+    val isIndexing: StateFlow<Boolean>
 
     suspend fun syncMangas(baseUri: Uri?)
     suspend fun rescanMangas(baseUri: Uri?)
