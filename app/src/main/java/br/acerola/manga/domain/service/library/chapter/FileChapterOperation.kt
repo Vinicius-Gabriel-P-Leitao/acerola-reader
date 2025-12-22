@@ -14,8 +14,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class FileChapterOperation(
+@Singleton
+class FileChapterOperation @Inject constructor(
     private val chapterDao: ChapterFileDao
 ) : LibraryPort.ChapterOperations<ChapterPageDto> {
     /**

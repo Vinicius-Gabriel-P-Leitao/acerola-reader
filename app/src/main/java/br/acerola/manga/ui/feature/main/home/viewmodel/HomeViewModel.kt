@@ -1,16 +1,16 @@
 package br.acerola.manga.ui.feature.main.home.viewmodel
 
-import android.app.Application
 import android.content.Context
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.preference.HomeLayoutPreferences
 import br.acerola.manga.shared.config.preference.HomeLayoutType
+import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.dto.manga.MangaDto
-import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
-import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModel
+import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,37 +18,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val folderPort: LibraryPort<MangaFolderDto>,
+    private val folderOps: LibraryPort.MangaOperations<MangaFolderDto>,
+    private val metadataPort: LibraryPort<MangaMetadataDto>,
+    private val metadataOps: LibraryPort.MangaOperations<MangaMetadataDto>,
+) : ViewModel() {
 
-class HomeViewModelFactory(
-    private val application: Application,
-    private val mangaFolderViewModel: MangaFolderViewModel,
-    private val mangaMetadataViewModel: MangaMetadataViewModel,
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return HomeViewModel(application, mangaFolderViewModel, mangaMetadataViewModel) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-class HomeViewModel(
-    application: Application,
-    mangaFolderViewModel: MangaFolderViewModel,
-    mangaMetadataViewModel: MangaMetadataViewModel,
-) : AndroidViewModel(application) {
-    private val context: Context get() = getApplication()
-
-    private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
+    private val _selectedHomeLayout = MutableStateFlow(HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
     val isIndexing: StateFlow<Boolean> = combine(
-        flow = mangaFolderViewModel.isIndexing,
-        flow2 = mangaMetadataViewModel.isIndexing
-    ) { folderIsIndexing, metadataIsIndexing ->
-        folderIsIndexing || metadataIsIndexing
+        flow = folderPort.progress,
+        flow2 = metadataPort.progress
+    ) { folderProgress, metadataProgress ->
+        folderProgress != -1 || metadataProgress != -1
     }.stateIn(
         viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
@@ -56,18 +44,14 @@ class HomeViewModel(
     )
 
     val progress: StateFlow<Int> = combine(
-        flow = mangaFolderViewModel.isIndexing,
-        flow2 = mangaFolderViewModel.progress,
-        flow3 = mangaMetadataViewModel.isIndexing,
-        flow4 = mangaMetadataViewModel.progress
-    ) { folderIsIndexing, folderProgress, metadataIsIndexing, metadataProgress ->
-        if (folderIsIndexing) {
-            return@combine folderProgress
+        flow = folderPort.progress,
+        flow2 = metadataPort.progress
+    ) { folderProgress, metadataProgress ->
+        when {
+            folderProgress != -1 -> folderProgress
+            metadataProgress != -1 -> metadataProgress
+            else -> -1
         }
-        if (metadataIsIndexing) {
-            return@combine metadataProgress
-        }
-        return@combine -1
     }.stateIn(
         viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
@@ -75,8 +59,8 @@ class HomeViewModel(
     )
 
     val mangas: StateFlow<List<MangaDto>> = combine(
-        flow = mangaFolderViewModel.folders,
-        flow2 = mangaMetadataViewModel.metadata
+        flow = folderOps.loadMangas(),
+        flow2 = metadataOps.loadMangas()
     ) { folders, metadata ->
         val metadataMap = metadata.associateBy { it.title.normalizeKey() }
         folders.map { folder ->
@@ -88,12 +72,11 @@ class HomeViewModel(
         initialValue = emptyList()
     )
 
-
     init {
         observeHomeLayout()
     }
 
-    fun String.normalizeKey(): String {
+    private fun String.normalizeKey(): String {
         return this.filter { it.isLetterOrDigit() }.lowercase()
     }
 
@@ -104,7 +87,6 @@ class HomeViewModel(
             HomeLayoutPreferences.saveLayout(context, layout)
         }
     }
-
 
     private fun observeHomeLayout() {
         viewModelScope.launch {

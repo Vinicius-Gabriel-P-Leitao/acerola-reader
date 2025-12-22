@@ -1,34 +1,17 @@
 package br.acerola.manga.ui.common.viewmodel.archive.folder
 
-import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.shared.permission.FolderAccessManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
-class FolderAccessViewModelFactory(
-    private val application: Application,
+@HiltViewModel
+class FolderAccessViewModel @Inject constructor(
     private val manager: FolderAccessManager
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(FolderAccessViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return FolderAccessViewModel(application, manager) as T
-        }
-
-        // TODO: Tratar erro de forma melhor
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-class FolderAccessViewModel(
-    application: Application,
-    private val manager: FolderAccessManager
-) : AndroidViewModel(application) {
+) : ViewModel() {
     val folderUri get() = manager.folderUri
 
     fun saveFolderUri(uri: Uri?) {

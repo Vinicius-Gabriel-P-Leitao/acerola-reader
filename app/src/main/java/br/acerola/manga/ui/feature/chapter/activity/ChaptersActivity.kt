@@ -49,33 +49,25 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import br.acerola.manga.domain.data.dao.database.AcerolaDatabase
-import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.manga.MangaDto
-import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton
 import br.acerola.manga.ui.common.layout.NavigationTopBar
+import br.acerola.manga.ui.common.route.Destination
 import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileViewModel
-import br.acerola.manga.ui.common.viewmodel.library.archive.ChapterFileModelFactory
 import br.acerola.manga.ui.feature.chapter.component.ChapterItem
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.gson.GsonBuilder
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class ChaptersActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
 ) : BaseActivity() {
-    private val chapterViewModel: ChapterFileViewModel by viewModels {
-        val database = AcerolaDatabase.getInstance(context = this)
-        ChapterFileModelFactory(
-            application, chapterOperations = FileChapterOperation(
-                chapterDao = database.chapterFileDao()
-            )
-        )
-    }
+    private val chapterViewModel: ChapterFileViewModel by viewModels()
 
     object ChapterExtra {
         const val MANGA = "MANGA"

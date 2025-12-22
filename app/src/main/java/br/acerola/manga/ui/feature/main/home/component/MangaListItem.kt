@@ -36,7 +36,7 @@ fun MangaListItem(
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val coverUri = manga.folder.bannerUri ?: manga.folder.coverUri
+    val coverUri = manga.folder.coverUri ?: manga.folder.bannerUri
     val title = manga.metadata?.title ?: manga.folder.name
 
     val imageRequest = remember(key1 = coverUri) {

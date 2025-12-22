@@ -37,7 +37,7 @@ class MangaDexMangaOperationTest {
         fakeMangaDao.relationsList.add(relations)
 
         val fakeFolderDao = FakeMangaFolderDao()
-        val service = MangaDexMangaOperation(fakeMangaDao, fakeFolderDao)
+        val service = MangaMetadataOperation(fakeMangaDao, fakeFolderDao)
 
         val stateFlow = service.loadMangas()
         val collected = stateFlow.first { it.isNotEmpty() }

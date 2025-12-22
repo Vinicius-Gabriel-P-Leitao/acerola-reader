@@ -5,9 +5,15 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
 import br.acerola.manga.shared.config.preference.FolderPreference
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.firstOrNull
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class FolderAccessManager(private val context: Context) {
+@Singleton
+class FolderAccessManager @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) {
     var folderUri: Uri? = null
         private set
 

@@ -14,8 +14,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MangaDexMangaOperation(
+@Singleton
+class MangaMetadataOperation @Inject constructor(
     private val mangaDao: MangaMetadataDao,
     private val folderDao: MangaFolderDao,
 ) : LibraryPort.MangaOperations<MangaMetadataDto> {

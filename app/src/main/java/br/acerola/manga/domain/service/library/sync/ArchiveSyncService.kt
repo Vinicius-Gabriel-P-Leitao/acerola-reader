@@ -3,12 +3,11 @@ package br.acerola.manga.domain.service.library.sync
 import android.content.Context
 import android.net.Uri
 import br.acerola.manga.domain.builder.ArchiveBuilder
-import br.acerola.manga.domain.data.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,18 +19,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.chunked
-import kotlin.collections.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ArchiveSyncService(
-    private val context: Context,
+@Singleton
+class ArchiveSyncService @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val folderDao: MangaFolderDao,
-    private val chapterDao: ChapterFileDao,
-    private val mangaOps: LibraryPort.MangaOperations<MangaFolderDto> = FolderMangaOperation(
-        context,
-        folderDao,
-        chapterDao
-    ),
+    private val mangaOps: LibraryPort.MangaOperations<MangaFolderDto>
 ) : LibraryPort<MangaFolderDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()

@@ -1,8 +1,6 @@
 package br.acerola.manga.domain.data.dao.database
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import br.acerola.manga.domain.data.converter.Converters
@@ -30,7 +28,7 @@ import br.acerola.manga.domain.model.metadata.gender.Gender
     version = 1,
 )
 @TypeConverters(Converters::class)
-abstract class AcerolaDatabase : RoomDatabase() {
+abstract class DatabaseAcerola : RoomDatabase() {
     abstract fun chapterFileDao(): ChapterFileDao
     abstract fun chapterMetadataDao(): ChapterMetadataDao
     abstract fun mangaFolderDao(): MangaFolderDao
@@ -38,17 +36,4 @@ abstract class AcerolaDatabase : RoomDatabase() {
     abstract fun authorDao(): AuthorDao
     abstract fun coverDao(): CoverDao
     abstract fun genderDao(): GenderDao
-
-    companion object {
-        @Volatile
-        private var INSTANCE: AcerolaDatabase? = null
-
-        fun getInstance(context: Context): AcerolaDatabase = INSTANCE ?: synchronized(lock = this) {
-            INSTANCE ?: Room.databaseBuilder(
-                context.applicationContext,
-                klass = AcerolaDatabase::class.java,
-                name = "acerola_database"
-            ).build().also { INSTANCE = it }
-        }
-    }
 }

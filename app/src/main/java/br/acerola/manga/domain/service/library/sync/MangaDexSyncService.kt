@@ -2,7 +2,7 @@ package br.acerola.manga.domain.service.library.sync
 
 import android.content.Context
 import android.net.Uri
-import br.acerola.manga.R
+import androidx.core.net.toUri
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.data.dao.database.metadata.author.AuthorDao
@@ -18,131 +18,118 @@ import br.acerola.manga.shared.config.preference.FolderPreference
 import br.acerola.manga.shared.dto.metadata.AuthorDto
 import br.acerola.manga.shared.dto.metadata.GenreDto
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
-import br.acerola.manga.shared.error.exception.MangaDexRequestError
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.math.roundToInt
-import androidx.core.net.toUri
 
-// TODO: Criar um método privado que vai chamar um futuro serviço
-//  FetchCoverMangaDexService e escrever o arquivo de resultado da API no sistema de arquivos
-class MangaDexSyncService(
-    private val context: Context,
+@Singleton
+class MangaDexSyncService @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val authorDao: AuthorDao,
     private val genderDao: GenderDao,
     private val folderDao: MangaFolderDao,
     private val mangaDao: MangaMetadataDao,
-    private val mangaCoverService: MangaCoverService,
-    private val fetchManga: MangaDexFetchMangaDataService = MangaDexFetchMangaDataService(),
+    private val coverService: MangaCoverService,
+    private val fetchManga: MangaDexFetchMangaDataService,
 ) : LibraryPort<MangaMetadataDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
-    // TODO: Tratar erros melhor
-    // TODO: Sync de dados simples, vai buscar de apenas dados novos, caso do DB de folder tenha um que não existe ainda no de metadados
-    //  ele vai fazer um scan só para ele
     override suspend fun syncMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
         val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
         val allMetadata = mangaDao.getAllMangasMetadata().firstOrNull() ?: emptyList()
 
-        val existingTitles = allMetadata.map {
-            it.name.filter { char -> char.isLetterOrDigit() }.lowercase()
-        }.toSet()
+        val existingTitles = allMetadata.map { normalizeName(it.name) }.toSet()
 
         val metadataToSync = allFolders.filter { folder ->
-            val normalizedName = folder.name.filter { char -> char.isLetterOrDigit() }.lowercase()
-            normalizedName !in existingTitles
+            normalizeName(folder.name) !in existingTitles
         }
 
-        val total = metadataToSync.size
-        if (total == 0) {
+        if (metadataToSync.isEmpty()) {
             _progress.value = -1
             return@withContext
         }
 
+        executeSync(folders = metadataToSync, baseUri)
+    }
+
+    override suspend fun rescanMangas(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+        val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+
+        if (allFolders.isEmpty()) {
+            _progress.value = -1
+            return@withContext
+        }
+
+        executeSync(folders = allFolders, baseUri)
+    }
+
+    // NOTE: Pensar em forma de fazer isso futuramente, mas até agora é função inutil
+    override suspend fun deepRescanLibrary(baseUri: Uri?) = withContext(context = Dispatchers.IO) {
+        rescanMangas(baseUri)
+    }
+
+    private suspend fun executeSync(folders: List<br.acerola.manga.domain.model.archive.MangaFolder>, baseUri: Uri?) {
+        val total = folders.size
         _progress.value = 0
 
-        metadataToSync.forEachIndexed { index, current ->
-            val title = current.name
+        // NOTE: Se a URL não for passada ele usa a de preferencia.
+        val rootPath = baseUri?.toString() ?: FolderPreference.folderUriFlow(context).firstOrNull()
+        if (rootPath.isNullOrBlank()) {
+            _progress.value = -1
+            return
+        }
+        val rootUri = rootPath.toUri()
 
-            val currentProgress = ((index.toFloat() / total.toFloat()) * 100).roundToInt()
-            _progress.value = currentProgress
-
-            if (index > 0) delay(timeMillis = 300)
-
-            val rootPath = baseUri?.toString() ?: FolderPreference.folderUriFlow(context).firstOrNull()
-            if (rootPath.isNullOrBlank()) {
-                _progress.value = -1
-                return@withContext
-            }
-
-            val rootUri = rootPath.toUri()
-
+        folders.forEachIndexed { index, current ->
             try {
+                val title = current.name
                 val fetchedList: List<MangaMetadataDto> = fetchManga.searchManga(title = title)
-                val folderNameNormalized = title.filter { it.isLetterOrDigit() }.lowercase()
+                val folderNameNormalized = normalizeName(name = title)
 
                 val bestMatch: MangaMetadataDto? = fetchedList.find { candidate ->
-                    val candidateTitleNormalized = candidate.title.filter { it.isLetterOrDigit() }.lowercase()
-                    val candidateRomanjiNormalized = candidate.romanji?.filter { it.isLetterOrDigit() }?.lowercase()
-
-                    candidateTitleNormalized == folderNameNormalized || candidateRomanjiNormalized == folderNameNormalized
+                    normalizeName(name = candidate.title) == folderNameNormalized || normalizeName(
+                        name = candidate.romanji ?: ""
+                    ) == folderNameNormalized
                 } ?: fetchedList.firstOrNull()
 
-                if (bestMatch == null) return@forEachIndexed
+                if (bestMatch != null) {
+                    val authorId = bestMatch.authors?.let { saveAndGetAuthorId(dto = it) }
+                    val genderId = bestMatch.gender.firstOrNull()?.let { saveAndGetGenderId(dto = it) }
 
-                // NOTE: Popula o banco de dados para poder ter mais metadados
-                val authorId: Long? = bestMatch.authors?.let { authorDto ->
-                    saveAndGetAuthorId(authorDto)
-                }
+                    val coverId = bestMatch.cover?.let { dto ->
+                        coverService.processCover(
+                            coverDto = dto,
+                            rootUri = rootUri,
+                            folderId = current.id,
+                            mangaFolderName = current.name,
+                        )
+                    }
 
-                val genderId: Long? = bestMatch.gender.firstOrNull()?.let { genreDto ->
-                    saveAndGetGenderId(genreDto)
-                }
-
-                val coverId: Long? = bestMatch.cover?.let { dto ->
-                    mangaCoverService.processCover(
-                        coverDto = dto,
-                        rootUri = rootUri,
-                        folderId = current.id,
-                        mangaFolderName = current.name,
+                    val newMangaEntity = bestMatch.toModel(
+                        authorId = authorId, coverId = coverId, genderId = genderId
                     )
+
+                    mangaDao.insert(entity = newMangaEntity)
                 }
 
-                val newMangaEntity = bestMatch.toModel(
-                    authorId = authorId, coverId = coverId, genderId = genderId
-                )
-
-                mangaDao.insert(entity = newMangaEntity)
-            } catch (mangaDexRequestError: MangaDexRequestError) {
-                throw mangaDexRequestError
             } catch (exception: Exception) {
-                println(exception)
-                throw MangaDexRequestError(
-                    title = R.string.title_error_mangadex_sync,
-                    description = R.string.message_error_mangadex_sync_unknown
-                )
+                // TODO: Normalizar esse erro, ao invez de um log
+                println("Erro ao sincronizar $current: ${exception.message}")
+            } finally {
+                val currentProgress = (((index + 1).toFloat() / total.toFloat()) * 100).roundToInt()
+                _progress.value = currentProgress
             }
         }
 
-        _progress.value = 100
-        delay(timeMillis = 250)
         _progress.value = -1
-    }
-
-    // TODO: Fazer reescan bruto de metados onde vai refazer todas buscas, porem só de mangás
-    override suspend fun rescanMangas(baseUri: Uri?) {
-        TODO("Not yet implemented")
-    }
-
-    // TODO: Fazer uma busca mais bruta ainda, vai buscar tando dos mangas quando dos capitulos
-    override suspend fun deepRescanLibrary(baseUri: Uri?) {
-        TODO("Not yet implemented")
     }
 
     private suspend fun saveAndGetAuthorId(dto: AuthorDto): Long {
@@ -175,5 +162,9 @@ class MangaDexSyncService(
             genderDao.getGenderByMirrorId(mirrorId = dto.id)?.id
                 ?: throw IllegalStateException("Gênero deveria existir")
         }
+    }
+
+    private fun normalizeName(name: String): String {
+        return name.filter { it.isLetterOrDigit() }.lowercase()
     }
 }

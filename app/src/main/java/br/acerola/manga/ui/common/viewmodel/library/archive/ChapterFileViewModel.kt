@@ -1,36 +1,20 @@
 package br.acerola.manga.ui.common.viewmodel.library.archive
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ChapterFileModelFactory(
-    private val application: Application,
+@HiltViewModel
+class ChapterFileViewModel @Inject constructor(
     private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
-) : ViewModelProvider.Factory {
-
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ChapterFileViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST") return ChapterFileViewModel(application, chapterOperations) as T
-        }
-
-        // TODO: Tratar erro de forma melhor
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-class ChapterFileViewModel(
-    application: Application,
-    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
-) : AndroidViewModel(application) {
+) : ViewModel() {
     private val _chapterPage = MutableStateFlow<ChapterPageDto?>(value = null)
     val chapterPage: StateFlow<ChapterPageDto?> = _chapterPage.asStateFlow()
 

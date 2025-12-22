@@ -13,6 +13,7 @@ import br.acerola.manga.shared.config.preference.FileExtension
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.util.templateToRegex
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,9 +26,12 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class FolderMangaOperation(
-    private val context: Context,
+@Singleton
+class FolderMangaOperation @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao
 ) : LibraryPort.MangaOperations<MangaFolderDto> {

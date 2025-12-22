@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -78,7 +77,7 @@ fun SyncMangaDexData(
             Divider()
 
             ListItem(
-                modifier = Modifier.clickable { mangaDexViewModel.loadAndSyncMangas() },
+                modifier = Modifier.clickable { mangaDexViewModel.rescanMangas() },
                 headlineContent = { Text(text = stringResource(id = R.string.title_sync_metadata)) },
                 supportingContent = { Text(text = stringResource(id = R.string.description_sync_metadata_supporting)) },
                 leadingContent = {

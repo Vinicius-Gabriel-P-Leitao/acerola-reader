@@ -1,11 +1,7 @@
 package br.acerola.manga.ui.common.viewmodel.library.archive
 
-import android.app.Application
-import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.archive.ChapterFileDto
@@ -14,9 +10,10 @@ import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.error.exception.ApplicationException
 import br.acerola.manga.shared.error.exception.GenericInternalError
 import br.acerola.manga.shared.error.handler.GlobalErrorHandler
+import br.acerola.manga.shared.permission.FolderAccessManager
 import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,33 +23,15 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MangaFolderViewModelFactory(
-    private val application: Application,
+@HiltViewModel
+class MangaFolderViewModel @Inject constructor(
+    private val manager: FolderAccessManager,
     private val libraryPort: LibraryPort<MangaFolderDto>,
-    private val folderAccessViewModel: FolderAccessViewModel,
     private val mangaOperations: LibraryPort.MangaOperations<MangaFolderDto>,
     private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MangaFolderViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST") return MangaFolderViewModel(
-                application, libraryPort, folderAccessViewModel, mangaOperations, chapterOperations,
-            ) as T
-        }
-
-        // TODO: Tratar erro de forma melhor
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-class MangaFolderViewModel(
-    application: Application,
-    private val libraryPort: LibraryPort<MangaFolderDto>,
-    private val folderAccessViewModel: FolderAccessViewModel,
-    private val mangaOperations: LibraryPort.MangaOperations<MangaFolderDto>,
-    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
-) : AndroidViewModel(application) {
+) : ViewModel() {
     private val _error = MutableStateFlow<Throwable?>(value = null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
@@ -131,7 +110,7 @@ class MangaFolderViewModel(
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
     private suspend fun getFolderUri(): Uri? {
-        folderAccessViewModel.loadSavedFolder()
-        return folderAccessViewModel.folderUri
+        manager.loadFolderUri()
+        return manager.folderUri
     }
 }

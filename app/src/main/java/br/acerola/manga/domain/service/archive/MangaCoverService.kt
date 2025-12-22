@@ -8,9 +8,13 @@ import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.model.metadata.cover.Cover
 import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
 import br.acerola.manga.shared.dto.metadata.CoverDto
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MangaCoverService(
-    private val context: Context,
+@Singleton
+class MangaCoverService @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val coverDao: CoverDao,
     private val folderDao: MangaFolderDao,
     private val downloadService: MangaDexFetchCoverService
@@ -77,17 +81,9 @@ class MangaCoverService(
             val existing = coverDao.getCoverByMirrorId(mirrorId = coverDto.id)
                 ?: throw IllegalStateException("O cover não foi encontrado.: ${coverDto.id}")
 
-            coverDao.update(existing.copy(url = coverDto.url, fileName = "cover.png"))
+            coverDao.update(entity = existing.copy(url = coverDto.url, fileName = "cover.png"))
             existing.id
         }
     }
 
-    private fun fileExists(uri: Uri): Boolean {
-        return try {
-            context.contentResolver.openFileDescriptor(uri, "r")?.close()
-            true
-        } catch (exception: Exception) {
-            false
-        }
-    }
 }
