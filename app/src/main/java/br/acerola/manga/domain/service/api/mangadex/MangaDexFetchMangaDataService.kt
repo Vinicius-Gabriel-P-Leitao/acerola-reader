@@ -4,6 +4,7 @@ import br.acerola.manga.R
 import br.acerola.manga.domain.builder.MetadataBuilder
 import br.acerola.manga.domain.data.dao.api.mangadex.manga.MangaDataMangaDexDao
 import br.acerola.manga.domain.service.api.ApiPort
+import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.MangaDexRequestError
@@ -22,7 +23,7 @@ class MangaDexFetchMangaDataService @Inject constructor(
     ): List<MangaMetadataDto> {
         return withContext(context = Dispatchers.IO) {
             try {
-                val response: MangaDexResponse = api.searchMangaByName(title, limit, offset)
+                val response: MangaDexResponse<MetadataMangaDto> = api.searchMangaByName(title, limit, offset)
                 MetadataBuilder.fromMangaDataList(dataList = response.data)
             } catch (httpException: HttpException) {
                 throw MangaDexRequestError(

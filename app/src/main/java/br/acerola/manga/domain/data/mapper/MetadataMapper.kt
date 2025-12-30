@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.mapper
+package br.acerola.manga.domain.data.mapper
 
 import br.acerola.manga.domain.model.metadata.MangaMetadata
 import br.acerola.manga.domain.model.relation.MetadataWithRelations

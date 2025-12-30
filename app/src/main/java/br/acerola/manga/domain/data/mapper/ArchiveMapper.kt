@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.mapper
+package br.acerola.manga.domain.data.mapper
 
 import androidx.core.net.toUri
 import br.acerola.manga.domain.model.archive.ChapterFile

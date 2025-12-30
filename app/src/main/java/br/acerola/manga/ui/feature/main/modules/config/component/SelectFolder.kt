@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.config.component
+package br.acerola.manga.ui.feature.main.modules.config.component
 
 import android.content.Context
 import androidx.compose.foundation.background

@@ -7,7 +7,7 @@ import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.data.dao.database.metadata.author.AuthorDao
 import br.acerola.manga.domain.data.dao.database.metadata.gender.GenderDao
-import br.acerola.manga.domain.mapper.toModel
+import br.acerola.manga.domain.data.mapper.toModel
 import br.acerola.manga.domain.model.metadata.author.Author
 import br.acerola.manga.domain.model.metadata.author.TypeAuthor
 import br.acerola.manga.domain.model.metadata.gender.Gender

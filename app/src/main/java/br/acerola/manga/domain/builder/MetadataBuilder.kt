@@ -1,28 +1,28 @@
 package br.acerola.manga.domain.builder
 
-import br.acerola.manga.shared.dto.mangadex.MangaData
+import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import br.acerola.manga.shared.dto.metadata.AuthorDto
 import br.acerola.manga.shared.dto.metadata.CoverDto
 import br.acerola.manga.shared.dto.metadata.GenreDto
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 
 object MetadataBuilder {
-    fun fromMangaData(mangaData: MangaData): MangaMetadataDto {
-        val attributes = mangaData.attributes
+    fun fromMangaData(metadataMangaDto: MetadataMangaDto): MangaMetadataDto {
+        val attributes = metadataMangaDto.attributes
 
-        val authors = if (mangaData.authorName != null && mangaData.authorId !=null) {
+        val authors = if (metadataMangaDto.authorName != null && metadataMangaDto.authorId !=null) {
             AuthorDto(
-                id = mangaData.authorId!!,
-                name = mangaData.authorName!!,
-                type = mangaData.authorType!!
+                id = metadataMangaDto.authorId!!,
+                name = metadataMangaDto.authorName!!,
+                type = metadataMangaDto.authorType!!
             )
         } else null
 
-        val coverDto = if (mangaData.coverFileName != null && mangaData.coverId != null) {
+        val coverDto = if (metadataMangaDto.coverFileName != null && metadataMangaDto.coverId != null) {
             CoverDto(
-                id = mangaData.coverId!!,
-                fileName = mangaData.coverFileName!!,
-                url = mangaData.getCoverUrl() ?: ""
+                id = metadataMangaDto.coverId!!,
+                fileName = metadataMangaDto.coverFileName!!,
+                url = metadataMangaDto.getCoverUrl() ?: ""
             )
         } else null
 
@@ -40,7 +40,7 @@ object MetadataBuilder {
 
         // TODO: String para valores default
         return MangaMetadataDto(
-            id = mangaData.id,
+            id = metadataMangaDto.id,
             title = attributes.title ?: "Sem Título",
             description = attributes.description ?: "",
             romanji = romanji,
@@ -52,6 +52,6 @@ object MetadataBuilder {
         )
     }
 
-    fun fromMangaDataList(dataList: List<MangaData>): List<MangaMetadataDto> =
-        dataList.map { fromMangaData(mangaData = it) }
+    fun fromMangaDataList(dataList: List<MetadataMangaDto>): List<MangaMetadataDto> =
+        dataList.map { fromMangaData(metadataMangaDto = it) }
 }

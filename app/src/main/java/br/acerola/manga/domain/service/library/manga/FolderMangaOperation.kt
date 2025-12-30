@@ -6,7 +6,7 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.data.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
-import br.acerola.manga.domain.mapper.toDto
+import br.acerola.manga.domain.data.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.preference.FileExtension

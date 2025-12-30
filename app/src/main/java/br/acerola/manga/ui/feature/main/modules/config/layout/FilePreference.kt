@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.config.layout
+package br.acerola.manga.ui.feature.main.modules.config.layout
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable

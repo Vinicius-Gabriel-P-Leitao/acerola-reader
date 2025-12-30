@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.home.screen
+package br.acerola.manga.ui.feature.main.modules.home.screen
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement

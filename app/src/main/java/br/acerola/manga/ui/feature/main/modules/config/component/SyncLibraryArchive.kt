@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.config.component
+package br.acerola.manga.ui.feature.main.modules.config.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncLock
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -29,18 +31,16 @@ import br.acerola.manga.R
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.Divider
 import br.acerola.manga.ui.common.component.SmartCard
-import br.acerola.manga.ui.common.viewmodel.library.metadata.MangaMetadataViewModel
+import br.acerola.manga.ui.common.viewmodel.library.archive.MangaFolderViewModel
 
 @Composable
-fun SyncMangaDexData(
-    mangaDexViewModel: MangaMetadataViewModel
+fun SyncLibraryArchive(
+    mangaFolderViewModel: MangaFolderViewModel,
 ) {
     SmartCard(
-        type = CardType.CONTENT,
-        colors = CardDefaults.elevatedCardColors(
+        type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
+        ), elevation = CardDefaults.elevatedCardElevation(
             defaultElevation = 8.dp, pressedElevation = 12.dp
         )
     ) {
@@ -76,10 +76,39 @@ fun SyncMangaDexData(
 
             Divider()
 
+            // TODO: Criar description
             ListItem(
-                modifier = Modifier.clickable { mangaDexViewModel.rescanMangas() },
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_metadata)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_sync_metadata_supporting)) },
+                modifier = Modifier.clickable {
+                    mangaFolderViewModel.deepScanLibrary()
+                },
+                headlineContent = {
+                    Text(text = stringResource(id = R.string.description_text_home_deep_sync))
+                },
+                supportingContent = {
+                    Text(text = stringResource(id = R.string.description_text_home_deep_sync_supporting))
+                },
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Default.SyncLock, contentDescription = null
+                    )
+                },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
+                )
+            )
+
+            HorizontalDivider()
+
+
+            // TODO: Criar description
+            ListItem(
+                modifier = Modifier.clickable { mangaFolderViewModel.rescanMangas() },
+                headlineContent = {
+                    Text(text = stringResource(id = R.string.description_text_home_quick_sync))
+                },
+                supportingContent = {
+                    Text(text = stringResource(id = R.string.description_text_home_quick_sync_supporting))
+                },
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Default.Sync, contentDescription = null

@@ -1,9 +1,14 @@
-package br.acerola.manga.ui.feature.main.home.component
+package br.acerola.manga.ui.feature.main.modules.home.component
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
 import br.acerola.manga.shared.dto.manga.MangaDto
@@ -24,7 +29,7 @@ import coil.size.Size
 import coil.size.SizeResolver
 
 @Composable
-fun MangaGridItem(
+fun MangaListItem(
     manga: MangaDto,
     onClick: () -> Unit
 ) {
@@ -35,12 +40,7 @@ fun MangaGridItem(
     val title = manga.metadata?.title ?: manga.folder.name
 
     val imageRequest = remember(key1 = coverUri) {
-        val imageSize: Size = with(receiver = density) {
-            Size(
-                width = 120.dp.toPx().toInt(),
-                height = 180.dp.toPx().toInt()
-            )
-        }
+        val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
         ImageRequest.Builder(context)
             .data(data = coverUri)
             .size(resolver = SizeResolver(imageSize))
@@ -53,24 +53,37 @@ fun MangaGridItem(
         error = painterResource(id = R.drawable.ic_launcher_background)
     )
 
-    Column(
-        modifier = Modifier.padding(all = 4.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height = 120.dp)
+            .padding(all = 4.dp)
     ) {
         SmartCard(
             onClick = onClick,
             type = CardType.IMAGE,
             image = coverPainter,
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(ratio = 2f / 3f),
+                .width(width = 80.dp)
+                .fillMaxHeight(),
         )
 
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+        Spacer(modifier = Modifier.width(width = 8.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(weight = 1f), verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title, style = MaterialTheme.typography.titleMedium, maxLines = 1
+            )
+            Text(
+                text = stringResource(id = R.string.description_manga_list_item_chapter_count, manga.folder.chapters.total),
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

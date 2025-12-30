@@ -14,7 +14,7 @@ import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchMangaDataServic
 import br.acerola.manga.domain.service.archive.MangaCoverService
 import br.acerola.manga.shared.config.preference.FolderPreference
 import br.acerola.manga.shared.dto.mangadex.MangaAttributes
-import br.acerola.manga.shared.dto.mangadex.MangaData
+import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
 import io.mockk.every
 import io.mockk.mockk
@@ -126,7 +126,7 @@ class MangaDexSyncServiceTest {
         fakeFolderDao.folders.add(folder)
         fakeMangaDexDao.response = MangaDexResponse(
             result = "ok", response = "collection", data = listOf(
-                MangaData(
+                MetadataMangaDto(
                     id = "mp1", type = "manga", attributes = MangaAttributes(
                         titleMap = mapOf("en" to "One Piece"), status = "ongoing", links = null
                     )

@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.config.screen
+package br.acerola.manga.ui.feature.main.modules.config.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

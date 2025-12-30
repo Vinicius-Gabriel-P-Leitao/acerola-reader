@@ -1,4 +1,4 @@
-package br.acerola.manga.ui.feature.main.home.viewmodel
+package br.acerola.manga.ui.feature.main.modules.home.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
