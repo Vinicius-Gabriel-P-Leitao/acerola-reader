@@ -10,7 +10,7 @@ import br.acerola.manga.domain.data.dao.database.metadata.gender.GenderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.model.metadata.author.Author
 import br.acerola.manga.domain.model.metadata.gender.Gender
-import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchMangaDataService
+import br.acerola.manga.domain.service.api.mangadex.MangadexFetchMangaDataService
 import br.acerola.manga.domain.service.archive.MangaCoverService
 import br.acerola.manga.shared.config.preference.FolderPreference
 import br.acerola.manga.shared.dto.mangadex.MangaAttributes
@@ -36,10 +36,10 @@ class MangaDexSyncServiceTest {
     private lateinit var fakeFolderDao: FakeMangaFolderDao
     private lateinit var fakeMangaMetadataDao: FakeMangaMetadataDao
     private lateinit var fakeMangaCoverService: MangaCoverService
-    private lateinit var fakeFetchMangaDataService: MangaDexFetchMangaDataService
+    private lateinit var fakeFetchMangaDataService: MangadexFetchMangaDataService
     private lateinit var fakeMangaDexDao: FakeMangaDataMangaDexDao
 
-    private lateinit var service: MangaDexSyncService
+    private lateinit var service: MangadexSyncService
 
     class FakeAuthorDao : AuthorDao {
         val authors = mutableListOf<Author>()
@@ -89,9 +89,9 @@ class MangaDexSyncServiceTest {
         fakeMangaCoverService = mockk(relaxed = true)
 
         fakeMangaDexDao = FakeMangaDataMangaDexDao()
-        fakeFetchMangaDataService = MangaDexFetchMangaDataService(fakeMangaDexDao)
+        fakeFetchMangaDataService = MangadexFetchMangaDataService(fakeMangaDexDao)
 
-        service = MangaDexSyncService(
+        service = MangadexSyncService(
             context,
             fakeAuthorDao,
             fakeGenderDao,

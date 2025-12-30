@@ -1,7 +1,7 @@
 package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDexDownloadDao
-import br.acerola.manga.shared.error.exception.MangaDexRequestError
+import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.fail
@@ -15,7 +15,7 @@ class MangaDexFetchCoverServiceTest {
         val fakeDao = FakeMangaDexDownloadDao()
         fakeDao.responseBytes = expectedBytes
 
-        val service = MangaDexFetchCoverService(fakeDao)
+        val service = MangadexFetchCoverService(fakeDao)
         val result = service.searchCover("http://example.com/cover.png")
 
         assertArrayEquals(expectedBytes, result)
@@ -26,12 +26,12 @@ class MangaDexFetchCoverServiceTest {
         val fakeDao = FakeMangaDexDownloadDao()
         fakeDao.shouldThrow = true
 
-        val service = MangaDexFetchCoverService(fakeDao)
+        val service = MangadexFetchCoverService(fakeDao)
 
         try {
             service.searchCover("http://example.com/cover.png")
             fail("Should have thrown MangaDexRequestError")
-        } catch (_: MangaDexRequestError) {
+        } catch (_: MangadexRequestException) {
         } catch (exception: Exception) {
             fail("Should have thrown MangaDexRequestError, but threw ${exception::class.simpleName}")
         }

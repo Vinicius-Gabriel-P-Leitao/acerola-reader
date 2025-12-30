@@ -4,7 +4,7 @@ import br.acerola.manga.domain.service.library.chapter.FileChapterOperation
 import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
 import br.acerola.manga.domain.service.library.manga.MangaMetadataOperation
 import br.acerola.manga.domain.service.library.sync.ArchiveSyncService
-import br.acerola.manga.domain.service.library.sync.MangaDexSyncService
+import br.acerola.manga.domain.service.library.sync.MangadexSyncService
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
@@ -22,7 +22,7 @@ abstract class ServiceModule {
     @Binds
     @Singleton
     abstract fun bindMangaDexSyncService(
-        impl: MangaDexSyncService
+        impl: MangadexSyncService
     ): LibraryPort<MangaMetadataDto>
 
     @Binds

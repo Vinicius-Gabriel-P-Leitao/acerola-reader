@@ -4,7 +4,7 @@ import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDataMangaDexDao
 import br.acerola.manga.shared.dto.mangadex.MangaAttributes
 import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
-import br.acerola.manga.shared.error.exception.MangaDexRequestError
+import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -30,7 +30,7 @@ class MangaDexFetchMangaDataServiceTest {
             limit = 10, offset = 0, total = 1
         )
 
-        val service = MangaDexFetchMangaDataService(fakeDao)
+        val service = MangadexFetchMangaDataService(fakeDao)
         val result = service.searchManga("One Piece", 10, 0)
 
         assertEquals(1, result.size)
@@ -42,12 +42,12 @@ class MangaDexFetchMangaDataServiceTest {
         val fakeDao = FakeMangaDataMangaDexDao()
         fakeDao.shouldThrow = true
 
-        val service = MangaDexFetchMangaDataService(fakeDao)
+        val service = MangadexFetchMangaDataService(fakeDao)
 
         try {
             service.searchManga("Unknown", 10, 0)
             fail("Should have thrown MangaDexRequestError")
-        } catch (mangaDexRequestError: MangaDexRequestError) {
+        } catch (mangaDexRequestException: MangadexRequestException) {
             // Success
         }
     }

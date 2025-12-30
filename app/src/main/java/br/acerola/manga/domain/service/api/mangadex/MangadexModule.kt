@@ -25,7 +25,7 @@ annotation class MainApi
 
 @Module
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
+object MangadexModule {
 
     @MainApi
     @Provides

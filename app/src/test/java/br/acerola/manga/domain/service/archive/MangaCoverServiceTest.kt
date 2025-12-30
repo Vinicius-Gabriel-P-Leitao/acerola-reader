@@ -8,7 +8,7 @@ import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.model.metadata.cover.Cover
-import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
+import br.acerola.manga.domain.service.api.mangadex.MangadexFetchCoverService
 import br.acerola.manga.shared.dto.metadata.CoverDto
 import io.mockk.every
 import io.mockk.mockk
@@ -26,7 +26,7 @@ class MangaCoverServiceTest {
     private lateinit var fakeFolderDao: FakeMangaFolderDao
     private lateinit var fakeCoverDao: FakeCoverDao
     private lateinit var fakeDownloadDao: FakeMangaDexDownloadDao
-    private lateinit var fetchCoverService: MangaDexFetchCoverService
+    private lateinit var fetchCoverService: MangadexFetchCoverService
     private lateinit var service: MangaCoverService
     private lateinit var context: Context
 
@@ -61,7 +61,7 @@ class MangaCoverServiceTest {
         fakeDownloadDao = FakeMangaDexDownloadDao()
         fakeDownloadDao.responseBytes = byteArrayOf(1, 2, 3)
         
-        fetchCoverService = MangaDexFetchCoverService(fakeDownloadDao)
+        fetchCoverService = MangadexFetchCoverService(fakeDownloadDao)
         service = MangaCoverService(context, fakeCoverDao, fakeFolderDao, fetchCoverService)
 
         mockkStatic(DocumentFile::class)

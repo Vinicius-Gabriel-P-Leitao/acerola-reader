@@ -8,10 +8,9 @@ import br.acerola.manga.shared.dto.archive.ChapterFileDto
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.error.exception.ApplicationException
-import br.acerola.manga.shared.error.exception.GenericInternalError
+import br.acerola.manga.shared.error.exception.GenericInternalException
 import br.acerola.manga.shared.error.handler.GlobalErrorHandler
 import br.acerola.manga.shared.permission.FolderAccessManager
-import br.acerola.manga.ui.common.viewmodel.archive.folder.FolderAccessViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -100,7 +99,7 @@ class MangaFolderViewModel @Inject constructor(
                 GlobalErrorHandler.emit(applicationException)
             } catch (exception: Exception) {
                 GlobalErrorHandler.emit(
-                    exception = GenericInternalError(cause = exception)
+                    exception = GenericInternalException(cause = exception)
                 )
             } finally {
                 _isIndexing.value = false

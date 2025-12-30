@@ -6,7 +6,7 @@ import br.acerola.manga.shared.dto.metadata.CoverDto
 import br.acerola.manga.shared.dto.metadata.GenreDto
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 
-object MetadataBuilder {
+object MangaMetadataBuilder {
     fun fromMangaData(metadataMangaDto: MetadataMangaDto): MangaMetadataDto {
         val attributes = metadataMangaDto.attributes
 

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.ApplicationException
-import br.acerola.manga.shared.error.exception.GenericInternalError
+import br.acerola.manga.shared.error.exception.GenericInternalException
 import br.acerola.manga.shared.error.handler.GlobalErrorHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +56,7 @@ class MangaMetadataViewModel @Inject constructor(
             } catch (applicationException: ApplicationException) {
                 GlobalErrorHandler.emit(applicationException)
             } catch (exception: Exception) {
-                GlobalErrorHandler.emit(exception = GenericInternalError(cause = exception))
+                GlobalErrorHandler.emit(exception = GenericInternalException(cause = exception))
             } finally {
                 val elapsed = System.currentTimeMillis() - start
                 val minTime = 500L

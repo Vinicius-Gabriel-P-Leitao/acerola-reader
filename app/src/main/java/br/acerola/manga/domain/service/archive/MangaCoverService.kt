@@ -6,7 +6,7 @@ import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.model.metadata.cover.Cover
-import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchCoverService
+import br.acerola.manga.domain.service.api.mangadex.MangadexFetchCoverService
 import br.acerola.manga.shared.dto.metadata.CoverDto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -17,7 +17,7 @@ class MangaCoverService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val coverDao: CoverDao,
     private val folderDao: MangaFolderDao,
-    private val downloadService: MangaDexFetchCoverService
+    private val downloadService: MangadexFetchCoverService
 ) {
     suspend fun processCover(
         rootUri: Uri,

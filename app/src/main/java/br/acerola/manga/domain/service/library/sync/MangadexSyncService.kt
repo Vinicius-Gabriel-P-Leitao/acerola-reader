@@ -11,7 +11,7 @@ import br.acerola.manga.domain.data.mapper.toModel
 import br.acerola.manga.domain.model.metadata.author.Author
 import br.acerola.manga.domain.model.metadata.author.TypeAuthor
 import br.acerola.manga.domain.model.metadata.gender.Gender
-import br.acerola.manga.domain.service.api.mangadex.MangaDexFetchMangaDataService
+import br.acerola.manga.domain.service.api.mangadex.MangadexFetchMangaDataService
 import br.acerola.manga.domain.service.archive.MangaCoverService
 import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.preference.FolderPreference
@@ -30,14 +30,14 @@ import javax.inject.Singleton
 import kotlin.math.roundToInt
 
 @Singleton
-class MangaDexSyncService @Inject constructor(
+class MangadexSyncService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val authorDao: AuthorDao,
     private val genderDao: GenderDao,
     private val folderDao: MangaFolderDao,
     private val mangaDao: MangaMetadataDao,
     private val coverService: MangaCoverService,
-    private val fetchManga: MangaDexFetchMangaDataService,
+    private val fetchManga: MangadexFetchMangaDataService,
 ) : LibraryPort<MangaMetadataDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
