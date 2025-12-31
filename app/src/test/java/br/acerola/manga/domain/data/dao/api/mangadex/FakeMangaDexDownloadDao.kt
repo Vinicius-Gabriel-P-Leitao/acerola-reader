@@ -1,6 +1,6 @@
 package br.acerola.manga.domain.data.dao.api.mangadex
 
-import br.acerola.manga.domain.data.dao.api.mangadex.cover.MangaDexDownloadDao
+import br.acerola.manga.domain.data.dao.api.mangadex.MangaDexDownloadDao
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody
 import retrofit2.http.Url

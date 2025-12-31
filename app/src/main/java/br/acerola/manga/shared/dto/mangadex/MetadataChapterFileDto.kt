@@ -2,10 +2,10 @@ package br.acerola.manga.shared.dto.mangadex
 
 data class MetadataChapterFileDto(
     val baseUrl: String,
-    val chapter: List<ChapterDataSaver> = emptyList()
+    val chapter: List<ChapterPage> = emptyList()
 )
 
-data class ChapterDataSaver(
+data class ChapterPage(
     val hash: String,
     val data: List<String> = emptyList()
 )

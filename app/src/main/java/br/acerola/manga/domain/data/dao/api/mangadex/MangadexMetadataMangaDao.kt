@@ -1,11 +1,11 @@
-package br.acerola.manga.domain.data.dao.api.mangadex.manga
+package br.acerola.manga.domain.data.dao.api.mangadex
 
-import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
+import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface MangaDataMangaDexDao {
+interface MangadexMetadataMangaDao {
     @GET(value = "manga")
     suspend fun searchMangaByName(
         @Query(value = "title") title: String,

@@ -1,10 +1,9 @@
 package br.acerola.manga.domain.data.dao.api.mangadex
 
-import br.acerola.manga.domain.data.dao.api.mangadex.manga.MangaDataMangaDexDao
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
 import retrofit2.http.Query
 
-class FakeMangaDataMangaDexDao : MangaDataMangaDexDao {
+class FakeMangadexMetadataMangaDao : MangadexMetadataMangaDao {
     var response: MangaDexResponse? = null
     var shouldThrow: Boolean = false
     var lastTitle: String? = null

@@ -2,7 +2,7 @@ package br.acerola.manga.domain.service.library.sync
 
 import android.content.Context
 import android.net.Uri
-import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDataMangaDexDao
+import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangadexMetadataMangaDao
 import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
 import br.acerola.manga.domain.data.dao.database.FakeMangaMetadataDao
 import br.acerola.manga.domain.data.dao.database.metadata.author.AuthorDao
@@ -37,7 +37,7 @@ class MangaDexSyncServiceTest {
     private lateinit var fakeMangaMetadataDao: FakeMangaMetadataDao
     private lateinit var fakeMangaCoverService: MangaCoverService
     private lateinit var fakeFetchMangaDataService: MangadexFetchMangaDataService
-    private lateinit var fakeMangaDexDao: FakeMangaDataMangaDexDao
+    private lateinit var fakeMangaDexDao: FakeMangadexMetadataMangaDao
 
     private lateinit var service: MangadexSyncService
 
@@ -88,7 +88,7 @@ class MangaDexSyncServiceTest {
         fakeMangaMetadataDao = FakeMangaMetadataDao()
         fakeMangaCoverService = mockk(relaxed = true)
 
-        fakeMangaDexDao = FakeMangaDataMangaDexDao()
+        fakeMangaDexDao = FakeMangadexMetadataMangaDao()
         fakeFetchMangaDataService = MangadexFetchMangaDataService(fakeMangaDexDao)
 
         service = MangadexSyncService(

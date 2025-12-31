@@ -1,6 +1,6 @@
 package br.acerola.manga.domain.service.api.mangadex
 
-import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDataMangaDexDao
+import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangadexMetadataMangaDao
 import br.acerola.manga.shared.dto.mangadex.MangaAttributes
 import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
 import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
@@ -14,7 +14,7 @@ class MangaDexFetchMangaDataServiceTest {
 
     @Test
     fun searchManga_success_returnsList() = runBlocking {
-        val fakeDao = FakeMangaDataMangaDexDao()
+        val fakeDao = FakeMangadexMetadataMangaDao()
         fakeDao.response = MangaDexResponse(
             result = "ok", response = "collection",
             data = listOf(
@@ -31,7 +31,7 @@ class MangaDexFetchMangaDataServiceTest {
         )
 
         val service = MangadexFetchMangaDataService(fakeDao)
-        val result = service.searchManga("One Piece", 10, 0)
+        val result = service.searchMetadata("One Piece", 10, 0)
 
         assertEquals(1, result.size)
         assertEquals("One Piece", result[0].title)
@@ -39,13 +39,13 @@ class MangaDexFetchMangaDataServiceTest {
 
     @Test
     fun searchManga_httpError_throwsRequestError() = runBlocking {
-        val fakeDao = FakeMangaDataMangaDexDao()
+        val fakeDao = FakeMangadexMetadataMangaDao()
         fakeDao.shouldThrow = true
 
         val service = MangadexFetchMangaDataService(fakeDao)
 
         try {
-            service.searchManga("Unknown", 10, 0)
+            service.searchMetadata("Unknown", 10, 0)
             fail("Should have thrown MangaDexRequestError")
         } catch (mangaDexRequestException: MangadexRequestException) {
             // Success

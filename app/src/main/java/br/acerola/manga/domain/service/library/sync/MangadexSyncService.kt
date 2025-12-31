@@ -109,7 +109,7 @@ class MangadexSyncService @Inject constructor(
         folders.forEachIndexed { index, current ->
             try {
                 val title = current.name
-                val fetchedList: List<MangaMetadataDto> = fetchManga.searchManga(title = title)
+                val fetchedList: List<MangaMetadataDto> = fetchManga.searchMetadata(manga = title)
                 val folderNameNormalized = normalizeName(name = title)
 
                 val bestMatch: MangaMetadataDto? = fetchedList.find { candidate ->

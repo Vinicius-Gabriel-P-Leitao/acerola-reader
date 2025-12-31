@@ -28,17 +28,11 @@ data class ChapterMetadata(
     @ColumnInfo(name = "title")
     val title: String?,
 
-    @ColumnInfo(name = "release_date")
-    val releaseDate: Long?,
-
-    @ColumnInfo(name = "summary")
-    val summary: String?,
-
     @ColumnInfo(name = "page_count")
     val pageCount: Int? = null,
 
-    @ColumnInfo(name = "scanlator")
-    val scanlator: String? = null,
+    @ColumnInfo(name = "scanlation")
+    val scanlation: String? = null,
 
     @ColumnInfo(name = "manga_metadata_fk")
     val mangaMetadataFk: Long,

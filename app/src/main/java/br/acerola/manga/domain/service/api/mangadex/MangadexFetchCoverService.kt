@@ -1,7 +1,7 @@
 package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.R
-import br.acerola.manga.domain.data.dao.api.mangadex.cover.MangaDexDownloadDao
+import br.acerola.manga.domain.data.dao.api.mangadex.MangaDexDownloadDao
 import br.acerola.manga.domain.service.api.ApiPort
 import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.Dispatchers

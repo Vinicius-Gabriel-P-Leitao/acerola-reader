@@ -5,7 +5,7 @@ package br.acerola.manga.domain.service.api
 // NOTE: O vararg não é obrigatório por padrão.
 interface ApiPort {
     interface MetadataOperations<R, P> {
-        suspend fun searchManga(title: String, limit: Int = 10, offset: Int = 0, vararg extra: P?): List<R>
+        suspend fun searchMetadata(manga: String, limit: Int = 10, offset: Int = 0, vararg extra: P?): List<R>
     }
 
     interface ArchiveOperations<P> {

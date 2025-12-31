@@ -1,4 +1,4 @@
-package br.acerola.manga.domain.data.dao.api.mangadex.cover
+package br.acerola.manga.domain.data.dao.api.mangadex
 
 import okhttp3.ResponseBody
 import retrofit2.http.GET

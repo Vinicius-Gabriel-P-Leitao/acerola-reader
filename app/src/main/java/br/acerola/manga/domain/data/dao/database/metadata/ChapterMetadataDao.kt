@@ -8,8 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
-
-
     @Query("SELECT * FROM chapter_metadata ORDER BY chapter ASC")
     fun getAllChaptersMetadata(): Flow<List<ChapterMetadata>>
 
