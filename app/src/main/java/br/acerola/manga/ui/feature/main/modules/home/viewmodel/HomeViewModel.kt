@@ -3,12 +3,12 @@ package br.acerola.manga.ui.feature.main.modules.home.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.domain.service.library.LibraryPort
+import br.acerola.manga.domain.service.library.LibraryRepository
 import br.acerola.manga.shared.config.preference.HomeLayoutPreferences
 import br.acerola.manga.shared.config.preference.HomeLayoutType
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
-import br.acerola.manga.shared.dto.manga.MangaDto
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.dto.archive.MangaFolderDto
+import br.acerola.manga.domain.dto.MangaDto
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,10 +23,10 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val folderPort: LibraryPort<MangaFolderDto>,
-    private val folderOps: LibraryPort.MangaOperations<MangaFolderDto>,
-    private val metadataPort: LibraryPort<MangaMetadataDto>,
-    private val metadataOps: LibraryPort.MangaOperations<MangaMetadataDto>,
+    private val folderPort: LibraryRepository<MangaFolderDto>,
+    private val folderOps: LibraryRepository.MangaOperations<MangaFolderDto>,
+    private val metadataPort: LibraryRepository<MangaMetadataDto>,
+    private val metadataOps: LibraryRepository.MangaOperations<MangaMetadataDto>,
 ) : ViewModel() {
 
     private val _selectedHomeLayout = MutableStateFlow(HomeLayoutType.LIST)

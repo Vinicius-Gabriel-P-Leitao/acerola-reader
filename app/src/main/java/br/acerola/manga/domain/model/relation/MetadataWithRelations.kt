@@ -3,9 +3,9 @@ package br.acerola.manga.domain.model.relation
 import androidx.room.Embedded
 import androidx.room.Relation
 import br.acerola.manga.domain.model.metadata.MangaMetadata
-import br.acerola.manga.domain.model.metadata.author.Author
-import br.acerola.manga.domain.model.metadata.cover.Cover
-import br.acerola.manga.domain.model.metadata.gender.Gender
+import br.acerola.manga.domain.model.metadata.relationship.Author
+import br.acerola.manga.domain.model.metadata.relationship.Cover
+import br.acerola.manga.domain.model.metadata.relationship.Gender
 
 data class MetadataWithRelations(
     @Embedded val metadata: MangaMetadata,

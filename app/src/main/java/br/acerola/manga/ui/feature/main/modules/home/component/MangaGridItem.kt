@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
-import br.acerola.manga.shared.dto.manga.MangaDto
+import br.acerola.manga.domain.dto.MangaDto
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
 import coil.compose.rememberAsyncImagePainter

@@ -8,10 +8,10 @@ import br.acerola.manga.domain.data.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.data.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
-import br.acerola.manga.domain.service.library.LibraryPort
+import br.acerola.manga.domain.service.library.LibraryRepository
 import br.acerola.manga.shared.config.preference.FileExtension
-import br.acerola.manga.shared.dto.archive.ChapterPageDto
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.domain.dto.archive.ChapterPageDto
+import br.acerola.manga.domain.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.util.sha256
 import br.acerola.manga.shared.util.templateToRegex
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,7 +35,7 @@ class FolderMangaOperation @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val folderDao: MangaFolderDao,
     private val chapterDao: ChapterFileDao
-) : LibraryPort.MangaOperations<MangaFolderDto> {
+) : LibraryRepository.MangaOperations<MangaFolderDto> {
     /**
      * Reescaneia todos os capítulos vinculados a um mangá específico.
      *

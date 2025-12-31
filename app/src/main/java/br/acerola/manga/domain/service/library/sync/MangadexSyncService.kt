@@ -8,16 +8,16 @@ import br.acerola.manga.domain.data.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.data.dao.database.metadata.author.AuthorDao
 import br.acerola.manga.domain.data.dao.database.metadata.gender.GenderDao
 import br.acerola.manga.domain.data.mapper.toModel
-import br.acerola.manga.domain.model.metadata.author.Author
-import br.acerola.manga.domain.model.metadata.author.TypeAuthor
-import br.acerola.manga.domain.model.metadata.gender.Gender
+import br.acerola.manga.domain.model.metadata.relationship.Author
+import br.acerola.manga.domain.model.metadata.relationship.TypeAuthor
+import br.acerola.manga.domain.model.metadata.relationship.Gender
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchMangaDataService
 import br.acerola.manga.domain.service.archive.MangaCoverService
-import br.acerola.manga.domain.service.library.LibraryPort
+import br.acerola.manga.domain.service.library.LibraryRepository
 import br.acerola.manga.shared.config.preference.FolderPreference
-import br.acerola.manga.shared.dto.metadata.AuthorDto
-import br.acerola.manga.shared.dto.metadata.GenreDto
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.dto.metadata.manga.AuthorDto
+import br.acerola.manga.domain.dto.metadata.manga.GenreDto
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,7 @@ class MangadexSyncService @Inject constructor(
     private val mangaDao: MangaMetadataDao,
     private val coverService: MangaCoverService,
     private val fetchManga: MangadexFetchMangaDataService,
-) : LibraryPort<MangaMetadataDto> {
+) : LibraryRepository<MangaMetadataDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 

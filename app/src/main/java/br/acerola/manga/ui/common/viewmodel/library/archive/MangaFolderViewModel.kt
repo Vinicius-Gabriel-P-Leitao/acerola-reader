@@ -3,10 +3,10 @@ package br.acerola.manga.ui.common.viewmodel.library.archive
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.shared.dto.archive.ChapterFileDto
-import br.acerola.manga.shared.dto.archive.ChapterPageDto
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.domain.service.library.LibraryRepository
+import br.acerola.manga.domain.dto.archive.ChapterFileDto
+import br.acerola.manga.domain.dto.archive.ChapterPageDto
+import br.acerola.manga.domain.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.error.exception.ApplicationException
 import br.acerola.manga.shared.error.exception.GenericInternalException
 import br.acerola.manga.shared.error.handler.GlobalErrorHandler
@@ -27,9 +27,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaFolderViewModel @Inject constructor(
     private val manager: FolderAccessManager,
-    private val libraryPort: LibraryPort<MangaFolderDto>,
-    private val mangaOperations: LibraryPort.MangaOperations<MangaFolderDto>,
-    private val chapterOperations: LibraryPort.ChapterOperations<ChapterPageDto>,
+    private val libraryRepository: LibraryRepository<MangaFolderDto>,
+    private val mangaOperations: LibraryRepository.MangaOperations<MangaFolderDto>,
+    private val chapterOperations: LibraryRepository.ChapterOperations<ChapterPageDto>,
 ) : ViewModel() {
     private val _error = MutableStateFlow<Throwable?>(value = null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
@@ -37,7 +37,7 @@ class MangaFolderViewModel @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    val progress: StateFlow<Int> = libraryPort.progress
+    val progress: StateFlow<Int> = libraryRepository.progress
 
     private val _selectedFolderId = MutableStateFlow<Long?>(value = null)
 
@@ -67,19 +67,19 @@ class MangaFolderViewModel @Inject constructor(
     // NOTE: Sync básico que vê só novas alterações
     fun syncLibrary() = runLibraryTask {
         val uri = getFolderUri() ?: return@runLibraryTask
-        libraryPort.syncMangas(baseUri = uri)
+        libraryRepository.syncMangas(baseUri = uri)
     }
 
     // NOTE: Sync que vê só mangás novos, não faz sync de capitulos
     fun rescanMangas() = runLibraryTask {
         val uri = getFolderUri() ?: return@runLibraryTask
-        libraryPort.rescanMangas(baseUri = uri)
+        libraryRepository.rescanMangas(baseUri = uri)
     }
 
     // NOTE: Sync bruto, busca tudo de novo até os capitulos
     fun deepScanLibrary() = runLibraryTask {
         val uri = getFolderUri() ?: return@runLibraryTask
-        libraryPort.deepRescanLibrary(baseUri = uri)
+        libraryRepository.deepRescanLibrary(baseUri = uri)
     }
 
     // TODO: A ser implementado na config de cada manga, só vai buscar os capitulos

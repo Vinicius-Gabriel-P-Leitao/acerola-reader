@@ -7,9 +7,9 @@ import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangaDexDownloadDao
 import br.acerola.manga.domain.data.dao.database.FakeMangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.model.archive.MangaFolder
-import br.acerola.manga.domain.model.metadata.cover.Cover
+import br.acerola.manga.domain.model.metadata.relationship.Cover
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchCoverService
-import br.acerola.manga.shared.dto.metadata.CoverDto
+import br.acerola.manga.domain.dto.metadata.manga.CoverDto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

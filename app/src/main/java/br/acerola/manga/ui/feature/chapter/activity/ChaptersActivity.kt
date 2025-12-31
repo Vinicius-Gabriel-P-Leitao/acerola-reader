@@ -52,8 +52,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.R
-import br.acerola.manga.shared.dto.archive.ChapterFileDto
-import br.acerola.manga.shared.dto.manga.MangaDto
+import br.acerola.manga.domain.dto.archive.ChapterFileDto
+import br.acerola.manga.domain.dto.MangaDto
 import br.acerola.manga.ui.common.activity.BaseActivity
 import br.acerola.manga.ui.common.component.ButtonType
 import br.acerola.manga.ui.common.component.SmartButton

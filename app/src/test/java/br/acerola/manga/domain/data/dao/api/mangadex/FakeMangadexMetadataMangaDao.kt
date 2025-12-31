@@ -1,6 +1,6 @@
 package br.acerola.manga.domain.data.dao.api.mangadex
 
-import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
+import br.acerola.manga.data.remote.mangadex.dto.MangaDexResponse
 import retrofit2.http.Query
 
 class FakeMangadexMetadataMangaDao : MangadexMetadataMangaDao {

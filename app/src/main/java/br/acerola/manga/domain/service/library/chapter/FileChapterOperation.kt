@@ -3,9 +3,9 @@ package br.acerola.manga.domain.service.library.chapter
 import br.acerola.manga.domain.data.dao.database.archive.ChapterFileDao
 import br.acerola.manga.domain.data.mapper.toDto
 import br.acerola.manga.domain.model.archive.ChapterFile
-import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.shared.dto.archive.ChapterFileDto
-import br.acerola.manga.shared.dto.archive.ChapterPageDto
+import br.acerola.manga.domain.service.library.LibraryRepository
+import br.acerola.manga.domain.dto.archive.ChapterFileDto
+import br.acerola.manga.domain.dto.archive.ChapterPageDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,7 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class FileChapterOperation @Inject constructor(
     private val chapterDao: ChapterFileDao
-) : LibraryPort.ChapterOperations<ChapterPageDto> {
+) : LibraryRepository.ChapterOperations<ChapterPageDto> {
     /**
      * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico.
      *

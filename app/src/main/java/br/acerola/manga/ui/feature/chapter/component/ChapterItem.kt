@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.R
-import br.acerola.manga.shared.dto.archive.ChapterFileDto
+import br.acerola.manga.domain.dto.archive.ChapterFileDto
 import br.acerola.manga.ui.common.component.CardType
 import br.acerola.manga.ui.common.component.SmartCard
 

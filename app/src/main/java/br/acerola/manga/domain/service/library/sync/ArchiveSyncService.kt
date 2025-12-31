@@ -3,12 +3,11 @@ package br.acerola.manga.domain.service.library.sync
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.domain.builder.ArchiveBuilder
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
-import br.acerola.manga.domain.service.library.LibraryPort
+import br.acerola.manga.domain.service.library.LibraryRepository
 import br.acerola.manga.shared.config.preference.FileExtension
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.domain.dto.archive.MangaFolderDto
 import br.acerola.manga.shared.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -29,8 +28,8 @@ import javax.inject.Singleton
 class ArchiveSyncService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val folderDao: MangaFolderDao,
-    private val mangaOps: LibraryPort.MangaOperations<MangaFolderDto>
-) : LibraryPort<MangaFolderDto> {
+    private val mangaOps: LibraryRepository.MangaOperations<MangaFolderDto>
+) : LibraryRepository<MangaFolderDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 

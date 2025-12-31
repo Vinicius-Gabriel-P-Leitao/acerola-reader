@@ -1,9 +1,9 @@
 package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.domain.data.dao.api.mangadex.FakeMangadexMetadataMangaDao
-import br.acerola.manga.shared.dto.mangadex.MangaAttributes
-import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
-import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
+import br.acerola.manga.data.remote.mangadex.dto.manga.MangaAttributes
+import br.acerola.manga.data.remote.mangadex.dto.manga.MangaMangadexDto
+import br.acerola.manga.data.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -18,7 +18,7 @@ class MangaDexFetchMangaDataServiceTest {
         fakeDao.response = MangaDexResponse(
             result = "ok", response = "collection",
             data = listOf(
-                MetadataMangaDto(
+                MangaMangadexDto(
                     id = "1", type = "manga",
                     attributes = MangaAttributes(
                         titleMap = mapOf("en" to "One Piece"),

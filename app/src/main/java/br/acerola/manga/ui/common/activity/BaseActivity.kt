@@ -14,7 +14,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import br.acerola.manga.application.GlobalErrorRenderer
+import br.acerola.manga.app.GlobalErrorRenderer
 import br.acerola.manga.ui.common.layout.AcerolaScaffold
 import br.acerola.manga.ui.common.theme.AcerolaTheme
 import dagger.hilt.android.AndroidEntryPoint

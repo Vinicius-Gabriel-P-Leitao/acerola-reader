@@ -3,8 +3,8 @@ package br.acerola.manga.domain.service.api
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchChapterDataService
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchCoverService
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchMangaDataService
-import br.acerola.manga.shared.dto.metadata.ChapterMetadataDto
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.dto.metadata.chapter.ChapterMetadataDto
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,17 +18,17 @@ abstract class ServiceModule {
     @Singleton
     abstract fun bindMangaMetadataOperation(
         impl: MangadexFetchMangaDataService
-    ): ApiPort.MetadataOperations<MangaMetadataDto, String>
+    ): MangaRepository.MetadataOperations<MangaMetadataDto, String>
 
     @Binds
     @Singleton
     abstract fun bindMangadexFetchChapterOperation(
         impl: MangadexFetchChapterDataService
-    ): ApiPort.MetadataOperations<ChapterMetadataDto, String>
+    ): MangaRepository.MetadataOperations<ChapterMetadataDto, String>
 
     @Binds
     @Singleton
     abstract fun bindMangaDexFetchMangaDataService(
         impl: MangadexFetchCoverService
-    ): ApiPort.ArchiveOperations<String>
+    ): MangaRepository.ArchiveOperations<String>
 }

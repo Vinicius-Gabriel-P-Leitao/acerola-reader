@@ -5,9 +5,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import br.acerola.manga.domain.model.metadata.author.Author
-import br.acerola.manga.domain.model.metadata.cover.Cover
-import br.acerola.manga.domain.model.metadata.gender.Gender
+import br.acerola.manga.domain.model.metadata.relationship.Author
+import br.acerola.manga.domain.model.metadata.relationship.Cover
+import br.acerola.manga.domain.model.metadata.relationship.Gender
 
 @Entity(
     tableName = "manga_metadata",

@@ -2,13 +2,13 @@ package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.R
 import br.acerola.manga.domain.data.dao.api.mangadex.MangadexMetadataMangaDao
-import br.acerola.manga.domain.service.api.ApiPort
-import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
-import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
-import br.acerola.manga.shared.dto.metadata.AuthorDto
-import br.acerola.manga.shared.dto.metadata.CoverDto
-import br.acerola.manga.shared.dto.metadata.GenreDto
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.service.api.MangaRepository
+import br.acerola.manga.data.remote.mangadex.dto.MangaDexResponse
+import br.acerola.manga.data.remote.mangadex.dto.manga.MangaMangadexDto
+import br.acerola.manga.domain.dto.metadata.manga.AuthorDto
+import br.acerola.manga.domain.dto.metadata.manga.CoverDto
+import br.acerola.manga.domain.dto.metadata.manga.GenreDto
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,13 +19,13 @@ import javax.inject.Singleton
 @Singleton
 class MangadexFetchMangaDataService @Inject constructor(
     private val api: MangadexMetadataMangaDao
-) : ApiPort.MetadataOperations<MangaMetadataDto, String> {
+) : MangaRepository.MetadataOperations<MangaMetadataDto, String> {
     override suspend fun searchMetadata(
         manga: String, limit: Int, offset: Int, vararg extra: String?
     ): List<MangaMetadataDto> {
         return withContext(context = Dispatchers.IO) {
             try {
-                val response: MangaDexResponse<MetadataMangaDto> = api.searchMangaByName(manga, limit, offset)
+                val response: MangaDexResponse<MangaMangadexDto> = api.searchMangaByName(manga, limit, offset)
                 fromMangaDataList(dataList = response.data)
             } catch (httpException: HttpException) {
                 throw MangadexRequestException(
@@ -42,25 +42,25 @@ class MangadexFetchMangaDataService @Inject constructor(
         }
     }
 
-    private fun fromMangaDataList(dataList: List<MetadataMangaDto>): List<MangaMetadataDto> =
-        dataList.map { fromMangaData(metadataMangaDto = it) }
+    private fun fromMangaDataList(dataList: List<MangaMangadexDto>): List<MangaMetadataDto> =
+        dataList.map { fromMangaData(mangaMangadexDto = it) }
 
-    private fun fromMangaData(metadataMangaDto: MetadataMangaDto): MangaMetadataDto {
-        val attributes = metadataMangaDto.attributes
+    private fun fromMangaData(mangaMangadexDto: MangaMangadexDto): MangaMetadataDto {
+        val attributes = mangaMangadexDto.attributes
 
-        val authors = if (metadataMangaDto.authorName != null && metadataMangaDto.authorId != null) {
+        val authors = if (mangaMangadexDto.authorName != null && mangaMangadexDto.authorId != null) {
             AuthorDto(
-                id = metadataMangaDto.authorId!!,
-                name = metadataMangaDto.authorName!!,
-                type = metadataMangaDto.authorType!!
+                id = mangaMangadexDto.authorId!!,
+                name = mangaMangadexDto.authorName!!,
+                type = mangaMangadexDto.authorType!!
             )
         } else null
 
-        val coverDto = if (metadataMangaDto.coverFileName != null && metadataMangaDto.coverId != null) {
+        val coverDto = if (mangaMangadexDto.coverFileName != null && mangaMangadexDto.coverId != null) {
             CoverDto(
-                id = metadataMangaDto.coverId!!,
-                fileName = metadataMangaDto.coverFileName!!,
-                url = metadataMangaDto.getCoverUrl() ?: ""
+                id = mangaMangadexDto.coverId!!,
+                fileName = mangaMangadexDto.coverFileName!!,
+                url = mangaMangadexDto.getCoverUrl() ?: ""
             )
         } else null
 
@@ -78,7 +78,7 @@ class MangadexFetchMangaDataService @Inject constructor(
 
         // TODO: String para valores default
         return MangaMetadataDto(
-            id = metadataMangaDto.id,
+            id = mangaMangadexDto.id,
             title = attributes.title ?: "Sem Título",
             description = attributes.description ?: "",
             romanji = romanji,

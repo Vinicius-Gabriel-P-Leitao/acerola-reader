@@ -5,9 +5,9 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
-import br.acerola.manga.domain.model.metadata.cover.Cover
+import br.acerola.manga.domain.model.metadata.relationship.Cover
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchCoverService
-import br.acerola.manga.shared.dto.metadata.CoverDto
+import br.acerola.manga.domain.dto.metadata.manga.CoverDto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton

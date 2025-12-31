@@ -8,14 +8,14 @@ import br.acerola.manga.domain.data.dao.database.FakeMangaMetadataDao
 import br.acerola.manga.domain.data.dao.database.metadata.author.AuthorDao
 import br.acerola.manga.domain.data.dao.database.metadata.gender.GenderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
-import br.acerola.manga.domain.model.metadata.author.Author
-import br.acerola.manga.domain.model.metadata.gender.Gender
+import br.acerola.manga.domain.model.metadata.relationship.Author
+import br.acerola.manga.domain.model.metadata.relationship.Gender
 import br.acerola.manga.domain.service.api.mangadex.MangadexFetchMangaDataService
 import br.acerola.manga.domain.service.archive.MangaCoverService
 import br.acerola.manga.shared.config.preference.FolderPreference
-import br.acerola.manga.shared.dto.mangadex.MangaAttributes
-import br.acerola.manga.shared.dto.mangadex.MetadataMangaDto
-import br.acerola.manga.shared.dto.mangadex.MangaDexResponse
+import br.acerola.manga.data.remote.mangadex.dto.manga.MangaAttributes
+import br.acerola.manga.data.remote.mangadex.dto.manga.MangaMangadexDto
+import br.acerola.manga.data.remote.mangadex.dto.MangaDexResponse
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -126,7 +126,7 @@ class MangaDexSyncServiceTest {
         fakeFolderDao.folders.add(folder)
         fakeMangaDexDao.response = MangaDexResponse(
             result = "ok", response = "collection", data = listOf(
-                MetadataMangaDto(
+                MangaMangadexDto(
                     id = "mp1", type = "manga", attributes = MangaAttributes(
                         titleMap = mapOf("en" to "One Piece"), status = "ongoing", links = null
                     )

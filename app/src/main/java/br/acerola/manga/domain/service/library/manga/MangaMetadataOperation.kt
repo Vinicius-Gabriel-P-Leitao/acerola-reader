@@ -3,8 +3,8 @@ package br.acerola.manga.domain.service.library.manga
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.data.dao.database.metadata.MangaMetadataDao
 import br.acerola.manga.domain.data.mapper.toDto
-import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.service.library.LibraryRepository
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,7 +21,7 @@ import javax.inject.Singleton
 class MangaMetadataOperation @Inject constructor(
     private val mangaDao: MangaMetadataDao,
     private val folderDao: MangaFolderDao,
-) : LibraryPort.MangaOperations<MangaMetadataDto> {
+) : LibraryRepository.MangaOperations<MangaMetadataDto> {
     private val _mangas = MutableStateFlow<List<MangaMetadataDto>>(value = emptyList())
     val mangas: StateFlow<List<MangaMetadataDto>> = _mangas.asStateFlow()
 

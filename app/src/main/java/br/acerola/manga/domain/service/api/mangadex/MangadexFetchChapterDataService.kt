@@ -2,10 +2,10 @@ package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.R
 import br.acerola.manga.domain.data.dao.api.mangadex.MangadexMetadataChapterDao
-import br.acerola.manga.domain.service.api.ApiPort
-import br.acerola.manga.shared.dto.mangadex.MetadataChapterDto
-import br.acerola.manga.shared.dto.mangadex.MetadataChapterFileDto
-import br.acerola.manga.shared.dto.metadata.ChapterMetadataDto
+import br.acerola.manga.domain.service.api.MangaRepository
+import br.acerola.manga.data.remote.mangadex.dto.chapter.ChapterMangadexDto
+import br.acerola.manga.data.remote.mangadex.dto.chapter.ChapterFileMangadexDto
+import br.acerola.manga.domain.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class MangadexFetchChapterDataService @Inject constructor(
     private val api: MangadexMetadataChapterDao
-) : ApiPort.MetadataOperations<ChapterMetadataDto, String> {
+) : MangaRepository.MetadataOperations<ChapterMetadataDto, String> {
 
     override suspend fun searchMetadata(
         manga: String, limit: Int, offset: Int, vararg extra: String?
@@ -64,12 +64,12 @@ class MangadexFetchChapterDataService @Inject constructor(
         }
     }
 
-    private fun fromChapterDataList(dataList: List<MetadataChapterDto>): List<ChapterMetadataDto> =
+    private fun fromChapterDataList(dataList: List<ChapterMangadexDto>): List<ChapterMetadataDto> =
         dataList.map { fromChapterData(metadataDto = it, fileDto = null) }
 
     private fun fromChapterData(
-        metadataDto: MetadataChapterDto,
-        fileDto: MetadataChapterFileDto? = null
+        metadataDto: ChapterMangadexDto,
+        fileDto: ChapterFileMangadexDto? = null
     ): ChapterMetadataDto {
         val attributes = metadataDto.attributes
         val scanlatorName = metadataDto.scanlationGroups

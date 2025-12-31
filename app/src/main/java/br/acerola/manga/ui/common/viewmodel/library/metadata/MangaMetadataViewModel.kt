@@ -2,8 +2,8 @@ package br.acerola.manga.ui.common.viewmodel.library.metadata
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.domain.service.library.LibraryPort
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.service.library.LibraryRepository
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.shared.error.exception.ApplicationException
 import br.acerola.manga.shared.error.exception.GenericInternalException
 import br.acerola.manga.shared.error.handler.GlobalErrorHandler
@@ -18,13 +18,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MangaMetadataViewModel @Inject constructor(
-    private val libraryPort: LibraryPort<MangaMetadataDto>,
-    private val mangaOperations: LibraryPort.MangaOperations<MangaMetadataDto>,
+    private val libraryRepository: LibraryRepository<MangaMetadataDto>,
+    private val mangaOperations: LibraryRepository.MangaOperations<MangaMetadataDto>,
 ) : ViewModel() {
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    val progress: StateFlow<Int> = libraryPort.progress
+    val progress: StateFlow<Int> = libraryRepository.progress
 
 
     val metadata: StateFlow<List<MangaMetadataDto>> = mangaOperations.loadMangas()
@@ -35,15 +35,15 @@ class MangaMetadataViewModel @Inject constructor(
         )
 
     fun syncLibrary() = runLibraryTask {
-        libraryPort.syncMangas(baseUri = null)
+        libraryRepository.syncMangas(baseUri = null)
     }
 
     fun rescanMangas() = runLibraryTask {
-        libraryPort.rescanMangas(baseUri = null)
+        libraryRepository.rescanMangas(baseUri = null)
     }
 
     fun deepScanLibrary() = runLibraryTask {
-        libraryPort.deepRescanLibrary(baseUri = null)
+        libraryRepository.deepRescanLibrary(baseUri = null)
     }
 
     // TODO: Fazer um handler de erro melhor

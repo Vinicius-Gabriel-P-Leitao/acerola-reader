@@ -2,7 +2,7 @@ package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.R
 import br.acerola.manga.domain.data.dao.api.mangadex.MangaDexDownloadDao
-import br.acerola.manga.domain.service.api.ApiPort
+import br.acerola.manga.domain.service.api.MangaRepository
 import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,7 +12,7 @@ import javax.inject.Singleton
 @Singleton
 class MangadexFetchCoverService @Inject constructor(
     private val api: MangaDexDownloadDao
-) : ApiPort.ArchiveOperations<String> {
+) : MangaRepository.ArchiveOperations<String> {
     override suspend fun searchCover(url: String, vararg extra: String?): ByteArray {
         return withContext(context = Dispatchers.IO) {
             try {

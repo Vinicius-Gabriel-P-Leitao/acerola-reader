@@ -5,9 +5,9 @@ import br.acerola.manga.domain.service.library.manga.FolderMangaOperation
 import br.acerola.manga.domain.service.library.manga.MangaMetadataOperation
 import br.acerola.manga.domain.service.library.sync.ArchiveSyncService
 import br.acerola.manga.domain.service.library.sync.MangadexSyncService
-import br.acerola.manga.shared.dto.archive.ChapterPageDto
-import br.acerola.manga.shared.dto.archive.MangaFolderDto
-import br.acerola.manga.shared.dto.metadata.MangaMetadataDto
+import br.acerola.manga.domain.dto.archive.ChapterPageDto
+import br.acerola.manga.domain.dto.archive.MangaFolderDto
+import br.acerola.manga.domain.dto.metadata.manga.MangaMetadataDto
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,30 +23,30 @@ abstract class ServiceModule {
     @Singleton
     abstract fun bindMangaDexSyncService(
         impl: MangadexSyncService
-    ): LibraryPort<MangaMetadataDto>
+    ): LibraryRepository<MangaMetadataDto>
 
     @Binds
     @Singleton
     abstract fun bindMangaMetadataOperation(
         impl: MangaMetadataOperation
-    ): LibraryPort.MangaOperations<MangaMetadataDto>
+    ): LibraryRepository.MangaOperations<MangaMetadataDto>
 
     // NOTE: Arquivos
     @Binds
     @Singleton
     abstract fun bindArchiveSyncService(
         impl: ArchiveSyncService
-    ): LibraryPort<MangaFolderDto>
+    ): LibraryRepository<MangaFolderDto>
 
     @Binds
     @Singleton
     abstract fun bindFolderMangaOperations(
         impl: FolderMangaOperation
-    ): LibraryPort.MangaOperations<MangaFolderDto>
+    ): LibraryRepository.MangaOperations<MangaFolderDto>
 
     @Binds
     @Singleton
     abstract fun bindFileChapterOperation(
         impl: FileChapterOperation
-    ): LibraryPort.ChapterOperations<ChapterPageDto>
+    ): LibraryRepository.ChapterOperations<ChapterPageDto>
 }
