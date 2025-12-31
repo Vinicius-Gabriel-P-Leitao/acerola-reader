@@ -26,7 +26,7 @@ class MangaMetadataOperation @Inject constructor(
     val mangas: StateFlow<List<MangaMetadataDto>> = _mangas.asStateFlow()
 
     override suspend fun rescanChaptersByManga(mangaId: Long) {
-
+        // TODO: Implementar lógica de busca de dados do captitulo
     }
 
     override fun loadMangas(): StateFlow<List<MangaMetadataDto>> {

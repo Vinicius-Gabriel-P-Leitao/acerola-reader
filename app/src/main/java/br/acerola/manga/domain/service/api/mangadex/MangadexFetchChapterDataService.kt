@@ -1,9 +1,10 @@
 package br.acerola.manga.domain.service.api.mangadex
 
 import br.acerola.manga.R
-import br.acerola.manga.domain.builder.ChapterMetadataBuilder
 import br.acerola.manga.domain.data.dao.api.mangadex.MangadexMetadataChapterDao
 import br.acerola.manga.domain.service.api.ApiPort
+import br.acerola.manga.shared.dto.mangadex.MetadataChapterDto
+import br.acerola.manga.shared.dto.mangadex.MetadataChapterFileDto
 import br.acerola.manga.shared.dto.metadata.ChapterMetadataDto
 import br.acerola.manga.shared.error.exception.MangadexRequestException
 import kotlinx.coroutines.Dispatchers
@@ -32,13 +33,13 @@ class MangadexFetchChapterDataService @Inject constructor(
                         try {
                             val fileDto = api.getChapterImages(chapterId = metadataItem.id)
 
-                            ChapterMetadataBuilder.fromChapterData(
+                            fromChapterData(
                                 metadataDto = metadataItem,
                                 fileDto = fileDto
                             )
                             // TODO: Tratar erro melhor
                         } catch (exception: Exception) {
-                            ChapterMetadataBuilder.fromChapterData(
+                            fromChapterData(
                                 metadataDto = metadataItem,
                                 fileDto = null
                             )
@@ -61,5 +62,39 @@ class MangadexFetchChapterDataService @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun fromChapterDataList(dataList: List<MetadataChapterDto>): List<ChapterMetadataDto> =
+        dataList.map { fromChapterData(metadataDto = it, fileDto = null) }
+
+    private fun fromChapterData(
+        metadataDto: MetadataChapterDto,
+        fileDto: MetadataChapterFileDto? = null
+    ): ChapterMetadataDto {
+        val attributes = metadataDto.attributes
+        val scanlatorName = metadataDto.scanlationGroups
+            .firstNotNullOfOrNull { it.attributes?.name }
+
+        val pagesUrls = if (fileDto != null && fileDto.chapter.isNotEmpty()) {
+            val dataSaver = fileDto.chapter.first()
+            val baseUrl = fileDto.baseUrl
+            val hash = dataSaver.hash
+
+            dataSaver.data.map { fileName ->
+                "$baseUrl/data/$hash/$fileName"
+            }
+        } else {
+            emptyList()
+        }
+
+        return ChapterMetadataDto(
+            id = metadataDto.id,
+            volume = attributes.volume,
+            chapter = attributes.chapter,
+            title = attributes.title,
+            scanlator = scanlatorName,
+            pages = attributes.pages,
+            pageUrls = pagesUrls
+        )
     }
 }

@@ -33,6 +33,10 @@ data class ChapterFile(
     @ColumnInfo(name = "chapter_sort")
     val chapterSort: String,
 
+    // NOTE: Campo vai manter um hash do arquivo, para se tiver quebrado, ele tratar no frontend
+    @ColumnInfo(name = "checksum")
+    val checksum: String? = null,
+
     @ColumnInfo(name = "folder_path_fk")
     val folderPathFk: Long,
 )

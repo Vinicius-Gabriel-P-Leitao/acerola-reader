@@ -2,11 +2,14 @@ package br.acerola.manga.domain.service.library.sync
 
 import android.content.Context
 import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.domain.builder.ArchiveBuilder
 import br.acerola.manga.domain.data.dao.database.archive.MangaFolderDao
 import br.acerola.manga.domain.model.archive.MangaFolder
 import br.acerola.manga.domain.service.library.LibraryPort
+import br.acerola.manga.shared.config.preference.FileExtension
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -75,7 +78,7 @@ class ArchiveSyncService @Inject constructor(
                     return@withContext
                 }
 
-                val folders: List<MangaFolder> = ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
+                val folders: List<MangaFolder> = buildLibrary(context, rootUri = baseUri)
                 val existingFolders: List<MangaFolder> =
                     folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
 
@@ -137,7 +140,7 @@ class ArchiveSyncService @Inject constructor(
                 }
 
                 val foldersToProcess: List<MangaFolder> =
-                    ArchiveBuilder.buildLibrary(context, rootUri = baseUri)
+                    buildLibrary(context, rootUri = baseUri)
                 if (foldersToProcess.isEmpty()) {
                     _progress.value = -1
                     return@withContext
@@ -285,5 +288,39 @@ class ArchiveSyncService @Inject constructor(
 
     private fun normalizeName(name: String): String {
         return name.filter { it.isLetterOrDigit() }.lowercase()
+    }
+
+    private fun buildLibrary(context: Context, rootUri: Uri): List<MangaFolder> {
+        val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
+
+        return pickedDir.listFiles().filter { it.isDirectory }.map { folder ->
+            val banner = folder.listFiles().firstOrNull { isBanner(file = it) }
+            val cover = folder.listFiles().firstOrNull { isCover(file = it) }
+
+            val firstChapter = folder.listFiles().firstOrNull { file ->
+                file.isFile && FileExtension.isSupported(ext = file.name)
+            }
+            val detectedTemplate = firstChapter?.name?.let { detectTemplate(fileName = it) }
+
+            MangaFolder(
+                name = folder.name ?: "Unknown",
+                path = folder.uri.toString(),
+                cover = cover?.uri?.toString(),
+                banner = banner?.uri?.toString(),
+                chapterTemplate = detectedTemplate,
+                lastModified = folder.lastModified(),
+            )
+        }
+    }
+
+    // TODO: Fazer "cover" ".jpg" ".png" ser um dicionario desse object, uma constante a ser usada.
+    private fun isCover(file: DocumentFile): Boolean {
+        val name = file.name?.lowercase() ?: return false
+        return name.contains(other = "cover") && (name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png"))
+    }
+
+    private fun isBanner(file: DocumentFile): Boolean {
+        val name = file.name?.lowercase() ?: return false
+        return name.contains(other = "banner") && (name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png"))
     }
 }

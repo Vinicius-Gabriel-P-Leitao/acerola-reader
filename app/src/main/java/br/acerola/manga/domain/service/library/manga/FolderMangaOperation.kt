@@ -12,6 +12,7 @@ import br.acerola.manga.domain.service.library.LibraryPort
 import br.acerola.manga.shared.config.preference.FileExtension
 import br.acerola.manga.shared.dto.archive.ChapterPageDto
 import br.acerola.manga.shared.dto.archive.MangaFolderDto
+import br.acerola.manga.shared.util.sha256
 import br.acerola.manga.shared.util.templateToRegex
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -49,8 +50,7 @@ class FolderMangaOperation @Inject constructor(
     override suspend fun rescanChaptersByManga(mangaId: Long) =
         withContext(context = Dispatchers.IO) {
             val folder = folderDao.getMangaFolderById(mangaId = mangaId) ?: return@withContext
-            val folderDoc =
-                DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@withContext
+            val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@withContext
 
             val chaptersExist = chapterDao.countChaptersByFolder(folderId = mangaId) > 0
 
@@ -83,6 +83,7 @@ class FolderMangaOperation @Inject constructor(
                 ChapterFile(
                     chapter = name,
                     path = file.uri.toString(),
+                    checksum = file.sha256(context),
                     chapterSort = chapterSort,
                     folderPathFk = mangaId
                 )
@@ -135,4 +136,7 @@ class FolderMangaOperation @Inject constructor(
             items = initial.map { it.toDto() }, pageSize = pageSize, page = 0, total = total
         )
     }
+
+    // TODO: Tratar erros melhor.
+
 }

@@ -13,7 +13,6 @@ import br.acerola.manga.domain.data.dao.database.metadata.cover.CoverDao
 import br.acerola.manga.domain.data.dao.database.metadata.gender.GenderDao
 import br.acerola.manga.domain.model.archive.ChapterFile
 import br.acerola.manga.domain.model.archive.MangaFolder
-import br.acerola.manga.domain.model.metadata.ChapterMetadata
 import br.acerola.manga.domain.model.metadata.MangaMetadata
 import br.acerola.manga.domain.model.metadata.author.Author
 import br.acerola.manga.domain.model.metadata.cover.Cover
@@ -22,7 +21,7 @@ import br.acerola.manga.domain.model.metadata.gender.Gender
 @Database(
     entities = [
         MangaFolder::class, ChapterFile::class, MangaMetadata::class,
-        ChapterMetadata::class, Author::class, Gender::class, Cover::class
+        ChapterFile::class, Author::class, Gender::class, Cover::class
     ],
     exportSchema = false,
     version = 1,
