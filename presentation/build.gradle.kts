@@ -5,33 +5,22 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.androidx.room)
-    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.hilt)
 }
 
 android {
     namespace = "br.acerola.manga.feature"
-    compileSdk {
-        version = release(version = 36)
-    }
+    compileSdk = 36
+
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField(type = "String", name = "MANGADEX_BASE_URL", value = "\"https://api.mangadex.org\"")
-        buildConfigField(type = "String", name = "MANGADEX_UPLOAD_URL", value = "\"https://uploads.mangadex.org\"")
-        buildConfigField(
-            type = "String",
-            name = "GITHUB_USER_AGENT",
-            value = "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\""
-        )
     }
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile(name = "proguard-android-optimize.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
@@ -51,80 +40,35 @@ android {
     }
 }
 
-room {
-    schemaDirectory(path = "$projectDir/schema")
-}
-
 dependencies {
     implementation(project(":data"))
     implementation(project(":infrastructure"))
 
-    // Core Android
+    // --- Core ---
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.kotlinx.coroutines.android)
 
-    // Jetpack Compose BOM
+    // --- UI / Compose ---
     implementation(platform(libs.androidx.compose.bom))
-
-    // Coil
+    implementation(libs.bundles.compose.ui)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.adaptive.navigation)
+    implementation(libs.androidx.documentfile)
 
-    // Compose UI
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material.icons.extended)
-
-    // Injeção de dependencia
+    // --- DI ---
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 
-    // Material Design 3
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.compose.material3.window.size.class1)
-    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
-
-    // Leitor de mangá
-    implementation(libs.junrar)
-
-    // Datastore
-    implementation(libs.androidx.datastore)
-    implementation(libs.androidx.documentfile)
-
-    // Navigation
-    implementation(libs.androidx.navigation.common.ktx)
-    implementation(libs.androidx.navigation.compose)
-
-    //  ROOM + SQLITE
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.sqlite.bundled)
-    implementation(libs.androidx.room.sqlite.wrapper)
-
-    // Testes
+    // --- Testing ---
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-
-    // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
+    androidTestImplementation(libs.androidx.espresso.core)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    // JSON
-    implementation(libs.kotlinx.serialization.json)
-
-    // GraphQL – Apollo (AniList)
-    implementation(libs.apollo.runtime)
-    implementation(libs.apollo.normalized.cache)
-
-    // REST – Retrofit + OkHttp (MangaDex)
-    implementation(libs.retrofit)
-    implementation(libs.converter.gson)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 }
