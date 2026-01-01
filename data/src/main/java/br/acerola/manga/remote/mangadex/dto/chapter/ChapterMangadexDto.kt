@@ -1,5 +1,8 @@
 package br.acerola.manga.remote.mangadex.dto.chapter
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class ChapterMangadexDto(
     val id: String,
     val type: String,
@@ -22,6 +25,7 @@ data class ChapterMangadexDto(
         get() = relationships.filter { it.type == "scanlation_group" }
 }
 
+@JsonClass(generateAdapter = true)
 data class ChapterAttributes(
     val volume: String?,
     val chapter: String?,
@@ -29,12 +33,14 @@ data class ChapterAttributes(
     val pages: Int = 0
 )
 
+@JsonClass(generateAdapter = true)
 data class ChapterRelationship(
     val id: String,
     val type: String,
     val attributes: ChapterRelationshipAttributes? = null
 )
 
+@JsonClass(generateAdapter = true)
 data class ChapterRelationshipAttributes(
     val name: String? = null,
     val focusedLanguages: List<String>? = emptyList()

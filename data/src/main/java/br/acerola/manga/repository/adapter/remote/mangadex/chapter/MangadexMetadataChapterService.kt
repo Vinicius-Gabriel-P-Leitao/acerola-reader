@@ -56,6 +56,7 @@ class MangadexMetadataChapterService @Inject constructor(
                 )
             } catch (exception: Exception) {
                 // TODO: Tratar erro melhor
+                println("Erro ao sincronizar $exception")
                 throw MangadexRequestException(
                     title = R.string.title_metadata_request_error,
                     description = R.string.description_metadata_request_error

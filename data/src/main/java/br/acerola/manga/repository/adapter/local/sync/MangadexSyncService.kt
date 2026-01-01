@@ -17,8 +17,8 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Gender
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.mapper.toModel
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMetadataMangaService
-import br.acerola.manga.service.archive.MangaCoverService
 import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.service.archive.MangaCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -141,7 +141,8 @@ class MangadexSyncService @Inject constructor(
 
             } catch (exception: Exception) {
                 // TODO: Normalizar esse erro, ao invez de um log
-                println("Erro ao sincronizar $current: ${exception.message}")
+                println("Erro ao sincronizar $exception")
+                throw exception
             } finally {
                 val currentProgress = (((index + 1).toFloat() / total.toFloat()) * 100).roundToInt()
                 _progress.value = currentProgress

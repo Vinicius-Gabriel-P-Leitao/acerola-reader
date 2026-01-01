@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -62,7 +61,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.serialization.json)
 
     // --- Compose Runtime (Only for @Immutable) ---
     implementation(platform(libs.androidx.compose.bom))
@@ -77,8 +75,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     // --- Networking (Retrofit + OkHttp + GraphQL) ---
-    implementation(libs.bundles.retrofit)
+    ksp(libs.moshi.codegen)
     implementation(libs.apollo.runtime)
+    implementation(libs.bundles.retrofit)
     implementation(libs.apollo.normalized.cache)
 
     // --- File & Utilities ---
