@@ -16,11 +16,11 @@ android {
         version = release(version = 36)
     }
     defaultConfig {
-        applicationId = "br.acerola.manga"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        applicationId = "br.acerola.manga"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField(type = "String", name = "MANGADEX_BASE_URL", value = "\"https://api.mangadex.org\"")
@@ -56,6 +56,10 @@ room {
 }
 
 dependencies {
+    implementation(project(":data"))
+    implementation(project(":presentation"))
+    implementation(project(":infrastructure"))
+
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

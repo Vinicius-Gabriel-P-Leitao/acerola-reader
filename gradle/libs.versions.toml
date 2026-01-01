@@ -28,6 +28,8 @@ kotlinxSerialization = "1.9.0"
 mockk = "1.14.7"
 coroutinesTest = "1.10.2"
 hilt = "2.57.2"
+appcompat = "1.6.1"
+material = "1.10.0"
 
 [libraries]
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
@@ -68,9 +70,12 @@ apollo-normalized-cache = { module = "com.apollographql.apollo3:apollo-normalize
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

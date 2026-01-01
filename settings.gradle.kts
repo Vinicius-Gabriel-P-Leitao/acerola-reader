@@ -1,5 +1,8 @@
 rootProject.name = "acerola"
 include(":app")
+include(":data")
+include(":presentation")
+include(":infrastructure")
 
 pluginManagement {
     repositories {
@@ -16,7 +19,9 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(
+        RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    )
     repositories {
         google()
         mavenCentral()
