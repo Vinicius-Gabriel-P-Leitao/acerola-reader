@@ -22,9 +22,9 @@ import br.acerola.manga.common.viewmodel.archive.folder.FolderAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaFolderViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.module.config.component.SelectFolder
-import br.acerola.manga.module.config.component.SelectedPreferSavedFile
+import br.acerola.manga.module.config.component.PreferSavedFile
 import br.acerola.manga.module.config.component.SyncLibraryArchive
-import br.acerola.manga.module.config.component.SyncMangaDexData
+import br.acerola.manga.module.config.component.SyncMangadexData
 
 @Composable
 fun ConfigScreen(
@@ -54,7 +54,7 @@ fun ConfigScreen(
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
-                SelectedPreferSavedFile(filePreferencesViewModel)
+                PreferSavedFile(filePreferencesViewModel)
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
@@ -70,7 +70,7 @@ fun ConfigScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
             ) {
-                SyncMangaDexData(mangaDexViewModel)
+                SyncMangadexData(mangaDexViewModel)
             }
 
             Spacer(modifier = Modifier.height(height = 16.dp))

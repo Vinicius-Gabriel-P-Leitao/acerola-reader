@@ -3,7 +3,7 @@ package br.acerola.manga.common.viewmodel.library.archive
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.archive.ChapterPageDto
-import br.acerola.manga.usecase.library.LibraryRepository
+import br.acerola.manga.repository.port.LibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

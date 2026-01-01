@@ -6,7 +6,7 @@ import br.acerola.manga.error.exception.ApplicationException
 import br.acerola.manga.error.exception.GenericInternalException
 import br.acerola.manga.error.handler.GlobalErrorHandler
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.usecase.library.LibraryRepository
+import br.acerola.manga.repository.port.LibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
