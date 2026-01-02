@@ -34,7 +34,7 @@ import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.config.preference.HomeLayoutType
-import br.acerola.manga.module.chapter.activity.ChaptersActivity
+import br.acerola.manga.module.manga.MangaActivity
 import br.acerola.manga.module.home.component.MangaGridItem
 import br.acerola.manga.module.home.component.MangaListItem
 
@@ -66,8 +66,8 @@ fun HomeScreen(
                     MangaListItem(
                         manga = manga,
                         onClick = {
-                            val intent = Intent(context, ChaptersActivity::class.java).apply {
-                                putExtra(ChaptersActivity.ChapterExtra.MANGA, manga)
+                            val intent = Intent(context, MangaActivity::class.java).apply {
+                                putExtra(MangaActivity.ChapterExtra.MANGA, manga)
                             }
                             context.startActivity(intent)
                         }
@@ -91,8 +91,8 @@ fun HomeScreen(
                 ) {
                     items(items = mangas) { manga ->
                         val onClick = {
-                            val intent = Intent(context, ChaptersActivity::class.java).apply {
-                                putExtra(ChaptersActivity.ChapterExtra.MANGA, manga)
+                            val intent = Intent(context, MangaActivity::class.java).apply {
+                                putExtra(MangaActivity.ChapterExtra.MANGA, manga)
                             }
                             context.startActivity(intent)
                         }

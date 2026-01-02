@@ -1,4 +1,4 @@
-package br.acerola.manga.module.chapter.component
+package br.acerola.manga.module.manga.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
