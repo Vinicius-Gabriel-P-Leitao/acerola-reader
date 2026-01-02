@@ -21,19 +21,39 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 *   [x] **Tela Inicial (Home Screen):** Exibe todos os mangás da sua biblioteca com duas opções de layout: Lista e Grade.
 *   [x] **Tela de Capítulos:** Mostra uma lista de todos os capítulos de um mangá selecionado, juntamente com seus metadados detalhados.
 
+### 🛠️ FIXME (Correções Prioritárias)
+
+*   [ ] **Bug no Primeiro Scan:** Verificar por que no primeiro scan de mangás os capítulos não estão sendo mapeados.
+*   [ ] **Performance:** Reformular o `loadPage` da seção de capítulos na tela de detalhes do mangá.
+
 ### 🚧 Planejado / Em Andamento
 
 *   **Leitor de Mangás Integrado:**
     *   [ ] Suporte completo para formatos `.cbz` e `.cbr`.
+*   **Configuração e Gerenciamento do Mangá (Refatoração):**
+    *   [ ] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
+    *   [ ] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
+    *   [ ] **Edição de Metadados:** Editar metadados básicos com opção de "Trancar" o mangá para impedir sobrescrita.
+    *   [ ] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se o banner for removido, a capa assume o lugar.
+    *   [ ] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
+    *   [ ] **Ações de Limpeza (com confirmação):**
+        *   Limpar metadados (remove do DB e apaga `ComicInfo.xml`).
+        *   Limpar capítulos (remove todos os arquivos e dados).
+*   **Configurações Globais:**
+    *   [ ] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
+        *   Gerar `ComicInfo.xml` por padrão; ler se existir.
+        *   Resolver conflitos: Adicionar opção "Metadata ComicInfo ? Database" e persistir essa escolha (SQLite/DataStore).
+    *   [ ] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).
+*   **Melhorias na UI/UX:**
+    *   [ ] **ChapterItem:** Reformular visual para ficar mais agradável.
+    *   [ ] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo (avaliar `SearchBar` do Material3).
+    *   [ ] Opção para uma "UI Limpa" (minimalista) vs. "UI Rica em Funcionalidades".
+    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean.
+*   **Background e Performance:**
+    *   [ ] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de background com notificação de progresso, permitindo sair do app.
 *   **Fontes de Metadados Expandidas:**
     *   [ ] Opção para escolher **AniList** como uma fonte alternativa de metadados.
     *   [ ] Um painel de configurações para selecionar e configurar o provedor de metadados desejado (MangaDex/AniList).
-*   **Configuração Aprimorada:**
-    *   [ ] Configurações avançadas relacionadas a arquivos.
-    *   [ ] Opções de personalização da interface do usuário.
-*   **Melhorias na UI/UX:**
-    *   [ ] Opção para uma "UI Limpa" (minimalista) vs. "UI Rica em Funcionalidades".
-    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean.
 *   **Rastreamento de Leitura:**
     *   [ ] Marcar capítulos como lidos/não lidos.
     *   [ ] Funcionalidade "Continuar Lendo" para pular rapidamente para o último capítulo lido.
