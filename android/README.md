@@ -32,7 +32,7 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
     *   [ ] Suporte completo para formatos `.cbz` e `.cbr`.
 *   **Configuração e Gerenciamento do Mangá (Refatoração):**
     *   [ ] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
-    *   [ ] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
+    *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
     *   [ ] **Edição de Metadados:** Editar metadados básicos com opção de "Trancar" o mangá para impedir sobrescrita.
     *   [ ] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se o banner for removido, a capa assume o lugar.
     *   [ ] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
@@ -47,8 +47,7 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 *   **Melhorias na UI/UX:**
     *   [ ] **ChapterItem:** Reformular visual para ficar mais agradável.
     *   [ ] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo (avaliar `SearchBar` do Material3).
-    *   [ ] Opção para uma "UI Limpa" (minimalista) vs. "UI Rica em Funcionalidades".
-    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean.
+    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porem com thema mais dark.
 *   **Background e Performance:**
     *   [ ] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de background com notificação de progresso, permitindo sair do app.
 *   **Fontes de Metadados Expandidas:**
