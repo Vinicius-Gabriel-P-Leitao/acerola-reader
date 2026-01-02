@@ -20,18 +20,15 @@ android {
 
         buildConfigField("String", "MANGADEX_BASE_URL", "\"https://api.mangadex.org\"")
         buildConfigField("String", "MANGADEX_UPLOAD_URL", "\"https://uploads.mangadex.org\"")
-        buildConfigField(
-            "String",
-            "GITHUB_USER_AGENT",
-            "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\""
+        buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\""
         )
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
