@@ -1,6 +1,6 @@
 package br.acerola.manga.common.theme
 
-import  android.content.Context
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,30 +12,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Overlay0,
-    onPrimary = Text,
-    secondary = Teal,
+    primary = Mauve,
+    onPrimary = Base,
+    primaryContainer = Surface2,
+    onPrimaryContainer = Mauve,
+    secondary = Pink,
     onSecondary = Base,
-    tertiary = Pink,
+    secondaryContainer = Surface2,
+    onSecondaryContainer = Pink,
+    tertiary = Sky,
     onTertiary = Base,
+    tertiaryContainer = Surface2,
+    onTertiaryContainer = Sky,
     background = Base,
     onBackground = Text,
-    surface = Mantle,
+    surface = Surface0,
     onSurface = Text,
+    surfaceVariant = Surface1,
+    onSurfaceVariant = Subtext1,
+    outline = Overlay0,
     error = Red,
-    onError = Base
+    onError = Base,
+    errorContainer = Maroon,
+    onErrorContainer = Text
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Surface,
-    onPrimary = Text,
-    secondary = Sapphire,
+    primary = Mauve,
+    onPrimary = Base,
+    secondary = Pink,
     onSecondary = Base,
-    tertiary = Peach,
+    tertiary = Sky,
     onTertiary = Base,
     background = Text,
     onBackground = Base,
-    surface = Subtext,
+    surface = Subtext1,
     onSurface = Base,
     error = Red,
     onError = Base
@@ -43,7 +54,9 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun AcerolaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(), dynamicColor: Boolean = false, content: @Composable () -> Unit
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
+    content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
