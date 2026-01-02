@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterDownloadSourceDao: BaseDao<ChapterDownloadSource> {
-    @Query("SELECT * FROM chapter_page ORDER BY id ASC")
+    @Query(value = "SELECT * FROM chapter_page ORDER BY id ASC")
     fun getAllChapterDownloadSource(): Flow<List<ChapterDownloadSource>>
 
-    @Query("SELECT * FROM chapter_page WHERE id = :mangaId")
+    @Query(value = "SELECT * FROM chapter_page WHERE id = :mangaId")
     fun getChapterDownloadSourceById(mangaId: Long): Flow<ChapterDownloadSource?>
 }

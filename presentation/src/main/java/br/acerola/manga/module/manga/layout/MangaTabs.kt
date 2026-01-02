@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,9 +27,6 @@ fun MangaTabs(
     totalChapters: Int,
     activeTab: MainTab,
     onTabSelected: (MainTab) -> Unit,
-    textColor: Color,
-    secondaryTextColor: Color,
-    primaryColor: Color
 ) {
     val tabs = MainTab.entries.toTypedArray()
 
@@ -55,7 +51,8 @@ fun MangaTabs(
             ) {
                 Text(
                     text = title,
-                    color = if (isActive) textColor else secondaryTextColor,
+                    color = if (isActive) MaterialTheme.colorScheme.onBackground
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
                     ),
@@ -67,7 +64,10 @@ fun MangaTabs(
                         modifier = Modifier
                             .width(width = 20.dp)
                             .height(height = 3.dp)
-                            .background(primaryColor, shape = RoundedCornerShape(size = 2.dp))
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(size = 2.dp)
+                            )
                     )
                 }
             }

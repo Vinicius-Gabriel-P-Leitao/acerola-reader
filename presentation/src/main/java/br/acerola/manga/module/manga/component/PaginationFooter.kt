@@ -17,11 +17,9 @@ import androidx.compose.ui.unit.dp
 fun PaginationFooter(
     currentPage: Int,
     totalPages: Int,
-    textColor: Color,
     onPageChange: (Int) -> Unit
 ) {
     val lastPageIndex = totalPages - 1
-
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -34,20 +32,28 @@ fun PaginationFooter(
             onClick = { onPageChange(currentPage - 1) },
             enabled = currentPage > 0
         ) {
-            Text("Anterior", color = if (currentPage > 0) textColor else textColor.copy(alpha = 0.3f))
+            Text(
+                "Anterior",
+                color = if (currentPage > 0) MaterialTheme.colorScheme.onBackground
+                else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+            )
         }
 
         Text(
             text = "Página ${currentPage + 1} de $totalPages",
             style = MaterialTheme.typography.bodyMedium,
-            color = textColor
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         TextButton(
             onClick = { onPageChange(currentPage + 1) },
             enabled = currentPage < lastPageIndex
         ) {
-            Text("Próximo", color = if (currentPage < lastPageIndex) textColor else textColor.copy(alpha = 0.3f))
+            Text(
+                "Próximo",
+                color = if (currentPage < lastPageIndex) MaterialTheme.colorScheme.onBackground
+                else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+            )
         }
     }
 }

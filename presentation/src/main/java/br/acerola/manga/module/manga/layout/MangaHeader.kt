@@ -36,9 +36,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
 @Composable
-fun MangaHeader(
-    manga: MangaDto, textColor: Color, secondaryTextColor: Color
-) {
+fun MangaHeader(manga: MangaDto) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,7 +105,8 @@ fun MangaHeader(
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold, color = textColor
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
                         ),
                     )
 
@@ -116,7 +115,7 @@ fun MangaHeader(
                     Text(
                         text = manga.remoteInfo?.status ?: "Unknown",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = secondaryTextColor
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(height = 8.dp))
@@ -134,7 +133,7 @@ fun MangaHeader(
                         Text(
                             text = manga.remoteInfo?.authors?.name ?: "Unknown",
                             style = MaterialTheme.typography.labelLarge,
-                            color = textColor
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }

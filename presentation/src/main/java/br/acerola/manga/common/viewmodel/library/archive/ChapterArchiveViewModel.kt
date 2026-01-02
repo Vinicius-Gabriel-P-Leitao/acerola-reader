@@ -2,6 +2,7 @@ package br.acerola.manga.common.viewmodel.library.archive
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.ChapterPageDto
 import br.acerola.manga.repository.port.LibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,7 +52,7 @@ class ChapterArchiveViewModel @Inject constructor(
                 total = total,
             )
 
-            val sortedItems = result.items.sortedBy {
+            val sortedItems: List<ChapterFileDto> = result.items.sortedBy {
                 it.chapterSort.replace(oldChar = ',', newChar = '.').toFloatOrNull() ?: 0f
             }
 
