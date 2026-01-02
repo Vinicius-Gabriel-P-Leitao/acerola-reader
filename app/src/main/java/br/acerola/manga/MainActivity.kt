@@ -20,10 +20,10 @@ import br.acerola.manga.module.home.HomeViewModel
 import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.layout.NavigationBottomBar
 import br.acerola.manga.common.navigation.Destination
-import br.acerola.manga.common.viewmodel.archive.file.FilePreferencesViewModel
-import br.acerola.manga.common.viewmodel.archive.folder.FolderAccessViewModel
-import br.acerola.manga.common.viewmodel.library.archive.MangaFolderViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
+import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
+import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
+import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -31,16 +31,16 @@ class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
 ) : BaseActivity() {
     private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
-    private val folderAccessViewModel: FolderAccessViewModel by viewModels()
-    private val mangaFolderViewModel: MangaFolderViewModel by viewModels()
-    private val mangaDexViewModel: MangaMetadataViewModel by viewModels()
+    private val fileSystemAccessViewModel: FileSystemAccessViewModel by viewModels()
+    private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
+    private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
 
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
-                mangaFolderViewModel, homeViewModel
+                mangaDirectoryViewModel, homeViewModel
             )
         }
         defaultComposable(context, Destination.HISTORY) {
@@ -49,8 +49,8 @@ class MainActivity(
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(
                 filePreferencesViewModel,
-                folderAccessViewModel,
-                mangaFolderViewModel,
+                fileSystemAccessViewModel,
+                mangaDirectoryViewModel,
                 mangaDexViewModel
             )
         }

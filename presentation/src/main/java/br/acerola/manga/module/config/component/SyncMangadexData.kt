@@ -29,11 +29,11 @@ import br.acerola.manga.feature.R
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
-import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 
 @Composable
 fun SyncMangadexData(
-    mangaDexViewModel: MangaMetadataViewModel
+    mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
     SmartCard(
         type = CardType.CONTENT,
@@ -60,7 +60,7 @@ fun SyncMangadexData(
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(size = 22.dp),
                         contentDescription = stringResource(
-                            id = R.string.description_icon_sync_manga_folders
+                            id = R.string.description_icon_sync_manga_directory
                         ),
                     )
                 }
@@ -78,8 +78,8 @@ fun SyncMangadexData(
 
             ListItem(
                 modifier = Modifier.clickable { mangaDexViewModel.rescanMangas() },
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_metadata)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_sync_metadata_supporting)) },
+                headlineContent = { Text(text = stringResource(id = R.string.title_sync_remote_info)) },
+                supportingContent = { Text(text = stringResource(id = R.string.description_sync_remote_info_supporting)) },
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Default.Sync, contentDescription = null

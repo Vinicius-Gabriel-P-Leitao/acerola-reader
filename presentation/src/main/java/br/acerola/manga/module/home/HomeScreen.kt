@@ -32,7 +32,7 @@ import br.acerola.manga.common.component.FloatingTool
 import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
-import br.acerola.manga.common.viewmodel.library.archive.MangaFolderViewModel
+import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.module.chapter.activity.ChaptersActivity
 import br.acerola.manga.module.home.component.MangaGridItem
@@ -40,12 +40,12 @@ import br.acerola.manga.module.home.component.MangaListItem
 
 @Composable
 fun HomeScreen(
-    mangaFolderViewModel: MangaFolderViewModel,
+    mangaDirectoryViewModel: MangaDirectoryViewModel,
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
 
-    val error by mangaFolderViewModel.error.collectAsState()
+    val error by mangaDirectoryViewModel.error.collectAsState()
 
     val layout by homeViewModel.selectedHomeLayout.collectAsState()
     val isIndexing by homeViewModel.isIndexing.collectAsState()
@@ -56,8 +56,8 @@ fun HomeScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             SearchBar(
                 items = mangas,
-                itemKey = { it.folder.id },
-                searchKey = { it.folder.name },
+                itemKey = { it.directory.id },
+                searchKey = { it.directory.name },
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -1,11 +1,11 @@
 package br.acerola.manga.repository.port
 
 import br.acerola.manga.dto.archive.ChapterPageDto
-import br.acerola.manga.dto.archive.MangaFolderDto
-import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.repository.adapter.local.chapter.FileChapterOperation
-import br.acerola.manga.repository.adapter.local.manga.FolderMangaOperation
-import br.acerola.manga.repository.adapter.local.manga.MangaMetadataOperation
+import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveOperation
+import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryOperation
+import br.acerola.manga.repository.adapter.local.manga.ChapterRemoteInfoOperation
 import br.acerola.manga.repository.adapter.local.sync.ArchiveSyncService
 import br.acerola.manga.repository.adapter.local.sync.MangadexSyncService
 import dagger.Binds
@@ -23,30 +23,30 @@ abstract class LibraryModule {
     @Singleton
     abstract fun bindMangaDexSyncService(
         impl: MangadexSyncService
-    ): LibraryRepository<MangaMetadataDto>
+    ): LibraryRepository<MangaRemoteInfoDto>
 
     @Binds
     @Singleton
-    abstract fun bindMangaMetadataOperation(
-        impl: MangaMetadataOperation
-    ): LibraryRepository.MangaOperations<MangaMetadataDto>
+    abstract fun bindMangaRemoteInfoOperation(
+        impl: ChapterRemoteInfoOperation
+    ): LibraryRepository.MangaOperations<MangaRemoteInfoDto>
 
     // NOTE: Arquivos
     @Binds
     @Singleton
     abstract fun bindArchiveSyncService(
         impl: ArchiveSyncService
-    ): LibraryRepository<MangaFolderDto>
+    ): LibraryRepository<MangaDirectoryDto>
 
     @Binds
     @Singleton
-    abstract fun bindFolderMangaOperations(
-        impl: FolderMangaOperation
-    ): LibraryRepository.MangaOperations<MangaFolderDto>
+    abstract fun bindMangaDirectoryOperations(
+        impl: MangaDirectoryOperation
+    ): LibraryRepository.MangaOperations<MangaDirectoryDto>
 
     @Binds
     @Singleton
     abstract fun bindFileChapterOperation(
-        impl: FileChapterOperation
+        impl: ChapterArchiveOperation
     ): LibraryRepository.ChapterOperations<ChapterPageDto>
 }

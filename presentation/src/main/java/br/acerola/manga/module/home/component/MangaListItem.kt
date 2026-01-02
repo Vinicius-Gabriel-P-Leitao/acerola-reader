@@ -36,8 +36,8 @@ fun MangaListItem(
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val coverUri = manga.folder.coverUri ?: manga.folder.bannerUri
-    val title = manga.metadata?.title ?: manga.folder.name
+    val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
+    val title = manga.remoteInfo?.title ?: manga.directory.name
 
     val imageRequest = remember(key1 = coverUri) {
         val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
@@ -79,7 +79,7 @@ fun MangaListItem(
                 text = title, style = MaterialTheme.typography.titleMedium, maxLines = 1
             )
             Text(
-                text = stringResource(id = R.string.description_manga_list_item_chapter_count, manga.folder.chapters.total),
+                text = stringResource(id = R.string.description_manga_list_item_chapter_count, manga.directory.chapters.total),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -4,9 +4,9 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.config.preference.FileExtension
-import br.acerola.manga.dto.archive.MangaFolderDto
-import br.acerola.manga.local.database.dao.archive.MangaFolderDao
-import br.acerola.manga.local.database.entity.archive.MangaFolder
+import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,9 +27,9 @@ import javax.inject.Singleton
 @Singleton
 class ArchiveSyncService @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val folderDao: MangaFolderDao,
-    private val mangaOps: LibraryRepository.MangaOperations<MangaFolderDto>
-) : LibraryRepository<MangaFolderDto> {
+    private val directoryDao: MangaDirectoryDao,
+    private val mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
+) : LibraryRepository<MangaDirectoryDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -50,7 +50,7 @@ class ArchiveSyncService @Inject constructor(
      *
      * **Fluxo operacional:**
      * 1. Constrói a lista atual de pastas usando o [ArchiveBuilder].
-     * 2. Recupera as pastas já persistidas no banco via [folderDao].
+     * 2. Recupera as pastas já persistidas no banco via [directoryDao].
      * 3. Determina diferenças (novas, modificadas, removidas) com base em:
      *    - Timestamp (`lastModified`)
      *    - Mudanças de `cover` ou `banner`
@@ -63,7 +63,7 @@ class ArchiveSyncService @Inject constructor(
      *
      * @see ArchiveBuilder.buildLibrary
      * @see processFolderList
-     * @see folderDao
+     * @see directoryDao
      *
      * @throws java.io.IOException Se ocorrer falha no acesso ao diretório ou leitura de metadados.
      * @throws kotlinx.coroutines.CancellationException Se a coroutine for cancelada durante a sincronização.
@@ -77,19 +77,18 @@ class ArchiveSyncService @Inject constructor(
                     return@withContext
                 }
 
-                val folders: List<MangaFolder> = buildLibrary(context, rootUri = baseUri)
-                val existingFolders: List<MangaFolder> =
-                    folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                val discoveredFolders: List<MangaDirectory> = buildLibrary(context, rootUri = baseUri)
+                val databaseFolders: List<MangaDirectory> = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
 
-                if (folders.isEmpty() && existingFolders.isEmpty()) {
+                if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
                     _progress.value = -1
                     return@withContext
                 }
 
-                val existingFoldersMap = existingFolders.associateBy { normalizeName(it.name) }
-                val foldersMap = folders.associateBy { normalizeName(it.name) }
+                val existingFoldersMap = databaseFolders.associateBy { normalizeName(it.name) }
+                val foldersMap = discoveredFolders.associateBy { normalizeName(it.name) }
 
-                val foldersToProcess = folders.filter { folder ->
+                val foldersToProcess = discoveredFolders.filter { folder ->
                     val normalizedName = normalizeName(folder.name)
                     val existing = existingFoldersMap[normalizedName]
 
@@ -102,16 +101,16 @@ class ArchiveSyncService @Inject constructor(
                     }
                 }
 
-                val removedFolders = existingFolders.filter { normalizeName(it.name) !in foldersMap }
+                val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
 
                 if (removedFolders.isNotEmpty()) {
                     removedFolders.forEach { folder ->
                         // NOTE: Ele deleta os capitulos de forma recursiva, joga pro sqlite
-                        folderDao.delete(entity = folder)
+                        directoryDao.delete(entity = folder)
                     }
                 }
 
-                processFolderList(foldersToProcess, existingFolders)
+                processFolderList(foldersToProcess, databaseFolders)
             }
         } finally {
             _isIndexing.value = false
@@ -138,14 +137,14 @@ class ArchiveSyncService @Inject constructor(
                     return@withContext
                 }
 
-                val foldersToProcess: List<MangaFolder> =
+                val foldersToProcess: List<MangaDirectory> =
                     buildLibrary(context, rootUri = baseUri)
                 if (foldersToProcess.isEmpty()) {
                     _progress.value = -1
                     return@withContext
                 }
 
-                val existingFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
                 processFolderList(foldersToProcess, existingFolders)
             }
         } finally {
@@ -170,7 +169,7 @@ class ArchiveSyncService @Inject constructor(
         try {
             withContext(context = Dispatchers.IO) {
                 rescanMangas(baseUri)
-                val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
 
                 if (allFolders.isEmpty()) {
                     _progress.value = -1
@@ -186,7 +185,7 @@ class ArchiveSyncService @Inject constructor(
                         batch.map { folder ->
                             async(context = Dispatchers.IO) {
                                 try {
-                                    mangaOps.rescanChaptersByManga(mangaId = folder.id)
+                                    mangaDirectoryOps.rescanChaptersByManga(mangaId = folder.id)
                                 } finally {
                                     val current = processed.incrementAndGet()
                                     _progress.value = ((current.toFloat() / total) * 100).toInt()
@@ -215,9 +214,9 @@ class ArchiveSyncService @Inject constructor(
      * @param existingFolders Lista de pastas já persistidas no banco.
      *
      * @see upsertFolder
-     * @see folderDao
+     * @see directoryDao
      */
-    private suspend fun processFolderList(foldersToProcess: List<MangaFolder>, existingFolders: List<MangaFolder>) {
+    private suspend fun processFolderList(foldersToProcess: List<MangaDirectory>, existingFolders: List<MangaDirectory>) {
         if (foldersToProcess.isEmpty()) {
             _progress.value = -1
             return
@@ -270,26 +269,26 @@ class ArchiveSyncService @Inject constructor(
      * Caso a pasta já exista, seus metadados são atualizados mantendo o mesmo `id`.
      * Se for uma nova entrada, é criada uma nova linha no banco.
      *
-     * @param folder Entidade [MangaFolder] a ser inserida ou atualizada.
+     * @param folder Entidade [MangaDirectory] a ser inserida ou atualizada.
      * @param existingFolders Lista completa de pastas persistidas para verificação de duplicidade.
      */
-    private suspend fun upsertFolder(folder: MangaFolder, existingFolders: List<MangaFolder>) {
+    private suspend fun upsertFolder(folder: MangaDirectory, existingFolders: List<MangaDirectory>) {
         val normalizedName = normalizeName(folder.name)
         val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
 
         if (existing != null) {
-            folderDao.update(entity = folder.copy(id = existing.id))
+            directoryDao.update(entity = folder.copy(id = existing.id))
             return
         }
 
-        folderDao.insert(entity = folder)
+        directoryDao.insert(entity = folder)
     }
 
     private fun normalizeName(name: String): String {
         return name.filter { it.isLetterOrDigit() }.lowercase()
     }
 
-    private fun buildLibrary(context: Context, rootUri: Uri): List<MangaFolder> {
+    private fun buildLibrary(context: Context, rootUri: Uri): List<MangaDirectory> {
         val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
 
         return pickedDir.listFiles().filter { it.isDirectory }.map { folder ->
@@ -301,7 +300,7 @@ class ArchiveSyncService @Inject constructor(
             }
             val detectedTemplate = firstChapter?.name?.let { detectTemplate(fileName = it) }
 
-            MangaFolder(
+            MangaDirectory(
                 name = folder.name ?: "Unknown",
                 path = folder.uri.toString(),
                 cover = cover?.uri?.toString(),

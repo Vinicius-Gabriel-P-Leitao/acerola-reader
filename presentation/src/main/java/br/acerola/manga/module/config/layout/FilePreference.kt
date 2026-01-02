@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.common.component.RadioGroup
-import br.acerola.manga.common.viewmodel.archive.file.FilePreferencesViewModel
+import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 
 @Composable
 fun FilePreference(viewModel: FilePreferencesViewModel = viewModel()) {

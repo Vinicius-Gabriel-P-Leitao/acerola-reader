@@ -3,12 +3,12 @@ package br.acerola.manga.local.mapper
 import androidx.core.net.toUri
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.ChapterPageDto
-import br.acerola.manga.dto.archive.MangaFolderDto
-import br.acerola.manga.local.database.entity.archive.ChapterFile
-import br.acerola.manga.local.database.entity.archive.MangaFolder
+import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.database.entity.archive.MangaDirectory
 
-fun MangaFolder.toDto(firstPage: ChapterPageDto): MangaFolderDto {
-    return MangaFolderDto(
+fun MangaDirectory.toDto(firstPage: ChapterPageDto): MangaDirectoryDto {
+    return MangaDirectoryDto(
         id = id,
         name = name,
         path = path,
@@ -20,8 +20,8 @@ fun MangaFolder.toDto(firstPage: ChapterPageDto): MangaFolderDto {
     )
 }
 
-fun MangaFolderDto.toModel(): MangaFolder {
-    return MangaFolder(
+fun MangaDirectoryDto.toModel(): MangaDirectory {
+    return MangaDirectory(
         name = name,
         path = path,
         cover = coverUri?.toString(),
@@ -31,7 +31,7 @@ fun MangaFolderDto.toModel(): MangaFolder {
     )
 }
 
-fun ChapterFile.toDto(): ChapterFileDto {
+fun ChapterArchive.toDto(): ChapterFileDto {
     return ChapterFileDto(
         id = id,
         name = chapter,
@@ -40,8 +40,8 @@ fun ChapterFile.toDto(): ChapterFileDto {
     )
 }
 
-fun ChapterFileDto.toModel(folderId: Long): ChapterFile {
-    return ChapterFile(
+fun ChapterFileDto.toModel(folderId: Long): ChapterArchive {
+    return ChapterArchive(
         chapter = name,
         path = path,
         chapterSort = chapterSort,

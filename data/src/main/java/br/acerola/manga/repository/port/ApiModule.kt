@@ -1,10 +1,10 @@
 package br.acerola.manga.repository.port
 
-import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
-import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexMetadataChapterService
+import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexChapterInfoService
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverService
-import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMetadataMangaService
+import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoService
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,15 +16,15 @@ import javax.inject.Singleton
 abstract class ApiModule {
     @Binds
     @Singleton
-    abstract fun bindMangaMetadataOperation(
-        impl: MangadexMetadataMangaService
-    ): ApiRepository.MetadataOperations<MangaMetadataDto, String>
+    abstract fun bindMangaRemoteInfoOperation(
+        impl: MangadexMangaInfoService
+    ): ApiRepository.RemoteInfoOperations<MangaRemoteInfoDto, String>
 
     @Binds
     @Singleton
     abstract fun bindMangadexFetchChapterOperation(
-        impl: MangadexMetadataChapterService
-    ): ApiRepository.MetadataOperations<ChapterMetadataDto, String>
+        impl: MangadexChapterInfoService
+    ): ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
 
     @Binds
     @Singleton

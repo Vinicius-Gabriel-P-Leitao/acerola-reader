@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">acerola</string>
-    <string name="title_folder_access_error">Erro de acesso a pasta</string>
-    <string name="description_folder_access_error">Não foi possível acessar a pasta.</string>
+    <string name="title_file_system_access_error">Erro de acesso a pasta</string>
+    <string name="description_file_system_access_error">Não foi possível acessar a pasta.</string>
     <string name="title_generic_internal_error">Erro interno desconhecido</string>
     <string name="description_generic_internal_error">Ocorreu um erro interno inesperado.</string>
     <string name="title_permission_denied_error">Erro de permissão</string>

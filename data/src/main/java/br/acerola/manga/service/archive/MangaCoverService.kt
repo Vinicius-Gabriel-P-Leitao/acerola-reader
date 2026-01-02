@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.dto.metadata.manga.CoverDto
-import br.acerola.manga.local.database.dao.archive.MangaFolderDao
+import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.cover.CoverDao
 import br.acerola.manga.local.database.entity.metadata.relationship.Cover
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverService
@@ -16,8 +16,8 @@ import javax.inject.Singleton
 class MangaCoverService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val coverDao: CoverDao,
-    private val folderDao: MangaFolderDao,
-    private val downloadService: MangadexFetchCoverService
+    private val directoryDao: MangaDirectoryDao,
+    private val downloadCoverService: MangadexFetchCoverService
 ) {
     suspend fun processCover(
         rootUri: Uri,
@@ -38,7 +38,7 @@ class MangaCoverService @Inject constructor(
                 }
 
                 if (mangaDir != null && mangaDir.canWrite()) {
-                    val bytes = downloadService.searchCover(coverDto.url)
+                    val bytes = downloadCoverService.searchCover(coverDto.url)
                     val finalFileName = "cover.png"
 
                     val oldFile = mangaDir.findFile(finalFileName)
@@ -61,9 +61,9 @@ class MangaCoverService @Inject constructor(
         }
 
         if (savedUriString != null) {
-            val folderEntity = folderDao.getMangaFolderById(mangaId = folderId)
-            if (folderEntity != null) {
-                folderDao.update(entity = folderEntity.copy(cover = savedUriString))
+            val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
+            if (directory != null) {
+                directoryDao.update(entity = directory.copy(cover = savedUriString))
             }
         }
 

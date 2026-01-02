@@ -57,7 +57,7 @@ import br.acerola.manga.common.component.ButtonType
 import br.acerola.manga.common.component.SmartButton
 import br.acerola.manga.common.layout.NavigationTopBar
 import br.acerola.manga.common.navigation.Destination
-import br.acerola.manga.common.viewmodel.library.archive.ChapterFileViewModel
+import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.chapter.component.ChapterItem
@@ -69,7 +69,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class ChaptersActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
 ) : BaseActivity() {
-    private val chapterViewModel: ChapterFileViewModel by viewModels()
+    private val chapterViewModel: ChapterArchiveViewModel by viewModels()
 
     object ChapterExtra {
         const val MANGA = "MANGA"
@@ -79,7 +79,7 @@ class ChaptersActivity(
         CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters), SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
     }
 
-    val folder: MangaDto? by lazy {
+    val manga: MangaDto? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent?.getParcelableExtra(ChapterExtra.MANGA, MangaDto::class.java)
         } else {
@@ -89,7 +89,7 @@ class ChaptersActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CHAPTERS.route)) {
-            folder?.let {
+            manga?.let {
                 Screen(chapterViewModel, manga = it)
             }
         }
@@ -102,13 +102,13 @@ class ChaptersActivity(
 
     @Composable
     fun Screen(
-        chapterViewModel: ChapterFileViewModel,
+        chapterViewModel: ChapterArchiveViewModel,
         manga: MangaDto
     ) {
         var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
-        LaunchedEffect(key1 = manga.folder.id) {
-            chapterViewModel.init(folderId = manga.folder.id, firstPage = manga.folder.chapters)
+        LaunchedEffect(key1 = manga.directory.id) {
+            chapterViewModel.init(directoryId = manga.directory.id, firstPage = manga.directory.chapters)
         }
 
         val chapterPage by chapterViewModel.chapterPage.collectAsState()
@@ -195,7 +195,7 @@ class ChaptersActivity(
                 .fillMaxWidth()
                 .height(height = 420.dp)
         ) {
-            val bannerModel = manga.folder.bannerUri ?: manga.folder.coverUri
+            val bannerModel = manga.directory.bannerUri ?: manga.directory.coverUri
 
             AsyncImage(
                 contentDescription = null,
@@ -235,7 +235,7 @@ class ChaptersActivity(
                         contentDescription = "Cover",
                         contentScale = ContentScale.Crop,
                         model = ImageRequest.Builder(context = LocalContext.current)
-                            .data(data = manga.folder.coverUri)
+                            .data(data = manga.directory.coverUri)
                             .crossfade(enable = true)
                             .build(),
                         modifier = Modifier
@@ -254,7 +254,7 @@ class ChaptersActivity(
                             .weight(weight = 1f),
                     ) {
                         Text(
-                            text = manga.metadata?.title ?: manga.folder.name,
+                            text = manga.remoteInfo?.title ?: manga.directory.name,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.headlineSmall.copy(
@@ -266,7 +266,7 @@ class ChaptersActivity(
 
                         Text(
                             // TODO: Nâo gerar string pois vai vim dos métadados de cada mangá
-                            text = manga.metadata?.status ?: "Unknown",
+                            text = manga.remoteInfo?.status ?: "Unknown",
                             style = MaterialTheme.typography.bodyMedium,
                             color = secondaryTextColor
                         )
@@ -283,7 +283,7 @@ class ChaptersActivity(
                             Spacer(modifier = Modifier.width(width = 4.dp))
                             Text(
                                 // TODO: Verificar se consigo pegar status do mangá
-                                text = manga.metadata?.authors?.name ?: "Unknown",
+                                text = manga.remoteInfo?.authors?.name ?: "Unknown",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = textColor
                             )

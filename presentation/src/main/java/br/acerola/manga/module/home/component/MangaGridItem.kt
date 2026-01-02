@@ -31,8 +31,8 @@ fun MangaGridItem(
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val coverUri = manga.folder.coverUri ?: manga.folder.bannerUri
-    val title = manga.metadata?.title ?: manga.folder.name
+    val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
+    val title = manga.remoteInfo?.title ?: manga.directory.name
 
     val imageRequest = remember(key1 = coverUri) {
         val imageSize: Size = with(receiver = density) {

@@ -2,7 +2,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex
 
 import br.acerola.manga.data.BuildConfig
 import br.acerola.manga.remote.mangadex.api.MangadexDownloadService
-import br.acerola.manga.remote.mangadex.api.MangadexMetadataMangaService
+import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoService
 import br.acerola.manga.remote.mangadex.interceptor.MangadexInterceptor
 import dagger.Module
 import dagger.Provides
@@ -53,8 +53,8 @@ object MangadexModule {
 
     @Provides
     @Singleton
-    fun provideMangaDataMangaDexService(@MainApi retrofit: Retrofit): MangadexMetadataMangaService {
-        return retrofit.create(MangadexMetadataMangaService::class.java)
+    fun provideMangaDataMangaDexService(@MainApi retrofit: Retrofit): MangadexMangaInfoService {
+        return retrofit.create(MangadexMangaInfoService::class.java)
     }
 
     // NOTE: Injeçao de dependencia para dados blob

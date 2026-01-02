@@ -31,11 +31,11 @@ import br.acerola.manga.feature.R
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
-import br.acerola.manga.common.viewmodel.library.archive.MangaFolderViewModel
+import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 
 @Composable
 fun SyncLibraryArchive(
-    mangaFolderViewModel: MangaFolderViewModel,
+    mangaDirectoryViewModel: MangaDirectoryViewModel,
 ) {
     SmartCard(
         type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
@@ -60,7 +60,7 @@ fun SyncLibraryArchive(
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(size = 22.dp),
                         contentDescription = stringResource(
-                            id = R.string.description_icon_sync_manga_folders
+                            id = R.string.description_icon_sync_manga_directory
                         ),
                     )
                 }
@@ -79,7 +79,7 @@ fun SyncLibraryArchive(
             // TODO: Criar description
             ListItem(
                 modifier = Modifier.clickable {
-                    mangaFolderViewModel.deepScanLibrary()
+                    mangaDirectoryViewModel.deepScanLibrary()
                 },
                 headlineContent = {
                     Text(text = stringResource(id = R.string.description_text_home_deep_sync))
@@ -102,7 +102,7 @@ fun SyncLibraryArchive(
 
             // TODO: Criar description
             ListItem(
-                modifier = Modifier.clickable { mangaFolderViewModel.rescanMangas() },
+                modifier = Modifier.clickable { mangaDirectoryViewModel.rescanMangas() },
                 headlineContent = {
                     Text(text = stringResource(id = R.string.description_text_home_quick_sync))
                 },

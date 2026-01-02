@@ -25,7 +25,7 @@ import br.acerola.manga.feature.R
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
-import br.acerola.manga.common.viewmodel.archive.file.FilePreferencesViewModel
+import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.module.config.layout.FilePreference
 
 @Composable

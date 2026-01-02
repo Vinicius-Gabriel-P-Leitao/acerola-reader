@@ -17,10 +17,10 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.feature.R
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
-import br.acerola.manga.common.viewmodel.archive.file.FilePreferencesViewModel
-import br.acerola.manga.common.viewmodel.archive.folder.FolderAccessViewModel
-import br.acerola.manga.common.viewmodel.library.archive.MangaFolderViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
+import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
+import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
+import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.module.config.component.SelectFolder
 import br.acerola.manga.module.config.component.PreferSavedFile
 import br.acerola.manga.module.config.component.SyncLibraryArchive
@@ -29,9 +29,9 @@ import br.acerola.manga.module.config.component.SyncMangadexData
 @Composable
 fun ConfigScreen(
     filePreferencesViewModel: FilePreferencesViewModel,
-    folderAccessViewModel: FolderAccessViewModel,
-    mangaFolderViewModel: MangaFolderViewModel,
-    mangaDexViewModel: MangaMetadataViewModel
+    fileSystemAccessViewModel: FileSystemAccessViewModel,
+    mangaDirectoryViewModel: MangaDirectoryViewModel,
+    mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
     val context = LocalContext.current
 
@@ -50,7 +50,7 @@ fun ConfigScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
             ) {
-                SelectFolder(context, folderAccessViewModel)
+                SelectFolder(context, fileSystemAccessViewModel)
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
@@ -58,7 +58,7 @@ fun ConfigScreen(
 
                 Spacer(modifier = Modifier.height(height = 12.dp))
 
-                SyncLibraryArchive(mangaFolderViewModel)
+                SyncLibraryArchive(mangaDirectoryViewModel)
             }
 
             Spacer(modifier = Modifier.height(height = 12.dp))

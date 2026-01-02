@@ -3,20 +3,20 @@ package br.acerola.manga.repository.adapter.local.sync
 import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
-import br.acerola.manga.config.preference.FolderPreference
+import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
-import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.local.database.dao.archive.MangaFolderDao
-import br.acerola.manga.local.database.dao.metadata.MangaMetadataDao
+import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.gender.GenderDao
-import br.acerola.manga.local.database.entity.archive.MangaFolder
+import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.database.entity.metadata.relationship.Author
-import br.acerola.manga.local.database.entity.metadata.relationship.Gender
+import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.mapper.toModel
-import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMetadataMangaService
+import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoService
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.service.archive.MangaCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -34,12 +34,12 @@ import kotlin.math.roundToInt
 class MangadexSyncService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val authorDao: AuthorDao,
-    private val genderDao: GenderDao,
-    private val folderDao: MangaFolderDao,
-    private val mangaDao: MangaMetadataDao,
+    private val genreDao: GenreDao,
+    private val directoryDao: MangaDirectoryDao,
+    private val mangaDao: MangaRemoteInfoDao,
     private val coverService: MangaCoverService,
-    private val fetchManga: MangadexMetadataMangaService,
-) : LibraryRepository<MangaMetadataDto> {
+    private val fetchManga: MangadexMangaInfoService,
+) : LibraryRepository<MangaRemoteInfoDto> {
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -51,21 +51,21 @@ class MangadexSyncService @Inject constructor(
 
         try {
             withContext(context = Dispatchers.IO) {
-                val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
-                val allMetadata = mangaDao.getAllMangasMetadata().firstOrNull() ?: emptyList()
+                val localDirectories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                val allRemoteMangaInfo = mangaDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
 
-                val existingTitles = allMetadata.map { normalizeName(it.name) }.toSet()
+                val existingTitles = allRemoteMangaInfo.map { normalizeName(it.name) }.toSet()
 
-                val metadataToSync = allFolders.filter { folder ->
-                    normalizeName(folder.name) !in existingTitles
+                val remoteInfoToSync = localDirectories.filter {
+                    normalizeName(it.name) !in existingTitles
                 }
 
-                if (metadataToSync.isEmpty()) {
+                if (remoteInfoToSync.isEmpty()) {
                     _progress.value = -1
                     return@withContext
                 }
 
-                executeSync(folders = metadataToSync, baseUri)
+                executeSync(folders = remoteInfoToSync, baseUri)
             }
         } finally {
             _isIndexing.value = false
@@ -76,14 +76,14 @@ class MangadexSyncService @Inject constructor(
         _isIndexing.value = true
         try {
             withContext(context = Dispatchers.IO) {
-                val allFolders = folderDao.getAllMangasFolders().firstOrNull() ?: emptyList()
+                val mangaLibraryFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
 
-                if (allFolders.isEmpty()) {
+                if (mangaLibraryFolders.isEmpty()) {
                     _progress.value = -1
                     return@withContext
                 }
 
-                executeSync(folders = allFolders, baseUri)
+                executeSync(folders = mangaLibraryFolders, baseUri)
             }
         } finally {
             _isIndexing.value = false
@@ -95,12 +95,12 @@ class MangadexSyncService @Inject constructor(
         rescanMangas(baseUri)
     }
 
-    private suspend fun executeSync(folders: List<MangaFolder>, baseUri: Uri?) {
+    private suspend fun executeSync(folders: List<MangaDirectory>, baseUri: Uri?) {
         val total = folders.size
         _progress.value = 0
 
         // NOTE: Se a URL não for passada ele usa a de preferencia.
-        val rootPath = baseUri?.toString() ?: FolderPreference.folderUriFlow(context).firstOrNull()
+        val rootPath = baseUri?.toString() ?: MangaDirectoryPreference.folderUriFlow(context).firstOrNull()
         if (rootPath.isNullOrBlank()) {
             _progress.value = -1
             return
@@ -110,10 +110,10 @@ class MangadexSyncService @Inject constructor(
         folders.forEachIndexed { index, current ->
             try {
                 val title = current.name
-                val fetchedList: List<MangaMetadataDto> = fetchManga.searchMetadata(manga = title)
+                val fetchedList: List<MangaRemoteInfoDto> = fetchManga.searchInfo(manga = title)
                 val folderNameNormalized = normalizeName(name = title)
 
-                val bestMatch: MangaMetadataDto? = fetchedList.find { candidate ->
+                val bestMatch: MangaRemoteInfoDto? = fetchedList.find { candidate ->
                     normalizeName(name = candidate.title) == folderNameNormalized || normalizeName(
                         name = candidate.romanji ?: ""
                     ) == folderNameNormalized
@@ -121,7 +121,7 @@ class MangadexSyncService @Inject constructor(
 
                 if (bestMatch != null) {
                     val authorId = bestMatch.authors?.let { saveAndGetAuthorId(dto = it) }
-                    val genderId = bestMatch.gender.firstOrNull()?.let { saveAndGetGenderId(dto = it) }
+                    val genreId = bestMatch.genre.firstOrNull()?.let { saveAndGetGenreId(dto = it) }
 
                     val coverId = bestMatch.cover?.let { dto ->
                         coverService.processCover(
@@ -133,7 +133,7 @@ class MangadexSyncService @Inject constructor(
                     }
 
                     val newMangaEntity = bestMatch.toModel(
-                        authorId = authorId, coverId = coverId, genderId = genderId
+                        authorId = authorId, coverId = coverId, genreId = genreId
                     )
 
                     mangaDao.insert(entity = newMangaEntity)
@@ -168,10 +168,10 @@ class MangadexSyncService @Inject constructor(
         }
     }
 
-    private suspend fun saveAndGetGenderId(dto: GenreDto): Long {
-        val insertedId = genderDao.insert(
-            entity = Gender(
-                mirrorId = dto.id, gender = dto.name
+    private suspend fun saveAndGetGenreId(dto: GenreDto): Long {
+        val insertedId = genreDao.insert(
+            entity = Genre(
+                mirrorId = dto.id, genre = dto.name
             )
         )
 
@@ -179,7 +179,7 @@ class MangadexSyncService @Inject constructor(
         return if (insertedId != -1L) {
             insertedId
         } else {
-            genderDao.getGenderByMirrorId(mirrorId = dto.id)?.id
+            genreDao.getGenreByMirrorId(mirrorId = dto.id)?.id
                 ?: throw IllegalStateException("Gênero deveria existir")
         }
     }
