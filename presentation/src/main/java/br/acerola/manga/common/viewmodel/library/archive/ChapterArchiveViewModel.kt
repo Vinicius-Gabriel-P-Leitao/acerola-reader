@@ -40,22 +40,22 @@ class ChapterArchiveViewModel @Inject constructor(
         loadPage(currentPage)
     }
 
-    private fun loadPage(page: Int) {
+    fun loadPage(page: Int) {
         viewModelScope.launch {
-            val result = chapterOperations.loadNextPage(
+            _chapterPage.value = null
+
+            val result: ChapterPageDto = chapterOperations.loadNextPage(
                 folderId = _selectedDirectoryId.value!!,
                 pageSize = pageSize,
                 page = page,
                 total = total,
             )
 
-            val merged = if (page == 0) {
-                result.items
-            } else {
-                (_chapterPage.value?.items ?: emptyList()) + result.items
+            val sortedItems = result.items.sortedBy {
+                it.chapterSort.replace(oldChar = ',', newChar = '.').toFloatOrNull() ?: 0f
             }
 
-            _chapterPage.value = result.copy(items = merged)
+            _chapterPage.value = result.copy(items = sortedItems)
         }
     }
 }

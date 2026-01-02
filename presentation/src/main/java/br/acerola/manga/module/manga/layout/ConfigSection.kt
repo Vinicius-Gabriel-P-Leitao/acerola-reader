@@ -1,25 +1,62 @@
 package br.acerola.manga.module.manga.layout
-import androidx.compose.foundation.layout.*
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.component.CardType
+import br.acerola.manga.common.component.SmartCard
 
 fun LazyListScope.settingsSection() {
     item { SettingHeader("Leitura") }
 
     item {
-        SettingItem(
-            icon = Icons.Default.ChromeReaderMode,
-            title = "Modo de visualização",
-            subtitle = "Cascata (Vertical)"
-        )
+        SmartCard(
+            type = CardType.CONTENT,
+            title = "Teste",
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+        ) {
+            // TODO: Virar component
+            SmartCard(
+                type = CardType.CONTENT,
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                elevation = CardDefaults.elevatedCardElevation(
+                    defaultElevation = 8.dp, pressedElevation = 12.dp
+                )
+            ) {
+                Text("Item de teste")
+            }
+        }
     }
 
     item {

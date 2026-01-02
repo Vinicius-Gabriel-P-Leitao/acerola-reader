@@ -34,7 +34,6 @@ fun ConfigScreen(
     mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
     val context = LocalContext.current
-
     val scrollState = rememberScrollState()
 
     Scaffold(modifier = Modifier.padding(all = 6.dp)) { paddingValues ->

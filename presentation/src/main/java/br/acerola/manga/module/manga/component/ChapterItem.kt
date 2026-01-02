@@ -20,10 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.feature.R
-import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.feature.R
 
 @Composable
 fun ChapterItem(
@@ -33,7 +33,7 @@ fun ChapterItem(
         onClick = onClick,
         type = CardType.CONTENT,
         modifier = Modifier
-            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .padding(all = 4.dp)
             .fillMaxWidth(),
     ) {
         Row(

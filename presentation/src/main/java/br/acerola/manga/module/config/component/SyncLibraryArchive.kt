@@ -27,20 +27,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.feature.R
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
+import br.acerola.manga.feature.R
 
 @Composable
 fun SyncLibraryArchive(
     mangaDirectoryViewModel: MangaDirectoryViewModel,
 ) {
     SmartCard(
-        type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
+        type = CardType.CONTENT,
+        colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ), elevation = CardDefaults.elevatedCardElevation(
+        ),
+        elevation = CardDefaults.elevatedCardElevation(
             defaultElevation = 8.dp, pressedElevation = 12.dp
         )
     ) {
