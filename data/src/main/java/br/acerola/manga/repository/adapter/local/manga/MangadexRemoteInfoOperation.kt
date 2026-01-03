@@ -69,9 +69,6 @@ class MangadexRemoteInfoOperation @Inject constructor(
             }
             .collect { pairs ->
                 pairs.forEach { (archive, remote) ->
-                    println("Archive $archive")
-                    println("Remote $remote")
-
                     val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
                     val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
@@ -104,10 +101,13 @@ class MangadexRemoteInfoOperation @Inject constructor(
         local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
         val remoteByChapter = remote.map { dto ->
+            println("Remote $dto")
             dto.chapter?.normalizeChapter().let { it to dto }
         }.groupBy(keySelector = { it.first }, valueTransform = { it.second }).mapValues { (_, list) ->
             list.maxBy { it.mangadexVersion }
         }
+
+        println("Remote $remoteByChapter")
 
         return local.mapNotNull { archive ->
             val key = archive.chapterSort.normalizeChapter()

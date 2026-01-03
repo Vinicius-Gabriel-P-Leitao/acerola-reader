@@ -11,6 +11,7 @@ class GenericInternalException(
     description = R.string.description_generic_internal_error,
 ) {
     init {
+        // TODO: Fazer uma util de logs, serpara o stackTrace da message
         Log.e("GenericInternalError", cause.toString())
         Log.e("GenericInternalError", cause.localizedMessage)
         Log.e("GenericInternalError", cause.message.toString())

@@ -28,8 +28,9 @@ class MangadexInterceptor : Interceptor {
 
             try {
                 TimeUnit.SECONDS.sleep(retryAfter + 1)
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
+                // TODO: Tratar erro melhor
+            } catch (interruptedException: InterruptedException) {
+                interruptedException.printStackTrace()
             }
 
             tryCount++

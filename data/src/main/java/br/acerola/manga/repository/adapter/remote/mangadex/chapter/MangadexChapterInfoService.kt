@@ -10,6 +10,8 @@ import br.acerola.manga.repository.port.ApiRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -26,13 +28,16 @@ class MangadexChapterInfoService @Inject constructor(
         return withContext(context = Dispatchers.IO) {
             try {
                 val responseFeed = api.getMangaFeed(mangaId = manga, limit = limit, offset = offset)
-                println("Response $responseFeed")
                 val chaptersRemoteInfoList = responseFeed.data
 
-                val deferredChapters = chaptersRemoteInfoList.map {
+                val deferredChapters = chaptersRemoteInfoList.map { item ->
                     async {
-                        val sourceMangadexDto = api.getChapterImages(chapterId = it.id)
-                        fromChapterData(remoteInfoDto = it, sourceMangadexDto)
+                        Semaphore(permits = 3).withPermit {
+                            // FIXME: Tranformar imagens em opcionais, otimizar essa busca, pode gerar request para
+                            //  caralhos de imagens.
+                            val source = api.getChapterImages(chapterId = item.id)
+                            fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
+                        }
                     }
                 }
 
