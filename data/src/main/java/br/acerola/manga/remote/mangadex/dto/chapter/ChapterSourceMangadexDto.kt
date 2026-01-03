@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class ChapterSourceMangadexDto(
     val baseUrl: String,
-    val chapter: List<ChapterPage> = emptyList()
+    val chapter: ChapterPage
 )
 
 @JsonClass(generateAdapter = true)

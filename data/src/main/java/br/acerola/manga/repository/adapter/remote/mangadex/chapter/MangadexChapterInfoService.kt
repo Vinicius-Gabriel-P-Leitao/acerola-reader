@@ -63,8 +63,8 @@ class MangadexChapterInfoService @Inject constructor(
         val attributes = remoteInfoDto.attributes
         val scanlatorName = remoteInfoDto.scanlationGroups.firstNotNullOfOrNull { it.attributes?.name }
 
-        val pagesUrls = if (sourceMangadexDto != null && sourceMangadexDto.chapter.isNotEmpty()) {
-            val dataSaver = sourceMangadexDto.chapter.first()
+        val pagesUrls = if (sourceMangadexDto != null) {
+            val dataSaver = sourceMangadexDto.chapter
             val baseUrl = sourceMangadexDto.baseUrl
             val hash = dataSaver.hash
 
@@ -72,6 +72,7 @@ class MangadexChapterInfoService @Inject constructor(
                 "$baseUrl/data/$hash/$fileName"
             }
         } else {
+            // TODO: Tratar erro melhor
             emptyList()
         }
 
