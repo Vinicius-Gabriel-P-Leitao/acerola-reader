@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -58,25 +59,17 @@ class MangadexRemoteInfoOperation @Inject constructor(
 
         val remoteChapters = mangadexChapterInfoService.searchInfo(manga = mirrorId)
         // NOTE: Não usa o serviço por vim dados a mais do que precisamos.
-        val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId)
+        val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
 
-        localChapters
-            .map { chapters ->
-                matchRemoteWithArchive(
-                    remote = remoteChapters,
-                    local = chapters
-                )
-            }
-            .collect { pairs ->
-                pairs.forEach { (archive, remote) ->
-                    val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
-                    val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
+        val pairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
 
-                    val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
-                    chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
-                }
-            }
+        pairs.forEach { (archive, remote) ->
+            val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
+            val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
+            val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
+            chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
+        }
     }
 
     /**
@@ -100,14 +93,8 @@ class MangadexRemoteInfoOperation @Inject constructor(
         remote: List<ChapterRemoteInfoDto>,
         local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
-        val remoteByChapter = remote.map { dto ->
-            println("Remote $dto")
-            dto.chapter?.normalizeChapter().let { it to dto }
-        }.groupBy(keySelector = { it.first }, valueTransform = { it.second }).mapValues { (_, list) ->
-            list.maxBy { it.mangadexVersion }
-        }
-
-        println("Remote $remoteByChapter")
+        val remoteByChapter = remote.groupBy { it.chapter?.normalizeChapter() }
+            .mapValues { (_, list) -> list.maxBy { it.mangadexVersion } }
 
         return local.mapNotNull { archive ->
             val key = archive.chapterSort.normalizeChapter()

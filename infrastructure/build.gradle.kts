@@ -57,6 +57,9 @@ dependencies {
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.documentfile)
 
+    // --- Networking (Retrofit) ---
+    implementation(libs.retrofit)
+
     // --- Testing ---
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

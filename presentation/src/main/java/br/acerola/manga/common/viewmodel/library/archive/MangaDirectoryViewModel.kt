@@ -86,7 +86,7 @@ class MangaDirectoryViewModel @Inject constructor(
         archiveSyncService.deepRescanLibrary(baseUri = uri)
     }
 
-    // TODO: A ser implementado na config de cada manga, só vai buscar os capitulos
+    // FIXME: Fazer essa porcaria ter o progress na tela do mangá tbm, e tratar a merda do erro de jobcanceled
     fun syncChaptersByMangaDirectory(folderId: Long) = runLibraryTask {
         mangaDirectoryOperation.rescanChaptersByManga(mangaId = folderId)
     }

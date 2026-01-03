@@ -16,7 +16,10 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("manga_remote_info_fk")]
+    indices = [
+        Index("manga_remote_info_fk"),
+        Index(value = ["chapter", "manga_remote_info_fk"], unique = true)
+    ]
 )
 data class ChapterRemoteInfo(
     @PrimaryKey(autoGenerate = true)

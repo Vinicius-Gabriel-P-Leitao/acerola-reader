@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -45,12 +46,16 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.feature.R
 
 fun LazyListScope.settingsSection(
+    directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
+    mangaDirectoryViewModel: MangaDirectoryViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
 ) {
     item { SettingHeader("Leitura") }
@@ -104,6 +109,26 @@ fun LazyListScope.settingsSection(
                     }
 
                     Divider()
+
+                    ListItem(
+                        modifier = Modifier.clickable { mangaDirectoryViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
+                        headlineContent = {
+                            Text(text = stringResource(id = R.string.description_text_home_quick_sync))
+                        },
+                        supportingContent = {
+                            Text(text = stringResource(id = R.string.description_text_home_quick_sync_supporting))
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.Sync, contentDescription = null
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+
+                    HorizontalDivider()
 
                     if (remoteInfo != null) {
                         ListItem(
