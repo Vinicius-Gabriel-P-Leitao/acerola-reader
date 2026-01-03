@@ -6,7 +6,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 @Immutable
-data class ChapterPageDto(
+data class ChapterArchivePageDto(
     val items: List<ChapterFileDto>,
     val pageSize: Int,
     val page: Int,

@@ -11,6 +11,7 @@ import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.layout.NavigationTopBar
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,6 +20,8 @@ class MangaActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
 ) : BaseActivity() {
     private val chapterViewModel: ChapterArchiveViewModel by viewModels()
+
+    private val mangaRemoteInfoViewModel: MangaRemoteInfoViewModel by viewModels()
 
     object ChapterExtra {
         const val MANGA = "MANGA"
@@ -35,7 +38,11 @@ class MangaActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CHAPTERS.route)) {
             manga?.let {
-                Screen(chapterViewModel, manga = it)
+                Screen(
+                    manga = it,
+                    chapterViewModel = chapterViewModel,
+                    mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
+                )
             }
         }
     }

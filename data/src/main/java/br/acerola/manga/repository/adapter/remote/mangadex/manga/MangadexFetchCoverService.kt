@@ -2,7 +2,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.manga
 
 import br.acerola.manga.data.R
 import br.acerola.manga.error.exception.MangadexRequestException
-import br.acerola.manga.remote.mangadex.api.MangadexDownloadService
+import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
 import br.acerola.manga.repository.port.ApiRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexFetchCoverService @Inject constructor(
-    private val api: MangadexDownloadService
+    private val api: MangadexDownloadApi
 ) : ApiRepository.ArchiveOperations<String> {
     override suspend fun searchCover(url: String, vararg extra: String?): ByteArray {
         return withContext(context = Dispatchers.IO) {

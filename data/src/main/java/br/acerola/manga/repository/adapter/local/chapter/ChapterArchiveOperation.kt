@@ -1,7 +1,8 @@
 package br.acerola.manga.repository.adapter.local.chapter
 
-import br.acerola.manga.dto.archive.ChapterPageDto
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
+import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.repository.port.LibraryRepository
 import kotlinx.coroutines.CoroutineScope
@@ -18,37 +19,38 @@ import javax.inject.Singleton
 @Singleton
 class ChapterArchiveOperation @Inject constructor(
     private val chapterDao: ChapterArchiveDao
-) : LibraryRepository.ChapterOperations<ChapterPageDto> {
+) : LibraryRepository.ChapterOperations<ChapterArchivePageDto> {
     /**
-     * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico.
+     * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico, os capitulos do
+     * arquivo são retornados de forma páginada.
      *
-     * Cada entidade [ChapterFile] é convertida para [ChapterFileDto] por meio do mapeador [toDto].
+     * Cada entidade [ChapterArchive] é convertida para [ChapterArchivePageDto] por meio do mapeador [toDto].
      *
      * @param mangaId Identificador único do mangá.
      * @return [StateFlow] com a lista de capítulos atualizada dinamicamente.
      */
-    override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterPageDto> {
-        return chapterDao.getChaptersByMangaDirectory(folderId = mangaId).map { list ->
-            ChapterPageDto(
+    override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterArchivePageDto> {
+        return chapterDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
+            ChapterArchivePageDto(
                 items = list.map { it.toDto() }, pageSize = list.size, page = 0, total = list.size
             )
         }.stateIn(
-            scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
             started = SharingStarted.Lazily,
-            initialValue = ChapterPageDto(items = emptyList(), pageSize = 0, page = 0, total = 0)
+            scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
+            initialValue = ChapterArchivePageDto(items = emptyList(), pageSize = 0, page = 0, total = 0)
         )
     }
 
 
-    override suspend fun loadNextPage(
+    override suspend fun loadPage(
         folderId: Long, total: Int, page: Int, pageSize: Int
-    ): ChapterPageDto {
+    ): ChapterArchivePageDto {
         val offset = page * pageSize
         val items = chapterDao.getChaptersPaged(folderId, pageSize, offset).firstOrNull()?.map {
             it.toDto()
         } ?: emptyList()
 
-        return ChapterPageDto(
+        return ChapterArchivePageDto(
             items = items, pageSize = pageSize, page = page, total = total
         )
     }

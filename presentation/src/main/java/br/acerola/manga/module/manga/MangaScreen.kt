@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.feature.R
@@ -35,7 +36,9 @@ enum class MainTab(@param:StringRes val titleRes: Int) {
 
 @Composable
 fun Screen(
-    chapterViewModel: ChapterArchiveViewModel, manga: MangaDto
+    manga: MangaDto,
+    chapterViewModel: ChapterArchiveViewModel,
+    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
 ) {
     LaunchedEffect(key1 = manga.directory.id) {
         chapterViewModel.init(directoryId = manga.directory.id, firstPage = manga.directory.chapters)
@@ -120,7 +123,10 @@ fun Screen(
                 }
 
                 MainTab.SETTINGS -> {
-                    settingsSection()
+                    settingsSection(
+                        remoteInfo = manga.remoteInfo,
+                        mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
+                    )
                 }
             }
 

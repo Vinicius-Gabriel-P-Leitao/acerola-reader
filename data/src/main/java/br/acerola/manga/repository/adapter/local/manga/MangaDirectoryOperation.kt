@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.config.preference.FileExtension
-import br.acerola.manga.dto.archive.ChapterPageDto
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
@@ -47,59 +47,59 @@ class MangaDirectoryOperation @Inject constructor(
      * @throws java.io.FileNotFoundException Se a pasta associada ao mangá não for encontrada.
      * @throws SecurityException Se o aplicativo perder a permissão de acesso ao [Uri].
      */
-    override suspend fun rescanChaptersByManga(mangaId: Long) =
-        withContext(context = Dispatchers.IO) {
-            val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@withContext
-            val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@withContext
+    override suspend fun rescanChaptersByManga(mangaId: Long) = withContext(context = Dispatchers.IO) {
+        val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@withContext
+        val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@withContext
 
-            val chaptersExist = archiveDao.countChaptersByMangaDirectory(folderId = mangaId) > 0
+        val chaptersExist = archiveDao.countChaptersByMangaDirectory(folderId = mangaId) > 0
 
-            if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
-                return@withContext
-            }
-
-            val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
-                FileExtension.isSupported(ext = file.name)
-            }
-
-            archiveDao.deleteChaptersByMangaDirectoryId(folderId = mangaId)
-
-            // TODO: Fazer lógica de validação melhor
-            val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
-
-            // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
-            //  tem que seguir um formato só, mais de um a lista fica desorganizada.
-            val chapters = chapterFiles.mapNotNull { file ->
-                val name = file.name ?: return@mapNotNull null
-
-                val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
-                val value = match.groups[1]?.value?.toDoubleOrNull() ?: return@mapNotNull null
-
-                val subGroup = if (match.groups.size > 2) match.groups[2] else null
-                val sub = subGroup?.value?.toDoubleOrNull() ?: 0.0
-
-                val chapterSort = "%05.2f".format(value + sub)
-
-                ChapterArchive(
-                    chapter = name,
-                    path = file.uri.toString(),
-                    checksum = file.sha256(context),
-                    chapterSort = chapterSort,
-                    folderPathFk = mangaId
-                )
-            }
-
-            if (chapters.isNotEmpty()) {
-                archiveDao.insertAll(*chapters.toTypedArray())
-            }
-
-            if (folder.lastModified < folderDoc.lastModified()) {
-                directoryDao.update(entity = folder.copy(lastModified = folderDoc.lastModified()))
-            }
+        if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
+            return@withContext
         }
 
+        val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
+            FileExtension.isSupported(ext = file.name)
+        }
+
+        archiveDao.deleteChaptersByMangaDirectoryId(folderId = mangaId)
+
+        // TODO: Fazer lógica de validação melhor
+        val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
+
+        // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
+        //  tem que seguir um formato só, mais de um a lista fica desorganizada.
+        val chapters = chapterFiles.mapNotNull { file ->
+            val name = file.name ?: return@mapNotNull null
+
+            val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
+            val value = match.groups[1]?.value?.toDoubleOrNull() ?: return@mapNotNull null
+
+            val subGroup = if (match.groups.size > 2) match.groups[2] else null
+            val sub = subGroup?.value?.toDoubleOrNull() ?: 0.0
+
+            val chapterSort = "%05.2f".format(value + sub)
+
+            // TODO: Tranformar em um toModel
+            ChapterArchive(
+                chapter = name,
+                path = file.uri.toString(),
+                checksum = file.sha256(context),
+                chapterSort = chapterSort,
+                folderPathFk = mangaId
+            )
+        }
+
+        if (chapters.isNotEmpty()) {
+            archiveDao.insertAll(*chapters.toTypedArray())
+        }
+
+        if (folder.lastModified < folderDoc.lastModified()) {
+            directoryDao.update(entity = folder.copy(lastModified = folderDoc.lastModified()))
+        }
+    }
+
     /**
-     * Retorna um fluxo reativo contendo todos os mangás e seus capítulos associados.
+     * Retorna um fluxo reativo contendo todos os mangás e seus capítulos associados, os dados são inseridos no sync.
      *
      * Combina as emissões de [MangaDirectoryDao] e [ChapterArchiveDao], convertendo o resultado para
      * objetos [MangaDirectoryDto] via [toDto].
@@ -113,7 +113,7 @@ class MangaDirectoryOperation @Inject constructor(
             coroutineScope {
                 folders.map { folder ->
                     async(context = Dispatchers.IO) {
-                        val firstPage: ChapterPageDto = loadFirstPage(folderId = folder.id)
+                        val firstPage: ChapterArchivePageDto = loadFirstPage(folderId = folder.id)
                         folder.toDto(firstPage)
                     }
                 }.awaitAll()
@@ -125,18 +125,23 @@ class MangaDirectoryOperation @Inject constructor(
         )
     }
 
-    // TODO: Documentar
-    private suspend fun loadFirstPage(folderId: Long): ChapterPageDto {
+    /**
+     * Monta o DTO de cada mangá, necessário por que os mangás tem capitulos paginados.
+     *
+     * @param folderId Identificador da pasta de mangá.
+     */
+    private suspend fun loadFirstPage(folderId: Long): ChapterArchivePageDto {
+        // TODO: Fazer isso vim de config global, procurar mais locais onde isso ocorre, talvez mudar assinatura do
+        //  método pai e receber via props
         val pageSize = 20
         val total = archiveDao.countChaptersByMangaDirectory(folderId)
-        val initial =
-            archiveDao.getChaptersPaged(folderId, pageSize, offset = 0).firstOrNull() ?: emptyList()
+        val initial = archiveDao.getChaptersPaged(folderId, pageSize, offset = 0).firstOrNull() ?: emptyList()
 
-        return ChapterPageDto(
-            items = initial.map { it.toDto() }, pageSize = pageSize, page = 0, total = total
+        return ChapterArchivePageDto(
+            items = initial.map { it.toDto() },
+            pageSize = pageSize,
+            total = total,
+            page = 0,
         )
     }
-
-    // TODO: Tratar erros melhor.
-
 }

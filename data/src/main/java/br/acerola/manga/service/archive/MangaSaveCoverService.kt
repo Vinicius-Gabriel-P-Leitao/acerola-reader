@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangaCoverService @Inject constructor(
+class MangaSaveCoverService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val coverDao: CoverDao,
     private val directoryDao: MangaDirectoryDao,

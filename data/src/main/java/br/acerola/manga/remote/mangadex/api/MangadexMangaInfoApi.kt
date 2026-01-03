@@ -5,7 +5,7 @@ import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface MangadexMangaInfoService {
+interface MangadexMangaInfoApi {
     @GET(value = "manga")
     suspend fun searchMangaByName(
         @Query(value = "title") title: String,

@@ -16,9 +16,10 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Author
 import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.mapper.toModel
-import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoService
+import br.acerola.manga.repository.port.ApiRepository
 import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.service.archive.MangaCoverService
+import br.acerola.manga.repository.port.Mangadex
+import br.acerola.manga.service.archive.MangaSaveCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,14 +33,22 @@ import kotlin.math.roundToInt
 
 @Singleton
 class MangadexSyncService @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val authorDao: AuthorDao,
     private val genreDao: GenreDao,
     private val directoryDao: MangaDirectoryDao,
-    private val mangaDao: MangaRemoteInfoDao,
-    private val coverService: MangaCoverService,
-    private val fetchManga: MangadexMangaInfoService,
+    private val remoteInfoDao: MangaRemoteInfoDao,
+    private val coverService: MangaSaveCoverService,
+    @param:ApplicationContext private val context: Context,
 ) : LibraryRepository<MangaRemoteInfoDto> {
+    /**
+     * Qualifier para saber que é:
+     *
+     * [br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoService]
+     */
+    @Inject
+    @Mangadex
+    lateinit var mangadexMangaInfoService: ApiRepository.RemoteInfoOperations<MangaRemoteInfoDto, String>
+
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -52,9 +61,9 @@ class MangadexSyncService @Inject constructor(
         try {
             withContext(context = Dispatchers.IO) {
                 val localDirectories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                val allRemoteMangaInfo = mangaDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
+                val allRemoteMangaInfo = remoteInfoDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
 
-                val existingTitles = allRemoteMangaInfo.map { normalizeName(it.name) }.toSet()
+                val existingTitles = allRemoteMangaInfo.map { normalizeName(it.title) }.toSet()
 
                 val remoteInfoToSync = localDirectories.filter {
                     normalizeName(it.name) !in existingTitles
@@ -105,12 +114,13 @@ class MangadexSyncService @Inject constructor(
             _progress.value = -1
             return
         }
+
         val rootUri = rootPath.toUri()
 
         folders.forEachIndexed { index, current ->
             try {
                 val title = current.name
-                val fetchedList: List<MangaRemoteInfoDto> = fetchManga.searchInfo(manga = title)
+                val fetchedList: List<MangaRemoteInfoDto> = mangadexMangaInfoService.searchInfo(manga = title)
                 val folderNameNormalized = normalizeName(name = title)
 
                 val bestMatch: MangaRemoteInfoDto? = fetchedList.find { candidate ->
@@ -122,7 +132,6 @@ class MangadexSyncService @Inject constructor(
                 if (bestMatch != null) {
                     val authorId = bestMatch.authors?.let { saveAndGetAuthorId(dto = it) }
                     val genreId = bestMatch.genre.firstOrNull()?.let { saveAndGetGenreId(dto = it) }
-
                     val coverId = bestMatch.cover?.let { dto ->
                         coverService.processCover(
                             coverDto = dto,
@@ -133,10 +142,12 @@ class MangadexSyncService @Inject constructor(
                     }
 
                     val newMangaEntity = bestMatch.toModel(
-                        authorId = authorId, coverId = coverId, genreId = genreId
+                        authorId = authorId,
+                        coverId = coverId,
+                        genreId = genreId
                     )
 
-                    mangaDao.insert(entity = newMangaEntity)
+                    remoteInfoDao.insert(entity = newMangaEntity)
                 }
 
             } catch (exception: Exception) {
@@ -155,7 +166,9 @@ class MangadexSyncService @Inject constructor(
     private suspend fun saveAndGetAuthorId(dto: AuthorDto): Long {
         val insertedId = authorDao.insert(
             entity = Author(
-                mirrorId = dto.id, name = dto.name, type = TypeAuthor.getByType(dto.type)
+                type = TypeAuthor.getByType(dto.type),
+                mirrorId = dto.id,
+                name = dto.name,
             )
         )
 
@@ -171,7 +184,8 @@ class MangadexSyncService @Inject constructor(
     private suspend fun saveAndGetGenreId(dto: GenreDto): Long {
         val insertedId = genreDao.insert(
             entity = Genre(
-                mirrorId = dto.id, genre = dto.name
+                mirrorId = dto.id,
+                genre = dto.name
             )
         )
 

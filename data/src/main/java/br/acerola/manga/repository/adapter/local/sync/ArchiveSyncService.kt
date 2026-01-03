@@ -7,6 +7,7 @@ import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
+import br.acerola.manga.repository.port.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,8 +29,16 @@ import javax.inject.Singleton
 class ArchiveSyncService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
-    private val mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
 ) : LibraryRepository<MangaDirectoryDto> {
+    /**
+     * Qualifier para saber que é:
+     *
+     * [br.acerola.manga.repository.adapter.local.manga.MangaDirectoryOperation]
+     */
+    @Inject
+    @DirectoryFsOps
+    lateinit  var mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
+
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -202,7 +211,6 @@ class ArchiveSyncService @Inject constructor(
             _isIndexing.value = false
         }
     }
-
 
     /**
      * Processa e sincroniza em lote uma lista de pastas de mangás.

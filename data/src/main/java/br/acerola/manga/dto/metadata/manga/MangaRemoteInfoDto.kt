@@ -7,7 +7,8 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 @Immutable
 data class MangaRemoteInfoDto(
-    val id: String,
+    val id: Long? = null,
+    val mirrorId: String,
     val title: String,
     val description: String,
     val romanji: String? = null,
@@ -22,8 +23,8 @@ data class MangaRemoteInfoDto(
 @Immutable
 data class CoverDto(
     val id: String,
+    val url: String,
     val fileName: String,
-    val url: String
 ) : Parcelable
 
 @Parcelize

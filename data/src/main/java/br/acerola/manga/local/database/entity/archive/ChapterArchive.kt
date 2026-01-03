@@ -7,7 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "chapter_file",
+    tableName = "chapter_archive",
     indices = [
         Index(value = ["folder_path_fk", "chapter"], unique = true)
     ],

@@ -33,7 +33,7 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Genre
     ],
     indices = [
         Index(
-            value = ["name", "manga_author_fk", "manga_genre_fk", "manga_cover_fk"],
+            value = ["title", "manga_author_fk", "manga_genre_fk", "manga_cover_fk"],
             unique = true
         ),
         Index(value = ["mirror_id"], unique = true),
@@ -46,8 +46,8 @@ data class MangaRemoteInfo(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    @ColumnInfo(name = "name")
-    val name: String,
+    @ColumnInfo(name = "title")
+    val title: String,
 
     @ColumnInfo(name = "description")
     val description: String,

@@ -1,8 +1,9 @@
 package br.acerola.manga.repository.adapter.remote.mangadex
 
 import br.acerola.manga.data.BuildConfig
-import br.acerola.manga.remote.mangadex.api.MangadexDownloadService
-import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoService
+import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
+import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
 import br.acerola.manga.remote.mangadex.interceptor.MangadexInterceptor
 import dagger.Module
 import dagger.Provides
@@ -17,11 +18,11 @@ import javax.inject.Singleton
 
 @Qualifier
 @Retention(value = AnnotationRetention.BINARY)
-annotation class DownloadApi
+annotation class MainApi
 
 @Qualifier
 @Retention(value = AnnotationRetention.BINARY)
-annotation class MainApi
+annotation class DownloadApi
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -39,7 +40,6 @@ object MangadexModule {
             .build()
     }
 
-    // NOTE: Retorna em json
     @MainApi
     @Provides
     @Singleton
@@ -53,23 +53,26 @@ object MangadexModule {
 
     @Provides
     @Singleton
-    fun provideMangaDataMangaDexService(@MainApi retrofit: Retrofit): MangadexMangaInfoService {
-        return retrofit.create(MangadexMangaInfoService::class.java)
-    }
-
-    // NOTE: Injeçao de dependencia para dados blob
-    @Provides
-    @Singleton
     @DownloadApi
     fun provideDownloadRetrofit(): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BuildConfig.MANGADEX_UPLOAD_URL)
-            .build()
+        return Retrofit.Builder().baseUrl(BuildConfig.MANGADEX_UPLOAD_URL).build()
     }
 
     @Provides
     @Singleton
-    fun provideMangaDexDownloadService(@DownloadApi retrofit: Retrofit): MangadexDownloadService {
-        return retrofit.create(MangadexDownloadService::class.java)
+    fun provideMangadexMangaInfoApi(@MainApi retrofit: Retrofit): MangadexMangaInfoApi {
+        return retrofit.create(MangadexMangaInfoApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMangadexDownloadApi(@DownloadApi retrofit: Retrofit): MangadexDownloadApi {
+        return retrofit.create(MangadexDownloadApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMangadexChapterInfoApi(@MainApi retrofit: Retrofit): MangadexChapterInfoApi {
+        return retrofit.create(MangadexChapterInfoApi::class.java)
     }
 }

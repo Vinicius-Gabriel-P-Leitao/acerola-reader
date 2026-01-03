@@ -21,6 +21,9 @@ data class ChapterMangadexDto(
     val pages: Int
         get() = attributes.pages
 
+    val version: Int
+        get() = attributes.version
+
     val scanlationGroups: List<ChapterRelationship>
         get() = relationships.filter { it.type == "scanlation_group" }
 }
@@ -30,7 +33,8 @@ data class ChapterAttributes(
     val volume: String?,
     val chapter: String?,
     val title: String?,
-    val pages: Int = 0
+    val pages: Int = 0,
+    val version: Int
 )
 
 @JsonClass(generateAdapter = true)

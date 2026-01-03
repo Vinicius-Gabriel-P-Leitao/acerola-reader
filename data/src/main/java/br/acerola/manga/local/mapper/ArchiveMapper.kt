@@ -1,13 +1,13 @@
 package br.acerola.manga.local.mapper
 
 import androidx.core.net.toUri
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.dto.archive.ChapterPageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 
-fun MangaDirectory.toDto(firstPage: ChapterPageDto): MangaDirectoryDto {
+fun MangaDirectory.toDto(firstPage: ChapterArchivePageDto): MangaDirectoryDto {
     return MangaDirectoryDto(
         id = id,
         name = name,
@@ -20,6 +20,15 @@ fun MangaDirectory.toDto(firstPage: ChapterPageDto): MangaDirectoryDto {
     )
 }
 
+fun ChapterArchive.toDto(): ChapterFileDto {
+    return ChapterFileDto(
+        id = id,
+        name = chapter,
+        path = path,
+        chapterSort = chapterSort
+    )
+}
+
 fun MangaDirectoryDto.toModel(): MangaDirectory {
     return MangaDirectory(
         name = name,
@@ -28,15 +37,6 @@ fun MangaDirectoryDto.toModel(): MangaDirectory {
         banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis(),
         chapterTemplate = chapterTemplate
-    )
-}
-
-fun ChapterArchive.toDto(): ChapterFileDto {
-    return ChapterFileDto(
-        id = id,
-        name = chapter,
-        path = path,
-        chapterSort = chapterSort
     )
 }
 

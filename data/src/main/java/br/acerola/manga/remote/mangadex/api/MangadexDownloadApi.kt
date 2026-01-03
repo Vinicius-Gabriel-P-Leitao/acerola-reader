@@ -5,7 +5,7 @@ import retrofit2.http.GET
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-interface MangadexDownloadService {
+interface MangadexDownloadApi {
     @GET
     @Streaming
     suspend fun downloadFile(@Url fileUrl: String): ResponseBody

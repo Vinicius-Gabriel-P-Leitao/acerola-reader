@@ -4,12 +4,13 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.config.permission.FileSystemAccessManager
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.dto.archive.ChapterPageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.exception.ApplicationException
 import br.acerola.manga.error.exception.GenericInternalException
 import br.acerola.manga.error.handler.GlobalErrorHandler
+import br.acerola.manga.repository.port.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,28 +28,35 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaDirectoryViewModel @Inject constructor(
     private val manager: FileSystemAccessManager,
-    private val libraryRepository: LibraryRepository<MangaDirectoryDto>,
-    private val mangaOperations: LibraryRepository.MangaOperations<MangaDirectoryDto>,
-    private val chapterOperations: LibraryRepository.ChapterOperations<ChapterPageDto>,
+
+    @param:DirectoryFsOps
+    private val archiveSyncService: LibraryRepository<MangaDirectoryDto>,
+
+    @param:DirectoryFsOps
+    private val mangaDirectoryOperation: LibraryRepository.MangaOperations<MangaDirectoryDto>,
+
+    @param:DirectoryFsOps
+    private val chapterArchiveOperation: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
 ) : ViewModel() {
+    val progress: StateFlow<Int> = archiveSyncService.progress
+
     private val _error = MutableStateFlow<Throwable?>(value = null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
 
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    val progress: StateFlow<Int> = libraryRepository.progress
+    private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
+    val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
-    private val _selectedFolderId = MutableStateFlow<Long?>(value = null)
-
-    val mangaDirectories: StateFlow<List<MangaDirectoryDto>> = mangaOperations.loadMangas().stateIn(
+    val mangaDirectories: StateFlow<List<MangaDirectoryDto>> = mangaDirectoryOperation.loadMangas().stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList()
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFileDto>> = _selectedFolderId.flatMapLatest { id ->
+    val chapters: StateFlow<List<ChapterFileDto>> = _selectedDirectoryId.flatMapLatest { id ->
             id?.let {
-                chapterOperations.loadChapterByManga(mangaId = it).map { page -> page.items }
+                chapterArchiveOperation.loadChapterByManga(mangaId = it).map { page -> page.items }
             } ?: flowOf(value = emptyList())
         }.stateIn(
             viewModelScope,
@@ -60,33 +68,28 @@ class MangaDirectoryViewModel @Inject constructor(
         syncLibrary()
     }
 
-    fun selectFolder(folderId: Long) {
-        _selectedFolderId.value = folderId
-    }
-
     // NOTE: Sync básico que vê só novas alterações
     fun syncLibrary() = runLibraryTask {
         val uri = getFolderUri() ?: return@runLibraryTask
-        libraryRepository.syncMangas(baseUri = uri)
+        archiveSyncService.syncMangas(baseUri = uri)
     }
 
     // NOTE: Sync que vê só mangás novos, não faz sync de capitulos
     fun rescanMangas() = runLibraryTask {
         val uri = getFolderUri() ?: return@runLibraryTask
-        libraryRepository.rescanMangas(baseUri = uri)
+        archiveSyncService.rescanMangas(baseUri = uri)
     }
 
     // NOTE: Sync bruto, busca tudo de novo até os capitulos
     fun deepScanLibrary() = runLibraryTask {
         val uri = getFolderUri() ?: return@runLibraryTask
-        libraryRepository.deepRescanLibrary(baseUri = uri)
+        archiveSyncService.deepRescanLibrary(baseUri = uri)
     }
 
     // TODO: A ser implementado na config de cada manga, só vai buscar os capitulos
-    fun syncChaptersByMangaDirecotry(folderId: Long) = runLibraryTask {
-        mangaOperations.rescanChaptersByManga(mangaId = folderId)
+    fun syncChaptersByMangaDirectory(folderId: Long) = runLibraryTask {
+        mangaDirectoryOperation.rescanChaptersByManga(mangaId = folderId)
     }
-
 
     // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
     private fun runLibraryTask(block: suspend () -> Unit) {

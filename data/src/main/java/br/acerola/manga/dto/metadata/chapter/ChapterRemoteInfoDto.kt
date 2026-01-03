@@ -13,5 +13,6 @@ data class ChapterRemoteInfoDto(
     val title: String? = null,
     val scanlator: String? = null,
     val pages: Int = 0,
+    val mangadexVersion: Int,
     val pageUrls: List<String> = emptyList()
 ) : Parcelable

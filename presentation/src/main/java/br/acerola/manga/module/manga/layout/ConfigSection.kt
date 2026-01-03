@@ -1,16 +1,25 @@
 package br.acerola.manga.module.manga.layout
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -25,15 +34,25 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
+import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.feature.R
 
-fun LazyListScope.settingsSection() {
+fun LazyListScope.settingsSection(
+    remoteInfo: MangaRemoteInfoDto?,
+    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
+) {
     item { SettingHeader("Leitura") }
 
     item {
@@ -54,7 +73,56 @@ fun LazyListScope.settingsSection() {
                     defaultElevation = 8.dp, pressedElevation = 12.dp
                 )
             ) {
-                Text("Item de teste")
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(size = 40.dp)
+                                .clip(CircleShape)
+                                .background(color = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Sync,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(size = 22.dp),
+                                contentDescription = stringResource(
+                                    id = R.string.description_icon_sync_manga_directory
+                                ),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(width = 12.dp))
+
+                        Text(
+                            text = stringResource(id = R.string.title_config_sync_modal),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    Divider()
+
+                    if (remoteInfo != null) {
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                mangaRemoteInfoViewModel.syncChaptersByMangaRemoteInfo(mangaId = remoteInfo.id!!)
+                            },
+                            headlineContent = { Text(text = stringResource(id = R.string.title_sync_remote_info)) },
+                            supportingContent = { Text(text = stringResource(id = R.string.description_sync_remote_info_supporting)) },
+                            leadingContent = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowUpward, contentDescription = null
+                                )
+                            },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -117,8 +185,6 @@ fun LazyListScope.settingsSection() {
 
     item { Spacer(modifier = Modifier.height(40.dp)) }
 }
-
-// --- COMPONENTES AUXILIARES (UI) ---
 
 @Composable
 fun SettingHeader(title: String) {

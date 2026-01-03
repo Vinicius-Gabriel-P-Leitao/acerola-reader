@@ -13,10 +13,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import br.acerola.manga.module.config.ConfigScreen
-import br.acerola.manga.module.history.HistoryScreen
-import br.acerola.manga.module.home.HomeScreen
-import br.acerola.manga.module.home.HomeViewModel
 import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.layout.NavigationBottomBar
 import br.acerola.manga.common.navigation.Destination
@@ -24,6 +20,10 @@ import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.module.config.ConfigScreen
+import br.acerola.manga.module.history.HistoryScreen
+import br.acerola.manga.module.home.HomeScreen
+import br.acerola.manga.module.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -40,7 +40,8 @@ class MainActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
-                mangaDirectoryViewModel, homeViewModel
+                mangaDirectoryViewModel,
+                homeViewModel
             )
         }
         defaultComposable(context, Destination.HISTORY) {

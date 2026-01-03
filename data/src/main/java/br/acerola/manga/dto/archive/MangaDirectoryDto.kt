@@ -15,5 +15,5 @@ data class MangaDirectoryDto(
     val bannerUri: Uri?,
     val lastModified: Long,
     val chapterTemplate: String?,
-    val chapters: ChapterPageDto
+    val chapters: ChapterArchivePageDto
 ) : Parcelable

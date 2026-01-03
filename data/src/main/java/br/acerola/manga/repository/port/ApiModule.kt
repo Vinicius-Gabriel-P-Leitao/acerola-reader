@@ -9,26 +9,38 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class Mangadex
+
+/**
+ * Esse modulo é para os serviços de busca de dados, só API, eles pegam dados tratam e retornam um DTO, tem que ser
+ * usado por outros services, não são feitos para serem usados em ViewModel.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ApiModule {
     @Binds
     @Singleton
-    abstract fun bindMangaRemoteInfoOperation(
+    @Mangadex
+    abstract fun bindMangadexMangaInfoService(
         impl: MangadexMangaInfoService
     ): ApiRepository.RemoteInfoOperations<MangaRemoteInfoDto, String>
 
     @Binds
     @Singleton
-    abstract fun bindMangadexFetchChapterOperation(
+    @Mangadex
+    abstract fun bindMangadexChapterInfoService(
         impl: MangadexChapterInfoService
     ): ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
 
     @Binds
     @Singleton
-    abstract fun bindMangaDexFetchMangaDataService(
+    @Mangadex
+    abstract fun bindMangadexFetchCoverService(
         impl: MangadexFetchCoverService
     ): ApiRepository.ArchiveOperations<String>
 }

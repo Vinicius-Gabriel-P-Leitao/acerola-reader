@@ -3,7 +3,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 import br.acerola.manga.data.R
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.error.exception.MangadexRequestException
-import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoService
+import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.manga.repository.port.ApiRepository
@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexChapterInfoService @Inject constructor(
-    private val api: MangadexChapterInfoService
+    private val api: MangadexChapterInfoApi
 ) : ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String> {
 
     override suspend fun searchInfo(
@@ -26,25 +26,13 @@ class MangadexChapterInfoService @Inject constructor(
         return withContext(context = Dispatchers.IO) {
             try {
                 val responseFeed = api.getMangaFeed(mangaId = manga, limit = limit, offset = offset)
+                println("Response $responseFeed")
                 val chaptersRemoteInfoList = responseFeed.data
 
                 val deferredChapters = chaptersRemoteInfoList.map {
                     async {
-                        try {
-                            val fileDto = api.getChapterImages(chapterId = it.id)
-
-                            fromChapterData(
-                                remoteInfoDto = it,
-                                archiveDto = fileDto
-                            )
-                            // TODO: Tratar erro melhor
-                        } catch (exception: Exception) {
-                            println("Erro ao sincronizar $exception")
-                            fromChapterData(
-                                remoteInfoDto = it,
-                                archiveDto = null
-                            )
-                        }
+                        val sourceMangadexDto = api.getChapterImages(chapterId = it.id)
+                        fromChapterData(remoteInfoDto = it, sourceMangadexDto)
                     }
                 }
 
@@ -52,6 +40,8 @@ class MangadexChapterInfoService @Inject constructor(
             } catch (httpException: HttpException) {
                 throw MangadexRequestException(
                     title = R.string.title_http_error,
+                    // TODO: Fazer isso de forma global, fazer um wrapper que pega erros http e lança a exception que
+                    //  quero
                     description = if (httpException.code() == 429) R.string.description_http_error_rate_limit
                     else R.string.description_http_error_generic
                 )
@@ -66,20 +56,16 @@ class MangadexChapterInfoService @Inject constructor(
         }
     }
 
-    private fun fromChapterDataList(dataList: List<ChapterMangadexDto>): List<ChapterRemoteInfoDto> =
-        dataList.map { fromChapterData(remoteInfoDto = it, archiveDto = null) }
-
     private fun fromChapterData(
         remoteInfoDto: ChapterMangadexDto,
-        archiveDto: ChapterSourceMangadexDto? = null
+        sourceMangadexDto: ChapterSourceMangadexDto? = null
     ): ChapterRemoteInfoDto {
         val attributes = remoteInfoDto.attributes
-        val scanlatorName = remoteInfoDto.scanlationGroups
-            .firstNotNullOfOrNull { it.attributes?.name }
+        val scanlatorName = remoteInfoDto.scanlationGroups.firstNotNullOfOrNull { it.attributes?.name }
 
-        val pagesUrls = if (archiveDto != null && archiveDto.chapter.isNotEmpty()) {
-            val dataSaver = archiveDto.chapter.first()
-            val baseUrl = archiveDto.baseUrl
+        val pagesUrls = if (sourceMangadexDto != null && sourceMangadexDto.chapter.isNotEmpty()) {
+            val dataSaver = sourceMangadexDto.chapter.first()
+            val baseUrl = sourceMangadexDto.baseUrl
             val hash = dataSaver.hash
 
             dataSaver.data.map { fileName ->
@@ -96,6 +82,7 @@ class MangadexChapterInfoService @Inject constructor(
             title = attributes.title,
             scanlator = scanlatorName,
             pages = attributes.pages,
+            mangadexVersion = remoteInfoDto.version,
             pageUrls = pagesUrls
         )
     }

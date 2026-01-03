@@ -14,10 +14,13 @@ interface MangaRemoteInfoDao : BaseDao<MangaRemoteInfo> {
     @Query(value = "SELECT * FROM manga_remote_info ORDER BY id ASC")
     fun getAllMangaRemoteInfo(): Flow<List<MangaRemoteInfo>>
 
-    @Transaction
-    @Query(value = "SELECT * FROM manga_remote_info ORDER BY name ASC")
-    fun getAllMangasWithRelations(): Flow<List<RemoteInfoRelations>>
+    @Query(value = "SELECT * FROM manga_remote_info WHERE title = :title")
+    fun getMangaRemoteInfoByName(title: String): Flow<MangaRemoteInfo?>
 
-    @Query(value = "SELECT * FROM manga_remote_info WHERE name = :name")
-    fun getMangaRemoteInfoByName(name: String): Flow<MangaRemoteInfo?>
+    @Query(value = "SELECT * FROM manga_remote_info WHERE id = :mangaId")
+    fun getMangaById(mangaId: Long): Flow<MangaRemoteInfo?>
+
+    @Transaction
+    @Query(value = "SELECT * FROM manga_remote_info ORDER BY title ASC")
+    fun getAllMangasWithRelations(): Flow<List<RemoteInfoRelations>>
 }

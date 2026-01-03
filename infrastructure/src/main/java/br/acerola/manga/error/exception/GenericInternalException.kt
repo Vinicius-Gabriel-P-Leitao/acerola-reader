@@ -11,7 +11,10 @@ class GenericInternalException(
     description = R.string.description_generic_internal_error,
 ) {
     init {
+        Log.e("GenericInternalError", cause.toString())
+        Log.e("GenericInternalError", cause.localizedMessage)
         Log.e("GenericInternalError", cause.message.toString())
+        Log.e("GenericInternalError", cause.stackTraceToString())
         initCause(cause)
     }
 }

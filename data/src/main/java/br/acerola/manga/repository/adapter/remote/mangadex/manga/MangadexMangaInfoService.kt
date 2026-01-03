@@ -6,7 +6,7 @@ import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.exception.MangadexRequestException
-import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoService
+import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
 import br.acerola.manga.repository.port.ApiRepository
@@ -18,8 +18,9 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexMangaInfoService @Inject constructor(
-    private val api: MangadexMangaInfoService
+    private val api: MangadexMangaInfoApi
 ) : ApiRepository.RemoteInfoOperations<MangaRemoteInfoDto, String> {
+
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, vararg extra: String?
     ): List<MangaRemoteInfoDto> {
@@ -34,6 +35,7 @@ class MangadexMangaInfoService @Inject constructor(
                     else R.string.description_http_error_generic
                 )
             } catch (exception: Exception) {
+                // TODO: Tratar erro melhor
                 println("Erro ao sincronizar $exception")
                 throw MangadexRequestException(
                     title = R.string.title_remote_info_request_error,
@@ -79,7 +81,7 @@ class MangadexMangaInfoService @Inject constructor(
 
         // TODO: String para valores default
         return MangaRemoteInfoDto(
-            id = mangaMangadexDto.id,
+            mirrorId = mangaMangadexDto.id,
             title = attributes.title ?: "Sem Título",
             description = attributes.description ?: "",
             romanji = romanji,

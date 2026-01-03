@@ -10,12 +10,13 @@ import retrofit2.http.Query
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-interface MangadexChapterInfoService {
+interface MangadexChapterInfoApi {
     @GET(value = "manga/{id}/feed")
     suspend fun getMangaFeed(
         @Path(value = "id") mangaId: String,
+        // TODO: Adicionar essa seleceção de idiomas no config global.
         @Query(value = "translatedLanguage[]") languages: List<String> = listOf("pt-br"),
-        @Query(value = "order[createdAt]") order: String = "asc",
+        @Query(value = "order[chapter]") order: String = "asc",
         @Query(value = "includes[]") includes: List<String> = listOf("scanlation_group"),
         @Query(value = "limit") limit: Int = 100,
         @Query(value = "offset") offset: Int = 0

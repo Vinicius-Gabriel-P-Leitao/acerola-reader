@@ -8,7 +8,9 @@ import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.repository.port.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.repository.port.MangadexFsOps
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,9 +25,17 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
+
+    @param:DirectoryFsOps
     private val libraryDirectoryOps: LibraryRepository<MangaDirectoryDto>,
+
+    @param:DirectoryFsOps
     private val mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>,
+
+    @param:MangadexFsOps
     private val libraryRemoteInfoOps: LibraryRepository<MangaRemoteInfoDto>,
+
+    @param:MangadexFsOps
     private val mangaRemoteInfoOps: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
 ) : ViewModel() {
 
