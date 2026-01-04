@@ -22,29 +22,46 @@ class MangadexChapterInfoService @Inject constructor(
 
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, vararg extra: String?
-    ): List<ChapterRemoteInfoDto> = safeApiCall {
-        withContext(context = Dispatchers.IO) {
-            val responseFeed = api.getMangaFeed(mangaId = manga, limit = limit, offset = offset)
-            val chaptersRemoteInfoList = responseFeed.data
+    ): List<ChapterRemoteInfoDto> = withContext(Dispatchers.IO) {
+        val allChapters = mutableListOf<ChapterRemoteInfoDto>()
+        var currentOffset = offset
+        val semaphore = Semaphore(permits = 3)
 
-            val semaphore = Semaphore(permits = 5)
+        do {
+            // Log para você ver o progresso da paginação
+            println("Buscando Feed: Offset $currentOffset")
 
-            val deferredChapters = chaptersRemoteInfoList.map { item ->
+            val responseFeed = safeApiCall {
+                api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
+            }
+
+            val chaptersData = responseFeed.data
+
+            // Log do tamanho real recebido
+            println("Recebido da API: ${chaptersData.size} capítulos")
+
+            val processedBatch = chaptersData.map { item ->
                 async {
                     semaphore.withPermit {
                         try {
-                            val source = api.getChapterImages(chapterId = item.id)
+                            val source = safeApiCall { api.getChapterImages(chapterId = item.id) }
                             fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
                         } catch (_: Exception) {
                             fromChapterData(remoteInfoDto = item, sourceMangadexDto = null)
                         }
                     }
                 }
-            }
+            }.awaitAll()
 
-            deferredChapters.awaitAll()
-        }
+            allChapters.addAll(elements = processedBatch)
+            currentOffset += 100
+
+        } while (currentOffset < responseFeed.total)
+
+        println("Total final processado: ${allChapters.size}")
+        allChapters
     }
+
 
     private fun fromChapterData(
         remoteInfoDto: ChapterMangadexDto, sourceMangadexDto: ChapterSourceMangadexDto? = null

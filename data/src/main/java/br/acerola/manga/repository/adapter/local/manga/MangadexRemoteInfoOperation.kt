@@ -57,11 +57,14 @@ class MangadexRemoteInfoOperation @Inject constructor(
                 description = R.string.description_error_download_failed
             )
 
-        val remoteChapters = mangadexChapterInfoService.searchInfo(manga = mirrorId)
-        // NOTE: Não usa o serviço por vim dados a mais do que precisamos.
+        val remoteChapters = mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100)
         val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
 
+        println("MangadexRemoteInfoOperation: $remoteChapters")
+        println("MangadexRemoteInfoOperation: $localChapters")
+
         val pairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
+        println("MangadexRemoteInfoOperation: $pairs")
 
         pairs.forEach { (archive, remote) ->
             val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
@@ -93,12 +96,20 @@ class MangadexRemoteInfoOperation @Inject constructor(
         remote: List<ChapterRemoteInfoDto>,
         local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
-        val remoteByChapter = remote.groupBy { it.chapter?.normalizeChapter() }
-            .mapValues { (_, list) -> list.maxBy { it.mangadexVersion } }
+        val remoteByChapter = remote
+            .groupBy { it.chapter?.normalizeChapter() }
+            .mapValues { (_, list) ->
+                list.maxBy { it.mangadexVersion }
+            }
 
         return local.mapNotNull { archive ->
             val key = archive.chapterSort.normalizeChapter()
-            val remoteInfo = remoteByChapter[key] ?: return@mapNotNull null
+            val remoteInfo = remoteByChapter[key]
+
+            if (remoteInfo == null) {
+                println("DEBUG: Falha no Match - Local: $key não encontrado no Remoto")
+                return@mapNotNull null
+            }
 
             archive to remoteInfo
         }
