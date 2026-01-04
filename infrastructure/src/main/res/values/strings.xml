@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">acerola</string>
+    <string name="title_file_system_access_error">Erro de acesso a pasta</string>
+    <string name="description_file_system_access_error">Não foi possível acessar a pasta.</string>
+    <string name="title_generic_internal_error">Erro interno desconhecido</string>
+    <string name="description_generic_internal_error">Ocorreu um erro interno inesperado.</string>
+    <string name="title_permission_denied_error">Erro de permissão</string>
+    <string name="description_permission_denied_error">Permissão negada.</string>
+    <string name="title_error_mangadex_sync">Erro ao sincronizar metadados</string>
+    <string name="message_error_mangadex_sync_unknown">Falha desconhecida no serviço de sincronização.</string>
+    <string name="title_http_error">Erro de Comunicação</string>
+    <string name="description_http_error_rate_limit">Muitas requisições. Tente novamente em breve.</string>
+    <string name="description_not_found">Não foi possivel encontar os dados que foram buscados.</string>
+    <string name="description_http_error_generic">Erro de comunicação com o MangaDex.</string>
+    <string name="title_network_error">Erro de Conexão</string>
+    <string name="description_network_error">Não foi possível estabelecer comunicação com o servidor. Verifique sua internet e tente novamente.</string>
+</resources>
