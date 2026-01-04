@@ -10,6 +10,10 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.database.entity.metadata.ChapterRemoteInfo
 import br.acerola.manga.local.database.entity.metadata.MangaRemoteInfo
+import br.acerola.manga.local.database.entity.metadata.relationship.Author
+import br.acerola.manga.local.database.entity.metadata.relationship.Cover
+import br.acerola.manga.local.database.entity.metadata.relationship.Genre
+import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.database.entity.relation.RemoteInfoRelations
 
 fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
@@ -21,32 +25,55 @@ fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
         romanji = this.remoteInfo.romanji,
         year = this.remoteInfo.publication,
         status = this.remoteInfo.status,
+        authors = this.author?.toDto(),
+        cover = this.cover?.toDto(),
+        genre = this.genre?.let { listOf(it.toDto()) } ?: emptyList()
+    )
+}
 
-        authors = this.author?.let { author ->
-            AuthorDto(
-                id = author.mirrorId,
-                name = author.name,
-                type = author.type.type
-            )
+fun Author.toDto(): AuthorDto {
+    return AuthorDto(
+        id = mirrorId,
+        name = name,
+        type = type.type
+    )
+}
 
-        },
+fun AuthorDto.toModel(): Author {
+    return Author(
+        name = name,
+        type = TypeAuthor.getByType(type),
+        mirrorId = id
+    )
+}
 
-        cover = this.cover?.let { cover ->
-            CoverDto(
-                id = cover.mirrorId,
-                fileName = cover.fileName,
-                url = cover.url
-            )
-        },
+fun Genre.toDto(): GenreDto {
+    return GenreDto(
+        id = mirrorId,
+        name = genre
+    )
+}
 
-        genre = this.genre?.let { genre ->
-            listOf(
-                GenreDto(
-                    id = genre.mirrorId,
-                    name = genre.genre
-                )
-            )
-        } ?: emptyList()
+fun GenreDto.toModel(): Genre {
+    return Genre(
+        genre = name,
+        mirrorId = id
+    )
+}
+
+fun Cover.toDto(): CoverDto {
+    return CoverDto(
+        id = mirrorId,
+        fileName = fileName,
+        url = url
+    )
+}
+
+fun CoverDto.toModel(): Cover {
+    return Cover(
+        fileName = fileName,
+        url = url,
+        mirrorId = id
     )
 }
 
@@ -71,7 +98,6 @@ fun ChapterDownloadSource.toDto(): ChapterSourceDto {
     )
 }
 
-// FIXME: Os métodos que deveriram ser toModel e toDto do author, cover e genre estão injetados no método
 fun MangaRemoteInfoDto.toModel(
     authorId: Long?,
     coverId: Long?,

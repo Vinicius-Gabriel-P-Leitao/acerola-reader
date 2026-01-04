@@ -5,7 +5,7 @@ import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.manga.repository.port.ApiRepository
-import br.acerola.manga.util.safeApiCall
+import br.acerola.manga.network.safeApiCall
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,10 +22,10 @@ class MangadexChapterInfoService @Inject constructor(
 
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, vararg extra: String?
-    ): List<ChapterRemoteInfoDto> = withContext(Dispatchers.IO) {
+    ): List<ChapterRemoteInfoDto> = withContext(context = Dispatchers.IO) {
         val allChapters = mutableListOf<ChapterRemoteInfoDto>()
-        var currentOffset = offset
         val semaphore = Semaphore(permits = 3)
+        var currentOffset = offset
 
         do {
             val responseFeed = safeApiCall { api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset) }
@@ -66,7 +66,7 @@ class MangadexChapterInfoService @Inject constructor(
 
             dataSaver.data.map { "$baseUrl/data/$hash/$it" }
         } else {
-            // TODO: Tratar erro melhor
+            // NOTE: Caso não tenha nenhuma pagina fica vázio mesmo
             emptyList()
         }
 

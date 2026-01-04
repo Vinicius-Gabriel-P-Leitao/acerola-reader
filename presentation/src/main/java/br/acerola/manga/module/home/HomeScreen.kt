@@ -27,25 +27,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.feature.R
 import br.acerola.manga.common.component.FloatingTool
 import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
-import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.config.preference.HomeLayoutType
-import br.acerola.manga.module.manga.MangaActivity
+import br.acerola.manga.feature.R
 import br.acerola.manga.module.home.component.MangaGridItem
 import br.acerola.manga.module.home.component.MangaListItem
+import br.acerola.manga.module.manga.MangaActivity
 
 @Composable
 fun HomeScreen(
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
 
-    val error by mangaDirectoryViewModel.error.collectAsState()
 
     val layout by homeViewModel.selectedHomeLayout.collectAsState()
     val isIndexing by homeViewModel.isIndexing.collectAsState()
@@ -76,7 +73,7 @@ fun HomeScreen(
             )
 
             if (mangas.isEmpty() && !isIndexing) {
-                EmptyState(error)
+//                EmptyState(error)
             } else {
                 val gridCells = when (layout) {
                     HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)

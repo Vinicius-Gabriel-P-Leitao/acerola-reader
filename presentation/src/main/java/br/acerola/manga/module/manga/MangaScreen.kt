@@ -32,7 +32,8 @@ import br.acerola.manga.module.manga.layout.settingsSection
 import kotlinx.coroutines.launch
 
 enum class MainTab(@param:StringRes val titleRes: Int) {
-    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters), SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
+    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters),
+    SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
 }
 
 @Composable
@@ -78,8 +79,7 @@ fun Screen(
 
     val handleChapterClick = remember {
         { chapter: ChapterFileDto ->
-            // Sua navegação aqui
-            // Log.d("Nav", "Indo para ${chapter.id}")
+            // TODO: Navegar para a activity futura de leitura
         }
     }
 

@@ -2,11 +2,11 @@ package br.acerola.manga.util
 
 import br.acerola.manga.config.pattern.ChapterTemplatePattern
 
-// TODO: Fazer código que vai tratar caso tenha um erro aqui
 fun templateToRegex(template: String = "{value}.cbz"): Regex {
     val regexStr = template
         .replace(oldValue = "{value}", newValue = "(\\d+(?:\\.\\d+)?)")
         .replace(oldValue = "{sub}", newValue = "(\\.\\d+)?") + "$"
+
     return Regex(pattern = regexStr, option = RegexOption.IGNORE_CASE)
 }
 

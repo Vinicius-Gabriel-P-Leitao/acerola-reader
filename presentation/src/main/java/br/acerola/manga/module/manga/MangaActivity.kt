@@ -4,10 +4,13 @@ import android.content.Context
 import android.os.Build
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
+import br.acerola.manga.common.layout.LocalSnackbarHostState
 import br.acerola.manga.common.layout.NavigationTopBar
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
@@ -52,6 +55,21 @@ class MangaActivity(
 
     @Composable
     override fun TopBar(navController: NavHostController) {
+        val snackbarHostState = LocalSnackbarHostState.current
+        val context = LocalContext.current
+
+        LaunchedEffect(Unit) {
+            mangaDirectoryViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            mangaRemoteInfoViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+
         NavigationTopBar(navController)
     }
 }

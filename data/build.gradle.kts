@@ -81,6 +81,10 @@ dependencies {
     implementation(libs.junrar)
     implementation(libs.androidx.documentfile)
 
+    // --- Quality code ---
+    implementation(libs.arrow.core)
+    implementation(libs.arrow.fx.coroutines)
+
     // --- Testing ---
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

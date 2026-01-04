@@ -1,7 +1,6 @@
 package br.acerola.manga.repository.port
 
 
-// TODO: Criar uma data Class para tipar os retornos em Sucess e Fail, mas não sei se é a melhor escolha já que os throws são pegos globalmente.
 // NOTE: O vararg não é obrigatório por padrão.
 interface ApiRepository {
     interface RemoteInfoOperations<R, P> {

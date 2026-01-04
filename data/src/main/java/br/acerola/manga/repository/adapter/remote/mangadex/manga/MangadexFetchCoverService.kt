@@ -2,7 +2,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.manga
 
 import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
 import br.acerola.manga.repository.port.ApiRepository
-import br.acerola.manga.util.safeApiCall
+import br.acerola.manga.network.safeApiCall
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

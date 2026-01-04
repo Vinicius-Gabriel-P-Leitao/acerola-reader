@@ -10,6 +10,7 @@ import br.acerola.manga.error.handler.GlobalErrorHandler
 @Composable
 fun ErrorRenderer() {
     val error = GlobalErrorHandler.errors.collectAsState(initial = null).value
+
     error?.let { exception ->
         Modal(
             show = true,

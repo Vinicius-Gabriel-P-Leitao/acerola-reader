@@ -1,4 +1,4 @@
-package br.acerola.manga.util
+package br.acerola.manga.network
 
 import br.acerola.manga.error.exception.MangadexRequestException
 import br.acerola.manga.infrastructure.R
@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import retrofit2.HttpException
 import java.io.IOException
 
+@Deprecated("Use Either.catch or specific API wrappers returning Either")
 suspend fun <T> safeApiCall(
     times: Int = 3, initialDelay: Long = 2000, call: suspend () -> T
 ): T {

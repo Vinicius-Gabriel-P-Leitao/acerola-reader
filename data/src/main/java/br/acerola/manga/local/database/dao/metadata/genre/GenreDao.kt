@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
+import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.local.database.dao.BaseDao
 import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 
@@ -13,8 +15,16 @@ interface GenreDao : BaseDao<Genre> {
     override suspend fun insert(entity: Genre): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    override suspend fun insertAll(vararg entity: Genre)
+    override suspend fun insertAll(vararg entity: Genre): LongArray
 
-    @Query(value = "SELECT * FROM genre WHERE mirror_id = :mirrorId LIMIT 1")
-    suspend fun getGenreByMirrorId(mirrorId: String): Genre?
+    @Query(value = "SELECT id FROM genre WHERE mirror_id = :mirrorId LIMIT 1")
+    suspend fun getIdByMirrorId(mirrorId: String): Long?
+
+    @Transaction
+    suspend fun insertOrGetId(entity: Genre): Long {
+        val id = insert(entity)
+
+        return if (id != -1L) id
+        else getIdByMirrorId(entity.mirrorId) ?: throw IntegrityException(source = "Genre", key = "mirrorId")
+    }
 }

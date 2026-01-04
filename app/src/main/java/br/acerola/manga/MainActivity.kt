@@ -9,11 +9,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
+import br.acerola.manga.common.layout.LocalSnackbarHostState
 import br.acerola.manga.common.layout.NavigationBottomBar
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
@@ -30,8 +33,8 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
 ) : BaseActivity() {
-    private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
     private val fileSystemAccessViewModel: FileSystemAccessViewModel by viewModels()
+    private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
     private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
@@ -40,7 +43,6 @@ class MainActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
-                mangaDirectoryViewModel,
                 homeViewModel
             )
         }
@@ -61,8 +63,25 @@ class MainActivity(
     override fun TopBar(navController: NavHostController) {
     }
 
+
     @Composable
     override fun BottomBar(navController: NavHostController) {
+        // TODO: Verificar por que o uiEvents tá sendo carregado aqui
+        val snackbarHostState = LocalSnackbarHostState.current
+        val context = LocalContext.current
+
+        LaunchedEffect(key1 = Unit) {
+            mangaDirectoryViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+
+        LaunchedEffect(key1 = Unit) {
+            mangaDexViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+
         NavigationBottomBar(navController)
     }
 
@@ -76,19 +95,23 @@ class MainActivity(
                 scaleIn(
                     initialScale = 0.8f, animationSpec = tween(durationMillis = 300)
                 ) + fadeIn(animationSpec = tween(durationMillis = 300))
-            }, exitTransition = {
+            },
+            exitTransition = {
                 scaleOut(
                     targetScale = 0.8f, animationSpec = tween(durationMillis = 300)
                 ) + fadeOut(animationSpec = tween(durationMillis = 300))
-            }, popEnterTransition = {
+            },
+            popEnterTransition = {
                 scaleIn(
                     initialScale = 1.2f, animationSpec = tween(durationMillis = 300)
                 ) + fadeIn(animationSpec = tween(durationMillis = 300))
-            }, popExitTransition = {
+            },
+            popExitTransition = {
                 scaleOut(
                     targetScale = 1.2f, animationSpec = tween(durationMillis = 300)
                 ) + fadeOut(animationSpec = tween(durationMillis = 300))
-            }, content = content
+            },
+            content = content
         )
     }
 }

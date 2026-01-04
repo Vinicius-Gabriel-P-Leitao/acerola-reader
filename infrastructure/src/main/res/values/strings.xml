@@ -14,4 +14,6 @@
     <string name="description_http_error_generic">Erro de comunicação com o MangaDex.</string>
     <string name="title_network_error">Erro de Conexão</string>
     <string name="description_network_error">Não foi possível estabelecer comunicação com o servidor. Verifique sua internet e tente novamente.</string>
+    <string name="title_dao_error">Erro em operação no banco de dados</string>
+    <string name="description_dao_error">Ouve algum erro na operação do banco de dados, porem desconhecido.</string>
 </resources>
