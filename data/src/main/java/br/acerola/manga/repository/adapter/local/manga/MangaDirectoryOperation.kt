@@ -8,7 +8,7 @@ import arrow.core.Either
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.error.LibrarySyncError
+import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
@@ -101,10 +101,7 @@ class MangaDirectoryOperation @Inject constructor(
             }.mapLeft { exception ->
                 when (exception) {
                     is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                    is IOException -> LibrarySyncError.DiskIOFailure(
-                        path = "Unknown",
-                        cause = exception
-                    )
+                    is IOException -> LibrarySyncError.DiskIOFailure(path = "Unknown", cause = exception)
 
                     is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)

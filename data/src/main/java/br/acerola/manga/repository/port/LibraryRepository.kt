@@ -2,7 +2,7 @@ package br.acerola.manga.repository.port
 
 import android.net.Uri
 import arrow.core.Either
-import br.acerola.manga.error.LibrarySyncError
+import br.acerola.manga.error.message.LibrarySyncError
 import kotlinx.coroutines.flow.StateFlow
 
 

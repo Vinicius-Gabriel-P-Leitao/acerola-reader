@@ -1,11 +1,13 @@
 package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 
+import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.error.message.NetworkError
+import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.manga.repository.port.ApiRepository
-import br.acerola.manga.network.safeApiCall
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -15,6 +17,8 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// ...
+
 @Singleton
 class MangadexChapterInfoService @Inject constructor(
     private val api: MangadexChapterInfoApi
@@ -22,24 +26,33 @@ class MangadexChapterInfoService @Inject constructor(
 
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, vararg extra: String?
-    ): List<ChapterRemoteInfoDto> = withContext(context = Dispatchers.IO) {
+    ): Either<NetworkError, List<ChapterRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
         val allChapters = mutableListOf<ChapterRemoteInfoDto>()
         val semaphore = Semaphore(permits = 3)
         var currentOffset = offset
+        var error: NetworkError? = null
 
-        do {
-            val responseFeed = safeApiCall { api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset) }
+        while (true) {
+            val responseFeedResult = safeApiCall {
+                api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
+            }
+
+            if (responseFeedResult is Either.Left) {
+                error = responseFeedResult.value
+                break
+            }
+
+            val responseFeed = responseFeedResult.getOrNull()!!
             val chaptersData = responseFeed.data
 
             val processedBatch = chaptersData.map { item ->
                 async {
                     semaphore.withPermit {
-                        try {
-                            val source = safeApiCall { api.getChapterImages(chapterId = item.id) }
-                            fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
-                        } catch (_: Exception) {
-                            fromChapterData(remoteInfoDto = item, sourceMangadexDto = null)
-                        }
+                        // NOTE: Ignorar erro para imagens de capítulos individuais, retornar fonte nula
+                        val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
+                        val source = sourceResult.getOrNull()
+
+                        fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
                     }
                 }
             }.awaitAll()
@@ -47,9 +60,16 @@ class MangadexChapterInfoService @Inject constructor(
             allChapters.addAll(elements = processedBatch)
             currentOffset += 100
 
-        } while (currentOffset < responseFeed.total)
+            if (currentOffset >= responseFeed.total) {
+                break
+            }
+        }
 
-        allChapters
+        if (error != null && allChapters.isEmpty()) {
+            Either.Left(value = error)
+        } else {
+            Either.Right(value = allChapters)
+        }
     }
 
 

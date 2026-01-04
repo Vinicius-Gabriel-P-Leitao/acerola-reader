@@ -16,9 +16,10 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// FIXME: Renomear ChapterArchiveOperation para ChapterOperation (sem Archive)
 @Singleton
 class ChapterArchiveOperation @Inject constructor(
-    private val chapterDao: ChapterArchiveDao
+    private val chapterArchiveDao: ChapterArchiveDao,
 ) : LibraryRepository.ChapterOperations<ChapterArchivePageDto> {
     /**
      * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico, os capitulos do
@@ -30,7 +31,7 @@ class ChapterArchiveOperation @Inject constructor(
      * @return [StateFlow] com a lista de capítulos atualizada dinamicamente.
      */
     override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterArchivePageDto> {
-        return chapterDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
+        return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
             ChapterArchivePageDto(
                 items = list.map { it.toDto() }, pageSize = list.size, page = 0, total = list.size
             )
@@ -41,12 +42,11 @@ class ChapterArchiveOperation @Inject constructor(
         )
     }
 
-
     override suspend fun loadPage(
         folderId: Long, total: Int, page: Int, pageSize: Int
     ): ChapterArchivePageDto {
         val offset = page * pageSize
-        val items = chapterDao.getChaptersPaged(folderId, pageSize, offset).firstOrNull()?.map {
+        val items = chapterArchiveDao.getChaptersPaged(folderId, pageSize, offset).firstOrNull()?.map {
             it.toDto()
         } ?: emptyList()
 
@@ -54,4 +54,5 @@ class ChapterArchiveOperation @Inject constructor(
             items = items, pageSize = pageSize, page = page, total = total
         )
     }
+
 }

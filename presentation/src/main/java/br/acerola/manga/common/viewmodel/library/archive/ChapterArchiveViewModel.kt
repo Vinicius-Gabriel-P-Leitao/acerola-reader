@@ -54,4 +54,3 @@ class ChapterArchiveViewModel @Inject constructor(
         }
     }
 }
-

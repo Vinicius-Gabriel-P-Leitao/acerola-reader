@@ -1,21 +1,21 @@
 package br.acerola.manga.repository.adapter.local.sync
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.error.LibrarySyncError
 import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.error.exception.MangadexRequestException
+import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toModel
-import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.repository.port.ApiRepository
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.repository.port.Mangadex
@@ -78,7 +78,7 @@ class MangadexSyncService @Inject constructor(
                     executeSync(folders = remoteInfoToSync, baseUri)
                 }.mapLeft { exception ->
                     when (exception) {
-                        is android.database.sqlite.SQLiteException -> LibrarySyncError.DatabaseError(
+                        is SQLiteException -> LibrarySyncError.DatabaseError(
                             cause = exception
                         )
 
@@ -106,7 +106,7 @@ class MangadexSyncService @Inject constructor(
                     executeSync(folders = mangaLibraryFolders, baseUri)
                 }.mapLeft { exception ->
                     when (exception) {
-                        is android.database.sqlite.SQLiteException -> LibrarySyncError.DatabaseError(
+                        is SQLiteException -> LibrarySyncError.DatabaseError(
                             cause = exception
                         )
 
@@ -143,9 +143,9 @@ class MangadexSyncService @Inject constructor(
                 val title = current.name
                 val folderNameNormalized = normalizeName(name = title)
 
-                val fetchedList = safeApiCall {
-                    mangadexMangaInfoService.searchInfo(manga = title)
-                }
+                val fetchedListResult = mangadexMangaInfoService.searchInfo(manga = title)
+
+                val fetchedList = fetchedListResult.getOrNull() ?: emptyList()
 
                 val bestMatch = fetchedList.find { candidate ->
                     normalizeName(name = candidate.title) == folderNameNormalized || normalizeName(name = candidate.romanji.orEmpty()) == folderNameNormalized
@@ -178,14 +178,16 @@ class MangadexSyncService @Inject constructor(
             result.onLeft { throwable ->
                 when (throwable) {
                     is IntegrityException -> {
+                        // TODO: Analisar alterações ou melhoras
                         println("SKIPPED [${current.name}] ${throwable.cause}")
                     }
 
                     is IOException, is MangadexRequestException -> {
+                        // TODO: Analisar alterações ou melhoras
                         println("RECOVERABLE [${current.name}] ${throwable.cause}")
                     }
 
-                    is android.database.sqlite.SQLiteException -> {
+                    is SQLiteException -> {
                         throw throwable
                     }
 

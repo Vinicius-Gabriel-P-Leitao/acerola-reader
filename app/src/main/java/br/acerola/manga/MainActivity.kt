@@ -39,7 +39,6 @@ class MainActivity(
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
 
-
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
             HomeScreen(
@@ -62,7 +61,6 @@ class MainActivity(
     @Composable
     override fun TopBar(navController: NavHostController) {
     }
-
 
     @Composable
     override fun BottomBar(navController: NavHostController) {

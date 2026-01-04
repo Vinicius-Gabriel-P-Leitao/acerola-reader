@@ -1,12 +1,14 @@
 package br.acerola.manga.repository.adapter.local.manga
 
+import android.database.sqlite.SQLiteException
 import arrow.core.Either
+import arrow.core.flatMap
 import br.acerola.manga.data.R
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.error.LibrarySyncError
 import br.acerola.manga.error.exception.MangadexRequestException
+import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
@@ -36,7 +38,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangadexRemoteInfoOperation @Inject constructor(
+class MangadexMangaRemoteInfoOperation @Inject constructor(
     private val chapterDao: ChapterArchiveDao,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
     private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
@@ -54,35 +56,44 @@ class MangadexRemoteInfoOperation @Inject constructor(
     override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             Either.catch {
-                val mirrorId = mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }
-                    .firstOrNull() ?: throw MangadexRequestException(
-                    title = R.string.title_download_error,
-                    description = R.string.description_error_download_failed
-                )
-
-                val remoteChapters = mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100)
-                val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
-
-                println("MangadexRemoteInfoOperation: $remoteChapters")
-                println("MangadexRemoteInfoOperation: $localChapters")
-
-                val pairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
-                println("MangadexRemoteInfoOperation: $pairs")
-
-                pairs.forEach { (archive, remote) ->
-                    val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
-                    val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
-
-                    val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
-                    chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
-                }
+                val mirrorId = mangaRemoteInfoDao.getMangaById(mangaId)
+                    .mapNotNull { it?.mirrorId }
+                    .firstOrNull()
+                    ?: throw MangadexRequestException(
+                        title = R.string.title_download_error,
+                        description = R.string.description_error_download_failed
+                    )
+                mirrorId
             }.mapLeft { exception ->
                 when (exception) {
                     is MangadexRequestException -> LibrarySyncError.NetworkError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
                 }
+            }.flatMap { mirrorId ->
+                mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100)
+                    .mapLeft { networkError ->
+                        LibrarySyncError.NetworkError(cause = null)
+                    }
+            }.flatMap { remoteChapters ->
+                Either.catch {
+                    val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
+                    val pairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
+
+                    pairs.forEach { (archive, remote) ->
+                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
+                        val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
+
+                        val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
+                        chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
+                    }
+                }.mapLeft { exception ->
+                    when (exception) {
+                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                        else -> LibrarySyncError.UnexpectedError(cause = exception)
+                    }
+                }
+            }
         }
-    }
 
     /**
      * A inserção desses dados é feita no sync de dados.

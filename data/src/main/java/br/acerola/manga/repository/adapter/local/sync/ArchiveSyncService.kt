@@ -8,7 +8,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.error.LibrarySyncError
+import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.repository.port.DirectoryFsOps

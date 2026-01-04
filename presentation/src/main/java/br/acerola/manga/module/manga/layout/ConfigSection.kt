@@ -58,7 +58,7 @@ fun LazyListScope.settingsSection(
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
 ) {
-    item { SettingHeader("Leitura") }
+    item { SettingHeader(title = "Leitura") }
 
     item {
         SmartCard(

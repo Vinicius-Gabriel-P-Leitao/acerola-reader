@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">acerola</string>
     <string name="description_manga_untitled">Sem título</string>
     <string name="title_http_error">Erro de Comunicação</string>

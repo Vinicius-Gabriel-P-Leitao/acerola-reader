@@ -1,46 +1,44 @@
 package br.acerola.manga.network
 
-import br.acerola.manga.error.exception.MangadexRequestException
-import br.acerola.manga.infrastructure.R
+import arrow.core.Either
+import br.acerola.manga.error.message.NetworkError
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import retrofit2.HttpException
 import java.io.IOException
 
-@Deprecated("Use Either.catch or specific API wrappers returning Either")
 suspend fun <T> safeApiCall(
-    times: Int = 3, initialDelay: Long = 2000, call: suspend () -> T
-): T {
-    var currentDelay = initialDelay
+    timeoutMs: Long = 1000L,
+    block: suspend () -> T
+): Either<NetworkError, T> {
+    return Either.catch {
+        // NOTE: Rate limite para que o mangadex não dê bonk
+        if (timeoutMs > 0) delay(timeMillis = timeoutMs)
 
-    repeat(times) { attempt ->
-        try {
-            return call()
-        } catch (httpException: HttpException) {
-            if (attempt == times - 1 || httpException.code() != 429) {
-                throw MangadexRequestException(
-                    title = R.string.title_http_error, description = when (httpException.code()) {
-                        429 -> R.string.description_http_error_rate_limit
-                        404 -> R.string.description_not_found
-                        else -> R.string.description_http_error_generic
-                    }
+        block()
+    }.mapLeft { exception ->
+        when (exception) {
+            is HttpException -> when (exception.code()) {
+                429 -> NetworkError.RateLimitExceeded(
+                    retryAfter = exception.response()?.headers()?.get("Retry-After")?.toLongOrNull()
+                )
+
+                in 500..599 -> NetworkError.ServerError(
+                    code = exception.code(),
+                    cause = exception
+                )
+
+                401, 403 -> NetworkError.Unauthorized(cause = exception)
+                404 -> NetworkError.NotFound(cause = exception)
+                else -> NetworkError.HttpError(
+                    code = exception.code(),
+                    cause = exception
                 )
             }
 
-            delay(timeMillis = currentDelay)
-        } catch (_: IOException) {
-            if (attempt == times - 1) {
-                throw MangadexRequestException(
-                    title = R.string.title_network_error,
-                    description = R.string.description_network_error
-                )
-            }
-
-            delay(timeMillis = currentDelay)
-            currentDelay *= 2
-        } catch (exception: Exception) {
-            throw exception
+            is IOException -> NetworkError.ConnectionFailed(cause = exception)
+            is TimeoutCancellationException -> NetworkError.Timeout(cause = exception)
+            else -> NetworkError.UnexpectedError(cause = exception)
         }
     }
-
-    return call()
 }

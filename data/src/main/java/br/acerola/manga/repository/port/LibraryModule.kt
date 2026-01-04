@@ -7,7 +7,7 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveOperation
 import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRemoteInfoOperation
 import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryOperation
-import br.acerola.manga.repository.adapter.local.manga.MangadexRemoteInfoOperation
+import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRemoteInfoOperation
 import br.acerola.manga.repository.adapter.local.sync.ArchiveSyncService
 import br.acerola.manga.repository.adapter.local.sync.MangadexSyncService
 import dagger.Binds
@@ -51,8 +51,9 @@ abstract class LibraryModule {
     @Singleton
     @DirectoryFsOps
     abstract fun bindChapterArchiveOperation(
-        impl: ChapterArchiveOperation
+        int: ChapterArchiveOperation
     ): LibraryRepository.ChapterOperations<ChapterArchivePageDto>
+
 
     @Binds
     @Singleton
@@ -64,8 +65,8 @@ abstract class LibraryModule {
     @Binds
     @Singleton
     @MangadexFsOps
-    abstract fun bindMangadexRemoteInfoOperation(
-        impl: MangadexRemoteInfoOperation
+    abstract fun bindMangadexMangaRemoteInfoOperation(
+        impl: MangadexMangaRemoteInfoOperation
     ): LibraryRepository.MangaOperations<MangaRemoteInfoDto>
 
     @Binds
