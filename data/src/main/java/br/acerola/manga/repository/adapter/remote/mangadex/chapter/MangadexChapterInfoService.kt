@@ -28,17 +28,8 @@ class MangadexChapterInfoService @Inject constructor(
         val semaphore = Semaphore(permits = 3)
 
         do {
-            // Log para você ver o progresso da paginação
-            println("Buscando Feed: Offset $currentOffset")
-
-            val responseFeed = safeApiCall {
-                api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
-            }
-
+            val responseFeed = safeApiCall { api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset) }
             val chaptersData = responseFeed.data
-
-            // Log do tamanho real recebido
-            println("Recebido da API: ${chaptersData.size} capítulos")
 
             val processedBatch = chaptersData.map { item ->
                 async {
@@ -58,7 +49,6 @@ class MangadexChapterInfoService @Inject constructor(
 
         } while (currentOffset < responseFeed.total)
 
-        println("Total final processado: ${allChapters.size}")
         allChapters
     }
 

@@ -127,8 +127,7 @@ class MangadexRemoteInfoOperation @Inject constructor(
 
         val initialChapterSource: List<ChapterDownloadSource> =
             initialChapter.flatMap { remoteInfo ->
-                chapterDownloadSourceDao
-                    .getChapterDownloadSourceByRemoteInfoId(
+                chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(
                         chapterId = remoteInfo.id
                     ).firstOrNull().orEmpty()
             }
