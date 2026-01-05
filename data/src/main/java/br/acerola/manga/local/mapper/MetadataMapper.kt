@@ -1,7 +1,8 @@
 package br.acerola.manga.local.mapper
 
-import br.acerola.manga.dto.metadata.chapter.ChapterDto
+import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.chapter.ChapterSourceDto
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.CoverDto
@@ -16,7 +17,7 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.database.entity.relation.RemoteInfoRelations
 
-fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
+fun RemoteInfoRelations.toDto(firstPage: ChapterRemoteInfoPageDto): MangaRemoteInfoDto {
     return MangaRemoteInfoDto(
         id = this.remoteInfo.id,
         mirrorId = this.remoteInfo.mirrorId,
@@ -27,7 +28,7 @@ fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
         status = this.remoteInfo.status,
         authors = this.author?.toDto(),
         cover = this.cover?.toDto(),
-        genre = this.genre?.let { listOf(it.toDto()) } ?: emptyList()
+        genre = this.genre?.let { listOf(it.toDto()) } ?: emptyList(),
     )
 }
 
@@ -79,8 +80,8 @@ fun CoverDto.toModel(): Cover {
 
 fun ChapterRemoteInfo.toDto(
     sources: List<ChapterDownloadSource>
-): ChapterDto {
-    return ChapterDto(
+): ChapterFeedDto {
+    return ChapterFeedDto(
         id = id,
         title = title.orEmpty(),
         chapter = chapter,

@@ -22,28 +22,22 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
 
     @Query(
         value = """
-            SELECT
-                *
-            FROM
-                chapter_archive
-            WHERE
-                folder_path_fk = :folderId ORDER BY CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
+            SELECT *
+            FROM chapter_archive
+            WHERE folder_path_fk = :folderId 
+            ORDER BY CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
         """
     )
     fun getChaptersByMangaDirectory(folderId: Long): Flow<List<ChapterArchive>>
 
     @Query(
         value = """
-            SELECT
-                *
-            FROM
-                chapter_archive
-            WHERE
-                folder_path_fk = :folderId
-            ORDER BY
-               CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
+            SELECT *
+            FROM chapter_archive
+            WHERE folder_path_fk = :folderId
+            ORDER BY CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
             LIMIT :pageSize OFFSET :offset
         """
     )
-    fun getChaptersPaged(folderId: Long, pageSize: Int, offset: Int): Flow<List<ChapterArchive>>
+    suspend fun getChaptersPaged(folderId: Long, pageSize: Int, offset: Int): List<ChapterArchive>
 }

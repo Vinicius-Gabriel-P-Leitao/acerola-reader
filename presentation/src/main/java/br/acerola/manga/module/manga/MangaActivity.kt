@@ -15,6 +15,7 @@ import br.acerola.manga.common.layout.NavigationTopBar
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,9 +25,11 @@ class MangaActivity(
     override val startDestinationRes: Int = Destination.CHAPTERS.route
 ) : BaseActivity() {
 
+    private val chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel by viewModels()
     private val mangaRemoteInfoViewModel: MangaRemoteInfoViewModel by viewModels()
+    private val chapterArchiveViewModel: ChapterArchiveViewModel by viewModels()
     private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
-    private val chapterViewModel: ChapterArchiveViewModel by viewModels()
+    private val mangaViewModel: MangaViewModel by viewModels()
 
     object ChapterExtra {
         const val MANGA = "MANGA"
@@ -43,9 +46,9 @@ class MangaActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CHAPTERS.route)) {
             manga?.let {
-                Screen(
+                MangaScreen(
                     manga = it,
-                    chapterViewModel = chapterViewModel,
+                    mangaViewModel = mangaViewModel,
                     mangaDirectoryViewModel= mangaDirectoryViewModel,
                     mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
                 )
@@ -58,13 +61,20 @@ class MangaActivity(
         val snackbarHostState = LocalSnackbarHostState.current
         val context = LocalContext.current
 
-        LaunchedEffect(Unit) {
+        // TODO: Ver por que isso tá aqui
+        LaunchedEffect(key1 = Unit) {
+            mangaViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+
+        LaunchedEffect(key1 = Unit) {
             mangaDirectoryViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
             }
         }
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(key1 = Unit) {
             mangaRemoteInfoViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
             }

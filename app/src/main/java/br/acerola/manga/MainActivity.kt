@@ -50,10 +50,10 @@ class MainActivity(
         }
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(
-                filePreferencesViewModel,
-                fileSystemAccessViewModel,
-                mangaDirectoryViewModel,
-                mangaDexViewModel
+                fileSystemAccessViewModel = fileSystemAccessViewModel,
+                filePreferencesViewModel = filePreferencesViewModel,
+                mangaDirectoryViewModel = mangaDirectoryViewModel,
+                mangaDexViewModel = mangaDexViewModel
             )
         }
     }

@@ -6,7 +6,6 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.manga.config.preference.FileExtension
-import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
@@ -25,7 +24,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
@@ -124,8 +122,7 @@ class MangaDirectoryOperation @Inject constructor(
             coroutineScope {
                 folders.map { folder ->
                     async(context = Dispatchers.IO) {
-                        val firstPage: ChapterArchivePageDto = loadFirstPage(folderId = folder.id)
-                        folder.toDto(firstPage)
+                        folder.toDto()
                     }
                 }.awaitAll()
             }
@@ -133,27 +130,6 @@ class MangaDirectoryOperation @Inject constructor(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
             started = SharingStarted.Lazily,
             initialValue = emptyList()
-        )
-    }
-
-    /**
-     * Monta o DTO de cada mangá, necessário por que os mangás tem capitulos paginados.
-     *
-     * @param folderId Identificador da pasta de mangá.
-     */
-    private suspend fun loadFirstPage(folderId: Long): ChapterArchivePageDto {
-        // TODO: Fazer isso vim de config global, procurar mais locais onde isso ocorre, talvez mudar assinatura do
-        //  método pai e receber via props
-        val pageSize = 20
-        val total = archiveDao.countChaptersByMangaDirectory(folderId)
-        val initial = archiveDao.getChaptersPaged(folderId, pageSize, offset = 0).firstOrNull() ?: emptyList()
-
-        // NOTE: Tranformar em um toDto
-        return ChapterArchivePageDto(
-            items = initial.map { it.toDto() },
-            pageSize = pageSize,
-            total = total,
-            page = 0,
         )
     }
 }

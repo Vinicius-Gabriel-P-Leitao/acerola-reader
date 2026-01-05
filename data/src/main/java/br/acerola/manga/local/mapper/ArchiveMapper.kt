@@ -7,7 +7,7 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 
-fun MangaDirectory.toDto(firstPage: ChapterArchivePageDto): MangaDirectoryDto {
+fun MangaDirectory.toDto(): MangaDirectoryDto {
     return MangaDirectoryDto(
         id = id,
         name = name,
@@ -16,7 +16,6 @@ fun MangaDirectory.toDto(firstPage: ChapterArchivePageDto): MangaDirectoryDto {
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
         chapterTemplate = chapterTemplate,
-        chapters = firstPage
     )
 }
 

@@ -6,6 +6,7 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.repository.port.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,14 +41,14 @@ class ChapterArchiveViewModel @Inject constructor(
             _chapterPage.value = null
 
             val result: ChapterArchivePageDto = chapterArchiveOperation.loadPage(
-                folderId = _selectedDirectoryId.value!!,
+                mangaId = _selectedDirectoryId.value!!,
                 pageSize = pageSize,
                 total = total,
                 page = page,
             )
 
             val sortedItems: List<ChapterFileDto> = result.items.sortedBy {
-                it.chapterSort.replace(oldChar = ',', newChar = '.').toFloatOrNull() ?: 0f
+                it.chapterSort.normalizeChapter().toFloatOrNull() ?: 0f
             }
 
             _chapterPage.value = result.copy(items = sortedItems)

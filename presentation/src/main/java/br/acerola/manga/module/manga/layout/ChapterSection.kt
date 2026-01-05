@@ -5,25 +5,31 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.module.manga.component.ChapterItem
 import br.acerola.manga.module.manga.component.PaginationFooter
+import br.acerola.manga.util.normalizeChapter
 
 fun LazyListScope.chaptersSection(
-    chapters: List<ChapterFileDto>,
+    chapters: ChapterDto,
     currentPage: Int,
     totalPages: Int,
-    onChapterClick: (ChapterFileDto) -> Unit,
-    onPageChange: (Int) -> Unit
+    onChapterClick: (ChapterFileDto, ChapterFeedDto?) -> Unit,
+    onPageChange: (Int) -> Unit,
 ) {
     items(
+        items = chapters.archive.items,
         contentType = { "chapter" },
-        items = chapters,
         key = { it.id },
-    ) { chapter ->
+    ) { archiveItem ->
+        val remoteItem: ChapterFeedDto? = chapters.remoteInfo?.items?.firstOrNull { it.chapter.normalizeChapter() == archiveItem.chapterSort.normalizeChapter() }
+
         ChapterItem(
-            chapter = chapter,
-            onClick = { onChapterClick(chapter) },
+            chapterFileDto = archiveItem,
+            chapterRemoteInfoDto = remoteItem,
+            onClick = { onChapterClick(archiveItem, remoteItem) },
             modifier = Modifier.padding(all = 4.dp)
         )
     }

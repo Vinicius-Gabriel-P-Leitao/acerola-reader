@@ -26,6 +26,9 @@ import br.acerola.manga.util.normalizeChapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -56,12 +59,9 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
     override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             Either.catch {
-                val mirrorId = mangaRemoteInfoDao.getMangaById(mangaId)
-                    .mapNotNull { it?.mirrorId }
-                    .firstOrNull()
+                val mirrorId = mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }.firstOrNull()
                     ?: throw MangadexRequestException(
-                        title = R.string.title_download_error,
-                        description = R.string.description_error_download_failed
+                        title = R.string.title_download_error, description = R.string.description_error_download_failed
                     )
                 mirrorId
             }.mapLeft { exception ->
@@ -70,8 +70,7 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
                 }
             }.flatMap { mirrorId ->
-                mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100)
-                    .mapLeft { networkError ->
+                mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100).mapLeft { networkError ->
                         LibrarySyncError.NetworkError(cause = null)
                     }
             }.flatMap { remoteChapters ->
@@ -101,9 +100,14 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
      * @return [StateFlow] contendo a lista de [MangaRemoteInfoDto] atualizada em tempo real.
      */
     override fun loadMangas(): StateFlow<List<MangaRemoteInfoDto>> {
-        return mangaRemoteInfoDao.getAllMangasWithRelations().map { relationsList ->
-            relationsList.map { relation ->
-                relation.toDto()
+        return mangaRemoteInfoDao.getAllMangasWithRelations().map { remoteInfoRelations ->
+            coroutineScope {
+                remoteInfoRelations.map { remoteInfo ->
+                    async(context = Dispatchers.IO) {
+                        val firstPage: ChapterRemoteInfoPageDto = loadFirstPage(mangaId = remoteInfo.remoteInfo.id)
+                        remoteInfo.toDto(firstPage)
+                    }
+                }.awaitAll()
             }
         }.stateIn(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
@@ -116,9 +120,7 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
         remote: List<ChapterRemoteInfoDto>,
         local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
-        val remoteByChapter = remote
-            .groupBy { it.chapter?.normalizeChapter() }
-            .mapValues { (_, list) ->
+        val remoteByChapter = remote.groupBy { it.chapter?.normalizeChapter() }.mapValues { (_, list) ->
                 list.maxBy { it.mangadexVersion }
             }
 
@@ -127,6 +129,7 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
             val remoteInfo = remoteByChapter[key]
 
             if (remoteInfo == null) {
+                // TODO: Tratar melhor
                 println("DEBUG: Falha no Match - Local: $key não encontrado no Remoto")
                 return@mapNotNull null
             }
@@ -136,21 +139,21 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
     }
 
     private suspend fun loadFirstPage(mangaId: Long): ChapterRemoteInfoPageDto {
-        // TODO: Fazer isso vim de config global, procurar mais locais onde isso ocorre, talvez mudar assinatura do
+        // TODO: Fazer isso vir de config global, procurar mais locais onde isso ocorre, talvez mudar assinatura do
         //  método pai e receber via props
         val pageSize = 20
         val total = chapterRemoteInfoDao.countChaptersByMangaRemoteInfo(mangaId)
 
         val initialChapter: List<ChapterRemoteInfo> = chapterRemoteInfoDao.getChaptersPaged(
             mangaId = mangaId, pageSize = pageSize, offset = 0
-        ).firstOrNull() ?: emptyList()
+        )
 
-        val initialChapterSource: List<ChapterDownloadSource> =
-            initialChapter.flatMap { remoteInfo ->
-                chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(
-                        chapterId = remoteInfo.id
-                    ).firstOrNull().orEmpty()
-            }
+        val initialChapterSource: List<ChapterDownloadSource> = if (initialChapter.isNotEmpty()) {
+            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(
+                chapterId = initialChapter.map { it.id }).first()
+        } else {
+            emptyList()
+        }
 
         return ChapterRemoteInfoPageDto(
             items = initialChapter.map { it.toDto(sources = initialChapterSource) },

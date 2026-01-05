@@ -27,23 +27,23 @@ class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
 
     @param:DirectoryFsOps
-    private val libraryDirectoryOps: LibraryRepository<MangaDirectoryDto>,
+    private val archiveSyncService: LibraryRepository<MangaDirectoryDto>,
 
     @param:DirectoryFsOps
-    private val mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>,
+    private val mangaDirectoryOperation: LibraryRepository.MangaOperations<MangaDirectoryDto>,
 
     @param:MangadexFsOps
-    private val libraryRemoteInfoOps: LibraryRepository<MangaRemoteInfoDto>,
+    private val mangadexSyncService: LibraryRepository<MangaRemoteInfoDto>,
 
     @param:MangadexFsOps
-    private val mangaRemoteInfoOps: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
+    private val mangadexRemoteInfoOperation: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
 ) : ViewModel() {
 
-    private val _selectedHomeLayout = MutableStateFlow(HomeLayoutType.LIST)
+    private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
     val isIndexing: StateFlow<Boolean> = combine(
-        flow = libraryDirectoryOps.isIndexing, flow2 = libraryRemoteInfoOps.isIndexing
+        flow = archiveSyncService.isIndexing, flow2 = mangadexSyncService.isIndexing
     ) { directoryIndexing, remoteInfoIndexing ->
         directoryIndexing || remoteInfoIndexing
     }.stateIn(
@@ -52,10 +52,10 @@ class HomeViewModel @Inject constructor(
     )
 
     val progress: StateFlow<Int> = combine(
-        flow = libraryDirectoryOps.isIndexing,
-        flow2 = libraryDirectoryOps.progress,
-        flow3 = libraryRemoteInfoOps.isIndexing,
-        flow4 = libraryRemoteInfoOps.progress
+        flow = archiveSyncService.isIndexing,
+        flow2 = archiveSyncService.progress,
+        flow3 = mangadexSyncService.isIndexing,
+        flow4 = mangadexSyncService.progress
     ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
         when {
             directoryBusy && directoryProg != -1 -> directoryProg
@@ -68,7 +68,7 @@ class HomeViewModel @Inject constructor(
     )
 
     val mangas: StateFlow<List<MangaDto>> = combine(
-        flow = mangaDirectoryOps.loadMangas(), flow2 = mangaRemoteInfoOps.loadMangas()
+        flow = mangaDirectoryOperation.loadMangas(), flow2 = mangadexRemoteInfoOperation.loadMangas()
     ) { mangaDirectories, remoteMangaInfo ->
         val remoteInfoMap = remoteMangaInfo.associateBy { it.title.normalizeKey() }
 
@@ -82,10 +82,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeHomeLayout()
-    }
-
-    private fun String.normalizeKey(): String {
-        return this.filter { it.isLetterOrDigit() }.lowercase()
     }
 
     fun updateHomeLayout(layout: HomeLayoutType) {
@@ -104,5 +100,9 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun String.normalizeKey(): String {
+        return this.filter { it.isLetterOrDigit() }.lowercase()
     }
 }

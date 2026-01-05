@@ -19,11 +19,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.feature.R
 import br.acerola.manga.module.manga.layout.MangaHeader
 import br.acerola.manga.module.manga.layout.MangaTabs
@@ -32,42 +32,41 @@ import br.acerola.manga.module.manga.layout.settingsSection
 import kotlinx.coroutines.launch
 
 enum class MainTab(@param:StringRes val titleRes: Int) {
-    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters),
-    SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
+    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters), SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
 }
 
 @Composable
-fun Screen(
+fun MangaScreen(
     manga: MangaDto,
-    chapterViewModel: ChapterArchiveViewModel,
+    mangaViewModel: MangaViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
+    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
 ) {
     LaunchedEffect(key1 = manga.directory.id) {
-        chapterViewModel.init(directoryId = manga.directory.id, firstPage = manga.directory.chapters)
+        mangaViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
     }
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
-    val chapterPage by chapterViewModel.chapterPage.collectAsState()
+
+    val chapterDto by mangaViewModel.chapters.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val totalChapters = chapterPage?.total ?: 0
+    val totalChapters = chapterDto?.archive?.total ?: 0
 
-    val currentChapters = chapterPage?.items ?: emptyList()
-    val currentPage = chapterPage?.page ?: 1
+    val currentPage = chapterDto?.archive?.page ?: 1
 
-    val totalChaptersPerPage = remember(key1 = chapterPage?.total, key2 = chapterPage?.pageSize) {
-        val total = chapterPage?.total ?: 0
-        val size = chapterPage?.pageSize ?: 1
+    val totalChaptersPerPage = remember(key1 = chapterDto?.archive?.total, key2 = chapterDto?.archive?.pageSize) {
+        val total = chapterDto?.archive?.total ?: 0
+        val size = chapterDto?.archive?.pageSize ?: 1
 
         if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
     }
 
-    val handlePageChange = remember(key1 = chapterViewModel, key2 = listState) {
+    val handlePageChange = remember(key1 = mangaViewModel, key2 = listState) {
         { nextPage: Int ->
-            chapterViewModel.loadPage(nextPage)
+            mangaViewModel.loadPageAsync(nextPage)
 
             coroutineScope.launch {
                 listState.animateScrollToItem(index = 2)
@@ -78,14 +77,13 @@ fun Screen(
     }
 
     val handleChapterClick = remember {
-        { chapter: ChapterFileDto ->
-            // TODO: Navegar para a activity futura de leitura
+        { chapter: ChapterFileDto, remote: ChapterFeedDto? ->
+            // TODO: Navegar de forma inteligente
         }
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground
+        containerColor = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground
     ) { paddingValues ->
         LazyColumn(
             state = listState,
@@ -94,8 +92,7 @@ fun Screen(
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             item(
-                key = "header_${manga.remoteInfo?.title}",
-                contentType = "header"
+                key = "header_${manga.remoteInfo?.title}", contentType = "header"
             ) {
                 MangaHeader(
                     manga = manga
@@ -103,8 +100,7 @@ fun Screen(
             }
 
             item(
-                key = "tabs_${manga.remoteInfo?.title}",
-                contentType = "tabs"
+                key = "tabs_${manga.remoteInfo?.title}", contentType = "tabs"
             ) {
                 MangaTabs(
                     totalChapters = totalChapters,
@@ -115,13 +111,15 @@ fun Screen(
 
             when (selectedTab) {
                 MainTab.CHAPTERS -> {
-                    chaptersSection(
-                        chapters = currentChapters,
-                        currentPage = currentPage,
-                        totalPages = totalChaptersPerPage,
-                        onChapterClick = handleChapterClick,
-                        onPageChange = handlePageChange
-                    )
+                    chapterDto?.let {
+                        chaptersSection(
+                            chapters = it,
+                            currentPage = currentPage,
+                            totalPages = totalChaptersPerPage,
+                            onChapterClick = handleChapterClick,
+                            onPageChange = handlePageChange
+                        )
+                    }
                 }
 
                 MainTab.SETTINGS -> {
@@ -135,8 +133,7 @@ fun Screen(
             }
 
             item(
-                key = "spacer_${manga.remoteInfo?.title}",
-                contentType = "tabs"
+                key = "spacer_${manga.remoteInfo?.title}", contentType = "tabs"
             ) {
                 Spacer(modifier = Modifier.height(height = 24.dp))
             }

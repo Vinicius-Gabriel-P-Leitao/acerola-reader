@@ -19,21 +19,14 @@ suspend fun <T> safeApiCall(
     }.mapLeft { exception ->
         when (exception) {
             is HttpException -> when (exception.code()) {
-                429 -> NetworkError.RateLimitExceeded(
-                    retryAfter = exception.response()?.headers()?.get("Retry-After")?.toLongOrNull()
-                )
+                429 -> NetworkError.RateLimitExceeded(retryAfter = exception.response()?.headers()?.get("Retry-After")?.toLongOrNull())
 
-                in 500..599 -> NetworkError.ServerError(
-                    code = exception.code(),
-                    cause = exception
-                )
+                in 500..599 -> NetworkError.ServerError(code = exception.code(), cause = exception)
 
                 401, 403 -> NetworkError.Unauthorized(cause = exception)
                 404 -> NetworkError.NotFound(cause = exception)
-                else -> NetworkError.HttpError(
-                    code = exception.code(),
-                    cause = exception
-                )
+
+                else -> NetworkError.HttpError(code = exception.code(), cause = exception)
             }
 
             is IOException -> NetworkError.ConnectionFailed(cause = exception)
