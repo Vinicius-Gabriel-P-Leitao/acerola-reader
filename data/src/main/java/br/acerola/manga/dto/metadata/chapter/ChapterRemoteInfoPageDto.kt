@@ -7,7 +7,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 @Immutable
 data class ChapterRemoteInfoPageDto(
-    val items: List<ChapterDto>,
+    val items: List<ChapterFeedDto>,
     val pageSize: Int,
     val page: Int,
     val total: Int
@@ -15,7 +15,7 @@ data class ChapterRemoteInfoPageDto(
 
 @Parcelize
 @Immutable
-data class ChapterDto(
+data class ChapterFeedDto(
     val id: Long,
     val title: String,
     val chapter: String,

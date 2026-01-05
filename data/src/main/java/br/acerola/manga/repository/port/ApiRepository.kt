@@ -1,14 +1,20 @@
 package br.acerola.manga.repository.port
 
+import arrow.core.Either
+import br.acerola.manga.error.message.NetworkError
 
-// TODO: Criar uma data Class para tipar os retornos em Sucess e Fail, mas não sei se é a melhor escolha já que os throws são pegos globalmente.
 // NOTE: O vararg não é obrigatório por padrão.
 interface ApiRepository {
     interface RemoteInfoOperations<R, P> {
-        suspend fun searchInfo(manga: String, limit: Int = 10, offset: Int = 0, vararg extra: P?): List<R>
+        suspend fun searchInfo(
+            manga: String,
+            limit: Int = 10,
+            offset: Int = 0,
+            vararg extra: P?
+        ): Either<NetworkError, List<R>>
     }
 
     interface ArchiveOperations<P> {
-        suspend fun searchCover(url: String, vararg extra: P?): ByteArray
+        suspend fun searchCover(url: String, vararg extra: P?): Either<NetworkError, ByteArray>
     }
 }

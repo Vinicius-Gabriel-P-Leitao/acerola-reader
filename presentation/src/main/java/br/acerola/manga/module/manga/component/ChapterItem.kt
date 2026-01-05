@@ -22,15 +22,17 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.feature.R
 
 @Composable
 fun ChapterItem(
-    chapter: ChapterFileDto,
+    chapterRemoteInfoDto: ChapterFeedDto?,
+    chapterFileDto: ChapterFileDto,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val stableOnClick = remember(key1 = chapter.id) { onClick }
+    val stableOnClick = remember(key1 = chapterFileDto.id) { onClick }
 
     SmartCard(
         onClick = stableOnClick,
@@ -42,14 +44,15 @@ fun ChapterItem(
         ) {
             Column(modifier = Modifier.weight(weight = 1f)) {
                 Text(
-                    text = stringResource(id = R.string.title_chapter_item_chapter_number, chapter.chapterSort),
+                    color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onBackground
+                    text = chapterRemoteInfoDto?.title
+                        ?: stringResource(id = R.string.title_chapter_item_chapter_number, chapterFileDto.chapterSort),
                 )
 
-                if (chapter.name.isNotEmpty()) {
+                if (chapterFileDto.name.isNotEmpty()) {
                     Text(
-                        text = chapter.name,
+                        text = chapterFileDto.name,
                         style = MaterialTheme.typography.bodySmall,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onBackground,

@@ -3,17 +3,18 @@ package br.acerola.manga.common.viewmodel.library.archive
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.Either
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.error.exception.ApplicationException
-import br.acerola.manga.error.exception.GenericInternalException
-import br.acerola.manga.error.handler.GlobalErrorHandler
+import br.acerola.manga.error.UserMessage
 import br.acerola.manga.repository.port.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,8 +42,8 @@ class MangaDirectoryViewModel @Inject constructor(
 ) : ViewModel() {
     val progress: StateFlow<Int> = archiveSyncService.progress
 
-    private val _error = MutableStateFlow<Throwable?>(value = null)
-    val error: StateFlow<Throwable?> = _error.asStateFlow()
+    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -50,7 +52,9 @@ class MangaDirectoryViewModel @Inject constructor(
     val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
     val mangaDirectories: StateFlow<List<MangaDirectoryDto>> = mangaDirectoryOperation.loadMangas().stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), initialValue = emptyList()
+        viewModelScope,
+        initialValue = emptyList(),
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -68,49 +72,54 @@ class MangaDirectoryViewModel @Inject constructor(
         syncLibrary()
     }
 
-    // NOTE: Sync básico que vê só novas alterações
-    fun syncLibrary() = runLibraryTask {
-        val uri = getFolderUri() ?: return@runLibraryTask
-        archiveSyncService.syncMangas(baseUri = uri)
-    }
-
-    // NOTE: Sync que vê só mangás novos, não faz sync de capitulos
-    fun rescanMangas() = runLibraryTask {
-        val uri = getFolderUri() ?: return@runLibraryTask
-        archiveSyncService.rescanMangas(baseUri = uri)
-    }
-
-    // NOTE: Sync bruto, busca tudo de novo até os capitulos
-    fun deepScanLibrary() = runLibraryTask {
-        val uri = getFolderUri() ?: return@runLibraryTask
-        archiveSyncService.deepRescanLibrary(baseUri = uri)
-    }
-
-    // FIXME: Fazer essa porcaria ter o progress na tela do mangá tbm, e tratar a merda do erro de jobcanceled
-    fun syncChaptersByMangaDirectory(folderId: Long) = runLibraryTask {
-        mangaDirectoryOperation.rescanChaptersByManga(mangaId = folderId)
-    }
-
-    // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
-    private fun runLibraryTask(block: suspend () -> Unit) {
+    fun syncLibrary() {
         viewModelScope.launch {
             _isIndexing.value = true
 
-            try {
-                block()
-            } catch (applicationException: ApplicationException) {
-                GlobalErrorHandler.emit(applicationException)
-            } catch (exception: Exception) {
-                GlobalErrorHandler.emit(
-                    exception = GenericInternalException(cause = exception)
-                )
-            } finally {
-                _isIndexing.value = false
-            }
+            val uri = getFolderUri()
+            if (uri != null) archiveSyncService.syncMangas(baseUri = uri).handleResult()
+
+            _isIndexing.value = false
         }
     }
 
-    // TODO: Tratar melhor exceptions, de preferencia de forma personalizada e global
+    fun rescanMangas() {
+        viewModelScope.launch {
+            _isIndexing.value = true
+
+            val uri = getFolderUri()
+            if (uri != null) archiveSyncService.rescanMangas(baseUri = uri).handleResult()
+
+            _isIndexing.value = false
+        }
+    }
+
+    fun deepScanLibrary() {
+        viewModelScope.launch {
+            _isIndexing.value = true
+
+            val uri = getFolderUri()
+            if (uri != null) archiveSyncService.deepRescanLibrary(baseUri = uri).handleResult()
+
+            _isIndexing.value = false
+        }
+    }
+
+    // TODO: Fazer essa porcaria ter o progress na tela do mangá tbm
+    fun syncChaptersByMangaDirectory(folderId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            mangaDirectoryOperation.rescanChaptersByManga(mangaId = folderId).handleResult()
+            _isIndexing.value = false
+        }
+    }
+
+    private suspend fun <T> Either<UserMessage, T>.handleResult() {
+        this.onLeft { error ->
+            _uiEvents.send(element = error)
+        }
+    }
+
     private suspend fun getFolderUri(): Uri? {
         manager.loadFolderUri()
         return manager.folderUri

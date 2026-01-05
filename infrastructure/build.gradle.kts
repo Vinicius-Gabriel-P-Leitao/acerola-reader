@@ -48,6 +48,7 @@ dependencies {
     // --- Compose Runtime (For @Composable types in Exceptions) ---
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.ui)
 
     // --- DI ---
     implementation(libs.hilt.android)
@@ -59,6 +60,10 @@ dependencies {
 
     // --- Networking (Retrofit) ---
     implementation(libs.retrofit)
+
+    // --- Quality code ---
+    implementation(libs.arrow.core)
+    implementation(libs.arrow.fx.coroutines)
 
     // --- Testing ---
     testImplementation(libs.junit)

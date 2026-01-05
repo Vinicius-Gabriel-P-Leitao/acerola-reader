@@ -1,5 +1,6 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">acerola</string>
+    <string name="description_manga_untitled">Sem título</string>
     <string name="title_http_error">Erro de Comunicação</string>
     <string name="description_http_error_rate_limit">Muitas requisições. Tente novamente em breve.</string>
     <string name="description_http_error_generic">Erro de comunicação com o MangaDex.</string>
@@ -7,4 +8,6 @@
     <string name="description_remote_info_request_error">Ocorreu um erro ao buscar os metadados no MangaDex.</string>
     <string name="title_download_error">Erro ao sincronizar as imagens de cover</string>
     <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão sendo sincronizados.</string>
+    <string name="title_genre_dao_insert_error">Erro ao inserir um gênero de mangá.</string>
+    <string name="description_genre_dao_insert_error">Ocorreu um erro ao inserir um gênero de mangá no banco de dados.</string>
 </resources>

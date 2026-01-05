@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -18,7 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ChapterArchiveOperation @Inject constructor(
-    private val chapterDao: ChapterArchiveDao
+    private val chapterArchiveDao: ChapterArchiveDao,
 ) : LibraryRepository.ChapterOperations<ChapterArchivePageDto> {
     /**
      * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico, os capitulos do
@@ -30,28 +29,35 @@ class ChapterArchiveOperation @Inject constructor(
      * @return [StateFlow] com a lista de capítulos atualizada dinamicamente.
      */
     override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterArchivePageDto> {
-        return chapterDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
+        return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
             ChapterArchivePageDto(
-                items = list.map { it.toDto() }, pageSize = list.size, page = 0, total = list.size
+                items = list.map { it.toDto() },
+                pageSize = list.size,
+                total = list.size,
+                page = 0,
             )
         }.stateIn(
             started = SharingStarted.Lazily,
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-            initialValue = ChapterArchivePageDto(items = emptyList(), pageSize = 0, page = 0, total = 0)
+            initialValue = ChapterArchivePageDto(items = emptyList(), pageSize = 0, total = 0, page = 0)
         )
     }
 
-
-    override suspend fun loadPage(
-        folderId: Long, total: Int, page: Int, pageSize: Int
-    ): ChapterArchivePageDto {
+    override suspend fun loadPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
         val offset = page * pageSize
-        val items = chapterDao.getChaptersPaged(folderId, pageSize, offset).firstOrNull()?.map {
-            it.toDto()
-        } ?: emptyList()
+
+        val realTotal = if (total > 0) {
+            total
+        } else {
+            chapterArchiveDao.countChaptersByMangaDirectory(folderId = mangaId)
+        }
+
+        val items = chapterArchiveDao.getChaptersPaged(
+            pageSize = pageSize, folderId = mangaId, offset = offset
+        ).map { it.toDto() }
 
         return ChapterArchivePageDto(
-            items = items, pageSize = pageSize, page = page, total = total
+            items = items, page = page, pageSize = pageSize, total = realTotal
         )
     }
 }

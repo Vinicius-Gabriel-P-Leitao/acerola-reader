@@ -1,10 +1,14 @@
 package br.acerola.manga.repository.adapter.local.sync
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
+import arrow.core.flatMap
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.repository.port.DirectoryFsOps
@@ -21,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -77,49 +82,65 @@ class ArchiveSyncService @Inject constructor(
      * @throws java.io.IOException Se ocorrer falha no acesso ao diretório ou leitura de metadados.
      * @throws kotlinx.coroutines.CancellationException Se a coroutine for cancelada durante a sincronização.
      */
-    override suspend fun syncMangas(baseUri: Uri?) {
+    override suspend fun syncMangas(baseUri: Uri?): Either<LibrarySyncError, Unit> {
         _isIndexing.value = true
         try {
-            withContext(context = Dispatchers.IO) {
-                // TODO: Tratar erro melhor
-                if (baseUri === null) {
-                    return@withContext
-                }
+            return withContext(context = Dispatchers.IO) {
+                Either.catch {
+                    if (baseUri === null) {
+                        return@catch
+                    }
 
-                val discoveredFolders: List<MangaDirectory> = buildLibrary(context, rootUri = baseUri)
-                val databaseFolders: List<MangaDirectory> = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    val discoveredFolders: List<MangaDirectory> = buildLibrary(context, rootUri = baseUri)
+                    val databaseFolders: List<MangaDirectory> =
+                        directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
 
-                if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
-                    _progress.value = -1
-                    return@withContext
-                }
+                    if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
+                        _progress.value = -1
+                        return@catch
+                    }
 
-                val existingFoldersMap = databaseFolders.associateBy { normalizeName(it.name) }
-                val foldersMap = discoveredFolders.associateBy { normalizeName(it.name) }
+                    val existingFoldersMap = databaseFolders.associateBy { normalizeName(it.name) }
+                    val foldersMap = discoveredFolders.associateBy { normalizeName(it.name) }
 
-                val foldersToProcess = discoveredFolders.filter { folder ->
-                    val normalizedName = normalizeName(folder.name)
-                    val existing = existingFoldersMap[normalizedName]
+                    val foldersToProcess = discoveredFolders.filter { folder ->
+                        val normalizedName = normalizeName(folder.name)
+                        val existing = existingFoldersMap[normalizedName]
 
-                    when {
-                        existing == null -> true
-                        existing.path != folder.path -> true
-                        existing.lastModified < folder.lastModified -> true
-                        existing.cover != folder.cover || existing.banner != folder.banner -> true
-                        else -> false
+                        when {
+                            existing == null -> true
+                            existing.path != folder.path -> true
+                            existing.lastModified < folder.lastModified -> true
+                            existing.cover != folder.cover || existing.banner != folder.banner -> true
+                            else -> false
+                        }
+                    }
+
+                    val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
+
+                    if (removedFolders.isNotEmpty()) {
+                        removedFolders.forEach { folder ->
+                            // NOTE: Ele deleta os capitulos de forma recursiva, joga pro sqlite
+                            directoryDao.delete(entity = folder)
+                        }
+                    }
+
+                    processFolderList(foldersToProcess, databaseFolders)
+                }.mapLeft { exception ->
+                    when (exception) {
+                        is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                        is IOException -> LibrarySyncError.DiskIOFailure(
+                            path = baseUri?.toString() ?: "Unknown",
+                            cause = exception
+                        )
+
+                        is SQLiteException -> LibrarySyncError.DatabaseError(
+                            cause = exception
+                        )
+
+                        else -> LibrarySyncError.UnexpectedError(cause = exception)
                     }
                 }
-
-                val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
-
-                if (removedFolders.isNotEmpty()) {
-                    removedFolders.forEach { folder ->
-                        // NOTE: Ele deleta os capitulos de forma recursiva, joga pro sqlite
-                        directoryDao.delete(entity = folder)
-                    }
-                }
-
-                processFolderList(foldersToProcess, databaseFolders)
             }
         } finally {
             _isIndexing.value = false
@@ -137,24 +158,41 @@ class ArchiveSyncService @Inject constructor(
      * @see processFolderList
      * @see syncMangas
      */
-    override suspend fun rescanMangas(baseUri: Uri?) {
+    override suspend fun rescanMangas(baseUri: Uri?): Either<LibrarySyncError, Unit> {
         _isIndexing.value = true
         try {
-            withContext(context = Dispatchers.IO) {
-                // TODO: Tratar erro melhor
-                if (baseUri === null) {
-                    return@withContext
-                }
+            return withContext(context = Dispatchers.IO) {
+                Either.catch {
+                    // TODO: Tratar erro melhor
+                    if (baseUri === null) {
+                        return@catch
+                    }
 
-                val foldersToProcess: List<MangaDirectory> =
-                    buildLibrary(context, rootUri = baseUri)
-                if (foldersToProcess.isEmpty()) {
-                    _progress.value = -1
-                    return@withContext
-                }
+                    val foldersToProcess: List<MangaDirectory> =
+                        buildLibrary(context, rootUri = baseUri)
+                    if (foldersToProcess.isEmpty()) {
+                        _progress.value = -1
+                        return@catch
+                    }
 
-                val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                processFolderList(foldersToProcess, existingFolders)
+                    val existingFolders =
+                        directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    processFolderList(foldersToProcess, existingFolders)
+                }.mapLeft { exception ->
+                    when (exception) {
+                        is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                        is IOException -> LibrarySyncError.DiskIOFailure(
+                            path = baseUri?.toString() ?: "Unknown",
+                            cause = exception
+                        )
+
+                        is SQLiteException -> LibrarySyncError.DatabaseError(
+                            cause = exception
+                        )
+
+                        else -> LibrarySyncError.UnexpectedError(cause = exception)
+                    }
+                }
             }
         } finally {
             _isIndexing.value = false
@@ -173,39 +211,60 @@ class ArchiveSyncService @Inject constructor(
      *
      * @throws kotlinx.coroutines.CancellationException Se a operação for interrompida.
      */
-    override suspend fun deepRescanLibrary(baseUri: Uri?) {
+    override suspend fun deepRescanLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
         _isIndexing.value = true
         try {
-            withContext(context = Dispatchers.IO) {
-                rescanMangas(baseUri)
-                val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+            return withContext(context = Dispatchers.IO) {
+                rescanMangas(baseUri).flatMap {
+                    Either.catch {
+                        val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
 
-                if (allFolders.isEmpty()) {
-                    _progress.value = -1
-                    return@withContext
-                }
+                        if (allFolders.isEmpty()) {
+                            _progress.value = -1
+                            return@catch
+                        }
 
-                val total = allFolders.size
-                val processed = AtomicInteger(0)
-                _progress.value = 0
+                        val total = allFolders.size
+                        val processed = AtomicInteger(0)
+                        _progress.value = 0
 
-                allFolders.chunked(CHUNK_SIZE).forEach { batch ->
-                    coroutineScope {
-                        batch.map { folder ->
-                            async(context = Dispatchers.IO) {
-                                try {
-                                    mangaDirectoryOps.rescanChaptersByManga(mangaId = folder.id)
-                                } finally {
-                                    val current = processed.incrementAndGet()
-                                    _progress.value = ((current.toFloat() / total) * 100).toInt()
-                                }
+                        allFolders.chunked(CHUNK_SIZE).forEach { batch ->
+                            coroutineScope {
+                                batch.map { folder ->
+                                    async(context = Dispatchers.IO) {
+                                        try {
+                                            mangaDirectoryOps.rescanChaptersByManga(mangaId = folder.id)
+                                                .onLeft {
+                                                    println("Error scanning chapters for ${folder.name}: $it")
+                                                }
+                                        } finally {
+                                            val current = processed.incrementAndGet()
+                                            _progress.value = ((current.toFloat() / total) * 100).toInt()
+                                        }
+                                    }
+                                }.awaitAll()
                             }
-                        }.awaitAll()
+                        }
+                        _progress.value = 100
+                        delay(timeMillis = 250)
+
+                        _progress.value = -1
+                    }.mapLeft { exception ->
+                        when (exception) {
+                            is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                            is IOException -> LibrarySyncError.DiskIOFailure(
+                                path = baseUri?.toString() ?: "Unknown",
+                                cause = exception
+                            )
+
+                            is SQLiteException -> LibrarySyncError.DatabaseError(
+                                cause = exception
+                            )
+
+                            else -> LibrarySyncError.UnexpectedError(cause = exception)
+                        }
                     }
                 }
-                _progress.value = 100
-                delay(timeMillis = 250)
-                _progress.value = -1
             }
         } finally {
             _isIndexing.value = false
@@ -308,6 +367,7 @@ class ArchiveSyncService @Inject constructor(
             }
             val detectedTemplate = firstChapter?.name?.let { detectTemplate(fileName = it) }
 
+            // TODO: Criar toModel
             MangaDirectory(
                 name = folder.name ?: "Unknown",
                 path = folder.uri.toString(),

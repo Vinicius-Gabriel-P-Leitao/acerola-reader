@@ -46,27 +46,31 @@ dependencies {
 
     // --- Core ---
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // --- UI / Compose ---
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.bundles.compose.ui)
     implementation(libs.coil.compose)
+    implementation(libs.bundles.compose.ui)
+    implementation(libs.androidx.documentfile)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.adaptive.navigation)
-    implementation(libs.androidx.documentfile)
+    implementation(platform(libs.androidx.compose.bom))
 
     // --- DI ---
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 
+    // --- Quality code ---
+    implementation(libs.arrow.core)
+    implementation(libs.arrow.fx.coroutines)
+
     // --- Testing ---
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.androidx.compose.ui.tooling)
     androidTestImplementation(libs.androidx.espresso.core)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

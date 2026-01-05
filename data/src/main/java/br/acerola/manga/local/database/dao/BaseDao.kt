@@ -10,7 +10,7 @@ interface BaseDao<T : Any> {
     suspend fun insert(entity: T): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(vararg entity: T)
+    suspend fun insertAll(vararg entity: T): LongArray
 
     @Update
     suspend fun update(entity: T)

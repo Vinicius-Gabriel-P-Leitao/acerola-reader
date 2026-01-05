@@ -2,6 +2,8 @@ package br.acerola.manga.dto.metadata.manga
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
+import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

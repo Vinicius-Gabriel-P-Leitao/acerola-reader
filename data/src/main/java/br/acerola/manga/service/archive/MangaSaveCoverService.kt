@@ -38,22 +38,30 @@ class MangaSaveCoverService @Inject constructor(
                 }
 
                 if (mangaDir != null && mangaDir.canWrite()) {
-                    val bytes = downloadCoverService.searchCover(coverDto.url)
-                    val finalFileName = "cover.png"
+                    val coverResult = downloadCoverService.searchCover(coverDto.url)
 
-                    val oldFile = mangaDir.findFile(finalFileName)
-                    if (oldFile != null && oldFile.exists()) {
-                        oldFile.delete()
-                    }
+                    coverResult.fold(
+                        ifLeft = { error ->
+                            println("Failed to download cover for ${coverDto.url}: $error")
+                        },
+                        ifRight = { bytes ->
+                            val finalFileName = "cover.png"
 
-                    val newFile = mangaDir.createFile("image/png", finalFileName)
+                            val oldFile = mangaDir.findFile(finalFileName)
+                            if (oldFile != null && oldFile.exists()) {
+                                oldFile.delete()
+                            }
 
-                    if (newFile != null) {
-                        context.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
-                            outputStream.write(bytes)
+                            val newFile = mangaDir.createFile("image/png", finalFileName)
+
+                            if (newFile != null) {
+                                context.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
+                                    outputStream.write(bytes)
+                                }
+                                savedUriString = newFile.uri.toString()
+                            }
                         }
-                        savedUriString = newFile.uri.toString()
-                    }
+                    )
                 }
             }
         } catch (exception: Exception) {
@@ -67,6 +75,7 @@ class MangaSaveCoverService @Inject constructor(
             }
         }
 
+        // TODO: Criar toModel
         val insertedId = coverDao.insert(
             entity = Cover(
                 mirrorId = coverDto.id,
@@ -78,6 +87,7 @@ class MangaSaveCoverService @Inject constructor(
         return if (insertedId != -1L) {
             insertedId
         } else {
+            // TODO: Mudar esse erro, forma porca de fazer
             val existing = coverDao.getCoverByMirrorId(mirrorId = coverDto.id)
                 ?: throw IllegalStateException("O cover não foi encontrado.: ${coverDto.id}")
 

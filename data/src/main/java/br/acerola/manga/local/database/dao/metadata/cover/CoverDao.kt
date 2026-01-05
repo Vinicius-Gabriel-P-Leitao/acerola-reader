@@ -13,7 +13,7 @@ interface CoverDao : BaseDao<Cover> {
     override suspend fun insert(entity: Cover): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    override suspend fun insertAll(vararg entity: Cover)
+    override suspend fun insertAll(vararg entity: Cover): LongArray
 
     @Query(value = "SELECT * FROM cover WHERE mirror_id = :mirrorId LIMIT 1")
     suspend fun getCoverByMirrorId(mirrorId: String): Cover?
