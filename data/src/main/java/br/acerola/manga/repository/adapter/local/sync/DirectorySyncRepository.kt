@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,7 +44,7 @@ class DirectorySyncRepository @Inject constructor(
      */
     @Inject
     @DirectoryFsOps
-    lateinit  var mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
+    lateinit var mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -131,8 +132,7 @@ class DirectorySyncRepository @Inject constructor(
                     when (exception) {
                         is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
                         is IOException -> LibrarySyncError.DiskIOFailure(
-                            path = baseUri?.toString() ?: "Unknown",
-                            cause = exception
+                            path = baseUri?.toString() ?: "Unknown", cause = exception
                         )
 
                         is SQLiteException -> LibrarySyncError.DatabaseError(
@@ -169,22 +169,19 @@ class DirectorySyncRepository @Inject constructor(
                         return@catch
                     }
 
-                    val foldersToProcess: List<MangaDirectory> =
-                        buildLibrary(context, rootUri = baseUri)
+                    val foldersToProcess: List<MangaDirectory> = buildLibrary(context, rootUri = baseUri)
                     if (foldersToProcess.isEmpty()) {
                         _progress.value = -1
                         return@catch
                     }
 
-                    val existingFolders =
-                        directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
                     processFolderList(foldersToProcess, existingFolders)
                 }.mapLeft { exception ->
                     when (exception) {
                         is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
                         is IOException -> LibrarySyncError.DiskIOFailure(
-                            path = baseUri?.toString() ?: "Unknown",
-                            cause = exception
+                            path = baseUri?.toString() ?: "Unknown", cause = exception
                         )
 
                         is SQLiteException -> LibrarySyncError.DatabaseError(
@@ -234,11 +231,10 @@ class DirectorySyncRepository @Inject constructor(
                                 batch.map { folder ->
                                     async(context = Dispatchers.IO) {
                                         try {
-                                            mangaDirectoryOps.rescanChaptersByManga(mangaId = folder.id)
-                                                .onLeft {
-                                                    // TODO: Tratar melhor
-                                                    println("Error scanning chapters for ${folder.name}: $it")
-                                                }
+                                            mangaDirectoryOps.rescanChaptersByManga(mangaId = folder.id).onLeft {
+                                                // TODO: Tratar melhor
+                                                println("Error scanning chapters for ${folder.name}: $it")
+                                            }
                                         } finally {
                                             val current = processed.incrementAndGet()
                                             _progress.value = ((current.toFloat() / total) * 100).toInt()
@@ -254,13 +250,10 @@ class DirectorySyncRepository @Inject constructor(
                     }.mapLeft { exception ->
                         when (exception) {
                             is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                            is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
+                            is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                             is IOException -> LibrarySyncError.DiskIOFailure(
-                                path = baseUri?.toString() ?: "Unknown",
-                                cause = exception
-                            )
-
-                            is SQLiteException -> LibrarySyncError.DatabaseError(
-                                cause = exception
+                                path = baseUri?.toString() ?: "Unknown", cause = exception
                             )
 
                             else -> LibrarySyncError.UnexpectedError(cause = exception)
@@ -285,7 +278,9 @@ class DirectorySyncRepository @Inject constructor(
      * @see upsertFolder
      * @see directoryDao
      */
-    private suspend fun processFolderList(foldersToProcess: List<MangaDirectory>, existingFolders: List<MangaDirectory>) {
+    private suspend fun processFolderList(
+        foldersToProcess: List<MangaDirectory>, existingFolders: List<MangaDirectory>
+    ) {
         if (foldersToProcess.isEmpty()) {
             _progress.value = -1
             return
@@ -365,10 +360,11 @@ class DirectorySyncRepository @Inject constructor(
             }
 
             val detectedTemplate = firstChapter?.name?.let {
+                // TODO: PatternSyntaxException tratar esse erro aqui
                 detectTemplate(fileName = it)
             }
 
-            folder.toMangaDirectoryModel(cover, banner, detectedTemplate)
+            folder.toMangaDirectoryModel(cover, banner, chapterTemplate = detectedTemplate)
         }
     }
 

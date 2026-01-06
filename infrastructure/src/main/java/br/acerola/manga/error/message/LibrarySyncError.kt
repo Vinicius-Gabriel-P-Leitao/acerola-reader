@@ -36,6 +36,12 @@ sealed interface LibrarySyncError : UserMessage {
         override val uiMessage = UiText.StringResource(resId = cause.description)
     }
 
+    data class MalformedLibrary(
+        val cause: Throwable? = null
+    ) : LibrarySyncError {
+        override val uiMessage = UiText.StringResource(resId = R.string.description_malformed_library)
+    }
+
     data class UnexpectedError(
         val cause: Throwable
     ) : LibrarySyncError {
