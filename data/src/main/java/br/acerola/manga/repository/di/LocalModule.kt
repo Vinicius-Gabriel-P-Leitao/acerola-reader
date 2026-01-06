@@ -1,4 +1,4 @@
-package br.acerola.manga.repository.port
+package br.acerola.manga.repository.di
 
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -10,6 +10,7 @@ import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository
 import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRepository
 import br.acerola.manga.repository.adapter.local.sync.DirectorySyncRepository
 import br.acerola.manga.repository.adapter.local.sync.MangadexSyncRepository
+import br.acerola.manga.repository.port.LibraryRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

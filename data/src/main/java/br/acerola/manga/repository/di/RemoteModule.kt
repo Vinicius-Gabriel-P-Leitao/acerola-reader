@@ -1,10 +1,11 @@
-package br.acerola.manga.repository.port
+package br.acerola.manga.repository.di
 
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexChapterInfoService
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverService
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoService
+import br.acerola.manga.repository.port.ApiRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

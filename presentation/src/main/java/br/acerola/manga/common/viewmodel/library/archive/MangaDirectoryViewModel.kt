@@ -9,7 +9,7 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.repository.port.DirectoryFsOps
+import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

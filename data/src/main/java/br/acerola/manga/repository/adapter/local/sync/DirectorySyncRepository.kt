@@ -12,7 +12,7 @@ import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toMangaDirectoryModel
-import br.acerola.manga.repository.port.DirectoryFsOps
+import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext

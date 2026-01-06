@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.port.MangadexFsOps
+import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

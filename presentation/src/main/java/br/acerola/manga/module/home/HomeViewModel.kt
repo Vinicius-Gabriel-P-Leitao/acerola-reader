@@ -8,9 +8,9 @@ import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.repository.port.DirectoryFsOps
+import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.port.MangadexFsOps
+import br.acerola.manga.repository.di.MangadexFsOps
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow

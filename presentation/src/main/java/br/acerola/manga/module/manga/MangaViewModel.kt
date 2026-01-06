@@ -9,9 +9,9 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.repository.port.DirectoryFsOps
+import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.port.MangadexFsOps
+import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

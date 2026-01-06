@@ -18,7 +18,7 @@ import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toModel
 import br.acerola.manga.repository.port.ApiRepository
 import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.port.Mangadex
+import br.acerola.manga.repository.di.Mangadex
 import br.acerola.manga.service.archive.MangaSaveCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
