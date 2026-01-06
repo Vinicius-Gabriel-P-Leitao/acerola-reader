@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
@@ -44,6 +45,7 @@ fun LazyListScope.settingsSection(
         SmartCard(
             type = CardType.CONTENT,
             title = "Cofigurções dos arquivos",
+            modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
@@ -88,22 +90,24 @@ fun LazyListScope.settingsSection(
         }
     }
 
+    item {
+        Spacer(modifier = Modifier.height(height = 12.dp))
+    }
 
     item {
         SmartCard(
             type = CardType.CONTENT,
             title = "Cofigurções dos arquivos",
+            modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
         ) {
             // TODO: Virar component
             SmartCard(
-                type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ), elevation = CardDefaults.elevatedCardElevation(
-                    defaultElevation = 8.dp, pressedElevation = 12.dp
-                )
+                type = CardType.CONTENT,
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
             ) {
                 Column {
                     Row(
@@ -187,17 +191,16 @@ fun LazyListScope.settingsSection(
         SmartCard(
             type = CardType.CONTENT,
             title = "Sincronizar com mangadex",
+            modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
         ) {
             // TODO: Virar component
             SmartCard(
-                type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ), elevation = CardDefaults.elevatedCardElevation(
-                    defaultElevation = 8.dp, pressedElevation = 12.dp
-                )
+                type = CardType.CONTENT,
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
             ) {
                 Column {
                     Row(
