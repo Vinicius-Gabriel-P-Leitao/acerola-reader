@@ -42,7 +42,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangadexMangaRemoteInfoOperation @Inject constructor(
+class MangadexMangaRepository @Inject constructor(
     private val chapterDao: ChapterArchiveDao,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
     private val chapterRemoteInfoDao: ChapterRemoteInfoDao,

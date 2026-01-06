@@ -4,12 +4,12 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveOperation
-import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRemoteInfoOperation
-import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryOperation
-import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRemoteInfoOperation
-import br.acerola.manga.repository.adapter.local.sync.ArchiveSyncService
-import br.acerola.manga.repository.adapter.local.sync.MangadexSyncService
+import br.acerola.manga.repository.adapter.local.chapter.ChapterFileRepository
+import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRepository
+import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository
+import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRepository
+import br.acerola.manga.repository.adapter.local.sync.DirectorySyncRepository
+import br.acerola.manga.repository.adapter.local.sync.MangadexSyncRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -37,21 +37,21 @@ abstract class LibraryModule {
     @Singleton
     @DirectoryFsOps
     abstract fun bindArchiveSyncService(
-        impl: ArchiveSyncService
+        impl: DirectorySyncRepository
     ): LibraryRepository<MangaDirectoryDto>
 
     @Binds
     @Singleton
     @DirectoryFsOps
     abstract fun bindMangaDirectoryOperations(
-        impl: MangaDirectoryOperation
+        impl: MangaDirectoryRepository
     ): LibraryRepository.MangaOperations<MangaDirectoryDto>
 
     @Binds
     @Singleton
     @DirectoryFsOps
     abstract fun bindChapterArchiveOperation(
-        int: ChapterArchiveOperation
+        int: ChapterFileRepository
     ): LibraryRepository.ChapterOperations<ChapterArchivePageDto>
 
 
@@ -59,20 +59,20 @@ abstract class LibraryModule {
     @Singleton
     @MangadexFsOps
     abstract fun bindMangaDexSyncService(
-        impl: MangadexSyncService
+        impl: MangadexSyncRepository
     ): LibraryRepository<MangaRemoteInfoDto>
 
     @Binds
     @Singleton
     @MangadexFsOps
     abstract fun bindMangadexMangaRemoteInfoOperation(
-        impl: MangadexMangaRemoteInfoOperation
+        impl: MangadexMangaRepository
     ): LibraryRepository.MangaOperations<MangaRemoteInfoDto>
 
     @Binds
     @Singleton
     @MangadexFsOps
     abstract fun bindMangadexChapterRemoteInfoOperation(
-        impl: MangadexChapterRemoteInfoOperation
+        impl: MangadexChapterRepository
     ): LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>
 }

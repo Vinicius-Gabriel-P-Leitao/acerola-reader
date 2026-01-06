@@ -22,10 +22,10 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
     @param:MangadexFsOps
-    private val mangadexSyncService: LibraryRepository<MangaRemoteInfoDto>,
+    private val mangadexSyncRepository: LibraryRepository<MangaRemoteInfoDto>,
 
     @param:MangadexFsOps
-    private val mangadexRemoteInfoOperation: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
+    private val mangadexChapterRepository: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
 ) : ViewModel() {
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -33,9 +33,9 @@ class MangaRemoteInfoViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    val progress: StateFlow<Int> = mangadexSyncService.progress
+    val progress: StateFlow<Int> = mangadexSyncRepository.progress
 
-    val remoteInfo: StateFlow<List<MangaRemoteInfoDto>> = mangadexRemoteInfoOperation.loadMangas()
+    val remoteInfo: StateFlow<List<MangaRemoteInfoDto>> = mangadexChapterRepository.loadMangas()
         .stateIn(
             scope = viewModelScope,
             initialValue = emptyList(),
@@ -45,7 +45,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     fun syncLibrary() {
         viewModelScope.launch {
             _isIndexing.value = true
-            mangadexSyncService.syncMangas(baseUri = null).handleResult()
+            mangadexSyncRepository.syncMangas(baseUri = null).handleResult()
             _isIndexing.value = false
         }
     }
@@ -53,7 +53,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     fun rescanMangas() {
         viewModelScope.launch {
             _isIndexing.value = true
-            mangadexSyncService.rescanMangas(baseUri = null).handleResult()
+            mangadexSyncRepository.rescanMangas(baseUri = null).handleResult()
             _isIndexing.value = false
         }
     }
@@ -61,7 +61,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     fun syncChaptersByMangaRemoteInfo(mangaId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
-            mangadexRemoteInfoOperation.rescanChaptersByManga(mangaId = mangaId).handleResult()
+            mangadexChapterRepository.rescanChaptersByManga(mangaId = mangaId).handleResult()
             _isIndexing.value = false
         }
     }

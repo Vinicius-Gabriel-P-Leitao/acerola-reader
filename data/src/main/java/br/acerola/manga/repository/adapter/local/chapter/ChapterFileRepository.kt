@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ChapterArchiveOperation @Inject constructor(
+class ChapterFileRepository @Inject constructor(
     private val chapterArchiveDao: ChapterArchiveDao,
 ) : LibraryRepository.ChapterOperations<ChapterArchivePageDto> {
     /**
@@ -60,5 +60,20 @@ class ChapterArchiveOperation @Inject constructor(
         return ChapterArchivePageDto(
             items = items, page = page, pageSize = pageSize, total = realTotal
         )
+    }
+
+    override fun observeSpecificChapters(
+        mangaId: Long,
+        chapters: List<String>
+    ): kotlinx.coroutines.flow.Flow<ChapterArchivePageDto> {
+        return chapterArchiveDao.getChaptersByMangaAndSorts(folderId = mangaId, chapters = chapters)
+            .map { list ->
+                ChapterArchivePageDto(
+                    items = list.map { it.toDto() },
+                    pageSize = list.size,
+                    total = list.size,
+                    page = 0,
+                )
+            }
     }
 }

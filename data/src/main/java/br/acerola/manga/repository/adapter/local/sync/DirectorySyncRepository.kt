@@ -31,14 +31,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ArchiveSyncService @Inject constructor(
+class DirectorySyncRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
 ) : LibraryRepository<MangaDirectoryDto> {
     /**
      * Qualifier para saber que é:
      *
-     * [br.acerola.manga.repository.adapter.local.manga.MangaDirectoryOperation]
+     * [br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository]
      */
     @Inject
     @DirectoryFsOps

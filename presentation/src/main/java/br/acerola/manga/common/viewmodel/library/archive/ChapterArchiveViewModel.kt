@@ -17,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChapterArchiveViewModel @Inject constructor(
     @param:DirectoryFsOps
-    private val chapterArchiveOperation: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
+    private val chapterFileRepository: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
 ) : ViewModel() {
     private val _chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
     val chapterPage: StateFlow<ChapterArchivePageDto?> = _chapterPage.asStateFlow()
@@ -40,7 +40,7 @@ class ChapterArchiveViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterArchivePageDto = chapterArchiveOperation.loadPage(
+            val result: ChapterArchivePageDto = chapterFileRepository.loadPage(
                 mangaId = _selectedDirectoryId.value!!,
                 pageSize = pageSize,
                 total = total,

@@ -33,7 +33,7 @@ import javax.inject.Singleton
 import kotlin.math.roundToInt
 
 @Singleton
-class MangadexSyncService @Inject constructor(
+class MangadexSyncRepository @Inject constructor(
     private val authorDao: AuthorDao,
     private val genreDao: GenreDao,
     private val directoryDao: MangaDirectoryDao,

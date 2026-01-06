@@ -34,7 +34,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangaDirectoryOperation @Inject constructor(
+class MangaDirectoryRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
     private val archiveDao: ChapterArchiveDao

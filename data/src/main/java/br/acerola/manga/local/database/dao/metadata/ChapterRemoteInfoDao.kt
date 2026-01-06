@@ -36,4 +36,6 @@ interface ChapterRemoteInfoDao : BaseDao<ChapterRemoteInfo> {
     )
     suspend fun getChaptersPaged(mangaId: Long, pageSize: Int, offset: Int): List<ChapterRemoteInfo>
 
+    @Query("SELECT * FROM chapter_remote_info WHERE manga_remote_info_fk = :mangaId AND chapter IN (:chapters)")
+    fun getChaptersByMangaAndNumbers(mangaId: Long, chapters: List<String>): Flow<List<ChapterRemoteInfo>>
 }

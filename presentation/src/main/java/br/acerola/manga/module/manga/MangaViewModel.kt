@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -30,13 +31,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MangaViewModel @Inject constructor(
-    @param:DirectoryFsOps private val mangaDirectoryOperation: LibraryRepository.MangaOperations<MangaDirectoryDto>,
+    @param:DirectoryFsOps private val mangaDirectoryRepository: LibraryRepository.MangaOperations<MangaDirectoryDto>,
 
-    @param:MangadexFsOps private val mangadexRemoteInfoOperation: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
+    @param:MangadexFsOps private val mangadexMangaRepository: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
 
-    @param:DirectoryFsOps private val chapterArchiveOperation: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
+    @param:DirectoryFsOps private val chapterFileRepository: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
 
-    @param:MangadexFsOps private val chapterRemoteInfoOperation: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>,
+    @param:MangadexFsOps private val mangadexChapterRepository: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
     val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
@@ -51,7 +52,7 @@ class MangaViewModel @Inject constructor(
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     val isIndexing: StateFlow<Boolean> = combine(
-        flow = mangaDirectoryOperation.isIndexing, flow2 = mangadexRemoteInfoOperation.isIndexing
+        flow = mangaDirectoryRepository.isIndexing, flow2 = mangadexMangaRepository.isIndexing
     ) { directoryIndexing, remoteInfoIndexing ->
         directoryIndexing || remoteInfoIndexing
     }.stateIn(
@@ -59,10 +60,10 @@ class MangaViewModel @Inject constructor(
     )
 
     val progress: StateFlow<Int> = combine(
-        flow = mangaDirectoryOperation.isIndexing,
-        flow2 = mangaDirectoryOperation.progress,
-        flow3 = mangadexRemoteInfoOperation.isIndexing,
-        flow4 = mangadexRemoteInfoOperation.progress
+        flow = mangaDirectoryRepository.isIndexing,
+        flow2 = mangaDirectoryRepository.progress,
+        flow3 = mangadexMangaRepository.isIndexing,
+        flow4 = mangadexMangaRepository.progress
     ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
         when {
             directoryBusy && directoryProg != -1 -> directoryProg
@@ -101,17 +102,19 @@ class MangaViewModel @Inject constructor(
         currentPage = page
 
         if (total == 0) {
-            total = chapterArchiveOperation.loadPage(mangaId = folderId, total = 0, page = 0, pageSize = pageSize).total
+            total = chapterFileRepository.loadPage(mangaId = folderId, total = 0, page = 0, pageSize = pageSize).total
         }
 
-        val localPage = chapterArchiveOperation.loadPage(
+        val localPage = chapterFileRepository.loadPage(
             mangaId = folderId, total = total, page = page, pageSize = pageSize
         )
 
+        val chapterSorts = localPage.items.map { it.chapterSort }
+
         val remotePage = mangaId?.let {
-            chapterRemoteInfoOperation.loadPage(
-                mangaId = it, total = total, page = page, pageSize = pageSize
-            )
+            mangadexChapterRepository.observeSpecificChapters(
+                mangaId = it, chapters = chapterSorts
+            ).first()
         } ?: ChapterRemoteInfoPageDto(
             items = emptyList(), pageSize = pageSize, page = page, total = total
         )
@@ -131,8 +134,8 @@ class MangaViewModel @Inject constructor(
     private fun loadPageAllChapters(
         folderId: Long, mangaId: Long?
     ): Flow<ChapterDto> {
-        return combine(flow = chapterArchiveOperation.loadChapterByManga(mangaId = folderId), flow2 = mangaId?.let {
-            chapterRemoteInfoOperation.loadChapterByManga(mangaId = it)
+        return combine(flow = chapterFileRepository.loadChapterByManga(mangaId = folderId), flow2 = mangaId?.let {
+            mangadexChapterRepository.loadChapterByManga(mangaId = it)
         } ?: flowOf(
             value = ChapterRemoteInfoPageDto(
                 items = emptyList(),

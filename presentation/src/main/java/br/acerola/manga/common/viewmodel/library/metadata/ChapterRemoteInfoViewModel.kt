@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.repository.port.DirectoryFsOps
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.repository.port.MangadexFsOps
 import br.acerola.manga.util.normalizeChapter
@@ -18,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChapterRemoteInfoViewModel @Inject constructor(
     @param:MangadexFsOps
-    private val chapterRemoteInfoOperation: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>,
+    private val mangadexChapterRepository: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
     private val _chapterPage = MutableStateFlow<ChapterRemoteInfoPageDto?>(value = null)
     val chapterPage: StateFlow<ChapterRemoteInfoPageDto?> = _chapterPage.asStateFlow()
@@ -41,7 +40,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterRemoteInfoPageDto = chapterRemoteInfoOperation.loadPage(
+            val result: ChapterRemoteInfoPageDto = mangadexChapterRepository.loadPage(
                 mangaId = _selectedMangaId.value!!,
                 pageSize = pageSize,
                 total = total,

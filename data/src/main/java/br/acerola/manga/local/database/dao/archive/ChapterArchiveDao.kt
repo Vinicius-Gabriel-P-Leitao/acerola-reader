@@ -60,4 +60,7 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
         """
     )
     suspend fun getChaptersPaged(folderId: Long, pageSize: Int, offset: Int): List<ChapterArchive>
+
+    @Query("SELECT * FROM chapter_archive WHERE folder_path_fk = :folderId AND chapter_sort IN (:chapters)")
+    fun getChaptersByMangaAndSorts(folderId: Long, chapters: List<String>): Flow<List<ChapterArchive>>
 }

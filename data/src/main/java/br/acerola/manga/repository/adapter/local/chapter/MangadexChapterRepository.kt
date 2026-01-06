@@ -20,7 +20,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangadexChapterRemoteInfoOperation @Inject constructor(
+class MangadexChapterRepository @Inject constructor(
     private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao
 ) : LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto> {
@@ -77,5 +77,32 @@ class MangadexChapterRemoteInfoOperation @Inject constructor(
         return ChapterRemoteInfoPageDto(
             items = items, page = page, pageSize = pageSize, total = realTotal
         )
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeSpecificChapters(
+        mangaId: Long,
+        chapters: List<String>
+    ): kotlinx.coroutines.flow.Flow<ChapterRemoteInfoPageDto> {
+        return chapterRemoteInfoDao.getChaptersByMangaAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
+            val chapterIds = chapterList.map { it.id }
+
+            flow {
+                val sources: List<ChapterDownloadSource> = if (chapterIds.isNotEmpty()) {
+                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(chapterIds).first()
+                } else {
+                    emptyList()
+                }
+
+                emit(
+                    value = ChapterRemoteInfoPageDto(
+                        items = chapterList.map { it.toDto(sources) },
+                        pageSize = chapterList.size,
+                        page = 0,
+                        total = chapterList.size
+                    )
+                )
+            }
+        }
     }
 }
