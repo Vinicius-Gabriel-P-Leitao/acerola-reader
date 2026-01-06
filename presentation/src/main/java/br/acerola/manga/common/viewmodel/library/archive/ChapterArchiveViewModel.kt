@@ -40,7 +40,7 @@ class ChapterArchiveViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterArchivePageDto = chapterFileRepository.loadPage(
+            val result: ChapterArchivePageDto = chapterFileRepository.loadChapterPage(
                 mangaId = _selectedDirectoryId.value!!,
                 pageSize = pageSize,
                 total = total,

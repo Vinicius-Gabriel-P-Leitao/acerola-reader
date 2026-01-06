@@ -4,7 +4,7 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.repository.adapter.local.chapter.ChapterFileRepository
+import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveRepository
 import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRepository
 import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository
 import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRepository
@@ -36,43 +36,43 @@ abstract class LibraryModule {
     @Binds
     @Singleton
     @DirectoryFsOps
-    abstract fun bindArchiveSyncService(
+    abstract fun bindDirectorySyncRepository(
         impl: DirectorySyncRepository
     ): LibraryRepository<MangaDirectoryDto>
 
     @Binds
     @Singleton
     @DirectoryFsOps
-    abstract fun bindMangaDirectoryOperations(
+    abstract fun bindMangaDirectoryRepository(
         impl: MangaDirectoryRepository
     ): LibraryRepository.MangaOperations<MangaDirectoryDto>
 
     @Binds
     @Singleton
     @DirectoryFsOps
-    abstract fun bindChapterArchiveOperation(
-        int: ChapterFileRepository
+    abstract fun bindChapterArchiveRepository(
+        int: ChapterArchiveRepository
     ): LibraryRepository.ChapterOperations<ChapterArchivePageDto>
 
 
     @Binds
     @Singleton
     @MangadexFsOps
-    abstract fun bindMangaDexSyncService(
+    abstract fun bindMangadexSyncRepository(
         impl: MangadexSyncRepository
     ): LibraryRepository<MangaRemoteInfoDto>
 
     @Binds
     @Singleton
     @MangadexFsOps
-    abstract fun bindMangadexMangaRemoteInfoOperation(
+    abstract fun bindMangadexMangaRepository(
         impl: MangadexMangaRepository
     ): LibraryRepository.MangaOperations<MangaRemoteInfoDto>
 
     @Binds
     @Singleton
     @MangadexFsOps
-    abstract fun bindMangadexChapterRemoteInfoOperation(
+    abstract fun bindMangadexChapterRepository(
         impl: MangadexChapterRepository
     ): LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>
 }

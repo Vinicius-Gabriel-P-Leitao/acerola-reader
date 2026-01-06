@@ -26,6 +26,6 @@ interface LibraryRepository<T> {
     interface ChapterOperations<T> {
         fun loadChapterByManga(mangaId: Long): StateFlow<T>
         fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<T>
-        suspend fun loadPage(mangaId: Long, total: Int, page: Int, pageSize: Int = 20): T
+        suspend fun loadChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int = 20): T
     }
 }

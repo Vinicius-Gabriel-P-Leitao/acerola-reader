@@ -102,10 +102,10 @@ class MangaViewModel @Inject constructor(
         currentPage = page
 
         if (total == 0) {
-            total = chapterFileRepository.loadPage(mangaId = folderId, total = 0, page = 0, pageSize = pageSize).total
+            total = chapterFileRepository.loadChapterPage(mangaId = folderId, total = 0, page = 0, pageSize = pageSize).total
         }
 
-        val localPage = chapterFileRepository.loadPage(
+        val localPage = chapterFileRepository.loadChapterPage(
             mangaId = folderId, total = total, page = page, pageSize = pageSize
         )
 

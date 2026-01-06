@@ -53,7 +53,7 @@ class MangadexChapterRepository @Inject constructor(
         )
     }
 
-    override suspend fun loadPage(
+    override suspend fun loadChapterPage(
         mangaId: Long, total: Int, page: Int, pageSize: Int
     ): ChapterRemoteInfoPageDto {
         val offset = page * pageSize

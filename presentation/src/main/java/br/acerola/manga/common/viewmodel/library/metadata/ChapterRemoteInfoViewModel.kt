@@ -40,7 +40,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterRemoteInfoPageDto = mangadexChapterRepository.loadPage(
+            val result: ChapterRemoteInfoPageDto = mangadexChapterRepository.loadChapterPage(
                 mangaId = _selectedMangaId.value!!,
                 pageSize = pageSize,
                 total = total,

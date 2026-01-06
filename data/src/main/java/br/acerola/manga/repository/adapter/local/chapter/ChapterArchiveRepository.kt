@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ChapterFileRepository @Inject constructor(
+class ChapterArchiveRepository @Inject constructor(
     private val chapterArchiveDao: ChapterArchiveDao,
 ) : LibraryRepository.ChapterOperations<ChapterArchivePageDto> {
     /**
@@ -44,7 +44,7 @@ class ChapterFileRepository @Inject constructor(
         )
     }
 
-    override suspend fun loadPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
+    override suspend fun loadChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
         val offset = page * pageSize
 
         val realTotal = if (total > 0) {
