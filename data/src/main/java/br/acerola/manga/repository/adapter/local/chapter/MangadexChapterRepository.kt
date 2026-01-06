@@ -4,7 +4,7 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
-import br.acerola.manga.local.mapper.toDto
+import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.port.LibraryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,12 +38,7 @@ class MangadexChapterRepository @Inject constructor(
                 }
 
                 emit(
-                    value = ChapterRemoteInfoPageDto(
-                        items = chapters.map { it.toDto(sources) },
-                        pageSize = chapters.size,
-                        page = 0,
-                        total = chapters.size
-                    )
+                    value = chapters.toPageDto(sources = sources)
                 )
             }
         }.stateIn(
@@ -72,10 +67,11 @@ class MangadexChapterRepository @Inject constructor(
             emptyList()
         }
 
-        val items = chapters.map { it.toDto(sources) }
-
-        return ChapterRemoteInfoPageDto(
-            items = items, page = page, pageSize = pageSize, total = realTotal
+        return chapters.toPageDto(
+            sources = sources,
+            pageSize = pageSize,
+            total = realTotal,
+            page = page
         )
     }
 
@@ -95,12 +91,7 @@ class MangadexChapterRepository @Inject constructor(
                 }
 
                 emit(
-                    value = ChapterRemoteInfoPageDto(
-                        items = chapterList.map { it.toDto(sources) },
-                        pageSize = chapterList.size,
-                        page = 0,
-                        total = chapterList.size
-                    )
+                    value = chapterList.toPageDto(sources = sources)
                 )
             }
         }

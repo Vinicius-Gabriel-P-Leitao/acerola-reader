@@ -3,10 +3,9 @@ package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
+import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
-import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
-import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.manga.repository.port.ApiRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -66,7 +65,7 @@ class MangadexChapterInfoService @Inject constructor(
                             println("DEBUG API: [!] Sem imagens para o chapter ${item.attributes.chapter}")
                         }
 
-                        fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
+                        item.toDto(source)
                     }
                 }
             }.awaitAll()
@@ -86,33 +85,5 @@ class MangadexChapterInfoService @Inject constructor(
         } else {
             Either.Right(value = allChapters)
         }
-    }
-
-    private fun fromChapterData(
-        remoteInfoDto: ChapterMangadexDto, sourceMangadexDto: ChapterSourceMangadexDto? = null
-    ): ChapterRemoteInfoDto {
-        val attributes = remoteInfoDto.attributes
-        val scanlatorName = remoteInfoDto.scanlationGroups.firstNotNullOfOrNull { it.attributes?.name }
-
-        val pagesUrls = if (sourceMangadexDto != null) {
-            val dataSaver = sourceMangadexDto.chapter
-            val baseUrl = sourceMangadexDto.baseUrl
-            val hash = dataSaver.hash
-
-            dataSaver.data.map { "$baseUrl/data/$hash/$it" }
-        } else {
-            emptyList()
-        }
-
-        return ChapterRemoteInfoDto(
-            id = remoteInfoDto.id,
-            volume = attributes.volume,
-            chapter = attributes.chapter,
-            title = attributes.title,
-            scanlator = scanlatorName,
-            pages = attributes.pages,
-            mangadexVersion = remoteInfoDto.version,
-            pageUrls = pagesUrls
-        )
     }
 }

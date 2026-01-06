@@ -1,6 +1,7 @@
 package br.acerola.manga.local.mapper
 
 import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -21,10 +22,7 @@ fun MangaDirectory.toDto(): MangaDirectoryDto {
 
 fun ChapterArchive.toDto(): ChapterFileDto {
     return ChapterFileDto(
-        id = id,
-        name = chapter,
-        path = path,
-        chapterSort = chapterSort
+        id = id, name = chapter, path = path, chapterSort = chapterSort
     )
 }
 
@@ -41,9 +39,39 @@ fun MangaDirectoryDto.toModel(): MangaDirectory {
 
 fun ChapterFileDto.toModel(folderId: Long): ChapterArchive {
     return ChapterArchive(
-        chapter = name,
-        path = path,
+        chapter = name, path = path, chapterSort = chapterSort, folderPathFk = folderId
+    )
+}
+
+fun List<ChapterArchive>.toPageDto(
+    pageSize: Int = this.size, total: Int = this.size, page: Int = 0
+): ChapterArchivePageDto {
+    return ChapterArchivePageDto(
+        items = this.map { it.toDto() }, pageSize = pageSize, total = total, page = page
+    )
+}
+
+fun DocumentFile.toMangaDirectoryModel(
+    cover: DocumentFile?, banner: DocumentFile?, chapterTemplate: String?
+): MangaDirectory {
+    return MangaDirectory(
+        name = name ?: "Unknown",
+        path = uri.toString(),
+        cover = cover?.uri?.toString(),
+        banner = banner?.uri?.toString(),
+        chapterTemplate = chapterTemplate,
+        lastModified = lastModified(),
+    )
+}
+
+fun DocumentFile.toChapterArchiveModel(
+    mangaId: Long, chapterSort: String, checksum: String
+): ChapterArchive {
+    return ChapterArchive(
+        chapter = name ?: "",
+        path = uri.toString(),
+        checksum = checksum,
         chapterSort = chapterSort,
-        folderPathFk = folderId
+        folderPathFk = mangaId
     )
 }

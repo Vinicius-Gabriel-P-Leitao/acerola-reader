@@ -4,6 +4,7 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.mapper.toDto
+import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.port.LibraryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,13 +31,7 @@ class ChapterArchiveRepository @Inject constructor(
      */
     override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
-            // TODO: Criar um toDto
-            ChapterArchivePageDto(
-                items = list.map { it.toDto() },
-                pageSize = list.size,
-                total = list.size,
-                page = 0,
-            )
+            list.toPageDto()
         }.stateIn(
             started = SharingStarted.Lazily,
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
@@ -55,11 +50,9 @@ class ChapterArchiveRepository @Inject constructor(
 
         val items = chapterArchiveDao.getChaptersPaged(
             pageSize = pageSize, folderId = mangaId, offset = offset
-        ).map { it.toDto() }
-
-        return ChapterArchivePageDto(
-            items = items, page = page, pageSize = pageSize, total = realTotal
         )
+
+        return items.toPageDto(pageSize = pageSize, total = realTotal, page = page)
     }
 
     override fun observeSpecificChapters(
@@ -68,12 +61,7 @@ class ChapterArchiveRepository @Inject constructor(
     ): kotlinx.coroutines.flow.Flow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaAndSorts(folderId = mangaId, chapters = chapters)
             .map { list ->
-                ChapterArchivePageDto(
-                    items = list.map { it.toDto() },
-                    pageSize = list.size,
-                    total = list.size,
-                    page = 0,
-                )
+                list.toPageDto()
             }
     }
 }

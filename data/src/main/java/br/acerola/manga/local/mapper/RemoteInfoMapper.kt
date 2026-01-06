@@ -34,47 +34,37 @@ fun RemoteInfoRelations.toDto(firstPage: ChapterRemoteInfoPageDto): MangaRemoteI
 
 fun Author.toDto(): AuthorDto {
     return AuthorDto(
-        id = mirrorId,
-        name = name,
-        type = type.type
+        id = mirrorId, name = name, type = type.type
     )
 }
 
 fun AuthorDto.toModel(): Author {
     return Author(
-        name = name,
-        type = TypeAuthor.getByType(type),
-        mirrorId = id
+        name = name, type = TypeAuthor.getByType(type), mirrorId = id
     )
 }
 
 fun Genre.toDto(): GenreDto {
     return GenreDto(
-        id = mirrorId,
-        name = genre
+        id = mirrorId, name = genre
     )
 }
 
 fun GenreDto.toModel(): Genre {
     return Genre(
-        genre = name,
-        mirrorId = id
+        genre = name, mirrorId = id
     )
 }
 
 fun Cover.toDto(): CoverDto {
     return CoverDto(
-        id = mirrorId,
-        fileName = fileName,
-        url = url
+        id = mirrorId, fileName = fileName, url = url,
     )
 }
 
 fun CoverDto.toModel(): Cover {
     return Cover(
-        fileName = fileName,
-        url = url,
-        mirrorId = id
+        fileName = fileName, url = url, mirrorId = id
     )
 }
 
@@ -87,22 +77,17 @@ fun ChapterRemoteInfo.toDto(
         chapter = chapter,
         pageCount = pageCount,
         scanlation = scanlation.orEmpty(),
-        source = sources.sortedBy { it.pageNumber }.map { it.toDto() }
-    )
+        source = sources.sortedBy { it.pageNumber }.map { it.toDto() })
 }
 
 fun ChapterDownloadSource.toDto(): ChapterSourceDto {
     return ChapterSourceDto(
-        pageNumber = pageNumber,
-        imageUrl = imageUrl,
-        downloaded = downloaded
+        pageNumber = pageNumber, imageUrl = imageUrl, downloaded = downloaded
     )
 }
 
 fun MangaRemoteInfoDto.toModel(
-    authorId: Long?,
-    coverId: Long?,
-    genreId: Long?
+    authorId: Long?, coverId: Long?, genreId: Long?
 ): MangaRemoteInfo {
     return MangaRemoteInfo(
         mirrorId = this.mirrorId,
@@ -134,10 +119,18 @@ fun ChapterRemoteInfoDto.toDownloadSources(
 ): List<ChapterDownloadSource> {
     return pageUrls.mapIndexed { index, url ->
         ChapterDownloadSource(
-            pageNumber = index,
-            imageUrl = url,
-            downloaded = false,
-            chapterFk = chapterFk
+            pageNumber = index, imageUrl = url, downloaded = false, chapterFk = chapterFk
         )
     }
+}
+
+fun List<ChapterRemoteInfo>.toPageDto(
+    sources: List<ChapterDownloadSource> = emptyList(), pageSize: Int = this.size, total: Int = this.size, page: Int = 0
+): ChapterRemoteInfoPageDto {
+    return ChapterRemoteInfoPageDto(
+        items = this.map { it.toDto(sources.filter { source -> source.chapterFk == it.id }) },
+        pageSize = pageSize,
+        total = total,
+        page = page
+    )
 }

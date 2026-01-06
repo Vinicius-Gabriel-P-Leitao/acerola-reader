@@ -19,6 +19,7 @@ import br.acerola.manga.local.database.entity.metadata.ChapterRemoteInfo
 import br.acerola.manga.local.mapper.toDownloadSources
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toModel
+import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.port.ApiRepository
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.repository.port.Mangadex
@@ -178,12 +179,11 @@ class MangadexMangaRepository @Inject constructor(
             emptyList()
         }
 
-        // TODO: Criar toDto
-        return ChapterRemoteInfoPageDto(
-            items = initialChapter.map { it.toDto(sources = initialChapterSource) },
+        return initialChapter.toPageDto(
+            sources = initialChapterSource,
             pageSize = pageSize,
             total = total,
-            page = 0,
+            page = 0
         )
     }
 }

@@ -10,7 +10,7 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.mapper.toChapterArchiveModel
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.util.sha256
@@ -79,11 +79,8 @@ class MangaDirectoryRepository @Inject constructor(
 
                 archiveDao.deleteChaptersByMangaDirectoryId(folderId = mangaId)
 
-                // TODO: Fazer lógica de validação melhor
                 val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}{sub}.*.cbz")
 
-                // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
-                //  tem que seguir um formato só, mais de um a lista fica desorganizada.
                 val chapters = chapterFiles.mapIndexedNotNull { index, file ->
                     val name = file.name ?: return@mapIndexedNotNull null
                     val match = chapterRegex.matchEntire(input = name) ?: return@mapIndexedNotNull null
@@ -99,13 +96,10 @@ class MangaDirectoryRepository @Inject constructor(
                     val currentProgress = 30 + ((index + 1) * 60 / chapterFiles.size)
                     _progress.value = currentProgress
 
-                    // TODO: Tranformar em um toModel
-                    ChapterArchive(
-                        chapter = name,
-                        path = file.uri.toString(),
-                        checksum = file.sha256(context),
+                    file.toChapterArchiveModel(
+                        mangaId = mangaId,
                         chapterSort = chapterSort,
-                        folderPathFk = mangaId
+                        checksum = file.sha256(context)
                     )
                 }
 
