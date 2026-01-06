@@ -46,8 +46,8 @@ fun ChapterItem(
                 Text(
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    text = chapterRemoteInfoDto?.title
-                        ?: stringResource(id = R.string.title_chapter_item_chapter_number, chapterFileDto.chapterSort),
+                    text = chapterRemoteInfoDto?.title?.takeIf { it.isNotBlank() }
+                        ?: stringResource(id = R.string.title_chapter_item_chapter_number, chapterFileDto.chapterSort)
                 )
 
                 if (chapterFileDto.name.isNotEmpty()) {

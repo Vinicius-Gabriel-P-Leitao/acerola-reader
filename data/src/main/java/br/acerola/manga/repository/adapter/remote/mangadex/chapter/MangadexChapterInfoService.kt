@@ -17,8 +17,6 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// ...
-
 @Singleton
 class MangadexChapterInfoService @Inject constructor(
     private val api: MangadexChapterInfoApi
@@ -30,9 +28,12 @@ class MangadexChapterInfoService @Inject constructor(
         val allChapters = mutableListOf<ChapterRemoteInfoDto>()
         val semaphore = Semaphore(permits = 3)
         var currentOffset = offset
+
         var error: NetworkError? = null
 
         while (true) {
+            println("DEBUG API: Fetching Feed Batch - Offset=$currentOffset | Limit=$limit")
+
             val responseFeedResult = safeApiCall {
                 api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
             }
@@ -48,9 +49,13 @@ class MangadexChapterInfoService @Inject constructor(
             val processedBatch = chaptersData.map { item ->
                 async {
                     semaphore.withPermit {
-                        // NOTE: Ignorar erro para imagens de capítulos individuais, retornar fonte nula
                         val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
                         val source = sourceResult.getOrNull()
+
+                        if (source == null) {
+                            // TODO: Dar um callback visual depois
+                            println("DEBUG API: [!] No images found or error for Chapter ${item.attributes.chapter}")
+                        }
 
                         fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
                     }
@@ -61,6 +66,8 @@ class MangadexChapterInfoService @Inject constructor(
             currentOffset += 100
 
             if (currentOffset >= responseFeed.total) {
+                // TODO: Dar um callback visual depois
+                println("DEBUG API: Finished. All $currentOffset chapters processed.")
                 break
             }
         }
@@ -86,7 +93,6 @@ class MangadexChapterInfoService @Inject constructor(
 
             dataSaver.data.map { "$baseUrl/data/$hash/$it" }
         } else {
-            // NOTE: Caso não tenha nenhuma pagina fica vázio mesmo
             emptyList()
         }
 

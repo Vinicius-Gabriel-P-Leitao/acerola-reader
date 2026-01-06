@@ -125,7 +125,7 @@ class ArchiveSyncService @Inject constructor(
                         }
                     }
 
-                    processFolderList(foldersToProcess, databaseFolders)
+                    processFolderList(foldersToProcess, existingFolders = databaseFolders)
                 }.mapLeft { exception ->
                     when (exception) {
                         is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
@@ -235,6 +235,7 @@ class ArchiveSyncService @Inject constructor(
                                         try {
                                             mangaDirectoryOps.rescanChaptersByManga(mangaId = folder.id)
                                                 .onLeft {
+                                                    // TODO: Tratar melhor
                                                     println("Error scanning chapters for ${folder.name}: $it")
                                                 }
                                         } finally {
@@ -351,10 +352,6 @@ class ArchiveSyncService @Inject constructor(
         directoryDao.insert(entity = folder)
     }
 
-    private fun normalizeName(name: String): String {
-        return name.filter { it.isLetterOrDigit() }.lowercase()
-    }
-
     private fun buildLibrary(context: Context, rootUri: Uri): List<MangaDirectory> {
         val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
 
@@ -365,7 +362,10 @@ class ArchiveSyncService @Inject constructor(
             val firstChapter = folder.listFiles().firstOrNull { file ->
                 file.isFile && FileExtension.isSupported(ext = file.name)
             }
-            val detectedTemplate = firstChapter?.name?.let { detectTemplate(fileName = it) }
+
+            val detectedTemplate = firstChapter?.name?.let {
+                detectTemplate(fileName = it)
+            }
 
             // TODO: Criar toModel
             MangaDirectory(
@@ -389,4 +389,9 @@ class ArchiveSyncService @Inject constructor(
         val name = file.name?.lowercase() ?: return false
         return name.contains(other = "banner") && (name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png"))
     }
+
+    private fun normalizeName(name: String): String {
+        return name.filter { it.isLetterOrDigit() }.lowercase()
+    }
+
 }

@@ -51,11 +51,12 @@ class MangaDirectoryOperation @Inject constructor(
                 val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@catch
                 val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@catch
 
-                val chaptersExist = archiveDao.countChaptersByMangaDirectory(folderId = mangaId) > 0
-
-                if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
-                    return@catch
-                }
+//                NOTE: Isso aqui vai existir só quando eu quiser pegar os que não existem no DB
+//                val chaptersExist = archiveDao.countChaptersByMangaDirectory(folderId = mangaId) > 0
+//
+//                if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
+//                    return@catch
+//                }
 
                 val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
                     FileExtension.isSupported(ext = file.name)
@@ -64,22 +65,23 @@ class MangaDirectoryOperation @Inject constructor(
                 archiveDao.deleteChaptersByMangaDirectoryId(folderId = mangaId)
 
                 // TODO: Fazer lógica de validação melhor
-                val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}.cbz")
+                val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}{sub}.*.cbz")
+                println("DEBUG: chapterRegex=$chapterRegex")
 
                 // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
                 //  tem que seguir um formato só, mais de um a lista fica desorganizada.
                 val chapters = chapterFiles.mapNotNull { file ->
                     val name = file.name ?: return@mapNotNull null
-
                     val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
-                    val value = match.groups[1]?.value?.toDoubleOrNull() ?: return@mapNotNull null
 
-                    val subGroup = if (match.groups.size > 2) match.groups[2] else null
-                    val sub = subGroup?.value?.toDoubleOrNull() ?: 0.0
+                    val mainInt = match.groupValues[1].toInt()
 
-                    val chapterSort = "%05.2f".format(value + sub)
+                    val subRaw = match.groupValues.getOrNull(index = 2)
+                    val subInt = subRaw?.toIntOrNull() ?: 0
 
-                    // TODO: Tranformar em um toModel
+                    val chapterSort = if (subInt == 0) mainInt.toString()
+                    else "$mainInt.$subInt"
+
                     ChapterArchive(
                         chapter = name,
                         path = file.uri.toString(),
@@ -104,8 +106,8 @@ class MangaDirectoryOperation @Inject constructor(
                     is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
                 }
+            }
         }
-    }
 
     /**
      * Retorna um fluxo reativo contendo todos os mangás e seus capítulos associados, os dados são inseridos no sync.

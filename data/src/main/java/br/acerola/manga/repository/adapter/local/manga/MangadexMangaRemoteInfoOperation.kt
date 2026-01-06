@@ -59,11 +59,11 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
     override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             Either.catch {
-                val mirrorId = mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }.firstOrNull()
+                // NOTE: Retornar o mirrorId -> no flatMap
+                mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }.firstOrNull()
                     ?: throw MangadexRequestException(
                         title = R.string.title_download_error, description = R.string.description_error_download_failed
                     )
-                mirrorId
             }.mapLeft { exception ->
                 when (exception) {
                     is MangadexRequestException -> LibrarySyncError.NetworkError(cause = exception)
@@ -76,9 +76,9 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
             }.flatMap { remoteChapters ->
                 Either.catch {
                     val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
-                    val pairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
+                    val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
 
-                    pairs.forEach { (archive, remote) ->
+                    chapterPairs.forEach { (archive, remote) ->
                         val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
                         val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
@@ -120,17 +120,22 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
         remote: List<ChapterRemoteInfoDto>,
         local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
-        val remoteByChapter = remote.groupBy { it.chapter?.normalizeChapter() }.mapValues { (_, list) ->
-                list.maxBy { it.mangadexVersion }
-            }
+        // NOTE: Organiza os capitulos e normaliza o indentifier do capitulo
+        val remoteByChapter = remote.mapNotNull { dto ->
+            val key = dto.chapter?.normalizeChapter()
+            if (key == null) null else key to dto
+        }.groupBy(keySelector = { it.first }, valueTransform = { it.second }).mapValues { (_, list) ->
+            list.maxBy { it.mangadexVersion }
+        }
 
+        // NOTE: Compara com os locais usando a MESMA chave normalizada
         return local.mapNotNull { archive ->
             val key = archive.chapterSort.normalizeChapter()
             val remoteInfo = remoteByChapter[key]
 
             if (remoteInfo == null) {
-                // TODO: Tratar melhor
-                println("DEBUG: Falha no Match - Local: $key não encontrado no Remoto")
+                // TODO: Fazer callback visual, talvez uma exception personalizada
+                println("DEBUG: Miss de match RemoteKey=${remoteByChapter[key]} | LocalKey=$key | Path=${archive.chapter}")
                 return@mapNotNull null
             }
 

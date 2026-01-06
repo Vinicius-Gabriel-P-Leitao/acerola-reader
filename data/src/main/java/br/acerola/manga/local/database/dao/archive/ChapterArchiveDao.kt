@@ -22,11 +22,21 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
 
     @Query(
         value = """
-            SELECT *
-            FROM chapter_archive
-            WHERE folder_path_fk = :folderId 
-            ORDER BY CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
-        """
+        SELECT *
+        FROM chapter_archive
+        WHERE folder_path_fk = :folderId 
+        ORDER BY 
+            -- NOTE: Ordena pela parte inteira (antes do ponto)
+            CAST(chapter_sort AS INTEGER) ASC, 
+            -- NOTE: Ordena pela parte decimal (depois do ponto) como um número inteiro
+            CAST(
+                CASE 
+                    WHEN chapter_sort LIKE '%.%' 
+                    THEN SUBSTR(chapter_sort, INSTR(chapter_sort, '.') + 1) 
+                    ELSE 0 
+                END AS INTEGER
+            ) ASC
+    """
     )
     fun getChaptersByMangaDirectory(folderId: Long): Flow<List<ChapterArchive>>
 
@@ -35,7 +45,17 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
             SELECT *
             FROM chapter_archive
             WHERE folder_path_fk = :folderId
-            ORDER BY CAST(REPLACE(chapter_sort, ',', '.') AS REAL) ASC
+            ORDER BY 
+                -- NOTE: Ordena pela parte inteira (antes do ponto)
+                CAST(chapter_sort AS INTEGER) ASC, 
+                -- NOTE: Ordena pela parte decimal (depois do ponto) como um número inteiro
+                CAST(
+                    CASE    
+                        WHEN chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_sort, INSTR(chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC
             LIMIT :pageSize OFFSET :offset
         """
     )

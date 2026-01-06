@@ -54,12 +54,11 @@ fun MangaScreen(
     val listState = rememberLazyListState()
 
     val totalChapters = chapterDto?.archive?.total ?: 0
-
     val currentPage = chapterDto?.archive?.page ?: 1
 
     val totalChaptersPerPage = remember(key1 = chapterDto?.archive?.total, key2 = chapterDto?.archive?.pageSize) {
-        val total = chapterDto?.archive?.total ?: 0
         val size = chapterDto?.archive?.pageSize ?: 1
+        val total = chapterDto?.archive?.total ?: 0
 
         if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
     }

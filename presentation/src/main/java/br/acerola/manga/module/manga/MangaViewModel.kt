@@ -68,6 +68,7 @@ class MangaViewModel @Inject constructor(
         }
     }
 
+    // WARN: Só no mangadex tem rota para dados tão detalhados para capitulos
     private suspend fun loadPage(page: Int) {
         val folderId = _selectedDirectoryId.value ?: return
         val mangaId = _selectedMangaId.value
