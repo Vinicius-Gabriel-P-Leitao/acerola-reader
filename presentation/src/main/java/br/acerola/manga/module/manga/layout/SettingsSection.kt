@@ -27,13 +27,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 
+// TODO: Criar string para tudo
 fun LazyListScope.settingsSection(
     directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
@@ -43,18 +43,16 @@ fun LazyListScope.settingsSection(
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Teste",
+            title = "Cofigurções dos arquivos",
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
         ) {
             // TODO: Virar component
             SmartCard(
-                type = CardType.CONTENT,
-                colors = CardDefaults.elevatedCardColors(
+                type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                elevation = CardDefaults.elevatedCardElevation(
+                ), elevation = CardDefaults.elevatedCardElevation(
                     defaultElevation = 8.dp, pressedElevation = 12.dp
                 )
             ) {
@@ -73,52 +71,28 @@ fun LazyListScope.settingsSection(
                                 imageVector = Icons.Filled.Sync,
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(size = 22.dp),
-                                contentDescription = "Sincronizar arquivos do mangá",
+                                contentDescription = "Prefencias",
                             )
                         }
 
                         Spacer(modifier = Modifier.width(width = 12.dp))
 
                         Text(
-                            text = "Sincronizar arquivos",
+                            text = "Preferencias da pagina de mangás",
                             color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
-
-                    Divider()
-
-                    // TODO: Criar string
-                    ListItem(
-                        modifier = Modifier.clickable { mangaDirectoryViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
-                        headlineContent = {
-                            Text(text = "Sincronizar arquivos dos capítulos")
-                        },
-                        supportingContent = {
-                            Text(text = "Sincroniza métadados de cada capitulo do mangá")
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Default.Sync, contentDescription = null
-                            )
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        )
-                    )
                 }
             }
         }
     }
 
-    item {
-        Spacer(modifier = Modifier.height(height = 12.dp))
-    }
 
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Teste",
+            title = "Cofigurções dos arquivos",
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
@@ -159,13 +133,125 @@ fun LazyListScope.settingsSection(
                         )
                     }
 
+
+                    ListItem(
+                        modifier = Modifier.clickable { mangaDirectoryViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
+                        headlineContent = {
+                            Text(text = "Sincronizar arquivos dos capítulos")
+                        },
+                        supportingContent = {
+                            Text(text = "Sincroniza métadados de cada capitulo do mangá")
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.Sync, contentDescription = null
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(width = 12.dp))
+
+
+                    ListItem(
+                        modifier = Modifier.clickable {
+                            /* TODO: Função de sincronizar dados do mangá */
+                        },
+                        headlineContent = {
+                            Text(text = "Sincronizar cover e banner")
+                        },
+                        supportingContent = {
+                            Text(text = "Vai buscar os cover e banners já baixados na pasta do mangá")
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.Sync, contentDescription = null
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    item {
+        Spacer(modifier = Modifier.height(height = 12.dp))
+    }
+
+    item {
+        SmartCard(
+            type = CardType.CONTENT,
+            title = "Sincronizar com mangadex",
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+        ) {
+            // TODO: Virar component
+            SmartCard(
+                type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ), elevation = CardDefaults.elevatedCardElevation(
+                    defaultElevation = 8.dp, pressedElevation = 12.dp
+                )
+            ) {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(size = 40.dp)
+                                .clip(CircleShape)
+                                .background(color = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Sync,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(size = 22.dp),
+                                contentDescription = "Sincronizar arquivos do mangá",
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(width = 12.dp))
+
+                        Text(
+                            text = "Sincronizar arquivos",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    ListItem(
+                        headlineContent = {
+                            Text(text = "Sincronizar metádados do manga")
+                        }, supportingContent = {
+                            Text(text = "Sincronizar os metadados do manga")
+                        }, modifier = Modifier.clickable {
+                            /* TODO: Função de sincronizar dados do mangá */
+                        }, leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowUpward, contentDescription = null
+                            )
+                        }, colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(width = 12.dp))
+
                     // TODO: Criar string e criar lógica para não aparecer quando os dados vem do mangádex
                     if (remoteInfo != null) {
                         ListItem(
                             headlineContent = {
-                                Text(text = "Sincronizar metádados dos capítulos")
+                                Text(text = "Sincronizar metadados dos capítulos")
                             }, supportingContent = {
-                                Text(text = "Sincroniza métadados de cada capitulo do mangá, baseado na numeração do capitulo, só para mangádex")
+                                Text(text = "Sincroniza metadados de cada capitulo do mangá, baseado na numeração do capitulo, só para mangadex")
                             }, modifier = Modifier.clickable {
                                 mangaRemoteInfoViewModel.syncChaptersByMangaRemoteInfo(mangaId = remoteInfo.id!!)
                             }, leadingContent = {

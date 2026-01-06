@@ -1,6 +1,7 @@
 package br.acerola.manga.module.manga
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -17,8 +18,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
@@ -49,6 +52,8 @@ fun MangaScreen(
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
     val chapterDto by mangaViewModel.chapters.collectAsState()
+    val isIndexing by mangaViewModel.isIndexing.collectAsState()
+    val progress by mangaViewModel.progress.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -81,61 +86,75 @@ fun MangaScreen(
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground
-    ) { paddingValues ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-        ) {
-            item(
-                key = "header_${manga.remoteInfo?.title}", contentType = "header"
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground
+        ) { paddingValues ->
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
-                MangaHeader(
-                    manga = manga
-                )
-            }
+                item(
+                    key = "header_${manga.remoteInfo?.title}", contentType = "header"
+                ) {
+                    MangaHeader(
+                        manga = manga
+                    )
+                }
 
-            item(
-                key = "tabs_${manga.remoteInfo?.title}", contentType = "tabs"
-            ) {
-                MangaTabs(
-                    totalChapters = totalChapters,
-                    activeTab = selectedTab,
-                    onTabSelected = { selectedTab = it },
-                )
-            }
+                item(
+                    key = "tabs_${manga.remoteInfo?.title}", contentType = "tabs"
+                ) {
+                    MangaTabs(
+                        totalChapters = totalChapters,
+                        activeTab = selectedTab,
+                        onTabSelected = { selectedTab = it },
+                    )
+                }
 
-            when (selectedTab) {
-                MainTab.CHAPTERS -> {
-                    chapterDto?.let {
-                        chaptersSection(
-                            chapters = it,
-                            currentPage = currentPage,
-                            totalPages = totalChaptersPerPage,
-                            onChapterClick = handleChapterClick,
-                            onPageChange = handlePageChange
+                when (selectedTab) {
+                    MainTab.CHAPTERS -> {
+                        chapterDto?.let {
+                            chaptersSection(
+                                chapters = it,
+                                currentPage = currentPage,
+                                totalPages = totalChaptersPerPage,
+                                onChapterClick = handleChapterClick,
+                                onPageChange = handlePageChange
+                            )
+                        }
+                    }
+
+                    MainTab.SETTINGS -> {
+                        settingsSection(
+                            directory = manga.directory,
+                            remoteInfo = manga.remoteInfo,
+                            mangaDirectoryViewModel = mangaDirectoryViewModel,
+                            mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
                         )
                     }
                 }
 
-                MainTab.SETTINGS -> {
-                    settingsSection(
-                        directory = manga.directory,
-                        remoteInfo = manga.remoteInfo,
-                        mangaDirectoryViewModel = mangaDirectoryViewModel,
-                        mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
-                    )
+                item(
+                    key = "spacer_${manga.remoteInfo?.title}", contentType = "tabs"
+                ) {
+                    Spacer(modifier = Modifier.height(height = 24.dp))
                 }
             }
-
-            item(
-                key = "spacer_${manga.remoteInfo?.title}", contentType = "tabs"
-            ) {
-                Spacer(modifier = Modifier.height(height = 24.dp))
-            }
+        }
+        
+        Box(
+            contentAlignment = Alignment.BottomStart,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(all = 8.dp),
+        ) {
+            ProgressIndicator(
+                isLoading = isIndexing,
+                progress = if (progress >= 0) progress / 100f else null,
+            )
         }
     }
 }

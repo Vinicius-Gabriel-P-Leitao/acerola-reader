@@ -22,8 +22,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
@@ -37,6 +39,12 @@ class MangaDirectoryOperation @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val archiveDao: ChapterArchiveDao
 ) : LibraryRepository.MangaOperations<MangaDirectoryDto> {
+    private val _progress = MutableStateFlow(value = -1)
+    override val progress: StateFlow<Int> = _progress.asStateFlow()
+
+    private val _isIndexing = MutableStateFlow(value = false)
+    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
     /**
      * Reescaneia todos os capítulos vinculados a um mangá específico.
      *
@@ -47,41 +55,51 @@ class MangaDirectoryOperation @Inject constructor(
      */
     override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
+            _isIndexing.value = true
+            _progress.value = 0
+
             Either.catch {
                 val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@catch
                 val folderDoc = DocumentFile.fromTreeUri(context, folder.path.toUri()) ?: return@catch
 
-//                NOTE: Isso aqui vai existir só quando eu quiser pegar os que não existem no DB
-//                val chaptersExist = archiveDao.countChaptersByMangaDirectory(folderId = mangaId) > 0
-//
-//                if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
-//                    return@catch
-//                }
+                // NOTE: Isso aqui vai existir só quando eu quiser pegar os que não existem no DB
+                val chaptersExist = archiveDao.countChaptersByMangaDirectory(folderId = mangaId) > 0
+
+                if (chaptersExist && folder.lastModified >= folderDoc.lastModified()) {
+                    return@catch
+                }
+
+                _progress.value = 10
 
                 val chapterFiles = folderDoc.listFiles().filter { it.isFile }.filter { file ->
                     FileExtension.isSupported(ext = file.name)
                 }
 
+                _progress.value = 30
+
                 archiveDao.deleteChaptersByMangaDirectoryId(folderId = mangaId)
 
                 // TODO: Fazer lógica de validação melhor
                 val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}{sub}.*.cbz")
-                println("DEBUG: chapterRegex=$chapterRegex")
 
                 // TODO: Tratar erro de quando não consegue dar nenhum match, lembrar de avisar o miserável de que o mangá
                 //  tem que seguir um formato só, mais de um a lista fica desorganizada.
-                val chapters = chapterFiles.mapNotNull { file ->
-                    val name = file.name ?: return@mapNotNull null
-                    val match = chapterRegex.matchEntire(input = name) ?: return@mapNotNull null
+                val chapters = chapterFiles.mapIndexedNotNull { index, file ->
+                    val name = file.name ?: return@mapIndexedNotNull null
+                    val match = chapterRegex.matchEntire(input = name) ?: return@mapIndexedNotNull null
 
-                    val mainInt = match.groupValues[1].toInt()
+                    val integerPart = match.groupValues[1].toInt()
 
-                    val subRaw = match.groupValues.getOrNull(index = 2)
-                    val subInt = subRaw?.toIntOrNull() ?: 0
+                    val fractionalPartRaw = match.groupValues.getOrNull(index = 2)
+                    val fractionalPart = fractionalPartRaw?.toIntOrNull() ?: 0
 
-                    val chapterSort = if (subInt == 0) mainInt.toString()
-                    else "$mainInt.$subInt"
+                    val chapterSort = if (fractionalPart == 0) integerPart.toString()
+                    else "$integerPart.$fractionalPart"
 
+                    val currentProgress = 30 + ((index + 1) * 60 / chapterFiles.size)
+                    _progress.value = currentProgress
+
+                    // TODO: Tranformar em um toModel
                     ChapterArchive(
                         chapter = name,
                         path = file.uri.toString(),
@@ -98,6 +116,8 @@ class MangaDirectoryOperation @Inject constructor(
                 if (folder.lastModified < folderDoc.lastModified()) {
                     directoryDao.update(entity = folder.copy(lastModified = folderDoc.lastModified()))
                 }
+
+                _progress.value = 100
             }.mapLeft { exception ->
                 when (exception) {
                     is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
@@ -106,6 +126,9 @@ class MangaDirectoryOperation @Inject constructor(
                     is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
                 }
+            }.also {
+                _isIndexing.value = false
+                _progress.value = -1
             }
         }
 

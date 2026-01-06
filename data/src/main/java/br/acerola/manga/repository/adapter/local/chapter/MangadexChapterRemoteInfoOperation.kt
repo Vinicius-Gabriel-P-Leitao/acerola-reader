@@ -67,8 +67,7 @@ class MangadexChapterRemoteInfoOperation @Inject constructor(
         val chapters = chapterRemoteInfoDao.getChaptersPaged(mangaId, pageSize, offset)
 
         val sources = if (chapters.isNotEmpty()) {
-            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(
-                chapterId = chapters.map { it.id }).first()
+            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(chapterId = chapters.map { it.id }).first()
         } else {
             emptyList()
         }

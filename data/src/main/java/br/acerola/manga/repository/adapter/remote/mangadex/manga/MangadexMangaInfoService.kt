@@ -24,14 +24,14 @@ class MangadexMangaInfoService @Inject constructor(
     @param:ApplicationContext private val context: Context, private val api: MangadexMangaInfoApi
 ) : ApiRepository.RemoteInfoOperations<MangaRemoteInfoDto, String> {
 
+    // TODO: Criar um progresso simples, esse progresso vai ser só pra saber que isso iniciou
     override suspend fun searchInfo(
-        manga: String, limit: Int, offset: Int, vararg extra: String?
+        manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<MangaRemoteInfoDto>> = safeApiCall {
         withContext(context = Dispatchers.IO) {
             val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
             fromMangaDataList(dataList = response.data)
         }
-
     }
 
     private fun fromMangaData(mangaMangadexDto: MangaMangadexDto): MangaRemoteInfoDto {
@@ -67,7 +67,7 @@ class MangadexMangaInfoService @Inject constructor(
         val romanji: String? = attributes.altTitlesList.flatMap { it.entries }.find { it.key == "ja-ro" }?.value
             ?: attributes.titleMap["ja-ro"]
 
-        // TODO: Tranformar em um toDto
+        // TODO: Tranformar em um toDto, e remover esse getString, deixar o titulo vázio, na UI fazer um isNotEmpty()
         return MangaRemoteInfoDto(
             mirrorId = mangaMangadexDto.id,
             title = attributes.title ?: context.getString(R.string.description_manga_untitled),

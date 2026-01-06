@@ -30,6 +30,7 @@ class ChapterArchiveOperation @Inject constructor(
      */
     override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
+            // TODO: Criar um toDto
             ChapterArchivePageDto(
                 items = list.map { it.toDto() },
                 pageSize = list.size,

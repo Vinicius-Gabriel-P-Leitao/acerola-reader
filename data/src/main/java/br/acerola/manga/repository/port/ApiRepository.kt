@@ -7,10 +7,7 @@ import br.acerola.manga.error.message.NetworkError
 interface ApiRepository {
     interface RemoteInfoOperations<R, P> {
         suspend fun searchInfo(
-            manga: String,
-            limit: Int = 10,
-            offset: Int = 0,
-            vararg extra: P?
+            manga: String, limit: Int = 10, offset: Int = 0, onProgress: ((Int) -> Unit)? = null, vararg extra: P?
         ): Either<NetworkError, List<R>>
     }
 

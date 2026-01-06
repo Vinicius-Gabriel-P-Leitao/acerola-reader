@@ -10,4 +10,6 @@
     <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão sendo sincronizados.</string>
     <string name="title_genre_dao_insert_error">Erro ao inserir um gênero de mangá.</string>
     <string name="description_genre_dao_insert_error">Ocorreu um erro ao inserir um gênero de mangá no banco de dados.</string>
+    <string name="title_remote_info_null_error">Sem metadados para os capitulos no mangadex.</string>\
+    <string name="description_remote_info_null_error">Não foi possivel encontrar métadados para nenhum dos capitulos, dentro do servidor do mangadex</string>
 </resources>

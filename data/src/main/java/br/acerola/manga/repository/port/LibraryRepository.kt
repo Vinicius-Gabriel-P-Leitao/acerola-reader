@@ -16,6 +16,8 @@ interface LibraryRepository<T> {
     suspend fun deepRescanLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
 
     interface MangaOperations<T> {
+        val progress: StateFlow<Int>
+        val isIndexing: StateFlow<Boolean>
         fun loadMangas(): StateFlow<List<T>>
         suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit>
     }

@@ -18,11 +18,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,6 +49,29 @@ class MangaViewModel @Inject constructor(
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+
+    val isIndexing: StateFlow<Boolean> = combine(
+        flow = mangaDirectoryOperation.isIndexing, flow2 = mangadexRemoteInfoOperation.isIndexing
+    ) { directoryIndexing, remoteInfoIndexing ->
+        directoryIndexing || remoteInfoIndexing
+    }.stateIn(
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
+    )
+
+    val progress: StateFlow<Int> = combine(
+        flow = mangaDirectoryOperation.isIndexing,
+        flow2 = mangaDirectoryOperation.progress,
+        flow3 = mangadexRemoteInfoOperation.isIndexing,
+        flow4 = mangadexRemoteInfoOperation.progress
+    ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
+        when {
+            directoryBusy && directoryProg != -1 -> directoryProg
+            remoteInfoBusy && remoteInfoProg != -1 -> remoteInfoProg
+            else -> -1
+        }
+    }.stateIn(
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = -1
+    )
 
     // TODO: Transformar em config do DataStore
     private var currentPage = 0

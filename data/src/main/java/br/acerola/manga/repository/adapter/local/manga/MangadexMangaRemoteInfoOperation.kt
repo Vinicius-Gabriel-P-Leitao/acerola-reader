@@ -29,10 +29,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
@@ -56,29 +57,45 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
     @Mangadex
     lateinit var mangadexChapterInfoService: ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
 
+    private val _progress = MutableStateFlow(-1)
+    override val progress: StateFlow<Int> = _progress.asStateFlow()
+
+    private val _isIndexing = MutableStateFlow(false)
+    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
     override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
+            _isIndexing.value = true
+            _progress.value = 0
+
             Either.catch {
-                // NOTE: Retornar o mirrorId -> no flatMap
-                mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }.firstOrNull()
-                    ?: throw MangadexRequestException(
-                        title = R.string.title_download_error, description = R.string.description_error_download_failed
-                    )
+                // NOTE: Retorna o mirrorId -> no flatMap
+                mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }.first()
             }.mapLeft { exception ->
                 when (exception) {
-                    is MangadexRequestException -> LibrarySyncError.NetworkError(cause = exception)
+                    is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
                 }
             }.flatMap { mirrorId ->
-                mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100).mapLeft { networkError ->
-                        LibrarySyncError.NetworkError(cause = null)
-                    }
+                mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100, onProgress = {
+                    _progress.value = it
+                }).mapLeft {
+                    LibrarySyncError.NetworkError(cause = null)
+                }
             }.flatMap { remoteChapters ->
+                _progress.value = 90
                 Either.catch {
                     val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
                     // TODO: Verificar se é otimização, mas as vezes API lança dado válido, porem não consigo ver
                     //  isso na UI ou DB
                     val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
+
+                    if (chapterPairs.isEmpty()) {
+                        throw MangadexRequestException(
+                            title = R.string.title_remote_info_null_error,
+                            description = R.string.description_remote_info_null_error
+                        )
+                    }
 
                     chapterPairs.forEach { (archive, remote) ->
                         val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
@@ -87,12 +104,17 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
                         val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
                         chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
                     }
+                    _progress.value = 100
                 }.mapLeft { exception ->
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                        is MangadexRequestException -> LibrarySyncError.MangadexError(cause = exception)
                         else -> LibrarySyncError.UnexpectedError(cause = exception)
                     }
                 }
+            }.also {
+                _isIndexing.value = false
+                _progress.value = -1
             }
         }
 
@@ -132,14 +154,8 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
 
         // NOTE: Compara com os locais usando a MESMA chave normalizada
         return local.mapNotNull { archive ->
-            val key = archive.chapterSort.normalizeChapter()
-            val remoteInfo = remoteByChapter[key]
-
-            if (remoteInfo == null) {
-                // TODO: Fazer callback visual, talvez uma exception personalizada
-                println("DEBUG: Miss de match RemoteKey=${remoteByChapter[key]} | LocalKey=$key | Path=${archive.chapter}")
-                return@mapNotNull null
-            }
+            val chapterKey = archive.chapterSort.normalizeChapter()
+            val remoteInfo = remoteByChapter[chapterKey] ?: return@mapNotNull null
 
             archive to remoteInfo
         }
@@ -162,6 +178,7 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
             emptyList()
         }
 
+        // TODO: Criar toDto
         return ChapterRemoteInfoPageDto(
             items = initialChapter.map { it.toDto(sources = initialChapterSource) },
             pageSize = pageSize,

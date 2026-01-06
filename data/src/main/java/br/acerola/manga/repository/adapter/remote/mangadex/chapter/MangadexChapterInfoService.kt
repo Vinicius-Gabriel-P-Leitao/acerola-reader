@@ -23,7 +23,7 @@ class MangadexChapterInfoService @Inject constructor(
 ) : ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String> {
 
     override suspend fun searchInfo(
-        manga: String, limit: Int, offset: Int, vararg extra: String?
+        manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<ChapterRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
         val allChapters = mutableListOf<ChapterRemoteInfoDto>()
         val semaphore = Semaphore(permits = 3)
@@ -31,8 +31,17 @@ class MangadexChapterInfoService @Inject constructor(
 
         var error: NetworkError? = null
 
+        // Initial fetch to get total
+        val initialResponseResult = safeApiCall { api.getMangaFeed(mangaId = manga, limit = 1, offset = 0) }
+        val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
+
         while (true) {
             println("DEBUG API: Fetching Feed Batch - Offset=$currentOffset | Limit=$limit")
+
+            if (totalChapters > 0 && onProgress != null) {
+                val progress = ((currentOffset.toFloat() / totalChapters.toFloat()) * 100).toInt()
+                onProgress(progress)
+            }
 
             val responseFeedResult = safeApiCall {
                 api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
@@ -54,7 +63,7 @@ class MangadexChapterInfoService @Inject constructor(
 
                         if (source == null) {
                             // TODO: Dar um callback visual depois
-                            println("DEBUG API: [!] No images found or error for Chapter ${item.attributes.chapter}")
+                            println("DEBUG API: [!] Sem imagens para o chapter ${item.attributes.chapter}")
                         }
 
                         fromChapterData(remoteInfoDto = item, sourceMangadexDto = source)
@@ -67,7 +76,7 @@ class MangadexChapterInfoService @Inject constructor(
 
             if (currentOffset >= responseFeed.total) {
                 // TODO: Dar um callback visual depois
-                println("DEBUG API: Finished. All $currentOffset chapters processed.")
+                println("DEBUG API: Finalizou $currentOffset chapters processados.")
                 break
             }
         }
@@ -78,7 +87,6 @@ class MangadexChapterInfoService @Inject constructor(
             Either.Right(value = allChapters)
         }
     }
-
 
     private fun fromChapterData(
         remoteInfoDto: ChapterMangadexDto, sourceMangadexDto: ChapterSourceMangadexDto? = null
