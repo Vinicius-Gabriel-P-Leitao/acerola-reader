@@ -76,6 +76,8 @@ class MangadexMangaRemoteInfoOperation @Inject constructor(
             }.flatMap { remoteChapters ->
                 Either.catch {
                     val localChapters = chapterDao.getChaptersByMangaDirectory(folderId = mangaId).first()
+                    // TODO: Verificar se é otimização, mas as vezes API lança dado válido, porem não consigo ver
+                    //  isso na UI ou DB
                     val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
 
                     chapterPairs.forEach { (archive, remote) ->
