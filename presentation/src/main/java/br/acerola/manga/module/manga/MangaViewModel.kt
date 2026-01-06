@@ -9,9 +9,10 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.repository.di.DirectoryFsOps
-import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.di.MangadexFsOps
+import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,14 +32,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MangaViewModel @Inject constructor(
-    @param:DirectoryFsOps private val mangaDirectoryRepository: LibraryRepository.MangaOperations<MangaDirectoryDto>,
-
-    @param:MangadexFsOps private val mangadexMangaRepository: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
-
-    @param:DirectoryFsOps private val chapterFileRepository: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
-
-    @param:MangadexFsOps private val mangadexChapterRepository: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>,
+    @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
+    @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
+    @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
+
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
     val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
@@ -52,18 +51,17 @@ class MangaViewModel @Inject constructor(
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     val isIndexing: StateFlow<Boolean> = combine(
-        flow = mangaDirectoryRepository.isIndexing, flow2 = mangadexMangaRepository.isIndexing
+        flow = directoryObserve.isIndexing, flow2 = mangadexObserve.isIndexing
     ) { directoryIndexing, remoteInfoIndexing ->
         directoryIndexing || remoteInfoIndexing
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
     )
-
     val progress: StateFlow<Int> = combine(
-        flow = mangaDirectoryRepository.isIndexing,
-        flow2 = mangaDirectoryRepository.progress,
-        flow3 = mangadexMangaRepository.isIndexing,
-        flow4 = mangadexMangaRepository.progress
+        flow = directoryObserve.isIndexing,
+        flow2 = directoryObserve.progress,
+        flow3 = mangadexObserve.isIndexing,
+        flow4 = mangadexObserve.progress
     ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
         when {
             directoryBusy && directoryProg != -1 -> directoryProg
@@ -86,6 +84,7 @@ class MangaViewModel @Inject constructor(
         viewModelScope.launch {
             loadPage(page = 0)
         }
+
     }
 
     fun loadPageAsync(page: Int) {
@@ -102,24 +101,30 @@ class MangaViewModel @Inject constructor(
         currentPage = page
 
         if (total == 0) {
-            total = chapterFileRepository.loadChapterPage(mangaId = folderId, total = 0, page = 0, pageSize = pageSize).total
+            total = directoryGetChapters.loadPage(
+                mangaId = folderId, total = 0, page = 0, pageSize = pageSize
+            ).total
         }
 
-        val localPage = chapterFileRepository.loadChapterPage(
+        val localPage = directoryGetChapters.loadPage(
             mangaId = folderId, total = total, page = page, pageSize = pageSize
         )
 
-        val chapterSorts = localPage.items.map { it.chapterSort }
+        val chapterSorts = localPage.items.map {
+            it.chapterSort
+        }
 
         val remotePage = mangaId?.let {
-            mangadexChapterRepository.observeSpecificChapters(
+            mangadexGetChapters.observeSpecific(
                 mangaId = it, chapters = chapterSorts
             ).first()
         } ?: ChapterRemoteInfoPageDto(
             items = emptyList(), pageSize = pageSize, page = page, total = total
         )
 
-        val remoteMap = remotePage.items.associateBy { it.chapter.normalizeChapter() }
+        val remoteMap = remotePage.items.associateBy {
+            it.chapter.normalizeChapter()
+        }
 
         val filteredRemoteItems = localPage.items.mapNotNull {
             remoteMap[it.chapterSort.normalizeChapter()]
@@ -128,14 +133,16 @@ class MangaViewModel @Inject constructor(
         _chapter.value = ChapterDto(
             archive = localPage, remoteInfo = remotePage.copy(items = filteredRemoteItems)
         )
+
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadPageAllChapters(
         folderId: Long, mangaId: Long?
     ): Flow<ChapterDto> {
-        return combine(flow = chapterFileRepository.loadChapterByManga(mangaId = folderId), flow2 = mangaId?.let {
-            mangadexChapterRepository.loadChapterByManga(mangaId = it)
+        return combine(
+            flow = directoryGetChapters.observeByManga(mangaId = folderId), flow2 = mangaId?.let {
+                mangadexGetChapters.observeByManga(mangaId = it)
         } ?: flowOf(
             value = ChapterRemoteInfoPageDto(
                 items = emptyList(),
@@ -144,9 +151,7 @@ class MangaViewModel @Inject constructor(
                 page = 0,
             )
         )) { local, remote ->
-
             val remoteMap = remote.items.associateBy { it.chapter.normalizeChapter() }
-
             val filteredRemoteItems = local.items.mapNotNull {
                 remoteMap[it.chapterSort.normalizeChapter()]
             }
@@ -155,11 +160,13 @@ class MangaViewModel @Inject constructor(
                 archive = local, remoteInfo = remote.copy(items = filteredRemoteItems)
             )
         }
+
     }
 
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
             _uiEvents.send(element = error)
         }
+
     }
 }

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.di.MangadexFsOps
+import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,9 +16,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChapterRemoteInfoViewModel @Inject constructor(
-    @param:MangadexFsOps
-    private val mangadexChapterRepository: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>,
+    @param:MangadexCase private val getChaptersUseCase: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
+
     private val _chapterPage = MutableStateFlow<ChapterRemoteInfoPageDto?>(value = null)
     val chapterPage: StateFlow<ChapterRemoteInfoPageDto?> = _chapterPage.asStateFlow()
 
@@ -31,27 +31,33 @@ class ChapterRemoteInfoViewModel @Inject constructor(
 
     fun init(mangaId: Long, firstPage: ChapterRemoteInfoPageDto) {
         _selectedMangaId.value = mangaId
+
         total = firstPage.total
+
         currentPage = firstPage.page
+
         _chapterPage.value = firstPage
+
     }
 
     fun loadPage(page: Int) {
         viewModelScope.launch {
             _chapterPage.value = null
-
-            val result: ChapterRemoteInfoPageDto = mangadexChapterRepository.loadChapterPage(
+            val result: ChapterRemoteInfoPageDto = getChaptersUseCase.loadPage(
                 mangaId = _selectedMangaId.value!!,
                 pageSize = pageSize,
                 total = total,
                 page = page,
             )
-
             val sortedItems: List<ChapterFeedDto> = result.items.sortedBy {
                 it.chapter.normalizeChapter().toFloatOrNull() ?: 0f
             }
 
+
+
             _chapterPage.value = result.copy(items = sortedItems)
         }
+
     }
+
 }

@@ -8,9 +8,10 @@ import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.repository.di.DirectoryFsOps
-import br.acerola.manga.repository.port.LibraryRepository
-import br.acerola.manga.repository.di.MangadexFsOps
+import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.library.SyncLibraryUseCase
+import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,36 +27,31 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
 
-    @param:DirectoryFsOps
-    private val archiveSyncService: LibraryRepository<MangaDirectoryDto>,
+    @param:DirectoryCase private val directorySync: SyncLibraryUseCase<MangaDirectoryDto>,
 
-    @param:DirectoryFsOps
-    private val mangaDirectoryOperation: LibraryRepository.MangaOperations<MangaDirectoryDto>,
+    @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
 
-    @param:MangadexFsOps
-    private val mangadexSyncService: LibraryRepository<MangaRemoteInfoDto>,
+    @param:MangadexCase private val mangadexSync: SyncLibraryUseCase<MangaRemoteInfoDto>,
 
-    @param:MangadexFsOps
-    private val mangadexRemoteInfoOperation: LibraryRepository.MangaOperations<MangaRemoteInfoDto>,
+    @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
 ) : ViewModel() {
 
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
     val isIndexing: StateFlow<Boolean> = combine(
-        flow = archiveSyncService.isIndexing, flow2 = mangadexSyncService.isIndexing
+        flow = directorySync.isIndexing, flow2 = mangadexSync.isIndexing
     ) { directoryIndexing, remoteInfoIndexing ->
         directoryIndexing || remoteInfoIndexing
     }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-        initialValue = false
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
     )
 
     val progress: StateFlow<Int> = combine(
-        flow = archiveSyncService.isIndexing,
-        flow2 = archiveSyncService.progress,
-        flow3 = mangadexSyncService.isIndexing,
-        flow4 = mangadexSyncService.progress
+        flow = directorySync.isIndexing,
+        flow2 = directorySync.progress,
+        flow3 = mangadexSync.isIndexing,
+        flow4 = mangadexSync.progress
     ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
         when {
             directoryBusy && directoryProg != -1 -> directoryProg
@@ -63,12 +59,11 @@ class HomeViewModel @Inject constructor(
             else -> -1
         }
     }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-        initialValue = -1
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = -1
     )
 
     val mangas: StateFlow<List<MangaDto>> = combine(
-        flow = mangaDirectoryOperation.loadMangas(), flow2 = mangadexRemoteInfoOperation.loadMangas()
+        flow = directoryObserve(), flow2 = mangadexObserve()
     ) { mangaDirectories, remoteMangaInfo ->
         val remoteInfoMap = remoteMangaInfo.associateBy { it.title.normalizeKey() }
 
@@ -76,8 +71,7 @@ class HomeViewModel @Inject constructor(
             MangaDto(directory = it, remoteInfo = remoteInfoMap[it.name.normalizeKey()])
         }
     }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-        initialValue = emptyList()
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()
     )
 
     init {

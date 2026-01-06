@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.repository.di.DirectoryFsOps
-import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChapterArchiveViewModel @Inject constructor(
-    @param:DirectoryFsOps
-    private val chapterFileRepository: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
+    @param:DirectoryCase
+    private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
     private val _chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
     val chapterPage: StateFlow<ChapterArchivePageDto?> = _chapterPage.asStateFlow()
@@ -40,7 +40,7 @@ class ChapterArchiveViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterArchivePageDto = chapterFileRepository.loadChapterPage(
+            val result: ChapterArchivePageDto = getChaptersUseCase.loadPage(
                 mangaId = _selectedDirectoryId.value!!,
                 pageSize = pageSize,
                 total = total,

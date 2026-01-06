@@ -9,8 +9,11 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.repository.di.DirectoryFsOps
-import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.library.SyncLibraryUseCase
+import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -30,17 +33,13 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaDirectoryViewModel @Inject constructor(
     private val manager: FileSystemAccessManager,
-
-    @param:DirectoryFsOps
-    private val directorySyncRepository: LibraryRepository<MangaDirectoryDto>,
-
-    @param:DirectoryFsOps
-    private val mangaDirectoryRepository: LibraryRepository.MangaOperations<MangaDirectoryDto>,
-
-    @param:DirectoryFsOps
-    private val chapterFileRepository: LibraryRepository.ChapterOperations<ChapterArchivePageDto>,
+    @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
+    @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
+    @param:DirectoryCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<MangaDirectoryDto>,
+    @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
-    val progress: StateFlow<Int> = directorySyncRepository.progress
+
+    val progress: StateFlow<Int> = syncLibraryUseCase.progress
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -51,7 +50,7 @@ class MangaDirectoryViewModel @Inject constructor(
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
     val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
-    val mangaDirectories: StateFlow<List<MangaDirectoryDto>> = mangaDirectoryRepository.loadMangas().stateIn(
+    val mangaDirectories: StateFlow<List<MangaDirectoryDto>> = observeLibraryUseCase().stateIn(
         viewModelScope,
         initialValue = emptyList(),
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
@@ -59,14 +58,14 @@ class MangaDirectoryViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val chapters: StateFlow<List<ChapterFileDto>> = _selectedDirectoryId.flatMapLatest { id ->
-            id?.let {
-                chapterFileRepository.loadChapterByManga(mangaId = it).map { page -> page.items }
-            } ?: flowOf(value = emptyList())
-        }.stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = emptyList()
-        )
+        id?.let {
+            getChaptersUseCase.observeByManga(mangaId = it).map { page -> page.items }
+        } ?: flowOf(value = emptyList())
+    }.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        initialValue = emptyList()
+    )
 
     init {
         syncLibrary()
@@ -75,9 +74,8 @@ class MangaDirectoryViewModel @Inject constructor(
     fun syncLibrary() {
         viewModelScope.launch {
             _isIndexing.value = true
-
             val uri = getFolderUri()
-            if (uri != null) directorySyncRepository.syncMangas(baseUri = uri).handleResult()
+            if (uri != null) syncLibraryUseCase.sync(baseUri = uri).handleResult()
 
             _isIndexing.value = false
         }
@@ -86,9 +84,8 @@ class MangaDirectoryViewModel @Inject constructor(
     fun rescanMangas() {
         viewModelScope.launch {
             _isIndexing.value = true
-
             val uri = getFolderUri()
-            if (uri != null) directorySyncRepository.rescanMangas(baseUri = uri).handleResult()
+            if (uri != null) syncLibraryUseCase.rescan(baseUri = uri).handleResult()
 
             _isIndexing.value = false
         }
@@ -97,9 +94,8 @@ class MangaDirectoryViewModel @Inject constructor(
     fun deepScanLibrary() {
         viewModelScope.launch {
             _isIndexing.value = true
-
             val uri = getFolderUri()
-            if (uri != null) directorySyncRepository.deepRescanLibrary(baseUri = uri).handleResult()
+            if (uri != null) syncLibraryUseCase.deepRescan(baseUri = uri).handleResult()
 
             _isIndexing.value = false
         }
@@ -109,19 +105,19 @@ class MangaDirectoryViewModel @Inject constructor(
     fun syncChaptersByMangaDirectory(folderId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
-            mangaDirectoryRepository.rescanChaptersByManga(mangaId = folderId).handleResult()
+            rescanMangaChaptersUseCase(mangaId = folderId).handleResult()
             _isIndexing.value = false
-        }
-    }
-
-    private suspend fun <T> Either<UserMessage, T>.handleResult() {
-        this.onLeft { error ->
-            _uiEvents.send(element = error)
         }
     }
 
     private suspend fun getFolderUri(): Uri? {
         manager.loadFolderUri()
         return manager.folderUri
+    }
+
+    private suspend fun <T> Either<UserMessage, T>.handleResult() {
+        this.onLeft { error ->
+            _uiEvents.send(element = error)
+        }
     }
 }

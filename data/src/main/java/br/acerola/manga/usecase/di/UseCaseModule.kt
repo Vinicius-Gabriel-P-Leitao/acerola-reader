@@ -29,10 +29,6 @@ annotation class MangadexCase
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
 
-    // ============================================================================================
-    // DIRECTORY / LOCAL
-    // ============================================================================================
-
     @Provides
     @DirectoryCase
     fun provideDirectorySyncLibraryUseCase(
@@ -46,7 +42,7 @@ object UseCaseModule {
     fun provideDirectoryObserveLibraryUseCase(
         @DirectoryFsOps mangaOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
     ): ObserveLibraryUseCase<MangaDirectoryDto> {
-        return ObserveLibraryUseCase(mangaOps)
+        return ObserveLibraryUseCase(mangaOperations = mangaOps)
     }
 
     @Provides
@@ -54,7 +50,7 @@ object UseCaseModule {
     fun provideDirectoryRescanMangaUseCase(
         @DirectoryFsOps mangaOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
     ): RescanMangaChaptersUseCase<MangaDirectoryDto> {
-        return RescanMangaChaptersUseCase(mangaOps)
+        return RescanMangaChaptersUseCase(mangaOperations = mangaOps)
     }
 
     @Provides
@@ -62,12 +58,8 @@ object UseCaseModule {
     fun provideDirectoryGetChaptersUseCase(
         @DirectoryFsOps chapterOps: LibraryRepository.ChapterOperations<ChapterArchivePageDto>
     ): GetChaptersUseCase<ChapterArchivePageDto> {
-        return GetChaptersUseCase(chapterOps)
+        return GetChaptersUseCase(chapterOperations = chapterOps)
     }
-
-    // ============================================================================================
-    // MANGADEX / REMOTE
-    // ============================================================================================
 
     @Provides
     @MangadexCase
@@ -82,7 +74,7 @@ object UseCaseModule {
     fun provideMangadexObserveLibraryUseCase(
         @MangadexFsOps mangaOps: LibraryRepository.MangaOperations<MangaRemoteInfoDto>
     ): ObserveLibraryUseCase<MangaRemoteInfoDto> {
-        return ObserveLibraryUseCase(mangaOps)
+        return ObserveLibraryUseCase(mangaOperations = mangaOps)
     }
 
     @Provides
@@ -90,7 +82,7 @@ object UseCaseModule {
     fun provideMangadexRescanMangaUseCase(
         @MangadexFsOps mangaOps: LibraryRepository.MangaOperations<MangaRemoteInfoDto>
     ): RescanMangaChaptersUseCase<MangaRemoteInfoDto> {
-        return RescanMangaChaptersUseCase(mangaOps)
+        return RescanMangaChaptersUseCase(mangaOperations = mangaOps)
     }
 
     @Provides
@@ -98,6 +90,6 @@ object UseCaseModule {
     fun provideMangadexGetChaptersUseCase(
         @MangadexFsOps chapterOps: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>
     ): GetChaptersUseCase<ChapterRemoteInfoPageDto> {
-        return GetChaptersUseCase(chapterOps)
+        return GetChaptersUseCase(chapterOperations = chapterOps)
     }
 }
