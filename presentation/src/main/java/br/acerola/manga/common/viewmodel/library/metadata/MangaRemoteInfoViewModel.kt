@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// TODO: Criar reescan de manga, ele pega o nome do ID da pasta e busca e após isso tentar fazer
+//  scan só dele.
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
     @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
