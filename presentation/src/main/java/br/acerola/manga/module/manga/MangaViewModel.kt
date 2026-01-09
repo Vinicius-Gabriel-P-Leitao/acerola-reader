@@ -114,9 +114,19 @@ class MangaViewModel @Inject constructor(
             it.chapterSort
         }
 
+        val searchChapters = chapterSorts.flatMap {
+            val parts = it.split(".")
+
+            if (parts.size == 2 && parts[1].length == 1) {
+                listOf(it, "${parts[0]}.0${parts[1]}")
+            } else {
+                listOf(it)
+            }
+        }.distinct()
+
         val remotePage = mangaId?.let {
             mangadexGetChapters.observeSpecific(
-                mangaId = it, chapters = chapterSorts
+                mangaId = it, chapters = searchChapters
             ).first()
         } ?: ChapterRemoteInfoPageDto(
             items = emptyList(), pageSize = pageSize, page = page, total = total
