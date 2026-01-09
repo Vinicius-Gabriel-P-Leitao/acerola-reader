@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 import br.acerola.manga.common.component.ButtonType
 import br.acerola.manga.common.component.SmartButton
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel

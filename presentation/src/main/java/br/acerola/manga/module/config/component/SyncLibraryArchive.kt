@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SyncLock
 import androidx.compose.material3.CardDefaults
@@ -31,7 +33,7 @@ import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 
 @Composable
 fun SyncLibraryArchive(
@@ -58,7 +60,7 @@ fun SyncLibraryArchive(
                         .background(color = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Sync,
+                        imageVector = Icons.Default.FolderZip,
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(size = 22.dp),
                         contentDescription = stringResource(
@@ -70,7 +72,7 @@ fun SyncLibraryArchive(
                 Spacer(modifier = Modifier.width(width = 12.dp))
 
                 Text(
-                    text = stringResource(id = R.string.title_config_sync_modal),
+                    text = stringResource(id = R.string.title_config_sync_mangadex),
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -80,18 +82,12 @@ fun SyncLibraryArchive(
 
             // TODO: Criar description
             ListItem(
-                modifier = Modifier.clickable {
-                    mangaDirectoryViewModel.deepScanLibrary()
-                },
-                headlineContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_deep_sync))
-                },
-                supportingContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_deep_sync_supporting))
-                },
+                modifier = Modifier.clickable { mangaDirectoryViewModel.deepScanLibrary() },
+                headlineContent = { Text(text = stringResource(id = R.string.description_text_home_deep_sync)) },
+                supportingContent = { Text(text = stringResource(id = R.string.description_text_home_deep_sync_supporting)) },
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.Default.SyncLock, contentDescription = null
+                        imageVector = Icons.Default.Folder, contentDescription = null
                     )
                 },
                 colors = ListItemDefaults.colors(

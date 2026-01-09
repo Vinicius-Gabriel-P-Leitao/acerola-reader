@@ -30,7 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard

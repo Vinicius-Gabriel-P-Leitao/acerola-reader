@@ -23,7 +23,7 @@ import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 
 @Composable
 fun ChapterItem(

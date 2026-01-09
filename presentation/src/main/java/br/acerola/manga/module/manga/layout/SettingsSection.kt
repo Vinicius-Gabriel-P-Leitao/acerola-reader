@@ -1,5 +1,6 @@
 package br.acerola.manga.module.manga.layout
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,8 +15,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.ImageSearch
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -26,6 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
@@ -33,237 +41,207 @@ import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.presentation.R
 
-// TODO: Criar string para tudo
 fun LazyListScope.settingsSection(
     directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
 ) {
+    // SEÇÃO: CONFIGURAÇÕES DE EXIBIÇÃO
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Cofigurções dos arquivos",
+            title = "Configurações de Exibição",
             modifier = Modifier.padding(all = 6.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
-            // TODO: Virar component
             SmartCard(
-                type = CardType.CONTENT, colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ), elevation = CardDefaults.elevatedCardElevation(
-                    defaultElevation = 8.dp, pressedElevation = 12.dp
-                )
+                type = CardType.CONTENT,
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
             ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(size = 40.dp)
-                                .clip(CircleShape)
-                                .background(color = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Sync,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(size = 22.dp),
-                                contentDescription = "Prefencias",
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(width = 12.dp))
-
-                        Text(
-                            text = "Preferencias da pagina de mangás",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.titleMedium
+                        Icon(
+                            imageVector = Icons.Default.SettingsSuggest, // Ícone mais "moderno" que o Sync
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(22.dp),
+                            contentDescription = null,
                         )
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Preferências da página",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }
     }
 
-    item {
-        Spacer(modifier = Modifier.height(height = 12.dp))
-    }
+    item { Spacer(modifier = Modifier.height(12.dp)) }
 
+    // SEÇÃO: ARQUIVOS LOCAIS
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Cofigurções dos arquivos",
+            title = "Configurações dos Arquivos",
             modifier = Modifier.padding(all = 6.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
-            // TODO: Virar component
             SmartCard(
                 type = CardType.CONTENT,
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
             ) {
                 Column {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(size = 40.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
-                                .background(color = MaterialTheme.colorScheme.primary)
+                                .background(
+                                    MaterialTheme.colorScheme.primary
+                                )
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Sync,
+                                imageVector = Icons.Default.FolderZip,
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(size = 22.dp),
-                                contentDescription = "Sincronizar arquivos do mangá",
+                                modifier = Modifier.size(22.dp),
+                                contentDescription = null,
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(width = 12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Text(
                             text = "Sincronizar arquivos",
-                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
-
 
                     ListItem(
                         modifier = Modifier.clickable { mangaDirectoryViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
-                        headlineContent = {
-                            Text(text = "Sincronizar arquivos dos capítulos")
-                        },
-                        supportingContent = {
-                            Text(text = "Sincroniza métadados de cada capitulo do mangá")
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Default.Sync, contentDescription = null
-                            )
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        )
+                        headlineContent = { Text("Sincronizar capítulos") },
+                        supportingContent = { Text("Sincroniza metadados de cada capítulo local") },
+                        leadingContent = { Icon(Icons.Default.Refresh, contentDescription = null) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                     )
 
-                    Spacer(modifier = Modifier.width(width = 12.dp))
-
-
                     ListItem(
-                        modifier = Modifier.clickable {
-                            /* TODO: Função de sincronizar dados do mangá */
-                        },
-                        headlineContent = {
-                            Text(text = "Sincronizar cover e banner")
-                        },
-                        supportingContent = {
-                            Text(text = "Vai buscar os cover e banners já baixados na pasta do mangá")
-                        },
+                        modifier = Modifier.clickable { /* TODO */ },
+                        headlineContent = { Text("Sincronizar cover e banner") },
+                        supportingContent = { Text("Busca imagens já baixadas na pasta") },
                         leadingContent = {
                             Icon(
-                                imageVector = Icons.Default.Sync, contentDescription = null
+                                Icons.Default.ImageSearch, contentDescription = null
                             )
                         },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        )
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                     )
                 }
             }
         }
     }
 
-    item {
-        Spacer(modifier = Modifier.height(height = 12.dp))
-    }
+    item { Spacer(modifier = Modifier.height(12.dp)) }
 
+    // SEÇÃO: MANGADEX (MANTIDO O ÍCONE DE IMAGEM)
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Sincronizar com mangadex",
+            title = "Sincronizar com MangaDex",
             modifier = Modifier.padding(all = 6.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
-            // TODO: Virar component
             SmartCard(
                 type = CardType.CONTENT,
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
             ) {
                 Column {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(size = 40.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
-                                .background(color = MaterialTheme.colorScheme.primary)
+                                .background(color = MaterialTheme.colorScheme.onSurface)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Sync,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(size = 22.dp),
-                                contentDescription = "Sincronizar arquivos do mangá",
+                            Image(
+                                painter = painterResource(id = R.drawable.mangadex_v2),
+                                contentDescription = stringResource(id = R.string.description_icon_sync_mangadex),
+                                modifier = Modifier.size(30.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(width = 12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Text(
-                            text = "Sincronizar arquivos",
+                            text = stringResource(id = R.string.title_config_sync_mangadex),
                             color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
 
                     ListItem(
-                        headlineContent = {
-                            Text(text = "Sincronizar metádados do manga")
-                        }, supportingContent = {
-                            Text(text = "Sincronizar os metadados do manga")
-                        }, modifier = Modifier.clickable {
-                            /* TODO: Função de sincronizar dados do mangá */
-                        }, leadingContent = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowUpward, contentDescription = null
+                        modifier = Modifier.clickable { /* TODO */ },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
+                        supportingContent = {
+                            Text(
+                                text = pluralStringResource(
+                                    id = R.plurals.description_sync_mangadex_remote_info_supporting,
+                                    count = 1
+                                )
                             )
-                        }, colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        )
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null
+                            )
+                        },
                     )
 
-                    Spacer(modifier = Modifier.width(width = 12.dp))
-
-                    // TODO: Criar string e criar lógica para não aparecer quando os dados vem do mangádex
                     if (remoteInfo != null) {
                         ListItem(
-                            headlineContent = {
-                                Text(text = "Sincronizar metadados dos capítulos")
-                            }, supportingContent = {
-                                Text(text = "Sincroniza metadados de cada capitulo do mangá, baseado na numeração do capitulo, só para mangadex")
-                            }, modifier = Modifier.clickable {
+                            headlineContent = { Text(text = "Sincronizar capítulos") },
+                            supportingContent = { Text(text = "Sincroniza numeração oficial e datas") },
+                            modifier = Modifier.clickable {
                                 mangaRemoteInfoViewModel.syncChaptersByMangaRemoteInfo(mangaId = remoteInfo.id!!)
-                            }, leadingContent = {
+                            },
+                            leadingContent = {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowUpward, contentDescription = null
+                                    imageVector = Icons.AutoMirrored.Filled.List,
+                                    contentDescription = null
                                 )
-                            }, colors = ListItemDefaults.colors(
-                                containerColor = Color.Transparent
-                            )
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                         )
                     }
                 }

@@ -17,12 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.feature.R
-import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.presentation.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size

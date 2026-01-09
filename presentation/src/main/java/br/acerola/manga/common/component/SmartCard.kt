@@ -27,7 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 
 enum class CardType {
     IMAGE, TEXT, CONTENT

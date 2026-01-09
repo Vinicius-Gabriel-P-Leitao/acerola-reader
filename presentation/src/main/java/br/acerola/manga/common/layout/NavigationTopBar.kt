@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 import br.acerola.manga.common.component.ButtonType
 import br.acerola.manga.common.component.SmartButton
 import br.acerola.manga.common.navigation.Destination

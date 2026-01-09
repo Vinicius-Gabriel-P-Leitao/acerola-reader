@@ -91,6 +91,7 @@ class MangaDirectoryViewModel @Inject constructor(
         }
     }
 
+    // TODO: Quando isso aqui inciar, permitir o maldito sair da tela e ficar uma notificação.
     fun deepScanLibrary() {
         viewModelScope.launch {
             _isIndexing.value = true

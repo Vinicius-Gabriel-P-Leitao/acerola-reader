@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "br.acerola.manga.feature"
+    namespace = "br.acerola.manga.presentation"
     compileSdk = 36
 
     defaultConfig {

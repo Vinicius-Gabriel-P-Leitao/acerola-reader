@@ -27,11 +27,11 @@ import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewMod
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
-import br.acerola.manga.feature.R
 import br.acerola.manga.module.manga.layout.MangaHeader
 import br.acerola.manga.module.manga.layout.MangaTabs
 import br.acerola.manga.module.manga.layout.chaptersSection
 import br.acerola.manga.module.manga.layout.settingsSection
+import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
 
 enum class MainTab(@param:StringRes val titleRes: Int) {

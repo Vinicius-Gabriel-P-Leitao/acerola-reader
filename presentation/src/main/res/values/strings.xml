@@ -21,6 +21,7 @@
     <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
     <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o manga.</string>
     <string name="description_icon_sync_manga_directory">Sincronização somente das pastas ou dos mangás completos.</string>
+    <string name="description_icon_sync_mangadex">Sincronização de dados do mangadex.</string>
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
     <string name="description_icon_home_filter">Filtro</string>
@@ -29,9 +30,9 @@
     <string name="title_text_mangadex_configs_in_app">Configuração do mangadex</string>
     <string name="title_text_config_select_path_manga">Pasta dos mangás</string>
     <string name="title_preference_file_extension">Tipo do arquivo a ser salvo</string>
-    <string name="title_config_sync_modal">Sincronizar mangás</string>
+    <string name="title_config_sync_mangadex">Sincronizar metadados com mangadex</string>
     <string name="title_chapter_item_chapter_number">Capitulo %1$s</string>
-    <string name="title_sync_remote_info">Sincronizar metadados</string>
+    <string name="title_sync_mangadex_remote_info">Sincronizar metadados</string>
     <string name="title_chapter_tabs_chapters">Capítulos (%1$d)</string>
     <string name="title_chapter_tabs_settings">Configurações</string>
     <!-- Text other types -->
@@ -48,7 +49,10 @@
     <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos.</string>
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
-    <string name="description_sync_remote_info_supporting">Adiciona apenas metadados a mangás.</string>
+    <plurals name="description_sync_mangadex_remote_info_supporting">
+        <item quantity="one">Busca informações da obra na API.</item>
+        <item quantity="other">Busca informações das obras na API.</item>
+    </plurals>
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
     <string name="message_path_not_found">Pasta não encontrada.</string>

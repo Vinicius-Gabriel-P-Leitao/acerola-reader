@@ -32,7 +32,7 @@ import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
 import br.acerola.manga.config.preference.HomeLayoutType
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 import br.acerola.manga.module.home.component.MangaGridItem
 import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.module.manga.MangaActivity

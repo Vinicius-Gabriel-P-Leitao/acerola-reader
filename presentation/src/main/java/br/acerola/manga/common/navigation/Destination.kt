@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
-import br.acerola.manga.feature.R
+import br.acerola.manga.presentation.R
 
 enum class Destination(
     val icon: ImageVector,
