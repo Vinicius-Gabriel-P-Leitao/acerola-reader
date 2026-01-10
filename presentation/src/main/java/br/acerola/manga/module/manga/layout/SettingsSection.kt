@@ -66,23 +66,23 @@ fun LazyListScope.settingsSection(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
+                        .padding(all = 8.dp)
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(size = 40.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(color = MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.SettingsSuggest, // Ícone mais "moderno" que o Sync
+                            imageVector = Icons.Default.SettingsSuggest,
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(size = 22.dp),
                             contentDescription = null,
                         )
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(width = 12.dp))
                     Text(
                         text = "Preferências da página",
                         style = MaterialTheme.typography.titleMedium
@@ -94,7 +94,6 @@ fun LazyListScope.settingsSection(
 
     item { Spacer(modifier = Modifier.height(12.dp)) }
 
-    // SEÇÃO: ARQUIVOS LOCAIS
     item {
         SmartCard(
             type = CardType.CONTENT,
@@ -112,26 +111,24 @@ fun LazyListScope.settingsSection(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
+                            .padding(all = 8.dp)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(size = 40.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    MaterialTheme.colorScheme.primary
-                                )
+                                .background(color = MaterialTheme.colorScheme.primary)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.FolderZip,
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(22.dp),
+                                modifier = Modifier.size(size = 22.dp),
                                 contentDescription = null,
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(width = 12.dp))
 
                         Text(
                             text = "Sincronizar arquivos",
@@ -141,21 +138,17 @@ fun LazyListScope.settingsSection(
 
                     ListItem(
                         modifier = Modifier.clickable { mangaDirectoryViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
-                        headlineContent = { Text("Sincronizar capítulos") },
-                        supportingContent = { Text("Sincroniza metadados de cada capítulo local") },
-                        leadingContent = { Icon(Icons.Default.Refresh, contentDescription = null) },
+                        headlineContent = { Text(text = "Sincronizar capítulos") },
+                        supportingContent = { Text(text = "Sincroniza metadados de cada capítulo local") },
+                        leadingContent = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                     )
 
                     ListItem(
                         modifier = Modifier.clickable { /* TODO */ },
-                        headlineContent = { Text("Sincronizar cover e banner") },
-                        supportingContent = { Text("Busca imagens já baixadas na pasta") },
-                        leadingContent = {
-                            Icon(
-                                Icons.Default.ImageSearch, contentDescription = null
-                            )
-                        },
+                        headlineContent = { Text(text = "Sincronizar cover e banner") },
+                        supportingContent = { Text(text = "Busca imagens já baixadas na pasta") },
+                        leadingContent = { Icon(imageVector = Icons.Default.ImageSearch, contentDescription = null) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                     )
                 }
@@ -183,23 +176,23 @@ fun LazyListScope.settingsSection(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
+                            .padding(all = 8.dp)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(size = 40.dp)
                                 .clip(CircleShape)
                                 .background(color = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.mangadex_v2),
                                 contentDescription = stringResource(id = R.string.description_icon_sync_mangadex),
-                                modifier = Modifier.size(30.dp)
+                                modifier = Modifier.size(size = 30.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(width = 12.dp))
 
                         Text(
                             text = stringResource(id = R.string.title_config_sync_mangadex),
@@ -209,9 +202,11 @@ fun LazyListScope.settingsSection(
                     }
 
                     ListItem(
-                        modifier = Modifier.clickable { /* TODO */ },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
+                        modifier = Modifier.clickable {
+                            mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = remoteInfo?.id!!)
+                        },
                         supportingContent = {
                             Text(
                                 text = pluralStringResource(
@@ -233,7 +228,7 @@ fun LazyListScope.settingsSection(
                             headlineContent = { Text(text = "Sincronizar capítulos") },
                             supportingContent = { Text(text = "Sincroniza numeração oficial e datas") },
                             modifier = Modifier.clickable {
-                                mangaRemoteInfoViewModel.syncChaptersByMangaRemoteInfo(mangaId = remoteInfo.id!!)
+                                mangaRemoteInfoViewModel.syncChaptersByManga(mangaId = remoteInfo.id!!)
                             },
                             leadingContent = {
                                 Icon(

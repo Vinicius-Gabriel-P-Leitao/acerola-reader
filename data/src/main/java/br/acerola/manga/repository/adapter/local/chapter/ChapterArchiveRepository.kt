@@ -12,7 +12,6 @@ import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.mapper.toChapterArchiveModel
-import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.util.sha256
@@ -45,15 +44,7 @@ class ChapterArchiveRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    /**
-     * Reescaneia todos os capítulos vinculados a um mangá específico.
-     *
-     * Remove registros antigos e reindexa todos os arquivos de capítulo encontrados no diretório da pasta
-     * correspondente. A operação é segura e idempotente, garantindo consistência entre disco e banco.
-     *
-     * @param mangaId Identificador da pasta de mangá alvo.
-     */
-    override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+    override suspend fun refreshMangaChapters(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             _isIndexing.value = true
             _progress.value = 0
@@ -133,16 +124,7 @@ class ChapterArchiveRepository @Inject constructor(
             }
         }
 
-    /**
-     * Retorna um fluxo reativo contendo todos os capítulos pertencentes a um mangá específico, os capitulos do
-     * arquivo são retornados de forma páginada.
-     *
-     * Cada entidade [ChapterArchive] é convertida para [ChapterArchivePageDto] por meio do mapeador [toDto].
-     *
-     * @param mangaId Identificador único do mangá.
-     * @return [StateFlow] com a lista de capítulos atualizada dinamicamente.
-     */
-    override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterArchivePageDto> {
+    override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
             list.toPageDto()
         }.stateIn(
@@ -152,7 +134,7 @@ class ChapterArchiveRepository @Inject constructor(
         )
     }
 
-    override suspend fun loadChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
+    override suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
         val offset = page * pageSize
 
         val realTotal = if (total > 0) {

@@ -10,6 +10,7 @@ import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
+import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,7 @@ import javax.inject.Inject
 //  scan só dele.
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
+    @param:MangadexCase private val rescanManga: RescanMangaUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto>,
@@ -61,10 +63,18 @@ class MangaRemoteInfoViewModel @Inject constructor(
         }
     }
 
-    fun syncChaptersByMangaRemoteInfo(mangaId: Long) {
+    fun rescanMangaByManga(mangaId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
-            rescanMangaChaptersUseCase(mangaId = mangaId).handleResult()
+            rescanManga(mangaId)
+            _isIndexing.value = false
+        }
+    }
+
+    fun syncChaptersByManga(mangaId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            rescanMangaChaptersUseCase(mangaId).handleResult()
             _isIndexing.value = false
         }
     }

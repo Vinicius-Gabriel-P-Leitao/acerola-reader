@@ -1,19 +1,21 @@
 package br.acerola.manga.usecase.manga
 
+import arrow.core.Either
+import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.repository.port.MangaManagementRepository
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * UseCase para observar a lista de mangás da biblioteca.
+ * UseCase para rescanear mangás da biblioteca.
  */
-class ObserveLibraryUseCase<T>(
+class RescanMangaUseCase<T>(
     private val mangaRepository: MangaManagementRepository<T>
 ) {
 
     val progress: StateFlow<Int> = mangaRepository.progress
     val isIndexing: StateFlow<Boolean> = mangaRepository.isIndexing
 
-    operator fun invoke(): StateFlow<List<T>> {
-        return mangaRepository.observeLibrary()
+    suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> {
+        return mangaRepository.refreshManga(mangaId)
     }
 }

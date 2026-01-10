@@ -8,12 +8,15 @@ import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
+import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -33,6 +36,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaDirectoryViewModel @Inject constructor(
     private val manager: FileSystemAccessManager,
+    @param:DirectoryCase private val rescanManga: RescanMangaUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,

@@ -8,10 +8,7 @@ import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveRepositor
 import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRepository
 import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository
 import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRepository
-import br.acerola.manga.repository.adapter.local.sync.DirectorySyncSyncRepository
-import br.acerola.manga.repository.adapter.local.sync.MangadexSyncSyncRepository
 import br.acerola.manga.repository.port.ChapterManagementRepository
-import br.acerola.manga.repository.port.LibrarySyncRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
 import dagger.Binds
 import dagger.Module
@@ -36,12 +33,6 @@ annotation class MangadexFsOps
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class LibraryModule {
-    @Binds
-    @Singleton
-    @DirectoryFsOps
-    abstract fun bindDirectorySyncRepository(
-        impl: DirectorySyncSyncRepository
-    ): LibrarySyncRepository<MangaDirectoryDto>
 
     @Binds
     @Singleton
@@ -56,14 +47,6 @@ abstract class LibraryModule {
     abstract fun bindChapterArchiveRepository(
         int: ChapterArchiveRepository
     ): ChapterManagementRepository<ChapterArchivePageDto>
-
-
-    @Binds
-    @Singleton
-    @MangadexFsOps
-    abstract fun bindMangadexSyncRepository(
-        impl: MangadexSyncSyncRepository
-    ): LibrarySyncRepository<MangaRemoteInfoDto>
 
     @Binds
     @Singleton

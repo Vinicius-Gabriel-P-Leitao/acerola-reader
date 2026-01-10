@@ -11,6 +11,6 @@ class RescanMangaChaptersUseCase<T>(
     private val chapterRepository: ChapterManagementRepository<T>
 ) {
     suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> {
-        return chapterRepository.rescanChaptersByManga(mangaId)
+        return chapterRepository.refreshMangaChapters(mangaId)
     }
 }

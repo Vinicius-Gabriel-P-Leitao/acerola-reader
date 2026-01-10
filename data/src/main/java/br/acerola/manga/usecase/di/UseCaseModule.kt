@@ -7,12 +7,12 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
-import br.acerola.manga.repository.port.LibrarySyncRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
+import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,7 +34,7 @@ object UseCaseModule {
     @Provides
     @DirectoryCase
     fun provideDirectorySyncLibraryUseCase(
-        @DirectoryFsOps repository: LibrarySyncRepository<MangaDirectoryDto>
+        @DirectoryFsOps repository: MangaManagementRepository<MangaDirectoryDto>
     ): SyncLibraryUseCase<MangaDirectoryDto> {
         return SyncLibraryUseCase(repository)
     }
@@ -50,6 +50,14 @@ object UseCaseModule {
     @Provides
     @DirectoryCase
     fun provideDirectoryRescanMangaUseCase(
+        @DirectoryFsOps mangaOps: MangaManagementRepository<MangaDirectoryDto>
+    ): RescanMangaUseCase<MangaDirectoryDto> {
+        return RescanMangaUseCase(mangaRepository = mangaOps)
+    }
+
+    @Provides
+    @DirectoryCase
+    fun provideDirectoryRescanMangaChaptersUseCase(
         @DirectoryFsOps chapterOps: ChapterManagementRepository<ChapterArchivePageDto>
     ): RescanMangaChaptersUseCase<ChapterArchivePageDto> {
         return RescanMangaChaptersUseCase(chapterRepository = chapterOps)
@@ -66,7 +74,7 @@ object UseCaseModule {
     @Provides
     @MangadexCase
     fun provideMangadexSyncLibraryUseCase(
-        @MangadexFsOps repository: LibrarySyncRepository<MangaRemoteInfoDto>
+        @MangadexFsOps repository: MangaManagementRepository<MangaRemoteInfoDto>
     ): SyncLibraryUseCase<MangaRemoteInfoDto> {
         return SyncLibraryUseCase(repository)
     }
@@ -82,6 +90,14 @@ object UseCaseModule {
     @Provides
     @MangadexCase
     fun provideMangadexRescanMangaUseCase(
+        @MangadexFsOps mangaOps: MangaManagementRepository<MangaRemoteInfoDto>
+    ): RescanMangaUseCase<MangaRemoteInfoDto> {
+        return RescanMangaUseCase(mangaRepository = mangaOps)
+    }
+
+    @Provides
+    @MangadexCase
+    fun provideMangadexRescanMangaChaptersUseCase(
         @MangadexFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
     ): RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto> {
         return RescanMangaChaptersUseCase(chapterRepository = chapterOps)

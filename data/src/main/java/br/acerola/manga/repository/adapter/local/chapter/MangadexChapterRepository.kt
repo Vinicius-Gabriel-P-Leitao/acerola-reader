@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,11 +47,6 @@ class MangadexChapterRepository @Inject constructor(
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
 ) : ChapterManagementRepository<ChapterRemoteInfoPageDto> {
 
-    /**
-     * Qualifier para saber que é:
-     *
-     * [br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexChapterInfoService]
-     */
     @Inject
     @Mangadex
     lateinit var mangadexChapterInfoService: ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
@@ -61,7 +57,7 @@ class MangadexChapterRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    override suspend fun rescanChaptersByManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+    override suspend fun refreshMangaChapters(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             _isIndexing.value = true
             _progress.value = 0
@@ -117,7 +113,7 @@ class MangadexChapterRepository @Inject constructor(
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun loadChapterByManga(mangaId: Long): StateFlow<ChapterRemoteInfoPageDto> {
+    override fun observeChapters(mangaId: Long): StateFlow<ChapterRemoteInfoPageDto> {
         return chapterRemoteInfoDao.getChaptersByMangaRemoteInfo(mangaId).flatMapLatest { chapters ->
             val chapterIds = chapters.map { it.id }
 
@@ -139,7 +135,7 @@ class MangadexChapterRepository @Inject constructor(
         )
     }
 
-    override suspend fun loadChapterPage(
+    override suspend fun getChapterPage(
         mangaId: Long, total: Int, page: Int, pageSize: Int
     ): ChapterRemoteInfoPageDto {
         val offset = page * pageSize
@@ -167,10 +163,7 @@ class MangadexChapterRepository @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeSpecificChapters(
-        mangaId: Long,
-        chapters: List<String>
-    ): kotlinx.coroutines.flow.Flow<ChapterRemoteInfoPageDto> {
+    override fun observeSpecificChapters(     mangaId: Long,     chapters: List<String> ): Flow<ChapterRemoteInfoPageDto> {
         return chapterRemoteInfoDao.getChaptersByMangaAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
             val chapterIds = chapterList.map { it.id }
 
@@ -191,7 +184,6 @@ class MangadexChapterRepository @Inject constructor(
     private fun matchRemoteWithArchive(
         remote: List<ChapterRemoteInfoDto>, local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
-        // NOTE: Organiza os capitulos e normaliza o indentifier do capitulo
         val remoteByChapter = remote.mapNotNull { dto ->
             val key = dto.chapter?.normalizeChapter()
             if (key == null) null else key to dto
@@ -199,7 +191,6 @@ class MangadexChapterRepository @Inject constructor(
             list.maxBy { it.mangadexVersion }
         }
 
-        // NOTE: Compara com os locais usando a MESMA chave normalizada
         return local.mapNotNull { archive ->
             val chapterKey = archive.chapterSort.normalizeChapter()
             val remoteInfo = remoteByChapter[chapterKey] ?: return@mapNotNull null

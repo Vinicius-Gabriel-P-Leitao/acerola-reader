@@ -14,7 +14,7 @@ class GetChaptersUseCase<T>(
      * Retorna o fluxo principal de capítulos para um mangá.
      */
     fun observeByManga(mangaId: Long): StateFlow<T> {
-        return chapterRepository.loadChapterByManga(mangaId)
+        return chapterRepository.observeChapters(mangaId)
     }
 
     /**
@@ -28,6 +28,6 @@ class GetChaptersUseCase<T>(
      * Carrega uma página específica de capítulos sob demanda.
      */
     suspend fun loadPage(mangaId: Long, total: Int, page: Int, pageSize: Int = 20): T {
-        return chapterRepository.loadChapterPage(mangaId, total, page, pageSize)
+        return chapterRepository.getChapterPage(mangaId, total, page, pageSize)
     }
 }
