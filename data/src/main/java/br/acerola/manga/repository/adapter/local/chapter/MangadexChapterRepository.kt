@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -43,6 +42,7 @@ import javax.inject.Singleton
 class MangadexChapterRepository @Inject constructor(
     private val chapterArchiveDao: ChapterArchiveDao,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
+    private val directoryDao: br.acerola.manga.local.database.dao.archive.MangaDirectoryDao,
     private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
 ) : ChapterManagementRepository<ChapterRemoteInfoPageDto> {
@@ -62,26 +62,34 @@ class MangadexChapterRepository @Inject constructor(
             _isIndexing.value = true
             _progress.value = 0
 
-            Either.catch {
-                // NOTE: Retorna o mirrorId -> no flatMap
-                mangaRemoteInfoDao.getMangaById(mangaId).mapNotNull { it?.mirrorId }.first()
-            }.mapLeft { exception ->
-                when (exception) {
-                    is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                    else -> LibrarySyncError.UnexpectedError(cause = exception)
-                }
-            }.flatMap { mirrorId ->
-                mangadexChapterInfoService.searchInfo(manga = mirrorId, limit = 100, onProgress = {
-                    _progress.value = it
-                }).mapLeft {
-                    LibrarySyncError.NetworkError(cause = null)
-                }
+            val remoteManga = try {
+                mangaRemoteInfoDao.getMangaById(mangaId).first()
+            } catch (exception: Exception) {
+                _isIndexing.value = false
+                return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = exception))
+            }
+
+            if (remoteManga == null) {
+                _isIndexing.value = false
+                // TODO: Criar erro específico para "Manga não encontrado"
+                return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = Exception("Manga Remote not found")))
+            }
+
+            // NOTE: Buscar na API
+            mangadexChapterInfoService.searchInfo(manga = remoteManga.mirrorId, limit = 100, onProgress = {
+                _progress.value = it
+            }).mapLeft {
+                LibrarySyncError.NetworkError(cause = null)
             }.flatMap { remoteChapters ->
                 _progress.value = 90
                 Either.catch {
-                    val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).first()
-                    // TODO: Verificar se é otimização, mas as vezes API lança dado válido, porem não consigo ver
-                    //  isso na UI ou DB
+                    // TODO: Criar erro específico para "Manga não encontrado"
+                    // NOTE: Tenta buscar pelo nome do mangá
+                    val localDirectory = directoryDao.getMangaDirectoryByName(mangaName = remoteManga.title)
+                        ?: throw Exception("Local directory not found for manga: ${remoteManga.title}")
+
+                    val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(localDirectory.id).first()
+                    
                     val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
 
                     if (chapterPairs.isEmpty()) {
@@ -92,7 +100,8 @@ class MangadexChapterRepository @Inject constructor(
                     }
 
                     chapterPairs.forEach { (archive, remote) ->
-                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = archive.folderPathFk)
+                        // FIX: O FK deve ser o ID do MangaRemoteInfo (mangaId), não o do arquivo local.
+                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = mangaId)
                         val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
                         val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
