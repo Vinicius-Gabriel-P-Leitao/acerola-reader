@@ -7,7 +7,7 @@ import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
-import br.acerola.manga.repository.port.RemoteRepository
+import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,9 +16,9 @@ import javax.inject.Singleton
 
 @Singleton
 
-class MangadexMangaInfoService @Inject constructor(
+class MangadexMangaInfoRepositoryRepository @Inject constructor(
     @param:ApplicationContext private val context: Context, private val api: MangadexMangaInfoApi
-) : RemoteRepository.RemoteInfoOperations<MangaRemoteInfoDto, String> {
+) : RemoteInfoOperationsRepository<MangaRemoteInfoDto, String> {
 
     // TODO: Criar um progresso simples, esse progresso vai ser só pra saber que isso iniciou
     override suspend fun searchInfo(

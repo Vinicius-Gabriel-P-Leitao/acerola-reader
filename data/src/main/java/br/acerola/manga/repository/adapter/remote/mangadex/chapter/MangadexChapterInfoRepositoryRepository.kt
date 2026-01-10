@@ -6,7 +6,7 @@ import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
-import br.acerola.manga.repository.port.RemoteRepository
+import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -17,9 +17,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangadexChapterInfoService @Inject constructor(
+class MangadexChapterInfoRepositoryRepository @Inject constructor(
     private val api: MangadexChapterInfoApi
-) : RemoteRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String> {
+) : RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String> {
 
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?

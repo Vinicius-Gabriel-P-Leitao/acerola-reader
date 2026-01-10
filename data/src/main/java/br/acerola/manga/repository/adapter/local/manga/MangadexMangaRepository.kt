@@ -25,8 +25,8 @@ import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toModel
 import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.di.Mangadex
-import br.acerola.manga.repository.port.RemoteRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -63,11 +63,11 @@ class MangadexMangaRepository @Inject constructor(
 
     @Inject
     @Mangadex
-    lateinit var mangadexChapterInfoService: RemoteRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
+    lateinit var mangadexChapterInfoService: RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String>
 
     @Inject
     @Mangadex
-    lateinit var mangadexMangaInfoService: RemoteRepository.RemoteInfoOperations<MangaRemoteInfoDto, String>
+    lateinit var mangadexMangaInfoService: RemoteInfoOperationsRepository<MangaRemoteInfoDto, String>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
