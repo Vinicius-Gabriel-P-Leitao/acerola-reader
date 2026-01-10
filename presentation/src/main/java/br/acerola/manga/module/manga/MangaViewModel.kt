@@ -136,6 +136,15 @@ class MangaViewModel @Inject constructor(
         viewModelScope.launch {
             loadPage(page = 0)
         }
+
+        // NOTE: Atualiza a pagina.
+        viewModelScope.launch {
+            chapterIsIndexing.collect { indexing ->
+                if (!indexing) {
+                    loadPage(page = currentPage)
+                }
+            }
+        }
     }
 
     fun loadPageAsync(page: Int) {
@@ -194,23 +203,15 @@ class MangaViewModel @Inject constructor(
         _chapter.value = ChapterDto(
             archive = localPage, remoteInfo = remotePage.copy(items = filteredRemoteItems)
         )
-
     }
 
     // WARN: Só no mangadex tem rota para dados tão detalhados para capitulos
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun loadPageAllChapters(
-        folderId: Long, mangaId: Long?
-    ): Flow<ChapterDto> {
+    private fun loadPageAllChapters(folderId: Long, mangaId: Long?): Flow<ChapterDto> {
         return combine(flow = directoryGetChapters.observeByManga(mangaId = folderId), flow2 = mangaId?.let {
             mangadexGetChapters.observeByManga(mangaId = it)
         } ?: flowOf(
-            value = ChapterRemoteInfoPageDto(
-                items = emptyList(),
-                pageSize = 0,
-                total = 0,
-                page = 0,
-            )
+            value = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, total = 0, page = 0)
         )) { local, remote ->
             val remoteMap = remote.items.associateBy { it.chapter.normalizeChapter() }
             val filteredRemoteItems = local.items.mapNotNull {
@@ -221,7 +222,6 @@ class MangaViewModel @Inject constructor(
                 archive = local, remoteInfo = remote.copy(items = filteredRemoteItems)
             )
         }
-
     }
 
     private suspend fun <T> Either<UserMessage, T>.handleResult() {

@@ -92,7 +92,7 @@ fun LazyListScope.settingsSection(
         }
     }
 
-    item { Spacer(modifier = Modifier.height(12.dp)) }
+    item { Spacer(modifier = Modifier.height(height = 12.dp)) }
 
     item {
         SmartCard(

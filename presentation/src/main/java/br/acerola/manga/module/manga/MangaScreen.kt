@@ -56,6 +56,7 @@ fun MangaScreen(
     val mangaState by mangaViewModel.manga.collectAsState()
     val currentManga = mangaState ?: manga
 
+    // NOTE: Atualizar se a função de sync de métadados for chamada
     val chapterDto by mangaViewModel.chapters.collectAsState()
 
     val chapterIsIndexing by mangaViewModel.chapterIsIndexing.collectAsState()
