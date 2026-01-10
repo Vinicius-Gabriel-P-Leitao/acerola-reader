@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.layout.ProgressIndicator
+import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterFileDto
@@ -43,8 +45,10 @@ enum class MainTab(@param:StringRes val titleRes: Int) {
 fun MangaScreen(
     manga: MangaDto,
     mangaViewModel: MangaViewModel,
+    chapterArchiveViewModel: ChapterArchiveViewModel,
+    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
+    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
 ) {
     LaunchedEffect(key1 = manga.directory.id) {
         mangaViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
@@ -140,9 +144,12 @@ fun MangaScreen(
 
                     MainTab.SETTINGS -> {
                         settingsSection(
-                            directory = currentManga.directory, remoteInfo = currentManga.remoteInfo,
+                            directory = currentManga.directory,
+                            remoteInfo = currentManga.remoteInfo,
                             mangaDirectoryViewModel = mangaDirectoryViewModel,
-                            mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
+                            chapterArchiveViewModel = chapterArchiveViewModel,
+                            mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
+                            chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
                         )
                     }
                 }

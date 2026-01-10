@@ -3,13 +3,11 @@ package br.acerola.manga.common.viewmodel.library.metadata
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -29,8 +27,7 @@ import javax.inject.Inject
 class MangaRemoteInfoViewModel @Inject constructor(
     @param:MangadexCase private val rescanManga: RescanMangaUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
-    @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>,
-    @param:MangadexCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto>,
+    @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>
 ) : ViewModel() {
 
     private val _isIndexing = MutableStateFlow(value = false)
@@ -39,7 +36,6 @@ class MangaRemoteInfoViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    val progress: StateFlow<Int> = syncLibraryUseCase.progress
 
     val remoteInfo: StateFlow<List<MangaRemoteInfoDto>> = observeLibraryUseCase().stateIn(
         scope = viewModelScope,
@@ -70,15 +66,6 @@ class MangaRemoteInfoViewModel @Inject constructor(
             _isIndexing.value = false
         }
     }
-
-    fun syncChaptersByManga(mangaId: Long) {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            rescanMangaChaptersUseCase(mangaId).handleResult()
-            _isIndexing.value = false
-        }
-    }
-
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
             _uiEvents.send(element = error)

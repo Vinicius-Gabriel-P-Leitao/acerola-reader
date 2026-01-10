@@ -13,7 +13,6 @@ import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,16 +37,15 @@ class MangaDirectoryViewModel @Inject constructor(
     @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
     val progress: StateFlow<Int> = syncLibraryUseCase.progress
 
-    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
-    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
-
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
+    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
     val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
@@ -108,15 +106,6 @@ class MangaDirectoryViewModel @Inject constructor(
             val uri = getFolderUri()
             if (uri != null) syncLibraryUseCase.deepRescan(baseUri = uri).handleResult()
 
-            _isIndexing.value = false
-        }
-    }
-
-    // TODO: Fazer essa porcaria ter o progress na tela do mangá tbm
-    fun syncChaptersByMangaDirectory(folderId: Long) {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            rescanMangaChaptersUseCase(mangaId = folderId).handleResult()
             _isIndexing.value = false
         }
     }

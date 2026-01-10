@@ -37,7 +37,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
@@ -46,6 +48,8 @@ import br.acerola.manga.presentation.R
 fun LazyListScope.settingsSection(
     directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
+    chapterArchiveViewModel: ChapterArchiveViewModel,
+    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel
 ) {
@@ -137,7 +141,7 @@ fun LazyListScope.settingsSection(
                     }
 
                     ListItem(
-                        modifier = Modifier.clickable { mangaDirectoryViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
+                        modifier = Modifier.clickable { chapterArchiveViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
                         headlineContent = { Text(text = "Sincronizar capítulos") },
                         supportingContent = { Text(text = "Sincroniza metadados de cada capítulo local") },
                         leadingContent = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
@@ -204,13 +208,14 @@ fun LazyListScope.settingsSection(
                         )
                     }
 
+                    if (remoteInfo != null) {
                     ListItem(
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
                         modifier = Modifier.clickable {
-                            remoteInfo?.id?.let { id ->
-                                mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = id)
-                            }
+                            mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = remoteInfo.id!!)
+                        },
+                        headlineContent = {
+                            Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info))
                         },
                         supportingContent = {
                             Text(
@@ -228,13 +233,16 @@ fun LazyListScope.settingsSection(
                         },
                     )
 
-                    if (remoteInfo != null) {
                         ListItem(
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            headlineContent = { Text(text = "Sincronizar capítulos") },
-                            supportingContent = { Text(text = "Sincroniza numeração oficial e datas") },
                             modifier = Modifier.clickable {
-                                mangaRemoteInfoViewModel.syncChaptersByManga(mangaId = remoteInfo.id!!)
+                                chapterRemoteInfoViewModel.syncChaptersByManga(mangaId = remoteInfo.id!!)
+                            },
+                            headlineContent = {
+                                Text(text = "Sincronizar capítulos")
+                            },
+                            supportingContent = {
+                                Text(text = "Sincroniza numeração oficial e datas")
                             },
                             leadingContent = {
                                 Icon(

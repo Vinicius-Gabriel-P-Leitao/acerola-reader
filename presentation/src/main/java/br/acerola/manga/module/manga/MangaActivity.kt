@@ -50,7 +50,9 @@ class MangaActivity(
                     manga = it,
                     mangaViewModel = mangaViewModel,
                     mangaDirectoryViewModel= mangaDirectoryViewModel,
-                    mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
+                    chapterArchiveViewModel = chapterArchiveViewModel,
+                    mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
+                    chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
                 )
             }
         }

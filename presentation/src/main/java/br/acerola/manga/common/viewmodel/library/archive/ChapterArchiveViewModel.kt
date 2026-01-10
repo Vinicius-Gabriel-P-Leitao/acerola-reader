@@ -2,23 +2,36 @@ package br.acerola.manga.common.viewmodel.library.archive
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.error.UserMessage
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ChapterArchiveViewModel @Inject constructor(
-    @param:DirectoryCase
-    private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
+    @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
+    @param:DirectoryCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
+
+    private val _isIndexing = MutableStateFlow(value = false)
+    val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
+    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+
     private val _chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
     val chapterPage: StateFlow<ChapterArchivePageDto?> = _chapterPage.asStateFlow()
 
@@ -52,6 +65,20 @@ class ChapterArchiveViewModel @Inject constructor(
             }
 
             _chapterPage.value = result.copy(items = sortedItems)
+        }
+    }
+
+    fun syncChaptersByMangaDirectory(folderId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            rescanMangaChaptersUseCase(mangaId = folderId).handleResult()
+            _isIndexing.value = false
+        }
+    }
+
+    private suspend fun <T> Either<UserMessage, T>.handleResult() {
+        this.onLeft { error ->
+            _uiEvents.send(element = error)
         }
     }
 }
