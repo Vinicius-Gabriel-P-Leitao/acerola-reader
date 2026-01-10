@@ -26,12 +26,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.presentation.R
 
 @Composable
 fun SyncMangaArchive(
@@ -68,22 +70,23 @@ fun SyncMangaArchive(
                 Spacer(modifier = Modifier.width(width = 12.dp))
 
                 Text(
-                    text = "Sincronizar arquivos", style = MaterialTheme.typography.titleMedium
+                    text = stringResource(id = R.string.title_settings_sync_files),
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
 
             ListItem(
                 modifier = Modifier.clickable { chapterArchiveViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
-                headlineContent = { Text(text = "Sincronizar capítulos") },
-                supportingContent = { Text(text = "Sincroniza metadados de cada capítulo local") },
+                headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
+                supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_local)) },
                 leadingContent = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             )
 
             ListItem(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                headlineContent = { Text(text = "Sincronizar cover e banner") },
-                supportingContent = { Text(text = "Busca imagens já baixadas na pasta") },
+                headlineContent = { Text(text = stringResource(id = R.string.title_sync_cover_banner)) },
+                supportingContent = { Text(text = stringResource(id = R.string.description_sync_cover_banner)) },
                 leadingContent = {
                     Icon(imageVector = Icons.Default.ImageSearch, contentDescription = null)
                 },
@@ -93,4 +96,5 @@ fun SyncMangaArchive(
             )
         }
     }
+
 }

@@ -50,8 +50,7 @@ fun SyncMangadexData(
     ) {
         Column {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
+                verticalAlignment = Alignment.CenterVertically, modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = 8.dp)
             ) {
@@ -81,42 +80,25 @@ fun SyncMangadexData(
             if (remoteInfo != null) {
                 ListItem(
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable {
-                        mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = remoteInfo.id!!)
-                    },
-                    headlineContent = {
-                        Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info))
-                    },
+                    modifier = Modifier.clickable { mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = remoteInfo.id!!) },
+                    headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
+                    leadingContent = { Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null) },
                     supportingContent = {
                         Text(
                             text = pluralStringResource(
-                                id = R.plurals.description_sync_mangadex_remote_info_supporting, count = 1
+                                id = R.plurals.description_sync_mangadex_remote_info_supporting,
+                                count = 1
                             )
-                        )
-                    },
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome, contentDescription = null
                         )
                     },
                 )
 
                 ListItem(
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable {
-                        chapterRemoteInfoViewModel.syncChaptersByManga(mangaId = remoteInfo.id!!)
-                    },
-                    headlineContent = {
-                        Text(text = "Sincronizar capítulos")
-                    },
-                    supportingContent = {
-                        Text(text = "Sincroniza numeração oficial e datas")
-                    },
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null
-                        )
-                    },
+                    modifier = Modifier.clickable { chapterRemoteInfoViewModel.syncChaptersByManga(mangaId = remoteInfo.id!!) },
+                    headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
+                    supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_remote)) },
+                    leadingContent = { Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null) },
                 )
             }
         }

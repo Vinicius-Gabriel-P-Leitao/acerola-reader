@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
@@ -19,6 +20,7 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.module.manga.component.ConfigPreferences
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMangadexData
+import br.acerola.manga.presentation.R
 
 fun LazyListScope.settingsSection(
     directory: MangaDirectoryDto,
@@ -28,11 +30,10 @@ fun LazyListScope.settingsSection(
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
     chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
 ) {
-    // SEÇÃO: CONFIGURAÇÕES DE EXIBIÇÃO
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Configurações de Exibição",
+            title = stringResource(id = R.string.title_settings_display_config),
             modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
@@ -45,7 +46,7 @@ fun LazyListScope.settingsSection(
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Configurações dos Arquivos",
+            title = stringResource(id = R.string.title_settings_file_config),
             modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
@@ -62,7 +63,7 @@ fun LazyListScope.settingsSection(
     item {
         SmartCard(
             type = CardType.CONTENT,
-            title = "Sincronizar com MangaDex",
+            title = stringResource(id = R.string.title_config_sync_mangadex),
             modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {

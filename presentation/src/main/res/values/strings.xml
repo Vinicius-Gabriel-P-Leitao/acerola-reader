@@ -6,16 +6,19 @@
     <string name="navigation_config_activity">config</string>
     <string name="navigation_history_activity">history</string>
     <string name="navigation_chapters_activity">chapters</string>
+
     <!-- Screen label -->
     <string name="label_home_activity">home</string>
     <string name="label_config_activity">configurações</string>
     <string name="label_history_activity">histórico</string>
     <string name="label_chapters_activity">capitulos</string>
+
     <!-- Screen content description -->
     <string name="description_home_activity">Tela de inicio que lista os mangás.</string>
     <string name="description_config_activity">Tela de configurações</string>
     <string name="description_history_activity">Tela de historico de mangás lidos</string>
     <string name="description_chapters_activity">Tela de listagem dos capitulos</string>
+
     <!-- Icons -->
     <string name="description_icon_navigation_back">Icone so botão que volta na pilha da navegação.</string>
     <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
@@ -25,6 +28,7 @@
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
     <string name="description_icon_home_filter">Filtro</string>
+
     <!-- Text title -->
     <string name="title_text_archive_configs_in_app">Configuração dos arquivos</string>
     <string name="title_text_mangadex_configs_in_app">Configuração do mangadex</string>
@@ -35,6 +39,7 @@
     <string name="title_sync_mangadex_remote_info">Sincronizar metadados</string>
     <string name="title_chapter_tabs_chapters">Capítulos (%1$d)</string>
     <string name="title_chapter_tabs_settings">Configurações</string>
+
     <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
     <string name="description_text_selected_manga_directory">Pasta selecionada: %1$s</string>
@@ -53,9 +58,21 @@
         <item quantity="one">Busca informações da obra na API.</item>
         <item quantity="other">Busca informações das obras na API.</item>
     </plurals>
+
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
     <string name="message_path_not_found">Pasta não encontrada.</string>
     <string name="description_icon_search_close">Fechar busca</string>
     <string name="description_text_search_no_results">Nenhum resultado encontrado</string>
+
+    <!-- Settings Section -->
+    <string name="title_settings_display_config">Configurações de Exibição</string>
+    <string name="title_settings_page_preferences">Preferências da página</string>
+    <string name="title_settings_file_config">Configurações dos Arquivos</string>
+    <string name="title_settings_sync_files">Sincronizar arquivos</string>
+    <string name="title_sync_chapters">Sincronizar capítulos</string>
+    <string name="description_sync_chapters_local">Sincroniza metadados de cada capítulo local</string>
+    <string name="description_sync_chapters_remote">Sincroniza numeração oficial e datas</string>
+    <string name="title_sync_cover_banner">Sincronizar cover e banner</string>
+    <string name="description_sync_cover_banner">Busca imagens já baixadas na pasta</string>
 </resources>

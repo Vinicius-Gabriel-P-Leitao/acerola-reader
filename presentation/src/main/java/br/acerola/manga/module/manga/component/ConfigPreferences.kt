@@ -19,9 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.presentation.R
 
 @Composable
 fun ConfigPreferences() {
@@ -53,7 +55,8 @@ fun ConfigPreferences() {
             Spacer(modifier = Modifier.width(width = 12.dp))
 
             Text(
-                text = "Preferências da página", style = MaterialTheme.typography.titleMedium
+                text = stringResource(id = R.string.title_settings_page_preferences),
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
