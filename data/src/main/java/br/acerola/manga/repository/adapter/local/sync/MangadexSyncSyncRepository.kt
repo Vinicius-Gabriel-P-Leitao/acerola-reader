@@ -16,9 +16,9 @@ import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toModel
-import br.acerola.manga.repository.port.ApiRepository
-import br.acerola.manga.repository.port.LibraryRepository
 import br.acerola.manga.repository.di.Mangadex
+import br.acerola.manga.repository.port.ApiRepository
+import br.acerola.manga.repository.port.LibrarySyncRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -33,14 +33,14 @@ import javax.inject.Singleton
 import kotlin.math.roundToInt
 
 @Singleton
-class MangadexSyncRepository @Inject constructor(
-    private val authorDao: AuthorDao,
+class MangadexSyncSyncRepository @Inject constructor(
     private val genreDao: GenreDao,
+    private val authorDao: AuthorDao,
     private val directoryDao: MangaDirectoryDao,
-    private val remoteInfoDao: MangaRemoteInfoDao,
+    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
     private val coverService: MangaSaveCoverService,
     @param:ApplicationContext private val context: Context,
-) : LibraryRepository<MangaRemoteInfoDto> {
+) : LibrarySyncRepository<MangaRemoteInfoDto> {
     /**
      * Qualifier para saber que é:
      *
@@ -63,7 +63,7 @@ class MangadexSyncRepository @Inject constructor(
             return withContext(context = Dispatchers.IO) {
                 Either.catch {
                     val localDirectories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                    val allRemoteMangaInfo = remoteInfoDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
+                    val allRemoteMangaInfo = mangaRemoteInfoDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
                     val existingTitles = allRemoteMangaInfo.map { normalizeName(name = it.title) }.toSet()
 
                     val remoteInfoToSync = localDirectories.filter {
@@ -93,6 +93,7 @@ class MangadexSyncRepository @Inject constructor(
 
     override suspend fun rescanMangas(baseUri: Uri?): Either<LibrarySyncError, Unit> {
         _isIndexing.value = true
+
         try {
             return withContext(context = Dispatchers.IO) {
                 Either.catch {
@@ -129,16 +130,13 @@ class MangadexSyncRepository @Inject constructor(
         _progress.value = 0
 
         val rootPath = baseUri?.toString() ?: MangaDirectoryPreference.folderUriFlow(context).firstOrNull()
-
         if (rootPath.isNullOrBlank()) {
             _progress.value = -1
             return
         }
 
         val rootUri = rootPath.toUri()
-
         folders.forEachIndexed { index, current ->
-
             val result = Either.catch {
                 val title = current.name
                 val folderNameNormalized = normalizeName(name = title)
@@ -152,7 +150,6 @@ class MangadexSyncRepository @Inject constructor(
                 } ?: fetchedList.firstOrNull()
 
                 if (bestMatch != null) {
-
                     val authorId = bestMatch.authors?.let {
                         authorDao.insertOrGetId(entity = it.toModel())
                     }
@@ -167,7 +164,7 @@ class MangadexSyncRepository @Inject constructor(
                         )
                     }
 
-                    remoteInfoDao.insert(
+                    mangaRemoteInfoDao.insert(
                         entity = bestMatch.toModel(
                             authorId = authorId, coverId = coverId, genreId = genreId
                         )

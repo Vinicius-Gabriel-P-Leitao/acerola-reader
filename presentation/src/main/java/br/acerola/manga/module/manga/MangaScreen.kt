@@ -35,7 +35,8 @@ import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
 
 enum class MainTab(@param:StringRes val titleRes: Int) {
-    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters), SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
+    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters),
+    SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
 }
 
 @Composable

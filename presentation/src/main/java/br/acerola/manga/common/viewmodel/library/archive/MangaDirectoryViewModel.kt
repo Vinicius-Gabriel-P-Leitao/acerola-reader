@@ -34,9 +34,9 @@ import javax.inject.Inject
 class MangaDirectoryViewModel @Inject constructor(
     private val manager: FileSystemAccessManager,
     @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
+    @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
+    @param:DirectoryCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
     val progress: StateFlow<Int> = syncLibraryUseCase.progress

@@ -6,7 +6,9 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.di.MangadexFsOps
-import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.repository.port.ChapterManagementRepository
+import br.acerola.manga.repository.port.LibrarySyncRepository
+import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
@@ -32,7 +34,7 @@ object UseCaseModule {
     @Provides
     @DirectoryCase
     fun provideDirectorySyncLibraryUseCase(
-        @DirectoryFsOps repository: LibraryRepository<MangaDirectoryDto>
+        @DirectoryFsOps repository: LibrarySyncRepository<MangaDirectoryDto>
     ): SyncLibraryUseCase<MangaDirectoryDto> {
         return SyncLibraryUseCase(repository)
     }
@@ -40,31 +42,31 @@ object UseCaseModule {
     @Provides
     @DirectoryCase
     fun provideDirectoryObserveLibraryUseCase(
-        @DirectoryFsOps mangaOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
+        @DirectoryFsOps mangaOps: MangaManagementRepository<MangaDirectoryDto>
     ): ObserveLibraryUseCase<MangaDirectoryDto> {
-        return ObserveLibraryUseCase(mangaOperations = mangaOps)
+        return ObserveLibraryUseCase(mangaRepository = mangaOps)
     }
 
     @Provides
     @DirectoryCase
     fun provideDirectoryRescanMangaUseCase(
-        @DirectoryFsOps mangaOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
-    ): RescanMangaChaptersUseCase<MangaDirectoryDto> {
-        return RescanMangaChaptersUseCase(mangaOperations = mangaOps)
+        @DirectoryFsOps chapterOps: ChapterManagementRepository<ChapterArchivePageDto>
+    ): RescanMangaChaptersUseCase<ChapterArchivePageDto> {
+        return RescanMangaChaptersUseCase(chapterRepository = chapterOps)
     }
 
     @Provides
     @DirectoryCase
     fun provideDirectoryGetChaptersUseCase(
-        @DirectoryFsOps chapterOps: LibraryRepository.ChapterOperations<ChapterArchivePageDto>
+        @DirectoryFsOps chapterOps: ChapterManagementRepository<ChapterArchivePageDto>
     ): GetChaptersUseCase<ChapterArchivePageDto> {
-        return GetChaptersUseCase(chapterOperations = chapterOps)
+        return GetChaptersUseCase(chapterRepository = chapterOps)
     }
 
     @Provides
     @MangadexCase
     fun provideMangadexSyncLibraryUseCase(
-        @MangadexFsOps repository: LibraryRepository<MangaRemoteInfoDto>
+        @MangadexFsOps repository: LibrarySyncRepository<MangaRemoteInfoDto>
     ): SyncLibraryUseCase<MangaRemoteInfoDto> {
         return SyncLibraryUseCase(repository)
     }
@@ -72,24 +74,24 @@ object UseCaseModule {
     @Provides
     @MangadexCase
     fun provideMangadexObserveLibraryUseCase(
-        @MangadexFsOps mangaOps: LibraryRepository.MangaOperations<MangaRemoteInfoDto>
+        @MangadexFsOps mangaOps: MangaManagementRepository<MangaRemoteInfoDto>
     ): ObserveLibraryUseCase<MangaRemoteInfoDto> {
-        return ObserveLibraryUseCase(mangaOperations = mangaOps)
+        return ObserveLibraryUseCase(mangaRepository = mangaOps)
     }
 
     @Provides
     @MangadexCase
     fun provideMangadexRescanMangaUseCase(
-        @MangadexFsOps mangaOps: LibraryRepository.MangaOperations<MangaRemoteInfoDto>
-    ): RescanMangaChaptersUseCase<MangaRemoteInfoDto> {
-        return RescanMangaChaptersUseCase(mangaOperations = mangaOps)
+        @MangadexFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
+    ): RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto> {
+        return RescanMangaChaptersUseCase(chapterRepository = chapterOps)
     }
 
     @Provides
     @MangadexCase
     fun provideMangadexGetChaptersUseCase(
-        @MangadexFsOps chapterOps: LibraryRepository.ChapterOperations<ChapterRemoteInfoPageDto>
+        @MangadexFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
     ): GetChaptersUseCase<ChapterRemoteInfoPageDto> {
-        return GetChaptersUseCase(chapterOperations = chapterOps)
+        return GetChaptersUseCase(chapterRepository = chapterOps)
     }
 }

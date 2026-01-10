@@ -3,7 +3,7 @@ package br.acerola.manga.usecase.library
 import android.net.Uri
 import arrow.core.Either
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.repository.port.LibrarySyncRepository
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Pode ser injetado com qualificadores para operar em diferentes fontes (Local/Remoto).
  */
 class SyncLibraryUseCase<T>(
-    private val repository: LibraryRepository<T>
+    private val repository: LibrarySyncRepository<T>
 ) {
     val progress: StateFlow<Int> = repository.progress
     val isIndexing: StateFlow<Boolean> = repository.isIndexing

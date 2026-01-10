@@ -7,13 +7,15 @@ import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.flatMap
 import br.acerola.manga.config.preference.FileExtension
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toMangaDirectoryModel
 import br.acerola.manga.repository.di.DirectoryFsOps
-import br.acerola.manga.repository.port.LibraryRepository
+import br.acerola.manga.repository.port.ChapterManagementRepository
+import br.acerola.manga.repository.port.LibrarySyncRepository
 import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -33,10 +35,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DirectorySyncRepository @Inject constructor(
+class DirectorySyncSyncRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
-) : LibraryRepository<MangaDirectoryDto> {
+) : LibrarySyncRepository<MangaDirectoryDto> {
     /**
      * Qualifier para saber que é:
      *
@@ -44,7 +46,7 @@ class DirectorySyncRepository @Inject constructor(
      */
     @Inject
     @DirectoryFsOps
-    lateinit var mangaDirectoryOps: LibraryRepository.MangaOperations<MangaDirectoryDto>
+    lateinit var mangaDirectoryOps: ChapterManagementRepository<ChapterArchivePageDto>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()

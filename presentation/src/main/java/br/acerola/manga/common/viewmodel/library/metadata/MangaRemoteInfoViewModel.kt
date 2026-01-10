@@ -3,6 +3,7 @@ package br.acerola.manga.common.viewmodel.library.metadata
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
+import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.usecase.di.MangadexCase
@@ -27,7 +28,7 @@ import javax.inject.Inject
 class MangaRemoteInfoViewModel @Inject constructor(
     @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>,
-    @param:MangadexCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<MangaRemoteInfoDto>,
+    @param:MangadexCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
 
     private val _isIndexing = MutableStateFlow(value = false)
