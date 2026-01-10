@@ -52,9 +52,17 @@ fun MangaScreen(
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
+    // NOTE: Vai sobrescrever o que vem do Intent, isso é necessário para atualizar UI
+    val mangaState by mangaViewModel.manga.collectAsState()
+    val currentManga = mangaState ?: manga
+
     val chapterDto by mangaViewModel.chapters.collectAsState()
-    val isIndexing by mangaViewModel.isIndexing.collectAsState()
-    val progress by mangaViewModel.progress.collectAsState()
+
+    val chapterIsIndexing by mangaViewModel.chapterIsIndexing.collectAsState()
+    val chapterProgress by mangaViewModel.chapterProgress.collectAsState()
+
+    val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsState()
+    val mangaProgress by mangaViewModel.mangaProgress.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -99,15 +107,15 @@ fun MangaScreen(
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 item(
-                    key = "header_${manga.remoteInfo?.title}", contentType = "header"
+                    key = "header_${currentManga.remoteInfo?.title}", contentType = "header"
                 ) {
                     MangaHeader(
-                        manga = manga
+                        manga = currentManga
                     )
                 }
 
                 item(
-                    key = "tabs_${manga.remoteInfo?.title}", contentType = "tabs"
+                    key = "tabs_${currentManga.remoteInfo?.title}", contentType = "tabs"
                 ) {
                     MangaTabs(
                         totalChapters = totalChapters,
@@ -131,8 +139,7 @@ fun MangaScreen(
 
                     MainTab.SETTINGS -> {
                         settingsSection(
-                            directory = manga.directory,
-                            remoteInfo = manga.remoteInfo,
+                            directory = currentManga.directory, remoteInfo = currentManga.remoteInfo,
                             mangaDirectoryViewModel = mangaDirectoryViewModel,
                             mangaRemoteInfoViewModel = mangaRemoteInfoViewModel
                         )
@@ -140,7 +147,7 @@ fun MangaScreen(
                 }
 
                 item(
-                    key = "spacer_${manga.remoteInfo?.title}", contentType = "tabs"
+                    key = "spacer_${currentManga.remoteInfo?.title}", contentType = "tabs"
                 ) {
                     Spacer(modifier = Modifier.height(height = 24.dp))
                 }
@@ -151,11 +158,15 @@ fun MangaScreen(
             contentAlignment = Alignment.BottomStart,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(all = 8.dp),
+                .padding(all = 18.dp),
         ) {
             ProgressIndicator(
-                isLoading = isIndexing,
-                progress = if (progress >= 0) progress / 100f else null,
+                isLoading = mangaIsIndexing || chapterIsIndexing,
+                progress = when {
+                    chapterIsIndexing && chapterProgress >= 0 -> chapterProgress / 100f
+                    mangaIsIndexing && mangaProgress >= 0 -> mangaProgress / 100f
+                    else -> null
+                },
             )
         }
     }

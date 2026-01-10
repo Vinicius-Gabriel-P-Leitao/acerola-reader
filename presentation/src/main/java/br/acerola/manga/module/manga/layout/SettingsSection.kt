@@ -205,7 +205,9 @@ fun LazyListScope.settingsSection(
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
                         modifier = Modifier.clickable {
-                            mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = remoteInfo?.id!!)
+                            remoteInfo?.id?.let { id ->
+                                mangaRemoteInfoViewModel.rescanMangaByManga(mangaId = id)
+                            }
                         },
                         supportingContent = {
                             Text(

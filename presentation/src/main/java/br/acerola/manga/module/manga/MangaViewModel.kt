@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
 import br.acerola.manga.dto.ChapterDto
+import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
@@ -13,7 +14,6 @@ import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,14 +53,28 @@ class MangaViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    val isIndexing: StateFlow<Boolean> = combine(
+    // TODO: Transformar em config do DataStore
+    private var currentPage = 0
+    private val pageSize = 20
+    private var total = 0
+
+    val mangaIsIndexing: StateFlow<Boolean> = combine(
         flow = directoryObserve.isIndexing, flow2 = mangadexObserve.isIndexing
     ) { directoryIndexing, remoteInfoIndexing ->
         directoryIndexing || remoteInfoIndexing
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
     )
-    val progress: StateFlow<Int> = combine(
+
+    val chapterIsIndexing: StateFlow<Boolean> = combine(
+        flow = directoryGetChapters.isIndexing, flow2 = mangadexGetChapters.isIndexing
+    ) { directoryIndexing, remoteInfoIndexing ->
+        directoryIndexing || remoteInfoIndexing
+    }.stateIn(
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
+    )
+
+    val mangaProgress: StateFlow<Int> = combine(
         flow = directoryObserve.isIndexing,
         flow2 = directoryObserve.progress,
         flow3 = mangadexObserve.isIndexing,
@@ -75,10 +89,45 @@ class MangaViewModel @Inject constructor(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = -1
     )
 
-    // TODO: Transformar em config do DataStore
-    private var currentPage = 0
-    private val pageSize = 20
-    private var total = 0
+    val chapterProgress: StateFlow<Int> = combine(
+        flow = directoryGetChapters.isIndexing,
+        flow2 = directoryGetChapters.progress,
+        flow3 = mangadexGetChapters.isIndexing,
+        flow4 = mangadexGetChapters.progress
+    ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
+        when {
+            directoryBusy && directoryProg != -1 -> directoryProg
+            remoteInfoBusy && remoteInfoProg != -1 -> remoteInfoProg
+            else -> -1
+        }
+    }.stateIn(
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = -1
+    )
+
+    val manga: StateFlow<MangaDto?> = combine(
+        flow = _selectedDirectoryId,
+        flow2 = _selectedMangaId,
+        flow3 = directoryObserve(),
+        flow4 = mangadexObserve(),
+    ) { folderId, remoteInfoId, directories, remoteInfos ->
+        if (folderId == null) return@combine null
+        val directory = directories.find { it.id == folderId } ?: return@combine null
+
+        var remote = if (remoteInfoId != null) {
+            remoteInfos.find { it.id == remoteInfoId }
+        } else null
+
+        if (remote == null) {
+            val normalizedName = directory.name.normalizeKey()
+            remote = remoteInfos.find { it.title.normalizeKey() == normalizedName }
+        }
+
+        MangaDto(directory = directory, remoteInfo = remote)
+    }.stateIn(
+        initialValue = null,
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+    )
 
     fun init(folderId: Long, mangaId: Long?) {
         _selectedDirectoryId.value = folderId
@@ -87,7 +136,6 @@ class MangaViewModel @Inject constructor(
         viewModelScope.launch {
             loadPage(page = 0)
         }
-
     }
 
     fun loadPageAsync(page: Int) {
@@ -149,13 +197,13 @@ class MangaViewModel @Inject constructor(
 
     }
 
+    // WARN: Só no mangadex tem rota para dados tão detalhados para capitulos
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadPageAllChapters(
         folderId: Long, mangaId: Long?
     ): Flow<ChapterDto> {
-        return combine(
-            flow = directoryGetChapters.observeByManga(mangaId = folderId), flow2 = mangaId?.let {
-                mangadexGetChapters.observeByManga(mangaId = it)
+        return combine(flow = directoryGetChapters.observeByManga(mangaId = folderId), flow2 = mangaId?.let {
+            mangadexGetChapters.observeByManga(mangaId = it)
         } ?: flowOf(
             value = ChapterRemoteInfoPageDto(
                 items = emptyList(),
@@ -180,6 +228,9 @@ class MangaViewModel @Inject constructor(
         this.onLeft { error ->
             _uiEvents.send(element = error)
         }
+    }
 
+    private fun String.normalizeKey(): String {
+        return this.filter { it.isLetterOrDigit() }.lowercase()
     }
 }

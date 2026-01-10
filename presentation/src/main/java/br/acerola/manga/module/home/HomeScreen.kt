@@ -32,17 +32,16 @@ import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
 import br.acerola.manga.config.preference.HomeLayoutType
-import br.acerola.manga.presentation.R
 import br.acerola.manga.module.home.component.MangaGridItem
 import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.module.manga.MangaActivity
+import br.acerola.manga.presentation.R
 
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
-
 
     val layout by homeViewModel.selectedHomeLayout.collectAsState()
     val isIndexing by homeViewModel.isIndexing.collectAsState()
@@ -61,16 +60,13 @@ fun HomeScreen(
                     .padding(all = 6.dp),
                 itemContent = { manga ->
                     MangaListItem(
-                        manga = manga,
-                        onClick = {
+                        manga = manga, onClick = {
                             val intent = Intent(context, MangaActivity::class.java).apply {
                                 putExtra(MangaActivity.ChapterExtra.MANGA, manga)
                             }
                             context.startActivity(intent)
-                        }
-                    )
-                }
-            )
+                        })
+                })
 
             if (mangas.isEmpty() && !isIndexing) {
 //                EmptyState(error)
@@ -112,8 +108,7 @@ fun HomeScreen(
             }, items = listOf(
                 FloatingToolItem(
                     label = if (layout == HomeLayoutType.GRID) stringResource(
-                        id = R.string
-                            .description_text_home_layout_list_label
+                        id = R.string.description_text_home_layout_list_label
                     ) else stringResource(
                         id = R.string.description_text_home_layout_grid_label
                     ),
@@ -136,11 +131,11 @@ fun HomeScreen(
                 // TODO: Criar filtragem por categoria.
                 FloatingToolItem(
                     icon = {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
-                        )
-                    },
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                    )
+                },
                     label = stringResource(id = R.string.description_text_home_filter_label),
                     onClick = { println("Filtrar") })
             )

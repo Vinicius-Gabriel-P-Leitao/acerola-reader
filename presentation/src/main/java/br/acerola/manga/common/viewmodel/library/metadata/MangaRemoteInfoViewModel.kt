@@ -66,7 +66,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     fun rescanMangaByManga(mangaId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
-            rescanManga(mangaId)
+            rescanManga(mangaId).handleResult()
             _isIndexing.value = false
         }
     }

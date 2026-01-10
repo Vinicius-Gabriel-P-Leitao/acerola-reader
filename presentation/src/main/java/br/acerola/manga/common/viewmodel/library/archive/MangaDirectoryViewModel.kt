@@ -8,11 +8,9 @@ import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
-import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
@@ -95,7 +93,15 @@ class MangaDirectoryViewModel @Inject constructor(
         }
     }
 
-    // TODO: Quando isso aqui inciar, permitir o maldito sair da tela e ficar uma notificação.
+    fun rescanMangaByManga(mangaId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            rescanManga(mangaId).handleResult()
+            _isIndexing.value = false
+        }
+    }
+
+    // TODO: Quando isso aqui inciar, permitir o maldito user sair da tela e ficar uma notificação.
     fun deepScanLibrary() {
         viewModelScope.launch {
             _isIndexing.value = true

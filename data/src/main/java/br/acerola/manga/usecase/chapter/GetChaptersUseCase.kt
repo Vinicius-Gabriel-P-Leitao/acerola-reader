@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 class GetChaptersUseCase<T>(
     private val chapterRepository: ChapterManagementRepository<T>
 ) {
+
+    val progress: StateFlow<Int> = chapterRepository.progress
+    val isIndexing: StateFlow<Boolean> = chapterRepository.isIndexing
+
     /**
      * Retorna o fluxo principal de capítulos para um mangá.
      */

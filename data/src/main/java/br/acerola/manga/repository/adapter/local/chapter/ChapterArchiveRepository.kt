@@ -39,10 +39,10 @@ class ChapterArchiveRepository @Inject constructor(
 ) : ChapterManagementRepository<ChapterArchivePageDto> {
 
     private val _progress = MutableStateFlow(value = -1)
-    val progress: StateFlow<Int> = _progress.asStateFlow()
+    override val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _isIndexing = MutableStateFlow(value = false)
-    val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
     override suspend fun refreshMangaChapters(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {

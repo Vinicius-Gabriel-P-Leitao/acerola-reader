@@ -20,6 +20,8 @@ interface MangaManagementRepository<T> {
 }
 
 interface ChapterManagementRepository<T> {
+    val progress: StateFlow<Int>
+    val isIndexing: StateFlow<Boolean>
 
     fun observeChapters(mangaId: Long): StateFlow<T>
     fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<T>

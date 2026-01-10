@@ -52,10 +52,10 @@ class MangadexChapterRepository @Inject constructor(
     lateinit var mangadexChapterInfoService: RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String>
 
     private val _progress = MutableStateFlow(value = -1)
-    val progress: StateFlow<Int> = _progress.asStateFlow()
+    override val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _isIndexing = MutableStateFlow(value = false)
-    val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
     override suspend fun refreshMangaChapters(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
@@ -155,15 +155,12 @@ class MangadexChapterRepository @Inject constructor(
         }
 
         return chapters.toPageDto(
-            sources = sources,
-            pageSize = pageSize,
-            total = realTotal,
-            page = page
+            sources = sources, pageSize = pageSize, total = realTotal, page = page
         )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeSpecificChapters(     mangaId: Long,     chapters: List<String> ): Flow<ChapterRemoteInfoPageDto> {
+    override fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<ChapterRemoteInfoPageDto> {
         return chapterRemoteInfoDao.getChaptersByMangaAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
             val chapterIds = chapterList.map { it.id }
 
