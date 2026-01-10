@@ -2,7 +2,6 @@ package br.acerola.manga.module.manga
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import arrow.core.Either
 import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
@@ -16,7 +15,6 @@ import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -153,7 +150,6 @@ class MangaViewModel @Inject constructor(
         }
     }
 
-    // WARN: Só no mangadex tem rota para dados tão detalhados para capitulos
     private suspend fun loadPage(page: Int) {
         val folderId = _selectedDirectoryId.value ?: return
         val mangaId = _selectedMangaId.value
@@ -203,31 +199,6 @@ class MangaViewModel @Inject constructor(
         _chapter.value = ChapterDto(
             archive = localPage, remoteInfo = remotePage.copy(items = filteredRemoteItems)
         )
-    }
-
-    // WARN: Só no mangadex tem rota para dados tão detalhados para capitulos
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun loadPageAllChapters(folderId: Long, mangaId: Long?): Flow<ChapterDto> {
-        return combine(flow = directoryGetChapters.observeByManga(mangaId = folderId), flow2 = mangaId?.let {
-            mangadexGetChapters.observeByManga(mangaId = it)
-        } ?: flowOf(
-            value = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, total = 0, page = 0)
-        )) { local, remote ->
-            val remoteMap = remote.items.associateBy { it.chapter.normalizeChapter() }
-            val filteredRemoteItems = local.items.mapNotNull {
-                remoteMap[it.chapterSort.normalizeChapter()]
-            }
-
-            ChapterDto(
-                archive = local, remoteInfo = remote.copy(items = filteredRemoteItems)
-            )
-        }
-    }
-
-    private suspend fun <T> Either<UserMessage, T>.handleResult() {
-        this.onLeft { error ->
-            _uiEvents.send(element = error)
-        }
     }
 
     private fun String.normalizeKey(): String {
