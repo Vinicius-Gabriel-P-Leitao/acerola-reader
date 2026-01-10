@@ -170,6 +170,7 @@ class MangaViewModel @Inject constructor(
             it.chapterSort
         }
 
+        // NOTE: Para assimiliar com o remote.
         val searchChapters = chapterSorts.flatMap {
             val parts = it.split(".")
 

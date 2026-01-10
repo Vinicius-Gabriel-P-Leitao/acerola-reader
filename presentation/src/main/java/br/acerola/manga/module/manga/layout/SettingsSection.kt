@@ -145,20 +145,23 @@ fun LazyListScope.settingsSection(
                     )
 
                     ListItem(
-                        modifier = Modifier.clickable { /* TODO */ },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         headlineContent = { Text(text = "Sincronizar cover e banner") },
                         supportingContent = { Text(text = "Busca imagens já baixadas na pasta") },
-                        leadingContent = { Icon(imageVector = Icons.Default.ImageSearch, contentDescription = null) },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                        leadingContent = {
+                            Icon(imageVector = Icons.Default.ImageSearch, contentDescription = null)
+                        },
+                        modifier = Modifier.clickable {
+                            mangaDirectoryViewModel.rescanMangaByManga(mangaId = directory.id)
+                        },
                     )
                 }
             }
         }
     }
 
-    item { Spacer(modifier = Modifier.height(12.dp)) }
+    item { Spacer(modifier = Modifier.height(height = 12.dp)) }
 
-    // SEÇÃO: MANGADEX (MANTIDO O ÍCONE DE IMAGEM)
     item {
         SmartCard(
             type = CardType.CONTENT,
@@ -227,6 +230,7 @@ fun LazyListScope.settingsSection(
 
                     if (remoteInfo != null) {
                         ListItem(
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                             headlineContent = { Text(text = "Sincronizar capítulos") },
                             supportingContent = { Text(text = "Sincroniza numeração oficial e datas") },
                             modifier = Modifier.clickable {
@@ -238,7 +242,6 @@ fun LazyListScope.settingsSection(
                                     contentDescription = null
                                 )
                             },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                         )
                     }
                 }

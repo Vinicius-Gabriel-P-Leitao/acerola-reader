@@ -10,6 +10,7 @@ enum class TypeAuthor(val type: String) {
     ARTIST(type = "artist");
 
     companion object {
+
         fun getByType(type: String): TypeAuthor {
             return entries.find { it.type == type } ?: AUTHOR
         }

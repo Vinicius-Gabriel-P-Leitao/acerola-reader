@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterArchiveDao : BaseDao<ChapterArchive> {
-    @Query(value = "DELETE FROM chapter_archive WHERE folder_path_fk = :folderId")
+    @Query(value = "DELETE FROM chapter_archive WHERE manga_directory_fk = :folderId")
     suspend fun deleteChaptersByMangaDirectoryId(folderId: Long)
 
     @Query(value = "SELECT * FROM chapter_archive ORDER BY chapter ASC")
@@ -17,14 +17,14 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     @Query(value = "SELECT * FROM chapter_archive WHERE id = :chapterId")
     fun getChaptersFileById(chapterId: Long): Flow<ChapterArchive?>
 
-    @Query(value = "SELECT COUNT(id) FROM chapter_archive WHERE folder_path_fk = :folderId")
+    @Query(value = "SELECT COUNT(id) FROM chapter_archive WHERE manga_directory_fk = :folderId")
     suspend fun countChaptersByMangaDirectory(folderId: Long): Int
 
     @Query(
         value = """
         SELECT *
         FROM chapter_archive
-        WHERE folder_path_fk = :folderId 
+        WHERE manga_directory_fk = :folderId 
         ORDER BY 
             -- NOTE: Ordena pela parte inteira (antes do ponto)
             CAST(chapter_sort AS INTEGER) ASC, 
@@ -44,7 +44,7 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
         value = """
             SELECT *
             FROM chapter_archive
-            WHERE folder_path_fk = :folderId
+            WHERE manga_directory_fk = :folderId
             ORDER BY 
                 -- NOTE: Ordena pela parte inteira (antes do ponto)
                 CAST(chapter_sort AS INTEGER) ASC, 
@@ -61,6 +61,6 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     )
     suspend fun getChaptersPaged(folderId: Long, pageSize: Int, offset: Int): List<ChapterArchive>
 
-    @Query("SELECT * FROM chapter_archive WHERE folder_path_fk = :folderId AND chapter_sort IN (:chapters)")
+    @Query("SELECT * FROM chapter_archive WHERE manga_directory_fk = :folderId AND chapter_sort IN (:chapters)")
     fun getChaptersByMangaAndSorts(folderId: Long, chapters: List<String>): Flow<List<ChapterArchive>>
 }

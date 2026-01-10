@@ -25,11 +25,11 @@ data class ChapterRemoteInfo(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    @ColumnInfo(name = "chapter")
-    val chapter: String,
-
     @ColumnInfo(name = "title")
     val title: String?,
+
+    @ColumnInfo(name = "chapter")
+    val chapter: String,
 
     @ColumnInfo(name = "page_count")
     val pageCount: Int? = null,
