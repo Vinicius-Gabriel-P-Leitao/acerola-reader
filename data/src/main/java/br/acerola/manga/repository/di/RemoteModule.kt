@@ -5,7 +5,7 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexChapterInfoService
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverService
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoService
-import br.acerola.manga.repository.port.ApiRepository
+import br.acerola.manga.repository.port.RemoteRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,19 +29,19 @@ abstract class ApiModule {
     @Mangadex
     abstract fun bindMangadexMangaInfoService(
         impl: MangadexMangaInfoService
-    ): ApiRepository.RemoteInfoOperations<MangaRemoteInfoDto, String>
+    ): RemoteRepository.RemoteInfoOperations<MangaRemoteInfoDto, String>
 
     @Binds
     @Singleton
     @Mangadex
     abstract fun bindMangadexChapterInfoService(
         impl: MangadexChapterInfoService
-    ): ApiRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
+    ): RemoteRepository.RemoteInfoOperations<ChapterRemoteInfoDto, String>
 
     @Binds
     @Singleton
     @Mangadex
     abstract fun bindMangadexFetchCoverService(
         impl: MangadexFetchCoverService
-    ): ApiRepository.ArchiveOperations<String>
+    ): RemoteRepository.ArchiveOperations<String>
 }

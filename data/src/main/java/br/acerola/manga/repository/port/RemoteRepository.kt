@@ -4,7 +4,7 @@ import arrow.core.Either
 import br.acerola.manga.error.message.NetworkError
 
 // NOTE: O vararg não é obrigatório por padrão.
-interface ApiRepository {
+interface RemoteRepository {
     interface RemoteInfoOperations<R, P> {
         suspend fun searchInfo(
             manga: String, limit: Int = 10, offset: Int = 0, onProgress: ((Int) -> Unit)? = null, vararg extra: P?
