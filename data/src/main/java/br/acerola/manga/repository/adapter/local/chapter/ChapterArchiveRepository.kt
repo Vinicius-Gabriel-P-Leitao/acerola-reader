@@ -139,9 +139,7 @@ class ChapterArchiveRepository @Inject constructor(
 
         val realTotal = if (total > 0) {
             total
-        } else {
-            chapterArchiveDao.countChaptersByMangaDirectory(folderId = mangaId)
-        }
+        } else chapterArchiveDao.countChaptersByMangaDirectory(folderId = mangaId)
 
         val items = chapterArchiveDao.getChaptersPaged(
             pageSize = pageSize, folderId = mangaId, offset = offset
