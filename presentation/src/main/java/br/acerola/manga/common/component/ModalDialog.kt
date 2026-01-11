@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun Modal(
+fun ModalDialog(
     show: Boolean,
     onDismiss: () -> Unit,
     title: String? = null,
