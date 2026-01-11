@@ -1,7 +1,10 @@
 package br.acerola.manga.module.manga
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.acerola.manga.config.preference.ChapterPageSizeType
+import br.acerola.manga.config.preference.ChapterPerPagePreference
 import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
@@ -15,6 +18,7 @@ import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,11 +36,15 @@ import javax.inject.Inject
 //  scan só dele.
 @HiltViewModel
 class MangaViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
+
+    private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
+    val selectedChapterPerPage: StateFlow<ChapterPageSizeType> = _selectedChapterPerPage.asStateFlow()
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
     val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
@@ -52,7 +60,7 @@ class MangaViewModel @Inject constructor(
 
     // TODO: Transformar em config do DataStore
     private var currentPage = 0
-    private val pageSize = 20
+    private var pageSize = 20
     private var total = 0
 
     val mangaIsIndexing: StateFlow<Boolean> = combine(
@@ -130,12 +138,43 @@ class MangaViewModel @Inject constructor(
         _selectedDirectoryId.value = folderId
         _selectedMangaId.value = mangaId
 
+        // Observe preference changes and trigger load
         viewModelScope.launch {
-            loadPage(page = 0)
+            ChapterPerPagePreference.chapterPerPageFlow(context).collect { size ->
+                _selectedChapterPerPage.value = size
+                pageSize = size.key.toInt()
+                loadPage(page = currentPage)
+            }
         }
 
         // NOTE: Atualiza a pagina.
         viewModelScope.launch {
+            chapterIsIndexing.collect { indexing ->
+                if (!indexing) {
+                    loadPage(page = currentPage)
+                }
+            }
+        }
+
+        observeChapterPerPage()
+    }
+
+    fun updateChapterPerPage(size: ChapterPageSizeType) {
+        if (_selectedChapterPerPage.value == size) return
+        _selectedChapterPerPage.value = size
+        viewModelScope.launch {
+            ChapterPerPagePreference.saveChapterPerPage(context, size)
+        }
+    }
+
+    private fun observeChapterPerPage() {
+        viewModelScope.launch {
+            ChapterPerPagePreference.chapterPerPageFlow(context).collect { size ->
+                if (_selectedChapterPerPage.value != size) {
+                    _selectedChapterPerPage.value = size
+                }
+            }
+
             chapterIsIndexing.collect { indexing ->
                 if (!indexing) {
                     loadPage(page = currentPage)

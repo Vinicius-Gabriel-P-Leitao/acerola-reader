@@ -17,6 +17,7 @@ import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewM
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.module.manga.component.ConfigPreferences
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMangadexData
@@ -25,6 +26,7 @@ import br.acerola.manga.presentation.R
 fun LazyListScope.settingsSection(
     directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
+    mangaViewModel: MangaViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     chapterArchiveViewModel: ChapterArchiveViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
@@ -37,7 +39,7 @@ fun LazyListScope.settingsSection(
             modifier = Modifier.padding(all = 6.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
-            ConfigPreferences()
+            ConfigPreferences(mangaViewModel = mangaViewModel)
         }
     }
 

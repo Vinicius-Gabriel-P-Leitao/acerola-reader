@@ -12,12 +12,12 @@ enum class HomeLayoutType(val key: String) {
     GRID(key = "GRID");
 
     companion object {
-        fun fromKey(key: String?): HomeLayoutType =
-            entries.firstOrNull { it.key == key } ?: LIST
+
+        fun fromKey(key: String?): HomeLayoutType = entries.firstOrNull { it.key == key } ?: LIST
     }
 }
 
-object HomeLayoutPreferences {
+object HomeLayoutPreference {
 
     private val Context.dataStore by preferencesDataStore(name = "home_layout_prefs")
 
@@ -31,6 +31,6 @@ object HomeLayoutPreferences {
 
     fun layoutFlow(context: Context): Flow<HomeLayoutType> =
         context.dataStore.data.map { prefs ->
-            HomeLayoutType.fromKey(prefs[HOME_LAYOUT_KEY])
+            HomeLayoutType.fromKey(key =prefs[HOME_LAYOUT_KEY])
         }
 }

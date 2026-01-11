@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,17 +17,29 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
+import br.acerola.manga.common.component.RadioGroup
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.config.preference.ChapterPageSizeType
+import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.presentation.R
 
 @Composable
-fun ConfigPreferences() {
+fun ConfigPreferences(
+    mangaViewModel: MangaViewModel,
+) {
+    val selected by mangaViewModel.selectedChapterPerPage.collectAsState(initial = null)
+    val options = ChapterPageSizeType.entries
+
+    val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
+
     SmartCard(
         type = CardType.CONTENT,
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
@@ -59,5 +72,16 @@ fun ConfigPreferences() {
                 style = MaterialTheme.typography.titleMedium
             )
         }
+
+        Spacer(modifier = Modifier.height(height = 12.dp))
+
+        RadioGroup(
+            selectedIndex = selectedIndex,
+            options = options.map { it.key.lowercase() },
+            onSelect = { index ->
+                val extension = options[index]
+                mangaViewModel.updateChapterPerPage(size = extension)
+            }
+        )
     }
 }

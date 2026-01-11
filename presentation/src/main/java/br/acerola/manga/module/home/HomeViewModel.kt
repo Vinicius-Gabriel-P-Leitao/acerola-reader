@@ -3,7 +3,7 @@ package br.acerola.manga.module.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.config.preference.HomeLayoutPreferences
+import br.acerola.manga.config.preference.HomeLayoutPreference
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -26,13 +26,9 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-
     @param:DirectoryCase private val directorySync: SyncLibraryUseCase<MangaDirectoryDto>,
-
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
-
     @param:MangadexCase private val mangadexSync: SyncLibraryUseCase<MangaRemoteInfoDto>,
-
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
 ) : ViewModel() {
 
@@ -81,14 +77,15 @@ class HomeViewModel @Inject constructor(
     fun updateHomeLayout(layout: HomeLayoutType) {
         if (_selectedHomeLayout.value == layout) return
         _selectedHomeLayout.value = layout
+
         viewModelScope.launch {
-            HomeLayoutPreferences.saveLayout(context, layout)
+            HomeLayoutPreference.saveLayout(context, layout)
         }
     }
 
     private fun observeHomeLayout() {
         viewModelScope.launch {
-            HomeLayoutPreferences.layoutFlow(context).collect { layout ->
+            HomeLayoutPreference.layoutFlow(context).collect { layout ->
                 if (_selectedHomeLayout.value != layout) {
                     _selectedHomeLayout.value = layout
                 }

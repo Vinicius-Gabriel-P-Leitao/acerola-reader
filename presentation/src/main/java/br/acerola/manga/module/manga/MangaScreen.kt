@@ -144,6 +144,7 @@ fun MangaScreen(
 
                     MainTab.SETTINGS -> {
                         settingsSection(
+                            mangaViewModel = mangaViewModel,
                             directory = currentManga.directory,
                             remoteInfo = currentManga.remoteInfo,
                             mangaDirectoryViewModel = mangaDirectoryViewModel,
