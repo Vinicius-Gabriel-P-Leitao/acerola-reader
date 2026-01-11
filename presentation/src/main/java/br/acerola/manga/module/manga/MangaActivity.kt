@@ -36,24 +36,30 @@ class MangaActivity(
     }
 
     val manga: MangaDto? by lazy {
+        val safeIntent = intent ?: return@lazy null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent?.getParcelableExtra(ChapterExtra.MANGA, MangaDto::class.java)
+            safeIntent.extras?.getParcelable(ChapterExtra.MANGA, MangaDto::class.java)
         } else {
-            @Suppress("DEPRECATION") intent.getParcelableExtra(ChapterExtra.MANGA)
+            @Suppress("DEPRECATION")
+            safeIntent.extras?.getParcelable(ChapterExtra.MANGA)
         }
     }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.CHAPTERS.route)) {
-            manga?.let {
+            if (manga != null) {
                 MangaScreen(
-                    manga = it,
+                    manga = manga!!,
                     mangaViewModel = mangaViewModel,
-                    mangaDirectoryViewModel= mangaDirectoryViewModel,
+                    mangaDirectoryViewModel = mangaDirectoryViewModel,
                     chapterArchiveViewModel = chapterArchiveViewModel,
                     mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
                     chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
                 )
+            } else {
+                LaunchedEffect(Unit) {
+                    finish()
+                }
             }
         }
     }
