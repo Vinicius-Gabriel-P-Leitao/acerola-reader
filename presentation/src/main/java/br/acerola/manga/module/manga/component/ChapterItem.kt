@@ -54,7 +54,8 @@ fun ChapterItem(
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(weight = 1f)) {
                 Text(
@@ -78,7 +79,8 @@ fun ChapterItem(
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                         text = stringResource(
-                            id = R.string.label_chapter_scanlation_prefix, chapterRemoteInfoDto.scanlation
+                            id = R.string.label_chapter_scanlation_prefix,
+                            chapterRemoteInfoDto.scanlation
                         ),
                     )
                 }
@@ -97,30 +99,38 @@ fun ChapterItem(
     }
 
     if (showDetails) {
-        ModalDialog(show = true, title = mainTitle, onDismiss = { showDetails = false }, confirmButtonContent = {
-            TextButton(onClick = { showDetails = false }) {
-                Text(text = stringResource(id = R.string.label_dialog_close))
-            }
-        }, content = {
-            Column {
-                DetailRow(
-                    label = stringResource(id = R.string.label_chapter_detail_file), value = chapterFileDto.name
-                )
-                chapterRemoteInfoDto?.let { remote ->
-                    if (remote.title.isNotBlank()) DetailRow(
-                        label = stringResource(id = R.string.label_chapter_detail_title), value = remote.title
-                    )
+        ModalDialog(
+            show = true,
+            title = mainTitle,
+            onDismiss = { showDetails = false },
+            confirmButtonContent = {
+                TextButton(onClick = { showDetails = false }) {
+                    Text(text = stringResource(id = R.string.label_dialog_close))
+                }
+            },
+            content = {
+                Column {
                     DetailRow(
-                        label = stringResource(id = R.string.label_chapter_detail_scanlation),
-                        value = remote.scanlation
+                        label = stringResource(id = R.string.label_chapter_detail_file),
+                        value = chapterFileDto.name
                     )
-                    DetailRow(
-                        label = stringResource(id = R.string.label_chapter_detail_pages),
-                        value = "${remote.pageCount ?: "?"}"
-                    )
+                    chapterRemoteInfoDto?.let { remote ->
+                        if (remote.title.isNotBlank()) DetailRow(
+                            label = stringResource(id = R.string.label_chapter_detail_title),
+                            value = remote.title
+                        )
+                        DetailRow(
+                            label = stringResource(id = R.string.label_chapter_detail_scanlation),
+                            value = remote.scanlation
+                        )
+                        DetailRow(
+                            label = stringResource(id = R.string.label_chapter_detail_pages),
+                            value = "${remote.pageCount ?: "?"}"
+                        )
+                    }
                 }
             }
-        })
+        )
     }
 }
 
@@ -129,10 +139,14 @@ private fun DetailRow(label: String, value: String) {
     if (value.isBlank()) return
     Column(modifier = Modifier.padding(bottom = 8.dp)) {
         Text(
-            text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

@@ -52,8 +52,8 @@ fun MangaHeader(manga: MangaDto) {
                 .crossfade(enable = true).build(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(height = 300.dp)
                 .blur(radius = 10.dp)
+                .height(height = 300.dp)
                 .align(Alignment.TopCenter)
         )
 
@@ -110,14 +110,6 @@ fun MangaHeader(manga: MangaDto) {
                         ),
                     )
 
-                    Spacer(modifier = Modifier.height(height = 4.dp))
-
-                    Text(
-                        text = manga.remoteInfo?.status ?: "Unknown",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
                     Spacer(modifier = Modifier.height(height = 8.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -136,6 +128,14 @@ fun MangaHeader(manga: MangaDto) {
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(height = 4.dp))
+
+                    Text(
+                        text = manga.remoteInfo?.status ?: "Unknown",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 

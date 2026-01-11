@@ -54,10 +54,6 @@
     <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos.</string>
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
-    <plurals name="description_sync_mangadex_remote_info_supporting">
-        <item quantity="one">Busca informações da obra na API.</item>
-        <item quantity="other">Busca informações das obras na API.</item>
-    </plurals>
 
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
