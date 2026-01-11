@@ -84,4 +84,13 @@
     <string name="label_chapter_detail_scanlation">Grupo de tradução</string>
     <string name="label_chapter_detail_pages">Páginas</string>
     <string name="label_chapter_scanlation_prefix">Scan: %1$s</string>
+
+    <!-- Manga Header -->
+    <string name="manga_header_cover_description">Capa do mangá</string>
+    <string name="manga_header_unknown">Desconhecido</string>
+    <string name="manga_header_synopsis_title">Sinopse</string>
+    <string name="manga_header_no_description">Nenhuma descrição disponível.</string>
+    <string name="manga_header_read_less">Ler menos</string>
+    <string name="manga_header_read_more">Ler mais</string>
+    <string name="manga_header_read_now">Ler agora</string>
 </resources>

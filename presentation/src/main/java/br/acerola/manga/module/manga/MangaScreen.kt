@@ -41,6 +41,9 @@ enum class MainTab(@param:StringRes val titleRes: Int) {
     SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
 }
 
+
+// TODO: Inserir o botão de iniciar a leitura do primeiro mangá ou o ultimo lido vai ter duas labels INICIAR |
+//  CONTINUAR com icone diferente e teremos histórico de capitulo.
 @Composable
 fun MangaScreen(
     manga: MangaDto,
