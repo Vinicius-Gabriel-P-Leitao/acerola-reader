@@ -17,7 +17,7 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.database.entity.relation.RemoteInfoRelations
 
-fun RemoteInfoRelations.toDto(firstPage: ChapterRemoteInfoPageDto): MangaRemoteInfoDto {
+fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
     return MangaRemoteInfoDto(
         id = this.remoteInfo.id,
         mirrorId = this.remoteInfo.mirrorId,
@@ -26,9 +26,9 @@ fun RemoteInfoRelations.toDto(firstPage: ChapterRemoteInfoPageDto): MangaRemoteI
         romanji = this.remoteInfo.romanji,
         year = this.remoteInfo.publication,
         status = this.remoteInfo.status,
-        authors = this.author?.toDto(),
-        cover = this.cover?.toDto(),
-        genre = this.genre?.let { listOf(it.toDto()) } ?: emptyList(),
+        authors = this.author.firstOrNull()?.toDto(),
+        cover = this.cover.firstOrNull()?.toDto(),
+        genre = this.genre.map { it.toDto() },
     )
 }
 
@@ -38,9 +38,9 @@ fun Author.toDto(): AuthorDto {
     )
 }
 
-fun AuthorDto.toModel(): Author {
+fun AuthorDto.toModel(mangaId: Long): Author {
     return Author(
-        name = name, type = TypeAuthor.getByType(type), mirrorId = id
+        name = name, type = TypeAuthor.getByType(type), mirrorId = id, mangaRemoteInfoFk = mangaId
     )
 }
 
@@ -50,9 +50,9 @@ fun Genre.toDto(): GenreDto {
     )
 }
 
-fun GenreDto.toModel(): Genre {
+fun GenreDto.toModel(mangaId: Long): Genre {
     return Genre(
-        genre = name, mirrorId = id
+        genre = name, mirrorId = id, mangaRemoteInfoFk = mangaId
     )
 }
 
@@ -62,9 +62,9 @@ fun Cover.toDto(): CoverDto {
     )
 }
 
-fun CoverDto.toModel(): Cover {
+fun CoverDto.toModel(mangaId: Long): Cover {
     return Cover(
-        fileName = fileName, url = url, mirrorId = id
+        fileName = fileName, url = url, mirrorId = id, mangaRemoteInfoFk = mangaId
     )
 }
 
@@ -86,19 +86,14 @@ fun ChapterDownloadSource.toDto(): ChapterSourceDto {
     )
 }
 
-fun MangaRemoteInfoDto.toModel(
-    authorId: Long?, coverId: Long?, genreId: Long?
-): MangaRemoteInfo {
+fun MangaRemoteInfoDto.toModel(): MangaRemoteInfo {
     return MangaRemoteInfo(
         mirrorId = this.mirrorId,
         title = this.title,
         description = this.description,
         romanji = this.romanji.orEmpty(),
         status = this.status,
-        publication = this.year ?: 0,
-        mangaAuthorFk = authorId,
-        mangaGenreFk = genreId,
-        mangaCoverFk = coverId
+        publication = this.year ?: 0
     )
 }
 

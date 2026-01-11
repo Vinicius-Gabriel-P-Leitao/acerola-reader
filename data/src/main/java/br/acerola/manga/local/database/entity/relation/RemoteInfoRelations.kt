@@ -11,21 +11,21 @@ data class RemoteInfoRelations(
     @Embedded val remoteInfo: MangaRemoteInfo,
 
     @Relation(
-        parentColumn = "manga_author_fk",
-        entityColumn = "id"
+        parentColumn = "id",
+        entityColumn = "manga_remote_info_fk"
     )
-    val author: Author?,
+    val author: List<Author>,
 
     @Relation(
-        parentColumn = "manga_cover_fk",
-        entityColumn = "id"
+        parentColumn = "id",
+        entityColumn = "manga_remote_info_fk"
     )
-    val cover: Cover?,
+    val cover: List<Cover>,
 
     @Relation(
-        parentColumn = "manga_genre_fk",
-        entityColumn = "id"
+        parentColumn = "id",
+        entityColumn = "manga_remote_info_fk"
     )
-    val genre: Genre?
+    val genre: List<Genre>
 
 )

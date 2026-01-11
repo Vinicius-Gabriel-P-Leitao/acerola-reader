@@ -7,7 +7,6 @@ import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.error.exception.MangadexRequestException
@@ -19,11 +18,8 @@ import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
-import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
-import br.acerola.manga.local.database.entity.metadata.ChapterRemoteInfo
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toModel
-import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.di.Mangadex
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
@@ -39,7 +35,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -168,9 +163,7 @@ class MangadexMangaRepository @Inject constructor(
             coroutineScope {
                 remoteInfoRelations.map { remoteInfo ->
                     async(context = Dispatchers.IO) {
-                        val firstPage: ChapterRemoteInfoPageDto =
-                            loadFirstPage(mangaId = remoteInfo.remoteInfo.id)
-                        remoteInfo.toDto(firstPage)
+                        remoteInfo.toDto()
                     }
                 }.awaitAll()
             }
@@ -178,26 +171,6 @@ class MangadexMangaRepository @Inject constructor(
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
             started = SharingStarted.Lazily,
             initialValue = emptyList()
-        )
-    }
-
-    private suspend fun loadFirstPage(mangaId: Long): ChapterRemoteInfoPageDto {
-        val pageSize = 20
-        val total = chapterRemoteInfoDao.countChaptersByMangaRemoteInfo(mangaId)
-
-        val initialChapter: List<ChapterRemoteInfo> = chapterRemoteInfoDao.getChaptersPaged(
-            mangaId = mangaId, pageSize = pageSize, offset = 0
-        )
-
-        val initialChapterSource: List<ChapterDownloadSource> = if (initialChapter.isNotEmpty()) {
-            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(
-                chapterId = initialChapter.map { it.id }).first()
-        } else {
-            emptyList()
-        }
-
-        return initialChapter.toPageDto(
-            sources = initialChapterSource, pageSize = pageSize, total = total, page = 0
         )
     }
 
@@ -225,25 +198,29 @@ class MangadexMangaRepository @Inject constructor(
                 } ?: fetchedList.firstOrNull()
 
                 if (bestMatch != null) {
-                    val authorId = bestMatch.authors?.let {
-                        authorDao.insertOrGetId(entity = it.toModel())
-                    }
-
-                    val genreId = bestMatch.genre.firstOrNull()?.let {
-                        genreDao.insertOrGetId(entity = it.toModel())
-                    }
-
-                    val coverId = bestMatch.cover?.let { dto ->
-                        coverService.processCover(
-                            coverDto = dto, rootUri = rootUri, folderId = current.id, mangaFolderName = current.name
-                        )
-                    }
-
-                    mangaRemoteInfoDao.insert(
-                        entity = bestMatch.toModel(
-                            authorId = authorId, coverId = coverId, genreId = genreId
-                        )
+                    val mangaId = mangaRemoteInfoDao.insert(
+                        entity = bestMatch.toModel()
                     )
+
+                    if (mangaId != -1L) {
+                        bestMatch.authors?.let {
+                            authorDao.insert(entity = it.toModel(mangaId = mangaId))
+                        }
+
+                        bestMatch.genre.forEach {
+                            genreDao.insert(entity = it.toModel(mangaId = mangaId))
+                        }
+
+                        bestMatch.cover?.let { dto ->
+                            coverService.processCover(
+                                coverDto = dto,
+                                rootUri = rootUri,
+                                folderId = current.id,
+                                mangaFolderName = current.name,
+                                mangaRemoteInfoFk = mangaId
+                            )
+                        }
+                    }
                 }
             }
 

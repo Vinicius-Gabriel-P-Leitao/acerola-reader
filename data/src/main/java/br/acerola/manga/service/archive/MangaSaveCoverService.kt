@@ -24,6 +24,7 @@ class MangaSaveCoverService @Inject constructor(
         folderId: Long,
         coverDto: CoverDto,
         mangaFolderName: String,
+        mangaRemoteInfoFk: Long
     ): Long {
         var savedUriString: String? = null
 
@@ -81,6 +82,7 @@ class MangaSaveCoverService @Inject constructor(
                 mirrorId = coverDto.id,
                 fileName = "cover.png",
                 url = coverDto.url,
+                mangaRemoteInfoFk = mangaRemoteInfoFk
             )
         )
 

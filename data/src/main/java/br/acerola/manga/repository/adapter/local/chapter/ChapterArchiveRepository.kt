@@ -109,12 +109,8 @@ class ChapterArchiveRepository @Inject constructor(
                 _progress.value = 100
             }.mapLeft { exception ->
                 when (exception) {
+                    is IOException -> LibrarySyncError.DiskIOFailure(path = "Unknown", cause = exception)
                     is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                    is IOException -> LibrarySyncError.DiskIOFailure(
-                        path = "Unknown",
-                        cause = exception
-                    )
-
                     is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
                 }
