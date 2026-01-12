@@ -17,7 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangadexChapterInfoRepositoryRepository @Inject constructor(
+class MangadexChapterInfoRepository @Inject constructor(
     private val api: MangadexChapterInfoApi
 ) : RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String> {
 

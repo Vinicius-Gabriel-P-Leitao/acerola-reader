@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 @Singleton
 
-class MangadexMangaInfoRepositoryRepository @Inject constructor(
+class MangadexMangaInfoRepository @Inject constructor(
     @param:ApplicationContext private val context: Context, private val api: MangadexMangaInfoApi
 ) : RemoteInfoOperationsRepository<MangaRemoteInfoDto, String> {
 
