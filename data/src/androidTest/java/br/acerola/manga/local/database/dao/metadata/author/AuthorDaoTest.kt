@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.fixtures.MetadataFixtures
+import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.database.DatabaseAcerola
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -20,8 +21,8 @@ import java.io.IOException
 class AuthorDaoTest {
 
     private lateinit var db: DatabaseAcerola
-    private lateinit var authorDao: br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-    private lateinit var mangaDao: br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
+    private lateinit var authorDao: AuthorDao
+    private lateinit var mangaDao: MangaRemoteInfoDao
 
     @Before
     fun setUp() {
