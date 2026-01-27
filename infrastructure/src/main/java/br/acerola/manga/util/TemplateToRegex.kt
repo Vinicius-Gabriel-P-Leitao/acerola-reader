@@ -9,6 +9,7 @@ fun templateToRegex(template: String): Regex {
         .replace(oldValue = ".", newValue = "\\.")
         .replace(oldValue = "{value}", newValue = "(\\d+)")
         .replace(oldValue = "{sub}", newValue = "(?:[.,](\\d+))?")
+        .replace(oldValue = "{extension}", newValue = "(cbz|cbr)")
         .replace(oldValue = "*", newValue = ".*?")
         .replace(oldValue = " ", newValue = "\\s*")
 
@@ -24,5 +25,5 @@ fun detectTemplate(fileName: String): String {
         }
     }
 
-    return "Ch. {value}{sub}.*.cbz"
+    return "Ch. {value}{sub}.*.{extension}"
 }
