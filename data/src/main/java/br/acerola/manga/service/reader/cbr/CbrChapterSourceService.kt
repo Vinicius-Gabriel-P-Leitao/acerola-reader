@@ -14,7 +14,9 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.core.net.toUri
 
+// TODO: Estudar mais as libs e fazer uma otimização e organização da busca desses dados
 @Singleton
 class CbrChapterSourceService @Inject constructor(
     @param:ApplicationContext private val context: Context
@@ -55,7 +57,7 @@ class CbrChapterSourceService @Inject constructor(
 
     private fun resolveFile(path: String): File {
         return if (path.startsWith("content://")) {
-            val uri = Uri.parse(path)
+            val uri = path.toUri()
             val inputStream = context.contentResolver.openInputStream(uri)
                 ?: throw IllegalStateException("Could not open URI: $path")
 

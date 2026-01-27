@@ -3,6 +3,8 @@ package br.acerola.manga.service.cache
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+// TODO: Otimizar o cache das paginas, isso é bem importante
 @Singleton
 class PageCacheService @Inject constructor() {
 

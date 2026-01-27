@@ -20,6 +20,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.dto.archive.ChapterFileDto
 
+
+// TODO: Fazer UI 100% mais bonita e otimizada com funções
 @Composable
 fun ReaderScreen(
     viewModel: ReaderViewModel,

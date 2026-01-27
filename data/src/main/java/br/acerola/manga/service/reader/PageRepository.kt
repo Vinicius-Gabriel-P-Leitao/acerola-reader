@@ -9,9 +9,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+// TODO: Otimizar esse código e fazer erros em casos de cache ou conflitos já que esse mano gerencia os bagulho/
 @Singleton
 class PageRepository @Inject constructor(
-    private val factory: ChapterSourceFactory, private val cache: PageCacheService
+    private val factory: ChapterSourceFactory,
+    private val cache: PageCacheService
 ) {
 
     private lateinit var source: ChapterSourceService

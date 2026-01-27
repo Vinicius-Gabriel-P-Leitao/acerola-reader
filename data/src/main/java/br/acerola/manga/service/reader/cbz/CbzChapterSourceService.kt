@@ -13,6 +13,7 @@ import java.util.zip.ZipFile
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Estudar mais as libs e fazer uma otimização e organização da busca desses dados
 @Singleton
 class CbzChapterSourceService @Inject constructor(
     @param:ApplicationContext private val context: Context

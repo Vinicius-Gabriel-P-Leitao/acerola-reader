@@ -7,6 +7,7 @@ import br.acerola.manga.service.reader.port.ChapterSourceService
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Não existe muito o que otimizar aqui além do erro para formato invalido
 @Singleton
 class ChapterSourceFactory @Inject constructor(
     private val cbz: CbzChapterSourceService,

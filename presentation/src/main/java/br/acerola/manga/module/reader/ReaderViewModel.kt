@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// TODO: Criar método que usa o maldito UserMessage para fazer Toast de erros para o usuário
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository
