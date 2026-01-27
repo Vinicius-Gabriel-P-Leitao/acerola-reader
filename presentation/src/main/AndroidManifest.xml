@@ -7,6 +7,12 @@
             android:exported="false"
             android:label="@string/label_chapters_activity"
             android:theme="@style/Theme.Acerola" />
+
+        <activity
+            android:name="br.acerola.manga.module.reader.ReaderActivity"
+            android:exported="false"
+            android:label="@string/label_reader_activity"
+            android:theme="@style/Theme.Acerola" />
     </application>
 
 </manifest>

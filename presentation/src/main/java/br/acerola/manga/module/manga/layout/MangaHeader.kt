@@ -97,9 +97,7 @@ fun MangaHeader(manga: MangaDto) {
                         modifier = Modifier
                             .clip(shape = RoundedCornerShape(size = 12.dp))
                             .width(width = 130.dp)
-                            .height(
-                                height = 190.dp
-                            )
+                            .height(height = 190.dp)
                             .background(color = MaterialTheme.colorScheme.surfaceVariant)
                     )
 
@@ -151,7 +149,7 @@ fun MangaHeader(manga: MangaDto) {
             }
         }
 
-        // Sinopse
+        // NOTE: Sinopse
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -165,7 +163,6 @@ fun MangaHeader(manga: MangaDto) {
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             )
-
 
             Spacer(modifier = Modifier.height(height = 8.dp))
 
@@ -183,6 +180,15 @@ fun MangaHeader(manga: MangaDto) {
                 modifier = Modifier.padding(top = 4.dp),
                 text = if (isExpanded) stringResource(id = R.string.manga_header_read_less) else stringResource(id = R.string.manga_header_read_more),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            )
+
+            Spacer(modifier = Modifier.height(height = 8.dp))
+
+            // TODO: Inserir o botão de iniciar a leitura do primeiro mangá ou o ultimo lido vai ter duas labels INICIAR |
+            //  CONTINUAR com icone diferente e teremos histórico de capitulo.
+            SmartButton(
+                type = ButtonType.TEXT, modifier = Modifier.fillMaxWidth(), onClick = { println("Testes") }, text =
+                    "Continuar"
             )
         }
     }

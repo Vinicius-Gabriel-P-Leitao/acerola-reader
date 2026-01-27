@@ -6,18 +6,21 @@
     <string name="navigation_config_activity">config</string>
     <string name="navigation_history_activity">history</string>
     <string name="navigation_chapters_activity">chapters</string>
+    <string name="navigation_reader_activity">reader</string>
 
     <!-- Screen label -->
     <string name="label_home_activity">home</string>
     <string name="label_config_activity">configurações</string>
     <string name="label_history_activity">histórico</string>
     <string name="label_chapters_activity">capitulos</string>
+    <string name="label_reader_activity">leitor</string>
 
     <!-- Screen content description -->
     <string name="description_home_activity">Tela de inicio que lista os mangás.</string>
     <string name="description_config_activity">Tela de configurações</string>
     <string name="description_history_activity">Tela de historico de mangás lidos</string>
     <string name="description_chapters_activity">Tela de listagem dos capitulos</string>
+    <string name="description_reader_activity">Tela de leitura do capítulo</string>
 
     <!-- Icons -->
     <string name="description_icon_navigation_back">Icone so botão que volta na pilha da navegação.</string>

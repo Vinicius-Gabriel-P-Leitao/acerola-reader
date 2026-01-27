@@ -2,6 +2,8 @@ package br.acerola.manga.common.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -20,11 +22,17 @@ enum class Destination(
         route = R.string.navigation_home_activity,
         contentDescriptionRes = R.string.description_home_activity,
     ),
-    CHAPTERS(
-        icon = Icons.Default.Home,
+    MANGA(
+        icon = Icons.AutoMirrored.Filled.MenuBook,
         label = R.string.label_chapters_activity,
         route = R.string.navigation_chapters_activity,
         contentDescriptionRes = R.string.description_chapters_activity,
+    ),
+    READER(
+        icon = Icons.Default.Book,
+        label = R.string.label_reader_activity,
+        route = R.string.navigation_reader_activity,
+        contentDescriptionRes = R.string.description_reader_activity,
     ),
     HISTORY(
         icon = Icons.Default.History,

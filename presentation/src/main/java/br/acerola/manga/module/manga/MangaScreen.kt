@@ -1,5 +1,6 @@
 package br.acerola.manga.module.manga
 
+import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
@@ -33,6 +35,7 @@ import br.acerola.manga.module.manga.layout.MangaHeader
 import br.acerola.manga.module.manga.layout.MangaTabs
 import br.acerola.manga.module.manga.layout.chaptersSection
 import br.acerola.manga.module.manga.layout.settingsSection
+import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
 
@@ -41,21 +44,20 @@ enum class MainTab(@param:StringRes val titleRes: Int) {
     SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
 }
 
-
-// TODO: Inserir o botão de iniciar a leitura do primeiro mangá ou o ultimo lido vai ter duas labels INICIAR |
-//  CONTINUAR com icone diferente e teremos histórico de capitulo.
 @Composable
 fun MangaScreen(
     manga: MangaDto,
     mangaViewModel: MangaViewModel,
     chapterArchiveViewModel: ChapterArchiveViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
+    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
 ) {
     LaunchedEffect(key1 = manga.directory.id) {
         mangaViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
     }
+
+    val context = LocalContext.current
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
@@ -98,8 +100,13 @@ fun MangaScreen(
     }
 
     val handleChapterClick = remember {
+        // TODO: Carregar o ReaderActivity e passar todos dados via Intent para que ele saiva carregar o chapter
         { chapter: ChapterFileDto, remote: ChapterFeedDto? ->
-            // TODO: Navegar de forma inteligente
+            val intent = Intent(context, ReaderActivity::class.java).apply {
+                putExtra(ReaderActivity.PageExtra.PAGE, chapter)
+            }
+
+            context.startActivity(intent)
         }
     }
 

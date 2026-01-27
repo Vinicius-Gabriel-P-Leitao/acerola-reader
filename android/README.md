@@ -31,10 +31,11 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 *   **Leitor de Mangás Integrado:**
     *   [ ] Suporte completo para formatos `.cbz` e `.cbr`.
 *   **Configuração e Gerenciamento do Mangá (Refatoração):**
-    *   [ ] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
+    *   [X] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
     *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
     *   [ ] **Edição de Metadados:** Editar metadados básicos com opção de "Trancar" o mangá para impedir sobrescrita.
-    *   [ ] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se o banner for removido, a capa assume o lugar.
+    *   [X] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se 
+        o banner for removido, a capa assume o lugar.
     *   [ ] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
     *   [ ] **Ações de Limpeza (com confirmação):**
         *   Limpar metadados (remove do DB e apaga `ComicInfo.xml`).

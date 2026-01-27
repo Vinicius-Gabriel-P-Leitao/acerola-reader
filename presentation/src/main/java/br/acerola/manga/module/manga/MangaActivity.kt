@@ -22,7 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MangaActivity(
-    override val startDestinationRes: Int = Destination.CHAPTERS.route
+    override val startDestinationRes: Int = Destination.MANGA.route
 ) : BaseActivity() {
 
     private val chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel by viewModels()
@@ -46,7 +46,7 @@ class MangaActivity(
     }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
-        composable(route = context.getString(Destination.CHAPTERS.route)) {
+        composable(route = context.getString(Destination.MANGA.route)) {
             if (manga != null) {
                 MangaScreen(
                     manga = manga!!,
@@ -69,7 +69,7 @@ class MangaActivity(
         val snackbarHostState = LocalSnackbarHostState.current
         val context = LocalContext.current
 
-        // TODO: Ver por que isso tá aqui
+        // NOTE: Isso emite os erros para o snackbar, porem deve ser tirado daqui
         LaunchedEffect(key1 = Unit) {
             mangaViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
