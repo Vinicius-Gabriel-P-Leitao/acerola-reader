@@ -7,6 +7,10 @@ import br.acerola.manga.service.reader.port.ChapterSourceService
 import com.github.junrar.Archive
 import com.github.junrar.rarfile.FileHeader
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -25,12 +29,23 @@ class CbrChapterSourceService @Inject constructor(
     private lateinit var archive: Archive
     private lateinit var entries: List<FileHeader>
 
+    private val mutex = Mutex()
+
+
     fun open(chapter: ChapterFileDto): ChapterSourceService {
+        // Close previous archive if it exists to release file handle
+        try {
+            archive.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         val file = resolveFile(chapter.path)
 
-        archive = Archive(file)
+        val newArchive = Archive(file)
 
-        entries = archive.fileHeaders
+        // Filter and sort entries
+        val headers = newArchive.fileHeaders
             .filter { !it.isDirectory }
             .filter {
                 val name = it.fileName.lowercase()
@@ -41,19 +56,30 @@ class CbrChapterSourceService @Inject constructor(
             }
             .sortedBy { it.fileName }
 
+        this.archive = newArchive
+        this.entries = headers
+
         return this
     }
 
     override suspend fun pageCount(): Int = entries.size
 
     override suspend fun openPage(index: Int): InputStream {
-        val header = entries.getOrNull(index) ?: error("Página $index inválida")
+        // We lock execution so only one extraction happens at a time
+        return mutex.withLock {
+            withContext(Dispatchers.IO) {
+                val localArchive = archive ?: error("Archive not open")
+                val header = entries.getOrNull(index) ?: error("Invalid page index: $index")
 
-        val output = ByteArrayOutputStream()
-        archive.extractFile(header, output)
+                val output = ByteArrayOutputStream()
+                // extractFile relies on an internal file pointer that must not move during extraction
+                localArchive.extractFile(header, output)
 
-        return ByteArrayInputStream(output.toByteArray())
+                ByteArrayInputStream(output.toByteArray())
+            }
+        }
     }
+
 
     private fun resolveFile(path: String): File {
         return if (path.startsWith("content://")) {
@@ -61,7 +87,10 @@ class CbrChapterSourceService @Inject constructor(
             val inputStream = context.contentResolver.openInputStream(uri)
                 ?: throw IllegalStateException("Could not open URI: $path")
 
+            // Create a temp file in cache
             val tempFile = File(context.cacheDir, "temp_chapter_read.cbr")
+
+            // Overwrite existing temp file
             FileOutputStream(tempFile).use { outputStream ->
                 inputStream.copyTo(outputStream)
             }
