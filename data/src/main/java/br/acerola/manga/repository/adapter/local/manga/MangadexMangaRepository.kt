@@ -12,8 +12,6 @@ import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.error.exception.MangadexRequestException
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
-import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
@@ -52,8 +50,6 @@ class MangadexMangaRepository @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val coverService: MangaSaveCoverService,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
-    private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
-    private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
 ) : MangaManagementRepository<MangaRemoteInfoDto> {
 
     @Inject

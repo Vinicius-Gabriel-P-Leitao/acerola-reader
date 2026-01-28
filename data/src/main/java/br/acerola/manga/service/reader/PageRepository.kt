@@ -1,6 +1,9 @@
 package br.acerola.manga.service.reader
 
+import arrow.core.Either
+import arrow.core.right
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.service.cache.PageCacheService
 import br.acerola.manga.service.reader.port.ChapterSourceService
 import kotlinx.coroutines.CoroutineScope
@@ -9,38 +12,39 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
-// TODO: Otimizar esse código e fazer erros em casos de cache ou conflitos já que esse mano gerencia os bagulho/
 @Singleton
 class PageRepository @Inject constructor(
     private val factory: ChapterSourceFactory,
     private val cache: PageCacheService
 ) {
-
     private lateinit var source: ChapterSourceService
 
-    fun openChapter(chapter: ChapterFileDto) {
-        source = factory.create(chapter)
-        cache.clear()
+    fun openChapter(chapter: ChapterFileDto): Either<ChapterError, Unit> {
+        return factory.create(chapter).map { newSource ->
+            source = newSource
+            cache.clear()
+        }
     }
 
     suspend fun pageCount(): Int = source.pageCount()
 
-    suspend fun loadPage(index: Int): ByteArray {
-        cache.get(index)?.let { return it }
+    suspend fun loadPage(index: Int): Either<ChapterError, ByteArray> {
+        cache.get(index).onRight { return it.right() }
 
-        val bytes = source.openPage(index).use { it.readBytes() }
-        cache.put(index, bytes)
-
-        return bytes
+        return source.openPage(index)
+            .map { stream ->
+                stream.use { it.readBytes() }
+            }.onRight { bytes ->
+                cache.put(index, data = bytes)
+            }
     }
 
     fun prefetchWindow(center: Int) {
         val range = (center + 1)..(center + 3)
 
         range.forEach { index ->
-            CoroutineScope(Dispatchers.IO).launch {
-                if (cache.get(index) == null) {
+            CoroutineScope(context = Dispatchers.IO).launch {
+                if (cache.get(index).isLeft()) {
                     loadPage(index)
                 }
             }

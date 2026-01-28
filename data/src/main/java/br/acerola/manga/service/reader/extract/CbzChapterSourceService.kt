@@ -1,11 +1,14 @@
-package br.acerola.manga.service.reader.cbz
+package br.acerola.manga.service.reader.extract
 
 import android.content.Context
 import androidx.core.net.toUri
+import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.service.reader.port.ChapterSourceService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.zip.ZipEntry
@@ -22,27 +25,39 @@ class CbzChapterSourceService @Inject constructor(
     private lateinit var zipFile: ZipFile
     private lateinit var entries: List<ZipEntry>
 
-    fun open(chapter: ChapterFileDto): ChapterSourceService {
-        val file = resolveFile(chapter.path)
-
-        zipFile = ZipFile(file)
-        entries = zipFile.entries().toList()
-            .filter { !it.isDirectory }
-            .filter {
-                val name = it.name.lowercase()
-                name.endsWith(".jpg") ||
-                        name.endsWith(".jpeg") ||
-                        name.endsWith(".png") ||
-                        name.endsWith(".webp")
-            }
-            .sortedBy { it.name }
-        return this
-    }
-
     override suspend fun pageCount(): Int = entries.size
 
-    override suspend fun openPage(index: Int): InputStream {
-        return zipFile.getInputStream(entries[index])
+    override suspend fun openPage(index: Int): Either<ChapterError, InputStream> {
+        return Either.Companion.catch { zipFile.getInputStream(entries[index]) }
+            .mapLeft { exception ->
+                ChapterError.ExtractionFailed(cause = exception)
+            }
+    }
+
+    override fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService> {
+        return Either.catch {
+            val file = resolveFile(chapter.path)
+
+            zipFile = ZipFile(file)
+            entries = zipFile.entries().toList()
+                .filter { !it.isDirectory }
+                .filter {
+                    val name = it.name.lowercase()
+                    // TODO: Fazer isso como pattern matching
+                    name.endsWith(".jpg") ||
+                            name.endsWith(".jpeg") ||
+                            name.endsWith(".png") ||
+                            name.endsWith(".webp")
+                }
+                .sortedBy { it.name }
+
+            this
+        }.mapLeft { error ->
+            when (error) {
+                is FileNotFoundException -> ChapterError.ArchiveNotFound(chapter.path)
+                else -> ChapterError.ArchiveCorrupted(chapter.path, error)
+            }
+        }
     }
 
     private fun resolveFile(path: String): File {

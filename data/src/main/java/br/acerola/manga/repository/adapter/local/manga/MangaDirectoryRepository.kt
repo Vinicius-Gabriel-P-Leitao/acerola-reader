@@ -46,7 +46,6 @@ import javax.inject.Singleton
 class MangaDirectoryRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
-    private val archiveDao: ChapterArchiveDao
 ) : MangaManagementRepository<MangaDirectoryDto> {
 
     /**

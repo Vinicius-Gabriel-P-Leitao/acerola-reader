@@ -17,7 +17,8 @@ import javax.inject.Singleton
 @Singleton
 
 class MangadexMangaInfoRepository @Inject constructor(
-    @param:ApplicationContext private val context: Context, private val api: MangadexMangaInfoApi
+    @param:ApplicationContext private val context: Context,
+    private val api: MangadexMangaInfoApi
 ) : RemoteInfoOperationsRepository<MangaRemoteInfoDto, String> {
 
     // TODO: Criar um progresso simples, esse progresso vai ser só pra saber que isso iniciou

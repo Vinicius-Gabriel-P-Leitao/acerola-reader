@@ -1,7 +1,7 @@
 package br.acerola.manga.service.reader.di
 
-import br.acerola.manga.service.reader.cbr.CbrChapterSourceService
-import br.acerola.manga.service.reader.cbz.CbzChapterSourceService
+import br.acerola.manga.service.reader.extract.CbrChapterSourceService
+import br.acerola.manga.service.reader.extract.CbzChapterSourceService
 import br.acerola.manga.service.reader.port.ChapterSourceService
 import dagger.Binds
 import dagger.Module

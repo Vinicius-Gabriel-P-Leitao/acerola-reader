@@ -9,6 +9,7 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.exception.MangadexRequestException
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
+import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
@@ -42,7 +43,7 @@ import javax.inject.Singleton
 class MangadexChapterRepository @Inject constructor(
     private val chapterArchiveDao: ChapterArchiveDao,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
-    private val directoryDao: br.acerola.manga.local.database.dao.archive.MangaDirectoryDao,
+    private val directoryDao: MangaDirectoryDao,
     private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
 ) : ChapterManagementRepository<ChapterRemoteInfoPageDto> {

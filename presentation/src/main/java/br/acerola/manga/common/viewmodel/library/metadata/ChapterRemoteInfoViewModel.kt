@@ -50,23 +50,22 @@ class ChapterRemoteInfoViewModel @Inject constructor(
         currentPage = firstPage.page
 
         _chapterPage.value = firstPage
-
     }
 
     fun loadPage(page: Int) {
         viewModelScope.launch {
             _chapterPage.value = null
+
             val result: ChapterRemoteInfoPageDto = getChaptersUseCase.loadPage(
                 mangaId = _selectedMangaId.value!!,
                 pageSize = pageSize,
                 total = total,
                 page = page,
             )
+
             val sortedItems: List<ChapterFeedDto> = result.items.sortedBy {
                 it.chapter.normalizeChapter().toFloatOrNull() ?: 0f
             }
-
-
 
             _chapterPage.value = result.copy(items = sortedItems)
         }
