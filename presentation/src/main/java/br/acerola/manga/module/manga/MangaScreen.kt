@@ -34,7 +34,7 @@ import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.module.manga.layout.MangaHeader
 import br.acerola.manga.module.manga.layout.MangaTabs
 import br.acerola.manga.module.manga.layout.chaptersSection
-import br.acerola.manga.module.manga.layout.settingsSection
+import br.acerola.manga.module.manga.layout.configSection
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
@@ -153,7 +153,7 @@ fun MangaScreen(
                     }
 
                     MainTab.SETTINGS -> {
-                        settingsSection(
+                        configSection(
                             mangaViewModel = mangaViewModel,
                             directory = currentManga.directory,
                             remoteInfo = currentManga.remoteInfo,

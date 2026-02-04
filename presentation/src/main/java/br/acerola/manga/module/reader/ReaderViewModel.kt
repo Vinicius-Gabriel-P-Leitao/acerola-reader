@@ -6,6 +6,7 @@ import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.reader.state.ReaderUiState
+import br.acerola.manga.module.reader.state.ReadingMode
 import br.acerola.manga.service.reader.PageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -58,6 +59,22 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    fun onCurrentPageChanged(index: Int) {
+        _state.update { it.copy(currentPage = index) }
+    }
+
+    fun onSliderChanged(index: Int) {
+        val target = index.coerceIn(0, state.value.pageCount - 1)
+        _state.update { it.copy(currentPage = target) }
+    }
+
+    fun toggleUiVisibility() {
+        _state.update { it.copy(isUiVisible = !it.isUiVisible) }
+    }
+
+    fun updateReadingMode(mode: ReadingMode) {
+        _state.update { it.copy(readingMode = mode) }
+    }
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
             _uiEvents.send(element = error)
