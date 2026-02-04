@@ -8,7 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.module.reader.component.ReaderContent
+import br.acerola.manga.module.reader.layout.ReaderContent
 import br.acerola.manga.module.reader.state.ReadingMode
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged

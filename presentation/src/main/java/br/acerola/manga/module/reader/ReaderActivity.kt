@@ -29,7 +29,7 @@ import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.component.ReaderBottomControls
-import br.acerola.manga.module.reader.component.ReaderTopBar
+import br.acerola.manga.module.reader.layout.ReaderTopBar
 import br.acerola.manga.module.reader.state.ReadingMode
 import dagger.hilt.android.AndroidEntryPoint
 
