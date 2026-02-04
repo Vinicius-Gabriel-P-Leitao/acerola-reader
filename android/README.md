@@ -23,8 +23,8 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 
 ### 🛠️ FIXME (Correções Prioritárias)
 
-*   [ ] **Bug no Primeiro Scan:** Verificar por que no primeiro scan de mangás os capítulos não estão sendo mapeados.
-*   [ ] **Performance:** Reformular o `loadPage` da seção de capítulos na tela de detalhes do mangá.
+*   [x] **Bug no Primeiro Scan:** Verificar por que no primeiro scan de mangás os capítulos não estão sendo mapeados.
+*   [x] **Performance:** Reformular o `loadPage` da seção de capítulos na tela de detalhes do mangá.
 
 ### 🚧 Planejado / Em Andamento
 
@@ -44,11 +44,13 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
     *   [ ] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
         *   Gerar `ComicInfo.xml` por padrão; ler se existir.
         *   Resolver conflitos: Adicionar opção "Metadata ComicInfo ? Database" e persistir essa escolha (SQLite/DataStore).
-    *   [ ] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).
+    *   [x] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).
 *   **Melhorias na UI/UX:**
-    *   [ ] **ChapterItem:** Reformular visual para ficar mais agradável.
-    *   [ ] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo (avaliar `SearchBar` do Material3).
-    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porem com thema mais dark.
+    *   [x] **ChapterItem:** Reformular visual para ficar mais agradável.
+    *   [x] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo 
+        (avaliar `SearchBar` do Material3).
+    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porem com 
+        thema mais dark.
 *   **Background e Performance:**
     *   [ ] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de background com notificação de progresso, permitindo sair do app.
 *   **Fontes de Metadados Expandidas:**
@@ -57,6 +59,9 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 *   **Rastreamento de Leitura:**
     *   [ ] Marcar capítulos como lidos/não lidos.
     *   [ ] Funcionalidade "Continuar Lendo" para pular rapidamente para o último capítulo lido.
+*  **Adicionar funções e melhorar tela de Leitura**
+    *   [ ] A interface já está bem agradável, será feito uma otimização e testes do código de interface.
+    *   [ ] Será feito função de clique para trocar pagina nos modos paginados.
 
 ## Pilha de Tecnologia
 
