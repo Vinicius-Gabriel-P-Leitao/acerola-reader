@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import br.acerola.manga.module.reader.state.ReadingMode
+import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.module.reader.state.TapArea
 
 @Composable

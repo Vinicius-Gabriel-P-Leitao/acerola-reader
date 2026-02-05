@@ -1,9 +1,8 @@
 package br.acerola.manga.module.reader.state
 
-enum class TapArea { LEFT, CENTER, RIGHT, BOTTOM, TOP
-}
+import br.acerola.manga.config.preference.ReadingMode
 
-enum class ReadingMode { HORIZONTAL, VERTICAL, WEBTOON
+enum class TapArea { LEFT, CENTER, RIGHT, BOTTOM, TOP
 }
 
 data class ReaderUiState(

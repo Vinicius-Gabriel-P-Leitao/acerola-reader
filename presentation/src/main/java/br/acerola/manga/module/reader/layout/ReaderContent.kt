@@ -6,10 +6,10 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.module.reader.component.HorizontalPagedReader
 import br.acerola.manga.module.reader.component.VerticalPagedReader
 import br.acerola.manga.module.reader.component.WebtoonReader
-import br.acerola.manga.module.reader.state.ReadingMode
 
 @Composable
 fun ReaderContent(

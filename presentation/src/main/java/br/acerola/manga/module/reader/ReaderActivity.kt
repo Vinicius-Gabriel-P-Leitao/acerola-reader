@@ -27,10 +27,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
+import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.layout.ReaderBottomControls
 import br.acerola.manga.module.reader.layout.ReaderTopBar
-import br.acerola.manga.module.reader.state.ReadingMode
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -68,11 +68,11 @@ class ReaderActivity(
             enter = slideInVertically { it },
             exit = slideOutVertically { it }) {
             ReaderBottomControls(
-                currentPage = state.currentPage,
                 pageCount = state.pageCount,
+                currentPage = state.currentPage,
+                enableNavigation = state.readingMode != ReadingMode.WEBTOON,
                 onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
                 onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
-                enableNavigation = state.readingMode != ReadingMode.WEBTOON
             )
         }
     }
@@ -105,10 +105,12 @@ class ReaderActivity(
                             viewModel.updateReadingMode(mode = ReadingMode.HORIZONTAL)
                             showMenu = false
                         })
+
                         DropdownMenuItem(text = { Text(text = "Vertical") }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.VERTICAL)
                             showMenu = false
                         })
+
                         DropdownMenuItem(text = { Text(text = "Webtoon") }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.WEBTOON)
                             showMenu = false

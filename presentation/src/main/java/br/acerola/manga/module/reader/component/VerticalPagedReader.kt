@@ -10,8 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.module.reader.gesture.ZoomablePageImage
-import br.acerola.manga.module.reader.state.ReadingMode
 import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
