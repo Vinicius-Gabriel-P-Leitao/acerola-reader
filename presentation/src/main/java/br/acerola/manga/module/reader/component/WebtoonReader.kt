@@ -45,7 +45,7 @@ fun WebtoonReader(
     var scale by remember { mutableFloatStateOf(value = 1f) }
     var offset by remember { mutableStateOf(value = Offset.Zero) }
 
-    // Report zoom state to parent (e.g., to hide UI)
+    // NOTE: Reporta o estado do zoom ao elemento pai (por exemplo, para ocultar a interface do usuário)
     LaunchedEffect(key1 = scale) {
         onZoomChange(scale > 1.0f)
     }
@@ -53,14 +53,14 @@ fun WebtoonReader(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            // Custom Gesture Detector to handle Conflict between Scroll and Zoom
+            // NOTE: Gestos personalizados.
             .pointerInput(key1 = Unit) {
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     do {
+                        val isZoomed = scale > 1f
                         val event = awaitPointerEvent()
                         val isMultiTouch = event.changes.size > 1
-                        val isZoomed = scale > 1f
 
                         // Se o dispositivo estiver multitoque OU já tiver aplicado zoom
                         if (isMultiTouch || isZoomed) {
@@ -70,7 +70,6 @@ fun WebtoonReader(
                             if (zoom != 1f || pan != Offset.Zero) {
                                 val newScale = (scale * zoom).coerceIn(1f, 3f)
 
-                                // Limit Translation based on scale
                                 val maxTranslateX = (newScale - 1) * size.width / 2
                                 val maxTranslateY = (newScale - 1) * size.height / 2
 
@@ -129,10 +128,12 @@ fun WebtoonReader(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            // NOTE: Toque duas vezes na alça para zoom e zoom-out
+                            // NOTE: Toque duas vezes na imagem para zoom e zoom-out
                             .pointerInput(key1 = Unit) {
                                 detectTapGestures(
-                                    onTap = { onUiToggle() },
+                                    onTap = {
+                                        onUiToggle()
+                                    },
                                     onDoubleTap = {
                                         if (scale > 1f) {
                                             scale = 1f

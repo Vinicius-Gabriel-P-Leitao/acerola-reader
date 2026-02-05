@@ -12,30 +12,44 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.reader.gesture.ZoomablePageImage
+import br.acerola.manga.module.reader.state.ReadingMode
+import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
 fun HorizontalPagedReader(
-    pages: Map<Int, ByteArray>,
     pagerState: PagerState,
-    onPageRequest: (Int) -> Unit,
     onUiToggle: () -> Unit,
-    onZoomChange: (Boolean) -> Unit
+    onPrevClick: () -> Unit,
+    onNextClick: () -> Unit,
+    pages: Map<Int, ByteArray>,
+    onPageRequest: (Int) -> Unit,
+    onZoomChange: (Boolean) -> Unit,
 ) {
-    var isZoomed by remember { mutableStateOf(false) }
+    var isZoomed by remember { mutableStateOf(value = false) }
 
     HorizontalPager(
         state = pagerState,
+        pageSpacing = 16.dp,
+        beyondViewportPageCount = 1,
         userScrollEnabled = !isZoomed,
         modifier = Modifier.fillMaxSize(),
-        pageSpacing = 16.dp,
-        beyondViewportPageCount = 1
     ) { index ->
         LaunchedEffect(key1 = index) {
             onPageRequest(index)
         }
 
         ZoomablePageImage(
-            pageBytes = pages[index], onTap = onUiToggle, onZoomStatusChange = { zoomed ->
+            pageBytes = pages[index],
+            orientation = ReadingMode.HORIZONTAL,
+            onAreaTap = { area ->
+                when (area) {
+                    TapArea.LEFT -> onPrevClick()
+                    TapArea.RIGHT -> onNextClick()
+                    TapArea.CENTER -> onUiToggle()
+                    else -> {} // WARN: Ignora o resto já que não chega
+                }
+            },
+            onZoomStatusChange = { zoomed ->
                 isZoomed = zoomed
                 onZoomChange(zoomed)
             })

@@ -21,12 +21,15 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import br.acerola.manga.module.reader.state.ReadingMode
+import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
 fun ZoomablePageImage(
     pageBytes: ByteArray?,
-    onTap: () -> Unit,
-    onZoomStatusChange: (Boolean) -> Unit
+    onAreaTap: (TapArea) -> Unit,
+    onZoomStatusChange: (Boolean) -> Unit,
+    orientation: ReadingMode = ReadingMode.VERTICAL,
 ) {
     var scale by remember { mutableFloatStateOf(value = 1f) }
     var offset by remember { mutableStateOf(value = Offset.Zero) }
@@ -39,19 +42,40 @@ fun ZoomablePageImage(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(key1 = Unit) {
-                detectTapGestures(
-                    onTap = { onTap() },
-                    onDoubleTap = {
-                        if (scale > 1f) {
-                            scale = 1f
-                            offset = Offset.Zero
-                            onZoomStatusChange(false)
-                        } else {
-                            scale = 2f
-                            onZoomStatusChange(true)
+                detectTapGestures(onTap = { offset ->
+                    val w = size.width
+                    val h = size.height
+                    val x = offset.x
+                    val y = offset.y
+
+                    val area = when (orientation) {
+                        ReadingMode.VERTICAL -> when {
+                            y < h * 0.25f -> TapArea.TOP
+                            y > h * 0.75f -> TapArea.BOTTOM
+                            else -> TapArea.CENTER
                         }
+
+                        ReadingMode.HORIZONTAL -> when {
+                            x < w * 0.25f -> TapArea.LEFT
+                            x > w * 0.75f -> TapArea.RIGHT
+                            else -> TapArea.CENTER
+                        }
+
+                        // WARN: Só para satisfazer o when, sem já que o webtoon usa um consumer proprio
+                        ReadingMode.WEBTOON -> TapArea.CENTER
                     }
-                )
+
+                    onAreaTap(area)
+                }, onDoubleTap = {
+                    if (scale > 1f) {
+                        scale = 1f
+                        offset = Offset.Zero
+                        onZoomStatusChange(false)
+                    } else {
+                        scale = 2f
+                        onZoomStatusChange(true)
+                    }
+                })
             }
             .pointerInput(key1 = Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->

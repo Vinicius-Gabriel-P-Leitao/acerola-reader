@@ -75,6 +75,7 @@ class ReaderViewModel @Inject constructor(
     fun updateReadingMode(mode: ReadingMode) {
         _state.update { it.copy(readingMode = mode) }
     }
+
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
             _uiEvents.send(element = error)

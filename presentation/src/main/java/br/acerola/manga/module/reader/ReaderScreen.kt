@@ -26,7 +26,7 @@ fun ReaderScreen(
         chapter?.let { viewModel.openChapter(it) }
     }
 
-    LaunchedEffect(pagerState, listState, state.readingMode) {
+    LaunchedEffect(key1 = pagerState, key2 = listState, key3 = state.readingMode) {
         snapshotFlow {
             if (state.readingMode == ReadingMode.WEBTOON) {
                 listState.firstVisibleItemIndex
@@ -38,10 +38,10 @@ fun ReaderScreen(
         }
     }
 
-    LaunchedEffect(state.currentPage) {
+    LaunchedEffect(key1 = state.currentPage) {
         if (state.readingMode == ReadingMode.WEBTOON) {
             if (listState.firstVisibleItemIndex != state.currentPage) {
-                listState.scrollToItem(state.currentPage)
+                listState.scrollToItem(index = state.currentPage)
             }
         } else {
             if (pagerState.currentPage != state.currentPage) {
@@ -51,13 +51,17 @@ fun ReaderScreen(
     }
 
     ReaderContent(
-        readingMode = state.readingMode,
-        pageCount = state.pageCount,
         pages = state.pages,
-        pagerState = pagerState,
         listState = listState,
-        onPageRequest = { index -> viewModel.onPageVisible(index) },
+        pagerState = pagerState,
+        pageCount = state.pageCount,
+        readingMode = state.readingMode,
         onUiToggle = { viewModel.toggleUiVisibility() },
-        onZoomChange = { /* Zoom state handled internally or via VM if needed to lock UI */ }
+        onPageRequest = { index -> viewModel.onPageVisible(index) },
+        onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
+        onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
+        onZoomChange = {
+            /* NOTE: O estado do zoom é gerenciado internamente ou via máquina virtual, se necessário, para bloquear a interface do usuário */
+        }
     )
 }

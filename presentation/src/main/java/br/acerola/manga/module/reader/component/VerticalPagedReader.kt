@@ -11,17 +11,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import br.acerola.manga.module.reader.gesture.ZoomablePageImage
+import br.acerola.manga.module.reader.state.ReadingMode
+import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
 fun VerticalPagedReader(
-    pageCount: Int,
-    pages: Map<Int, ByteArray>,
     pagerState: PagerState,
-    onPageRequest: (Int) -> Unit,
     onUiToggle: () -> Unit,
+    onPrevClick: () -> Unit,
+    onNextClick: () -> Unit,
+    pages: Map<Int, ByteArray>,
+    onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit
 ) {
-    var isZoomed by remember { mutableStateOf(false) }
+    var isZoomed by remember { mutableStateOf(value = false) }
 
     VerticalPager(
         state = pagerState,
@@ -35,7 +38,15 @@ fun VerticalPagedReader(
 
         ZoomablePageImage(
             pageBytes = pages[index],
-            onTap = onUiToggle,
+            orientation = ReadingMode.VERTICAL,
+            onAreaTap = { area ->
+                when (area) {
+                    TapArea.TOP -> onPrevClick()
+                    TapArea.BOTTOM -> onNextClick()
+                    TapArea.CENTER -> onUiToggle()
+                    else -> {} // WARN: Ignora o resto já que não chega
+                }
+            },
             onZoomStatusChange = { zoomed ->
                 isZoomed = zoomed
                 onZoomChange(zoomed)

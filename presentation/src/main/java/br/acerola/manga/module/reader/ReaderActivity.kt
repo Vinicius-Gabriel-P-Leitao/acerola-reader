@@ -28,7 +28,7 @@ import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.module.reader.component.ReaderBottomControls
+import br.acerola.manga.module.reader.layout.ReaderBottomControls
 import br.acerola.manga.module.reader.layout.ReaderTopBar
 import br.acerola.manga.module.reader.state.ReadingMode
 import dagger.hilt.android.AndroidEntryPoint
@@ -70,8 +70,8 @@ class ReaderActivity(
             ReaderBottomControls(
                 currentPage = state.currentPage,
                 pageCount = state.pageCount,
-                onPrevClick = { viewModel.onSliderChanged(state.currentPage - 1) },
-                onNextClick = { viewModel.onSliderChanged(state.currentPage + 1) },
+                onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
+                onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
                 enableNavigation = state.readingMode != ReadingMode.WEBTOON
             )
         }
@@ -80,7 +80,7 @@ class ReaderActivity(
     @Composable
     override fun TopBar(navController: NavHostController) {
         val state by viewModel.state.collectAsState()
-        var showMenu by remember { mutableStateOf(false) }
+        var showMenu by remember { mutableStateOf(value = false) }
 
         Box {
             ReaderTopBar(
@@ -101,16 +101,16 @@ class ReaderActivity(
                 ) {
                     DropdownMenu(
                         expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(text = { Text("Paginado") }, onClick = {
-                            viewModel.updateReadingMode(ReadingMode.PAGINATED)
+                        DropdownMenuItem(text = { Text(text = "Paginado") }, onClick = {
+                            viewModel.updateReadingMode(mode = ReadingMode.HORIZONTAL)
                             showMenu = false
                         })
-                        DropdownMenuItem(text = { Text("Vertical") }, onClick = {
-                            viewModel.updateReadingMode(ReadingMode.VERTICAL)
+                        DropdownMenuItem(text = { Text(text = "Vertical") }, onClick = {
+                            viewModel.updateReadingMode(mode = ReadingMode.VERTICAL)
                             showMenu = false
                         })
-                        DropdownMenuItem(text = { Text("Webtoon") }, onClick = {
-                            viewModel.updateReadingMode(ReadingMode.WEBTOON)
+                        DropdownMenuItem(text = { Text(text = "Webtoon") }, onClick = {
+                            viewModel.updateReadingMode(mode = ReadingMode.WEBTOON)
                             showMenu = false
                         })
                     }

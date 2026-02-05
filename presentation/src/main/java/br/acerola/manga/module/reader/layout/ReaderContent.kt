@@ -14,34 +14,39 @@ import br.acerola.manga.module.reader.state.ReadingMode
 @Composable
 fun ReaderContent(
     pageCount: Int,
-    readingMode: ReadingMode,
     pagerState: PagerState,
-    pages: Map<Int, ByteArray>,
-    listState: LazyListState,
-    onPageRequest: (Int) -> Unit,
     onUiToggle: () -> Unit,
-    onZoomChange: (Boolean) -> Unit
+    onPrevClick: () -> Unit,
+    onNextClick: () -> Unit,
+    readingMode: ReadingMode,
+    listState: LazyListState,
+    pages: Map<Int, ByteArray>,
+    onPageRequest: (Int) -> Unit,
+    onZoomChange: (Boolean) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         when (readingMode) {
-            ReadingMode.PAGINATED -> {
+            ReadingMode.HORIZONTAL -> {
                 HorizontalPagedReader(
                     pages = pages,
-                    pagerState = pagerState,
-                    onPageRequest = onPageRequest,
                     onUiToggle = onUiToggle,
-                    onZoomChange = onZoomChange
+                    pagerState = pagerState,
+                    onPrevClick = onPrevClick,
+                    onNextClick = onNextClick,
+                    onZoomChange = onZoomChange,
+                    onPageRequest = onPageRequest,
                 )
             }
 
             ReadingMode.VERTICAL -> {
                 VerticalPagedReader(
-                    pageCount = pageCount,
                     pages = pages,
-                    pagerState = pagerState,
-                    onPageRequest = onPageRequest,
                     onUiToggle = onUiToggle,
-                    onZoomChange = onZoomChange
+                    pagerState = pagerState,
+                    onPrevClick = onPrevClick,
+                    onNextClick = onNextClick,
+                    onZoomChange = onZoomChange,
+                    onPageRequest = onPageRequest,
                 )
             }
 

@@ -1,4 +1,4 @@
-package br.acerola.manga.module.reader.component
+package br.acerola.manga.module.reader.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
