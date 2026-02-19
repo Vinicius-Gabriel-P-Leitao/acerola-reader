@@ -37,6 +37,7 @@ class MangaDirectoryViewModel @Inject constructor(
     @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
+    private val scanAndSyncLibraryUseCase: br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase
 ) : ViewModel() {
 
     val progress: StateFlow<Int> = syncLibraryUseCase.progress
@@ -75,7 +76,7 @@ class MangaDirectoryViewModel @Inject constructor(
         viewModelScope.launch {
             _isIndexing.value = true
             val uri = getFolderUri()
-            if (uri != null) syncLibraryUseCase.sync(baseUri = uri).handleResult()
+            if (uri != null) scanAndSyncLibraryUseCase.execute(baseUri = uri)
 
             _isIndexing.value = false
         }

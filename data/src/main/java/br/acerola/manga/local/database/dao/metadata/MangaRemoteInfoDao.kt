@@ -21,6 +21,10 @@ interface MangaRemoteInfoDao : BaseDao<MangaRemoteInfo> {
     fun getMangaById(mangaId: Long): Flow<MangaRemoteInfo?>
 
     @Transaction
+    @Query(value = "SELECT * FROM manga_remote_info WHERE id = :mangaId")
+    fun getMangaWithRelationsById(mangaId: Long): Flow<br.acerola.manga.local.database.entity.relation.RemoteInfoRelations?>
+
+    @Transaction
     @Query(value = "SELECT * FROM manga_remote_info ORDER BY title ASC")
     fun getAllMangasWithRelations(): Flow<List<RemoteInfoRelations>>
 }

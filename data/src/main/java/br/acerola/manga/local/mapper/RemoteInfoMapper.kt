@@ -29,6 +29,7 @@ fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
         authors = this.author.firstOrNull()?.toDto(),
         cover = this.cover.firstOrNull()?.toDto(),
         genre = this.genre.map { it.toDto() },
+        metadataSource = this.remoteInfo.metadataSource
     )
 }
 
@@ -93,7 +94,8 @@ fun MangaRemoteInfoDto.toModel(): MangaRemoteInfo {
         description = this.description,
         romanji = this.romanji.orEmpty(),
         status = this.status,
-        publication = this.year ?: 0
+        publication = this.year ?: 0,
+        metadataSource = this.metadataSource
     )
 }
 

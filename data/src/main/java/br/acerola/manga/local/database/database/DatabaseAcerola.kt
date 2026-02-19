@@ -33,7 +33,7 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Genre
         Cover::class
     ],
     exportSchema = false,
-    version = 1,
+    version = 2,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class DatabaseAcerola : RoomDatabase() {

@@ -31,5 +31,8 @@ data class MangaRemoteInfo(
     val publication: Int?,
 
     @ColumnInfo(name = "mirror_id")
-    val mirrorId: String
+    val mirrorId: String,
+
+    @ColumnInfo(name = "metadata_source")
+    val metadataSource: MetadataSource = MetadataSource.MANGADEX
 )

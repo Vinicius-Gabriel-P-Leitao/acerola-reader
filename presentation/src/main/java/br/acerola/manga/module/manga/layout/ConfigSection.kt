@@ -81,7 +81,9 @@ fun LazyListScope.configSection(
             iconColor = MaterialTheme.colorScheme.tertiary // Sky no seu tema
         ) {
             SyncMangadexData(
+                directory = directory,
                 remoteInfo = remoteInfo,
+                mangaViewModel = mangaViewModel,
                 mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
                 chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
             )

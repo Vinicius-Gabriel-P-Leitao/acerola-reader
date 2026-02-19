@@ -30,4 +30,7 @@ data class MangaDirectory(
 
     @ColumnInfo(name = "chapter_template")
     val chapterTemplate: String?,
+
+    @ColumnInfo(name = "has_comic_info")
+    val hasComicInfo: Boolean = false,
 )

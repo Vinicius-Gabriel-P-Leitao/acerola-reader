@@ -1,6 +1,8 @@
 package br.acerola.manga.module.manga
 
 import android.content.Context
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.config.preference.ChapterPageSizeType
@@ -41,6 +43,8 @@ class MangaViewModel @Inject constructor(
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
+    private val syncMangaMetadataUseCase: br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase,
+    private val fileSystemAccessManager: br.acerola.manga.config.permission.FileSystemAccessManager
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
@@ -58,18 +62,52 @@ class MangaViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
+    private val _isMetadataIndexing = MutableStateFlow(value = false)
+    val isMetadataIndexing: StateFlow<Boolean> = _isMetadataIndexing.asStateFlow()
+
     // TODO: Transformar em config do DataStore
     private var currentPage = 0
     private var pageSize = 20
     private var total = 0
 
     val mangaIsIndexing: StateFlow<Boolean> = combine(
-        flow = directoryObserve.isIndexing, flow2 = mangadexObserve.isIndexing
-    ) { directoryIndexing, remoteInfoIndexing ->
-        directoryIndexing || remoteInfoIndexing
+        flow = directoryObserve.isIndexing, 
+        flow2 = mangadexObserve.isIndexing,
+        flow3 = _isMetadataIndexing
+    ) { directoryIndexing, remoteInfoIndexing, metadataIndexing ->
+        directoryIndexing || remoteInfoIndexing || metadataIndexing
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
     )
+
+    fun syncFromMangadex(folderId: Long, title: String) {
+        viewModelScope.launch {
+            _isMetadataIndexing.value = true
+            val rootUri = getRootUri() ?: return@launch
+            val mangaId = _selectedMangaId.value ?: -1L
+            syncMangaMetadataUseCase.syncFromMangadex(mangaId, folderId, title, rootUri).onLeft {
+                _uiEvents.send(element = it)
+            }
+            _isMetadataIndexing.value = false
+        }
+    }
+
+    fun syncFromComicInfo(folderId: Long, title: String, folderUri: String) {
+        viewModelScope.launch {
+            _isMetadataIndexing.value = true
+            val rootUri = getRootUri() ?: return@launch
+            val mangaId = _selectedMangaId.value ?: -1L
+            syncMangaMetadataUseCase.syncFromComicInfo(mangaId, folderId, title, folderUri.toUri(), rootUri).onLeft {
+                _uiEvents.send(element = it)
+            }
+            _isMetadataIndexing.value = false
+        }
+    }
+
+    private suspend fun getRootUri(): Uri? {
+        fileSystemAccessManager.loadFolderUri()
+        return fileSystemAccessManager.folderUri
+    }
 
     val chapterIsIndexing: StateFlow<Boolean> = combine(
         flow = directoryGetChapters.isIndexing, flow2 = mangadexGetChapters.isIndexing

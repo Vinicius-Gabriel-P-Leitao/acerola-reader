@@ -34,6 +34,19 @@ class CbzChapterSourceService @Inject constructor(
             }
     }
 
+    override suspend fun getFileStream(fileName: String): Either<ChapterError, InputStream> {
+        return Either.catch {
+            val entry = zipFile.getEntry(fileName)
+                ?: throw FileNotFoundException("File $fileName not found in ZIP")
+            zipFile.getInputStream(entry)
+        }.mapLeft { exception ->
+            when (exception) {
+                is FileNotFoundException -> ChapterError.InvalidChapterData(reason = exception.message ?: "File not found")
+                else -> ChapterError.ExtractionFailed(cause = exception)
+            }
+        }
+    }
+
     override fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService> {
         return Either.catch {
             val file = resolveFile(chapter.path)

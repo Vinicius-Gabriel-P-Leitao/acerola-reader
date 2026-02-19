@@ -110,4 +110,19 @@ object UseCaseModule {
     ): GetChaptersUseCase<ChapterRemoteInfoPageDto> {
         return GetChaptersUseCase(chapterRepository = chapterOps)
     }
+
+    @Provides
+    fun provideScanAndSyncLibraryUseCase(
+        @DirectoryCase syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
+        @DirectoryCase observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
+        syncMangaMetadataUseCase: br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase,
+        fileSystemAccessManager: br.acerola.manga.config.permission.FileSystemAccessManager
+    ): br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase {
+        return br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase(
+            syncLibraryUseCase,
+            observeLibraryUseCase,
+            syncMangaMetadataUseCase,
+            fileSystemAccessManager
+        )
+    }
 }

@@ -51,6 +51,21 @@ class CbrChapterSourceService @Inject constructor(
         }
     }
 
+    override suspend fun getFileStream(fileName: String): Either<ChapterError, InputStream> = mutex.withLock {
+        withContext(Dispatchers.IO) {
+            val header = archive.fileHeaders.find { it.fileName.equals(fileName, ignoreCase = true) }
+                ?: return@withContext ChapterError.InvalidChapterData("File $fileName not found in RAR").left()
+
+            Either.catch {
+                val output = ByteArrayOutputStream()
+                archive.extractFile(header, output)
+                ByteArrayInputStream(output.toByteArray())
+            }.mapLeft {
+                ChapterError.ExtractionFailed(cause = it)
+            }
+        }
+    }
+
     override fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService> {
         return Either.catch {
             val file = resolveFile(chapter.path)
