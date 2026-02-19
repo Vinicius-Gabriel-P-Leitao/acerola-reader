@@ -1,4 +1,4 @@
-package br.acerola.manga.repository.adapter.local.chapter
+package br.acerola.manga.repository.adapter.remote.xml
 
 import android.content.Context
 import arrow.core.Either
@@ -37,18 +37,22 @@ class ChapterComicInfoRepository @Inject constructor(
         sourceResult.fold(
             ifLeft = { Either.Left(value = NetworkError.NotFound()) },
             ifRight = { source ->
-                source.getFileStream(fileName = "ComicInfo.xml").fold(
-                    ifLeft = { Either.Left(value = NetworkError.NotFound()) },
-                    ifRight = { stream ->
-                        try {
-                            stream.use {
-                                Either.Right(value = listOf(parser.parseChapterInfo(it)))
+                try {
+                    source.getFileStream(fileName = "ComicInfo.xml").fold(
+                        ifLeft = { Either.Left(value = NetworkError.NotFound()) },
+                        ifRight = { stream ->
+                            try {
+                                stream.use {
+                                    Either.Right(value = listOf(parser.parseChapterInfo(it)))
+                                }
+                            } catch (e: Exception) {
+                                Either.Left(value = NetworkError.UnexpectedError(cause = e))
                             }
-                        } catch (e: Exception) {
-                            Either.Left(value = NetworkError.UnexpectedError(cause = e))
                         }
-                    }
-                )
+                    )
+                } finally {
+                    source.close()
+                }
             }
         )
     }

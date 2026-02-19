@@ -1,18 +1,22 @@
 package br.acerola.manga.usecase.di
 
+import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.repository.di.ComicInfoFsOps
 import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import br.acerola.manga.usecase.manga.RescanMangaUseCase
+import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,6 +76,22 @@ object UseCaseModule {
     }
 
     @Provides
+    @DirectoryCase
+    fun provideScanAndSyncLibraryUseCase(
+        @DirectoryCase syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
+        @DirectoryCase observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
+        syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
+        fileSystemAccessManager: FileSystemAccessManager
+    ): ScanAndSyncLibraryUseCase {
+        return ScanAndSyncLibraryUseCase(
+            syncLibraryUseCase,
+            observeLibraryUseCase,
+            syncMangaMetadataUseCase,
+            fileSystemAccessManager
+        )
+    }
+
+    @Provides
     @MangadexCase
     fun provideMangadexSyncLibraryUseCase(
         @MangadexFsOps repository: MangaManagementRepository<MangaRemoteInfoDto>
@@ -112,17 +132,17 @@ object UseCaseModule {
     }
 
     @Provides
-    fun provideScanAndSyncLibraryUseCase(
-        @DirectoryCase syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
-        @DirectoryCase observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
-        syncMangaMetadataUseCase: br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase,
-        fileSystemAccessManager: br.acerola.manga.config.permission.FileSystemAccessManager
-    ): br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase {
-        return br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase(
-            syncLibraryUseCase,
-            observeLibraryUseCase,
-            syncMangaMetadataUseCase,
-            fileSystemAccessManager
+    fun provideSyncMangaMetadataUseCase(
+        @MangadexFsOps mangadexMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>,
+        @MangadexFsOps mangadexChapterRepo: ChapterManagementRepository<ChapterRemoteInfoPageDto>,
+        @ComicInfoFsOps comicInfoMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>,
+        @ComicInfoFsOps comicInfoChapterRepo: ChapterManagementRepository<ChapterRemoteInfoPageDto>
+    ): SyncMangaMetadataUseCase {
+        return SyncMangaMetadataUseCase(
+            mangadexMangaRepo,
+            mangadexChapterRepo,
+            comicInfoMangaRepo,
+            comicInfoChapterRepo
         )
     }
 }

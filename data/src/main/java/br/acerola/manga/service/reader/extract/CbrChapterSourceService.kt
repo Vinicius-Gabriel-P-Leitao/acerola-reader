@@ -24,10 +24,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 // TODO: Estudar mais as libs e fazer uma otimização e organização da busca desses dados
-@Singleton
 class CbrChapterSourceService @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ChapterSourceService {
+
     private lateinit var archive: Archive
     private lateinit var entries: List<FileHeader>
     private val mutex = Mutex()
@@ -68,6 +68,8 @@ class CbrChapterSourceService @Inject constructor(
 
     override fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService> {
         return Either.catch {
+            close() // NOTE: Garantia extra de limpeza
+
             val file = resolveFile(chapter.path)
             val newArchive = Archive(file)
 
@@ -92,6 +94,12 @@ class CbrChapterSourceService @Inject constructor(
                 is FileNotFoundException -> ChapterError.ArchiveNotFound(chapter.path)
                 else -> ChapterError.ArchiveCorrupted(chapter.path, error)
             }
+        }
+    }
+
+    override fun close() {
+        if (::archive.isInitialized) {
+            runCatching { archive.close() }
         }
     }
 

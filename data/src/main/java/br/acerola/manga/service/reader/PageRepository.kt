@@ -21,6 +21,9 @@ class PageRepository @Inject constructor(
 
     fun openChapter(chapter: ChapterFileDto): Either<ChapterError, Unit> {
         return factory.create(chapter).map { newSource ->
+            if (::source.isInitialized) {
+                source.close()
+            }
             source = newSource
             cache.clear()
         }

@@ -12,4 +12,5 @@ interface ChapterSourceService {
     suspend fun openPage(index: Int): Either<ChapterError, InputStream>
     suspend fun getFileStream(fileName: String): Either<ChapterError, InputStream>
     fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService>
+    fun close()
 }

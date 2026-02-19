@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.config.preference.ChapterPageSizeType
 import br.acerola.manga.config.preference.ChapterPerPagePreference
 import br.acerola.manga.dto.ChapterDto
@@ -18,6 +19,7 @@ import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -39,12 +41,12 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val fileSystemAccessManager: FileSystemAccessManager,
+    private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
-    private val syncMangaMetadataUseCase: br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase,
-    private val fileSystemAccessManager: br.acerola.manga.config.permission.FileSystemAccessManager
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
@@ -71,7 +73,7 @@ class MangaViewModel @Inject constructor(
     private var total = 0
 
     val mangaIsIndexing: StateFlow<Boolean> = combine(
-        flow = directoryObserve.isIndexing, 
+        flow = directoryObserve.isIndexing,
         flow2 = mangadexObserve.isIndexing,
         flow3 = _isMetadataIndexing
     ) { directoryIndexing, remoteInfoIndexing, metadataIndexing ->
@@ -83,9 +85,8 @@ class MangaViewModel @Inject constructor(
     fun syncFromMangadex(folderId: Long, title: String) {
         viewModelScope.launch {
             _isMetadataIndexing.value = true
-            val rootUri = getRootUri() ?: return@launch
             val mangaId = _selectedMangaId.value ?: -1L
-            syncMangaMetadataUseCase.syncFromMangadex(mangaId, folderId, title, rootUri).onLeft {
+            syncMangaMetadataUseCase.syncFromMangadex(mangaId, folderId, title).onLeft {
                 _uiEvents.send(element = it)
             }
             _isMetadataIndexing.value = false
@@ -95,9 +96,7 @@ class MangaViewModel @Inject constructor(
     fun syncFromComicInfo(folderId: Long, title: String, folderUri: String) {
         viewModelScope.launch {
             _isMetadataIndexing.value = true
-            val rootUri = getRootUri() ?: return@launch
-            val mangaId = _selectedMangaId.value ?: -1L
-            syncMangaMetadataUseCase.syncFromComicInfo(mangaId, folderId, title, folderUri.toUri(), rootUri).onLeft {
+            syncMangaMetadataUseCase.syncFromComicInfo(folderId).onLeft {
                 _uiEvents.send(element = it)
             }
             _isMetadataIndexing.value = false

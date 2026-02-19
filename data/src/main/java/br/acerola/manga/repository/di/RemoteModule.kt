@@ -5,8 +5,8 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexChapterInfoRepository
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverRepository
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoRepository
-import br.acerola.manga.repository.adapter.local.chapter.ChapterComicInfoRepository
-import br.acerola.manga.repository.adapter.local.manga.MangaComicInfoRepository
+import br.acerola.manga.repository.adapter.remote.xml.ChapterComicInfoRepository
+import br.acerola.manga.repository.adapter.remote.xml.MangaComicInfoRepository
 import br.acerola.manga.repository.port.BinaryOperationsRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import dagger.Binds
