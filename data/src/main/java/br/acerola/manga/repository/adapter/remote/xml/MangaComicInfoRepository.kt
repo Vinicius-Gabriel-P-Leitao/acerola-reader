@@ -35,8 +35,11 @@ class MangaComicInfoRepository @Inject constructor(
             ?: return@withContext Either.Left(value = NetworkError.UnexpectedError(cause = Exception("Folder URI missing in extra[0]")))
 
         val folderDoc = DocumentFile.fromTreeUri(context, folderUri)
-            ?: return@withContext Either.Left(value = NetworkError.NotFound())
+        if (folderDoc == null || !folderDoc.exists()) {
+            return@withContext Either.Left(value = NetworkError.NotFound())
+        }
 
+        // 1. Tenta encontrar o ComicInfo.xml direto na raiz da pasta
         val directXml = folderDoc.findFile("ComicInfo.xml")
 
         if (directXml != null && directXml.exists()) {
@@ -49,6 +52,7 @@ class MangaComicInfoRepository @Inject constructor(
             }
         }
 
+        // 2. Se não achou na raiz, procura dentro dos capítulos (cbz/cbr)
         val firstChapter = folderDoc.listFiles().firstOrNull {
             it.isFile && (it.name?.endsWith(suffix = ".cbz") == true || it.name?.endsWith(suffix = ".cbr") == true)
         }

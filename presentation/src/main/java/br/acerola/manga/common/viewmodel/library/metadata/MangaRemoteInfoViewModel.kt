@@ -66,10 +66,10 @@ class MangaRemoteInfoViewModel @Inject constructor(
         }
     }
 
-    fun syncFromMangadex(mangaId: Long) {
+    fun syncFromMangadex(directoryId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
-            syncMangaMetadataUseCase.syncFromMangadex(mangaId).handleResult()
+            syncMangaMetadataUseCase.syncFromMangadex(directoryId).handleResult()
             _isIndexing.value = false
         }
     }

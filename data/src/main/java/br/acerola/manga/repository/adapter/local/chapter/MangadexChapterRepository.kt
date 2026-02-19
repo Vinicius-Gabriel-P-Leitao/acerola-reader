@@ -63,8 +63,9 @@ class MangadexChapterRepository @Inject constructor(
             _isIndexing.value = true
             _progress.value = 0
 
+            // mangaId aqui agora é o directoryId
             val remoteManga = try {
-                mangaRemoteInfoDao.getMangaById(mangaId).first()
+                mangaRemoteInfoDao.getMangaByDirectoryId(mangaId).first()
             } catch (exception: Exception) {
                 _isIndexing.value = false
                 return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = exception))
@@ -72,8 +73,8 @@ class MangadexChapterRepository @Inject constructor(
 
             if (remoteManga == null) {
                 _isIndexing.value = false
-                // TODO: Criar erro específico para "Manga não encontrado"
-                return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = Exception("Manga Remote not found")))
+                // Se não tem info remota, não há o que sincronizar de capítulos do Mangadex
+                return@withContext Either.Right(value = Unit)
             }
 
             // NOTE: Buscar na API
@@ -84,10 +85,8 @@ class MangadexChapterRepository @Inject constructor(
             }.flatMap { remoteChapters ->
                 _progress.value = 90
                 Either.catch {
-                    // TODO: Criar erro específico para "Manga não encontrado"
-                    // NOTE: Tenta buscar pelo nome do mangá
-                    val localDirectory = directoryDao.getMangaDirectoryByName(mangaName = remoteManga.title)
-                        ?: throw Exception("Local directory not found for manga: ${remoteManga.title}")
+                    val localDirectory = directoryDao.getMangaDirectoryById(mangaId)
+                        ?: throw Exception("Local directory not found for ID: $mangaId")
 
                     val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(localDirectory.id).first()
                     
@@ -101,8 +100,8 @@ class MangadexChapterRepository @Inject constructor(
                     }
 
                     chapterPairs.forEach { (archive, remote) ->
-                        // FIX: O FK deve ser o ID do MangaRemoteInfo (mangaId), não o do arquivo local.
-                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = mangaId)
+                        // FIX: O FK deve ser o ID do MangaRemoteInfo, não o do arquivo local.
+                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = remoteManga.id)
                         val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
                         val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)

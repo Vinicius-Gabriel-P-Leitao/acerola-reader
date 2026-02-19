@@ -56,10 +56,9 @@ class ComicInfoChapterRepository @Inject constructor(
                 val directory = directoryDao.getMangaDirectoryById(mangaId)
                     ?: throw Exception("Directory not found for ID: $mangaId")
 
-                // NOTE: Busca pelo ID determinístico local
-                val deterministicMirrorId = "local-${directory.id}"
-                val remoteManga = mangaRemoteInfoDao.getMangaByMirrorId(deterministicMirrorId).first()
-                    ?: throw Exception("Remote info not found for manga mirrorId: $deterministicMirrorId")
+                // NOTE: Busca pelo vínculo com a pasta local
+                val remoteManga = mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).first()
+                    ?: throw Exception("Remote info not found for manga directory: ${directory.name}")
 
                 val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(directory.id).first()
 

@@ -80,12 +80,13 @@ fun SyncMetadata(
                 )
             }
 
+            // TODO: Ver por que não funciona
             ListItem(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
                 leadingContent = { Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null) },
                 modifier = Modifier.clickable {
-                    mangaRemoteInfoViewModel.syncFromMangadex(mangaId = remoteInfo?.id ?: -1L)
+                    mangaRemoteInfoViewModel.syncFromMangadex(directory.id)
                 },
                 supportingContent = {
                     Text(

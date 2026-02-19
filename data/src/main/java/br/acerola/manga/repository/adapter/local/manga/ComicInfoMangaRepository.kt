@@ -60,15 +60,17 @@ class ComicInfoMangaRepository @Inject constructor(
                     )
 
                     val bestMatch = fetchedListResult.getOrNull()?.firstOrNull() ?: return@catch
-                    
-                    // NOTE: Força o mirrorId a ser baseado no folderId para garantir o vínculo pasta <-> metadado
-                    val deterministicMirrorId = "local-${directory.id}"
-                    val mangaToSave = bestMatch.toModel().copy(mirrorId = deterministicMirrorId)
 
-                    val existingRemote = mangaRemoteInfoDao.getMangaByMirrorId(deterministicMirrorId).firstOrNull()
-                    
+                    val existingRemote = mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).firstOrNull()
+
+                    val mangaToSave = bestMatch.toModel().copy(
+                        id = existingRemote?.id ?: 0L,
+                        mangaDirectoryFk = directory.id,
+                        mirrorId = bestMatch.mirrorId // Mantém o mirrorId original do match (local ou mangadex)
+                    )
+
                     val remoteId = if (existingRemote != null) {
-                        mangaRemoteInfoDao.update(entity = mangaToSave.copy(id = existingRemote.id))
+                        mangaRemoteInfoDao.update(entity = mangaToSave)
                         existingRemote.id
                     } else {
                         mangaRemoteInfoDao.insert(entity = mangaToSave)

@@ -21,22 +21,21 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.InputStream
 import javax.inject.Inject
-import javax.inject.Singleton
 
-// TODO: Estudar mais as libs e fazer uma otimização e organização da busca desses dados
 class CbrChapterSourceService @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ChapterSourceService {
 
-    private lateinit var archive: Archive
-    private lateinit var entries: List<FileHeader>
+    private var archive: Archive? = null
+    private var entries: List<FileHeader> = emptyList()
+    private var currentTempFile: File? = null
     private val mutex = Mutex()
 
     override suspend fun pageCount(): Int = entries.size
 
     override suspend fun openPage(index: Int): Either<ChapterError, InputStream> = mutex.withLock {
         withContext(context = Dispatchers.IO) {
-            val localArchive = archive
+            val localArchive = archive ?: return@withContext ChapterError.InvalidChapterData("Archive not open").left()
 
             val header = entries.getOrNull(index)
                 ?: return@withContext ChapterError.InvalidChapterData("Index $index out of bounds").left()
@@ -45,30 +44,31 @@ class CbrChapterSourceService @Inject constructor(
                 val output = ByteArrayOutputStream()
                 localArchive.extractFile(header, output)
                 ByteArrayInputStream(output.toByteArray())
-            }.mapLeft {
-                ChapterError.ExtractionFailed(cause = it)
+            }.mapLeft { exception ->
+                ChapterError.ExtractionFailed(cause = exception)
             }
         }
     }
 
     override suspend fun getFileStream(fileName: String): Either<ChapterError, InputStream> = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            val header = archive.fileHeaders.find { it.fileName.equals(fileName, ignoreCase = true) }
+        withContext(context = Dispatchers.IO) {
+            val localArchive = archive ?: return@withContext ChapterError.InvalidChapterData("Archive not open").left()
+            val header = localArchive.fileHeaders.find { it.fileName.equals(fileName, ignoreCase = true) }
                 ?: return@withContext ChapterError.InvalidChapterData("File $fileName not found in RAR").left()
 
             Either.catch {
                 val output = ByteArrayOutputStream()
-                archive.extractFile(header, output)
+                localArchive.extractFile(header, output)
                 ByteArrayInputStream(output.toByteArray())
-            }.mapLeft {
-                ChapterError.ExtractionFailed(cause = it)
+            }.mapLeft { exception ->
+                ChapterError.ExtractionFailed(cause = exception)
             }
         }
     }
 
     override fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService> {
         return Either.catch {
-            close() // NOTE: Garantia extra de limpeza
+            close() // NOTE: Limpa o anterior antes de abrir um novo
 
             val file = resolveFile(chapter.path)
             val newArchive = Archive(file)
@@ -77,29 +77,34 @@ class CbrChapterSourceService @Inject constructor(
                 .filter { !it.isDirectory }
                 .filter {
                     val name = it.fileName.lowercase()
-                    // TODO: Fazer isso como pattern matching
                     name.endsWith(".jpg") ||
                             name.endsWith(".jpeg") ||
                             name.endsWith(".png") ||
                             name.endsWith(".webp")
                 }.sortedBy { it.fileName }
 
-            runCatching { archive.close() }
             this.archive = newArchive
             this.entries = headers
 
             this
-        }.mapLeft { error ->
-            when (error) {
+        }.mapLeft { exception ->
+            when (exception) {
                 is FileNotFoundException -> ChapterError.ArchiveNotFound(chapter.path)
-                else -> ChapterError.ArchiveCorrupted(chapter.path, error)
+                else -> ChapterError.ArchiveCorrupted(chapter.path, exception)
             }
         }
     }
 
     override fun close() {
-        if (::archive.isInitialized) {
-            runCatching { archive.close() }
+        try {
+            archive?.close()
+        } catch (exception: Exception) {
+            // Ignora erros ao fechar
+        } finally {
+            archive = null
+            entries = emptyList()
+            currentTempFile?.delete()
+            currentTempFile = null
         }
     }
 
@@ -109,10 +114,10 @@ class CbrChapterSourceService @Inject constructor(
             val inputStream = context.contentResolver.openInputStream(uri)
                 ?: throw IllegalStateException("Could not open URI: $path")
 
-            // Create a temp file in cache
-            val tempFile = File(context.cacheDir, "temp_chapter_read.cbr")
+            // Cria um arquivo temporário único para evitar concorrência (SIGBUS)
+            val tempFile = File.createTempFile("chapter_sync_", ".cbr", context.cacheDir)
+            currentTempFile = tempFile
 
-            // Overwrite existing temp file
             FileOutputStream(tempFile).use { outputStream ->
                 inputStream.copyTo(outputStream)
             }

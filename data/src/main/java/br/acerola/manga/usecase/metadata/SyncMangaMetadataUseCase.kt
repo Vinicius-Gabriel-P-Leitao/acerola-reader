@@ -19,20 +19,20 @@ class SyncMangaMetadataUseCase @Inject constructor(
 ) {
 
     suspend fun syncFromMangadex(
-        mangaId: Long,
+        directoryId: Long,
     ): Either<LibrarySyncError, Unit> {
-        // NOTE: O repository já cuida de buscar na API e salvar no Room
-        return mangadexMangaRepo.refreshManga(mangaId).onRight {
-            mangadexChapterRepo.refreshMangaChapters(mangaId)
+        // NOTE: mangaId aqui deve ser o ID do diretório local
+        return mangadexMangaRepo.refreshManga(directoryId).onRight {
+            mangadexChapterRepo.refreshMangaChapters(directoryId)
         }
     }
 
     suspend fun syncFromComicInfo(
-        mangaId: Long
+        directoryId: Long
     ): Either<LibrarySyncError, Unit> {
-        // NOTE: O repository já cuida de buscar o XML e salvar no Room para mangá e capítulos
-        return comicInfoMangaRepo.refreshManga(mangaId).onRight {
-            comicInfoChapterRepo.refreshMangaChapters(mangaId)
+        // NOTE: mangaId aqui deve ser o ID do diretório local
+        return comicInfoMangaRepo.refreshManga(directoryId).onRight {
+            comicInfoChapterRepo.refreshMangaChapters(directoryId)
         }
     }
 }

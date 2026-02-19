@@ -20,7 +20,8 @@ data class MangaRemoteInfoDto(
     val cover: CoverDto? = null,
     val authors: AuthorDto? = null,
     val genre: List<GenreDto> = emptyList(),
-    val metadataSource: MetadataSource = MetadataSource.MANGADEX
+    val metadataSource: MetadataSource = MetadataSource.MANGADEX,
+    val mangaDirectoryFk: Long? = null
 ) : Parcelable
 
 @Parcelize

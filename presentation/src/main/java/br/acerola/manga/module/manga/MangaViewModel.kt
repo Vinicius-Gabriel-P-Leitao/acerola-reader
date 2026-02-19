@@ -1,11 +1,8 @@
 package br.acerola.manga.module.manga
 
 import android.content.Context
-import android.net.Uri
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.config.preference.ChapterPageSizeType
 import br.acerola.manga.config.preference.ChapterPerPagePreference
 import br.acerola.manga.dto.ChapterDto
@@ -19,10 +16,10 @@ import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,18 +27,20 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.ceil
+import kotlin.math.max
 
 // TODO: Criar reescan de manga, ele pega o nome do ID da pasta e busca e após isso tentar fazer
 //  scan só dele.
 @HiltViewModel
 class MangaViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val fileSystemAccessManager: FileSystemAccessManager,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
@@ -57,18 +56,13 @@ class MangaViewModel @Inject constructor(
     private val _selectedMangaId = MutableStateFlow<Long?>(value = null)
     val selectedMangaId: StateFlow<Long?> = _selectedMangaId.asStateFlow()
 
-    private val _chapter = MutableStateFlow<ChapterDto?>(value = null)
-    val chapters: StateFlow<ChapterDto?> = _chapter.asStateFlow()
+    private val _currentPage = MutableStateFlow(0)
+    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    // TODO: Transformar em config do DataStore
-    private var currentPage = 0
-    private var pageSize = 20
-    private var total = 0
-
-    val mangaIsIndexing:    StateFlow<Boolean> = combine(
+    val mangaIsIndexing: StateFlow<Boolean> = combine(
         flow = directoryObserve.isIndexing,
         flow2 = mangadexObserve.isIndexing,
     ) { directoryIndexing, remoteInfoIndexing ->
@@ -76,11 +70,6 @@ class MangaViewModel @Inject constructor(
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
     )
-
-    private suspend fun getRootUri(): Uri? {
-        fileSystemAccessManager.loadFolderUri()
-        return fileSystemAccessManager.folderUri
-    }
 
     val chapterIsIndexing: StateFlow<Boolean> = combine(
         flow = directoryGetChapters.isIndexing, flow2 = mangadexGetChapters.isIndexing
@@ -129,18 +118,12 @@ class MangaViewModel @Inject constructor(
         if (folderId == null) return@combine null
         val directory = directories.find { it.id == folderId } ?: return@combine null
 
-        // 1. Prioridade: ID explícito (ex: via Intent ou Sync)
-        var remote = if (remoteInfoId != null) {
-            remoteInfos.find { it.id == remoteInfoId }
-        } else null
+        var remote = remoteInfos.find { it.mangaDirectoryFk == folderId }
 
-        // 2. Fallback: Match Determinístico Local (ComicInfo)
-        if (remote == null) {
-            val localMirrorId = "local-${directory.id}"
-            remote = remoteInfos.find { it.mirrorId == localMirrorId }
+        if (remote == null && remoteInfoId != null) {
+            remote = remoteInfos.find { it.id == remoteInfoId }
         }
 
-        // 3. Fallback: Match por Título (Mangadex/Geral)
         if (remote == null) {
             val normalizedName = directory.name.normalizeKey()
             remote = remoteInfos.find { it.title.normalizeKey() == normalizedName }
@@ -153,40 +136,77 @@ class MangaViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val chapters: StateFlow<ChapterDto?> = _selectedDirectoryId.flatMapLatest { folderId ->
+        if (folderId == null) return@flatMapLatest flowOf(null)
+
+        val localFlow = directoryGetChapters.observeByManga(folderId)
+        val remoteFlow = manga.flatMapLatest {
+            val mangaId = it?.remoteInfo?.id
+
+            if (mangaId != null) {
+                mangadexGetChapters.observeByManga(mangaId)
+            } else {
+                flowOf(ChapterRemoteInfoPageDto(emptyList(), 0, 0, 0))
+            }
+        }
+
+        combine(
+            localFlow,
+            remoteFlow,
+            _currentPage,
+            _selectedChapterPerPage
+        ) { localAll, remoteAll, page, pageSizeType ->
+            val items = localAll.items
+            if (items.isEmpty()) return@combine ChapterDto(localAll, remoteAll)
+
+            val total = items.size
+            val pageSize = pageSizeType.key.toInt()
+            val totalPages = ceil(total.toDouble() / pageSize).toInt()
+            val safePage = page.coerceIn(0, max(0, totalPages - 1))
+
+            val start = safePage * pageSize
+            val end = (start + pageSize).coerceIn(0, total)
+
+            val pagedLocalItems = if (start < total) items.subList(start, end) else emptyList()
+
+            // Match em memória usando normalizeChapter para ignorar variações de string (ex: 0.1 vs 0.01)
+            val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
+
+            val filteredRemoteItems = pagedLocalItems.mapNotNull { local ->
+                remoteMap[local.chapterSort.normalizeChapter()]
+            }
+
+            ChapterDto(
+                archive = ChapterArchivePageDto(pagedLocalItems, pageSize, safePage, total),
+                remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, safePage, total)
+            )
+        }
+    }.stateIn(
+        initialValue = null,
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+    )
+
     fun init(folderId: Long, mangaId: Long?) {
         _selectedDirectoryId.value = folderId
         _selectedMangaId.value = mangaId
 
-        // Observe preference changes and trigger load
         viewModelScope.launch {
             ChapterPerPagePreference.chapterPerPageFlow(context).collect { size ->
                 _selectedChapterPerPage.value = size
-                pageSize = size.key.toInt()
-                loadPage(page = currentPage)
             }
         }
 
-        // NOTE: Atualiza a pagina quando o status de indexação muda
-        viewModelScope.launch {
-            chapterIsIndexing.collect { indexing ->
-                if (!indexing) {
-                    loadPage(page = currentPage)
-                }
-            }
-        }
-
-        // NOTE: REATIVIDADE CRÍTICA - Dispara loadPage assim que o remoteInfo é encontrado ou muda
+        // Sincroniza o ID remoto interno caso o StateFlow 'manga' encontre um novo vínculo
         viewModelScope.launch {
             manga.collect { mangaDto ->
                 val newRemoteId = mangaDto?.remoteInfo?.id
                 if (newRemoteId != null && newRemoteId != _selectedMangaId.value) {
                     _selectedMangaId.value = newRemoteId
-                    loadPage(page = currentPage)
                 }
             }
         }
-
-        observeChapterPerPage()
     }
 
     fun updateChapterPerPage(size: ChapterPageSizeType) {
@@ -197,78 +217,8 @@ class MangaViewModel @Inject constructor(
         }
     }
 
-    private fun observeChapterPerPage() {
-        viewModelScope.launch {
-            ChapterPerPagePreference.chapterPerPageFlow(context).collect { size ->
-                if (_selectedChapterPerPage.value != size) {
-                    _selectedChapterPerPage.value = size
-                }
-            }
-
-            chapterIsIndexing.collect { indexing ->
-                if (!indexing) {
-                    loadPage(page = currentPage)
-                }
-            }
-        }
-    }
-
     fun loadPageAsync(page: Int) {
-        viewModelScope.launch {
-            loadPage(page)
-        }
-    }
-
-    private suspend fun loadPage(page: Int) {
-        val folderId = _selectedDirectoryId.value ?: return
-        val mangaId = _selectedMangaId.value
-
-        currentPage = page
-
-        if (total == 0) {
-            total = directoryGetChapters.loadPage(
-                mangaId = folderId, total = 0, page = 0, pageSize = pageSize
-            ).total
-        }
-
-        val localPage = directoryGetChapters.loadPage(
-            mangaId = folderId, total = total, page = page, pageSize = pageSize
-        )
-
-        val chapterSorts = localPage.items.map {
-            it.chapterSort
-        }
-
-        // NOTE: Para assimiliar com o remote.
-        val searchChapters = chapterSorts.flatMap {
-            val parts = it.split(".")
-
-            if (parts.size == 2 && parts[1].length == 1) {
-                listOf(it, "${parts[0]}.0${parts[1]}")
-            } else {
-                listOf(it)
-            }
-        }.distinct()
-
-        val remotePage = mangaId?.let {
-            mangadexGetChapters.observeSpecific(
-                mangaId = it, chapters = searchChapters
-            ).first()
-        } ?: ChapterRemoteInfoPageDto(
-            items = emptyList(), pageSize = pageSize, page = page, total = total
-        )
-
-        val remoteMap = remotePage.items.associateBy {
-            it.chapter.normalizeChapter()
-        }
-
-        val filteredRemoteItems = localPage.items.mapNotNull {
-            remoteMap[it.chapterSort.normalizeChapter()]
-        }
-
-        _chapter.value = ChapterDto(
-            archive = localPage, remoteInfo = remotePage.copy(items = filteredRemoteItems)
-        )
+        _currentPage.value = page
     }
 
     private fun String.normalizeKey(): String {

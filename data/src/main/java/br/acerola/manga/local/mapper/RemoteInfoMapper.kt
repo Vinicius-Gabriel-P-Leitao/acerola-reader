@@ -29,7 +29,8 @@ fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
         authors = this.author.firstOrNull()?.toDto(),
         cover = this.cover.firstOrNull()?.toDto(),
         genre = this.genre.map { it.toDto() },
-        metadataSource = this.remoteInfo.metadataSource
+        metadataSource = this.remoteInfo.metadataSource,
+        mangaDirectoryFk = this.remoteInfo.mangaDirectoryFk
     )
 }
 
@@ -89,13 +90,15 @@ fun ChapterDownloadSource.toDto(): ChapterSourceDto {
 
 fun MangaRemoteInfoDto.toModel(): MangaRemoteInfo {
     return MangaRemoteInfo(
+        id = this.id ?: 0L,
         mirrorId = this.mirrorId,
         title = this.title,
         description = this.description,
         romanji = this.romanji.orEmpty(),
         status = this.status,
         publication = this.year ?: 0,
-        metadataSource = this.metadataSource
+        metadataSource = this.metadataSource,
+        mangaDirectoryFk = this.mangaDirectoryFk
     )
 }
 

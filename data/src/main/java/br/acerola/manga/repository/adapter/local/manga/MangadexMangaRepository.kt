@@ -67,16 +67,14 @@ class MangadexMangaRepository @Inject constructor(
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
     /**
-     * Atualiza os metadados de um mangá específico já existente no banco.
+     * Atualiza os metadados de um mangá específico baseado no ID da pasta local.
      */
     override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             _isIndexing.value = true
             try {
                 Either.catch {
-                    val remoteInfo = mangaRemoteInfoDao.getMangaById(mangaId).firstOrNull() ?: return@catch
-                    val directory = directoryDao.getMangaDirectoryByName(mangaName = remoteInfo.title) ?: return@catch
-
+                    val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
                     executeSync(folders = listOf(directory), baseUri = null)
                 }.mapLeft { exception ->
                     when (exception) {
@@ -194,9 +192,19 @@ class MangadexMangaRepository @Inject constructor(
                 } ?: fetchedList.firstOrNull()
 
                 if (bestMatch != null) {
-                    val mangaId = mangaRemoteInfoDao.insert(
-                        entity = bestMatch.toModel()
+                    val existingRemote = mangaRemoteInfoDao.getMangaByDirectoryId(current.id).firstOrNull()
+                    
+                    val mangaToSave = bestMatch.toModel().copy(
+                        id = existingRemote?.id ?: 0L,
+                        mangaDirectoryFk = current.id
                     )
+
+                    val mangaId = if (existingRemote != null) {
+                        mangaRemoteInfoDao.update(mangaToSave)
+                        existingRemote.id
+                    } else {
+                        mangaRemoteInfoDao.insert(mangaToSave)
+                    }
 
                     if (mangaId != -1L) {
                         bestMatch.authors?.let {
