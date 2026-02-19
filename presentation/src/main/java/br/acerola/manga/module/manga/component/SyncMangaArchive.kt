@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.ImageSearch
@@ -41,60 +42,37 @@ fun SyncMangaArchive(
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     chapterArchiveViewModel: ChapterArchiveViewModel,
 ) {
-    SmartCard(
-        type = CardType.CONTENT,
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
-    ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 8.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(size = 40.dp)
-                        .clip(CircleShape)
-                        .background(color = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FolderZip,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(size = 22.dp),
-                        contentDescription = null,
-                    )
-                }
+    Column {
+        ListItem(
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable {
+                chapterArchiveViewModel.syncChaptersByMangaDirectory(folderId = directory.id) 
+            },
+            headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_local)) },
+            leadingContent = { 
+                Icon(
+                    imageVector = Icons.Default.Refresh, 
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                ) 
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
 
-                Spacer(modifier = Modifier.width(width = 12.dp))
-
-                Text(
-                    text = stringResource(id = R.string.title_settings_sync_files),
-                    style = MaterialTheme.typography.titleMedium
+        ListItem(
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable {
+                mangaDirectoryViewModel.rescanMangaByManga(mangaId = directory.id)
+            },
+            headlineContent = { Text(text = stringResource(id = R.string.title_sync_cover_banner)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_sync_cover_banner)) },
+            leadingContent = {
+                Icon(
+                    imageVector = Icons.Default.ImageSearch, 
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
-            }
-
-            ListItem(
-                modifier = Modifier.clickable { chapterArchiveViewModel.syncChaptersByMangaDirectory(folderId = directory.id) },
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_local)) },
-                leadingContent = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
-
-            ListItem(
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_cover_banner)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_sync_cover_banner)) },
-                leadingContent = {
-                    Icon(imageVector = Icons.Default.ImageSearch, contentDescription = null)
-                },
-                modifier = Modifier.clickable {
-                    mangaDirectoryViewModel.rescanMangaByManga(mangaId = directory.id)
-                },
-            )
-        }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
     }
-
 }

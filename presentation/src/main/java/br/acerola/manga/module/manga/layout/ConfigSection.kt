@@ -56,7 +56,7 @@ fun LazyListScope.configSection(
 
     item {
         PrettyConfigCard(
-            title = stringResource(id = R.string.title_settings_file_config),
+            title = stringResource(id = R.string.title_text_archive_configs_in_app),
             icon = Icons.Rounded.SdStorage,
             iconColor = MaterialTheme.colorScheme.secondary
         ) {
@@ -88,10 +88,6 @@ fun LazyListScope.configSection(
     item { Spacer(modifier = Modifier.height(48.dp)) }
 }
 
-/**
- * Wrapper visual local para manter o código do LazyListScope limpo e bonito.
- * Coloca o Ícone dentro de um container colorido arredondado.
- */
 @androidx.compose.runtime.Composable
 private fun PrettyConfigCard(
     title: String,
@@ -108,23 +104,22 @@ private fun PrettyConfigCard(
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(top = 8.dp)) {
-            // Cabeçalho Bonito
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 12.dp, start = 8.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = iconColor.copy(alpha = 0.1f),
-                    modifier = Modifier.size(40.dp)
+                    color = iconColor.copy(alpha = 0.15f),
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
                             tint = iconColor,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -134,7 +129,7 @@ private fun PrettyConfigCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }

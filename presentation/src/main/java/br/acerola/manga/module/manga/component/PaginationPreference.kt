@@ -2,6 +2,7 @@ package br.acerola.manga.module.manga.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,40 +41,13 @@ fun PaginationPreference(
 
     val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
 
-    SmartCard(
-        type = CardType.CONTENT,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 8.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(size = 40.dp)
-                    .clip(CircleShape)
-                    .background(color = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SettingsSuggest,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(size = 22.dp),
-                    contentDescription = null,
-                )
-            }
-
-            Spacer(modifier = Modifier.width(width = 12.dp))
-
-            Text(
-                text = stringResource(id = R.string.title_settings_page_preferences),
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-
-        Spacer(modifier = Modifier.height(height = 12.dp))
+    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+        Text(
+            text = stringResource(id = R.string.description_text_preference_file_extension_default),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
 
         RadioGroup(
             selectedIndex = selectedIndex,
