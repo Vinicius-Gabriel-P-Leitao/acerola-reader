@@ -1,6 +1,5 @@
 package br.acerola.manga.module.manga.layout
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,9 +26,9 @@ import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewMod
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.module.manga.MangaViewModel
-import br.acerola.manga.module.manga.component.ConfigPreferences
+import br.acerola.manga.module.manga.component.PaginationPreference
 import br.acerola.manga.module.manga.component.SyncMangaArchive
-import br.acerola.manga.module.manga.component.SyncMangadexData
+import br.acerola.manga.module.manga.component.SyncMetadata
 import br.acerola.manga.presentation.R
 
 fun LazyListScope.configSection(
@@ -43,25 +42,23 @@ fun LazyListScope.configSection(
 ) {
     item { Spacer(modifier = Modifier.height(24.dp)) }
 
-    // --- Section: Display Settings (Visualização) ---
     item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_settings_display_config),
             icon = Icons.Rounded.Visibility,
             iconColor = MaterialTheme.colorScheme.primary
         ) {
-            ConfigPreferences(mangaViewModel = mangaViewModel)
+            PaginationPreference(mangaViewModel = mangaViewModel)
         }
     }
 
     item { Spacer(modifier = Modifier.height(16.dp)) }
 
-    // --- Section: File Management (Armazenamento) ---
     item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_settings_file_config),
             icon = Icons.Rounded.SdStorage,
-            iconColor = MaterialTheme.colorScheme.secondary // Pink no seu tema
+            iconColor = MaterialTheme.colorScheme.secondary
         ) {
             SyncMangaArchive(
                 directory = directory,
@@ -73,17 +70,15 @@ fun LazyListScope.configSection(
 
     item { Spacer(modifier = Modifier.height(16.dp)) }
 
-    // --- Section: Remote Sync (Nuvem) ---
     item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_config_sync_mangadex),
             icon = Icons.Rounded.CloudSync,
-            iconColor = MaterialTheme.colorScheme.tertiary // Sky no seu tema
+            iconColor = MaterialTheme.colorScheme.tertiary
         ) {
-            SyncMangadexData(
+            SyncMetadata(
                 directory = directory,
                 remoteInfo = remoteInfo,
-                mangaViewModel = mangaViewModel,
                 mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
                 chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
             )

@@ -32,7 +32,7 @@ import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.presentation.R
 
 @Composable
-fun ConfigPreferences(
+fun PaginationPreference(
     mangaViewModel: MangaViewModel,
 ) {
     val selected by mangaViewModel.selectedChapterPerPage.collectAsState(initial = null)

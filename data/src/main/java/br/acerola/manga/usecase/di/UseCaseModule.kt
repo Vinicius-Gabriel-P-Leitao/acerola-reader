@@ -11,7 +11,6 @@ import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
-import br.acerola.manga.usecase.library.ScanAndSyncLibraryUseCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
@@ -30,6 +29,10 @@ annotation class DirectoryCase
 @Qualifier
 @Retention(value = AnnotationRetention.BINARY)
 annotation class MangadexCase
+
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class ComicInfoCase
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -76,22 +79,6 @@ object UseCaseModule {
     }
 
     @Provides
-    @DirectoryCase
-    fun provideScanAndSyncLibraryUseCase(
-        @DirectoryCase syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
-        @DirectoryCase observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
-        syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
-        fileSystemAccessManager: FileSystemAccessManager
-    ): ScanAndSyncLibraryUseCase {
-        return ScanAndSyncLibraryUseCase(
-            syncLibraryUseCase,
-            observeLibraryUseCase,
-            syncMangaMetadataUseCase,
-            fileSystemAccessManager
-        )
-    }
-
-    @Provides
     @MangadexCase
     fun provideMangadexSyncLibraryUseCase(
         @MangadexFsOps repository: MangaManagementRepository<MangaRemoteInfoDto>
@@ -127,6 +114,46 @@ object UseCaseModule {
     @MangadexCase
     fun provideMangadexGetChaptersUseCase(
         @MangadexFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
+    ): GetChaptersUseCase<ChapterRemoteInfoPageDto> {
+        return GetChaptersUseCase(chapterRepository = chapterOps)
+    }
+
+    @Provides
+    @ComicInfoCase
+    fun provideComicInfoSyncLibraryUseCase(
+        @ComicInfoFsOps repository: MangaManagementRepository<MangaRemoteInfoDto>
+    ): SyncLibraryUseCase<MangaRemoteInfoDto> {
+        return SyncLibraryUseCase(repository)
+    }
+
+    @Provides
+    @ComicInfoCase
+    fun provideComicInfoObserveLibraryUseCase(
+        @ComicInfoFsOps mangaOps: MangaManagementRepository<MangaRemoteInfoDto>
+    ): ObserveLibraryUseCase<MangaRemoteInfoDto> {
+        return ObserveLibraryUseCase(mangaRepository = mangaOps)
+    }
+
+    @Provides
+    @ComicInfoCase
+    fun provideComicInfoRescanMangaUseCase(
+        @ComicInfoFsOps mangaOps: MangaManagementRepository<MangaRemoteInfoDto>
+    ): RescanMangaUseCase<MangaRemoteInfoDto> {
+        return RescanMangaUseCase(mangaRepository = mangaOps)
+    }
+
+    @Provides
+    @ComicInfoCase
+    fun provideComicInfoRescanMangaChaptersUseCase(
+        @ComicInfoFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
+    ): RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto> {
+        return RescanMangaChaptersUseCase(chapterRepository = chapterOps)
+    }
+
+    @Provides
+    @ComicInfoCase
+    fun provideComicInfoGetChaptersUseCase(
+        @ComicInfoFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
     ): GetChaptersUseCase<ChapterRemoteInfoPageDto> {
         return GetChaptersUseCase(chapterRepository = chapterOps)
     }

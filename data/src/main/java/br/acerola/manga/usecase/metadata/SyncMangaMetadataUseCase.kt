@@ -20,8 +20,6 @@ class SyncMangaMetadataUseCase @Inject constructor(
 
     suspend fun syncFromMangadex(
         mangaId: Long,
-        folderId: Long,
-        title: String
     ): Either<LibrarySyncError, Unit> {
         // NOTE: O repository já cuida de buscar na API e salvar no Room
         return mangadexMangaRepo.refreshManga(mangaId).onRight {

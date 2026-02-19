@@ -34,14 +34,15 @@ import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.presentation.R
 
 @Composable
-fun SyncMangadexData(
-    directory: br.acerola.manga.dto.archive.MangaDirectoryDto,
+fun SyncMetadata(
+    directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
-    mangaViewModel: br.acerola.manga.module.manga.MangaViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
     chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
 ) {
@@ -81,9 +82,11 @@ fun SyncMangadexData(
 
             ListItem(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                modifier = Modifier.clickable { mangaViewModel.syncFromMangadex(directory.id, directory.name) },
                 headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
                 leadingContent = { Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null) },
+                modifier = Modifier.clickable {
+                    mangaRemoteInfoViewModel.syncFromMangadex(mangaId = remoteInfo?.id ?: -1L)
+                },
                 supportingContent = {
                     Text(
                         text = pluralStringResource(
@@ -96,8 +99,8 @@ fun SyncMangadexData(
 
             ListItem(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                modifier = Modifier.clickable { 
-                    mangaViewModel.syncFromComicInfo(directory.id, directory.name, directory.path)
+                modifier = Modifier.clickable {
+                    mangaRemoteInfoViewModel.syncFromComicInfo(directory.id)
                 },
                 headlineContent = { Text(text = "Sincronizar ComicInfo.xml") },
                 supportingContent = { Text(text = "Busca metadados locais no arquivo ou pasta") },
@@ -107,12 +110,22 @@ fun SyncMangadexData(
             if (remoteInfo != null) {
                 ListItem(
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable { chapterRemoteInfoViewModel.syncChaptersByManga(mangaId = remoteInfo.id!!) },
-                    headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
+                    modifier = Modifier.clickable { chapterRemoteInfoViewModel.syncChaptersByMangadex(mangaId = remoteInfo.id!!) },
+                    headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters) + " (Mangadex)") },
                     supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_remote)) },
                     leadingContent = { Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null) },
                 )
             }
+
+            ListItem(
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier.clickable {
+                    chapterRemoteInfoViewModel.syncChaptersByComicInfo(folderId = directory.id)
+                },
+                headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters) + " (ComicInfo)") },
+                supportingContent = { Text(text = "Sincronizar capítulos usando ComicInfo.xml local") },
+                leadingContent = { Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null) },
+            )
         }
     }
 }

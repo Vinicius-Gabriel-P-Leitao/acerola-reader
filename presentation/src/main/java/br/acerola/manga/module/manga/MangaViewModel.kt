@@ -42,7 +42,6 @@ import javax.inject.Inject
 class MangaViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val fileSystemAccessManager: FileSystemAccessManager,
-    private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
@@ -64,44 +63,19 @@ class MangaViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    private val _isMetadataIndexing = MutableStateFlow(value = false)
-    val isMetadataIndexing: StateFlow<Boolean> = _isMetadataIndexing.asStateFlow()
-
     // TODO: Transformar em config do DataStore
     private var currentPage = 0
     private var pageSize = 20
     private var total = 0
 
-    val mangaIsIndexing: StateFlow<Boolean> = combine(
+    val mangaIsIndexing:    StateFlow<Boolean> = combine(
         flow = directoryObserve.isIndexing,
         flow2 = mangadexObserve.isIndexing,
-        flow3 = _isMetadataIndexing
-    ) { directoryIndexing, remoteInfoIndexing, metadataIndexing ->
-        directoryIndexing || remoteInfoIndexing || metadataIndexing
+    ) { directoryIndexing, remoteInfoIndexing ->
+        directoryIndexing || remoteInfoIndexing
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
     )
-
-    fun syncFromMangadex(folderId: Long, title: String) {
-        viewModelScope.launch {
-            _isMetadataIndexing.value = true
-            val mangaId = _selectedMangaId.value ?: -1L
-            syncMangaMetadataUseCase.syncFromMangadex(mangaId, folderId, title).onLeft {
-                _uiEvents.send(element = it)
-            }
-            _isMetadataIndexing.value = false
-        }
-    }
-
-    fun syncFromComicInfo(folderId: Long, title: String, folderUri: String) {
-        viewModelScope.launch {
-            _isMetadataIndexing.value = true
-            syncMangaMetadataUseCase.syncFromComicInfo(folderId).onLeft {
-                _uiEvents.send(element = it)
-            }
-            _isMetadataIndexing.value = false
-        }
-    }
 
     private suspend fun getRootUri(): Uri? {
         fileSystemAccessManager.loadFolderUri()
@@ -155,10 +129,18 @@ class MangaViewModel @Inject constructor(
         if (folderId == null) return@combine null
         val directory = directories.find { it.id == folderId } ?: return@combine null
 
+        // 1. Prioridade: ID explícito (ex: via Intent ou Sync)
         var remote = if (remoteInfoId != null) {
             remoteInfos.find { it.id == remoteInfoId }
         } else null
 
+        // 2. Fallback: Match Determinístico Local (ComicInfo)
+        if (remote == null) {
+            val localMirrorId = "local-${directory.id}"
+            remote = remoteInfos.find { it.mirrorId == localMirrorId }
+        }
+
+        // 3. Fallback: Match por Título (Mangadex/Geral)
         if (remote == null) {
             val normalizedName = directory.name.normalizeKey()
             remote = remoteInfos.find { it.title.normalizeKey() == normalizedName }
@@ -184,10 +166,21 @@ class MangaViewModel @Inject constructor(
             }
         }
 
-        // NOTE: Atualiza a pagina.
+        // NOTE: Atualiza a pagina quando o status de indexação muda
         viewModelScope.launch {
             chapterIsIndexing.collect { indexing ->
                 if (!indexing) {
+                    loadPage(page = currentPage)
+                }
+            }
+        }
+
+        // NOTE: REATIVIDADE CRÍTICA - Dispara loadPage assim que o remoteInfo é encontrado ou muda
+        viewModelScope.launch {
+            manga.collect { mangaDto ->
+                val newRemoteId = mangaDto?.remoteInfo?.id
+                if (newRemoteId != null && newRemoteId != _selectedMangaId.value) {
+                    _selectedMangaId.value = newRemoteId
                     loadPage(page = currentPage)
                 }
             }
