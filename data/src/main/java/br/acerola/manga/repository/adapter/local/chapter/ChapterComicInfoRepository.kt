@@ -27,7 +27,7 @@ class ChapterComicInfoRepository @Inject constructor(
         offset: Int,
         onProgress: ((Int) -> Unit)?,
         vararg extra: String?
-    ): Either<NetworkError, List<ChapterRemoteInfoDto>> = withContext(Dispatchers.IO) {
+    ): Either<NetworkError, List<ChapterRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
         // manga aqui é o URI do arquivo do capítulo
         val chapterUri = manga
         val chapterDto = ChapterFileDto(id = 0, name = "Unknown", path = chapterUri, chapterSort = "0")
@@ -35,17 +35,17 @@ class ChapterComicInfoRepository @Inject constructor(
         val sourceResult = chapterSourceFactory.create(chapterDto)
 
         sourceResult.fold(
-            ifLeft = { Either.Left(NetworkError.NotFound()) },
+            ifLeft = { Either.Left(value = NetworkError.NotFound()) },
             ifRight = { source ->
-                source.getFileStream("ComicInfo.xml").fold(
-                    ifLeft = { Either.Left(NetworkError.NotFound()) },
+                source.getFileStream(fileName = "ComicInfo.xml").fold(
+                    ifLeft = { Either.Left(value = NetworkError.NotFound()) },
                     ifRight = { stream ->
                         try {
                             stream.use {
-                                Either.Right(listOf(parser.parseChapterInfo(it)))
+                                Either.Right(value = listOf(parser.parseChapterInfo(it)))
                             }
                         } catch (e: Exception) {
-                            Either.Left(NetworkError.UnexpectedError(cause = e))
+                            Either.Left(value = NetworkError.UnexpectedError(cause = e))
                         }
                     }
                 )
@@ -55,6 +55,6 @@ class ChapterComicInfoRepository @Inject constructor(
 
     override suspend fun saveInfo(manga: String, info: ChapterRemoteInfoDto): Either<NetworkError, Unit> {
         // NOTE: Atualmente não suportamos escrita dentro de CBZ/CBR (re-zipar)
-        return Either.Right(Unit)
+        return Either.Right(value = Unit)
     }
 }

@@ -30,49 +30,50 @@ class MangaComicInfoRepository @Inject constructor(
         offset: Int,
         onProgress: ((Int) -> Unit)?,
         vararg extra: String?
-    ): Either<NetworkError, List<MangaRemoteInfoDto>> = withContext(Dispatchers.IO) {
-        val folderUri = extra.getOrNull(0)?.toUri()
-            ?: return@withContext Either.Left(NetworkError.UnexpectedError(cause = Exception("Folder URI missing in extra[0]")))
+    ): Either<NetworkError, List<MangaRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
+        val folderUri = extra.getOrNull(index = 0)?.toUri()
+            ?: return@withContext Either.Left(value = NetworkError.UnexpectedError(cause = Exception("Folder URI missing in extra[0]")))
 
         val folderDoc = DocumentFile.fromTreeUri(context, folderUri)
-            ?: return@withContext Either.Left(NetworkError.NotFound())
+            ?: return@withContext Either.Left(value = NetworkError.NotFound())
 
-        // 1. Tenta buscar na raiz
         val directXml = folderDoc.findFile("ComicInfo.xml")
+
         if (directXml != null && directXml.exists()) {
             return@withContext try {
                 context.contentResolver.openInputStream(directXml.uri)?.use {
-                    Either.Right(listOf(parser.parseMangaInfo(it)))
-                } ?: Either.Left(NetworkError.NotFound())
-            } catch (e: Exception) {
-                Either.Left(NetworkError.UnexpectedError(cause = e))
+                    Either.Right(value = listOf(parser.parseMangaInfo(inputStream = it)))
+                } ?: Either.Left(value = NetworkError.NotFound())
+            } catch (exception: Exception) {
+                Either.Left(value = NetworkError.UnexpectedError(cause = exception))
             }
         }
 
-        // 2. Tenta extrair do primeiro capítulo
-        val firstChapter =
-            folderDoc.listFiles().firstOrNull { it.isFile && (it.name?.endsWith(".cbz") == true || it.name?.endsWith(".cbr") == true) }
+        val firstChapter = folderDoc.listFiles().firstOrNull {
+            it.isFile && (it.name?.endsWith(suffix = ".cbz") == true || it.name?.endsWith(suffix = ".cbr") == true)
+        }
+
         if (firstChapter != null) {
             val chapterDto = ChapterFileDto(
                 id = 0,
+                chapterSort = "0",
                 name = firstChapter.name!!,
                 path = firstChapter.uri.toString(),
-                chapterSort = "0"
             )
             val sourceResult = chapterSourceFactory.create(chapterDto)
 
             return@withContext sourceResult.fold(
-                ifLeft = { Either.Left(NetworkError.NotFound()) },
+                ifLeft = { Either.Left(value = NetworkError.NotFound()) },
                 ifRight = { source ->
-                    source.getFileStream("ComicInfo.xml").fold(
-                        ifLeft = { Either.Left(NetworkError.NotFound()) },
+                    source.getFileStream(fileName = "ComicInfo.xml").fold(
+                        ifLeft = { Either.Left(value = NetworkError.NotFound()) },
                         ifRight = { stream ->
                             try {
                                 stream.use {
-                                    Either.Right(listOf(parser.parseMangaInfo(it)))
+                                    Either.Right(value = listOf(parser.parseMangaInfo(inputStream = it)))
                                 }
-                            } catch (e: Exception) {
-                                Either.Left(NetworkError.UnexpectedError(cause = e))
+                            } catch (exception: Exception) {
+                                Either.Left(value = NetworkError.UnexpectedError(cause = exception))
                             }
                         }
                     )
@@ -80,16 +81,16 @@ class MangaComicInfoRepository @Inject constructor(
             )
         }
 
-        Either.Left(NetworkError.NotFound())
+        Either.Left(value = NetworkError.NotFound())
     }
 
     override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> =
-        withContext(Dispatchers.IO) {
+        withContext(context = Dispatchers.IO) {
             // NOTE: manga aqui deve ser o URI da pasta pai (root) e info.title o nome da subpasta
             // Mas por simplicidade, vamos assumir que manga é o URI da pasta do mangá
             val folderUri = manga.toUri()
             val folderDoc = DocumentFile.fromTreeUri(context, folderUri)
-                ?: return@withContext Either.Left(NetworkError.NotFound())
+                ?: return@withContext Either.Left(value = NetworkError.NotFound())
 
             try {
                 val xmlFile = folderDoc.findFile("ComicInfo.xml") ?: folderDoc.createFile("text/xml", "ComicInfo.xml")
@@ -99,12 +100,19 @@ class MangaComicInfoRepository @Inject constructor(
                             writer.write(parser.serialize(info))
                         }
                     }
-                    Either.Right(Unit)
+                    Either.Right(value = Unit)
                 } else {
-                    Either.Left(NetworkError.UnexpectedError(cause = Exception("Could not create ComicInfo.xml")))
+                    Either.Left(
+                        value = NetworkError.UnexpectedError(
+                            cause = Exception(
+                                "Could not create ComicInfo" +
+                                        ".xml"
+                            )
+                        )
+                    )
                 }
-            } catch (e: Exception) {
-                Either.Left(NetworkError.UnexpectedError(cause = e))
+            } catch (exception: Exception) {
+                Either.Left(value = NetworkError.UnexpectedError(cause = exception))
             }
         }
 }
