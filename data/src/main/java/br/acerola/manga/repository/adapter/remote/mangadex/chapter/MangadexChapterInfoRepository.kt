@@ -35,8 +35,6 @@ class MangadexChapterInfoRepository @Inject constructor(
         val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
 
         while (true) {
-            println("DEBUG API: Fetching Feed Batch - Offset=$currentOffset | Limit=$limit")
-
             if (totalChapters > 0 && onProgress != null) {
                 val progress = ((currentOffset.toFloat() / totalChapters.toFloat()) * 100).toInt()
                 onProgress(progress)
@@ -60,11 +58,6 @@ class MangadexChapterInfoRepository @Inject constructor(
                         val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
                         val source = sourceResult.getOrNull()
 
-                        if (source == null) {
-                            // TODO: Dar um callback visual depois
-                            println("DEBUG API: [!] Sem imagens para o chapter ${item.attributes.chapter}")
-                        }
-
                         item.toDto(source)
                     }
                 }
@@ -74,8 +67,6 @@ class MangadexChapterInfoRepository @Inject constructor(
             currentOffset += 100
 
             if (currentOffset >= responseFeed.total) {
-                // TODO: Dar um callback visual depois
-                println("DEBUG API: Finalizou $currentOffset chapters processados.")
                 break
             }
         }

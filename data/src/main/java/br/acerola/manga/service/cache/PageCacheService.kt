@@ -29,9 +29,14 @@ class PageCacheService @Inject constructor() {
             return false
         }
 
-        fun putPage(index: Int, data: ByteArray) {
-            put(key = index, value = data)
-            currentSize += data.size
+        override fun put(key: Int, value: ByteArray): ByteArray? {
+            currentSize += value.size
+            return super.put(key, value)
+        }
+
+        override fun clear() {
+            currentSize = 0
+            super.clear()
         }
     }
 
@@ -41,7 +46,7 @@ class PageCacheService @Inject constructor() {
     }
 
     fun put(index: Int, data: ByteArray) {
-        cache.putPage(index, data)
+        cache[index] = data
     }
 
     fun clear() {

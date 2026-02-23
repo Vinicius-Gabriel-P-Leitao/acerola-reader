@@ -1,7 +1,6 @@
 package br.acerola.manga.local.mapper
 
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
@@ -12,6 +11,7 @@ import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -20,13 +20,11 @@ class ArchiveMapperTest {
     @Before
     fun setUp() {
         mockkStatic(Uri::class)
-        mockkStatic("androidx.core.net.UriKt")
     }
 
     @After
     fun tearDown() {
         unmockkStatic(Uri::class)
-        unmockkStatic("androidx.core.net.UriKt")
     }
 
     @Test
@@ -36,7 +34,7 @@ class ArchiveMapperTest {
             banner = "content://banner"
         )
         val uriMock = mockk<Uri>()
-        every { any<String>().toUri() } returns uriMock
+        every { Uri.parse(any()) } returns uriMock
 
         val dto = entity.toDto()
 
@@ -44,6 +42,15 @@ class ArchiveMapperTest {
         assertEquals(entity.name, dto.name)
         assertEquals(uriMock, dto.coverUri)
         assertEquals(uriMock, dto.bannerUri)
+    }
+
+    @Test
+    fun `MangaDirectory toDto deve mapear hasComicInfo corretamente`() {
+        val entity = MangaDirectoryFixtures.createMangaDirectory(hasComicInfo = true)
+        
+        val dto = entity.toDto()
+
+        assertTrue("hasComicInfo deveria ser true", dto.hasComicInfo)
     }
 
     @Test
@@ -69,16 +76,22 @@ class ArchiveMapperTest {
 
     @Test
     fun `MangaDirectoryDto toModel deve mapear para entidade com timestamp atual`() {
-        val dto = MangaDirectoryFixtures.createMangaDirectoryDto(coverUri = mockk(), bannerUri = mockk())
-        every { dto.coverUri.toString() } returns "uri_cover"
-        every { dto.bannerUri.toString() } returns "uri_banner"
+        val coverUri = mockk<Uri>()
+        val bannerUri = mockk<Uri>()
+        val dto = MangaDirectoryFixtures.createMangaDirectoryDto(
+            coverUri = coverUri, 
+            bannerUri = bannerUri,
+            hasComicInfo = true
+        )
+        every { coverUri.toString() } returns "uri_cover"
+        every { bannerUri.toString() } returns "uri_banner"
 
         val model = dto.toModel()
 
         assertEquals(dto.name, model.name)
         assertEquals("uri_cover", model.cover)
         assertEquals("uri_banner", model.banner)
-        // NOTE: lastModified é gerado via System.currentTimeMillis(), difícil de validar valor exato
+        assertTrue(model.hasComicInfo)
     }
 
     @Test
@@ -108,7 +121,7 @@ class ArchiveMapperTest {
         every { cover.uri.toString() } returns "uri_cover"
         every { banner.uri.toString() } returns "uri_banner"
 
-        val model = folder.toMangaDirectoryModel(cover, banner, "{v}")
+        val model = folder.toMangaDirectoryModel(cover, banner, "{v}", hasComicInfo = true)
 
         assertEquals("One Piece", model.name)
         assertEquals("uri_folder", model.path)
@@ -116,5 +129,6 @@ class ArchiveMapperTest {
         assertEquals("uri_banner", model.banner)
         assertEquals(5000L, model.lastModified)
         assertEquals("{v}", model.chapterTemplate)
+        assertTrue(model.hasComicInfo)
     }
 }

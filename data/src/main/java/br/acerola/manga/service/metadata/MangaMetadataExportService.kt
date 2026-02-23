@@ -59,11 +59,11 @@ class MangaMetadataExportService @Inject constructor(
 
     private fun writeXmlToFolder(folderDoc: DocumentFile, fileName: String, content: String) {
         val xmlFile = folderDoc.findFile(fileName) ?: folderDoc.createFile("text/xml", fileName)
-        xmlFile?.let {
-            context.contentResolver.openOutputStream(it.uri)?.use { output ->
-                output.write(content.toByteArray(Charsets.UTF_8))
-            }
-        }
+            ?: throw IOException("Could not create metadata file: $fileName")
+
+        context.contentResolver.openOutputStream(xmlFile.uri)?.use { output ->
+            output.write(content.toByteArray(Charsets.UTF_8))
+        } ?: throw IOException("Could not open output stream for: $fileName")
     }
 
     private fun handleException(throwable: Throwable): LibrarySyncError = when (throwable) {
