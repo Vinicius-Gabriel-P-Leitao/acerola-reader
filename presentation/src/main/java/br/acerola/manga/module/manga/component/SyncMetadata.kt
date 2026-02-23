@@ -48,6 +48,8 @@ import br.acerola.manga.local.database.entity.metadata.MetadataSource
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun SyncMetadata(
@@ -71,21 +73,37 @@ fun SyncMetadata(
                 .clickable {
                     mangaRemoteInfoViewModel.syncFromMangadex(directory.id)
                 },
-            headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
+            headlineContent = { 
+                Text(
+                    text = stringResource(id = R.string.title_sync_mangadex_remote_info),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
             supportingContent = {
                 Text(
                     text = pluralStringResource(
                         id = R.plurals.description_sync_mangadex_remote_info_supporting,
                         count = 1
-                    )
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
-                Image(
-                    painter = painterResource(id = R.drawable.mangadex_v2),
-                    contentDescription = null,
-                    modifier = Modifier.size(size = 24.dp)
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = painterResource(id = R.drawable.mangadex_v2),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
@@ -97,14 +115,35 @@ fun SyncMetadata(
                     .clickable {
                         chapterRemoteInfoViewModel.syncChaptersByMangadex(mangaId = remoteInfo.id!!)
                     },
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_remote)) },
+                headlineContent = { 
+                    Text(
+                        text = stringResource(id = R.string.title_sync_chapters),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
+                supportingContent = { 
+                    Text(
+                        text = stringResource(id = R.string.description_sync_chapters_remote),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ) 
+                },
                 leadingContent = {
-                    Icon(
-                        imageVector = Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.AutoAwesome,
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                                contentDescription = null
+                            )
+                        }
+                    }
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             )
@@ -131,14 +170,35 @@ fun SyncMetadata(
                 .clickable {
                     mangaRemoteInfoViewModel.syncFromComicInfo(directory.id)
                 },
-            headlineContent = { Text(text = stringResource(id = R.string.title_sync_comic_info)) },
-            supportingContent = { Text(text = stringResource(id = R.string.description_sync_comic_info)) },
+            headlineContent = { 
+                Text(
+                    text = stringResource(id = R.string.title_sync_comic_info),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
+            supportingContent = { 
+                Text(
+                    text = stringResource(id = R.string.description_sync_comic_info),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) 
+            },
             leadingContent = {
-                Icon(
-                    imageVector = Icons.Rounded.Description,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.Description,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            contentDescription = null
+                        )
+                    }
+                }
             },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
@@ -150,14 +210,35 @@ fun SyncMetadata(
                     .clickable {
                         chapterRemoteInfoViewModel.syncChaptersByComicInfo(folderId = directory.id)
                     },
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_internal)) },
+                headlineContent = { 
+                    Text(
+                        text = stringResource(id = R.string.title_sync_chapters),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
+                supportingContent = { 
+                    Text(
+                        text = stringResource(id = R.string.description_sync_chapters_internal),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ) 
+                },
                 leadingContent = {
-                    Icon(
-                        imageVector = Icons.Rounded.AutoStories,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.AutoStories,
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                contentDescription = null
+                            )
+                        }
+                    }
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             )

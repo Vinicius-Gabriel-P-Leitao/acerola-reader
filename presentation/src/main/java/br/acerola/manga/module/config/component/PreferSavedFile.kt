@@ -1,6 +1,5 @@
 package br.acerola.manga.module.config.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,10 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.presentation.R
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.module.config.layout.FilePreference
+import br.acerola.manga.presentation.R
 
 @Composable
 fun PreferSavedFile(
