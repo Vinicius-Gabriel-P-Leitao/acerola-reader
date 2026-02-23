@@ -29,7 +29,7 @@ class MangaComicInfoRepository @Inject constructor(
         limit: Int,
         offset: Int,
         onProgress: ((Int) -> Unit)?,
-        vararg extra: String?
+        vararg extra: String?,
     ): Either<NetworkError, List<MangaRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
         val folderUri = extra.getOrNull(index = 0)?.toUri()
             ?: return@withContext Either.Left(value = NetworkError.UnexpectedError(cause = Exception("Folder URI missing in extra[0]")))
@@ -45,7 +45,9 @@ class MangaComicInfoRepository @Inject constructor(
         if (directXml != null && directXml.exists()) {
             return@withContext try {
                 context.contentResolver.openInputStream(directXml.uri)?.use {
-                    Either.Right(value = listOf(parser.parseMangaInfo(inputStream = it)))
+                    parser.parseMangaInfo(inputStream = it)
+                        .map { info -> listOf(info) }
+                        .mapLeft { error -> NetworkError.UnexpectedError(cause = Exception(error.toString())) }
                 } ?: Either.Left(value = NetworkError.NotFound())
             } catch (exception: Exception) {
                 Either.Left(value = NetworkError.UnexpectedError(cause = exception))
@@ -75,7 +77,9 @@ class MangaComicInfoRepository @Inject constructor(
                             ifRight = { stream ->
                                 try {
                                     stream.use {
-                                        Either.Right(value = listOf(parser.parseMangaInfo(inputStream = it)))
+                                        parser.parseMangaInfo(inputStream = it)
+                                            .map { info -> listOf(info) }
+                                            .mapLeft { error -> NetworkError.UnexpectedError(cause = Exception(error.toString())) }
                                     }
                                 } catch (exception: Exception) {
                                     Either.Left(value = NetworkError.UnexpectedError(cause = exception))
@@ -112,10 +116,7 @@ class MangaComicInfoRepository @Inject constructor(
                 } else {
                     Either.Left(
                         value = NetworkError.UnexpectedError(
-                            cause = Exception(
-                                "Could not create ComicInfo" +
-                                        ".xml"
-                            )
+                            cause = Exception("Could not create ComicInfo .xml")
                         )
                     )
                 }

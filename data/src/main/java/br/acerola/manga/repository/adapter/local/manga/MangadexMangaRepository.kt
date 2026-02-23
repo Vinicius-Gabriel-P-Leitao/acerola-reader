@@ -22,6 +22,7 @@ import br.acerola.manga.repository.di.Mangadex
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
+import br.acerola.manga.service.metadata.MangaMetadataExportService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +51,7 @@ class MangadexMangaRepository @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val coverService: MangaSaveCoverService,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
+    private val metadataExportService: MangaMetadataExportService
 ) : MangaManagementRepository<MangaRemoteInfoDto> {
 
     @Inject
@@ -224,6 +226,9 @@ class MangadexMangaRepository @Inject constructor(
                                 mangaRemoteInfoFk = mangaId
                             )
                         }
+
+                        // Gera o ComicInfo.xml se a preferência estiver ativa
+                        metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
                     }
                 }
             }

@@ -43,7 +43,9 @@ class ChapterComicInfoRepository @Inject constructor(
                         ifRight = { stream ->
                             try {
                                 stream.use {
-                                    Either.Right(value = listOf(parser.parseChapterInfo(it)))
+                                    parser.parseChapterInfo(it)
+                                        .map { info -> listOf(info) }
+                                        .mapLeft { error -> NetworkError.UnexpectedError(cause = Exception(error.toString())) }
                                 }
                             } catch (e: Exception) {
                                 Either.Left(value = NetworkError.UnexpectedError(cause = e))

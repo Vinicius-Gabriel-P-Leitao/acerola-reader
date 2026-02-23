@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -32,57 +33,47 @@ import br.acerola.manga.module.config.layout.FilePreference
 fun PreferSavedFile(
     filePreferencesViewModel: FilePreferencesViewModel
 ) {
-    SmartCard(
-        type = CardType.CONTENT,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp, pressedElevation = 12.dp
-        )
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(size = 40.dp)
+                    .clip(CircleShape)
+                    .background(color = MaterialTheme.colorScheme.primary)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(size = 40.dp)
-                        .clip(CircleShape)
-                        .background(color = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.FileOpen,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(size = 22.dp),
-                        contentDescription = stringResource(
-                            R.string.description_icon_select_preference_saved_file
-                        ),
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(width = 12.dp))
-
-                Column {
-                    Text(
-                        text = stringResource(R.string.title_preference_file_extension),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        text = stringResource(
-                            R.string.description_text_preference_file_extension_default
-                        ),
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.FileOpen,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(size = 22.dp),
+                    contentDescription = stringResource(
+                        R.string.description_icon_select_preference_saved_file
+                    ),
+                )
             }
 
-            Divider()
+            Spacer(modifier = Modifier.width(width = 12.dp))
 
-            FilePreference(filePreferencesViewModel)
+            Column {
+                Text(
+                    text = stringResource(R.string.title_preference_file_extension),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(
+                        R.string.description_text_preference_file_extension_default
+                    ),
+                )
+            }
         }
+
+        Divider()
+
+        FilePreference(filePreferencesViewModel)
     }
 }

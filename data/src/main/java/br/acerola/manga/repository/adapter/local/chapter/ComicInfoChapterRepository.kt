@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -66,7 +67,11 @@ class ComicInfoChapterRepository @Inject constructor(
                 if (total == 0) return@catch
 
                 localChapters.forEachIndexed { index, archive ->
-                    val result = comicInfoService.searchInfo(manga = archive.path).getOrNull()?.firstOrNull()
+                    yield()
+                    // Tenta buscar metadados no arquivo. Se falhar, apenas ignora este capítulo e segue.
+                    val result = comicInfoService.searchInfo(manga = archive.path)
+                        .getOrNull()
+                        ?.firstOrNull()
 
                     if (result != null) {
                         val chapterRemoteInfoEntity = result.toModel(mangaRemoteInfoFk = remoteManga.id)

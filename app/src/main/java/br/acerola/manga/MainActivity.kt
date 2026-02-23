@@ -38,6 +38,7 @@ class MainActivity(
     private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
+    private val metadataSettingsViewModel: br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel by viewModels()
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
@@ -53,7 +54,8 @@ class MainActivity(
                 fileSystemAccessViewModel = fileSystemAccessViewModel,
                 filePreferencesViewModel = filePreferencesViewModel,
                 mangaDirectoryViewModel = mangaDirectoryViewModel,
-                mangaDexViewModel = mangaDexViewModel
+                mangaDexViewModel = mangaDexViewModel,
+                metadataSettingsViewModel = metadataSettingsViewModel
             )
         }
     }

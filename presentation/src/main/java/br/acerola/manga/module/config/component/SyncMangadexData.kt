@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.CardDefaults
@@ -38,62 +40,37 @@ import br.acerola.manga.presentation.R
 fun SyncMangadexData(
     mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
-    SmartCard(
-        type = CardType.CONTENT,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp, pressedElevation = 12.dp
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "MangaDex",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
-    ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(size = 40.dp)
-                        .clip(CircleShape)
-                        .background(color = MaterialTheme.colorScheme.onSurface)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.mangadex_v2),
-                        contentDescription = stringResource(id = R.string.description_icon_sync_mangadex),
-                        modifier = Modifier.size(size = 30.dp)
-                    )
-                }
 
-                Spacer(modifier = Modifier.width(width = 12.dp))
-
+        ListItem(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { mangaDexViewModel.rescanMangas() },
+            headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
+            supportingContent = {
                 Text(
-                    text = stringResource(id = R.string.title_config_sync_mangadex),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            Divider()
-
-            ListItem(
-                modifier = Modifier.clickable { mangaDexViewModel.rescanMangas() },
-                headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
-                supportingContent = {
-                    Text(
-                        text = pluralStringResource(
-                            id = R.plurals.description_sync_mangadex_remote_info_supporting,
-                            count = 2
-                        )
+                    text = pluralStringResource(
+                        id = R.plurals.description_sync_mangadex_remote_info_supporting,
+                        count = 2
                     )
-                },
-                leadingContent = {
-                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
-                },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
                 )
+            },
+            leadingContent = {
+                Image(
+                    painter = painterResource(id = R.drawable.mangadex_v2),
+                    contentDescription = null,
+                    modifier = Modifier.size(size = 24.dp)
+                )
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Transparent
             )
-        }
+        )
     }
 }

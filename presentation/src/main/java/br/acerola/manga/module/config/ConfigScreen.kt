@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
@@ -26,6 +25,8 @@ import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
+import br.acerola.manga.module.config.component.MetadataExportSettings
 import br.acerola.manga.module.config.component.PreferSavedFile
 import br.acerola.manga.module.config.component.SelectFolder
 import br.acerola.manga.module.config.component.SyncLibraryArchive
@@ -37,7 +38,8 @@ fun ConfigScreen(
     filePreferencesViewModel: FilePreferencesViewModel,
     fileSystemAccessViewModel: FileSystemAccessViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
-    mangaDexViewModel: MangaRemoteInfoViewModel
+    mangaDexViewModel: MangaRemoteInfoViewModel,
+    metadataSettingsViewModel: MetadataSettingsViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -51,50 +53,38 @@ fun ConfigScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header Principal da Página
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 12.dp)
-            ) {
-                // Pequeno detalhe visual no título
-                Box(
-                    modifier = Modifier
-                        .width(4.dp)
-                        .height(32.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(2.dp)
-                        )
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(id = R.string.label_config_activity),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
+            ConfigHeader()
 
-            // Seção: Arquivos Locais
-            // Usamos a cor Secondary (Pink no seu tema) para destacar arquivos
-            SettingsSection(
+            // Bloco 1: Diretório e Arquivos
+            PrettyConfigCard(
                 title = stringResource(id = R.string.title_text_archive_configs_in_app),
                 icon = Icons.Rounded.FolderOpen,
                 iconColor = MaterialTheme.colorScheme.secondary
             ) {
-                SelectFolder(context, fileSystemAccessViewModel)
-                Divider(modifier = Modifier.alpha(0.5f)) // Divider mais sutil
-                PreferSavedFile(filePreferencesViewModel)
-                Divider(modifier = Modifier.alpha(0.5f))
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SelectFolder(context, fileSystemAccessViewModel)
+                    Divider(modifier = Modifier.alpha(0.5f))
+                    PreferSavedFile(filePreferencesViewModel)
+                    Divider(modifier = Modifier.alpha(0.5f))
+                    MetadataExportSettings(metadataSettingsViewModel)
+                }
+            }
+
+            // Bloco 2: Sincronização Local
+            PrettyConfigCard(
+                title = "Biblioteca",
+                icon = Icons.Rounded.Settings,
+                iconColor = MaterialTheme.colorScheme.primary
+            ) {
                 SyncLibraryArchive(mangaDirectoryViewModel)
             }
 
-            // Seção: Integração Remota
-            // Usamos a cor Tertiary (Sky no seu tema) para nuvem/rede
-            SettingsSection(
+            // Bloco 3: Fontes Externas
+            PrettyConfigCard(
                 title = stringResource(id = R.string.title_text_mangadex_configs_in_app),
                 icon = Icons.Rounded.CloudSync,
                 iconColor = MaterialTheme.colorScheme.tertiary
@@ -107,9 +97,33 @@ fun ConfigScreen(
     }
 }
 
-// Reutilização do componente privado para consistência
 @Composable
-private fun SettingsSection(
+private fun ConfigHeader() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(32.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(2.dp)
+                )
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = stringResource(id = R.string.label_config_activity),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+private fun PrettyConfigCard(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconColor: androidx.compose.ui.graphics.Color,
@@ -118,45 +132,43 @@ private fun SettingsSection(
     SmartCard(
         type = CardType.CONTENT,
         title = null,
+        modifier = Modifier.padding(horizontal = 16.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(top = 8.dp)) {
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 20.dp)
+                modifier = Modifier.padding(bottom = 12.dp, start = 8.dp)
             ) {
-                // Ícone com Container Colorido
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = iconColor.copy(alpha = 0.1f),
-                    modifier = Modifier.size(42.dp)
+                    color = iconColor.copy(alpha = 0.15f),
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
                             tint = iconColor,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(14.dp))
 
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                content()
-            }
+            content()
         }
     }
 }

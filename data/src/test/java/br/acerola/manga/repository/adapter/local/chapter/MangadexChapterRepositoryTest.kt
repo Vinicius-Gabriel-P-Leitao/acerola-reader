@@ -50,6 +50,9 @@ class MangadexChapterRepositoryTest {
     lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
 
     @MockK
+    lateinit var metadataExportService: MangaMetadataExportService
+
+    @MockK
     lateinit var mangadexChapterInfoService: RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String>
 
     private lateinit var repository: MangadexChapterRepository
@@ -61,7 +64,12 @@ class MangadexChapterRepositoryTest {
         Dispatchers.setMain(testDispatcher)
 
         repository = MangadexChapterRepository(
-            chapterArchiveDao, mangaRemoteInfoDao, directoryDao, chapterRemoteInfoDao, chapterDownloadSourceDao
+            chapterArchiveDao, 
+            mangaRemoteInfoDao, 
+            directoryDao, 
+            chapterRemoteInfoDao, 
+            metadataExportService,
+            chapterDownloadSourceDao
         )
         repository.mangadexChapterInfoService = mangadexChapterInfoService
     }
@@ -102,6 +110,7 @@ class MangadexChapterRepositoryTest {
 
         coEvery { chapterRemoteInfoDao.insert(any()) } returns 50L
         coEvery { chapterDownloadSourceDao.insertAll(*anyVararg()) } returns longArrayOf(1)
+        coEvery { metadataExportService.exportFull(any(), any()) } returns Either.Right(Unit)
 
         val result = repository.refreshMangaChapters(mangaId)
 
