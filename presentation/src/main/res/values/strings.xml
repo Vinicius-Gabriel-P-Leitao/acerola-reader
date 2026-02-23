@@ -73,6 +73,10 @@
     <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
     <string name="description_sync_chapters_internal">Sincronizar capítulos usando metadados internos</string>
 
+    <string name="label_sync_progress">Sincronizando...</string>
+    <string name="label_sync_progress_percent">Sincronizando... %1$d%%</string>
+    <string name="label_sync_complete">Sincronizado!</string>
+
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
     <string name="message_path_not_found">Pasta não encontrada.</string>
