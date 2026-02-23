@@ -78,7 +78,7 @@ fun ConfigScreen(
 
             // Bloco 2: Sincronização Local
             PrettyConfigCard(
-                title = "Biblioteca",
+                title = stringResource(id = R.string.label_library_context),
                 icon = Icons.Rounded.Settings,
                 iconColor = MaterialTheme.colorScheme.primary
             ) {

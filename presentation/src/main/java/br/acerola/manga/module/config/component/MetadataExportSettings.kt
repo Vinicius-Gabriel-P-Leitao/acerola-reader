@@ -45,7 +45,7 @@ fun MetadataExportSettings(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Gerar ComicInfo.xml",
+                text = stringResource(id = R.string.title_preference_metadata_comic_info),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
@@ -53,7 +53,7 @@ fun MetadataExportSettings(
             Text(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
-                text = "Criar arquivo de metadados na pasta ao sincronizar com fontes externas.",
+                text = stringResource(id = R.string.description_preference_metadata_comic_info),
             )
         }
 

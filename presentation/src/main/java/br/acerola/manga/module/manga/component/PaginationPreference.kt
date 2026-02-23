@@ -60,13 +60,13 @@ fun PaginationPreference(
 
             Column {
                 Text(
-                    text = "Capítulos por página",
+                    text = stringResource(id = R.string.title_settings_chapters_per_page),
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Quantidade de itens exibidos na lista",
+                    text = stringResource(id = R.string.description_settings_chapters_per_page),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

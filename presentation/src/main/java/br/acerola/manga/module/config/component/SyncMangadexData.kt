@@ -44,6 +44,13 @@ fun SyncMangadexData(
     mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(id = R.string.label_mangadex_group),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
         ListItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))

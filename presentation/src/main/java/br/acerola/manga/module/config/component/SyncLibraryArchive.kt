@@ -46,7 +46,7 @@ fun SyncLibraryArchive(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Sincronizar",
+            text = stringResource(id = R.string.label_sync_group),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)

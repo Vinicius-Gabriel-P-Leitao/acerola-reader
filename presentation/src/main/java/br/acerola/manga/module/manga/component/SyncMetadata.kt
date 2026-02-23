@@ -59,7 +59,7 @@ fun SyncMetadata(
     val currentSource = remoteInfo?.metadataSource
     Column {
         Text(
-            text = "MangaDex",
+            text = stringResource(id = R.string.label_mangadex_group),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -119,7 +119,7 @@ fun SyncMetadata(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Arquivo Local",
+            text = stringResource(id = R.string.label_local_file_group),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.tertiary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -131,8 +131,8 @@ fun SyncMetadata(
                 .clickable {
                     mangaRemoteInfoViewModel.syncFromComicInfo(directory.id)
                 },
-            headlineContent = { Text(text = "Sincronizar ComicInfo.xml") },
-            supportingContent = { Text(text = "Busca metadados locais no arquivo ou pasta") },
+            headlineContent = { Text(text = stringResource(id = R.string.title_sync_comic_info)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_sync_comic_info)) },
             leadingContent = {
                 Icon(
                     imageVector = Icons.Rounded.Description,
@@ -151,7 +151,7 @@ fun SyncMetadata(
                         chapterRemoteInfoViewModel.syncChaptersByComicInfo(folderId = directory.id)
                     },
                 headlineContent = { Text(text = stringResource(id = R.string.title_sync_chapters)) },
-                supportingContent = { Text(text = "Sincronizar capítulos usando metadados internos") },
+                supportingContent = { Text(text = stringResource(id = R.string.description_sync_chapters_internal)) },
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Rounded.AutoStories,
