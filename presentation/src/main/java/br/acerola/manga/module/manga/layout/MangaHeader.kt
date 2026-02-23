@@ -127,9 +127,14 @@ fun MangaHeader(manga: MangaDto) {
 
                         Spacer(modifier = Modifier.height(height = 8.dp))
 
-                        StatusBadge(
-                            status = manga.remoteInfo?.status ?: stringResource(id = R.string.manga_header_unknown)
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatusBadge(
+                                status = manga.remoteInfo?.status ?: stringResource(id = R.string.manga_header_unknown)
+                            )
+                            manga.remoteInfo?.metadataSource?.let { source ->
+                                SourceBadge(source = source)
+                            }
+                        }
                     }
                 }
             }
@@ -208,6 +213,33 @@ fun GenreBadge(
     ) {
         Text(
             text = text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun SourceBadge(
+    source: br.acerola.manga.local.database.entity.metadata.MetadataSource, modifier: Modifier = Modifier
+) {
+    val color = when (source) {
+        br.acerola.manga.local.database.entity.metadata.MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
+        br.acerola.manga.local.database.entity.metadata.MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
+        br.acerola.manga.local.database.entity.metadata.MetadataSource.MANUAL -> MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    Box(
+        modifier = modifier
+            .clip(shape = RoundedCornerShape(size = 4.dp))
+            .background(color = color)
+            .border(
+                width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = RoundedCornerShape(size = 4.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = source.name,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

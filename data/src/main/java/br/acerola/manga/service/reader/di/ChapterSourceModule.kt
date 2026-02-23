@@ -24,14 +24,12 @@ abstract class ChapterSourceModule {
 
     @Cbr
     @Binds
-    @Singleton
     abstract fun bindCbrService(
         impl: CbrChapterSourceService
     ): ChapterSourceService
 
     @Cbz
     @Binds
-    @Singleton
     abstract fun bindCbzService(
         impl: CbzChapterSourceService
     ): ChapterSourceService

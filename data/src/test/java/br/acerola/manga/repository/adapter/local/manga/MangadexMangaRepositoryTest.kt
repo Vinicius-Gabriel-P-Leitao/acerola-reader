@@ -64,10 +64,7 @@ class MangadexMangaRepositoryTest {
     lateinit var mangaRemoteInfoDao: MangaRemoteInfoDao
 
     @MockK
-    lateinit var chapterRemoteInfoDao: ChapterRemoteInfoDao
-
-    @MockK
-    lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
+    lateinit var metadataExportService: MangaMetadataExportService
 
     @MockK
     lateinit var mangadexMangaInfoService: RemoteInfoOperationsRepository<MangaRemoteInfoDto, String>
@@ -90,8 +87,7 @@ class MangadexMangaRepositoryTest {
             directoryDao,
             coverService,
             mangaRemoteInfoDao,
-            chapterRemoteInfoDao,
-            chapterDownloadSourceDao
+            metadataExportService
         )
         repository.mangadexMangaInfoService = mangadexMangaInfoService
         repository.mangadexChapterInfoService = mangadexChapterInfoService
@@ -135,6 +131,7 @@ class MangadexMangaRepositoryTest {
         coEvery { authorDao.insert(any()) } returns 1L
         coEvery { genreDao.insert(any()) } returns 1L
         coEvery { coverService.processCover(any(), any(), any(), any(), any()) } returns 1L
+        coEvery { metadataExportService.exportMangaMetadata(any(), any()) } returns Either.Right(Unit)
 
         val result = repository.refreshManga(mangaId)
 

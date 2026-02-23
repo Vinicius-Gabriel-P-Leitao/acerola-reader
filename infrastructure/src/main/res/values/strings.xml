@@ -33,4 +33,10 @@
     <string name="error_database">Erro no banco de dados.</string>
     <string name="error_invalid_chapter">Dados de capítulo inválidos: %1$s</string>
     <string name="error_unexpected">Ocorreu um erro inesperado.</string>
+    <string name="error_file_read">Erro ao ler arquivo: %1$s</string>
+    <string name="error_file_write">Erro ao gravar arquivo: %1$s</string>
+    <string name="error_file_not_found">Arquivo não encontrado: %1$s</string>
+    <string name="error_invalid_metadata_file">Arquivo de metadados inválido ou corrompido.</string>
+    <string name="error_metadata_root_missing">O arquivo não contém a tag raiz ComicInfo.</string>
+    <string name="error_unrecognized_metadata">Não foi possível reconhecer os metadados em: %1$s</string>
 </resources>

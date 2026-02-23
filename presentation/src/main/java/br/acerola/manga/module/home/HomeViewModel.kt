@@ -61,10 +61,12 @@ class HomeViewModel @Inject constructor(
     val mangas: StateFlow<List<MangaDto>> = combine(
         flow = directoryObserve(), flow2 = mangadexObserve()
     ) { mangaDirectories, remoteMangaInfo ->
-        val remoteInfoMap = remoteMangaInfo.associateBy { it.title.normalizeKey() }
+        // NOTE: Agora associa pelo FK direto do banco, muito mais seguro que por título
+        val remoteInfoMap = remoteMangaInfo.filter { it.mangaDirectoryFk != null }
+            .associateBy { it.mangaDirectoryFk!! }
 
         mangaDirectories.map {
-            MangaDto(directory = it, remoteInfo = remoteInfoMap[it.name.normalizeKey()])
+            MangaDto(directory = it, remoteInfo = remoteInfoMap[it.id])
         }
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()

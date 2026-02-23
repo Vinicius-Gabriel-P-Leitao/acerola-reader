@@ -7,6 +7,7 @@ import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.di.ComicInfoCase
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import br.acerola.manga.util.normalizeChapter
@@ -22,8 +23,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChapterRemoteInfoViewModel @Inject constructor(
-    @param:MangadexCase private val getChaptersUseCase: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
-    @param:MangadexCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto>,
+    @param:MangadexCase private val getMangadexChaptersUseCase: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
+    @param:MangadexCase private val rescanMangadexChaptersUseCase: RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto>,
+    @param:ComicInfoCase private val rescanComicInfoChaptersUseCase: RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
 
     private val _isIndexing = MutableStateFlow(value = false)
@@ -44,11 +46,8 @@ class ChapterRemoteInfoViewModel @Inject constructor(
 
     fun init(mangaId: Long, firstPage: ChapterRemoteInfoPageDto) {
         _selectedMangaId.value = mangaId
-
         total = firstPage.total
-
         currentPage = firstPage.page
-
         _chapterPage.value = firstPage
     }
 
@@ -56,7 +55,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterRemoteInfoPageDto = getChaptersUseCase.loadPage(
+            val result: ChapterRemoteInfoPageDto = getMangadexChaptersUseCase.loadPage(
                 mangaId = _selectedMangaId.value!!,
                 pageSize = pageSize,
                 total = total,
@@ -72,10 +71,18 @@ class ChapterRemoteInfoViewModel @Inject constructor(
 
     }
 
-    fun syncChaptersByManga(mangaId: Long) {
+    fun syncChaptersByMangadex(mangaId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
-            rescanMangaChaptersUseCase(mangaId).handleResult()
+            rescanMangadexChaptersUseCase(mangaId).handleResult()
+            _isIndexing.value = false
+        }
+    }
+
+    fun syncChaptersByComicInfo(folderId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            rescanComicInfoChaptersUseCase(folderId).handleResult()
             _isIndexing.value = false
         }
     }

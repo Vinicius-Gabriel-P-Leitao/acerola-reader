@@ -5,6 +5,8 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.adapter.remote.mangadex.chapter.MangadexChapterInfoRepository
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverRepository
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexMangaInfoRepository
+import br.acerola.manga.repository.adapter.remote.xml.ChapterComicInfoRepository
+import br.acerola.manga.repository.adapter.remote.xml.MangaComicInfoRepository
 import br.acerola.manga.repository.port.BinaryOperationsRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import dagger.Binds
@@ -17,6 +19,10 @@ import javax.inject.Singleton
 @Qualifier
 @Retention(value = AnnotationRetention.BINARY)
 annotation class Mangadex
+
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class ComicInfo
 
 /**
  * Esse modulo é para os serviços de busca de dados, só API, eles pegam dados tratam e retornam um DTO, tem que ser
@@ -45,4 +51,18 @@ abstract class ApiModule {
     abstract fun bindMangadexFetchCoverService(
         impl: MangadexFetchCoverRepository
     ): BinaryOperationsRepository<String>
+
+    @Binds
+    @Singleton
+    @ComicInfo
+    abstract fun bindComicInfoMangaInfoService(
+        impl: MangaComicInfoRepository
+    ): RemoteInfoOperationsRepository<MangaRemoteInfoDto, String>
+
+    @Binds
+    @Singleton
+    @ComicInfo
+    abstract fun bindComicInfoChapterInfoService(
+        impl: ChapterComicInfoRepository
+    ): RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String>
 }

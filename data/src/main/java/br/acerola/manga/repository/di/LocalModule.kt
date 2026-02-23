@@ -25,6 +25,10 @@ annotation class DirectoryFsOps
 @Retention(value = AnnotationRetention.BINARY)
 annotation class MangadexFsOps
 
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class ComicInfoFsOps
+
 /**
  * Esse modulo é feito para abstrair chamadas de API e uso de DAO, servem para ser usados no ViewModel, ao contrario do
  *
@@ -60,5 +64,19 @@ abstract class LibraryModule {
     @MangadexFsOps
     abstract fun bindMangadexChapterRepository(
         impl: MangadexChapterRepository
+    ): ChapterManagementRepository<ChapterRemoteInfoPageDto>
+
+    @Binds
+    @Singleton
+    @ComicInfoFsOps
+    abstract fun bindComicInfoMangaRepository(
+        impl: br.acerola.manga.repository.adapter.local.manga.ComicInfoMangaRepository
+    ): MangaManagementRepository<MangaRemoteInfoDto>
+
+    @Binds
+    @Singleton
+    @ComicInfoFsOps
+    abstract fun bindComicInfoChapterRepository(
+        impl: br.acerola.manga.repository.adapter.local.chapter.ComicInfoChapterRepository
     ): ChapterManagementRepository<ChapterRemoteInfoPageDto>
 }

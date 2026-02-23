@@ -58,6 +58,21 @@
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
 
+    <string name="label_sync_group">Sincronizar</string>
+    <string name="label_mangadex_group">MangaDex</string>
+    <string name="label_library_context">Biblioteca</string>
+    <string name="label_local_file_group">Arquivo Local</string>
+
+    <string name="title_preference_metadata_comic_info">Gerar ComicInfo.xml</string>
+    <string name="description_preference_metadata_comic_info">Criar arquivo de metadados na pasta ao sincronizar com fontes externas.</string>
+    
+    <string name="title_settings_chapters_per_page">Capítulos por página</string>
+    <string name="description_settings_chapters_per_page">Quantidade de itens exibidos na lista</string>
+
+    <string name="title_sync_comic_info">Sincronizar ComicInfo.xml</string>
+    <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
+    <string name="description_sync_chapters_internal">Sincronizar capítulos usando metadados internos</string>
+
     <!-- Components -->
     <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
     <string name="message_path_not_found">Pasta não encontrada.</string>

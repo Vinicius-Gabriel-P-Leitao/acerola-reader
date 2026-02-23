@@ -16,11 +16,13 @@ import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.mapper.toDownloadSources
+import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toModel
 import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.di.Mangadex
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
+import br.acerola.manga.service.metadata.MangaMetadataExportService
 import br.acerola.manga.util.normalizeChapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,10 +43,11 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexChapterRepository @Inject constructor(
+    private val directoryDao: MangaDirectoryDao,
     private val chapterArchiveDao: ChapterArchiveDao,
     private val mangaRemoteInfoDao: MangaRemoteInfoDao,
-    private val directoryDao: MangaDirectoryDao,
     private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
+    private val metadataExportService: MangaMetadataExportService,
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
 ) : ChapterManagementRepository<ChapterRemoteInfoPageDto> {
 
@@ -63,18 +66,20 @@ class MangadexChapterRepository @Inject constructor(
             _isIndexing.value = true
             _progress.value = 0
 
-            val remoteManga = try {
-                mangaRemoteInfoDao.getMangaById(mangaId).first()
+            // Obtém o mangá com suas relações (autores, gêneros, capas) para exportação completa
+            val remoteMangaRelations = try {
+                mangaRemoteInfoDao.getMangaWithRelationsByDirectoryId(mangaId).first()
             } catch (exception: Exception) {
                 _isIndexing.value = false
                 return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = exception))
             }
 
-            if (remoteManga == null) {
+            if (remoteMangaRelations == null) {
                 _isIndexing.value = false
-                // TODO: Criar erro específico para "Manga não encontrado"
-                return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = Exception("Manga Remote not found")))
+                return@withContext Either.Right(value = Unit)
             }
+
+            val remoteManga = remoteMangaRelations.remoteInfo
 
             // NOTE: Buscar na API
             mangadexChapterInfoService.searchInfo(manga = remoteManga.mirrorId, limit = 100, onProgress = {
@@ -84,13 +89,11 @@ class MangadexChapterRepository @Inject constructor(
             }.flatMap { remoteChapters ->
                 _progress.value = 90
                 Either.catch {
-                    // TODO: Criar erro específico para "Manga não encontrado"
-                    // NOTE: Tenta buscar pelo nome do mangá
-                    val localDirectory = directoryDao.getMangaDirectoryByName(mangaName = remoteManga.title)
-                        ?: throw Exception("Local directory not found for manga: ${remoteManga.title}")
+                    val localDirectory = directoryDao.getMangaDirectoryById(mangaId)
+                        ?: throw Exception("Local directory not found for ID: $mangaId")
 
                     val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(localDirectory.id).first()
-                    
+
                     val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
 
                     if (chapterPairs.isEmpty()) {
@@ -101,13 +104,19 @@ class MangadexChapterRepository @Inject constructor(
                     }
 
                     chapterPairs.forEach { (archive, remote) ->
-                        // FIX: O FK deve ser o ID do MangaRemoteInfo (mangaId), não o do arquivo local.
-                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = mangaId)
+                        // FIX: O FK deve ser o ID do MangaRemoteInfo, não o do arquivo local.
+                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = remoteManga.id)
                         val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
                         val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
                         chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
                     }
+
+                    // Gera o ComicInfo da série na pasta raiz do mangá
+                    metadataExportService.exportFull(
+                        directoryId = mangaId, mangaInfo = remoteMangaRelations.toDto()
+                    )
+
                     _progress.value = 100
                 }.mapLeft { exception ->
                     when (exception) {
@@ -128,15 +137,11 @@ class MangadexChapterRepository @Inject constructor(
             val chapterIds = chapters.map { it.id }
 
             flow {
-                val sources: List<ChapterDownloadSource> = if (chapterIds.isNotEmpty()) {
-                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(chapterIds).first()
-                } else {
-                    emptyList()
-                }
+                val sources = chapterIds.takeIf { it.isNotEmpty() }?.let {
+                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
+                }.orEmpty()
 
-                emit(
-                    value = chapters.toPageDto(sources = sources)
-                )
+                emit(value = chapters.toPageDto(sources = sources))
             }
         }.stateIn(
             started = SharingStarted.Lazily,
@@ -150,19 +155,14 @@ class MangadexChapterRepository @Inject constructor(
     ): ChapterRemoteInfoPageDto {
         val offset = page * pageSize
 
-        val realTotal = if (total > 0) {
-            total
-        } else {
-            chapterRemoteInfoDao.countChaptersByMangaRemoteInfo(mangaId)
-        }
+        val realTotal = if (total != 0) total
+        else chapterRemoteInfoDao.countChaptersByMangaRemoteInfo(mangaId)
 
         val chapters = chapterRemoteInfoDao.getChaptersPaged(mangaId, pageSize, offset)
 
-        val sources = if (chapters.isNotEmpty()) {
-            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(chapterId = chapters.map { it.id }).first()
-        } else {
-            emptyList()
-        }
+        val sources = chapters.takeIf { it.isNotEmpty() }?.map { it.id }?.let {
+            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
+        }.orEmpty()
 
         return chapters.toPageDto(
             sources = sources, pageSize = pageSize, total = realTotal, page = page
@@ -175,15 +175,11 @@ class MangadexChapterRepository @Inject constructor(
             val chapterIds = chapterList.map { it.id }
 
             flow {
-                val sources: List<ChapterDownloadSource> = if (chapterIds.isNotEmpty()) {
-                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(chapterIds).first()
-                } else {
-                    emptyList()
-                }
+                val sources: List<ChapterDownloadSource> = chapterIds.takeIf { it.isNotEmpty() }?.let {
+                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
+                } ?: emptyList()
 
-                emit(
-                    value = chapterList.toPageDto(sources = sources)
-                )
+                emit(value = chapterList.toPageDto(sources = sources))
             }
         }
     }
@@ -193,6 +189,7 @@ class MangadexChapterRepository @Inject constructor(
     ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
         val remoteByChapter = remote.mapNotNull { dto ->
             val key = dto.chapter?.normalizeChapter()
+
             if (key == null) null else key to dto
         }.groupBy(keySelector = { it.first }, valueTransform = { it.second }).mapValues { (_, list) ->
             list.maxBy { it.mangadexVersion }

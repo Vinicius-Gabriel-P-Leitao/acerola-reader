@@ -8,14 +8,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,16 +25,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.presentation.R
-import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
-import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.module.config.layout.FolderAccess
 
@@ -44,52 +43,44 @@ fun SelectFolder(
 ) {
     var selectedFolderUri by remember { mutableStateOf<String?>(value = null) }
 
-    SmartCard(
-        type = CardType.CONTENT,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp, pressedElevation = 12.dp
-        )
-    ) {
+    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(size = 40.dp)
-                        .clip(CircleShape)
-                        .background(color = MaterialTheme.colorScheme.primary),
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    Icon(
-                        contentDescription = null,
-                        imageVector = Icons.Filled.Folder,
-                        modifier = Modifier.size(size = 24.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Filled.Folder,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = null
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.width(width = 12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Column {
                     Text(
                         text = stringResource(id = R.string.title_text_config_select_path_manga),
                         color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = stringResource(id = R.string.description_text_config_select_path_manga),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(width = 12.dp))
 
             FolderAccess(viewModel = fileSystemAccessViewModel) { uri ->
                 selectedFolderUri = uri

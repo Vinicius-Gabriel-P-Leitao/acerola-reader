@@ -9,6 +9,7 @@ import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaUseCase
+import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
+    private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
     @param:MangadexCase private val rescanManga: RescanMangaUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>
@@ -63,6 +65,23 @@ class MangaRemoteInfoViewModel @Inject constructor(
             _isIndexing.value = false
         }
     }
+
+    fun syncFromMangadex(directoryId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            syncMangaMetadataUseCase.syncFromMangadex(directoryId).handleResult()
+            _isIndexing.value = false
+        }
+    }
+
+    fun syncFromComicInfo(folderId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            syncMangaMetadataUseCase.syncFromComicInfo(folderId).handleResult()
+            _isIndexing.value = false
+        }
+    }
+
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
             _uiEvents.send(element = error)

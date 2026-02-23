@@ -74,6 +74,9 @@ fun MangaScreen(
     val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsState()
     val mangaProgress by mangaViewModel.mangaProgress.collectAsState()
 
+    val mangaRemoteIndexing by mangaRemoteInfoViewModel.isIndexing.collectAsState()
+    val chapterRemoteIndexing by chapterRemoteInfoViewModel.isIndexing.collectAsState()
+
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -172,7 +175,7 @@ fun MangaScreen(
                 }
             }
         }
-        
+
         Box(
             contentAlignment = Alignment.BottomStart,
             modifier = Modifier
@@ -180,7 +183,7 @@ fun MangaScreen(
                 .padding(all = 18.dp),
         ) {
             ProgressIndicator(
-                isLoading = mangaIsIndexing || chapterIsIndexing,
+                isLoading = mangaIsIndexing || chapterIsIndexing || mangaRemoteIndexing || chapterRemoteIndexing,
                 progress = when {
                     chapterIsIndexing && chapterProgress >= 0 -> chapterProgress / 100f
                     mangaIsIndexing && mangaProgress >= 0 -> mangaProgress / 100f
@@ -190,5 +193,3 @@ fun MangaScreen(
         }
     }
 }
-
-

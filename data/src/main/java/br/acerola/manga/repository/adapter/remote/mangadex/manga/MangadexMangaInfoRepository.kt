@@ -30,4 +30,9 @@ class MangadexMangaInfoRepository @Inject constructor(
             response.data.map { it.toDto(context) }
         }
     }
+
+    override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> {
+        // NOTE: MangaDex é apenas leitura para nós
+        return Either.Right(Unit)
+    }
 }

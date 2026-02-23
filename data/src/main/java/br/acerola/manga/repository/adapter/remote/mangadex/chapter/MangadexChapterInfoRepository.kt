@@ -86,4 +86,9 @@ class MangadexChapterInfoRepository @Inject constructor(
             Either.Right(value = allChapters)
         }
     }
+
+    override suspend fun saveInfo(manga: String, info: ChapterRemoteInfoDto): Either<br.acerola.manga.error.message.NetworkError, Unit> {
+        // NOTE: MangaDex é apenas leitura para nós
+        return Either.Right(Unit)
+    }
 }

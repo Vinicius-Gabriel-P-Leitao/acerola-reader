@@ -4,6 +4,7 @@ import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
+import br.acerola.manga.local.database.entity.metadata.MetadataSource
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -19,6 +20,8 @@ data class MangaRemoteInfoDto(
     val cover: CoverDto? = null,
     val authors: AuthorDto? = null,
     val genre: List<GenreDto> = emptyList(),
+    val metadataSource: MetadataSource = MetadataSource.MANGADEX,
+    val mangaDirectoryFk: Long? = null
 ) : Parcelable
 
 @Parcelize

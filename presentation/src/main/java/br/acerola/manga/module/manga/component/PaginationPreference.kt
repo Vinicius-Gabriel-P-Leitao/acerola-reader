@@ -1,39 +1,45 @@
-package br.acerola.manga.module.config.component
+package br.acerola.manga.module.manga.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.component.RadioGroup
+import br.acerola.manga.config.preference.ChapterPageSizeType
+import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.presentation.R
-import br.acerola.manga.common.component.Divider
-import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
-import br.acerola.manga.module.config.layout.FilePreference
 
 @Composable
-fun PreferSavedFile(
-    filePreferencesViewModel: FilePreferencesViewModel
+fun PaginationPreference(
+    mangaViewModel: MangaViewModel,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+    val selected by mangaViewModel.selectedChapterPerPage.collectAsState(initial = null)
+    val options = ChapterPageSizeType.entries
+
+    val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
+
+    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         Row(
-            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 12.dp)
         ) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
@@ -42,37 +48,38 @@ fun PreferSavedFile(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Filled.FileOpen,
-                        tint = MaterialTheme.colorScheme.primary,
+                        imageVector = Icons.Default.AutoStories,
                         modifier = Modifier.size(22.dp),
-                        contentDescription = stringResource(
-                            R.string.description_icon_select_preference_saved_file
-                        ),
+                        tint = MaterialTheme.colorScheme.primary,
+                        contentDescription = null
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(width = 12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column {
                 Text(
-                    text = stringResource(R.string.title_preference_file_extension),
+                    text = stringResource(id = R.string.title_settings_chapters_per_page),
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = stringResource(id = R.string.description_settings_chapters_per_page),
                     style = MaterialTheme.typography.bodySmall,
-                    text = stringResource(
-                        R.string.description_text_preference_file_extension_default
-                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        Divider()
-
-        FilePreference(filePreferencesViewModel)
+        RadioGroup(
+            selectedIndex = selectedIndex,
+            options = options.map { it.key.lowercase() },
+            onSelect = { index ->
+                val extension = options[index]
+                mangaViewModel.updateChapterPerPage(size = extension)
+            }
+        )
     }
 }

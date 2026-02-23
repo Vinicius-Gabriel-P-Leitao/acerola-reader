@@ -20,6 +20,9 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     @Query(value = "SELECT COUNT(id) FROM chapter_archive WHERE manga_directory_fk = :folderId")
     suspend fun countChaptersByMangaDirectory(folderId: Long): Int
 
+    @Query("SELECT * FROM chapter_archive WHERE manga_directory_fk = :folderId")
+    suspend fun getChaptersByMangaDirectoryList(folderId: Long): List<ChapterArchive>
+
     @Query(
         value = """
         SELECT *

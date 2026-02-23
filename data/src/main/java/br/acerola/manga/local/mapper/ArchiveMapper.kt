@@ -17,6 +17,7 @@ fun MangaDirectory.toDto(): MangaDirectoryDto {
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
         chapterTemplate = chapterTemplate,
+        hasComicInfo = hasComicInfo,
     )
 }
 
@@ -33,7 +34,8 @@ fun MangaDirectoryDto.toModel(): MangaDirectory {
         cover = coverUri?.toString(),
         banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis(),
-        chapterTemplate = chapterTemplate
+        chapterTemplate = chapterTemplate,
+        hasComicInfo = hasComicInfo
     )
 }
 
@@ -52,7 +54,7 @@ fun List<ChapterArchive>.toPageDto(
 }
 
 fun DocumentFile.toMangaDirectoryModel(
-    cover: DocumentFile?, banner: DocumentFile?, chapterTemplate: String?
+    cover: DocumentFile?, banner: DocumentFile?, chapterTemplate: String?, hasComicInfo: Boolean
 ): MangaDirectory {
     return MangaDirectory(
         name = name ?: "Unknown",
@@ -61,6 +63,7 @@ fun DocumentFile.toMangaDirectoryModel(
         banner = banner?.uri?.toString(),
         chapterTemplate = chapterTemplate,
         lastModified = lastModified(),
+        hasComicInfo = hasComicInfo,
     )
 }
 

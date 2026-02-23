@@ -3,6 +3,7 @@ package br.acerola.manga.service.reader.extract
 import android.content.Context
 import androidx.core.net.toUri
 import arrow.core.Either
+import arrow.core.left
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.service.reader.port.ChapterSourceService
@@ -17,33 +18,52 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 // TODO: Estudar mais as libs e fazer uma otimização e organização da busca desses dados
-@Singleton
 class CbzChapterSourceService @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ChapterSourceService {
 
-    private lateinit var zipFile: ZipFile
-    private lateinit var entries: List<ZipEntry>
+    private var zipFile: ZipFile? = null
+    private var entries: List<ZipEntry> = emptyList()
+    private var currentTempFile: File? = null
 
     override suspend fun pageCount(): Int = entries.size
 
     override suspend fun openPage(index: Int): Either<ChapterError, InputStream> {
-        return Either.Companion.catch { zipFile.getInputStream(entries[index]) }
+        val localZip = zipFile ?: return ChapterError.InvalidChapterData("Zip file not open").left()
+        return Either.Companion.catch { localZip.getInputStream(entries[index]) }
             .mapLeft { exception ->
                 ChapterError.ExtractionFailed(cause = exception)
             }
     }
 
+    override suspend fun getFileStream(fileName: String): Either<ChapterError, InputStream> {
+        val localZip = zipFile ?: return ChapterError.InvalidChapterData("Zip file not open").left()
+        return Either.catch {
+            val entry = localZip.getEntry(fileName)
+                ?: throw FileNotFoundException("File $fileName not found in ZIP")
+            localZip.getInputStream(entry)
+        }.mapLeft { exception ->
+            when (exception) {
+                is FileNotFoundException -> ChapterError.InvalidChapterData(
+                    reason = exception.message ?: "File not found"
+                )
+
+                else -> ChapterError.ExtractionFailed(cause = exception)
+            }
+        }
+    }
+
     override fun open(chapter: ChapterFileDto): Either<ChapterError, ChapterSourceService> {
         return Either.catch {
+            close() // NOTE: Limpa o anterior antes de abrir um novo
+
             val file = resolveFile(chapter.path)
 
-            zipFile = ZipFile(file)
-            entries = zipFile.entries().toList()
+            val newZipFile = ZipFile(file)
+            val newEntries = newZipFile.entries().toList()
                 .filter { !it.isDirectory }
                 .filter {
                     val name = it.name.lowercase()
-                    // TODO: Fazer isso como pattern matching
                     name.endsWith(".jpg") ||
                             name.endsWith(".jpeg") ||
                             name.endsWith(".png") ||
@@ -51,31 +71,47 @@ class CbzChapterSourceService @Inject constructor(
                 }
                 .sortedBy { it.name }
 
+            this.zipFile = newZipFile
+            this.entries = newEntries
+
             this
-        }.mapLeft { error ->
-            when (error) {
+        }.mapLeft { exception ->
+            when (exception) {
                 is FileNotFoundException -> ChapterError.ArchiveNotFound(chapter.path)
-                else -> ChapterError.ArchiveCorrupted(chapter.path, error)
+                else -> ChapterError.ArchiveCorrupted(chapter.path, exception)
             }
+        }
+    }
+
+    override fun close() {
+        try {
+            zipFile?.close()
+        } catch (exception: Exception) {
+            // Ignora erros ao fechar
+        } finally {
+            zipFile = null
+            entries = emptyList()
+            currentTempFile?.delete()
+            currentTempFile = null
         }
     }
 
     private fun resolveFile(path: String): File {
         return if (path.startsWith("content://")) {
-            // It's a SAF URI, we need to copy it to a temp file to read it as a ZipFile
             val uri = path.toUri()
             val inputStream = context.contentResolver.openInputStream(uri)
                 ?: throw IllegalStateException("Could not open URI: $path")
 
-            val tempFile = File(context.cacheDir, "temp_chapter_read.cbz")
-            // Create/Overwrite the temp file
+            // Cria um arquivo temporário único para evitar concorrência (SIGBUS)
+            val tempFile = File.createTempFile("chapter_sync_", ".cbz", context.cacheDir)
+            currentTempFile = tempFile
+
             FileOutputStream(tempFile).use { outputStream ->
                 inputStream.copyTo(outputStream)
             }
             inputStream.close()
             tempFile
         } else {
-            // It's a standard file path
             File(path)
         }
     }

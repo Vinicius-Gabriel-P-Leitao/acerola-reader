@@ -36,12 +36,12 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
     *   [ ] **Edição de Metadados:** Editar metadados básicos com opção de "Trancar" o mangá para impedir sobrescrita.
     *   [X] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se 
         o banner for removido, a capa assume o lugar.
-    *   [ ] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
-    *   [ ] **Ações de Limpeza (com confirmação):**
+    *   [x] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
+    *   [x] **Ações de Limpeza (com confirmação):**
         *   Limpar metadados (remove do DB e apaga `ComicInfo.xml`).
         *   Limpar capítulos (remove todos os arquivos e dados).
 *   **Configurações Globais:**
-    *   [ ] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
+    *   [] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
         *   Gerar `ComicInfo.xml` por padrão; ler se existir.
         *   Resolver conflitos: Adicionar opção "Metadata ComicInfo ? Database" e persistir essa escolha (SQLite/DataStore).
     *   [x] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).

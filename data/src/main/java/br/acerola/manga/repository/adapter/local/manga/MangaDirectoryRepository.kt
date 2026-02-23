@@ -89,6 +89,7 @@ class MangaDirectoryRepository @Inject constructor(
 
                     val banner = folderDoc.listFiles().firstOrNull { isBanner(file = it) }
                     val cover = folderDoc.listFiles().firstOrNull { isCover(file = it) }
+                    val hasComicInfo = folderDoc.findFile("ComicInfo.xml") != null
 
                     val firstChapter = folderDoc.listFiles().firstOrNull { file ->
                         file.isFile && FileExtension.isSupported(ext = file.name)
@@ -99,7 +100,7 @@ class MangaDirectoryRepository @Inject constructor(
                     }
 
                     val updatedManga = folderDoc.toMangaDirectoryModel(
-                        cover, banner, chapterTemplate = detectedTemplate
+                        cover, banner, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo
                     ).copy(id = existingManga.id)
 
                     directoryDao.update(entity = updatedManga)
@@ -343,6 +344,7 @@ class MangaDirectoryRepository @Inject constructor(
         return pickedDir.listFiles().filter { it.isDirectory }.map { folder ->
             val banner = folder.listFiles().firstOrNull { isBanner(file = it) }
             val cover = folder.listFiles().firstOrNull { isCover(file = it) }
+            val hasComicInfo = folder.findFile("ComicInfo.xml") != null
 
             val firstChapter = folder.listFiles().firstOrNull { file ->
                 file.isFile && FileExtension.isSupported(ext = file.name)
@@ -352,7 +354,7 @@ class MangaDirectoryRepository @Inject constructor(
                 detectTemplate(fileName = it)
             }
 
-            folder.toMangaDirectoryModel(cover, banner, chapterTemplate = detectedTemplate)
+            folder.toMangaDirectoryModel(cover, banner, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo)
         }
     }
 

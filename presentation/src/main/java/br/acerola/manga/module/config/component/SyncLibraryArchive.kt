@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderZip
@@ -21,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,10 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.theme.Surface
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.presentation.R
 
@@ -39,83 +44,84 @@ import br.acerola.manga.presentation.R
 fun SyncLibraryArchive(
     mangaDirectoryViewModel: MangaDirectoryViewModel,
 ) {
-    SmartCard(
-        type = CardType.CONTENT,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp, pressedElevation = 12.dp
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(id = R.string.label_sync_group),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
-    ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(size = 40.dp)
-                        .clip(CircleShape)
-                        .background(color = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FolderZip,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(size = 22.dp),
-                        contentDescription = stringResource(
-                            id = R.string.description_icon_sync_manga_directory
-                        ),
-                    )
-                }
 
-                Spacer(modifier = Modifier.width(width = 12.dp))
-
+        ListItem(
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { mangaDirectoryViewModel.deepScanLibrary() },
+            headlineContent = { 
                 Text(
-                    text = stringResource(id = R.string.title_config_sync_mangadex),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium
+                    text = stringResource(id = R.string.description_text_home_deep_sync),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
+            supportingContent = { 
+                Text(
+                    text = stringResource(id = R.string.description_text_home_deep_sync_supporting),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) 
+            },
+            leadingContent = {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Folder,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = null
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
+
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+
+        ListItem(
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { mangaDirectoryViewModel.rescanMangas() },
+            headlineContent = {
+                Text(
+                    text = stringResource(id = R.string.description_text_home_quick_sync),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
-            }
-
-            Divider()
-
-            // TODO: Criar description
-            ListItem(
-                modifier = Modifier.clickable { mangaDirectoryViewModel.deepScanLibrary() },
-                headlineContent = { Text(text = stringResource(id = R.string.description_text_home_deep_sync)) },
-                supportingContent = { Text(text = stringResource(id = R.string.description_text_home_deep_sync_supporting)) },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Default.Folder, contentDescription = null
-                    )
-                },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
+            },
+            supportingContent = {
+                Text(
+                    text = stringResource(id = R.string.description_text_home_quick_sync_supporting),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            )
-
-            HorizontalDivider()
-
-
-            // TODO: Criar description
-            ListItem(
-                modifier = Modifier.clickable { mangaDirectoryViewModel.rescanMangas() },
-                headlineContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_quick_sync))
-                },
-                supportingContent = {
-                    Text(text = stringResource(id = R.string.description_text_home_quick_sync_supporting))
-                },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Default.Sync, contentDescription = null
-                    )
-                },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
-                )
-            )
-        }
+            },
+            leadingContent = {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Sync,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = null
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
     }
 }
