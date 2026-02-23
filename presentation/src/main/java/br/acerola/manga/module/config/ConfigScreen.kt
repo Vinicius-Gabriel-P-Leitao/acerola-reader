@@ -65,11 +65,13 @@ fun ConfigScreen(
                 icon = Icons.Rounded.FolderOpen,
                 iconColor = MaterialTheme.colorScheme.secondary
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SelectFolder(context, fileSystemAccessViewModel)
                     Divider(modifier = Modifier.alpha(0.5f))
+
                     PreferSavedFile(filePreferencesViewModel)
                     Divider(modifier = Modifier.alpha(0.5f))
+
                     MetadataExportSettings(metadataSettingsViewModel)
                 }
             }
@@ -112,7 +114,9 @@ private fun ConfigHeader() {
                     RoundedCornerShape(2.dp)
                 )
         )
+
         Spacer(modifier = Modifier.width(12.dp))
+
         Text(
             text = stringResource(id = R.string.label_config_activity),
             style = MaterialTheme.typography.headlineMedium,

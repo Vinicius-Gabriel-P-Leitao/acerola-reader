@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,10 +30,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.theme.Surface
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.presentation.R
 
@@ -41,32 +44,38 @@ fun SyncMangadexData(
     mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "MangaDex",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         ListItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable { mangaDexViewModel.rescanMangas() },
-            headlineContent = { Text(text = stringResource(id = R.string.title_sync_mangadex_remote_info)) },
+            headlineContent = {
+                Text(
+                    text = stringResource(id = R.string.title_sync_mangadex_remote_info),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             supportingContent = {
                 Text(
                     text = pluralStringResource(
-                        id = R.plurals.description_sync_mangadex_remote_info_supporting,
-                        count = 2
-                    )
+                        id = R.plurals.description_sync_mangadex_remote_info_supporting, count = 2
+                    ), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
-                Image(
-                    painter = painterResource(id = R.drawable.mangadex_v2),
-                    contentDescription = null,
-                    modifier = Modifier.size(size = 24.dp)
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = painterResource(id = R.drawable.mangadex_v2),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent

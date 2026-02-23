@@ -9,23 +9,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileOpen
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.presentation.R
-import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
-import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.module.config.layout.FilePreference
 
@@ -37,21 +35,21 @@ fun PreferSavedFile(
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(size = 40.dp)
-                    .clip(CircleShape)
-                    .background(color = MaterialTheme.colorScheme.primary)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.FileOpen,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(size = 22.dp),
-                    contentDescription = stringResource(
-                        R.string.description_icon_select_preference_saved_file
-                    ),
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.FileOpen,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                        contentDescription = stringResource(
+                            R.string.description_icon_select_preference_saved_file
+                        ),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(width = 12.dp))
@@ -60,11 +58,12 @@ fun PreferSavedFile(
                 Text(
                     text = stringResource(R.string.title_preference_file_extension),
                     color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     text = stringResource(
                         R.string.description_text_preference_file_extension_default
                     ),
