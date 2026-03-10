@@ -32,6 +32,8 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.layout.ReaderBottomControls
 import br.acerola.manga.module.reader.layout.ReaderTopBar
+import br.acerola.manga.presentation.R
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -98,8 +100,8 @@ class ReaderActivity(
 
         Box {
             ReaderTopBar(
-                title = page?.name ?: stringResource(id = br.acerola.manga.presentation.R.string.label_reader_activity),
-                subtitle = stringResource(id = br.acerola.manga.presentation.R.string.label_reader_chapter_order, page?.chapterSort ?: "-"),
+                title = page?.name ?: stringResource(id = R.string.label_reader_activity),
+                subtitle = stringResource(id = R.string.label_reader_chapter_order, page?.chapterSort ?: "-"),
                 isVisible = state.isUiVisible,
                 onBackClick = { finish() },
                 onSettingsClick = { showMenu = true })
@@ -115,17 +117,17 @@ class ReaderActivity(
                 ) {
                     DropdownMenu(
                         expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(text = { Text(text = stringResource(id = br.acerola.manga.presentation.R.string.label_reader_mode_horizontal)) }, onClick = {
+                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_horizontal)) }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.HORIZONTAL)
                             showMenu = false
                         })
 
-                        DropdownMenuItem(text = { Text(text = stringResource(id = br.acerola.manga.presentation.R.string.label_reader_mode_vertical)) }, onClick = {
+                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_vertical)) }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.VERTICAL)
                             showMenu = false
                         })
 
-                        DropdownMenuItem(text = { Text(text = stringResource(id = br.acerola.manga.presentation.R.string.label_reader_mode_webtoon)) }, onClick = {
+                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_webtoon)) }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.WEBTOON)
                             showMenu = false
                         })

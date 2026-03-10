@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.presentation.R
 
 @Composable
 fun ReaderBottomControls(
@@ -43,7 +44,7 @@ fun ReaderBottomControls(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(id = br.acerola.manga.presentation.R.string.label_reader_page_format, currentPage + 1, pageCount),
+                text = stringResource(id = R.string.label_reader_page_format, currentPage + 1, pageCount),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -57,7 +58,7 @@ fun ReaderBottomControls(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = stringResource(id = br.acerola.manga.presentation.R.string.description_icon_pagination_previous)
+                        contentDescription = stringResource(id = R.string.description_icon_pagination_previous)
                     )
                 }
 
@@ -65,7 +66,7 @@ fun ReaderBottomControls(
                     onClick = onNextClick,
                     enabled = currentPage < pageCount - 1
                 ) {
-                    Text(text = stringResource(id = br.acerola.manga.presentation.R.string.label_reader_next_page))
+                    Text(text = stringResource(id = R.string.label_reader_next_page))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         modifier = Modifier.padding(start = 8.dp),

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.module.manga.MangaActivity
+import br.acerola.manga.presentation.R
 
 @Composable
 fun HistoryScreen(
@@ -39,7 +40,7 @@ fun HistoryScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = stringResource(id = br.acerola.manga.presentation.R.string.title_history_screen),
+                text = stringResource(id = R.string.title_history_screen),
                 modifier = Modifier.padding(vertical = 16.dp),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
@@ -54,7 +55,7 @@ fun HistoryScreen(
                     horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = stringResource(id = br.acerola.manga.presentation.R.string.description_history_empty_state),
+                        text = stringResource(id = R.string.description_history_empty_state),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -65,9 +66,9 @@ fun HistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(historyItems, key = { it.manga.directory.id }) { item ->
-                        val chapterInfo = item.history.chapterName ?: stringResource(id = br.acerola.manga.presentation.R.string.label_chapter_unknown)
+                        val chapterInfo = item.history.chapterName ?: stringResource(id = R.string.label_chapter_unknown)
                         val progressInfo = stringResource(
-                            id = br.acerola.manga.presentation.R.string.label_history_chapter_progress,
+                            id = R.string.label_history_chapter_progress,
                             chapterInfo,
                             item.history.lastPage + 1
                         )

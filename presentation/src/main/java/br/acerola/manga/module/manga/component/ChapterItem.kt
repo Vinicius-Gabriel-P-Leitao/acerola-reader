@@ -192,9 +192,7 @@ fun ChapterItem(
                         )
                     ) {
                         Text(
-                            text = if (isRead) stringResource(id = br.acerola.manga.presentation.R.string.action_mark_as_unread) else stringResource(
-                                id = br.acerola.manga.presentation.R.string.action_mark_as_read
-                            ),
+                            text = if (isRead) stringResource(id = R.string.action_mark_as_unread) else stringResource(id = R.string.action_mark_as_read),
                             fontWeight = FontWeight.SemiBold
                         )
                     }
