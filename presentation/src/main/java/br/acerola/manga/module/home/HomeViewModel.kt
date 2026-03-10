@@ -3,14 +3,16 @@ package br.acerola.manga.module.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import br.acerola.manga.config.preference.HomeLayoutPreference
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
-import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -22,16 +24,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import androidx.work.WorkManager
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    @param:DirectoryCase private val directorySync: SyncLibraryUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
-    @param:MangadexCase private val mangadexSync: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
+    private val historyRepository: HistoryManagementRepository,
     private val workManager: WorkManager
 ) : ViewModel() {
 
@@ -53,15 +53,19 @@ class HomeViewModel @Inject constructor(
             viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = -1
         )
 
-    val mangas: StateFlow<List<MangaDto>> = combine(
-        flow = directoryObserve(), flow2 = mangadexObserve()
-    ) { mangaDirectories, remoteMangaInfo ->
-        // NOTE: Agora associa pelo FK direto do banco, muito mais seguro que por título
+    val mangas: StateFlow<List<Pair<MangaDto, ReadingHistoryDto?>>> = combine(
+        flow = directoryObserve(),
+        flow2 = mangadexObserve(),
+        flow3 = historyRepository.getAllRecentHistory()
+    ) { mangaDirectories, remoteMangaInfo, historyList ->
         val remoteInfoMap = remoteMangaInfo.filter { it.mangaDirectoryFk != null }
             .associateBy { it.mangaDirectoryFk!! }
 
+        val historyMap = historyList.associateBy { it.mangaDirectoryId }
+
         mangaDirectories.map {
-            MangaDto(directory = it, remoteInfo = remoteInfoMap[it.id])
+            val manga = MangaDto(directory = it, remoteInfo = remoteInfoMap[it.id])
+            manga to historyMap[it.id]
         }
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()

@@ -1,14 +1,25 @@
 package br.acerola.manga.module.manga.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -21,22 +32,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.ModalDialog
-import br.acerola.manga.common.component.SmartCard
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.presentation.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChapterItem(
     chapterRemoteInfoDto: ChapterFeedDto?,
     chapterFileDto: ChapterFileDto,
+    isRead: Boolean = false,
     modifier: Modifier = Modifier,
+    onToggleRead: () -> Unit = {},
     onClick: () -> Unit
 ) {
     var showDetails by remember { mutableStateOf(value = false) }
@@ -44,56 +57,88 @@ fun ChapterItem(
 
     val chapterNumber = chapterRemoteInfoDto?.chapter ?: chapterFileDto.chapterSort
     val mainTitle = stringResource(id = R.string.title_chapter_item_chapter_number, chapterNumber)
-
     val subtitle = chapterRemoteInfoDto?.title?.takeIf { it.isNotBlank() } ?: chapterFileDto.name
 
-    SmartCard(
-        type = CardType.CONTENT,
+    ElevatedCard(
         onClick = stableOnClick,
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = if (isRead) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(weight = 1f)) {
-                Text(
-                    text = mainTitle,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // Indicador lateral sutil para capítulos lidos
+            if (isRead) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(4.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
+                        .background(MaterialTheme.colorScheme.primary)
                 )
-
-                Text(
-                    maxLines = 1,
-                    text = subtitle,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                if (chapterRemoteInfoDto?.scanlation?.isNotBlank() == true) {
-                    Text(
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelSmall,
-                        text = stringResource(
-                            id = R.string.label_chapter_scanlation_prefix,
-                            chapterRemoteInfoDto.scanlation
-                        ),
-                    )
-                }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = if (isRead) 12.dp else 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = mainTitle,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = if (isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                        )
+                        
+                        if (isRead) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
 
-            IconButton(onClick = { showDetails = true }) {
-                Icon(
-                    contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
-                    imageVector = Icons.Default.MoreVert,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    if (chapterRemoteInfoDto?.scanlation?.isNotBlank() == true) {
+                        Text(
+                            text = stringResource(
+                                id = R.string.label_chapter_scanlation_prefix,
+                                chapterRemoteInfoDto.scanlation
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = { showDetails = true },
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -105,11 +150,14 @@ fun ChapterItem(
             onDismiss = { showDetails = false },
             confirmButtonContent = {
                 TextButton(onClick = { showDetails = false }) {
-                    Text(text = stringResource(id = R.string.label_dialog_close))
+                    Text(
+                        text = stringResource(id = R.string.label_dialog_close),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             },
             content = {
-                Column {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     DetailRow(
                         label = stringResource(id = R.string.label_chapter_detail_file),
                         value = chapterFileDto.name
@@ -128,6 +176,26 @@ fun ChapterItem(
                             value = "${remote.pageCount ?: "?"}"
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            onToggleRead()
+                            showDetails = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (isRead) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = if (isRead) stringResource(id = R.string.action_mark_as_unread) else stringResource(id = R.string.action_mark_as_read),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         )
@@ -137,11 +205,12 @@ fun ChapterItem(
 @Composable
 private fun DetailRow(label: String, value: String) {
     if (value.isBlank()) return
-    Column(modifier = Modifier.padding(bottom = 8.dp)) {
+    Column(modifier = Modifier.padding(bottom = 12.dp)) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
         )
         Text(
             text = value,

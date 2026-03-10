@@ -16,7 +16,9 @@ fun LazyListScope.chaptersSection(
     chapters: ChapterDto,
     currentPage: Int,
     totalPages: Int,
+    readChapters: List<Long> = emptyList(),
     onChapterClick: (ChapterFileDto, ChapterFeedDto?) -> Unit,
+    onToggleRead: (Long) -> Unit,
     onPageChange: (Int) -> Unit,
 ) {
     items(
@@ -29,7 +31,9 @@ fun LazyListScope.chaptersSection(
         ChapterItem(
             chapterFileDto = archiveItem,
             chapterRemoteInfoDto = remoteItem,
+            isRead = readChapters.contains(archiveItem.id),
             onClick = { onChapterClick(archiveItem, remoteItem) },
+            onToggleRead = { onToggleRead(archiveItem.id) },
             modifier = Modifier.padding(all = 4.dp)
         )
     }

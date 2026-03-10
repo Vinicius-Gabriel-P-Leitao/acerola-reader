@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -31,6 +32,8 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.layout.ReaderBottomControls
 import br.acerola.manga.module.reader.layout.ReaderTopBar
+import br.acerola.manga.presentation.R
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -42,6 +45,9 @@ class ReaderActivity(
 
     object PageExtra {
         const val PAGE = "PAGE"
+        const val MANGA_ID = "MANGA_ID"
+        const val CHAPTER_ID = "CHAPTER_ID"
+        const val INITIAL_PAGE = "INITIAL_PAGE"
     }
 
     val page: ChapterFileDto? by lazy {
@@ -55,7 +61,17 @@ class ReaderActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.READER.route)) {
-            ReaderScreen(viewModel = viewModel, chapter = page)
+            val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
+            val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
+            val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
+            
+            ReaderScreen(
+                chapter = page,
+                chapterId = chapterId,
+                mangaId = mangaId,
+                viewModel = viewModel,
+                initialPage = initialPage
+            )
         }
     }
 
@@ -84,8 +100,8 @@ class ReaderActivity(
 
         Box {
             ReaderTopBar(
-                title = page?.name ?: "Leitor",
-                subtitle = "Ordem: ${page?.chapterSort ?: "-"}",
+                title = page?.name ?: stringResource(id = R.string.label_reader_activity),
+                subtitle = stringResource(id = R.string.label_reader_chapter_order, page?.chapterSort ?: "-"),
                 isVisible = state.isUiVisible,
                 onBackClick = { finish() },
                 onSettingsClick = { showMenu = true })
@@ -101,17 +117,17 @@ class ReaderActivity(
                 ) {
                     DropdownMenu(
                         expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(text = { Text(text = "Paginado") }, onClick = {
+                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_horizontal)) }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.HORIZONTAL)
                             showMenu = false
                         })
 
-                        DropdownMenuItem(text = { Text(text = "Vertical") }, onClick = {
+                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_vertical)) }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.VERTICAL)
                             showMenu = false
                         })
 
-                        DropdownMenuItem(text = { Text(text = "Webtoon") }, onClick = {
+                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_webtoon)) }, onClick = {
                             viewModel.updateReadingMode(mode = ReadingMode.WEBTOON)
                             showMenu = false
                         })

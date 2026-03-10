@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -34,7 +33,10 @@ import br.acerola.manga.common.layout.SearchBar
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.module.home.component.MangaGridItem
 import br.acerola.manga.module.home.component.MangaListItem
+import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.manga.MangaActivity
+import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
@@ -50,17 +52,27 @@ fun HomeScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            SearchBar(
+            SearchBar<Pair<MangaDto, ReadingHistoryDto?>>(
                 items = mangas,
-                itemKey = { it.directory.id },
-                searchKey = { it.directory.name },
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
+                itemKey = { (manga, _) -> manga.directory.id },
+                searchKey = { (manga, _) -> manga.directory.name },
                 modifier = Modifier
-                    .fillMaxWidth()
                     .padding(all = 6.dp),
-                itemContent = { manga ->
+                itemContent = { (manga, history) ->
                     MangaListItem(
-                        manga = manga, onClick = {
+                        manga = manga,
+                        onPlayClick = history?.let {
+                            {
+                                val intent = Intent(context, ReaderActivity::class.java).apply {
+                                    putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, it.lastPage)
+                                    putExtra(ReaderActivity.PageExtra.MANGA_ID, manga.directory.id)
+                                    putExtra(ReaderActivity.PageExtra.CHAPTER_ID, it.chapterArchiveId)
+                                }
+                                context.startActivity(intent)
+                            }
+                        },
+                        onClick = {
                             val intent = Intent(context, MangaActivity::class.java).apply {
                                 putExtra(MangaActivity.ChapterExtra.MANGA, manga)
                             }
@@ -82,7 +94,7 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
-                    items(items = mangas) { manga ->
+                    items(items = mangas) { (manga, history) ->
                         val onClick = {
                             val intent = Intent(context, MangaActivity::class.java).apply {
                                 putExtra(MangaActivity.ChapterExtra.MANGA, manga)
@@ -92,7 +104,20 @@ fun HomeScreen(
 
                         when (layout) {
                             HomeLayoutType.GRID -> MangaGridItem(manga = manga, onClick = onClick)
-                            HomeLayoutType.LIST -> MangaListItem(manga = manga, onClick = onClick)
+                            HomeLayoutType.LIST -> MangaListItem(
+                                manga = manga,
+                                onPlayClick = history?.let { h ->
+                                    {
+                                        val intent = Intent(context, ReaderActivity::class.java).apply {
+                                            putExtra(ReaderActivity.PageExtra.MANGA_ID, manga.directory.id)
+                                            putExtra(ReaderActivity.PageExtra.CHAPTER_ID, h.chapterArchiveId)
+                                            putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, h.lastPage)
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                },
+                                onClick = onClick
+                            )
                         }
                     }
                 }
@@ -107,11 +132,6 @@ fun HomeScreen(
                 )
             }, items = listOf(
                 FloatingToolItem(
-                    label = if (layout == HomeLayoutType.GRID) stringResource(
-                        id = R.string.description_text_home_layout_list_label
-                    ) else stringResource(
-                        id = R.string.description_text_home_layout_grid_label
-                    ),
                     onClick = {
                         homeViewModel.updateHomeLayout(
                             layout = when (layout) {
@@ -131,13 +151,11 @@ fun HomeScreen(
                 // TODO: Criar filtragem por categoria.
                 FloatingToolItem(
                     icon = {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = stringResource(id = R.string.description_icon_home_filter)
-                    )
-                },
-                    label = stringResource(id = R.string.description_text_home_filter_label),
-                    onClick = { println("Filtrar") })
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                        )
+                    }, onClick = { println("Filtrar") })
             )
         )
 

@@ -12,6 +12,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.repository.port.HistoryManagementRepository
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
@@ -45,6 +47,7 @@ class MangaViewModel @Inject constructor(
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
+    private val historyRepository: HistoryManagementRepository
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
@@ -137,6 +140,26 @@ class MangaViewModel @Inject constructor(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    val history: StateFlow<ReadingHistoryDto?> = _selectedDirectoryId.flatMapLatest { id ->
+        if (id == null) flowOf(null)
+        else historyRepository.getHistoryByMangaId(id)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val readChapters: StateFlow<List<Long>> = _selectedDirectoryId.flatMapLatest { id ->
+        if (id == null) flowOf(emptyList())
+        else historyRepository.getReadChaptersByMangaId(id)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     val chapters: StateFlow<ChapterDto?> = _selectedDirectoryId.flatMapLatest { folderId ->
         if (folderId == null) return@flatMapLatest flowOf(null)
 
@@ -219,6 +242,19 @@ class MangaViewModel @Inject constructor(
 
     fun loadPageAsync(page: Int) {
         _currentPage.value = page
+    }
+
+    fun toggleChapterReadStatus(chapterId: Long) {
+        val mangaId = _selectedDirectoryId.value ?: return
+        val isRead = readChapters.value.contains(chapterId)
+
+        viewModelScope.launch {
+            if (isRead) {
+                historyRepository.unmarkChapterAsRead(chapterId)
+            } else {
+                historyRepository.markChapterAsRead(mangaId, chapterId)
+            }
+        }
     }
 
     private fun String.normalizeKey(): String {

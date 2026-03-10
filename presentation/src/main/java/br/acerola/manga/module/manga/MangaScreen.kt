@@ -50,8 +50,8 @@ fun MangaScreen(
     mangaViewModel: MangaViewModel,
     chapterArchiveViewModel: ChapterArchiveViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
+    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
 ) {
     LaunchedEffect(key1 = manga.directory.id) {
         mangaViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
@@ -90,6 +90,9 @@ fun MangaScreen(
         if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
     }
 
+    val history by mangaViewModel.history.collectAsState()
+    val readChapters by mangaViewModel.readChapters.collectAsState()
+
     val handlePageChange = remember(key1 = mangaViewModel, key2 = listState) {
         { nextPage: Int ->
             mangaViewModel.loadPageAsync(nextPage)
@@ -103,14 +106,29 @@ fun MangaScreen(
     }
 
     val handleChapterClick = remember {
-        // TODO: Carregar o ReaderActivity e passar todos dados via Intent para que ele saiva carregar o chapter
-        { chapter: ChapterFileDto, remote: ChapterFeedDto? ->
+        { chapter: ChapterFileDto, remote: ChapterFeedDto?, initialPage: Int ->
             val intent = Intent(context, ReaderActivity::class.java).apply {
                 putExtra(ReaderActivity.PageExtra.PAGE, chapter)
+                putExtra(ReaderActivity.PageExtra.MANGA_ID, currentManga.directory.id)
+                putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, initialPage)
             }
 
             context.startActivity(intent)
         }
+    }
+
+    val handleContinueClick = { chapterId: Long, lastPage: Int ->
+        val chaptersList = chapterDto?.archive?.items ?: emptyList()
+        val targetChapter = if (chapterId == -1L) {
+            chaptersList.firstOrNull()
+        } else {
+            chaptersList.find { it.id == chapterId }
+        }
+
+        targetChapter?.let {
+            handleChapterClick(it, null, lastPage)
+        }
+        Unit
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -128,7 +146,9 @@ fun MangaScreen(
                     key = "header_${currentManga.remoteInfo?.title}", contentType = "header"
                 ) {
                     MangaHeader(
-                        manga = currentManga
+                        manga = currentManga,
+                        history = history,
+                        onContinueClick = handleContinueClick
                     )
                 }
 
@@ -148,9 +168,11 @@ fun MangaScreen(
                             chaptersSection(
                                 chapters = it,
                                 currentPage = currentPage,
+                                onPageChange = handlePageChange,
                                 totalPages = totalChaptersPerPage,
-                                onChapterClick = handleChapterClick,
-                                onPageChange = handlePageChange
+                                readChapters = readChapters,
+                                onToggleRead = { id -> mangaViewModel.toggleChapterReadStatus(id) },
+                                onChapterClick = { chapter, remote -> handleChapterClick(chapter, remote, 0) },
                             )
                         }
                     }
