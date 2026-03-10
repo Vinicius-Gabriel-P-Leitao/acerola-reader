@@ -47,6 +47,7 @@ class MetadataSyncWorker @AssistedInject constructor(
             ForegroundInfo(
                 NotificationHelper.SYNC_NOTIFICATION_ID,
                 builder.build(),
+                // TODO: Verificar
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         )
@@ -77,10 +78,10 @@ class MetadataSyncWorker @AssistedInject constructor(
                     Result.success()
                 }
             )
-        } catch (e: Exception) {
+        } catch (exception: Exception) {
             notificationHelper.showFinishedNotification(
                 context.getString(R.string.sync_library_fatal_error_title),
-                e.message ?: context.getString(R.string.sync_metadata_fetching_error)
+                exception.message ?: context.getString(R.string.sync_metadata_fetching_error)
             )
             Result.failure()
         }

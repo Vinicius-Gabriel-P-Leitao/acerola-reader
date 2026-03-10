@@ -1,5 +1,6 @@
 package br.acerola.manga.module.reader.layout
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
@@ -20,7 +21,7 @@ fun ReaderContent(
     onNextClick: () -> Unit,
     readingMode: ReadingMode,
     listState: LazyListState,
-    pages: Map<Int, android.graphics.Bitmap>,
+    pages: Map<Int, Bitmap>,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {

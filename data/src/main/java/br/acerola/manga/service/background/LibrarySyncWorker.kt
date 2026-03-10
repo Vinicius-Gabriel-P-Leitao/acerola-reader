@@ -54,6 +54,7 @@ class LibrarySyncWorker @AssistedInject constructor(
             ForegroundInfo(
                 NotificationHelper.SYNC_NOTIFICATION_ID,
                 builder.build(),
+                // TODO: Verificar
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         )
@@ -91,11 +92,11 @@ class LibrarySyncWorker @AssistedInject constructor(
                     Result.success()
                 }
             )
-        } catch (e: Exception) {
+        } catch (exception: Exception) {
             progressJob.cancel()
             notificationHelper.showFinishedNotification(
                 context.getString(R.string.sync_library_fatal_error_title),
-                e.message ?: context.getString(R.string.sync_library_unexpected_error)
+                exception.message ?: context.getString(R.string.sync_library_unexpected_error)
             )
             Result.failure()
         }
