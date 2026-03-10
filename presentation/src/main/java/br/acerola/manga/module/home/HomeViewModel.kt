@@ -19,8 +19,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import androidx.work.WorkManager
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,33 +32,26 @@ class HomeViewModel @Inject constructor(
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:MangadexCase private val mangadexSync: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
 
-    val isIndexing: StateFlow<Boolean> = combine(
-        flow = directorySync.isIndexing, flow2 = mangadexSync.isIndexing
-    ) { directoryIndexing, remoteInfoIndexing ->
-        directoryIndexing || remoteInfoIndexing
-    }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = false
-    )
+    val isIndexing: StateFlow<Boolean> = workManager.getWorkInfosByTagFlow("library_sync")
+        .map { workInfos ->
+            workInfos.any { !it.state.isFinished }
+        }.stateIn(
+            viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = false
+        )
 
-    val progress: StateFlow<Int> = combine(
-        flow = directorySync.isIndexing,
-        flow2 = directorySync.progress,
-        flow3 = mangadexSync.isIndexing,
-        flow4 = mangadexSync.progress
-    ) { directoryBusy, directoryProg, remoteInfoBusy, remoteInfoProg ->
-        when {
-            directoryBusy && directoryProg != -1 -> directoryProg
-            remoteInfoBusy && remoteInfoProg != -1 -> remoteInfoProg
-            else -> -1
-        }
-    }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = -1
-    )
+    val progress: StateFlow<Int> = workManager.getWorkInfosByTagFlow("library_sync")
+        .map { workInfos ->
+            val activeWorker = workInfos.firstOrNull { !it.state.isFinished }
+            activeWorker?.progress?.getInt("progress", -1) ?: -1
+        }.stateIn(
+            viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = -1
+        )
 
     val mangas: StateFlow<List<MangaDto>> = combine(
         flow = directoryObserve(), flow2 = mangadexObserve()

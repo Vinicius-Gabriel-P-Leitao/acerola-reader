@@ -3,6 +3,7 @@ package br.acerola.manga.repository.adapter.local.manga
 import android.content.Context
 import android.database.sqlite.SQLiteException
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
@@ -19,6 +20,8 @@ import br.acerola.manga.local.mapper.toMangaDirectoryModel
 import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.util.ContentQueryHelper
+import br.acerola.manga.util.FastFileMetadata
 import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +38,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
@@ -47,6 +52,8 @@ class MangaDirectoryRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
 ) : MangaManagementRepository<MangaDirectoryDto> {
+
+    private val semaphore = Semaphore(permits = 3)
 
     /**
      * Injeção de dependência circular resolvida via interface.
@@ -79,7 +86,7 @@ class MangaDirectoryRepository @Inject constructor(
                 Either.catch {
                     val existingManga = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
 
-                    val folderDoc = DocumentFile.fromTreeUri(context, existingManga.path.toUri())
+                    val folderDoc = DocumentFile.fromSingleUri(context, existingManga.path.toUri())
 
                     // WARN: Caso a pasta não exista ele só ignora
                     if (folderDoc == null || !folderDoc.isDirectory) return@catch
@@ -87,8 +94,8 @@ class MangaDirectoryRepository @Inject constructor(
                     // NOTE: Se não mudou data de modificação, assume atualizado, confia mais no file system doq do user
                     if (existingManga.lastModified >= folderDoc.lastModified()) return@catch
 
-                    val banner = folderDoc.listFiles().firstOrNull { isBanner(file = it) }
-                    val cover = folderDoc.listFiles().firstOrNull { isCover(file = it) }
+                    val banner = folderDoc.listFiles().firstOrNull { isBanner(name = it.name) }
+                    val cover = folderDoc.listFiles().firstOrNull { isCover(name = it.name) }
                     val hasComicInfo = folderDoc.findFile("ComicInfo.xml") != null
 
                     val firstChapter = folderDoc.listFiles().firstOrNull { file ->
@@ -104,6 +111,9 @@ class MangaDirectoryRepository @Inject constructor(
                     ).copy(id = existingManga.id)
 
                     directoryDao.update(entity = updatedManga)
+                    
+                    // Trigger chapter refresh (falls back to DocumentFile since we don't have the library tree URI here)
+                    mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = null)
                 }.mapLeft { exception ->
                     when (exception) {
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -160,7 +170,7 @@ class MangaDirectoryRepository @Inject constructor(
                         }
                     }
 
-                    processFolderList(foldersToProcess, existingFolders = databaseFolders)
+                    processFolderList(foldersToProcess, existingFolders = databaseFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
                     when (exception) {
                         is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
@@ -190,7 +200,7 @@ class MangaDirectoryRepository @Inject constructor(
                     }
 
                     val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                    processFolderList(foldersToProcess, existingFolders)
+                    processFolderList(foldersToProcess, existingFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
                     when (exception) {
                         is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
@@ -229,7 +239,7 @@ class MangaDirectoryRepository @Inject constructor(
                                 batch.map { folder ->
                                     async(context = Dispatchers.IO) {
                                         try {
-                                            mangaDirectoryOps.refreshMangaChapters(mangaId = folder.id).onLeft {
+                                            mangaDirectoryOps.refreshMangaChapters(mangaId = folder.id, baseUri = baseUri).onLeft {
                                                 // TODO: Tratar melhor
                                                 println("Error scanning chapters for ${folder.name}: $it")
                                             }
@@ -278,7 +288,9 @@ class MangaDirectoryRepository @Inject constructor(
     }
 
     private suspend fun processFolderList(
-        foldersToProcess: List<MangaDirectory>, existingFolders: List<MangaDirectory>
+        foldersToProcess: List<MangaDirectory>, 
+        existingFolders: List<MangaDirectory>,
+        baseUri: android.net.Uri? = null
     ) {
         if (foldersToProcess.isEmpty()) {
             _progress.value = -1
@@ -293,7 +305,7 @@ class MangaDirectoryRepository @Inject constructor(
                 coroutineScope {
                     batch.map { folder ->
                         async(context = Dispatchers.IO) {
-                            upsertFolder(folder, existingFolders)
+                            upsertFolder(folder, existingFolders, baseUri)
                         }
                     }.awaitAll()
                 }
@@ -311,7 +323,7 @@ class MangaDirectoryRepository @Inject constructor(
                 batch.map { folder ->
                     async(context = Dispatchers.IO) {
                         try {
-                            upsertFolder(folder, existingFolders)
+                            upsertFolder(folder, existingFolders, baseUri)
                         } finally {
                             val current = processed.incrementAndGet()
                             _progress.value = ((current.toFloat() / total) * 100).toInt()
@@ -326,46 +338,81 @@ class MangaDirectoryRepository @Inject constructor(
         _progress.value = -1
     }
 
-    private suspend fun upsertFolder(folder: MangaDirectory, existingFolders: List<MangaDirectory>) {
+    private suspend fun upsertFolder(
+        folder: MangaDirectory, 
+        existingFolders: List<MangaDirectory>,
+        baseUri: android.net.Uri? = null
+    ) {
         val normalizedName = normalizeName(folder.name)
         val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
 
-        if (existing != null) {
-            directoryDao.update(entity = folder.copy(id = existing.id))
-            return
+        val finalMangaId = if (existing != null) {
+            val updated = folder.copy(id = existing.id)
+            directoryDao.update(entity = updated)
+            existing.id
+        } else {
+            directoryDao.insert(entity = folder)
         }
 
-        directoryDao.insert(entity = folder)
+        // Trigger chapter scan for new/updated folders
+        mangaDirectoryOps.refreshMangaChapters(mangaId = finalMangaId, baseUri = baseUri)
     }
 
     private fun buildLibrary(context: Context, rootUri: Uri): List<MangaDirectory> {
         val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
+        
+        // Otimização: Listagem via ContentResolver.query (40x mais rápido)
+        val allChildren = ContentQueryHelper.listFiles(context, rootUri)
+        val folders = allChildren.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
 
-        return pickedDir.listFiles().filter { it.isDirectory }.map { folder ->
-            val banner = folder.listFiles().firstOrNull { isBanner(file = it) }
-            val cover = folder.listFiles().firstOrNull { isCover(file = it) }
-            val hasComicInfo = folder.findFile("ComicInfo.xml") != null
+        return folders.map { folderMetadata ->
+            val folderUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, folderMetadata.id)
+            val folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@map null
+            
+            // Reusamos o ContentQueryHelper para listar itens dentro da pasta do mangá
+            val folderChildren = ContentQueryHelper.listFiles(context, rootUri, folderMetadata.id)
+            
+            val bannerMetadata = folderChildren.firstOrNull { isBanner(it.name) }
+            val coverMetadata = folderChildren.firstOrNull { isCover(it.name) }
+            val hasComicInfo = folderChildren.any { it.name == "ComicInfo.xml" }
 
-            val firstChapter = folder.listFiles().firstOrNull { file ->
-                file.isFile && FileExtension.isSupported(ext = file.name)
-            }
+            val firstChapterName = folderChildren.firstOrNull { 
+                FileExtension.isSupported(ext = it.name)
+            }?.name
 
-            val detectedTemplate = firstChapter?.name?.let {
+            val detectedTemplate = firstChapterName?.let {
                 detectTemplate(fileName = it)
             }
 
-            folder.toMangaDirectoryModel(cover, banner, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo)
-        }
+            MangaDirectory(
+                name = folderMetadata.name,
+                path = folderUri.toString(),
+                cover = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+                banner = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+                chapterTemplate = detectedTemplate,
+                lastModified = folderMetadata.lastModified,
+                hasComicInfo = hasComicInfo,
+            )
+        }.filterNotNull()
     }
 
-    private fun isCover(file: DocumentFile): Boolean {
-        val name = file.name?.lowercase() ?: return false
-        return name.contains(other = "cover") && (name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png"))
+    private fun isCover(name: String?): Boolean {
+        if (name == null) return false
+        val lower = name.lowercase()
+        // Prioriza arquivos com 'cover' no nome
+        if (lower.contains("cover") && isImage(lower)) return true
+        // Fallback: Qualquer imagem que pareça ser a capa (ex: folder.jpg, 00.jpg, front.png)
+        return (lower.startsWith("folder") || lower.startsWith("front") || lower.startsWith("00")) && isImage(lower)
     }
 
-    private fun isBanner(file: DocumentFile): Boolean {
-        val name = file.name?.lowercase() ?: return false
-        return name.contains(other = "banner") && (name.endsWith(suffix = ".jpg") || name.endsWith(suffix = ".png"))
+    private fun isBanner(name: String?): Boolean {
+        if (name == null) return false
+        val lower = name.lowercase()
+        return lower.contains("banner") && isImage(lower)
+    }
+
+    private fun isImage(name: String): Boolean {
+        return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".webp")
     }
 
     private fun normalizeName(name: String): String {

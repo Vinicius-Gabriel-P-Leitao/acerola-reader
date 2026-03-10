@@ -89,7 +89,13 @@ fun SelectFolder(
 
         selectedFolderUri?.let { uriString ->
             val uri = uriString.toUri()
-            val documentFile = DocumentFile.fromTreeUri(context, uri)
+            val documentFile = remember(uri) {
+                try {
+                    DocumentFile.fromTreeUri(context, uri)
+                } catch (e: Exception) {
+                    null
+                }
+            }
 
             Divider()
 

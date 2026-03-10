@@ -26,7 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(value = ReaderUiState())
@@ -59,19 +59,24 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun onPageVisible(index: Int) {
-        viewModelScope.launch {
-            repository.loadPage(index).map { page ->
-                    _state.update {
-                        it.copy(pages = it.pages + (index to page))
-                    }
-                }.handleResult()
+        if (state.value.pages.containsKey(index)) return
 
-            repository.prefetchWindow(center = index)
+        viewModelScope.launch {
+            repository.loadPage(index).onRight { bitmap ->
+                _state.update { it.copy(pages = it.pages + (index to bitmap)) }
+            }.handleResult()
         }
     }
 
     fun onCurrentPageChanged(index: Int) {
-        _state.update { it.copy(currentPage = index) }
+        if (_state.value.currentPage == index) return
+        
+        _state.update { state ->
+            // Cleanup: Mantém 7 páginas (3 acima, 3 abaixo + atual) para evitar flicker
+            val newPages = state.pages.filterKeys { it in (index - 3)..(index + 3) }
+            state.copy(currentPage = index, pages = newPages)
+        }
+        repository.prefetchWindow(center = index, total = state.value.pageCount)
     }
 
     fun onSliderChanged(index: Int) {

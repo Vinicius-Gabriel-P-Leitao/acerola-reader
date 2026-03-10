@@ -65,7 +65,7 @@
 
     <string name="title_preference_metadata_comic_info">Gerar ComicInfo.xml</string>
     <string name="description_preference_metadata_comic_info">Criar arquivo de metadados na pasta ao sincronizar com fontes externas.</string>
-    
+
     <string name="title_settings_chapters_per_page">Capítulos por página</string>
     <string name="description_settings_chapters_per_page">Quantidade de itens exibidos na lista</string>
 

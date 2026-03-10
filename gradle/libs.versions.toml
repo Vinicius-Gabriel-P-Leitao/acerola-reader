@@ -38,8 +38,16 @@ androidxJunit = "1.2.1"
 espressoCore = "3.7.0"
 mockk = "1.14.7"
 
+# -- Testing Extensions --
+turbine = "1.2.1"
+mockwebserver = "5.0.0-alpha.14"
+truth = "1.4.4"
+robolectric = "4.14.1"
+
 # -- Quality code --
 arrow = "2.2.1.1"
+work = "2.10.0"
+hiltWork = "1.2.0"
 
 [libraries]
 # --- Core ---
@@ -88,6 +96,7 @@ androidx-documentfile = { group = "androidx.documentfile", name = "documentfile"
 # --- Test ---
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
@@ -97,6 +106,15 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 # --- Quality code ---
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
+androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
+
+# --- Testing Extensions ---
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
