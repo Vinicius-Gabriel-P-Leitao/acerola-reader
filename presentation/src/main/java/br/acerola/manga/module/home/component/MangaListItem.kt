@@ -30,6 +30,7 @@ import coil.size.SizeResolver
 @Composable
 fun MangaListItem(
     manga: MangaDto,
+    subtitle: String? = null,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -75,14 +76,18 @@ fun MangaListItem(
                 .weight(weight = 1f), verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = title, style = MaterialTheme.typography.titleMedium, maxLines = 1
+                text = title, style = MaterialTheme.typography.titleMedium, maxLines = 1,
+                color = MaterialTheme.colorScheme.onBackground
             )
-//            Text(
-//                text = stringResource(id = R.string.description_manga_list_item_chapter_count, manga.directory.chapters.total),
-//                style = MaterialTheme.typography.bodyMedium,
-//                maxLines = 2,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
+
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

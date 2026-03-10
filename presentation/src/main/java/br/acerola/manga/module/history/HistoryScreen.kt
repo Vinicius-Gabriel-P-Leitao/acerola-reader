@@ -63,12 +63,16 @@ fun HistoryScreen(
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(historyItems, key = { it.directory.id }) { manga ->
+                    items(historyItems, key = { it.manga.directory.id }) { item ->
+                        val chapterInfo = item.history.chapterName ?: "Capítulo desconhecido"
+                        val progressInfo = "Capítulo $chapterInfo - Pág. ${item.history.lastPage + 1}"
+                        
                         MangaListItem(
-                            manga = manga,
+                            manga = item.manga,
+                            subtitle = progressInfo,
                             onClick = {
                                 val intent = Intent(context, MangaActivity::class.java).apply {
-                                    putExtra(MangaActivity.ChapterExtra.MANGA, manga)
+                                    putExtra(MangaActivity.ChapterExtra.MANGA, item.manga)
                                 }
                                 context.startActivity(intent)
                             }

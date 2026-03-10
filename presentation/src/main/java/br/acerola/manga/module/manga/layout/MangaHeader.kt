@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.ButtonType
 import br.acerola.manga.common.component.SmartButton
 import br.acerola.manga.dto.MangaDto
-import br.acerola.manga.local.database.entity.history.ReadingHistory
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.local.database.entity.metadata.MetadataSource
 import br.acerola.manga.presentation.R
 import coil.compose.AsyncImage
@@ -47,7 +47,7 @@ import coil.request.ImageRequest
 @Composable
 fun MangaHeader(
     manga: MangaDto,
-    history: ReadingHistory?,
+    history: ReadingHistoryDto?,
     onContinueClick: (Long, Int) -> Unit
 ) {
     val scrollState = rememberScrollState()

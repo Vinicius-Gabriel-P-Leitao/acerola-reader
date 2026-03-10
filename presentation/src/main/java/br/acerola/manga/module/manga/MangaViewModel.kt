@@ -12,8 +12,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.data.repository.HistoryRepository
-import br.acerola.manga.local.database.entity.history.ReadingHistory
+import br.acerola.manga.repository.port.HistoryManagementRepository
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
@@ -47,7 +47,7 @@ class MangaViewModel @Inject constructor(
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryManagementRepository
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
@@ -140,7 +140,7 @@ class MangaViewModel @Inject constructor(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val history: StateFlow<ReadingHistory?> = _selectedDirectoryId.flatMapLatest { id ->
+    val history: StateFlow<ReadingHistoryDto?> = _selectedDirectoryId.flatMapLatest { id ->
         if (id == null) flowOf(null)
         else historyRepository.getHistoryByMangaId(id)
     }.stateIn(

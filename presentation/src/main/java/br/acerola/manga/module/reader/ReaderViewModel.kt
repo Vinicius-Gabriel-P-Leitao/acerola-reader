@@ -8,9 +8,9 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.reader.state.ReaderUiState
-import br.acerola.manga.data.repository.HistoryRepository
-import br.acerola.manga.local.database.entity.history.ReadingHistory
+import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.service.reader.PageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository,
-    private val historyRepository: HistoryRepository,
+    private val historyRepository: HistoryManagementRepository,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -83,10 +83,11 @@ class ReaderViewModel @Inject constructor(
 
         viewModelScope.launch {
             historyRepository.upsertHistory(
-                ReadingHistory(
+                ReadingHistoryDto(
                     mangaId = mangaId,
                     chapterId = chapterId,
-                    lastPage = index
+                    lastPage = index,
+                    updatedAt = System.currentTimeMillis()
                 )
             )
         }
