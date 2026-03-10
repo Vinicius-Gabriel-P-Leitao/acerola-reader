@@ -171,6 +171,7 @@ fun MangaScreen(
                                 onPageChange = handlePageChange,
                                 totalPages = totalChaptersPerPage,
                                 readChapters = readChapters,
+                                onToggleRead = { id -> mangaViewModel.toggleChapterReadStatus(id) },
                                 onChapterClick = { chapter, remote -> handleChapterClick(chapter, remote, 0) },
                             )
                         }

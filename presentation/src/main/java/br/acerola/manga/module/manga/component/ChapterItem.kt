@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,7 @@ fun ChapterItem(
     chapterFileDto: ChapterFileDto,
     isRead: Boolean = false,
     modifier: Modifier = Modifier,
+    onToggleRead: () -> Unit = {},
     onClick: () -> Unit
 ) {
     var showDetails by remember { mutableStateOf(value = false) }
@@ -55,9 +59,19 @@ fun ChapterItem(
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (isRead) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
             Column(modifier = Modifier.weight(weight = 1f)) {
                 Text(
                     text = mainTitle,
@@ -127,6 +141,25 @@ fun ChapterItem(
                         DetailRow(
                             label = stringResource(id = R.string.label_chapter_detail_pages),
                             value = "${remote.pageCount ?: "?"}"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            onToggleRead()
+                            showDetails = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (isRead) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = if (isRead) "Marcar como não lido" else "Marcar como lido"
                         )
                     }
                 }

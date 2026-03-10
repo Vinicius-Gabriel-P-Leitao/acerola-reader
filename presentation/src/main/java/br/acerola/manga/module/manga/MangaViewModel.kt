@@ -244,6 +244,19 @@ class MangaViewModel @Inject constructor(
         _currentPage.value = page
     }
 
+    fun toggleChapterReadStatus(chapterId: Long) {
+        val mangaId = _selectedDirectoryId.value ?: return
+        val isRead = readChapters.value.contains(chapterId)
+
+        viewModelScope.launch {
+            if (isRead) {
+                historyRepository.unmarkChapterAsRead(chapterId)
+            } else {
+                historyRepository.markChapterAsRead(mangaId, chapterId)
+            }
+        }
+    }
+
     private fun String.normalizeKey(): String {
         return this.filter { it.isLetterOrDigit() }.lowercase()
     }
