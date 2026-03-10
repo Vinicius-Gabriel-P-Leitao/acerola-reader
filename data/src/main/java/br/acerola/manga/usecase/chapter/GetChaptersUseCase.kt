@@ -7,12 +7,12 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * UseCase unificado para operações de leitura de capítulos (paginação, fluxo contínuo ou lista específica).
  */
-class GetChaptersUseCase<T>(
+open class GetChaptersUseCase<T>(
     private val chapterRepository: ChapterManagementRepository<T>
 ) {
 
-    val progress: StateFlow<Int> = chapterRepository.progress
-    val isIndexing: StateFlow<Boolean> = chapterRepository.isIndexing
+    val progress: StateFlow<Int> get() = chapterRepository.progress
+    val isIndexing: StateFlow<Boolean> get() = chapterRepository.isIndexing
 
     /**
      * Retorna o fluxo principal de capítulos para um mangá.

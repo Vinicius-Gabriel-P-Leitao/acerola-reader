@@ -3,7 +3,9 @@ package br.acerola.manga.common.layout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -11,6 +13,7 @@ class ProgressIndicatorTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `ProgressIndicator_deve_exibir_texto_de_sincronização_indeterminada_inicialmente`() {
@@ -21,7 +24,8 @@ class ProgressIndicatorTest {
         }
 
         // Verifica se a string de carregamento padrão aparece
-        composeTestRule.onNodeWithText("Sincronizando...", substring = true).assertIsDisplayed()
+        val syncLabel = context.getString(R.string.label_sync_progress)
+        composeTestRule.onNodeWithText(syncLabel, substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -50,6 +54,7 @@ class ProgressIndicatorTest {
         isLoading.value = false
 
         // Aguarda a animação e o delay interno de feedback (Sincronizado!)
-        composeTestRule.onNodeWithText("Sincronizado!", substring = true).assertIsDisplayed()
+        val completeLabel = context.getString(R.string.label_sync_complete)
+        composeTestRule.onNodeWithText(completeLabel, substring = true).assertIsDisplayed()
     }
 }

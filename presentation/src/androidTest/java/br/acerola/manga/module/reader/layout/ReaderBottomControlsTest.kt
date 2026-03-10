@@ -7,7 +7,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -15,6 +17,7 @@ class ReaderBottomControlsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `ReaderBottomControls_deve_exibir_a_contagem_de_páginas_no_formato_correto`() {
@@ -30,7 +33,8 @@ class ReaderBottomControlsTest {
         }
 
         // Index 5 corresponde à página visual 6
-        composeTestRule.onNodeWithText("Página 6 / 20").assertIsDisplayed()
+        val pageFormat = context.getString(R.string.label_reader_page_format, 6, 20)
+        composeTestRule.onNodeWithText(pageFormat).assertIsDisplayed()
     }
 
     @Test
@@ -46,8 +50,11 @@ class ReaderBottomControlsTest {
             }
         }
 
-        composeTestRule.onNodeWithContentDescription("Página Anterior").assertIsNotEnabled()
-        composeTestRule.onNodeWithText("Próximo").assertIsEnabled()
+        val prevDescription = context.getString(R.string.description_icon_pagination_previous)
+        val nextLabel = context.getString(R.string.label_reader_next_page)
+        
+        composeTestRule.onNodeWithContentDescription(prevDescription).assertIsNotEnabled()
+        composeTestRule.onNodeWithText(nextLabel).assertIsEnabled()
     }
 
     @Test
@@ -64,7 +71,8 @@ class ReaderBottomControlsTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Próximo").performClick()
+        val nextLabel = context.getString(R.string.label_reader_next_page)
+        composeTestRule.onNodeWithText(nextLabel).performClick()
         assert(nextCalled)
     }
 }

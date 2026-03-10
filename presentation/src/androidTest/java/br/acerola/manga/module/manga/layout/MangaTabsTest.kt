@@ -2,8 +2,10 @@ package br.acerola.manga.module.manga.layout
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
 import br.acerola.manga.module.manga.MainTab
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -11,6 +13,7 @@ class MangaTabsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `MangaTabs_deve_exibir_o_número_total_de_capítulos_na_aba_correspondente`() {
@@ -25,7 +28,8 @@ class MangaTabsTest {
         }
 
         // Valida texto formatado: Capítulos (150)
-        composeTestRule.onNodeWithText("Capítulos (150)", substring = true).assertIsDisplayed()
+        val chaptersLabel = context.getString(R.string.title_chapter_tabs_chapters, 150)
+        composeTestRule.onNodeWithText(chaptersLabel, substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -43,7 +47,8 @@ class MangaTabsTest {
         }
 
         // Clica na aba de Configurações
-        composeTestRule.onNodeWithText("Configurações").performClick()
+        val settingsLabel = context.getString(R.string.title_chapter_tabs_settings)
+        composeTestRule.onNodeWithText(settingsLabel).performClick()
 
         assert(selectedTab == MainTab.SETTINGS)
     }
