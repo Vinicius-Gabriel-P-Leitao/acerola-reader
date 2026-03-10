@@ -38,9 +38,16 @@ class HomeLayoutToggleTest {
         val hubDescription = context.getString(R.string.description_icon_home_floating_tool_hub)
         composeTestRule.onNodeWithContentDescription(hubDescription, substring = true).performClick()
 
-        // 2. Clica no botão de trocar visualização (que deve exibir "Grade" já que estamos em Lista)
+        // Aguarda animação de expansão do FloatingTool
+        composeTestRule.waitForIdle()
+
+        // 2. Clica no botão de trocar visualização
         val gridLabel = context.getString(R.string.description_text_home_layout_grid_label)
-        composeTestRule.onNodeWithText(gridLabel, substring = true).performClick()
+        
+        // Usamos useUnmergedTree para garantir que encontramos o texto dentro do FloatingTool
+        composeTestRule.onNodeWithText(gridLabel, substring = true, useUnmergedTree = true)
+            .assertIsDisplayed()
+            .performClick()
 
         // 3. Verifica se o ViewModel foi notificado para mudar o layout
         verify { viewModel.updateHomeLayout(HomeLayoutType.GRID) }

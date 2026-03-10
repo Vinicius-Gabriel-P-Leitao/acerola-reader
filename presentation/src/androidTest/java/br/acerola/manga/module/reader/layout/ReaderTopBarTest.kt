@@ -49,7 +49,7 @@ class ReaderTopBarTest {
 
         // Aciona botão de configurações
         val settingsDescription = context.getString(R.string.label_config_activity)
-        composeTestRule.onNodeWithContentDescription(settingsDescription).performClick()
+        composeTestRule.onNodeWithContentDescription(settingsDescription, ignoreCase = true).performClick()
         assert(settingsClicked)
     }
 }

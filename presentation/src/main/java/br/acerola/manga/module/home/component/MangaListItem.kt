@@ -47,18 +47,23 @@ fun MangaListItem(
     val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
     val title = manga.remoteInfo?.title ?: manga.directory.name
 
-    val imageRequest = remember(key1 = coverUri) {
-        val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
-        ImageRequest.Builder(context)
-            .data(data = coverUri)
+    val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
+
+    val placeholderPainter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(data = R.raw.placeholder_manga)
             .size(resolver = SizeResolver(imageSize))
             .build()
-    }
+    )
 
     val coverPainter = rememberAsyncImagePainter(
-        model = imageRequest,
-        placeholder = painterResource(id = R.drawable.ic_launcher_background),
-        error = painterResource(id = R.drawable.ic_launcher_background)
+        placeholder = placeholderPainter,
+        fallback = placeholderPainter,
+        error = placeholderPainter,
+        model = ImageRequest.Builder(context)
+            .data(data = coverUri)
+            .size(resolver = SizeResolver(imageSize))
+            .build(),
     )
 
     Row(

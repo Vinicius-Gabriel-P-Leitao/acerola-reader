@@ -52,6 +52,7 @@ dependencies {
 
     // --- UI / Compose ---
     implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
     implementation(libs.bundles.compose.ui)
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.activity.compose)

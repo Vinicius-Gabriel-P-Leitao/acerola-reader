@@ -7,17 +7,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.presentation.R
-import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.presentation.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
@@ -34,23 +32,25 @@ fun MangaGridItem(
     val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
     val title = manga.remoteInfo?.title ?: manga.directory.name
 
-    val imageRequest = remember(key1 = coverUri) {
-        val imageSize: Size = with(receiver = density) {
-            Size(
-                width = 120.dp.toPx().toInt(),
-                height = 180.dp.toPx().toInt()
-            )
-        }
-        ImageRequest.Builder(context)
-            .data(data = coverUri)
-            .size(resolver = SizeResolver(imageSize))
-            .build()
+    val imageSize: Size = with(receiver = density) {
+        Size(
+            width = 120.dp.toPx().toInt(),
+            height = 180.dp.toPx().toInt()
+        )
     }
 
+    val placeholderPainter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(data = R.raw.placeholder_manga)
+            .size(resolver = SizeResolver(imageSize))
+            .build()
+    )
+
     val coverPainter = rememberAsyncImagePainter(
-        model = imageRequest,
-        placeholder = painterResource(id = R.drawable.ic_launcher_background),
-        error = painterResource(id = R.drawable.ic_launcher_background)
+        placeholder = placeholderPainter,
+        fallback = placeholderPainter,
+        error = placeholderPainter,
+        model = ImageRequest.Builder(context).data(data = coverUri).size(resolver = SizeResolver(imageSize)).build(),
     )
 
     Column(
