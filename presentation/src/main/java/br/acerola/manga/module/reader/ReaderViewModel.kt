@@ -9,6 +9,8 @@ import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.reader.state.ReaderUiState
+import br.acerola.manga.data.repository.HistoryRepository
+import br.acerola.manga.local.database.entity.history.ReadingHistory
 import br.acerola.manga.service.reader.PageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository,
+    private val historyRepository: HistoryRepository,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -43,13 +46,14 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    fun openChapter(chapter: ChapterFileDto) {
+    fun openChapter(mangaId: Long, chapter: ChapterFileDto, initialPage: Int = 0) {
         viewModelScope.launch {
             repository.openChapter(chapter)
                 .map {
                     _state.update {
                         it.copy(
                             pageCount = repository.pageCount(),
+                            currentPage = initialPage,
                             pages = emptyMap()
                         )
                     }
@@ -68,7 +72,7 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    fun onCurrentPageChanged(index: Int) {
+    fun onCurrentPageChanged(mangaId: Long, chapterId: Long, index: Int) {
         if (_state.value.currentPage == index) return
         
         _state.update { state ->
@@ -76,6 +80,17 @@ class ReaderViewModel @Inject constructor(
             val newPages = state.pages.filterKeys { it in (index - 3)..(index + 3) }
             state.copy(currentPage = index, pages = newPages)
         }
+
+        viewModelScope.launch {
+            historyRepository.upsertHistory(
+                ReadingHistory(
+                    mangaId = mangaId,
+                    chapterId = chapterId,
+                    lastPage = index
+                )
+            )
+        }
+
         repository.prefetchWindow(center = index, total = state.value.pageCount)
     }
 

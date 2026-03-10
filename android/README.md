@@ -41,7 +41,7 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
         *   Limpar metadados (remove do DB e apaga `ComicInfo.xml`).
         *   Limpar capítulos (remove todos os arquivos e dados).
 *   **Configurações Globais:**
-    *   [] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
+    *   [x] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
         *   Gerar `ComicInfo.xml` por padrão; ler se existir.
         *   Resolver conflitos: Adicionar opção "Metadata ComicInfo ? Database" e persistir essa escolha (SQLite/DataStore).
     *   [x] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).

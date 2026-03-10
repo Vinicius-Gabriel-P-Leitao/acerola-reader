@@ -27,6 +27,7 @@ import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewMod
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.module.config.ConfigScreen
 import br.acerola.manga.module.history.HistoryScreen
+import br.acerola.manga.module.history.HistoryViewModel
 import br.acerola.manga.module.home.HomeScreen
 import br.acerola.manga.module.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +41,7 @@ class MainActivity(
     private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
     private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
+    private val historyViewModel: HistoryViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +58,7 @@ class MainActivity(
             )
         }
         defaultComposable(context, Destination.HISTORY) {
-            HistoryScreen()
+            HistoryScreen(historyViewModel)
         }
         defaultComposable(context, Destination.CONFIG) {
             ConfigScreen(

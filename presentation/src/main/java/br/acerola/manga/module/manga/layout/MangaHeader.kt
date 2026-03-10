@@ -38,12 +38,18 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.ButtonType
 import br.acerola.manga.common.component.SmartButton
 import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.local.database.entity.history.ReadingHistory
+import br.acerola.manga.local.database.entity.metadata.MetadataSource
 import br.acerola.manga.presentation.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
 @Composable
-fun MangaHeader(manga: MangaDto) {
+fun MangaHeader(
+    manga: MangaDto,
+    history: ReadingHistory?,
+    onContinueClick: (Long, Int) -> Unit
+) {
     val scrollState = rememberScrollState()
 
     var isExpanded by remember { mutableStateOf(value = false) }
@@ -191,9 +197,20 @@ fun MangaHeader(manga: MangaDto) {
 
             // TODO: Inserir o botão de iniciar a leitura do primeiro mangá ou o ultimo lido vai ter duas labels INICIAR |
             //  CONTINUAR com icone diferente e teremos histórico de capitulo.
+            val buttonText = if (history != null) "Continuar" else "Iniciar"
+            
             SmartButton(
-                type = ButtonType.TEXT, modifier = Modifier.fillMaxWidth(), onClick = { println("Testes") }, text =
-                    "Continuar"
+                type = ButtonType.TEXT,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    if (history != null) {
+                        onContinueClick(history.chapterId, history.lastPage)
+                    } else {
+                        // Se não houver histórico, inicia do primeiro capítulo (id -1 para sinalizar primeiro)
+                        onContinueClick(-1L, 0)
+                    }
+                },
+                text = buttonText
             )
         }
     }
@@ -219,12 +236,12 @@ fun GenreBadge(
 
 @Composable
 fun SourceBadge(
-    source: br.acerola.manga.local.database.entity.metadata.MetadataSource, modifier: Modifier = Modifier
+    source: MetadataSource, modifier: Modifier = Modifier
 ) {
     val color = when (source) {
-        br.acerola.manga.local.database.entity.metadata.MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
-        br.acerola.manga.local.database.entity.metadata.MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
-        br.acerola.manga.local.database.entity.metadata.MetadataSource.MANUAL -> MaterialTheme.colorScheme.surfaceVariant
+        MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
+        MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
+        MetadataSource.MANUAL -> MaterialTheme.colorScheme.surfaceVariant
     }
 
     Box(
