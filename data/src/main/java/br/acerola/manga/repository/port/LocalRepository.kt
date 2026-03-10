@@ -26,6 +26,6 @@ interface ChapterManagementRepository<T> {
     fun observeChapters(mangaId: Long): StateFlow<T>
     fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<T>
 
-    suspend fun refreshMangaChapters(mangaId: Long): Either<LibrarySyncError, Unit>
+    suspend fun refreshMangaChapters(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit>
     suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int = 20): T
 }

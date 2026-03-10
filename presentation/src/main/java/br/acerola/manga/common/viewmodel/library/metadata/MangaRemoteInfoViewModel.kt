@@ -2,14 +2,19 @@ package br.acerola.manga.common.viewmodel.library.metadata
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.service.background.MetadataSyncWorker
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.usecase.manga.RescanMangaUseCase
-import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -24,17 +29,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
-    private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
     @param:MangadexCase private val rescanManga: RescanMangaUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
-    @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>
+    @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    private val workManager: WorkManager
 ) : ViewModel() {
+
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
+    private val _progress = MutableStateFlow<Int>(value = -1)
+    val progress: StateFlow<Int> = _progress.asStateFlow()
+
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
-
 
     val remoteInfo: StateFlow<List<MangaRemoteInfoDto>> = observeLibraryUseCase().stateIn(
         scope = viewModelScope,
@@ -67,18 +75,43 @@ class MangaRemoteInfoViewModel @Inject constructor(
     }
 
     fun syncFromMangadex(directoryId: Long) {
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, directoryId)
+    }
+
+    fun syncFromComicInfo(directoryId: Long) {
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_COMICINFO, directoryId)
+    }
+
+    private fun enqueueMetadataSync(source: String, directoryId: Long) {
         viewModelScope.launch {
-            _isIndexing.value = true
-            syncMangaMetadataUseCase.syncFromMangadex(directoryId).handleResult()
-            _isIndexing.value = false
+            val syncRequest = OneTimeWorkRequestBuilder<MetadataSyncWorker>()
+                .setInputData(
+                    workDataOf(
+                        MetadataSyncWorker.KEY_SYNC_SOURCE to source,
+                        MetadataSyncWorker.KEY_DIRECTORY_ID to directoryId
+                    )
+                )
+                .addTag("metadata_sync")
+                .build()
+
+            workManager.enqueueUniqueWork(
+                "metadata_sync_${directoryId}",
+                ExistingWorkPolicy.KEEP,
+                syncRequest
+            )
+
+            observeWorkStatus(syncRequest.id)
         }
     }
 
-    fun syncFromComicInfo(folderId: Long) {
+    private fun observeWorkStatus(workerId: java.util.UUID) {
         viewModelScope.launch {
-            _isIndexing.value = true
-            syncMangaMetadataUseCase.syncFromComicInfo(folderId).handleResult()
-            _isIndexing.value = false
+            workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                if (workInfo != null) {
+                    _isIndexing.value = !workInfo.state.isFinished
+                    _progress.value = if (workInfo.state == WorkInfo.State.RUNNING) -1 else 0
+                }
+            }
         }
     }
 

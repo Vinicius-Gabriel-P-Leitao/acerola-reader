@@ -1,6 +1,6 @@
 package br.acerola.manga.module.reader.component
 
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -38,7 +38,7 @@ fun WebtoonReader(
     pageCount: Int,
     onUiToggle: () -> Unit,
     listState: LazyListState,
-    pages: Map<Int, ByteArray>,
+    pages: Map<Int, Bitmap>,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit
 ) {
@@ -116,9 +116,9 @@ fun WebtoonReader(
                 }
 
                 // NOTE: Imagem da Webtoon: Apenas uma imagem, sem zoom individual.
-                val pageBytes = pages[index]
-                val bitmap = remember(key1 = pageBytes) {
-                    pageBytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
+                val pageBitmap = pages[index]
+                val bitmap = remember(key1 = pageBitmap) {
+                    pageBitmap?.asImageBitmap()
                 }
 
                 if (bitmap != null) {

@@ -1,5 +1,6 @@
 package br.acerola.manga.module.reader.component
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -21,7 +22,7 @@ fun HorizontalPagedReader(
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    pages: Map<Int, ByteArray>,
+    pages: Map<Int, Bitmap>,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
@@ -39,7 +40,7 @@ fun HorizontalPagedReader(
         }
 
         ZoomablePageImage(
-            pageBytes = pages[index],
+            pageBitmap = pages[index],
             orientation = ReadingMode.HORIZONTAL,
             onAreaTap = { area ->
                 when (area) {

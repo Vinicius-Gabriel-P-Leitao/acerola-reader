@@ -68,12 +68,13 @@ fun DocumentFile.toMangaDirectoryModel(
 }
 
 fun DocumentFile.toChapterArchiveModel(
-    mangaId: Long, chapterSort: String, checksum: String
+    mangaId: Long, chapterSort: String, checksum: String?, fastHash: String?
 ): ChapterArchive {
     return ChapterArchive(
         chapter = name ?: "",
         path = uri.toString(),
         checksum = checksum,
+        fastHash = fastHash,
         chapterSort = chapterSort,
         folderPathFk = mangaId
     )

@@ -26,7 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(value = ReaderUiState())
@@ -60,9 +60,11 @@ class ReaderViewModel @Inject constructor(
 
     fun onPageVisible(index: Int) {
         viewModelScope.launch {
-            repository.loadPage(index).map { page ->
-                    _state.update {
-                        it.copy(pages = it.pages + (index to page))
+            repository.loadPage(index).map { bitmap ->
+                    _state.update { 
+                        // Mantém apenas uma janela de páginas no estado da UI para evitar overhead
+                        val newPages = it.pages.filterKeys { key -> key in (index - 2)..(index + 2) }
+                        it.copy(pages = newPages + (index to bitmap))
                     }
                 }.handleResult()
 

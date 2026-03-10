@@ -14,8 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -41,9 +39,7 @@ class CbrChapterSourceService @Inject constructor(
                 ?: return@withContext ChapterError.InvalidChapterData("Index $index out of bounds").left()
 
             Either.catch {
-                val output = ByteArrayOutputStream()
-                localArchive.extractFile(header, output)
-                ByteArrayInputStream(output.toByteArray())
+                localArchive.getInputStream(header)
             }.mapLeft { exception ->
                 ChapterError.ExtractionFailed(cause = exception)
             }
@@ -57,9 +53,7 @@ class CbrChapterSourceService @Inject constructor(
                 ?: return@withContext ChapterError.InvalidChapterData("File $fileName not found in RAR").left()
 
             Either.catch {
-                val output = ByteArrayOutputStream()
-                localArchive.extractFile(header, output)
-                ByteArrayInputStream(output.toByteArray())
+                localArchive.getInputStream(header)
             }.mapLeft { exception ->
                 ChapterError.ExtractionFailed(cause = exception)
             }
@@ -77,10 +71,8 @@ class CbrChapterSourceService @Inject constructor(
                 .filter { !it.isDirectory }
                 .filter {
                     val name = it.fileName.lowercase()
-                    name.endsWith(".jpg") ||
-                            name.endsWith(".jpeg") ||
-                            name.endsWith(".png") ||
-                            name.endsWith(".webp")
+                    name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".webp")
+
                 }.sortedBy { it.fileName }
 
             this.archive = newArchive
