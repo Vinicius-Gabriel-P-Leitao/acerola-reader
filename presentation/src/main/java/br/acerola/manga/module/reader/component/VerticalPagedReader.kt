@@ -1,5 +1,6 @@
 package br.acerola.manga.module.reader.component
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
@@ -20,7 +21,7 @@ fun VerticalPagedReader(
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    pages: Map<Int, ByteArray>,
+    pages: Map<Int, Bitmap>,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit
 ) {
@@ -37,7 +38,7 @@ fun VerticalPagedReader(
         }
 
         ZoomablePageImage(
-            pageBytes = pages[index],
+            pageBitmap = pages[index],
             orientation = ReadingMode.VERTICAL,
             onAreaTap = { area ->
                 when (area) {

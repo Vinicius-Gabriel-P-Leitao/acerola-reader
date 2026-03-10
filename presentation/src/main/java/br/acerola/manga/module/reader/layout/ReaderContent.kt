@@ -20,7 +20,7 @@ fun ReaderContent(
     onNextClick: () -> Unit,
     readingMode: ReadingMode,
     listState: LazyListState,
-    pages: Map<Int, ByteArray>,
+    pages: Map<Int, android.graphics.Bitmap>,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {

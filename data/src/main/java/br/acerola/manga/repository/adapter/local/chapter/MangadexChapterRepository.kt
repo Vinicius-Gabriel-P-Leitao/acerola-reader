@@ -1,6 +1,7 @@
 package br.acerola.manga.repository.adapter.local.chapter
 
 import android.database.sqlite.SQLiteException
+import android.net.Uri
 import arrow.core.Either
 import arrow.core.flatMap
 import br.acerola.manga.data.R
@@ -61,7 +62,7 @@ class MangadexChapterRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    override suspend fun refreshMangaChapters(mangaId: Long): Either<LibrarySyncError, Unit> =
+    override suspend fun refreshMangaChapters(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             _isIndexing.value = true
             _progress.value = 0

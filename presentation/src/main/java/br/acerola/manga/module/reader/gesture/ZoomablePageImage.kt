@@ -1,5 +1,6 @@
 package br.acerola.manga.module.reader.gesture
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -26,7 +27,7 @@ import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
 fun ZoomablePageImage(
-    pageBytes: ByteArray?,
+    pageBitmap: Bitmap?,
     onAreaTap: (TapArea) -> Unit,
     onZoomStatusChange: (Boolean) -> Unit,
     orientation: ReadingMode = ReadingMode.VERTICAL,
@@ -34,8 +35,8 @@ fun ZoomablePageImage(
     var scale by remember { mutableFloatStateOf(value = 1f) }
     var offset by remember { mutableStateOf(value = Offset.Zero) }
 
-    val bitmap = remember(key1 = pageBytes) {
-        pageBytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
+    val bitmap = remember(key1 = pageBitmap) {
+        pageBitmap?.asImageBitmap()
     }
 
     Box(

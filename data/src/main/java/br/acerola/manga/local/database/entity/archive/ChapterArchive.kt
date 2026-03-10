@@ -37,6 +37,9 @@ data class ChapterArchive(
     @ColumnInfo(name = "checksum")
     val checksum: String? = null,
 
+    @ColumnInfo(name = "fast_hash")
+    val fastHash: String? = null,
+
     @ColumnInfo(name = "manga_directory_fk")
     val folderPathFk: Long,
 )
