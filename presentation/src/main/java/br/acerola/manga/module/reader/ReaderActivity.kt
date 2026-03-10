@@ -43,6 +43,7 @@ class ReaderActivity(
     object PageExtra {
         const val PAGE = "PAGE"
         const val MANGA_ID = "MANGA_ID"
+        const val CHAPTER_ID = "CHAPTER_ID"
         const val INITIAL_PAGE = "INITIAL_PAGE"
     }
 
@@ -58,10 +59,12 @@ class ReaderActivity(
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.READER.route)) {
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
+            val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
             
             ReaderScreen(
                 chapter = page,
+                chapterId = chapterId,
                 mangaId = mangaId,
                 viewModel = viewModel,
                 initialPage = initialPage

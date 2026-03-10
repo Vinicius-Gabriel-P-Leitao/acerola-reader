@@ -71,6 +71,14 @@ fun HistoryScreen(
                             manga = item.manga,
                             subtitle = progressInfo,
                             isCompleted = item.history.isCompleted,
+                            onPlayClick = {
+                                val intent = Intent(context, br.acerola.manga.module.reader.ReaderActivity::class.java).apply {
+                                    putExtra(br.acerola.manga.module.reader.ReaderActivity.PageExtra.MANGA_ID, item.manga.directory.id)
+                                    putExtra(br.acerola.manga.module.reader.ReaderActivity.PageExtra.CHAPTER_ID, item.history.chapterArchiveId)
+                                    putExtra(br.acerola.manga.module.reader.ReaderActivity.PageExtra.INITIAL_PAGE, item.history.lastPage)
+                                }
+                                context.startActivity(intent)
+                            },
                             onClick = {
                                 val intent = Intent(context, MangaActivity::class.java).apply {
                                     putExtra(MangaActivity.ChapterExtra.MANGA, item.manga)

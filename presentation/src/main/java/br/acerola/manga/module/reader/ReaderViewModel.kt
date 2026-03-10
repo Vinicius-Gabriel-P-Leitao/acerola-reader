@@ -7,11 +7,15 @@ import arrow.core.Either
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.module.reader.state.ReaderUiState
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.service.reader.PageRepository
+import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.di.DirectoryCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -19,9 +23,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelChildren
 import javax.inject.Inject
 
 // TODO: Criar método que usa o maldito UserMessage para fazer Toast de erros para o usuário
@@ -29,6 +35,7 @@ import javax.inject.Inject
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository,
     private val historyRepository: HistoryManagementRepository,
+    @DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -57,7 +64,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun openChapter(mangaId: Long, chapter: ChapterFileDto, initialPage: Int = 0) {
-        _state.update { it.copy(currentPage = initialPage, pages = emptyMap()) }
+        _state.update { it.copy(currentPage = initialPage, pages = emptyMap(), isLoading = true) }
         seenPages.clear()
         // Não limpamos markedAsReadInSession para evitar spam se o usuário alternar capítulos
         viewModelScope.launch {
@@ -67,11 +74,39 @@ class ReaderViewModel @Inject constructor(
                         it.copy(
                             pageCount = repository.pageCount(),
                             currentPage = initialPage,
-                            pages = emptyMap()
+                            pages = emptyMap(),
+                            isLoading = false
                         )
                     }
                 }
                 .handleResult()
+        }
+    }
+
+    fun loadAndOpenChapter(mangaId: Long, chapterId: Long, initialPage: Int = 0) {
+        _state.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            // Usa transformWhile para coletar até encontrar o capítulo ou desistir
+            getChaptersUseCase.observeByManga(mangaId)
+                .combine(getChaptersUseCase.isIndexing) { pageDto, isIndexing ->
+                    pageDto to isIndexing
+                }
+                .collect { (pageDto, isIndexing) ->
+                    val chapter = pageDto.items.find { it.id == chapterId }
+                    if (chapter != null) {
+                        openChapter(mangaId, chapter, initialPage)
+                        this@launch.coroutineContext.cancelChildren() // Para a coleta
+                        return@collect
+                    }
+                    
+                    if (!isIndexing && pageDto.items.isNotEmpty()) {
+                        // Se terminou de indexar e não achou
+                        _uiEvents.send(ChapterError.UnexpectedError(Throwable("Capítulo não encontrado localmente")))
+                        _state.update { it.copy(isLoading = false) }
+                        this@launch.coroutineContext.cancelChildren()
+                        return@collect
+                    }
+                }
         }
     }
 
@@ -107,12 +142,8 @@ class ReaderViewModel @Inject constructor(
     fun onCurrentPageChanged(mangaId: Long, chapterId: Long, index: Int) {
         markPageAsSeen(mangaId, chapterId, index)
 
-        if (_state.value.currentPage == index) return
-        
         _state.update { state ->
-            // Cleanup: Mantém 7 páginas (3 acima, 3 abaixo + atual) para evitar flicker
-            val newPages = state.pages.filterKeys { it in (index - 3)..(index + 3) }
-            state.copy(currentPage = index, pages = newPages)
+            state.copy(currentPage = index)
         }
 
         val pageCount = _state.value.pageCount
@@ -168,6 +199,7 @@ class ReaderViewModel @Inject constructor(
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
             _uiEvents.send(element = error)
+            _state.update { it.copy(isLoading = false) }
         }
     }
 }

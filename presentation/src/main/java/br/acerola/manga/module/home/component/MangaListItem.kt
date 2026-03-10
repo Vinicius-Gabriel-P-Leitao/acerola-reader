@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ fun MangaListItem(
     manga: MangaDto,
     subtitle: String? = null,
     isCompleted: Boolean = false,
+    onPlayClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -109,6 +112,25 @@ fun MangaListItem(
                         )
                     }
                 }
+            }
+        }
+
+        if (onPlayClick != null) {
+            androidx.compose.material3.IconButton(
+                onClick = onPlayClick,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 8.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.PlayArrow,
+                    contentDescription = "Continuar leitura",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
