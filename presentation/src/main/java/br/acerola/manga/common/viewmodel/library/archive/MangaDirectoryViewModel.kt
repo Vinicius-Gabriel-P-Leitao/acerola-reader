@@ -40,7 +40,6 @@ import javax.inject.Inject
 class MangaDirectoryViewModel @Inject constructor(
     private val manager: FileSystemAccessManager,
     @param:DirectoryCase private val rescanManga: RescanMangaUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
     private val workManager: WorkManager

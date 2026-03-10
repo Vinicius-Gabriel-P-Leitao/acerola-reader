@@ -1,0 +1,59 @@
+Configuration on demand is an incubating feature.
+> Task :data:preBuild UP-TO-DATE
+> Task :infrastructure:preBuild UP-TO-DATE
+> Task :data:preDebugBuild UP-TO-DATE
+> Task :infrastructure:preDebugBuild UP-TO-DATE
+> Task :infrastructure:writeDebugAarMetadata UP-TO-DATE
+> Task :data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :infrastructure:generateDebugResValues UP-TO-DATE
+> Task :infrastructure:generateDebugResources UP-TO-DATE
+> Task :infrastructure:packageDebugResources UP-TO-DATE
+> Task :infrastructure:processDebugNavigationResources UP-TO-DATE
+> Task :infrastructure:parseDebugLocalResources UP-TO-DATE
+> Task :infrastructure:generateDebugRFile UP-TO-DATE
+> Task :infrastructure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :infrastructure:generateDebugBuildConfig UP-TO-DATE
+> Task :infrastructure:kspDebugKotlin UP-TO-DATE
+> Task :data:mergeDebugNativeLibs NO-SOURCE
+> Task :data:stripDebugDebugSymbols NO-SOURCE
+> Task :data:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :data:generateDebugBuildConfig UP-TO-DATE
+> Task :data:generateDebugResValues UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:copyDebugJniLibsProjectAndLocalJars
+> Task :data:checkDebugAarMetadata
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:extractDeepLinksForAarDebug
+> Task :data:mergeDebugShaders UP-TO-DATE
+> Task :data:compileDebugShaders NO-SOURCE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :data:mergeDebugAssets UP-TO-DATE
+> Task :data:prepareDebugArtProfile
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :data:prepareLintJarForPublish
+> Task :infrastructure:javaPreCompileDebug UP-TO-DATE
+
+> Task :infrastructure:compileDebugKotlin FAILED
+e: file:///C:/Users/vinicius/Desktop/acerola/infrastructure/src/main/java/br/acerola/manga/util/NotificationHelper.kt:24:38 Unresolved reference 'R'.
+e: file:///C:/Users/vinicius/Desktop/acerola/infrastructure/src/main/java/br/acerola/manga/util/NotificationHelper.kt:25:49 Unresolved reference 'R'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':infrastructure:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2s
+29 actionable tasks: 6 executed, 23 up-to-date

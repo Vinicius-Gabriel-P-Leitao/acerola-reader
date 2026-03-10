@@ -6,22 +6,21 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import androidx.work.workDataOf
+import br.acerola.manga.data.R
 import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import br.acerola.manga.util.NotificationHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.coroutineScope
 
 @HiltWorker
 class MetadataSyncWorker @AssistedInject constructor(
-    @Assisted private val appContext: Context,
+    @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
     private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase
-) : CoroutineWorker(appContext, workerParams) {
+) : CoroutineWorker(context, workerParams) {
 
-    private val notificationHelper = NotificationHelper(appContext)
+    private val notificationHelper = NotificationHelper(context)
 
     companion object {
         const val KEY_SYNC_SOURCE = "sync_source"
@@ -31,19 +30,19 @@ class MetadataSyncWorker @AssistedInject constructor(
         const val SOURCE_COMICINFO = "comicinfo"
     }
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = coroutineScope {
         val source = inputData.getString(KEY_SYNC_SOURCE) ?: SOURCE_MANGADEX
         val directoryId = inputData.getLong(KEY_DIRECTORY_ID, -1L)
 
-        if (directoryId == -1L) return Result.failure()
+        if (directoryId == -1L) return@coroutineScope Result.failure()
 
         val title = when (source) {
-            SOURCE_MANGADEX -> "Buscando Metadados (MangaDex)"
-            SOURCE_COMICINFO -> "Lendo ComicInfo.xml"
-            else -> "Sincronizando Metadados..."
+            SOURCE_MANGADEX -> context.getString(R.string.sync_metadata_title_mangadex)
+            SOURCE_COMICINFO -> context.getString(R.string.sync_metadata_title_comicinfo)
+            else -> context.getString(R.string.sync_metadata_title_generic)
         }
 
-        val builder = notificationHelper.createBaseNotification(title, "Buscando informações para sua biblioteca...")
+        val builder = notificationHelper.createBaseNotification(title, context.getString(R.string.sync_metadata_description_fetching))
         setForeground(
             ForegroundInfo(
                 NotificationHelper.SYNC_NOTIFICATION_ID,
@@ -55,7 +54,7 @@ class MetadataSyncWorker @AssistedInject constructor(
         // Note: SyncMangaMetadataUseCase doesn't seem to have a progress flow directly yet,
         // but we can at least show it's running.
 
-        return try {
+        try {
             val result = when (source) {
                 SOURCE_MANGADEX -> syncMangaMetadataUseCase.syncFromMangadex(directoryId)
                 SOURCE_COMICINFO -> syncMangaMetadataUseCase.syncFromComicInfo(directoryId)
@@ -63,17 +62,26 @@ class MetadataSyncWorker @AssistedInject constructor(
             }
 
             result.fold(
-                ifLeft = { 
-                    notificationHelper.showFinishedNotification("Erro nos Metadados", it.uiMessage.asString(appContext))
-                    Result.failure() 
+                ifLeft = {
+                    notificationHelper.showFinishedNotification(
+                        context.getString(R.string.sync_metadata_error_title),
+                        it.uiMessage.asString(context)
+                    )
+                    Result.failure()
                 },
-                ifRight = { 
-                    notificationHelper.showFinishedNotification("Metadados Atualizados", "Informações baixadas com sucesso.")
-                    Result.success() 
+                ifRight = {
+                    notificationHelper.showFinishedNotification(
+                        context.getString(R.string.sync_metadata_success_title),
+                        context.getString(R.string.sync_metadata_success_message)
+                    )
+                    Result.success()
                 }
             )
         } catch (e: Exception) {
-            notificationHelper.showFinishedNotification("Erro Fatal", e.message ?: "Erro ao buscar metadados.")
+            notificationHelper.showFinishedNotification(
+                context.getString(R.string.sync_library_fatal_error_title),
+                e.message ?: context.getString(R.string.sync_metadata_fetching_error)
+            )
             Result.failure()
         }
     }

@@ -5,11 +5,38 @@
     <string name="description_http_error_rate_limit">Muitas requisições. Tente novamente em breve.</string>
     <string name="description_http_error_generic">Erro de comunicação com o MangaDex.</string>
     <string name="title_remote_info_request_error">Erro na Busca de Metadados</string>
-    <string name="description_remote_info_request_error">Ocorreu um erro ao buscar os metadados no MangaDex.</string>
+    <string name="description_remote_info_request_error">Ocorreu um erro ao buscar os metadados no
+        MangaDex.</string>
     <string name="title_download_error">Erro ao sincronizar as imagens de cover</string>
-    <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão sendo sincronizados.</string>
-    <string name="title_genre_dao_insert_error">Erro ao inserir um gênero de mangá.</string>
-    <string name="description_genre_dao_insert_error">Ocorreu um erro ao inserir um gênero de mangá no banco de dados.</string>
-    <string name="title_remote_info_null_error">Sem metadados para os capitulos no mangadex.</string>\
-    <string name="description_remote_info_null_error">Não foi possivel encontrar métadados para nenhum dos capitulos, dentro do servidor do mangadex</string>
+    <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão
+        sendo sincronizados.</string>
+    <string name="title_genre_dao_insert_error">Erro ao inserir um
+        gênero de mangá.</string>
+    <string name="description_genre_dao_insert_error">Ocorreu um erro ao
+        inserir um gênero de mangá no banco de dados.</string>
+    <string name="title_remote_info_null_error">Sem metadados para os capitulos no mangadex.</string>
+    <string name="description_remote_info_null_error">Não foi possivel encontrar métadados para nenhum
+        dos capitulos, dentro do servidor do mangadex</string>
+
+    <!-- Library Sync Worker -->
+    <string name="sync_library_title_incremental">Sincronizando Biblioteca</string>
+    <string name="sync_library_title_refresh">Atualizando Biblioteca</string>
+    <string name="sync_library_title_rebuild">Reconstruindo Biblioteca</string>
+    <string name="sync_library_title_generic">Sincronizando...</string>
+    <string name="sync_library_description_scanning">Aguarde enquanto escaneamos seus arquivos...</string>
+    <string name="sync_library_error_title">Erro na Sincronização</string>
+    <string name="sync_library_success_title">Sincronização Concluída</string>
+    <string name="sync_library_success_message">Sua biblioteca foi atualizada com sucesso.</string>
+    <string name="sync_library_fatal_error_title">Erro Fatal</string>
+    <string name="sync_library_unexpected_error">Ocorreu um erro inesperado.</string>
+
+    <!-- Metadata Sync Worker -->
+    <string name="sync_metadata_title_mangadex">Buscando Metadados (MangaDex)</string>
+    <string name="sync_metadata_title_comicinfo">Lendo ComicInfo.xml</string>
+    <string name="sync_metadata_title_generic">Sincronizando Metadados...</string>
+    <string name="sync_metadata_description_fetching">Buscando informações para sua biblioteca...</string>
+    <string name="sync_metadata_error_title">Erro nos Metadados</string>
+    <string name="sync_metadata_success_title">Metadados Atualizados</string>
+    <string name="sync_metadata_success_message">Informações baixadas com sucesso.</string>
+    <string name="sync_metadata_fetching_error">Erro ao buscar metadados.</string>
 </resources>

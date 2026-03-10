@@ -2,7 +2,6 @@ package br.acerola.manga.service.background
 
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.net.Uri
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -12,6 +11,7 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.util.NotificationHelper
+import br.acerola.manga.data.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
@@ -19,15 +19,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
 
-// TODO: String.xml
 @HiltWorker
 class LibrarySyncWorker @AssistedInject constructor(
-    @Assisted private val appContext: Context,
+    @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
     @param:DirectoryFsOps private val repository: MangaManagementRepository<MangaDirectoryDto>
-) : CoroutineWorker(appContext, workerParams) {
+) : CoroutineWorker(context, workerParams) {
 
-    private val notificationHelper = NotificationHelper(appContext)
+    private val notificationHelper = NotificationHelper(context)
 
     companion object {
         const val KEY_SYNC_TYPE = "sync_type"
@@ -44,13 +43,13 @@ class LibrarySyncWorker @AssistedInject constructor(
         val baseUri = baseUriString?.toUri()
 
         val title = when (syncType) {
-            SYNC_TYPE_INCREMENTAL -> "Sincronizando Biblioteca"
-            SYNC_TYPE_REFRESH -> "Atualizando Biblioteca"
-            SYNC_TYPE_REBUILD -> "Reconstruindo Biblioteca"
-            else -> "Sincronizando..."
+            SYNC_TYPE_INCREMENTAL -> context.getString(R.string.sync_library_title_incremental)
+            SYNC_TYPE_REFRESH -> context.getString(R.string.sync_library_title_refresh)
+            SYNC_TYPE_REBUILD -> context.getString(R.string.sync_library_title_rebuild)
+            else -> context.getString(R.string.sync_library_title_generic)
         }
 
-        val builder = notificationHelper.createBaseNotification(title, "Aguarde enquanto escaneamos seus arquivos...")
+        val builder = notificationHelper.createBaseNotification(title, context.getString(R.string.sync_library_description_scanning))
         setForeground(
             ForegroundInfo(
                 NotificationHelper.SYNC_NOTIFICATION_ID,
@@ -75,20 +74,29 @@ class LibrarySyncWorker @AssistedInject constructor(
             }
 
             progressJob.cancel()
-            
+
             result.fold(
-                ifLeft = { 
-                    notificationHelper.showFinishedNotification("Erro na Sincronização", it.uiMessage.asString(appContext))
-                    Result.failure() 
+                ifLeft = {
+                    notificationHelper.showFinishedNotification(
+                        context.getString(R.string.sync_library_error_title),
+                        it.uiMessage.asString(context)
+                    )
+                    Result.failure()
                 },
-                ifRight = { 
-                    notificationHelper.showFinishedNotification("Sincronização Concluída", "Sua biblioteca foi atualizada com sucesso.")
-                    Result.success() 
+                ifRight = {
+                    notificationHelper.showFinishedNotification(
+                        context.getString(R.string.sync_library_success_title),
+                        context.getString(R.string.sync_library_success_message)
+                    )
+                    Result.success()
                 }
             )
         } catch (e: Exception) {
             progressJob.cancel()
-            notificationHelper.showFinishedNotification("Erro Fatal", e.message ?: "Ocorreu um erro inesperado.")
+            notificationHelper.showFinishedNotification(
+                context.getString(R.string.sync_library_fatal_error_title),
+                e.message ?: context.getString(R.string.sync_library_unexpected_error)
+            )
             Result.failure()
         }
     }

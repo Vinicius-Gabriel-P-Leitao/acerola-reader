@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import br.acerola.manga.infrastructure.R
 
 class NotificationHelper(private val context: Context) {
 
@@ -21,9 +22,8 @@ class NotificationHelper(private val context: Context) {
     }
 
     private fun createNotificationChannel() {
-        // TODO: String.xml
-        val name = "Sincronização de Biblioteca"
-        val descriptionText = "Notificações de progresso de sincronização de mangás"
+        val name = context.getString(R.string.sync_notification_channel_name)
+        val descriptionText = context.getString(R.string.sync_notification_channel_description)
         val importance = NotificationManager.IMPORTANCE_LOW
         val channel = NotificationChannel(SYNC_CHANNEL_ID, name, importance).apply {
             description = descriptionText
