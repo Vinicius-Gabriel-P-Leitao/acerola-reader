@@ -32,6 +32,7 @@ class ConfigScreenTest {
         every { mangaDirVM.progress } returns MutableStateFlow(-1)
         every { metadataSettingsVM.generateComicInfo } returns MutableStateFlow(true)
         every { filePrefsVM.selectedExtension } returns MutableStateFlow(br.acerola.manga.config.preference.FileExtension.CBZ)
+        every { fsAccessVM.folderUri } returns null
 
         composeTestRule.setContent {
             AcerolaTheme {

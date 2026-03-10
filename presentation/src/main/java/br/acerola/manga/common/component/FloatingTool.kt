@@ -15,8 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,15 +80,40 @@ fun FloatingTool(
                             targetOffsetX = { it / 2 }
                         ) + fadeOut(animationSpec = tween(delayMillis = exitDelay))
                     ) {
-                        FloatingActionButton(
-                            containerColor = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(size = 48.dp),
-                            onClick = {
-                                item.onClick()
-                                expanded = false
-                            },
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(end = 4.dp)
                         ) {
-                            item.icon()
+                            item.label?.let { label ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                                    tonalElevation = 2.dp,
+                                    modifier = Modifier.clickable {
+                                        item.onClick()
+                                        expanded = false
+                                    }
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            FloatingActionButton(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(size = 48.dp),
+                                onClick = {
+                                    item.onClick()
+                                    expanded = false
+                                },
+                            ) {
+                                item.icon()
+                            }
                         }
                     }
                 }

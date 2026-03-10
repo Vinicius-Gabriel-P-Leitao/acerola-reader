@@ -65,7 +65,15 @@ class ArchiveMapperTest {
 
     @Test
     fun `ChapterArchive toDto deve mapear campos corretamente`() {
-        val entity = ChapterArchive(1, "10", "path", "10", "hash", 100)
+        val entity = ChapterArchive(
+            id = 1,
+            chapter = "10",
+            path = "path",
+            chapterSort = "10",
+            checksum = "hash",
+            fastHash = "hash",
+            folderPathFk = 1
+        )
         
         val dto = entity.toDto()
 
@@ -97,8 +105,24 @@ class ArchiveMapperTest {
     @Test
     fun `List ChapterArchive toPageDto deve criar objeto de paginação correto`() {
         val list = listOf(
-            ChapterArchive(1, "1", "p1", "1", null, 10),
-            ChapterArchive(2, "2", "p2", "2", null, 10)
+            ChapterArchive(
+                id = 1,
+                chapter = "1",
+                path = "p1",
+                chapterSort = "1",
+                checksum = null,
+                fastHash = "10",
+                folderPathFk = 1
+            ),
+            ChapterArchive(
+                id = 2,
+                chapter = "2",
+                path = "p2",
+                chapterSort = "2",
+                checksum = null,
+                fastHash = "10",
+                folderPathFk = 1
+            )
         )
 
         val pageDto = list.toPageDto(pageSize = 10, total = 100, page = 1)

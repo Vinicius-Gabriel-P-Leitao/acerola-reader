@@ -9,14 +9,18 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+import android.provider.DocumentsContract
 import br.acerola.manga.repository.port.ChapterManagementRepository
+import br.acerola.manga.util.ContentQueryHelper
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
@@ -54,15 +58,27 @@ class MangaDirectoryRepositoryTest {
 
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)
+        mockkStatic(DocumentsContract::class)
+        mockkObject(ContentQueryHelper)
+        
+        every { context.contentResolver } returns mockk(relaxed = true)
+        every { DocumentsContract.getTreeDocumentId(any()) } returns "root_id"
+        every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockk(relaxed = true)
+        every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockk(relaxed = true)
         
         // Mock padrão para evitar 'no answer found'
         every { directoryDao.getAllMangaDirectory() } returns flowOf(emptyList())
+        coEvery { mangaDirectoryOps.refreshMangaChapters(any(), any()) } returns Either.Right(Unit)
+        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns emptyList()
+        every { ContentQueryHelper.listFiles(any(), any()) } returns emptyList()
     }
 
     @After
     fun tearDown() {
         unmockkStatic(Uri::class)
         unmockkStatic(DocumentFile::class)
+        unmockkStatic(DocumentsContract::class)
+        unmockkObject(ContentQueryHelper)
         Dispatchers.resetMain()
     }
 
@@ -76,7 +92,7 @@ class MangaDirectoryRepositoryTest {
 
         coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns existingManga
         every { Uri.parse(any()) } returns uriMock
-        every { DocumentFile.fromTreeUri(context, any()) } returns folderDocMock
+        every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
 
         every { folderDocMock.lastModified() } returns 90000000L
         every { folderDocMock.name } returns "Manga Folder"
@@ -127,7 +143,21 @@ class MangaDirectoryRepositoryTest {
         every { newDoc.findFile(any()) } returns null
 
         every { DocumentFile.fromTreeUri(context, rootUri) } returns rootDoc
-        every { rootDoc.listFiles() } returns arrayOf(newDoc)
+        
+        // Mock do ContentQueryHelper para o buildLibrary
+        val newFolderMetadata = br.acerola.manga.util.FastFileMetadata(
+            id = "new_id",
+            name = "New",
+            size = 0L,
+            lastModified = 100L,
+            mimeType = DocumentsContract.Document.MIME_TYPE_DIR
+        )
+        every { ContentQueryHelper.listFiles(context, rootUri) } returns listOf(newFolderMetadata)
+        every { ContentQueryHelper.listFiles(context, rootUri, "new_id") } returns emptyList()
+        
+        every { DocumentsContract.buildDocumentUriUsingTree(rootUri, "new_id") } returns newUri
+        every { DocumentFile.fromSingleUri(context, newUri) } returns newDoc
+        
         every { directoryDao.getAllMangaDirectory() } returns flowOf(listOf(existingManga))
         coEvery { directoryDao.delete(existingManga) } returns Unit
         coEvery { directoryDao.insert(any()) } returns 1L
