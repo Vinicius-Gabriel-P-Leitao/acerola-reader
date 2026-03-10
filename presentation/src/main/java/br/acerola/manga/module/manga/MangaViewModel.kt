@@ -144,9 +144,19 @@ class MangaViewModel @Inject constructor(
         if (id == null) flowOf(null)
         else historyRepository.getHistoryByMangaId(id)
     }.stateIn(
-        initialValue = null,
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val readChapters: StateFlow<List<Long>> = _selectedDirectoryId.flatMapLatest { id ->
+        if (id == null) flowOf(emptyList())
+        else historyRepository.getReadChaptersByMangaId(id)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)

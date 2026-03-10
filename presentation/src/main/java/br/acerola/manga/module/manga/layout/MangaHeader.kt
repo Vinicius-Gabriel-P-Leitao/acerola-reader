@@ -197,14 +197,18 @@ fun MangaHeader(
 
             // TODO: Inserir o botão de iniciar a leitura do primeiro mangá ou o ultimo lido vai ter duas labels INICIAR |
             //  CONTINUAR com icone diferente e teremos histórico de capitulo.
-            val buttonText = if (history != null) "Continuar" else "Iniciar"
+            val buttonText = when {
+                history?.isCompleted == true -> "Reler"
+                history != null -> "Continuar"
+                else -> "Iniciar"
+            }
             
             SmartButton(
                 type = ButtonType.TEXT,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     if (history != null) {
-                        onContinueClick(history.chapterId, history.lastPage)
+                        onContinueClick(history.chapterArchiveId, history.lastPage)
                     } else {
                         // Se não houver histórico, inicia do primeiro capítulo (id -1 para sinalizar primeiro)
                         onContinueClick(-1L, 0)

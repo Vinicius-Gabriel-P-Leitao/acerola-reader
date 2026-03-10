@@ -36,6 +36,7 @@ import br.acerola.manga.presentation.R
 fun ChapterItem(
     chapterRemoteInfoDto: ChapterFeedDto?,
     chapterFileDto: ChapterFileDto,
+    isRead: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -60,7 +61,7 @@ fun ChapterItem(
             Column(modifier = Modifier.weight(weight = 1f)) {
                 Text(
                     text = mainTitle,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 )
 

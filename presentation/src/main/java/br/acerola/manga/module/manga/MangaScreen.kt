@@ -91,6 +91,7 @@ fun MangaScreen(
     }
 
     val history by mangaViewModel.history.collectAsState()
+    val readChapters by mangaViewModel.readChapters.collectAsState()
 
     val handlePageChange = remember(key1 = mangaViewModel, key2 = listState) {
         { nextPage: Int ->
@@ -169,6 +170,7 @@ fun MangaScreen(
                                 currentPage = currentPage,
                                 onPageChange = handlePageChange,
                                 totalPages = totalChaptersPerPage,
+                                readChapters = readChapters,
                                 onChapterClick = { chapter, remote -> handleChapterClick(chapter, remote, 0) },
                             )
                         }

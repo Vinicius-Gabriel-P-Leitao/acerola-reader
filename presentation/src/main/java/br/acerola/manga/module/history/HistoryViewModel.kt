@@ -40,8 +40,8 @@ class HistoryViewModel @Inject constructor(
                 mangadexObserve()
             ) { directories, remoteInfos ->
                 historyList.mapNotNull { history ->
-                    val directory = directories.find { it.id == history.mangaId } ?: return@mapNotNull null
-                    val remote = remoteInfos.find { it.mangaDirectoryFk == history.mangaId }
+                    val directory = directories.find { it.id == history.mangaDirectoryId } ?: return@mapNotNull null
+                    val remote = remoteInfos.find { it.mangaDirectoryFk == history.mangaDirectoryId }
                     HistoryItemUiState(
                         manga = MangaDto(directory = directory, remoteInfo = remote),
                         history = history

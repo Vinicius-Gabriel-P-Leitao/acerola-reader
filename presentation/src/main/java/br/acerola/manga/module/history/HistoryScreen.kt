@@ -70,6 +70,7 @@ fun HistoryScreen(
                         MangaListItem(
                             manga = item.manga,
                             subtitle = progressInfo,
+                            isCompleted = item.history.isCompleted,
                             onClick = {
                                 val intent = Intent(context, MangaActivity::class.java).apply {
                                     putExtra(MangaActivity.ChapterExtra.MANGA, item.manga)

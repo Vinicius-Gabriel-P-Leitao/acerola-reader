@@ -1,5 +1,6 @@
 package br.acerola.manga.module.home.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,10 +14,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.SmartCard
@@ -31,6 +34,7 @@ import coil.size.SizeResolver
 fun MangaListItem(
     manga: MangaDto,
     subtitle: String? = null,
+    isCompleted: Boolean = false,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -80,13 +84,31 @@ fun MangaListItem(
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            if (isCompleted || subtitle != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isCompleted) {
+                        Text(
+                            text = "Lido",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shape = MaterialTheme.shapes.extraSmall
+                                )
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+                    if (subtitle != null) {
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }

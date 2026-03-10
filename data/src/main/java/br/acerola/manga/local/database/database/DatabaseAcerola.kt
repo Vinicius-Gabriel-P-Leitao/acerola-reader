@@ -22,6 +22,7 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Author
 import br.acerola.manga.local.database.entity.metadata.relationship.Cover
 import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 import br.acerola.manga.local.database.entity.history.ReadingHistory
+import br.acerola.manga.local.database.entity.history.ChapterRead
 
 @Database(
     entities = [
@@ -33,10 +34,11 @@ import br.acerola.manga.local.database.entity.history.ReadingHistory
         Author::class,
         Genre::class,
         Cover::class,
-        ReadingHistory::class
+        ReadingHistory::class,
+        ChapterRead::class
     ],
     exportSchema = false,
-    version = 3,
+    version = 6,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class DatabaseAcerola : RoomDatabase() {

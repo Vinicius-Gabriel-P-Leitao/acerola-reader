@@ -7,7 +7,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.viewmodel.compose.viewModel
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.layout.ReaderContent
@@ -23,14 +22,14 @@ fun ReaderScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    val pagerState = rememberPagerState(pageCount = { state.pageCount })
-    val listState = rememberLazyListState()
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { state.pageCount })
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialPage)
 
     LaunchedEffect(chapter) {
         chapter?.let { viewModel.openChapter(mangaId, it, initialPage) }
     }
 
-    LaunchedEffect(key1 = pagerState, key2 = listState, key3 = state.readingMode) {
+    LaunchedEffect(pagerState, listState, state.readingMode, mangaId, chapter) {
         snapshotFlow {
             if (state.readingMode == ReadingMode.WEBTOON) {
                 listState.firstVisibleItemIndex
@@ -61,7 +60,9 @@ fun ReaderScreen(
         pageCount = state.pageCount,
         readingMode = state.readingMode,
         onUiToggle = { viewModel.toggleUiVisibility() },
-        onPageRequest = { index -> viewModel.onPageVisible(index) },
+        onPageRequest = { index ->
+            chapter?.let { viewModel.onPageVisible(mangaId, it.id, index) }
+        },
         onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
         onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
         onZoomChange = {

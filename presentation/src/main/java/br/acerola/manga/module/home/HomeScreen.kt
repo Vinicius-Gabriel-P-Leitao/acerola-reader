@@ -107,11 +107,6 @@ fun HomeScreen(
                 )
             }, items = listOf(
                 FloatingToolItem(
-                    label = if (layout == HomeLayoutType.GRID) stringResource(
-                        id = R.string.description_text_home_layout_list_label
-                    ) else stringResource(
-                        id = R.string.description_text_home_layout_grid_label
-                    ),
                     onClick = {
                         homeViewModel.updateHomeLayout(
                             layout = when (layout) {
@@ -131,13 +126,11 @@ fun HomeScreen(
                 // TODO: Criar filtragem por categoria.
                 FloatingToolItem(
                     icon = {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = stringResource(id = R.string.description_icon_home_filter)
-                    )
-                },
-                    label = stringResource(id = R.string.description_text_home_filter_label),
-                    onClick = { println("Filtrar") })
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                        )
+                    }, onClick = { println("Filtrar") })
             )
         )
 

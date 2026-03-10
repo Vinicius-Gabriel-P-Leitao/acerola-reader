@@ -7,18 +7,20 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 @Immutable
 data class ReadingHistoryDto(
-    val mangaId: Long,
-    val chapterId: Long,
+    val mangaDirectoryId: Long,
+    val chapterArchiveId: Long,
     val lastPage: Int,
+    val isCompleted: Boolean,
     val updatedAt: Long
 ) : Parcelable
 
 @Parcelize
 @Immutable
 data class ReadingHistoryWithChapterDto(
-    val mangaId: Long,
-    val chapterId: Long,
+    val mangaDirectoryId: Long,
+    val chapterArchiveId: Long,
     val lastPage: Int,
     val updatedAt: Long,
-    val chapterName: String?
+    val chapterName: String?,
+    val isCompleted: Boolean
 ) : Parcelable

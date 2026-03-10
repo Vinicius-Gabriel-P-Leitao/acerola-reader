@@ -8,7 +8,8 @@ import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 
 @Entity(
-    tableName = "reading_history",
+    tableName = "chapter_read",
+    primaryKeys = ["manga_directory_id", "chapter_archive_id"],
     foreignKeys = [
         ForeignKey(
             entity = MangaDirectory::class,
@@ -24,20 +25,13 @@ import br.acerola.manga.local.database.entity.archive.MangaDirectory
         )
     ]
 )
-data class ReadingHistory(
-    @PrimaryKey
+data class ChapterRead(
     @ColumnInfo(name = "manga_directory_id")
     val mangaDirectoryId: Long,
-
+    
     @ColumnInfo(name = "chapter_archive_id")
     val chapterArchiveId: Long,
-
-    @ColumnInfo(name = "last_page")
-    val lastPage: Int,
-
-    @ColumnInfo(name = "is_completed")
-    val isCompleted: Boolean = false,
-
-    @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis()
+    
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis()
 )

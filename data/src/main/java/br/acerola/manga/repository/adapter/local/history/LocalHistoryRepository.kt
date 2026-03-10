@@ -3,6 +3,7 @@ package br.acerola.manga.repository.adapter.local.history
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.manga.local.database.dao.history.ReadingHistoryDao
+import br.acerola.manga.local.database.entity.history.ChapterRead
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toEntity
 import br.acerola.manga.repository.port.HistoryManagementRepository
@@ -28,8 +29,20 @@ class LocalHistoryRepository @Inject constructor(
         return readingHistoryDao.getAllRecentWithChapterName().map { list -> list.map { it.toDto() } }
     }
 
+    override fun getReadChaptersByMangaId(mangaId: Long): Flow<List<Long>> {
+        return readingHistoryDao.getReadChaptersByMangaId(mangaId)
+    }
+
     override suspend fun upsertHistory(history: ReadingHistoryDto) {
         readingHistoryDao.upsert(history.toEntity())
+    }
+
+    override suspend fun markChapterAsRead(mangaId: Long, chapterId: Long) {
+        readingHistoryDao.markChapterAsRead(ChapterRead(mangaDirectoryId = mangaId, chapterArchiveId = chapterId))
+    }
+
+    override suspend fun unmarkChapterAsRead(chapterId: Long) {
+        readingHistoryDao.unmarkChapterAsRead(chapterId)
     }
 
     override suspend fun deleteHistory(mangaId: Long) {

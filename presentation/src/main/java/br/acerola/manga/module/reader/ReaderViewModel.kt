@@ -7,8 +7,8 @@ import arrow.core.Either
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.error.UserMessage
 import br.acerola.manga.dto.history.ReadingHistoryDto
+import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.reader.state.ReaderUiState
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.service.reader.PageRepository
@@ -38,15 +38,28 @@ class ReaderViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
+    private val _historyUpdates = Channel<Triple<Long, Long, Int>>(Channel.BUFFERED)
+    private val seenPages = mutableSetOf<Int>()
+    private val markedAsReadInSession = mutableSetOf<Long>()
+
     init {
         viewModelScope.launch {
             ReadingModePreference.readingModeFlow(context).collect { mode ->
                 _state.update { it.copy(readingMode = mode) }
             }
         }
+        viewModelScope.launch {
+            _historyUpdates.receiveAsFlow()
+                .collect { (mId, cId, idx) ->
+                    persistHistory(mId, cId, idx)
+                }
+        }
     }
 
     fun openChapter(mangaId: Long, chapter: ChapterFileDto, initialPage: Int = 0) {
+        _state.update { it.copy(currentPage = initialPage, pages = emptyMap()) }
+        seenPages.clear()
+        // Não limpamos markedAsReadInSession para evitar spam se o usuário alternar capítulos
         viewModelScope.launch {
             repository.openChapter(chapter)
                 .map {
@@ -62,17 +75,38 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    fun onPageVisible(index: Int) {
-        if (state.value.pages.containsKey(index)) return
+    fun onPageVisible(mangaId: Long, chapterId: Long, index: Int) {
+        if (state.value.pages.containsKey(index)) {
+            markPageAsSeen(mangaId, chapterId, index)
+            return
+        }
 
         viewModelScope.launch {
             repository.loadPage(index).onRight { bitmap ->
+                markPageAsSeen(mangaId, chapterId, index)
                 _state.update { it.copy(pages = it.pages + (index to bitmap)) }
             }.handleResult()
         }
     }
 
+    private fun markPageAsSeen(mangaId: Long, chapterId: Long, index: Int) {
+        if (seenPages.add(index)) {
+            // Se uma nova página foi vista, verificamos se o threshold de 70% foi atingido
+            val pageCount = _state.value.pageCount
+            val progress = if (pageCount > 0) seenPages.size.toDouble() / pageCount else 0.0
+
+            if (progress >= 0.7 && !markedAsReadInSession.contains(chapterId)) {
+                viewModelScope.launch {
+                    historyRepository.markChapterAsRead(mangaId, chapterId)
+                    markedAsReadInSession.add(chapterId)
+                }
+            }
+        }
+    }
+
     fun onCurrentPageChanged(mangaId: Long, chapterId: Long, index: Int) {
+        markPageAsSeen(mangaId, chapterId, index)
+
         if (_state.value.currentPage == index) return
         
         _state.update { state ->
@@ -81,18 +115,39 @@ class ReaderViewModel @Inject constructor(
             state.copy(currentPage = index, pages = newPages)
         }
 
-        viewModelScope.launch {
-            historyRepository.upsertHistory(
-                ReadingHistoryDto(
-                    mangaId = mangaId,
-                    chapterId = chapterId,
-                    lastPage = index,
-                    updatedAt = System.currentTimeMillis()
-                )
-            )
+        val pageCount = _state.value.pageCount
+        val isCompletion = pageCount > 0 && index >= pageCount - 1
+
+        if (isCompletion) {
+            // Salva imediatamente se for conclusão
+            viewModelScope.launch {
+                persistHistory(mangaId, chapterId, index)
+            }
+        } else {
+            _historyUpdates.trySend(Triple(mangaId, chapterId, index))
         }
 
         repository.prefetchWindow(center = index, total = state.value.pageCount)
+    }
+
+    private suspend fun persistHistory(mangaDirectoryId: Long, chapterArchiveId: Long, index: Int) {
+        historyRepository.upsertHistory(
+            ReadingHistoryDto(
+                mangaDirectoryId = mangaDirectoryId,
+                chapterArchiveId = chapterArchiveId,
+                lastPage = index,
+                isCompleted = false,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+
+        // A marcação como lido já é tratada pelo markPageAsSeen se atingir 70%
+        // Mas se atingiu a última página, garantimos aqui também
+        val pageCount = _state.value.pageCount
+        if (pageCount > 0 && index >= pageCount - 1 && !markedAsReadInSession.contains(chapterArchiveId)) {
+            historyRepository.markChapterAsRead(mangaDirectoryId, chapterArchiveId)
+            markedAsReadInSession.add(chapterArchiveId)
+        }
     }
 
     fun onSliderChanged(index: Int) {
