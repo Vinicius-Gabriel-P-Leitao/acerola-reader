@@ -59,21 +59,24 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun onPageVisible(index: Int) {
-        viewModelScope.launch {
-            repository.loadPage(index).map { bitmap ->
-                    _state.update { 
-                        // Mantém apenas uma janela de páginas no estado da UI para evitar overhead
-                        val newPages = it.pages.filterKeys { key -> key in (index - 2)..(index + 2) }
-                        it.copy(pages = newPages + (index to bitmap))
-                    }
-                }.handleResult()
+        if (state.value.pages.containsKey(index)) return
 
-            repository.prefetchWindow(center = index)
+        viewModelScope.launch {
+            repository.loadPage(index).onRight { bitmap ->
+                _state.update { it.copy(pages = it.pages + (index to bitmap)) }
+            }.handleResult()
         }
     }
 
     fun onCurrentPageChanged(index: Int) {
-        _state.update { it.copy(currentPage = index) }
+        if (_state.value.currentPage == index) return
+        
+        _state.update { state ->
+            // Cleanup: Mantém 7 páginas (3 acima, 3 abaixo + atual) para evitar flicker
+            val newPages = state.pages.filterKeys { it in (index - 3)..(index + 3) }
+            state.copy(currentPage = index, pages = newPages)
+        }
+        repository.prefetchWindow(center = index, total = state.value.pageCount)
     }
 
     fun onSliderChanged(index: Int) {
