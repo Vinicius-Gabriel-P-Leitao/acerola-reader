@@ -67,6 +67,9 @@ dependencies {
     // --- DI ---
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     // --- Database (Room) ---
     implementation(libs.bundles.room)

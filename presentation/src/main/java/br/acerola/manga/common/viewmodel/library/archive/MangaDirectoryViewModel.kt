@@ -3,12 +3,17 @@ package br.acerola.manga.common.viewmodel.library.archive
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.service.background.LibrarySyncWorker
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
@@ -28,6 +33,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,9 +43,11 @@ class MangaDirectoryViewModel @Inject constructor(
     @param:DirectoryCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
-    val progress: StateFlow<Int> = syncLibraryUseCase.progress
+    private val _progress = MutableStateFlow<Int>(value = -1)
+    val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -72,23 +80,11 @@ class MangaDirectoryViewModel @Inject constructor(
     }
 
     fun syncLibrary() {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            val uri = getFolderUri()
-            if (uri != null) syncLibraryUseCase.sync(baseUri = uri).handleResult()
-
-            _isIndexing.value = false
-        }
+        enqueueSync(LibrarySyncWorker.SYNC_TYPE_INCREMENTAL)
     }
 
     fun rescanMangas() {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            val uri = getFolderUri()
-            if (uri != null) syncLibraryUseCase.rescan(baseUri = uri).handleResult()
-
-            _isIndexing.value = false
-        }
+        enqueueSync(LibrarySyncWorker.SYNC_TYPE_REFRESH)
     }
 
     fun rescanMangaByManga(mangaId: Long) {
@@ -99,14 +95,42 @@ class MangaDirectoryViewModel @Inject constructor(
         }
     }
 
-    // TODO: Quando isso aqui inciar, permitir o maldito user sair da tela e ficar uma notificação.
     fun deepScanLibrary() {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            val uri = getFolderUri()
-            if (uri != null) syncLibraryUseCase.deepRescan(baseUri = uri).handleResult()
+        enqueueSync(LibrarySyncWorker.SYNC_TYPE_REBUILD)
+    }
 
-            _isIndexing.value = false
+    private fun enqueueSync(type: String) {
+        viewModelScope.launch {
+            val uri = getFolderUri() ?: return@launch
+
+            val syncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
+                .setInputData(
+                    workDataOf(
+                        LibrarySyncWorker.KEY_SYNC_TYPE to type,
+                        LibrarySyncWorker.KEY_BASE_URI to uri.toString()
+                    )
+                )
+                .addTag("library_sync")
+                .build()
+
+            workManager.enqueueUniqueWork(
+                "library_sync_unique",
+                ExistingWorkPolicy.KEEP,
+                syncRequest
+            )
+
+            observeWorkProgress(syncRequest.id)
+        }
+    }
+
+    private fun observeWorkProgress(workerId: UUID) {
+        viewModelScope.launch {
+            workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                if (workInfo != null) {
+                    _isIndexing.value = !workInfo.state.isFinished
+                    _progress.value = workInfo.progress.getInt("progress", -1)
+                }
+            }
         }
     }
 

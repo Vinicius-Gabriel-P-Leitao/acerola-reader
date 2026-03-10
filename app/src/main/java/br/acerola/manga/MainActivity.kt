@@ -1,6 +1,7 @@
 package br.acerola.manga
 
 import android.content.Context
+import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.tween
@@ -23,6 +24,7 @@ import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.module.config.ConfigScreen
 import br.acerola.manga.module.history.HistoryScreen
 import br.acerola.manga.module.home.HomeScreen
@@ -34,11 +36,18 @@ class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
 ) : BaseActivity() {
     private val fileSystemAccessViewModel: FileSystemAccessViewModel by viewModels()
+    private val metadataSettingsViewModel: MetadataSettingsViewModel by viewModels()
     private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
     private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
-    private val metadataSettingsViewModel: br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 0)
+        }
+    }
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {

@@ -29,7 +29,7 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 ### 🚧 Planejado / Em Andamento
 
 *   **Leitor de Mangás Integrado:**
-    *   [ ] Suporte completo para formatos `.cbz` e `.cbr`.
+    *   [x] Suporte completo para formatos `.cbz` e `.cbr`.
 *   **Configuração e Gerenciamento do Mangá (Refatoração):**
     *   [X] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
     *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
@@ -52,7 +52,7 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
     *   [ ] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porem com 
         thema mais dark.
 *   **Background e Performance:**
-    *   [ ] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de background com notificação de progresso, permitindo sair do app.
+    *   [x] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de background com notificação de progresso, permitindo sair do app.
 *   **Fontes de Metadados Expandidas:**
     *   [ ] Opção para escolher **AniList** como uma fonte alternativa de metadados.
     *   [ ] Um painel de configurações para selecionar e configurar o provedor de metadados desejado (MangaDex/AniList).
