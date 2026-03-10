@@ -31,10 +31,10 @@ import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
 import br.acerola.manga.config.preference.HomeLayoutType
-import br.acerola.manga.module.home.component.MangaGridItem
-import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
+import br.acerola.manga.module.home.component.MangaGridItem
+import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.module.manga.MangaActivity
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
@@ -132,7 +132,6 @@ fun HomeScreen(
                 )
             }, items = listOf(
                 FloatingToolItem(
-                    label = if (layout == HomeLayoutType.GRID) stringResource(id = R.string.description_text_home_layout_list_label) else stringResource(id = R.string.description_text_home_layout_grid_label),
                     onClick = {
                         homeViewModel.updateHomeLayout(
                             layout = when (layout) {
@@ -151,7 +150,6 @@ fun HomeScreen(
 
                 // TODO: Criar filtragem por categoria.
                 FloatingToolItem(
-                    label = stringResource(id = R.string.description_text_home_filter_label),
                     icon = {
                         Icon(
                             imageVector = Icons.Default.FilterList,

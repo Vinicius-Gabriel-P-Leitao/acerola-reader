@@ -48,9 +48,6 @@
     <string name="description_text_selected_manga_directory">Pasta selecionada: %1$s</string>
     <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
     <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
-    <string name="description_text_home_layout_list_label">Lista</string>
-    <string name="description_text_home_layout_grid_label">Grade</string>
-    <string name="description_text_home_filter_label">Filter</string>
     <string name="description_text_home_deep_sync">Sincronização profunda</string>
     <string name="description_text_home_deep_sync_supporting">Verifica todos os arquivos. Pode demorar.</string>
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
