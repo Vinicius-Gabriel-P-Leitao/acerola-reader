@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -193,7 +192,9 @@ fun ChapterItem(
                         )
                     ) {
                         Text(
-                            text = if (isRead) "Marcar como não lido" else "Marcar como lido",
+                            text = if (isRead) stringResource(id = br.acerola.manga.presentation.R.string.action_mark_as_unread) else stringResource(
+                                id = br.acerola.manga.presentation.R.string.action_mark_as_read
+                            ),
                             fontWeight = FontWeight.SemiBold
                         )
                     }

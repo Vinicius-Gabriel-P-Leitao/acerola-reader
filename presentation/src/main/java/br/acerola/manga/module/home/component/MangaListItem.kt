@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
@@ -91,7 +92,7 @@ fun MangaListItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (isCompleted) {
                         Text(
-                            text = "Lido",
+                            text = stringResource(id = R.string.label_manga_status_read),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
@@ -128,7 +129,7 @@ fun MangaListItem(
             ) {
                 androidx.compose.material3.Icon(
                     imageVector = androidx.compose.material.icons.Icons.Default.PlayArrow,
-                    contentDescription = "Continuar leitura",
+                    contentDescription = stringResource(id = R.string.description_icon_continue_reading),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

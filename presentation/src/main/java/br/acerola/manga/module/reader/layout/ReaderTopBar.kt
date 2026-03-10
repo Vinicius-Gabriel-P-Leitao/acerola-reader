@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +51,7 @@ fun ReaderTopBar(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar"
+                        contentDescription = stringResource(id = br.acerola.manga.presentation.R.string.description_icon_navigation_back)
                     )
                 }
             },
@@ -58,7 +59,7 @@ fun ReaderTopBar(
                 IconButton(onClick = onSettingsClick) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
-                        contentDescription = "Configurações"
+                        contentDescription = stringResource(id = br.acerola.manga.presentation.R.string.label_config_activity)
                     )
                 }
             },

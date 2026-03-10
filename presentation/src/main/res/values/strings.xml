@@ -115,4 +115,29 @@
     <string name="manga_header_read_less">Ler menos</string>
     <string name="manga_header_read_more">Ler mais</string>
     <string name="manga_header_read_now">Ler agora</string>
+
+    <!-- Reader Modes -->
+    <string name="label_reader_mode_horizontal">Paginado</string>
+    <string name="label_reader_mode_vertical">Vertical</string>
+    <string name="label_reader_mode_webtoon">Webtoon</string>
+
+    <!-- Manga Actions -->
+    <string name="label_manga_action_reread">Reler</string>
+    <string name="label_manga_action_continue">Continuar</string>
+    <string name="label_manga_action_start">Iniciar</string>
+    <string name="label_manga_status_read">Lido</string>
+
+    <!-- Actions -->
+    <string name="action_mark_as_read">Marcar como lido</string>
+    <string name="action_mark_as_unread">Marcar como não lido</string>
+    <string name="label_reader_next_page">Próximo</string>
+    <string name="description_icon_continue_reading">Continuar leitura</string>
+
+    <!-- History & Reader Info -->
+    <string name="title_history_screen">Histórico de Leitura</string>
+    <string name="description_history_empty_state">Nenhum mangá lido recentemente</string>
+    <string name="label_chapter_unknown">Capítulo desconhecido</string>
+    <string name="label_reader_chapter_order">Ordem: %1$s</string>
+    <string name="label_reader_page_format">Página %1$d / %2$d</string>
+    <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
 </resources>

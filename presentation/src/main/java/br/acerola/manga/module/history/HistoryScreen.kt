@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.home.component.MangaListItem
@@ -38,7 +39,7 @@ fun HistoryScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Histórico de Leitura",
+                text = stringResource(id = br.acerola.manga.presentation.R.string.title_history_screen),
                 modifier = Modifier.padding(vertical = 16.dp),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
@@ -53,7 +54,7 @@ fun HistoryScreen(
                     horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Nenhum mangá lido recentemente",
+                        text = stringResource(id = br.acerola.manga.presentation.R.string.description_history_empty_state),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -64,8 +65,12 @@ fun HistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(historyItems, key = { it.manga.directory.id }) { item ->
-                        val chapterInfo = item.history.chapterName ?: "Capítulo desconhecido"
-                        val progressInfo = "Capítulo $chapterInfo - Pág. ${item.history.lastPage + 1}"
+                        val chapterInfo = item.history.chapterName ?: stringResource(id = br.acerola.manga.presentation.R.string.label_chapter_unknown)
+                        val progressInfo = stringResource(
+                            id = br.acerola.manga.presentation.R.string.label_history_chapter_progress,
+                            chapterInfo,
+                            item.history.lastPage + 1
+                        )
                         
                         MangaListItem(
                             manga = item.manga,
