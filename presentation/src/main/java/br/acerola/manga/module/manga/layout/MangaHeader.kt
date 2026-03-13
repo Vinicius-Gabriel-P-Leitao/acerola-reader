@@ -64,12 +64,25 @@ fun MangaHeader(
                 .fillMaxWidth()
                 .height(height = 420.dp)
         ) {
+            val context = LocalContext.current
             val bannerModel = manga.directory.bannerUri ?: manga.directory.coverUri
+
+            val placeholderPainter = coil.compose.rememberAsyncImagePainter(
+                model = ImageRequest.Builder(context)
+                    .data(data = R.raw.placeholder_manga)
+                    .build()
+            )
 
             AsyncImage(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                model = ImageRequest.Builder(context = LocalContext.current).data(data = bannerModel).crossfade(enable = true).build(),
+                model = ImageRequest.Builder(context = context)
+                    .data(data = bannerModel)
+                    .crossfade(enable = true)
+                    .build(),
+                placeholder = placeholderPainter,
+                error = placeholderPainter,
+                fallback = placeholderPainter,
                 modifier = Modifier
                     .fillMaxWidth()
                     .blur(radius = 20.dp)
@@ -97,9 +110,13 @@ fun MangaHeader(
                     AsyncImage(
                         contentDescription = stringResource(id = R.string.manga_header_cover_description),
                         contentScale = ContentScale.Crop,
-                        model = ImageRequest.Builder(context = LocalContext.current).data(data = manga.directory.coverUri).crossfade(
-                            enable = true
-                        ).build(),
+                        model = ImageRequest.Builder(context = context)
+                            .data(data = manga.directory.coverUri)
+                            .crossfade(enable = true)
+                            .build(),
+                        placeholder = placeholderPainter,
+                        error = placeholderPainter,
+                        fallback = placeholderPainter,
                         modifier = Modifier
                             .clip(shape = RoundedCornerShape(size = 12.dp))
                             .width(width = 130.dp)

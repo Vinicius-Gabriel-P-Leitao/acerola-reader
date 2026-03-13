@@ -2,7 +2,9 @@ package br.acerola.manga.module.reader.layout
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -10,6 +12,7 @@ class ReaderTopBarTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `ReaderTopBar_deve_exibir_título_e_subtítulo_dinâmicos_corretamente`() {
@@ -45,7 +48,8 @@ class ReaderTopBarTest {
         }
 
         // Aciona botão de configurações
-        composeTestRule.onNodeWithContentDescription("Configurações").performClick()
+        val settingsDescription = context.getString(R.string.label_config_activity)
+        composeTestRule.onNodeWithContentDescription(settingsDescription, ignoreCase = true).performClick()
         assert(settingsClicked)
     }
 }

@@ -3,7 +3,9 @@ package br.acerola.manga.common.layout
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -11,6 +13,7 @@ class NavigationBarsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `NavigationBottomBar_deve_exibir_labels_para_as_abas_principais`() {
@@ -22,9 +25,13 @@ class NavigationBarsTest {
         }
 
         // Valida labels globais (strings.xml)
-        composeTestRule.onNodeWithText("home", ignoreCase = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("histórico", ignoreCase = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("configurações", ignoreCase = true).assertIsDisplayed()
+        val homeLabel = context.getString(R.string.label_home_activity)
+        val historyLabel = context.getString(R.string.label_history_activity)
+        val configLabel = context.getString(R.string.label_config_activity)
+
+        composeTestRule.onNodeWithText(homeLabel, ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText(historyLabel, ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText(configLabel, ignoreCase = true).assertIsDisplayed()
     }
 
     @Test
@@ -36,7 +43,9 @@ class NavigationBarsTest {
             }
         }
 
-        // Valida botão de voltar por descrição parcial (ignore typo 'so' no resource)
-        composeTestRule.onNodeWithContentDescription("volta", substring = true).assertIsDisplayed()
+        // Valida botão de voltar por descrição parcial
+        val backDescription = context.getString(R.string.description_icon_navigation_back)
+        // Usamos substring=true pois o resource pode ter typos ou ser longo
+        composeTestRule.onNodeWithContentDescription(backDescription, substring = true).assertIsDisplayed()
     }
 }

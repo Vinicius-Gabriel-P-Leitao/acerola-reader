@@ -59,6 +59,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose.ui)
     implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
 

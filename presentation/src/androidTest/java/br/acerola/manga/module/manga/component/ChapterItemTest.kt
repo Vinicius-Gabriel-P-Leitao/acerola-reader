@@ -3,9 +3,11 @@ package br.acerola.manga.module.manga.component
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,6 +15,7 @@ class ChapterItemTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `ChapterItem_deve_exibir_o_número_do_capítulo_e_o_título_remoto_se_disponíveis`() {
@@ -30,11 +33,13 @@ class ChapterItemTest {
         }
 
         // Valida número do capítulo (Capitulo 1)
-        composeTestRule.onNodeWithText("Capitulo 1", substring = true).assertIsDisplayed()
+        val chapterLabel = context.getString(R.string.title_chapter_item_chapter_number, "1")
+        composeTestRule.onNodeWithText(chapterLabel, substring = true).assertIsDisplayed()
         // Valida título do capítulo remoto
         composeTestRule.onNodeWithText("O Início").assertIsDisplayed()
         // Valida prefixo de scanlation
-        composeTestRule.onNodeWithText("Scan: Scan Top", substring = true).assertIsDisplayed()
+        val scanLabel = context.getString(R.string.label_chapter_scanlation_prefix, "Scan Top")
+        composeTestRule.onNodeWithText(scanLabel, substring = true).assertIsDisplayed()
     }
 
     @Test

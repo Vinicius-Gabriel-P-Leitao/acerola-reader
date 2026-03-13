@@ -31,10 +31,10 @@ import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.layout.SearchBar
 import br.acerola.manga.config.preference.HomeLayoutType
-import br.acerola.manga.module.home.component.MangaGridItem
-import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
+import br.acerola.manga.module.home.component.MangaGridItem
+import br.acerola.manga.module.home.component.MangaListItem
 import br.acerola.manga.module.manga.MangaActivity
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R

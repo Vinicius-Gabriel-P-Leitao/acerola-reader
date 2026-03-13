@@ -2,7 +2,9 @@ package br.acerola.manga.module.manga.component
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -10,6 +12,7 @@ class PaginationFooterTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun `PaginationFooter_deve_organizar_os_blocos_de_páginas_conforme_o_índice_atual`() {
@@ -26,7 +29,8 @@ class PaginationFooterTest {
         }
 
         // Valida contagem textual (1 / 10)
-        composeTestRule.onNodeWithText("1 / 10", substring = true).assertIsDisplayed()
+        val pageFormat = context.getString(R.string.label_pagination_format, 1, 10)
+        composeTestRule.onNodeWithText(pageFormat, substring = true).assertIsDisplayed()
 
         // Valida botões do bloco (1 a 5)
         composeTestRule.onNodeWithText("1").assertIsDisplayed()
@@ -53,7 +57,8 @@ class PaginationFooterTest {
         }
 
         // Aciona ícone de próxima página
-        composeTestRule.onNodeWithContentDescription("Próxima Página").performClick()
+        val nextDescription = context.getString(R.string.description_icon_pagination_next)
+        composeTestRule.onNodeWithContentDescription(nextDescription).performClick()
         assert(pageTarget == 1)
     }
 }

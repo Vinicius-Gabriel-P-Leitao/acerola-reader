@@ -37,13 +37,13 @@ class FloatingToolTest {
 
         // Garante que o item secundário não está visível inicialmente
         composeTestRule.onNodeWithContentDescription("Menu").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Config").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Configurações").assertDoesNotExist()
 
         // Aciona a expansão
         composeTestRule.onNodeWithContentDescription("Menu").performClick()
 
-        // Valida se o item expandido aparece e responde ao clique
-        composeTestRule.onNodeWithContentDescription("Config").assertIsDisplayed().performClick()
+        // Valida se o item expandido aparece e responde ao clique (usando texto do label)
+        composeTestRule.onNodeWithText("Configurações").assertIsDisplayed().performClick()
         
         assert(itemClicked)
     }

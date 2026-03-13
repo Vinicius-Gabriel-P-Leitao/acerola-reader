@@ -23,16 +23,25 @@ class HomeScreenTest {
     fun `HomeScreen_deve_exibir_SearchBar_e_lista_de_mangás_quando_houver_dados`() {
         val mangas = listOf(
             MangaDto(
-                directory = MangaDirectoryDto(1, "Manga 1", "", null, null, 0, null),
+                directory = MangaDirectoryDto(
+                    id = 1,
+                    name = "Manga 1",
+                    path = "",
+                    coverUri = null,
+                    bannerUri = null,
+                    lastModified = 0,
+                    chapterTemplate = null,
+                    hasComicInfo = false
+                ),
                 remoteInfo = null
-            )
+            ) to null
         )
 
         // Mockando os fluxos de estado do ViewModel
         every { viewModel.selectedHomeLayout } returns MutableStateFlow(HomeLayoutType.LIST)
         every { viewModel.isIndexing } returns MutableStateFlow(false)
-        every { viewModel.progress } returns MutableStateFlow(-1)
         every { viewModel.mangas } returns MutableStateFlow(mangas)
+        every { viewModel.progress } returns MutableStateFlow(-1)
 
         composeTestRule.setContent {
             AcerolaTheme {

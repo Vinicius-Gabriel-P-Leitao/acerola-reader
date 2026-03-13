@@ -20,7 +20,16 @@ class MangaHeaderTest {
     @Test
     fun `MangaHeader_deve_exibir_metadados_badges_e_gêneros_do_mangá_corretamente`() {
         val manga = MangaDto(
-            directory = MangaDirectoryDto(1, "Pasta Local", "", null, null, 0, null),
+            directory = MangaDirectoryDto(
+                id = 1,
+                name = "Pasta Local",
+                path = "",
+                coverUri = null,
+                bannerUri = null,
+                lastModified = 0,
+                chapterTemplate = null,
+                hasComicInfo = false
+            ),
             remoteInfo = MangaRemoteInfoDto(
                 mirrorId = "1",
                 title = "Manga de Teste",
@@ -34,7 +43,11 @@ class MangaHeaderTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                MangaHeader(manga = manga)
+                MangaHeader(
+                    manga = manga,
+                    history = null,
+                    onContinueClick = { _, _ -> }
+                )
             }
         }
 

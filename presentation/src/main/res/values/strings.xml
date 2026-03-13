@@ -10,20 +10,20 @@
 
     <!-- Screen label -->
     <string name="label_home_activity">home</string>
-    <string name="label_config_activity">configurações</string>
-    <string name="label_history_activity">histórico</string>
-    <string name="label_chapters_activity">capitulos</string>
-    <string name="label_reader_activity">leitor</string>
+    <string name="label_config_activity">Configurações</string>
+    <string name="label_history_activity">Histórico</string>
+    <string name="label_chapters_activity">Capítulos</string>
+    <string name="label_reader_activity">Leitor</string>
 
     <!-- Screen content description -->
-    <string name="description_home_activity">Tela de inicio que lista os mangás.</string>
+    <string name="description_home_activity">Tela de início que lista os mangás.</string>
     <string name="description_config_activity">Tela de configurações</string>
-    <string name="description_history_activity">Tela de historico de mangás lidos</string>
-    <string name="description_chapters_activity">Tela de listagem dos capitulos</string>
+    <string name="description_history_activity">Tela de histórico de mangás lidos</string>
+    <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
     <string name="description_reader_activity">Tela de leitura do capítulo</string>
 
     <!-- Icons -->
-    <string name="description_icon_navigation_back">Icone so botão que volta na pilha da navegação.</string>
+    <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
     <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
     <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o manga.</string>
     <string name="description_icon_sync_manga_directory">Sincronização somente das pastas ou dos mangás completos.</string>
@@ -48,9 +48,6 @@
     <string name="description_text_selected_manga_directory">Pasta selecionada: %1$s</string>
     <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
     <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
-    <string name="description_text_home_layout_list_label">Lista</string>
-    <string name="description_text_home_layout_grid_label">Grade</string>
-    <string name="description_text_home_filter_label">Filter</string>
     <string name="description_text_home_deep_sync">Sincronização profunda</string>
     <string name="description_text_home_deep_sync_supporting">Verifica todos os arquivos. Pode demorar.</string>
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
