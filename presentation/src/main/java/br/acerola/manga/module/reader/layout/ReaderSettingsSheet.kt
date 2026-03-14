@@ -4,14 +4,28 @@ import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.StayCurrentPortrait
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.VerticalAlignBottom
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ViewHeadline
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,14 +46,14 @@ fun ReaderSettingsSheet(
     currentMode: ReadingMode,
     onModeSelected: (ReadingMode) -> Unit
 ) {
-    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
 
     ModalBottomSheet(
         containerColor = Color.Transparent,
         onDismissRequest = onDismissRequest,
-        scrimColor = Color.Black.copy(alpha = 0.4f),
         contentWindowInsets = { WindowInsets.navigationBars },
+        scrimColor = Color.Black.copy(alpha = 0.4f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
     ) {
         Box(
@@ -81,14 +95,14 @@ fun ReaderSettingsSheet(
 
                 ReadingModeItem(
                     title = stringResource(id = R.string.label_reader_mode_horizontal),
-                    icon = Icons.Default.SwapHoriz,
+                    icon = Icons.Default.AutoStories, // Better for "Paged"
                     isSelected = currentMode == ReadingMode.HORIZONTAL,
                     onClick = { onModeSelected(ReadingMode.HORIZONTAL) }
                 )
 
                 ReadingModeItem(
                     title = stringResource(id = R.string.label_reader_mode_vertical),
-                    icon = Icons.Default.StayCurrentPortrait,
+                    icon = Icons.Default.ViewHeadline, // Better for "Vertical scroll"
                     isSelected = currentMode == ReadingMode.VERTICAL,
                     onClick = { onModeSelected(ReadingMode.VERTICAL) }
                 )
