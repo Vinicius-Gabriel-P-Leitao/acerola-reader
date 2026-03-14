@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.layout.AcerolaGlassButton
+import br.acerola.manga.common.component.AcerolaGlassButton
 import br.acerola.manga.presentation.R
 
 @Composable

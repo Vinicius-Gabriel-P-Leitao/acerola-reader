@@ -88,8 +88,13 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
       *   [ ] **UI do filtro:** Ícone de ordenação na barra superior da tela de capítulos, abrindo bottom sheet consistente com o da Home.
 
 *    **Implementar mais logs:**
-      *    [ ] **Implementar uma classe de logs ou função de faz um wrapper para o Log.** Essa classe ou função tem 
+     *   [ ] **Implementar uma classe de logs ou função de faz um wrapper para o Log.** Essa classe ou função tem 
            de padronizar os logs do projeto para que fique fácil de buscar e filtrar    
+
+*    **Adiciona função de trocar thema:**
+     *   [ ] **Thema adaptável** Isso já é default do android então só dataStore para salvar preferencia.
+     *   [ ] **Thema default vai ser o cattpuccin** Deixar ele default e melhorar cores para thema branco. 
+
 
 ## Pilha de Tecnologia
 

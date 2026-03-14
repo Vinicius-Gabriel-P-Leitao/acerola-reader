@@ -4,6 +4,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
+import br.acerola.manga.common.component.SearchBar
 import br.acerola.manga.common.theme.AcerolaTheme
 import br.acerola.manga.presentation.R
 import org.junit.Rule

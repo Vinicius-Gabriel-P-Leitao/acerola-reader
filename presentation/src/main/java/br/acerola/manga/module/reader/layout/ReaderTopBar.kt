@@ -32,8 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.presentation.R
-import br.acerola.manga.common.layout.AcerolaTopBar
-import br.acerola.manga.common.layout.AcerolaGlassButton
+import br.acerola.manga.common.component.AcerolaGlassButton
 
 @Composable
 fun ReaderTopBar(

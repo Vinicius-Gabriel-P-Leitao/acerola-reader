@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.FloatingTool
 import br.acerola.manga.common.component.FloatingToolItem
 import br.acerola.manga.common.layout.ProgressIndicator
-import br.acerola.manga.common.layout.SearchBar
+import br.acerola.manga.common.component.SearchBar
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto

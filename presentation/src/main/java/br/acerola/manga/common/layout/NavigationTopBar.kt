@@ -9,11 +9,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import br.acerola.manga.common.component.AcerolaGlassButton
+import br.acerola.manga.common.component.AcerolaTopBar
 import br.acerola.manga.presentation.R
 import br.acerola.manga.common.navigation.Destination
 
