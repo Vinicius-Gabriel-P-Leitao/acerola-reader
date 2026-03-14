@@ -7,6 +7,8 @@ import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.LibrarySyncError
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
@@ -27,7 +29,6 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// TODO: Implementar os outros métodos
 @Singleton
 class ComicInfoMangaRepository @Inject constructor(
     private val genreDao: GenreDao,
@@ -49,6 +50,7 @@ class ComicInfoMangaRepository @Inject constructor(
 
     override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Refreshing manga from ComicInfo.xml: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
             _isIndexing.value = true
             try {
                 Either.catch {
@@ -59,14 +61,17 @@ class ComicInfoMangaRepository @Inject constructor(
                         extra = arrayOf(directory.path)
                     )
 
-                    val bestMatch = fetchedListResult.getOrNull()?.firstOrNull() ?: return@catch
+                    val bestMatch = fetchedListResult.getOrNull()?.firstOrNull() ?: run {
+                        AcerolaLogger.d(TAG, "No ComicInfo.xml found or matched for: ${directory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                        return@catch
+                    }
 
                     val existingRemote = mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).firstOrNull()
 
                     val mangaToSave = bestMatch.toModel().copy(
                         id = existingRemote?.id ?: 0L,
                         mangaDirectoryFk = directory.id,
-                        mirrorId = bestMatch.mirrorId // Mantém o mirrorId original do match (local ou mangadex)
+                        mirrorId = bestMatch.mirrorId 
                     )
 
                     val remoteId = if (existingRemote != null) {
@@ -88,14 +93,16 @@ class ComicInfoMangaRepository @Inject constructor(
                         bestMatch.cover?.let { dto ->
                             coverService.processCover(
                                 coverDto = dto,
-                                rootUri = directory.path.toUri(), // Usa a própria pasta como root por simplicidade
+                                rootUri = directory.path.toUri(), 
                                 folderId = directory.id,
                                 mangaFolderName = directory.name,
                                 mangaRemoteInfoFk = remoteId
                             )
                         }
+                        AcerolaLogger.i(TAG, "Successfully updated metadata from ComicInfo for: ${directory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
                     }
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Error processing ComicInfo for manga: $mangaId", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                         is IOException -> LibrarySyncError.DiskIOFailure(path = "Local", cause = exception)
@@ -108,11 +115,14 @@ class ComicInfoMangaRepository @Inject constructor(
         }
 
     override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
-        // NOTE: Reaproveita a lógica de observação global se necessário, mas o UseCase já observa via MangadexMangaRepository ou similar.
         return MutableStateFlow(value = emptyList<MangaRemoteInfoDto>()).asStateFlow()
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
     override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
+
+    companion object {
+        private const val TAG = "ComicInfoMangaRepository" // PADRÃO OBRIGATÓRIO
+    }
 }

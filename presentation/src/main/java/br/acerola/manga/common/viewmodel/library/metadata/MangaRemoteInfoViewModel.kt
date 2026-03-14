@@ -10,6 +10,8 @@ import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.service.background.MetadataSyncWorker
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
@@ -51,6 +53,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     )
 
     fun syncLibrary() {
+        AcerolaLogger.d(TAG, "Requesting library metadata sync", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             _isIndexing.value = true
             syncLibraryUseCase.sync(baseUri = null).handleResult()
@@ -59,6 +62,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     }
 
     fun rescanMangas() {
+        AcerolaLogger.d(TAG, "Requesting library rescan", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             _isIndexing.value = true
             syncLibraryUseCase.rescan(baseUri = null).handleResult()
@@ -67,6 +71,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     }
 
     fun rescanMangaByManga(mangaId: Long) {
+        AcerolaLogger.audit(TAG, "User requested metadata rescan for manga: $mangaId", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             _isIndexing.value = true
             rescanManga(mangaId).handleResult()
@@ -75,14 +80,17 @@ class MangaRemoteInfoViewModel @Inject constructor(
     }
 
     fun syncFromMangadex(directoryId: Long) {
+        AcerolaLogger.audit(TAG, "User requested metadata sync from MangaDex", LogSource.VIEWMODEL, mapOf("directoryId" to directoryId.toString())) // LOG ADICIONADO
         enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, directoryId)
     }
 
     fun syncFromComicInfo(directoryId: Long) {
+        AcerolaLogger.audit(TAG, "User requested metadata sync from ComicInfo.xml", LogSource.VIEWMODEL, mapOf("directoryId" to directoryId.toString())) // LOG ADICIONADO
         enqueueMetadataSync(MetadataSyncWorker.SOURCE_COMICINFO, directoryId)
     }
 
     private fun enqueueMetadataSync(source: String, directoryId: Long) {
+        AcerolaLogger.d(TAG, "Enqueuing metadata sync worker: source=$source", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             val syncRequest = OneTimeWorkRequestBuilder<MetadataSyncWorker>()
                 .setInputData(
@@ -108,8 +116,13 @@ class MangaRemoteInfoViewModel @Inject constructor(
         viewModelScope.launch {
             workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
                 if (workInfo != null) {
+                    val wasIndexing = _isIndexing.value
                     _isIndexing.value = !workInfo.state.isFinished
                     _progress.value = if (workInfo.state == WorkInfo.State.RUNNING) -1 else 0
+                    
+                    if (wasIndexing && workInfo.state.isFinished) {
+                        AcerolaLogger.i(TAG, "Metadata sync worker finished: ${workInfo.state.name}", LogSource.VIEWMODEL) // LOG ADICIONADO
+                    }
                 }
             }
         }
@@ -117,7 +130,12 @@ class MangaRemoteInfoViewModel @Inject constructor(
 
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
+            AcerolaLogger.e(TAG, "Metadata operation failed: ${error.uiMessage}", LogSource.VIEWMODEL) // LOG ADICIONADO
             _uiEvents.send(element = error)
         }
+    }
+
+    companion object {
+        private const val TAG = "MangaRemoteInfoViewModel" // PADRÃO OBRIGATÓRIO
     }
 }

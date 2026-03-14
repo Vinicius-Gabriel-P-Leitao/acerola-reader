@@ -10,6 +10,8 @@ import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
@@ -63,10 +65,13 @@ class HomeViewModel @Inject constructor(
 
         val historyMap = historyList.associateBy { it.mangaDirectoryId }
 
-        mangaDirectories.map {
+        val list = mangaDirectories.map {
             val manga = MangaDto(directory = it, remoteInfo = remoteInfoMap[it.id])
             manga to historyMap[it.id]
         }
+        
+        AcerolaLogger.d(TAG, "Library loaded: ${list.size} mangas found", LogSource.VIEWMODEL) // LOG ADICIONADO
+        list
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()
     )
@@ -78,6 +83,8 @@ class HomeViewModel @Inject constructor(
     fun updateHomeLayout(layout: HomeLayoutType) {
         if (_selectedHomeLayout.value == layout) return
         _selectedHomeLayout.value = layout
+
+        AcerolaLogger.audit(TAG, "User changed home layout to ${layout.name}", LogSource.VIEWMODEL) // LOG ADICIONADO
 
         viewModelScope.launch {
             HomeLayoutPreference.saveLayout(context, layout)
@@ -96,5 +103,9 @@ class HomeViewModel @Inject constructor(
 
     private fun String.normalizeKey(): String {
         return this.filter { it.isLetterOrDigit() }.lowercase()
+    }
+
+    companion object {
+        private const val TAG = "HomeViewModel" // PADRÃO OBRIGATÓRIO
     }
 }

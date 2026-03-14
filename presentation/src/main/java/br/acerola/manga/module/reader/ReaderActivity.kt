@@ -33,15 +33,21 @@ import dagger.hilt.android.AndroidEntryPoint
 class ReaderActivity(
     override val startDestinationRes: Int = Destination.READER.route
 ) : BaseActivity() {
-    override val applyScaffoldPadding: Boolean = false
-    private val viewModel: ReaderViewModel by viewModels()
 
     object PageExtra {
+
         const val PAGE = "PAGE"
         const val MANGA_ID = "MANGA_ID"
         const val CHAPTER_ID = "CHAPTER_ID"
         const val INITIAL_PAGE = "INITIAL_PAGE"
     }
+
+    companion object {
+        private const val TAG = "ReaderActivity"
+    }
+
+    override val applyScaffoldPadding: Boolean = false
+    private val viewModel: ReaderViewModel by viewModels()
 
     val page: ChapterFileDto? by lazy {
         val safeIntent = intent ?: return@lazy null
@@ -58,9 +64,9 @@ class ReaderActivity(
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
             val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
-            
+
             AcerolaLogger.d(TAG, "Navigating to ReaderScreen. Manga: $mangaId, Chapter: $chapterId", LogSource.UI)
-            
+
             ReaderScreen(
                 chapter = state.currentChapter ?: page,
                 chapterId = chapterId,
@@ -88,21 +94,21 @@ class ReaderActivity(
                 hasNextChapter = state.nextChapterId != null,
                 hasPreviousChapter = state.previousChapterId != null,
                 isLoading = state.isLoading,
-                onPrevClick = { 
+                onPrevClick = {
                     AcerolaLogger.d(TAG, "User clicked previous page", LogSource.UI)
-                    viewModel.onSliderChanged(index = state.currentPage - 1) 
+                    viewModel.onSliderChanged(index = state.currentPage - 1)
                 },
-                onNextClick = { 
+                onNextClick = {
                     AcerolaLogger.d(TAG, "User clicked next page", LogSource.UI)
-                    viewModel.onSliderChanged(index = state.currentPage + 1) 
+                    viewModel.onSliderChanged(index = state.currentPage + 1)
                 },
-                onNextChapterClick = { 
+                onNextChapterClick = {
                     AcerolaLogger.audit(TAG, "User clicked next chapter", LogSource.UI)
-                    viewModel.loadNextChapter(mangaId) 
+                    viewModel.loadNextChapter(mangaId)
                 },
-                onPreviousChapterClick = { 
+                onPreviousChapterClick = {
                     AcerolaLogger.audit(TAG, "User clicked previous chapter", LogSource.UI)
-                    viewModel.loadPreviousChapter(mangaId) 
+                    viewModel.loadPreviousChapter(mangaId)
                 }
             )
         }
@@ -120,13 +126,13 @@ class ReaderActivity(
                 title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
                 subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
                 isVisible = state.isUiVisible,
-                onBackClick = { 
+                onBackClick = {
                     AcerolaLogger.audit(TAG, "User exited reader via back button", LogSource.UI)
-                    finish() 
+                    finish()
                 },
-                onSettingsClick = { 
+                onSettingsClick = {
                     AcerolaLogger.d(TAG, "Opening reader settings sheet", LogSource.UI)
-                    showSettings = true 
+                    showSettings = true
                 })
 
             if (showSettings) {
@@ -143,7 +149,4 @@ class ReaderActivity(
         }
     }
 
-    companion object {
-        private const val TAG = "ReaderActivity"
-    }
 }

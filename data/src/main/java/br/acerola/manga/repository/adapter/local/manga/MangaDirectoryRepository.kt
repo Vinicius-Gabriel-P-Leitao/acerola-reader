@@ -12,6 +12,8 @@ import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
@@ -55,10 +57,6 @@ class MangaDirectoryRepository @Inject constructor(
 
     private val semaphore = Semaphore(permits = 3)
 
-    /**
-     * Injeção de dependência circular resolvida via interface.
-     * Usado para operations de capítulos dentro do deepRescan.
-     */
     @Inject
     @DirectoryFsOps
     lateinit var mangaDirectoryOps: ChapterManagementRepository<ChapterArchivePageDto>
@@ -69,18 +67,9 @@ class MangaDirectoryRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    companion object {
-
-        const val CHUNK_SIZE = 50
-        const val PROGRESS_THRESHOLD = 5
-    }
-
-    /**
-     * Reescaneia um único mangá específico.
-     * Verifica se a pasta ainda existe e atualiza metadados (capa, banner) se necessário.
-     */
     override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Syncing specific manga: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
             _isIndexing.value = true
             try {
                 Either.catch {
@@ -88,10 +77,8 @@ class MangaDirectoryRepository @Inject constructor(
 
                     val folderDoc = DocumentFile.fromSingleUri(context, existingManga.path.toUri())
 
-                    // WARN: Caso a pasta não exista ele só ignora
                     if (folderDoc == null || !folderDoc.isDirectory) return@catch
 
-                    // NOTE: Se não mudou data de modificação, assume atualizado, confia mais no file system doq do user
                     if (existingManga.lastModified >= folderDoc.lastModified()) return@catch
 
                     val banner = folderDoc.listFiles().firstOrNull { isBanner(name = it.name) }
@@ -112,9 +99,9 @@ class MangaDirectoryRepository @Inject constructor(
 
                     directoryDao.update(entity = updatedManga)
                     
-                    // Trigger chapter refresh (falls back to DocumentFile since we don't have the library tree URI here)
                     mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = null)
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Failed to refresh specific manga: $mangaId", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
                     when (exception) {
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
                         is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
@@ -127,10 +114,8 @@ class MangaDirectoryRepository @Inject constructor(
             }
         }
 
-    /**
-     * Sincroniza a biblioteca local de mangás com o diretório selecionado.
-     */
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+        AcerolaLogger.i(TAG, "Starting incremental library scan", LogSource.REPOSITORY) // LOG ADICIONADO
         _isIndexing.value = true
         try {
             return withContext(context = Dispatchers.IO) {
@@ -165,13 +150,16 @@ class MangaDirectoryRepository @Inject constructor(
                     val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
 
                     if (removedFolders.isNotEmpty()) {
+                        AcerolaLogger.d(TAG, "Removing ${removedFolders.size} stale folders from DB", LogSource.REPOSITORY) // LOG ADICIONADO
                         removedFolders.forEach { folder ->
                             directoryDao.delete(entity = folder)
                         }
                     }
 
+                    AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY) // LOG ADICIONADO
                     processFolderList(foldersToProcess, existingFolders = databaseFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
                     when (exception) {
                         is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -187,6 +175,7 @@ class MangaDirectoryRepository @Inject constructor(
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+        AcerolaLogger.i(TAG, "Starting refresh library scan", LogSource.REPOSITORY) // LOG ADICIONADO
         _isIndexing.value = true
         try {
             return withContext(context = Dispatchers.IO) {
@@ -200,8 +189,10 @@ class MangaDirectoryRepository @Inject constructor(
                     }
 
                     val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY) // LOG ADICIONADO
                     processFolderList(foldersToProcess, existingFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
                     when (exception) {
                         is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -217,6 +208,7 @@ class MangaDirectoryRepository @Inject constructor(
     }
 
     override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+        AcerolaLogger.i(TAG, "Starting deep rebuild of library", LogSource.REPOSITORY) // LOG ADICIONADO
         _isIndexing.value = true
         try {
             return withContext(context = Dispatchers.IO) {
@@ -230,6 +222,7 @@ class MangaDirectoryRepository @Inject constructor(
                         }
 
                         val total = allFolders.size
+                        AcerolaLogger.d(TAG, "Deep scanning chapters for $total mangas", LogSource.REPOSITORY) // LOG ADICIONADO
 
                         val processed = AtomicInteger(0)
                         _progress.value = 0
@@ -240,8 +233,7 @@ class MangaDirectoryRepository @Inject constructor(
                                     async(context = Dispatchers.IO) {
                                         try {
                                             mangaDirectoryOps.refreshMangaChapters(mangaId = folder.id, baseUri = baseUri).onLeft {
-                                                // TODO: Tratar melhor
-                                                println("Error scanning chapters for ${folder.name}: $it")
+                                                AcerolaLogger.e(TAG, "Error scanning chapters for ${folder.name}", LogSource.REPOSITORY, t = null) // LOG SUBSTITUÍDO (it is LibrarySyncError, not Exception)
                                             }
                                         } finally {
                                             val current = processed.incrementAndGet()
@@ -256,6 +248,7 @@ class MangaDirectoryRepository @Inject constructor(
 
                         _progress.value = -1
                     }.mapLeft { exception ->
+                        AcerolaLogger.e(TAG, "Deep rebuild failed", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
                         when (exception) {
                             is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
                             is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -273,6 +266,7 @@ class MangaDirectoryRepository @Inject constructor(
 
     override fun observeLibrary(): StateFlow<List<MangaDirectoryDto>> {
         return directoryDao.getAllMangaDirectory().map { folders ->
+            AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY) // LOG ADICIONADO
             coroutineScope {
                 folders.map { folder ->
                     async(context = Dispatchers.IO) {
@@ -354,14 +348,12 @@ class MangaDirectoryRepository @Inject constructor(
             directoryDao.insert(entity = folder)
         }
 
-        // Trigger chapter scan for new/updated folders
         mangaDirectoryOps.refreshMangaChapters(mangaId = finalMangaId, baseUri = baseUri)
     }
 
     private fun buildLibrary(context: Context, rootUri: Uri): List<MangaDirectory> {
         val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
         
-        // Otimização: Listagem via ContentResolver.query (40x mais rápido)
         val allChildren = ContentQueryHelper.listFiles(context, rootUri)
         val folders = allChildren.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
 
@@ -369,7 +361,6 @@ class MangaDirectoryRepository @Inject constructor(
             val folderUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, folderMetadata.id)
             val folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@map null
             
-            // Reusamos o ContentQueryHelper para listar itens dentro da pasta do mangá
             val folderChildren = ContentQueryHelper.listFiles(context, rootUri, folderMetadata.id)
             
             val bannerMetadata = folderChildren.firstOrNull { isBanner(it.name) }
@@ -399,9 +390,7 @@ class MangaDirectoryRepository @Inject constructor(
     private fun isCover(name: String?): Boolean {
         if (name == null) return false
         val lower = name.lowercase()
-        // Prioriza arquivos com 'cover' no nome
         if (lower.contains("cover") && isImage(lower)) return true
-        // Fallback: Qualquer imagem que pareça ser a capa (ex: folder.jpg, 00.jpg, front.png)
         return (lower.startsWith("folder") || lower.startsWith("front") || lower.startsWith("00")) && isImage(lower)
     }
 
@@ -417,5 +406,11 @@ class MangaDirectoryRepository @Inject constructor(
 
     private fun normalizeName(name: String): String {
         return name.filter { it.isLetterOrDigit() }.lowercase()
+    }
+
+    companion object {
+        private const val TAG = "MangaDirectoryRepository" // PADRÃO OBRIGATÓRIO
+        const val CHUNK_SIZE = 50
+        const val PROGRESS_THRESHOLD = 5
     }
 }

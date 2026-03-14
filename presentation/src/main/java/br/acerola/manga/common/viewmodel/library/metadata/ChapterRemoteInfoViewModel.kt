@@ -6,6 +6,8 @@ import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.ComicInfoCase
 import br.acerola.manga.usecase.di.MangadexCase
@@ -45,6 +47,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
     private var total = 0
 
     fun init(mangaId: Long, firstPage: ChapterRemoteInfoPageDto) {
+        AcerolaLogger.d(TAG, "Initializing with mangaId: $mangaId", LogSource.VIEWMODEL) // LOG ADICIONADO
         _selectedMangaId.value = mangaId
         total = firstPage.total
         currentPage = firstPage.page
@@ -52,6 +55,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
     }
 
     fun loadPage(page: Int) {
+        AcerolaLogger.d(TAG, "Loading metadata page: $page", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             _chapterPage.value = null
 
@@ -72,6 +76,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
     }
 
     fun syncChaptersByMangadex(mangaId: Long) {
+        AcerolaLogger.audit(TAG, "User requested chapter sync from MangaDex", LogSource.VIEWMODEL, mapOf("mangaId" to mangaId.toString())) // LOG ADICIONADO
         viewModelScope.launch {
             _isIndexing.value = true
             rescanMangadexChaptersUseCase(mangaId).handleResult()
@@ -80,6 +85,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
     }
 
     fun syncChaptersByComicInfo(folderId: Long) {
+        AcerolaLogger.audit(TAG, "User requested chapter sync from ComicInfo.xml", LogSource.VIEWMODEL, mapOf("folderId" to folderId.toString())) // LOG ADICIONADO
         viewModelScope.launch {
             _isIndexing.value = true
             rescanComicInfoChaptersUseCase(folderId).handleResult()
@@ -89,7 +95,12 @@ class ChapterRemoteInfoViewModel @Inject constructor(
 
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
+            AcerolaLogger.e(TAG, "Metadata operation failed: ${error.uiMessage}", LogSource.VIEWMODEL) // LOG ADICIONADO
             _uiEvents.send(element = error)
         }
+    }
+
+    companion object {
+        private const val TAG = "ChapterRemoteInfoViewModel" // PADRÃO OBRIGATÓRIO
     }
 }

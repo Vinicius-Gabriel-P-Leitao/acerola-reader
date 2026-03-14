@@ -6,6 +6,8 @@ import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
@@ -39,7 +41,7 @@ class HistoryViewModel @Inject constructor(
                 directoryObserve(),
                 mangadexObserve()
             ) { directories, remoteInfos ->
-                historyList.mapNotNull { history ->
+                val list = historyList.mapNotNull { history ->
                     val directory = directories.find { it.id == history.mangaDirectoryId } ?: return@mapNotNull null
                     val remote = remoteInfos.find { it.mangaDirectoryFk == history.mangaDirectoryId }
                     HistoryItemUiState(
@@ -47,10 +49,16 @@ class HistoryViewModel @Inject constructor(
                         history = history
                     )
                 }
+                AcerolaLogger.d(TAG, "History items updated: ${list.size} items found", LogSource.VIEWMODEL) // LOG ADICIONADO
+                list
             }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    companion object {
+        private const val TAG = "HistoryViewModel" // PADRÃO OBRIGATÓRIO
+    }
 }

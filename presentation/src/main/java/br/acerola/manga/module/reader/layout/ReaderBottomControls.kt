@@ -30,6 +30,8 @@ import br.acerola.manga.infrastructure.logging.AcerolaLogger
 import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.presentation.R
 
+private const val TAG = "ReaderBottomControls"
+
 @Composable
 fun ReaderBottomControls(
     pageCount: Int,
@@ -221,5 +223,3 @@ fun ReaderBottomControls(
         }
     }
 }
-
-private const val TAG = "ReaderBottomControls"

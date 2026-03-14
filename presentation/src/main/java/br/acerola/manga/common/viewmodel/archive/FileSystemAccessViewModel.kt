@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.config.permission.FileSystemAccessManager
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,12 +17,18 @@ class FileSystemAccessViewModel @Inject constructor(
     val folderUri get() = manager.folderUri
 
     fun saveFolderUri(uri: Uri?) {
+        AcerolaLogger.audit(TAG, "User selected new library folder", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             manager.saveFolderUri(uri)
         }
     }
 
     suspend fun loadSavedFolder() {
+        AcerolaLogger.d(TAG, "Loading saved library folder", LogSource.VIEWMODEL) // LOG ADICIONADO
         manager.loadFolderUri()
+    }
+
+    companion object {
+        private const val TAG = "FileSystemAccessViewModel" // PADRÃO OBRIGATÓRIO
     }
 }

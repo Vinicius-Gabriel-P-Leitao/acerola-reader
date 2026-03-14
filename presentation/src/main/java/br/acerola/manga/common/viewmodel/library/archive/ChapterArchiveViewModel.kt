@@ -6,6 +6,8 @@ import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
@@ -43,6 +45,7 @@ class ChapterArchiveViewModel @Inject constructor(
     private var total = 0
 
     fun init(directoryId: Long, firstPage: ChapterArchivePageDto) {
+        AcerolaLogger.d(TAG, "Initializing with directoryId: $directoryId", LogSource.VIEWMODEL) // LOG ADICIONADO
         _selectedDirectoryId.value = directoryId
         total = firstPage.total
         currentPage = firstPage.page
@@ -50,6 +53,7 @@ class ChapterArchiveViewModel @Inject constructor(
     }
 
     fun loadPage(page: Int) {
+        AcerolaLogger.d(TAG, "Loading local chapter page: $page", LogSource.VIEWMODEL) // LOG ADICIONADO
         viewModelScope.launch {
             _chapterPage.value = null
 
@@ -69,6 +73,7 @@ class ChapterArchiveViewModel @Inject constructor(
     }
 
     fun syncChaptersByMangaDirectory(folderId: Long) {
+        AcerolaLogger.audit(TAG, "User requested local chapter rescan", LogSource.VIEWMODEL, mapOf("folderId" to folderId.toString())) // LOG ADICIONADO
         viewModelScope.launch {
             _isIndexing.value = true
             rescanMangaChaptersUseCase(mangaId = folderId).handleResult()
@@ -78,7 +83,12 @@ class ChapterArchiveViewModel @Inject constructor(
 
     private suspend fun <T> Either<UserMessage, T>.handleResult() {
         this.onLeft { error ->
+            AcerolaLogger.e(TAG, "Local chapter operation failed: ${error.uiMessage}", LogSource.VIEWMODEL) // LOG ADICIONADO
             _uiEvents.send(element = error)
         }
+    }
+
+    companion object {
+        private const val TAG = "ChapterArchiveViewModel" // PADRÃO OBRIGATÓRIO
     }
 }
