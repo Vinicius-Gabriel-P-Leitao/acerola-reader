@@ -137,4 +137,5 @@
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
     <string name="label_reader_page_format">Página %1$d / %2$d</string>
     <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
+    <string name="label_reader_config_title">Modo de Leitura</string>
 </resources>
