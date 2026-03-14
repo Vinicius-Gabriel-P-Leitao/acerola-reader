@@ -35,7 +35,7 @@ enum class CardType {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SmartCard(
+fun Card(
     type: CardType,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier,

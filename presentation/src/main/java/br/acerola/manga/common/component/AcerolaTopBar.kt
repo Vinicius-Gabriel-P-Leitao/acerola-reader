@@ -3,7 +3,6 @@ package br.acerola.manga.common.component
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,45 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-@Composable
-fun AcerolaGlassButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
-    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
-
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(Color.Transparent)
-            .clickable(onClick = onClick)
-    ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .then(
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        Modifier.blur(20.dp)
-                    } else {
-                        Modifier
-                    }
-                )
-                .background(glassColor)
-                .border(0.5.dp, borderColor, CircleShape)
-        )
-
-        Box(
-            modifier = Modifier.matchParentSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            content()
-        }
-    }
-}
 
 @Composable
 fun AcerolaTopBar(

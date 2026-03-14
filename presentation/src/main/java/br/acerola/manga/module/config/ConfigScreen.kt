@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
 import br.acerola.manga.common.component.Divider
-import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.component.Card
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -133,7 +133,7 @@ private fun PrettyConfigCard(
     iconColor: androidx.compose.ui.graphics.Color,
     content: @Composable () -> Unit
 ) {
-    SmartCard(
+    Card(
         type = CardType.CONTENT,
         title = null,
         modifier = Modifier.padding(horizontal = 16.dp),

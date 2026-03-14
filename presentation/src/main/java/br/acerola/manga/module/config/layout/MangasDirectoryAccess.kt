@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.presentation.R
 import br.acerola.manga.common.component.ButtonType
-import br.acerola.manga.common.component.SmartButton
+import br.acerola.manga.common.component.AcerolaButton
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 
 @Composable
@@ -40,7 +40,7 @@ fun FolderAccess(viewModel: FileSystemAccessViewModel, onFolderSelected: (String
     }
 
     Column {
-        SmartButton(
+        AcerolaButton(
             type = ButtonType.ICON,
             onClick = { launcher.launch(input = null) },
         ) {

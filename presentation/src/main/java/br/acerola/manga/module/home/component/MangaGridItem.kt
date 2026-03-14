@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.component.Card
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.presentation.R
 import coil.compose.rememberAsyncImagePainter
@@ -56,7 +56,7 @@ fun MangaGridItem(
     Column(
         modifier = Modifier.padding(all = 4.dp)
     ) {
-        SmartCard(
+        Card(
             onClick = onClick,
             type = CardType.IMAGE,
             image = coverPainter,

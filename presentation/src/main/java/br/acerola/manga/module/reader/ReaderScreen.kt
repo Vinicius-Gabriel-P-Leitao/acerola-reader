@@ -7,7 +7,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.platform.LocalContext
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.layout.ReaderContent
@@ -23,7 +22,6 @@ fun ReaderScreen(
     mangaId: Long,
 ) {
     val state by viewModel.state.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(chapter, chapterId, mangaId) {
         if (chapter != null) {
@@ -45,6 +43,17 @@ fun ReaderScreen(
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0))
     )
+
+    // Handle next page action
+    val handleNextAction = {
+        val currentPage = state.currentPage
+        val pageCount = state.pageCount
+
+        if (currentPage < pageCount - 1) {
+            viewModel.onSliderChanged(index = currentPage + 1)
+        }
+        Unit
+    }
 
     LaunchedEffect(pagerState, listState, state.readingMode, mangaId, chapter, chapterId) {
         snapshotFlow {
@@ -87,7 +96,7 @@ fun ReaderScreen(
             }
         },
         onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
-        onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
+        onNextClick = handleNextAction,
         onZoomChange = {
             /* NOTE: O estado do zoom é gerenciado internamente ou via máquina virtual, se necessário, para bloquear a interface do usuário */
         }

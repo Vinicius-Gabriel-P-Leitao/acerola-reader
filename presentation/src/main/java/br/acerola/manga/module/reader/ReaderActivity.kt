@@ -52,12 +52,13 @@ class ReaderActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         composable(route = context.getString(Destination.READER.route)) {
+            val state by viewModel.state.collectAsState()
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
             val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
             
             ReaderScreen(
-                chapter = page,
+                chapter = state.currentChapter ?: page,
                 chapterId = chapterId,
                 mangaId = mangaId,
                 viewModel = viewModel,
@@ -69,6 +70,7 @@ class ReaderActivity(
     @Composable
     override fun BottomBar(navController: NavHostController) {
         val state by viewModel.state.collectAsState()
+        val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
 
         AnimatedVisibility(
             visible = state.isUiVisible,
@@ -78,8 +80,11 @@ class ReaderActivity(
                 pageCount = state.pageCount,
                 currentPage = state.currentPage,
                 enableNavigation = state.readingMode != ReadingMode.WEBTOON,
+                isChapterRead = state.isChapterRead,
+                hasNextChapter = state.nextChapterId != null,
                 onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
                 onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
+                onNextChapterClick = { viewModel.loadNextChapter(mangaId) }
             )
         }
     }
@@ -89,10 +94,12 @@ class ReaderActivity(
         val state by viewModel.state.collectAsState()
         var showSettings by remember { mutableStateOf(value = false) }
 
+        val activeChapter = state.currentChapter ?: page
+
         Box {
             ReaderTopBar(
-                title = page?.name ?: stringResource(id = R.string.label_reader_activity),
-                subtitle = stringResource(id = R.string.label_reader_chapter_order, page?.chapterSort ?: "-"),
+                title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
+                subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
                 isVisible = state.isUiVisible,
                 onBackClick = { finish() },
                 onSettingsClick = { showSettings = true })

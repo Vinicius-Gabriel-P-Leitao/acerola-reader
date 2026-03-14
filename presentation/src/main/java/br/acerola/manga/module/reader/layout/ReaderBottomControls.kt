@@ -1,22 +1,16 @@
 package br.acerola.manga.module.reader.layout
 
 import android.os.Build
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.NavigateNext
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,9 +32,12 @@ fun ReaderBottomControls(
     currentPage: Int,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
+    onNextChapterClick: () -> Unit,
+    isChapterRead: Boolean = false,
+    hasNextChapter: Boolean = false,
     enableNavigation: Boolean = true
 ) {
-    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
+    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
 
     Box(
@@ -50,9 +47,9 @@ fun ReaderBottomControls(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Main Container with Glass Effect
         Box(
             modifier = Modifier
+                .wrapContentWidth()
                 .clip(RoundedCornerShape(32.dp))
                 .background(Color.Transparent)
         ) {
@@ -71,8 +68,10 @@ fun ReaderBottomControls(
             )
 
             Row(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .animateContentSize()
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Page Indicator
@@ -82,10 +81,10 @@ fun ReaderBottomControls(
                     color = MaterialTheme.colorScheme.primary
                 )
 
+                // Navigation (Paged Modes Only)
                 if (enableNavigation) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                    // Previous Button
                     AcerolaGlassButton(
                         modifier = Modifier.size(40.dp),
                         onClick = onPrevClick
@@ -97,30 +96,50 @@ fun ReaderBottomControls(
                         )
                     }
 
-                    // Next Button (Large Pill)
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                            .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                            .clickable(
-                                enabled = currentPage < pageCount - 1,
-                                onClick = onNextClick
-                            )
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                            .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
+                            .clickable(onClick = onNextClick)
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                // Next Chapter Button (Mover para fora do enableNavigation para aparecer no Webtoon)
+                if (isChapterRead && hasNextChapter) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable(onClick = onNextChapterClick)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = stringResource(id = R.string.label_reader_next_page),
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary
+                                text = stringResource(id = R.string.label_reader_next_chapter),
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1
                             )
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                imageVector = Icons.Default.NavigateNext,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(start = 4.dp).size(18.dp)
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
