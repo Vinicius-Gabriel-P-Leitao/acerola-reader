@@ -26,6 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.component.AcerolaGlassButton
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.presentation.R
 
 @Composable
@@ -42,6 +44,12 @@ fun ReaderBottomControls(
     enableNavigation: Boolean = true,
     isLoading: Boolean = false
 ) {
+    AcerolaLogger.d(
+        TAG,
+        "Recomposed: isChapterRead=$isChapterRead, hasNextChapter=$hasNextChapter, page=$currentPage/$pageCount",
+        LogSource.UI
+    )
+
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
 
@@ -79,7 +87,6 @@ fun ReaderBottomControls(
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Top Section: Progress Text
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +106,6 @@ fun ReaderBottomControls(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Progress Bar
                 val progress = if (pageCount > 0) (currentPage + 1).toFloat() / pageCount.toFloat() else 0f
                 LinearProgressIndicator(
                     progress = { progress },
@@ -113,13 +119,10 @@ fun ReaderBottomControls(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Bottom Section: Navigation Controls
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    
-                    // Left area: Previous Chapter
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                         if (hasPreviousChapter) {
                             Box(
@@ -149,7 +152,6 @@ fun ReaderBottomControls(
                         }
                     }
 
-                    // Center area: Page Navigation (if applicable)
                     if (enableNavigation) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp),
@@ -163,12 +165,14 @@ fun ReaderBottomControls(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                                     contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
-                                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.3f
+                                    )
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.width(12.dp))
-                            
+
                             AcerolaGlassButton(
                                 modifier = Modifier.size(40.dp),
                                 onClick = onNextClick
@@ -176,13 +180,14 @@ fun ReaderBottomControls(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                     contentDescription = stringResource(id = R.string.description_icon_pagination_next),
-                                    tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.3f
+                                    )
                                 )
                             }
                         }
                     }
 
-                    // Right area: Next Chapter
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
                         if (isChapterRead && hasNextChapter) {
                             Box(
@@ -216,3 +221,5 @@ fun ReaderBottomControls(
         }
     }
 }
+
+private const val TAG = "ReaderBottomControls"

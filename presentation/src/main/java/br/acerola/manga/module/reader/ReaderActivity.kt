@@ -21,6 +21,8 @@ import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.infrastructure.logging.AcerolaLogger
+import br.acerola.manga.infrastructure.logging.LogSource
 import br.acerola.manga.module.reader.layout.ReaderBottomControls
 import br.acerola.manga.module.reader.layout.ReaderSettingsSheet
 import br.acerola.manga.module.reader.layout.ReaderTopBar
@@ -57,6 +59,8 @@ class ReaderActivity(
             val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
             
+            AcerolaLogger.d(TAG, "Navigating to ReaderScreen. Manga: $mangaId, Chapter: $chapterId", LogSource.UI)
+            
             ReaderScreen(
                 chapter = state.currentChapter ?: page,
                 chapterId = chapterId,
@@ -84,10 +88,22 @@ class ReaderActivity(
                 hasNextChapter = state.nextChapterId != null,
                 hasPreviousChapter = state.previousChapterId != null,
                 isLoading = state.isLoading,
-                onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
-                onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
-                onNextChapterClick = { viewModel.loadNextChapter(mangaId) },
-                onPreviousChapterClick = { viewModel.loadPreviousChapter(mangaId) }
+                onPrevClick = { 
+                    AcerolaLogger.d(TAG, "User clicked previous page", LogSource.UI)
+                    viewModel.onSliderChanged(index = state.currentPage - 1) 
+                },
+                onNextClick = { 
+                    AcerolaLogger.d(TAG, "User clicked next page", LogSource.UI)
+                    viewModel.onSliderChanged(index = state.currentPage + 1) 
+                },
+                onNextChapterClick = { 
+                    AcerolaLogger.audit(TAG, "User clicked next chapter", LogSource.UI)
+                    viewModel.loadNextChapter(mangaId) 
+                },
+                onPreviousChapterClick = { 
+                    AcerolaLogger.audit(TAG, "User clicked previous chapter", LogSource.UI)
+                    viewModel.loadPreviousChapter(mangaId) 
+                }
             )
         }
     }
@@ -104,19 +120,30 @@ class ReaderActivity(
                 title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
                 subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
                 isVisible = state.isUiVisible,
-                onBackClick = { finish() },
-                onSettingsClick = { showSettings = true })
+                onBackClick = { 
+                    AcerolaLogger.audit(TAG, "User exited reader via back button", LogSource.UI)
+                    finish() 
+                },
+                onSettingsClick = { 
+                    AcerolaLogger.d(TAG, "Opening reader settings sheet", LogSource.UI)
+                    showSettings = true 
+                })
 
             if (showSettings) {
                 ReaderSettingsSheet(
                     onDismissRequest = { showSettings = false },
                     currentMode = state.readingMode,
                     onModeSelected = { mode ->
+                        AcerolaLogger.audit(TAG, "User changed reading mode to $mode", LogSource.UI)
                         viewModel.updateReadingMode(mode = mode)
                         showSettings = false
                     }
                 )
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "ReaderActivity"
     }
 }
