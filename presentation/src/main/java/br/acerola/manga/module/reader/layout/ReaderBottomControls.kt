@@ -1,16 +1,25 @@
 package br.acerola.manga.module.reader.layout
 
 import android.os.Build
-import androidx.compose.animation.*
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.NavigateNext
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -74,16 +83,13 @@ fun ReaderBottomControls(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Page Indicator
                 Text(
-                    text = stringResource(id = R.string.label_reader_page_format, currentPage + 1, pageCount),
+                    text = "${stringResource(id = R.string.label_reader_pages_prefix)} ${currentPage + 1}/$pageCount",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
-                // Navigation (Paged Modes Only)
                 if (enableNavigation) {
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
 
                     AcerolaGlassButton(
                         modifier = Modifier.size(40.dp),
@@ -92,41 +98,38 @@ fun ReaderBottomControls(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                             contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
-                            tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f
+                            )
                         )
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                            .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
-                            .clickable(onClick = onNextClick)
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
+                    AcerolaGlassButton(
+                        modifier = Modifier.size(40.dp),
+                        onClick = onNextClick
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                            modifier = Modifier.size(20.dp)
+                            contentDescription = stringResource(id = R.string.description_icon_pagination_next),
+                            tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f
+                            )
                         )
                     }
                 }
 
-                // Next Chapter Button (Mover para fora do enableNavigation para aparecer no Webtoon)
                 if (isChapterRead && hasNextChapter) {
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
+                    Spacer(modifier = Modifier.width(16.dp))
+
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .background(MaterialTheme.colorScheme.primary)
                             .clickable(onClick = onNextChapterClick)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -135,11 +138,12 @@ fun ReaderBottomControls(
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 maxLines = 1
                             )
+
                             Icon(
-                                imageVector = Icons.Default.NavigateNext,
                                 contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }

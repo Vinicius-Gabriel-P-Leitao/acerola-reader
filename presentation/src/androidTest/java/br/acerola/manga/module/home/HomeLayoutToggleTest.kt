@@ -40,8 +40,6 @@ class HomeLayoutToggleTest {
 
         // Aguarda animação de expansão do FloatingTool
         composeTestRule.waitForIdle()
-
-        // 2. Clica no botão de trocar visualização
         val gridLabel = context.getString(R.string.description_text_home_layout_grid_label)
         
         // Usamos useUnmergedTree para garantir que encontramos o texto dentro do FloatingTool
