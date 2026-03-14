@@ -70,8 +70,8 @@
     <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
     <string name="description_sync_chapters_internal">Sincronizar capítulos usando metadados internos</string>
 
-    <string name="label_sync_progress">Sincronizando...</string>
-    <string name="label_sync_progress_percent">Sincronizando... %1$d%%</string>
+    <string name="label_sync_progress">Sincronizando…</string>
+    <string name="label_sync_progress_percent">Sincronizando… %1$d%%</string>
     <string name="label_sync_complete">Sincronizado!</string>
 
     <!-- Components -->
@@ -139,5 +139,6 @@
     <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
     <string name="label_reader_config_title">Modo de Leitura</string>
     <string name="label_reader_pages_prefix">Páginas</string>
-    <string name="label_reader_next_chapter">Capitulo</string>
-</resources>
+    <string name="label_reader_next_chapter">Próximo</string>
+    <string name="label_reader_previous_chapter">Anterior</string>
+    </resources>

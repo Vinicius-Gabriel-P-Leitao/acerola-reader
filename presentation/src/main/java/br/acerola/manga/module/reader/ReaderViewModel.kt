@@ -67,6 +67,7 @@ class ReaderViewModel @Inject constructor(
                 pages = emptyMap(),
                 isLoading = true,
                 isChapterRead = false,
+                previousChapterId = null,
                 nextChapterId = null
             )
         }
@@ -79,9 +80,15 @@ class ReaderViewModel @Inject constructor(
                 .collect { pageDto ->
                     val chapters = pageDto.items.sortedBy { it.chapterSort.toDoubleOrNull() ?: 0.0 }
                     val currentIndex = chapters.indexOfFirst { it.id == chapter.id }
-                    if (currentIndex != -1 && currentIndex < chapters.size - 1) {
-                        val nextChapter = chapters[currentIndex + 1]
-                        _state.update { it.copy(nextChapterId = nextChapter.id) }
+                    if (currentIndex != -1) {
+                        val prevChapter = if (currentIndex > 0) chapters[currentIndex - 1] else null
+                        val nextChapter = if (currentIndex < chapters.size - 1) chapters[currentIndex + 1] else null
+                        _state.update { 
+                            it.copy(
+                                previousChapterId = prevChapter?.id,
+                                nextChapterId = nextChapter?.id
+                            ) 
+                        }
                     }
                 }
         }
@@ -103,6 +110,8 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun loadAndOpenChapter(mangaId: Long, chapterId: Long, initialPage: Int = 0) {
+        if (_state.value.isLoading) return
+        
         _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             getChaptersUseCase.observeByManga(mangaId)
@@ -215,6 +224,11 @@ class ReaderViewModel @Inject constructor(
     fun loadNextChapter(mangaId: Long) {
         val nextId = state.value.nextChapterId ?: return
         loadAndOpenChapter(mangaId, nextId, 0)
+    }
+
+    fun loadPreviousChapter(mangaId: Long) {
+        val prevId = state.value.previousChapterId ?: return
+        loadAndOpenChapter(mangaId, prevId, 0) // Note: Talvez seja melhor abrir na última página em vez de na página 0? Vou manter a página 0 para simplificar.
     }
 
     private suspend fun <T> Either<UserMessage, T>.handleResult() {

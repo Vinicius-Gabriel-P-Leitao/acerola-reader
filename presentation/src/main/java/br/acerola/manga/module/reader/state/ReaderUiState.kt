@@ -12,6 +12,7 @@ data class ReaderUiState(
     val pageCount: Int = 0,
     val currentPage: Int = 0,
     val isLoading: Boolean = false,
+    val previousChapterId: Long? = null,
     val nextChapterId: Long? = null,
     val isUiVisible: Boolean = true,
     val isChapterRead: Boolean = false,

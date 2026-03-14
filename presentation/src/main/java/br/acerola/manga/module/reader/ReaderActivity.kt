@@ -82,9 +82,12 @@ class ReaderActivity(
                 enableNavigation = state.readingMode != ReadingMode.WEBTOON,
                 isChapterRead = state.isChapterRead,
                 hasNextChapter = state.nextChapterId != null,
+                hasPreviousChapter = state.previousChapterId != null,
+                isLoading = state.isLoading,
                 onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
                 onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
-                onNextChapterClick = { viewModel.loadNextChapter(mangaId) }
+                onNextChapterClick = { viewModel.loadNextChapter(mangaId) },
+                onPreviousChapterClick = { viewModel.loadPreviousChapter(mangaId) }
             )
         }
     }

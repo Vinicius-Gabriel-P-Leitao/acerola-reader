@@ -1,26 +1,19 @@
 package br.acerola.manga.module.reader.layout
 
 import android.os.Build
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,9 +35,12 @@ fun ReaderBottomControls(
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
     onNextChapterClick: () -> Unit,
+    onPreviousChapterClick: () -> Unit,
     isChapterRead: Boolean = false,
     hasNextChapter: Boolean = false,
-    enableNavigation: Boolean = true
+    hasPreviousChapter: Boolean = false,
+    enableNavigation: Boolean = true,
+    isLoading: Boolean = false
 ) {
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
@@ -58,7 +54,7 @@ fun ReaderBottomControls(
     ) {
         Box(
             modifier = Modifier
-                .wrapContentWidth()
+                .fillMaxWidth()
                 .clip(RoundedCornerShape(32.dp))
                 .background(Color.Transparent)
         ) {
@@ -76,75 +72,143 @@ fun ReaderBottomControls(
                     .border(0.5.dp, borderColor, RoundedCornerShape(32.dp))
             )
 
-            Row(
+            Column(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .animateContentSize()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "${stringResource(id = R.string.label_reader_pages_prefix)} ${currentPage + 1}/$pageCount",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (enableNavigation) {
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    AcerolaGlassButton(
-                        modifier = Modifier.size(40.dp),
-                        onClick = onPrevClick
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
-                            tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.3f
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    AcerolaGlassButton(
-                        modifier = Modifier.size(40.dp),
-                        onClick = onNextClick
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = stringResource(id = R.string.description_icon_pagination_next),
-                            tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.3f
-                            )
-                        )
-                    }
+                // Top Section: Progress Text
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.label_reader_pages_prefix),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = "${currentPage + 1} / $pageCount",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
 
-                if (isChapterRead && hasNextChapter) {
-                    Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable(onClick = onNextChapterClick)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(id = R.string.label_reader_next_chapter),
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                maxLines = 1
-                            )
+                // Progress Bar
+                val progress = if (pageCount > 0) (currentPage + 1).toFloat() / pageCount.toFloat() else 0f
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                )
 
-                            Icon(
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                            )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Bottom Section: Navigation Controls
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    
+                    // Left area: Previous Chapter
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                        if (hasPreviousChapter) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLoading) 0.05f else 0.1f))
+                                    .clickable(enabled = !isLoading, onClick = onPreviousChapterClick)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
+                                        contentDescription = null,
+                                        tint = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(id = R.string.label_reader_previous_chapter),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        modifier = Modifier.padding(start = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Center area: Page Navigation (if applicable)
+                    if (enableNavigation) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AcerolaGlassButton(
+                                modifier = Modifier.size(40.dp),
+                                onClick = onPrevClick
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
+                                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.width(12.dp))
+                            
+                            AcerolaGlassButton(
+                                modifier = Modifier.size(40.dp),
+                                onClick = onNextClick
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = stringResource(id = R.string.description_icon_pagination_next),
+                                    tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
+                            }
+                        }
+                    }
+
+                    // Right area: Next Chapter
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                        if (isChapterRead && hasNextChapter) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(if (isLoading) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary)
+                                    .clickable(enabled = !isLoading, onClick = onNextChapterClick)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = stringResource(id = R.string.label_reader_next_chapter),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                        color = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimary,
+                                        maxLines = 1,
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                                        contentDescription = null,
+                                        tint = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
