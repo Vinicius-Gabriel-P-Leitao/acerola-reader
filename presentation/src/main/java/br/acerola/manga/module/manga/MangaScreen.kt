@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -22,7 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.layout.AcerolaGlassButton
+import br.acerola.manga.common.layout.AcerolaTopBar
 import br.acerola.manga.common.layout.ProgressIndicator
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -52,6 +58,7 @@ fun MangaScreen(
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
     chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
+    onBackClick: () -> Unit,
 ) {
     LaunchedEffect(key1 = manga.directory.id) {
         mangaViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
@@ -197,6 +204,19 @@ fun MangaScreen(
                 }
             }
         }
+
+        // Floating Top Bar with Glass Back Button
+        AcerolaTopBar(
+            navigationIcon = {
+                AcerolaGlassButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(id = R.string.description_icon_navigation_back),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        )
 
         Box(
             contentAlignment = Alignment.BottomStart,

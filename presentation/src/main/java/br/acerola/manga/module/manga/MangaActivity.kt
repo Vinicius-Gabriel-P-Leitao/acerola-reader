@@ -54,7 +54,8 @@ class MangaActivity(
                     mangaDirectoryViewModel = mangaDirectoryViewModel,
                     chapterArchiveViewModel = chapterArchiveViewModel,
                     mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
-                    chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
+                    chapterRemoteInfoViewModel = chapterRemoteInfoViewModel,
+                    onBackClick = { finish() }
                 )
             } else {
                 LaunchedEffect(Unit) {
@@ -87,7 +88,5 @@ class MangaActivity(
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
             }
         }
-
-        NavigationTopBar(navController)
     }
 }
