@@ -33,9 +33,7 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
 *   **Configuração e Gerenciamento do Mangá (Refatoração):**
     *   [X] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
     *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
-    *   [ ] **Edição de Metadados:** Editar metadados básicos com opção de "Trancar" o mangá para impedir sobrescrita.
-    *   [X] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se 
-        o banner for removido, a capa assume o lugar.
+    *   [X] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se o banner for removido, a capa assume o lugar.
     *   [x] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
     *   [x] **Ações de Limpeza (com confirmação):**
         *   Limpar metadados (remove do DB e apaga `ComicInfo.xml`).
@@ -47,21 +45,51 @@ Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funciona
     *   [x] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).
 *   **Melhorias na UI/UX:**
     *   [x] **ChapterItem:** Reformular visual para ficar mais agradável.
-    *   [x] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo 
+    *   [x] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo
         (avaliar `SearchBar` do Material3).
-    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porem com 
-        thema mais dark.
+    *   [ ] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porém com
+        tema mais dark.
 *   **Background e Performance:**
     *   [x] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de background com notificação de progresso, permitindo sair do app.
 *   **Fontes de Metadados Expandidas:**
     *   [ ] Opção para escolher **AniList** como uma fonte alternativa de metadados.
     *   [ ] Um painel de configurações para selecionar e configurar o provedor de metadados desejado (MangaDex/AniList).
 *   **Rastreamento de Leitura:**
-    *   [ ] Marcar capítulos como lidos/não lidos.
-    *   [ ] Funcionalidade "Continuar Lendo" para pular rapidamente para o último capítulo lido.
-*  **Adicionar funções e melhorar tela de Leitura**
+    *   [x] Marcar capítulos como lidos/não lidos.
+    *   [x] Funcionalidade "Continuar Lendo" para pular rapidamente para o último capítulo lido.
+*   **Adicionar funções e melhorar tela de Leitura:**
     *   [ ] A interface já está bem agradável, será feito uma otimização e testes do código de interface.
-    *   [ ] Será feito função de clique para trocar pagina nos modos paginados.
+    *   [x] Será feito função de clique para trocar página nos modos paginados.
+
+---
+
+*   **Download de Traduções via MangaDex:**
+    *   [ ] **Busca de tradução:** Localizar capítulos traduzidos por nome do mangá, ID do MangaDex ou URL do mangá.
+    *   [ ] **Seleção de idioma:** Permitir ao usuário escolher o idioma da tradução antes de baixar.
+    *   [ ] **Download como `.cbz`:** Baixar as páginas do capítulo e empacotar automaticamente em arquivo `.cbz` na pasta do mangá correspondente.
+    *   [ ] **Fila de download:** Gerenciar múltiplos downloads simultâneos com progresso individual por capítulo (tarefa de background com notificação).
+    *   [ ] **Integração com biblioteca:** Após o download, acionar sync automático para que o capítulo apareça na biblioteca sem intervenção manual.
+
+*   **Filtros e Ordenação da Biblioteca (Home Screen):**
+    *   [ ] **Ordenação:** Suporte a Asc/Desc para os critérios abaixo:
+        *   Título (A–Z / Z–A).
+        *   Quantidade de capítulos (menor → maior / maior → menor).
+        *   Última atualização / `lastUpdate` (mais recente → mais antigo / mais antigo → mais recente).
+    *   [ ] **Persistência de preferência:** Salvar a ordenação escolhida via DataStore para manter entre sessões.
+    *   [ ] **UI do filtro:** Usar o icone já na tela de HOME, não colocar label só icone mesmo.
+
+*   **Filtros e Ordenação da Tela de Capítulos:**
+      *   [ ] **Tirar autoscroll** Remover autoscroll da tela de chapter quando troco a paginação, deixar o usuário 
+          clicar em trocar página e não quebrar
+      *   [ ] **Ordenação:** Suporte a Asc/Desc para os critérios abaixo:
+          *   Número do capítulo (`chapterSort`) — crescente / decrescente.
+          *   Última atualização / `lastUpdate` (mais recente → mais antigo / mais antigo → mais recente).
+      *   [ ] **Persistência de preferência:** Salvar a ordenação por mangá (ou global) via DataStore.
+      *   [ ] **UI do filtro:** Ícone de ordenação na barra superior da tela de capítulos, abrindo bottom sheet consistente com o da Home.
+
+*    **Implementar mais logs:**
+      *    [ ] **Implementar uma classe de logs ou função de faz um wrapper para o Log.** Essa classe ou função tem 
+           de padronizar os logs do projeto para que fique fácil de buscar e filtrar    
 
 ## Pilha de Tecnologia
 
