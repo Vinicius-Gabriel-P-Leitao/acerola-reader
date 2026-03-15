@@ -12,6 +12,7 @@ import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.cover.CoverDao
 import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
@@ -20,6 +21,8 @@ import br.acerola.manga.local.database.entity.metadata.MangaRemoteInfo
 import br.acerola.manga.local.database.entity.metadata.relationship.Author
 import br.acerola.manga.local.database.entity.metadata.relationship.Cover
 import br.acerola.manga.local.database.entity.metadata.relationship.Genre
+import br.acerola.manga.local.database.entity.history.ReadingHistory
+import br.acerola.manga.local.database.entity.history.ChapterRead
 
 @Database(
     entities = [
@@ -30,10 +33,12 @@ import br.acerola.manga.local.database.entity.metadata.relationship.Genre
         ChapterDownloadSource::class,
         Author::class,
         Genre::class,
-        Cover::class
+        Cover::class,
+        ReadingHistory::class,
+        ChapterRead::class
     ],
     exportSchema = false,
-    version = 2,
+    version = 6,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class DatabaseAcerola : RoomDatabase() {
@@ -45,4 +50,5 @@ abstract class DatabaseAcerola : RoomDatabase() {
     abstract fun authorDao(): AuthorDao
     abstract fun coverDao(): CoverDao
     abstract fun genreDao(): GenreDao
+    abstract fun readingHistoryDao(): ReadingHistoryDao
 }

@@ -6,12 +6,12 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * UseCase para observar a lista de mangás da biblioteca.
  */
-class ObserveLibraryUseCase<T>(
+open class ObserveLibraryUseCase<T>(
     private val mangaRepository: MangaManagementRepository<T>
 ) {
 
-    val progress: StateFlow<Int> = mangaRepository.progress
-    val isIndexing: StateFlow<Boolean> = mangaRepository.isIndexing
+    val progress: StateFlow<Int> get() = mangaRepository.progress
+    val isIndexing: StateFlow<Boolean> get() = mangaRepository.isIndexing
 
     operator fun invoke(): StateFlow<List<T>> {
         return mangaRepository.observeLibrary()

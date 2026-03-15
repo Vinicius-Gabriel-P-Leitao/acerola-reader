@@ -3,6 +3,8 @@ package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
@@ -24,6 +26,7 @@ class MangadexChapterInfoRepository @Inject constructor(
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<ChapterRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
+        AcerolaLogger.d(TAG, "GET /manga/$manga/feed initiated (offset: $offset)", LogSource.NETWORK)  
         val allChapters = mutableListOf<ChapterRemoteInfoDto>()
         val semaphore = Semaphore(permits = 3)
         var currentOffset = offset
@@ -45,11 +48,13 @@ class MangadexChapterInfoRepository @Inject constructor(
             }
 
             if (responseFeedResult is Either.Left) {
+                AcerolaLogger.e(TAG, "Failed to fetch chapter feed for manga: $manga", LogSource.NETWORK)  
                 error = responseFeedResult.value
                 break
             }
 
             val responseFeed = responseFeedResult.getOrNull()!!
+            AcerolaLogger.d(TAG, "Feed received: ${responseFeed.data.size} chapters in this batch", LogSource.NETWORK)  
             val chaptersData = responseFeed.data
 
             val processedBatch = chaptersData.map { item ->
@@ -74,12 +79,16 @@ class MangadexChapterInfoRepository @Inject constructor(
         if (error != null && allChapters.isEmpty()) {
             Either.Left(value = error)
         } else {
+            AcerolaLogger.i(TAG, "Successfully fetched total of ${allChapters.size} chapters for manga $manga", LogSource.NETWORK)  
             Either.Right(value = allChapters)
         }
     }
 
     override suspend fun saveInfo(manga: String, info: ChapterRemoteInfoDto): Either<br.acerola.manga.error.message.NetworkError, Unit> {
-        // NOTE: MangaDex é apenas leitura para nós
         return Either.Right(Unit)
+    }
+
+    companion object {
+        private const val TAG = "MangadexChapterInfoRepository"  
     }
 }

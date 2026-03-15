@@ -2,7 +2,8 @@ package br.acerola.manga.module.reader.layout
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
+import br.acerola.manga.module.reader.Reader
 import org.junit.Rule
 import org.junit.Test
 
@@ -12,12 +13,12 @@ class ReaderTopBarTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `ReaderTopBar_deve_exibir_título_e_subtítulo_dinâmicos_corretamente`() {
+    fun `ReaderTopBar_deve_exibir_titulo_e_subtitulo_corretamente`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                ReaderTopBar(
-                    title = "Capítulo 01",
-                    subtitle = "Ordem: 1",
+                Reader.Layout.ReaderTopBar(
+                    title = "Solo Leveling",
+                    subtitle = "Capítulo 150",
                     isVisible = true,
                     onBackClick = {},
                     onSettingsClick = {}
@@ -25,27 +26,24 @@ class ReaderTopBarTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Capítulo 01").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Ordem: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Solo Leveling").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Capítulo 150").assertIsDisplayed()
     }
 
     @Test
-    fun `clique_no_ícone_de_configurações_deve_acionar_a_ação_correspondente`() {
-        var settingsClicked = false
+    fun `ReaderTopBar_deve_ficar_oculta_quando_isVisible_for_falso`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                ReaderTopBar(
-                    title = "Capítulo 01",
-                    subtitle = "Ordem: 1",
-                    isVisible = true,
+                Reader.Layout.ReaderTopBar(
+                    title = "Qualquer",
+                    subtitle = "Coisa",
+                    isVisible = false,
                     onBackClick = {},
-                    onSettingsClick = { settingsClicked = true }
+                    onSettingsClick = {}
                 )
             }
         }
 
-        // Aciona botão de configurações
-        composeTestRule.onNodeWithContentDescription("Configurações").performClick()
-        assert(settingsClicked)
+        composeTestRule.onNodeWithText("Qualquer").assertDoesNotExist()
     }
 }

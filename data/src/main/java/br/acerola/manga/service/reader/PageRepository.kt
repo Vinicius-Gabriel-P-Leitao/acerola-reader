@@ -91,8 +91,9 @@ class PageRepository @Inject constructor(
         return inSampleSize
     }
 
-    fun prefetchWindow(center: Int) {
-        val range = (center + 1)..(center + 3)
+    fun prefetchWindow(center: Int, total: Int) {
+        // Prefetch 2 à frente e 2 atrás
+        val range = ((center - 2)..(center + 2)).filter { it >= 0 && it < total }
 
         range.forEach { index ->
             CoroutineScope(context = Dispatchers.IO).launch {

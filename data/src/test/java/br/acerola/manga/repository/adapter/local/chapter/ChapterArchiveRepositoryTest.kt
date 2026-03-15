@@ -3,6 +3,7 @@ package br.acerola.manga.repository.adapter.local.chapter
 import android.content.Context
 import android.database.sqlite.SQLiteException
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
@@ -10,6 +11,8 @@ import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.util.ContentQueryHelper
+import br.acerola.manga.util.FastFileMetadata
 import br.acerola.manga.util.sha256
 import br.acerola.manga.util.templateToRegex
 import io.mockk.MockKAnnotations
@@ -18,8 +21,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -60,12 +65,26 @@ class ChapterArchiveRepositoryTest {
 
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)
+        mockkStatic(DocumentsContract::class)
+        mockkObject(ContentQueryHelper)
+        
+        every { context.contentResolver } returns mockk(relaxed = true)
+        every { DocumentsContract.getDocumentId(any()) } returns "docId"
+        every { DocumentsContract.getTreeDocumentId(any()) } returns "treeId"
+        val mockUri = mockk<Uri>()
+        every { mockUri.toString() } returns "uri/mock"
+        every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockUri
+        every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockUri
+        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns emptyList()
+        every { ContentQueryHelper.listFiles(any(), any()) } returns emptyList()
     }
 
     @After
     fun tearDown() {
         unmockkStatic(Uri::class)
         unmockkStatic(DocumentFile::class)
+        unmockkStatic(DocumentsContract::class)
+        unmockkObject(ContentQueryHelper)
         Dispatchers.resetMain()
     }
 
@@ -78,22 +97,27 @@ class ChapterArchiveRepositoryTest {
         
         coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns directory
         every { Uri.parse(any()) } returns uri
-        every { DocumentFile.fromTreeUri(context, uri) } returns folderDoc
+        every { DocumentFile.fromSingleUri(context, uri) } returns folderDoc
         
         // Simula que FS é mais novo que DB
-        coEvery { chapterArchiveDao.countChaptersByMangaDirectory(mangaId) } returns 1
+        val oldChapter = ChapterArchive(id = 2, chapter = "Old", path = "old/uri", folderPathFk = mangaId, chapterSort = "0")
+        coEvery { chapterArchiveDao.getChaptersByMangaDirectoryList(mangaId) } returns listOf(oldChapter)
         every { folderDoc.lastModified() } returns 2000L 
         
         // Simula arquivos
         val ch1 = mockk<DocumentFile>()
+        val ch1Uri = mockk<Uri>()
         every { ch1.isFile } returns true
         every { ch1.name } returns "ch1.cbz"
-        every { ch1.uri } returns mockk()
+        every { ch1.uri } returns ch1Uri
+        every { ch1Uri.toString() } returns "uri/ch1"
+        every { ch1.length() } returns 1024L
+        every { ch1.lastModified() } returns 3000L
         
         every { folderDoc.listFiles() } returns arrayOf(ch1)
         
-        coEvery { chapterArchiveDao.deleteChaptersByMangaDirectoryId(mangaId) } returns Unit
-        coEvery { chapterArchiveDao.insertAll(any()) } returns longArrayOf(1)
+        coEvery { chapterArchiveDao.delete(any()) } returns Unit
+        coEvery { chapterArchiveDao.insertAll(*anyVararg()) } returns longArrayOf(1)
         coEvery { directoryDao.update(any()) } returns Unit
 
         // Mock utils
@@ -114,8 +138,8 @@ class ChapterArchiveRepositoryTest {
         val result = repository.refreshMangaChapters(mangaId)
 
         assertTrue(result.isRight())
-        coVerify { chapterArchiveDao.deleteChaptersByMangaDirectoryId(mangaId) }
-        coVerify { chapterArchiveDao.insertAll(any()) }
+        coVerify { chapterArchiveDao.delete(oldChapter) }
+        coVerify { chapterArchiveDao.insertAll(*anyVararg()) }
         coVerify { directoryDao.update(match { it.lastModified == 2000L }) }
         
         unmockkStatic("br.acerola.manga.util.DocumentFileHashKt")

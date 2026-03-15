@@ -8,8 +8,10 @@ import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveRepositor
 import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRepository
 import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository
 import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRepository
+import br.acerola.manga.repository.adapter.local.history.LocalHistoryRepository
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.repository.port.HistoryManagementRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -79,4 +81,10 @@ abstract class LibraryModule {
     abstract fun bindComicInfoChapterRepository(
         impl: br.acerola.manga.repository.adapter.local.chapter.ComicInfoChapterRepository
     ): ChapterManagementRepository<ChapterRemoteInfoPageDto>
+
+    @Binds
+    @Singleton
+    abstract fun bindHistoryRepository(
+        impl: LocalHistoryRepository
+    ): HistoryManagementRepository
 }

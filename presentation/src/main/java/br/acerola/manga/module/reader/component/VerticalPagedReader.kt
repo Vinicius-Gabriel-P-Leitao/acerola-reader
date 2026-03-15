@@ -6,51 +6,42 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import br.acerola.manga.config.preference.ReadingMode
+import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.module.reader.gesture.ZoomablePageImage
 import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
-fun VerticalPagedReader(
+fun Reader.Component.VerticalPagedReader(
+    pages: Map<Int, Bitmap>,
     pagerState: PagerState,
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    pages: Map<Int, Bitmap>,
     onPageRequest: (Int) -> Unit,
-    onZoomChange: (Boolean) -> Unit
+    onZoomChange: (Boolean) -> Unit,
 ) {
-    var isZoomed by remember { mutableStateOf(value = false) }
-
     VerticalPager(
         state = pagerState,
-        beyondViewportPageCount = 1,
-        userScrollEnabled = !isZoomed,
         modifier = Modifier.fillMaxSize(),
+        key = { it }
     ) { index ->
-        LaunchedEffect(key1 = index) {
+        LaunchedEffect(index) {
             onPageRequest(index)
         }
 
-        ZoomablePageImage(
+        Reader.Gesture.ZoomablePageImage(
             pageBitmap = pages[index],
             orientation = ReadingMode.VERTICAL,
+            onZoomStatusChange = onZoomChange,
             onAreaTap = { area ->
                 when (area) {
                     TapArea.TOP -> onPrevClick()
                     TapArea.BOTTOM -> onNextClick()
                     TapArea.CENTER -> onUiToggle()
-                    else -> {} // WARN: Ignora o resto já que não chega
+                    else -> {}
                 }
-            },
-            onZoomStatusChange = { zoomed ->
-                isZoomed = zoomed
-                onZoomChange(zoomed)
             }
         )
     }
