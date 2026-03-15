@@ -26,7 +26,7 @@ import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
-fun HistoryScreen(
+fun Main.History.Layout.Screen(
     viewModel: HistoryViewModel
 ) {
     val historyItems by viewModel.historyItems.collectAsState()
@@ -76,7 +76,7 @@ fun HistoryScreen(
                             item.history.lastPage + 1
                         )
 
-                        Main.Component.MangaListItem(
+                        Main.Common.Component.MangaListItem(
                             manga = item.manga,
                             subtitle = progressInfo,
                             isCompleted = item.history.isCompleted,

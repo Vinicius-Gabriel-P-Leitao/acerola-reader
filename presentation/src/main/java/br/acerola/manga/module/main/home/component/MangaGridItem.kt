@@ -24,7 +24,7 @@ import coil.size.Size
 import coil.size.SizeResolver
 
 @Composable
-fun Main.Component.MangaGridItem(
+fun Main.Home.Component.MangaGridItem(
     manga: MangaDto,
     onClick: () -> Unit
 ) {

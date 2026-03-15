@@ -37,7 +37,7 @@ import coil.size.Size
 import coil.size.SizeResolver
 
 @Composable
-fun Main.Component.MangaListItem(
+fun Main.Common.Component.MangaListItem(
     manga: MangaDto,
     subtitle: String? = null,
     isCompleted: Boolean = false,

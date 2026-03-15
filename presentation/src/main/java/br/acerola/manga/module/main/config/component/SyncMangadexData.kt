@@ -24,10 +24,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
-fun SyncMangadexData(
+fun Main.Config.Component.SyncMangadexData(
     mangaDexViewModel: MangaRemoteInfoViewModel
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {

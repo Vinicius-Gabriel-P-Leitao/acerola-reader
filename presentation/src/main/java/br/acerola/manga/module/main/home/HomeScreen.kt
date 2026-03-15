@@ -42,7 +42,7 @@ import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
-fun Main.Layout.Screen(
+fun Main.Home.Layout.Screen(
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
@@ -61,7 +61,7 @@ fun Main.Layout.Screen(
                 searchKey = { (manga, _) -> manga.directory.name },
                 modifier = Modifier.padding(all = 6.dp),
                 itemContent = { (manga, history) ->
-                    Main.Component.MangaListItem(
+                    Main.Common.Component.MangaListItem(
                         manga = manga,
                         onPlayClick = history?.let {
                             {
@@ -104,8 +104,8 @@ fun Main.Layout.Screen(
                         }
 
                         when (layout) {
-                            HomeLayoutType.GRID -> Main.Component.MangaGridItem(manga = manga, onClick = onClick)
-                            HomeLayoutType.LIST -> Main.Component.MangaListItem(
+                            HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(manga = manga, onClick = onClick)
+                            HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
                                 manga = manga,
                                 onPlayClick = history?.let { h ->
                                     {

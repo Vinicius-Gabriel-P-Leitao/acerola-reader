@@ -39,10 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
-fun ThemeSettings(
+fun Main.Config.Component.ThemeSettings(
     themeViewModel: ThemeViewModel
 ) {
     val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
@@ -135,7 +136,7 @@ fun ThemeSettings(
 }
 
 @Composable
-fun ThemeCard(
+private fun ThemeCard(
     modifier: Modifier = Modifier,
     title: String,
     subtitle: String,

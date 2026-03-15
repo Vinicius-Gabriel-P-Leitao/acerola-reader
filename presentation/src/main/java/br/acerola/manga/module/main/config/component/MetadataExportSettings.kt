@@ -25,10 +25,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
-fun MetadataExportSettings(
+fun Main.Config.Component.MetadataExportSettings(
     viewModel: MetadataSettingsViewModel
 ) {
     val generateComicInfo by viewModel.generateComicInfo.collectAsState()

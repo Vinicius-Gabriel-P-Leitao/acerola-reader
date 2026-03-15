@@ -43,6 +43,7 @@ class ReaderActivity(
     }
 
     companion object {
+
         private const val TAG = "ReaderActivity"
     }
 
@@ -58,7 +59,10 @@ class ReaderActivity(
         }
     }
 
-    override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+    override fun NavGraphBuilder.setupNavGraph(
+        context: Context,
+        navController: NavHostController
+    ) {
         composable(route = context.getString(Destination.READER.route)) {
             val state by viewModel.state.collectAsState()
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
@@ -85,14 +89,15 @@ class ReaderActivity(
         AnimatedVisibility(
             visible = state.isUiVisible,
             enter = slideInVertically { it },
-            exit = slideOutVertically { it }) {
+            exit = slideOutVertically { it }
+        ) {
             Reader.Layout.BottomControls(
                 pageCount = state.pageCount,
                 currentPage = state.currentPage,
-                enableNavigation = state.readingMode != ReadingMode.WEBTOON,
                 isChapterRead = state.isChapterRead,
                 hasNextChapter = state.nextChapterId != null,
                 hasPreviousChapter = state.previousChapterId != null,
+                enableNavigation = state.readingMode != ReadingMode.WEBTOON,
                 isLoading = state.isLoading,
                 onPrevClick = {
                     AcerolaLogger.d(TAG, "User clicked previous page", LogSource.UI)

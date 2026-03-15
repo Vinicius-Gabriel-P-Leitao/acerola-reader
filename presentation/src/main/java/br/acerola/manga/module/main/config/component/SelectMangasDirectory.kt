@@ -35,10 +35,11 @@ import br.acerola.manga.presentation.R
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
-import br.acerola.manga.module.config.layout.FolderAccess
+import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.config.layout.FolderAccess
 
 @Composable
-fun SelectFolder(
+fun Main.Config.Component.SelectFolder(
     context: Context,
     fileSystemAccessViewModel: FileSystemAccessViewModel
 ) {
@@ -83,7 +84,7 @@ fun SelectFolder(
                 }
             }
 
-            FolderAccess(viewModel = fileSystemAccessViewModel) { uri ->
+            Main.Config.Layout.FolderAccess(viewModel = fileSystemAccessViewModel) { uri ->
                 selectedFolderUri = uri
             }
         }

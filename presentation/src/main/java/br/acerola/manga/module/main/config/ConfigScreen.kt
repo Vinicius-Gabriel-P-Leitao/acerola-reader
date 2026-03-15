@@ -32,12 +32,7 @@ import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
-import br.acerola.manga.module.config.component.MetadataExportSettings
-import br.acerola.manga.module.config.component.PreferSavedFile
-import br.acerola.manga.module.config.component.SelectFolder
-import br.acerola.manga.module.config.component.SyncLibraryArchive
-import br.acerola.manga.module.config.component.SyncMangadexData
-import br.acerola.manga.module.config.component.ThemeSettings
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.component.MetadataExportSettings
 import br.acerola.manga.module.main.config.component.PreferSavedFile
 import br.acerola.manga.module.main.config.component.SelectFolder
@@ -47,7 +42,7 @@ import br.acerola.manga.module.main.config.component.ThemeSettings
 import br.acerola.manga.presentation.R
 
 @Composable
-fun ConfigScreen(
+fun Main.Config.Layout.Screen(
     filePreferencesViewModel: FilePreferencesViewModel,
     fileSystemAccessViewModel: FileSystemAccessViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
@@ -84,7 +79,7 @@ fun ConfigScreen(
                     icon = Icons.Rounded.Palette,
                     iconColor = MaterialTheme.colorScheme.primary
                 ) {
-                    ThemeSettings(themeViewModel)
+                    Main.Config.Component.ThemeSettings(themeViewModel)
                 }
 
                 PrettyConfigCard(
@@ -93,13 +88,13 @@ fun ConfigScreen(
                     iconColor = MaterialTheme.colorScheme.secondary
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SelectFolder(context, fileSystemAccessViewModel)
+                        Main.Config.Component.SelectFolder(context, fileSystemAccessViewModel)
                         Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
 
-                        PreferSavedFile(filePreferencesViewModel)
+                        Main.Config.Component.PreferSavedFile(filePreferencesViewModel)
                         Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
 
-                        MetadataExportSettings(metadataSettingsViewModel)
+                        Main.Config.Component.MetadataExportSettings(metadataSettingsViewModel)
                     }
                 }
 
@@ -108,7 +103,7 @@ fun ConfigScreen(
                     icon = Icons.Rounded.Settings,
                     iconColor = MaterialTheme.colorScheme.primary
                 ) {
-                    SyncLibraryArchive(mangaDirectoryViewModel)
+                    Main.Config.Component.SyncLibraryArchive(mangaDirectoryViewModel)
                 }
 
                 PrettyConfigCard(
@@ -116,7 +111,7 @@ fun ConfigScreen(
                     icon = Icons.Rounded.CloudSync,
                     iconColor = MaterialTheme.colorScheme.tertiary
                 ) {
-                    SyncMangadexData(mangaDexViewModel)
+                    Main.Config.Component.SyncMangadexData(mangaDexViewModel)
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))

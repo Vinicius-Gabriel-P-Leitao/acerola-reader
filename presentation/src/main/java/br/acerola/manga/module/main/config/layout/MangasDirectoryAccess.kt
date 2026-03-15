@@ -19,10 +19,11 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.IconButton
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
-fun FolderAccess(viewModel: FileSystemAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
+fun Main.Config.Layout.FolderAccess(viewModel: FileSystemAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri ->

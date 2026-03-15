@@ -8,10 +8,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.RadioGroup
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 
 @Composable
-fun FilePreference(viewModel: FilePreferencesViewModel = viewModel()) {
+fun Main.Config.Layout.FilePreference(viewModel: FilePreferencesViewModel = viewModel()) {
     val selected by viewModel.selectedExtension.collectAsState(initial = null)
     val options = FileExtension.entries
 
