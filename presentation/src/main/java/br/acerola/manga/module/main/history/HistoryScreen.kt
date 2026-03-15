@@ -1,4 +1,4 @@
-package br.acerola.manga.module.history
+package br.acerola.manga.module.main.history
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +19,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.module.home.component.MangaListItem
+import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.common.component.MangaListItem
 import br.acerola.manga.module.manga.MangaActivity
+import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
@@ -66,23 +68,34 @@ fun HistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(historyItems, key = { it.manga.directory.id }) { item ->
-                        val chapterInfo = item.history.chapterName ?: stringResource(id = R.string.label_chapter_unknown)
+                        val chapterInfo =
+                            item.history.chapterName ?: stringResource(id = R.string.label_chapter_unknown)
                         val progressInfo = stringResource(
                             id = R.string.label_history_chapter_progress,
                             chapterInfo,
                             item.history.lastPage + 1
                         )
-                        
-                        MangaListItem(
+
+                        Main.Component.MangaListItem(
                             manga = item.manga,
                             subtitle = progressInfo,
                             isCompleted = item.history.isCompleted,
                             onPlayClick = {
-                                val intent = Intent(context, br.acerola.manga.module.reader.ReaderActivity::class.java).apply {
-                                    putExtra(br.acerola.manga.module.reader.ReaderActivity.PageExtra.MANGA_ID, item.manga.directory.id)
-                                    putExtra(br.acerola.manga.module.reader.ReaderActivity.PageExtra.CHAPTER_ID, item.history.chapterArchiveId)
-                                    putExtra(br.acerola.manga.module.reader.ReaderActivity.PageExtra.INITIAL_PAGE, item.history.lastPage)
-                                }
+                                val intent =
+                                    Intent(context, ReaderActivity::class.java).apply {
+                                        putExtra(
+                                            ReaderActivity.PageExtra.MANGA_ID,
+                                            item.manga.directory.id
+                                        )
+                                        putExtra(
+                                            ReaderActivity.PageExtra.CHAPTER_ID,
+                                            item.history.chapterArchiveId
+                                        )
+                                        putExtra(
+                                            ReaderActivity.PageExtra.INITIAL_PAGE,
+                                            item.history.lastPage
+                                        )
+                                    }
                                 context.startActivity(intent)
                             },
                             onClick = {

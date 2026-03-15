@@ -1,4 +1,4 @@
-package br.acerola.manga.module.config.layout
+package br.acerola.manga.module.main.config.layout
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts

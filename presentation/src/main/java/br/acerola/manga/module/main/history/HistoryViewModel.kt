@@ -1,13 +1,13 @@
-package br.acerola.manga.module.history
+package br.acerola.manga.module.main.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.module.main.history.state.HistoryUiState
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase
@@ -21,12 +21,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
-data class HistoryItemUiState(
-    val manga: MangaDto,
-    val history: ReadingHistoryWithChapterDto
-)
-
-
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val historyRepository: HistoryManagementRepository,
@@ -35,7 +29,7 @@ class HistoryViewModel @Inject constructor(
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val historyItems: StateFlow<List<HistoryItemUiState>> = historyRepository.getAllRecentHistoryWithChapter()
+    val historyItems: StateFlow<List<HistoryUiState>> = historyRepository.getAllRecentHistoryWithChapter()
         .flatMapLatest { historyList ->
             combine(
                 directoryObserve(),
@@ -44,7 +38,7 @@ class HistoryViewModel @Inject constructor(
                 val list = historyList.mapNotNull { history ->
                     val directory = directories.find { it.id == history.mangaDirectoryId } ?: return@mapNotNull null
                     val remote = remoteInfos.find { it.mangaDirectoryFk == history.mangaDirectoryId }
-                    HistoryItemUiState(
+                    HistoryUiState(
                         manga = MangaDto(directory = directory, remoteInfo = remote),
                         history = history
                     )

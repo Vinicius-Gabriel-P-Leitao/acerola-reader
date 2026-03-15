@@ -1,4 +1,4 @@
-package br.acerola.manga.module.home.component
+package br.acerola.manga.module.main.home.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -16,6 +16,7 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
 import br.acerola.manga.common.ux.component.CardType
 import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -23,7 +24,7 @@ import coil.size.Size
 import coil.size.SizeResolver
 
 @Composable
-fun MangaGridItem(
+fun Main.Component.MangaGridItem(
     manga: MangaDto,
     onClick: () -> Unit
 ) {

@@ -1,4 +1,4 @@
-package br.acerola.manga.module.config
+package br.acerola.manga.module.main.config
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -38,6 +38,12 @@ import br.acerola.manga.module.config.component.SelectFolder
 import br.acerola.manga.module.config.component.SyncLibraryArchive
 import br.acerola.manga.module.config.component.SyncMangadexData
 import br.acerola.manga.module.config.component.ThemeSettings
+import br.acerola.manga.module.main.config.component.MetadataExportSettings
+import br.acerola.manga.module.main.config.component.PreferSavedFile
+import br.acerola.manga.module.main.config.component.SelectFolder
+import br.acerola.manga.module.main.config.component.SyncLibraryArchive
+import br.acerola.manga.module.main.config.component.SyncMangadexData
+import br.acerola.manga.module.main.config.component.ThemeSettings
 import br.acerola.manga.presentation.R
 
 @Composable

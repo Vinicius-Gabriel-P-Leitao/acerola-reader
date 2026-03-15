@@ -1,4 +1,4 @@
-package br.acerola.manga.module.home.component
+package br.acerola.manga.module.main.common.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -30,6 +29,7 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
 import br.acerola.manga.common.ux.component.CardType
 import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -37,7 +37,7 @@ import coil.size.Size
 import coil.size.SizeResolver
 
 @Composable
-fun MangaListItem(
+fun Main.Component.MangaListItem(
     manga: MangaDto,
     subtitle: String? = null,
     isCompleted: Boolean = false,

@@ -18,8 +18,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.manga.common.ux.layout.BottomBar
+import br.acerola.manga.common.ux.layout.LocalSnackbarHostState
+import br.acerola.manga.common.ux.layout.NavigationBottomBar
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
@@ -27,11 +27,8 @@ import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
-import br.acerola.manga.module.config.ConfigScreen
-import br.acerola.manga.module.history.HistoryScreen
-import br.acerola.manga.module.history.HistoryViewModel
-import br.acerola.manga.module.home.HomeScreen
-import br.acerola.manga.module.home.HomeViewModel
+import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.home.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -43,8 +40,8 @@ class MainActivity(
     private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
     private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
-    private val historyViewModel: HistoryViewModel by viewModels()
-    private val homeViewModel: HomeViewModel by viewModels()
+    private val historyViewModel: br.acerola.manga.module.main.history.HistoryViewModel by viewModels()
+    private val homeViewModel: br.acerola.manga.module.main.home.HomeViewModel by viewModels()
     private val themeViewModel: ThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,15 +53,15 @@ class MainActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
-            HomeScreen(
+            Main.Layout.Screen(
                 homeViewModel
             )
         }
         defaultComposable(context, Destination.HISTORY) {
-            HistoryScreen(historyViewModel)
+            _root_ide_package_.br.acerola.manga.module.main.history.HistoryScreen(historyViewModel)
         }
         defaultComposable(context, Destination.CONFIG) {
-            ConfigScreen(
+            _root_ide_package_.br.acerola.manga.module.main.config.ConfigScreen(
                 fileSystemAccessViewModel = fileSystemAccessViewModel,
                 filePreferencesViewModel = filePreferencesViewModel,
                 mangaDirectoryViewModel = mangaDirectoryViewModel,
@@ -97,7 +94,7 @@ class MainActivity(
             }
         }
 
-        Acerola.Layout.BottomBar(navController)
+        Acerola.Layout.NavigationBottomBar(navController)
     }
 
     private fun NavGraphBuilder.defaultComposable(

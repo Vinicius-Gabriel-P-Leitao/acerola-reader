@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
 
-class HomeLayoutToggleTest {
+class MainLayoutToggleTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -30,7 +30,7 @@ class HomeLayoutToggleTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                HomeScreen(homeViewModel = viewModel)
+                Home.Layout.Screen(homeViewModel = viewModel)
             }
         }
 

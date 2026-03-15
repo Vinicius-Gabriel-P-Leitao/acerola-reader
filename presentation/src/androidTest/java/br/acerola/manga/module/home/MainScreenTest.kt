@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
 
-class HomeScreenTest {
+class MainScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -45,7 +45,7 @@ class HomeScreenTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                HomeScreen(homeViewModel = viewModel)
+                Home.Layout.Screen(homeViewModel = viewModel)
             }
         }
 

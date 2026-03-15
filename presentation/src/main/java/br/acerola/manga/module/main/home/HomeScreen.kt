@@ -1,4 +1,4 @@
-package br.acerola.manga.module.home
+package br.acerola.manga.module.main.home
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -34,14 +34,15 @@ import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.module.home.component.MangaGridItem
-import br.acerola.manga.module.home.component.MangaListItem
+import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.common.component.MangaListItem
+import br.acerola.manga.module.main.home.component.MangaGridItem
 import br.acerola.manga.module.manga.MangaActivity
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
-fun HomeScreen(
+fun Main.Layout.Screen(
     homeViewModel: HomeViewModel
 ) {
     val context = LocalContext.current
@@ -53,14 +54,14 @@ fun HomeScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Acerola.Component.SearchBar(
+            Acerola.Component.SearchBar<Pair<MangaDto, ReadingHistoryDto?>>(
                 items = mangas,
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
                 itemKey = { (manga, _) -> manga.directory.id },
                 searchKey = { (manga, _) -> manga.directory.name },
                 modifier = Modifier.padding(all = 6.dp),
                 itemContent = { (manga, history) ->
-                    MangaListItem(
+                    Main.Component.MangaListItem(
                         manga = manga,
                         onPlayClick = history?.let {
                             {
@@ -103,8 +104,8 @@ fun HomeScreen(
                         }
 
                         when (layout) {
-                            HomeLayoutType.GRID -> MangaGridItem(manga = manga, onClick = onClick)
-                            HomeLayoutType.LIST -> MangaListItem(
+                            HomeLayoutType.GRID -> Main.Component.MangaGridItem(manga = manga, onClick = onClick)
+                            HomeLayoutType.LIST -> Main.Component.MangaListItem(
                                 manga = manga,
                                 onPlayClick = history?.let { h ->
                                     {

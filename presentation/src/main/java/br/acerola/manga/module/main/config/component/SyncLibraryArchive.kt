@@ -1,4 +1,4 @@
-package br.acerola.manga.module.config.component
+package br.acerola.manga.module.main.config.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
