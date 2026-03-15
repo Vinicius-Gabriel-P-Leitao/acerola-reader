@@ -29,7 +29,7 @@ class HomeLayoutToggleTest {
         every { viewModel.mangas } returns MutableStateFlow(emptyList())
 
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+            AcerolaTheme {
                 HomeScreen(homeViewModel = viewModel)
             }
         }

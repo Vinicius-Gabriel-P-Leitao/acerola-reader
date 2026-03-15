@@ -1,11 +1,12 @@
 package br.acerola.manga.module.manga.layout
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.module.manga.MainTab
-import br.acerola.manga.presentation.R
+import br.acerola.manga.module.manga.Manga
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,13 +14,12 @@ class MangaTabsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun `MangaTabs_deve_exibir_o_número_total_de_capítulos_na_aba_correspondente`() {
+    fun `MangaTabs_deve_exibir_o_número_total_de_capítulos_na_tab_correspondente`() {
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                MangaTabs(
+            AcerolaTheme {
+                Manga.Layout.Tabs(
                     totalChapters = 150,
                     activeTab = MainTab.CHAPTERS,
                     onTabSelected = {}
@@ -27,18 +27,16 @@ class MangaTabsTest {
             }
         }
 
-        // Valida texto formatado: Capítulos (150)
-        val chaptersLabel = context.getString(R.string.title_chapter_tabs_chapters, 150)
-        composeTestRule.onNodeWithText(chaptersLabel, substring = true).assertIsDisplayed()
+        // Verifica se o texto formatado com o número de capítulos aparece
+        composeTestRule.onNodeWithText("150 Capítulos", substring = true).assertIsDisplayed()
     }
 
     @Test
-    fun `clique_em_uma_aba_inativa_deve_disparar_a_troca_de_contexto`() {
+    fun `MangaTabs_deve_chamar_onTabSelected_ao_clicar_em_uma_aba`() {
         var selectedTab: MainTab? = null
-
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                MangaTabs(
+            AcerolaTheme {
+                Manga.Layout.Tabs(
                     totalChapters = 10,
                     activeTab = MainTab.CHAPTERS,
                     onTabSelected = { selectedTab = it }
@@ -46,9 +44,8 @@ class MangaTabsTest {
             }
         }
 
-        // Clica na aba de Configurações
-        val settingsLabel = context.getString(R.string.title_chapter_tabs_settings)
-        composeTestRule.onNodeWithText(settingsLabel).performClick()
+        // Clica na aba de configurações (ou a segunda aba)
+        composeTestRule.onNodeWithText("Configurações", substring = true).performClick()
 
         assert(selectedTab == MainTab.SETTINGS)
     }

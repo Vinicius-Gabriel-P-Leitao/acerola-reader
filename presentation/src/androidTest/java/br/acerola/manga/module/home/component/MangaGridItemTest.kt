@@ -24,7 +24,7 @@ class MangaGridItemTest {
         )
 
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+            AcerolaTheme {
                 MangaGridItem(manga = manga, onClick = {})
             }
         }

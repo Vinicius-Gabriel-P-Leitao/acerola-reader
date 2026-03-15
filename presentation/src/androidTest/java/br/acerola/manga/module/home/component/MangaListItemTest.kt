@@ -24,7 +24,7 @@ class MangaListItemTest {
         )
 
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+            AcerolaTheme {
                 MangaListItem(manga = manga, onClick = {})
             }
         }

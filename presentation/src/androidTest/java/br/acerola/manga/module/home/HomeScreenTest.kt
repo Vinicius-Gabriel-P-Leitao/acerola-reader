@@ -44,7 +44,7 @@ class HomeScreenTest {
         every { viewModel.progress } returns MutableStateFlow(-1)
 
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+            AcerolaTheme {
                 HomeScreen(homeViewModel = viewModel)
             }
         }

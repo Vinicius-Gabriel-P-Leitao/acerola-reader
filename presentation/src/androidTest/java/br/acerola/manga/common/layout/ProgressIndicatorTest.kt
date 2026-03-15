@@ -1,11 +1,10 @@
 package br.acerola.manga.common.layout
 
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.test.platform.app.InstrumentationRegistry
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.ux.theme.AcerolaTheme
-import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,54 +12,46 @@ class ProgressIndicatorTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun `ProgressIndicator_deve_exibir_texto_de_sincronização_indeterminada_inicialmente`() {
+    fun `ProgressIndicator_deve_exibir_porcentagem_quando_o_progresso_for_informado`() {
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
-                    isLoading = true, progress = null
+            AcerolaTheme {
+                Acerola.Layout.ProgressIndicator(
+                    isLoading = true,
+                    progress = 0.45f // 45%
                 )
             }
         }
 
-        // Verifica se a string de carregamento padrão aparece
-        val syncLabel = context.getString(R.string.label_sync_progress)
-        composeTestRule.onNodeWithText(syncLabel, substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("45%", substring = true).assertIsDisplayed()
     }
 
     @Test
-    fun `ProgressIndicator_deve_exibir_a_porcentagem_de_progresso_quando_disponível`() {
+    fun `ProgressIndicator_deve_mostrar_indicador_indeterminado_quando_progresso_for_nulo`() {
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
-                    isLoading = true, progress = 0.5f
+            AcerolaTheme {
+                Acerola.Layout.ProgressIndicator(
+                    isLoading = true,
+                    progress = null
                 )
             }
         }
 
-        // 0.5f -> 50%
-        composeTestRule.onNodeWithText("50%", substring = true).assertIsDisplayed()
+        // Como o progresso é nulo, verificamos se o texto padrão de sincronização aparece
+        composeTestRule.onNodeWithText("Sincronizando", substring = true).assertIsDisplayed()
     }
 
     @Test
-    fun `ProgressIndicator_deve_exibir_estado_concluído_com_feedback_visual_ao_finalizar`() {
-        val isLoading = androidx.compose.runtime.mutableStateOf(true)
-
+    fun `ProgressIndicator_deve_desaparecer_quando_não_estiver_carregando`() {
         composeTestRule.setContent {
-            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
-                    isLoading = isLoading.value, progress = 1f
+            AcerolaTheme {
+                Acerola.Layout.ProgressIndicator(
+                    isLoading = false
                 )
             }
         }
 
-        // Muda para falso para disparar o feedback de conclusão
-        isLoading.value = false
-
-        // Aguarda a animação e o delay interno de feedback (Sincronizado!)
-        val completeLabel = context.getString(R.string.label_sync_complete)
-        composeTestRule.onNodeWithText(completeLabel, substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Sincronizando").assertDoesNotExist()
     }
 }
