@@ -25,11 +25,10 @@ import br.acerola.manga.presentation.R
 
 @Composable
 fun Manga.Component.PaginationPreference(
-    mangaViewModel: MangaViewModel,
+    selected: ChapterPageSizeType?,
+    onSelect: (ChapterPageSizeType) -> Unit,
 ) {
-    val selected by mangaViewModel.selectedChapterPerPage.collectAsState(initial = null)
     val options = ChapterPageSizeType.entries
-
     val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
 
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -73,8 +72,7 @@ fun Manga.Component.PaginationPreference(
             selectedIndex = selectedIndex,
             options = options.map { it.key.lowercase() },
             onSelect = { index ->
-                val extension = options[index]
-                mangaViewModel.updateChapterPerPage(size = extension)
+                onSelect(options[index])
             }
         )
     }

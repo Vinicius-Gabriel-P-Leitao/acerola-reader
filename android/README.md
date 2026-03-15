@@ -101,7 +101,6 @@ está planejado para o futuro.
     *   [ ] **Persistência de preferência:** Salvar a ordenação por mangá (ou global) via DataStore.
     *   [ ] **UI do filtro:** Ícone de ordenação na barra superior da tela de capítulos, abrindo bottom sheet
         consistente com o da Home.
-
 * **Implementar mais logs:**
     *   [x] **Implementar uma classe de logs ou função de faz um wrapper para o Log.** Essa classe ou função tem
         de padronizar os logs do projeto para que fique fácil de buscar e filtrar
@@ -111,6 +110,9 @@ está planejado para o futuro.
 * **Corrigir bug de notificação para todos os sync**
    *    [ ] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera 
         notifição e deixa com o app rodando em background, verificar se existe outro que tem o mesmo problema. 
+* **Adicionar novos themas, Nord e Dracula**
+    *    [ ] **Adicionar Dracula e Alucard** Dracula vai ser o dark e o Alucard o claro
+    *    [ ] **Adicionar o Nord** Verificar como o nord pode ser aplicado em claro e escuro
 
 ## Pilha de Tecnologia
 

@@ -30,16 +30,15 @@ import br.acerola.manga.presentation.R
 
 @Composable
 fun Manga.Component.SyncMangaArchive(
-    directory: MangaDirectoryDto,
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
-    chapterArchiveViewModel: ChapterArchiveViewModel,
+    onSyncChapters: () -> Unit,
+    onRescanCover: () -> Unit,
 ) {
     Column {
         ListItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    chapterArchiveViewModel.syncChaptersByMangaDirectory(folderId = directory.id)
+                    onSyncChapters()
                 },
             headlineContent = {
                 Text(
@@ -78,7 +77,7 @@ fun Manga.Component.SyncMangaArchive(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    mangaDirectoryViewModel.rescanMangaByManga(mangaId = directory.id)
+                    onRescanCover()
                 },
             headlineContent = {
                 Text(

@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,18 +20,49 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.common.component.MangaListItem
+import br.acerola.manga.module.main.history.state.HistoryAction
+import br.acerola.manga.module.main.history.state.HistoryUiState
 import br.acerola.manga.module.manga.MangaActivity
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
-fun Main.History.Layout.Screen(
-    viewModel: HistoryViewModel
-) {
+fun Main.History.Layout.Screen() {
+    val viewModel: HistoryViewModel = hiltViewModel()
     val historyItems by viewModel.historyItems.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { message ->
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+        }
+    }
+
+    val uiState = HistoryUiState(items = historyItems)
+
+    val onAction: (HistoryAction) -> Unit = { action ->
+        when (action) {
+            is HistoryAction.ClickManga -> {
+                val intent = Intent(context, MangaActivity::class.java).apply {
+                    putExtra(MangaActivity.ChapterExtra.MANGA, action.manga)
+                }
+                context.startActivity(intent)
+            }
+            is HistoryAction.ClickContinue -> {
+                val intent = Intent(context, ReaderActivity::class.java).apply {
+                    putExtra(ReaderActivity.PageExtra.MANGA_ID, action.manga.directory.id)
+                    putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
+                    putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
+                }
+                context.startActivity(intent)
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -50,7 +82,7 @@ fun Main.History.Layout.Screen(
                 ),
             )
 
-            if (historyItems.isEmpty()) {
+            if (uiState.items.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
@@ -67,7 +99,7 @@ fun Main.History.Layout.Screen(
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(historyItems, key = { it.manga.directory.id }) { item ->
+                    items(uiState.items, key = { it.manga.directory.id }) { item ->
                         val chapterInfo =
                             item.history.chapterName ?: stringResource(id = R.string.label_chapter_unknown)
                         val progressInfo = stringResource(
@@ -80,30 +112,8 @@ fun Main.History.Layout.Screen(
                             manga = item.manga,
                             subtitle = progressInfo,
                             isCompleted = item.history.isCompleted,
-                            onPlayClick = {
-                                val intent =
-                                    Intent(context, ReaderActivity::class.java).apply {
-                                        putExtra(
-                                            ReaderActivity.PageExtra.MANGA_ID,
-                                            item.manga.directory.id
-                                        )
-                                        putExtra(
-                                            ReaderActivity.PageExtra.CHAPTER_ID,
-                                            item.history.chapterArchiveId
-                                        )
-                                        putExtra(
-                                            ReaderActivity.PageExtra.INITIAL_PAGE,
-                                            item.history.lastPage
-                                        )
-                                    }
-                                context.startActivity(intent)
-                            },
-                            onClick = {
-                                val intent = Intent(context, MangaActivity::class.java).apply {
-                                    putExtra(MangaActivity.ChapterExtra.MANGA, item.manga)
-                                }
-                                context.startActivity(intent)
-                            }
+                            onPlayClick = { onAction(HistoryAction.ClickContinue(item.manga, item.history)) },
+                            onClick = { onAction(HistoryAction.ClickManga(item.manga)) }
                         )
                     }
                 }

@@ -23,14 +23,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
-import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
+import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.layout.FilePreference
 import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.PreferSavedFile(
-    filePreferencesViewModel: FilePreferencesViewModel
+    selected: FileExtension,
+    onSelect: (FileExtension) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
         Row(
@@ -74,6 +75,9 @@ fun Main.Config.Component.PreferSavedFile(
 
         Acerola.Component.Divider()
 
-        Main.Config.Layout.FilePreference(filePreferencesViewModel)
+        Main.Config.Layout.FilePreference(
+            selected = selected,
+            onSelect = onSelect
+        )
     }
 }

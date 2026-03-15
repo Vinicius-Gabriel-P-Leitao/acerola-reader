@@ -20,8 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.module.manga.MainTab
 import br.acerola.manga.module.manga.Manga
+import br.acerola.manga.module.manga.state.MainTab
 
 @Composable
 fun Manga.Layout.Tabs(

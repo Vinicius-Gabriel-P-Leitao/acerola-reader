@@ -1,7 +1,7 @@
 package br.acerola.manga.module.main.config.component
 
 import android.content.Context
-import androidx.compose.foundation.background
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,32 +19,26 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.presentation.R
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
-import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.layout.FolderAccess
+import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.SelectFolder(
     context: Context,
-    fileSystemAccessViewModel: FileSystemAccessViewModel
+    folderUri: Uri?,
+    onFolderSelected: (Uri?) -> Unit
 ) {
-    var selectedFolderUri by remember { mutableStateOf<String?>(value = null) }
-
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -84,13 +78,10 @@ fun Main.Config.Component.SelectFolder(
                 }
             }
 
-            Main.Config.Layout.FolderAccess(viewModel = fileSystemAccessViewModel) { uri ->
-                selectedFolderUri = uri
-            }
+            Main.Config.Layout.FolderAccess(onFolderSelected = onFolderSelected)
         }
 
-        selectedFolderUri?.let { uriString ->
-            val uri = uriString.toUri()
+        folderUri?.let { uri ->
             val documentFile = remember(uri) {
                 try {
                     DocumentFile.fromTreeUri(context, uri)

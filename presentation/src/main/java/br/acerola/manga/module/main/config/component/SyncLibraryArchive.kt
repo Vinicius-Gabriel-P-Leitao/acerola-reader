@@ -25,13 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.SyncLibraryArchive(
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
+    onDeepScan: () -> Unit,
+    onQuickSync: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -42,7 +42,7 @@ fun Main.Config.Component.SyncLibraryArchive(
         )
 
         ListItem(
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { mangaDirectoryViewModel.deepScanLibrary() },
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onDeepScan() },
             headlineContent = { 
                 Text(
                     text = stringResource(id = R.string.description_text_home_deep_sync),
@@ -79,7 +79,7 @@ fun Main.Config.Component.SyncLibraryArchive(
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
 
         ListItem(
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { mangaDirectoryViewModel.rescanMangas() },
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onQuickSync() },
             headlineContent = {
                 Text(
                     text = stringResource(id = R.string.description_text_home_quick_sync),

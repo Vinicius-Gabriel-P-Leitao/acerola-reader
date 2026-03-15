@@ -12,19 +12,24 @@ import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -38,25 +43,89 @@ import br.acerola.manga.module.main.config.component.SelectFolder
 import br.acerola.manga.module.main.config.component.SyncLibraryArchive
 import br.acerola.manga.module.main.config.component.SyncMangadexData
 import br.acerola.manga.module.main.config.component.ThemeSettings
+import br.acerola.manga.module.main.config.state.ConfigAction
+import br.acerola.manga.module.main.config.state.ConfigUiState
 import br.acerola.manga.presentation.R
+import kotlinx.coroutines.launch
 
 @Composable
-fun Main.Config.Layout.Screen(
-    filePreferencesViewModel: FilePreferencesViewModel,
-    fileSystemAccessViewModel: FileSystemAccessViewModel,
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
-    mangaDexViewModel: MangaRemoteInfoViewModel,
-    metadataSettingsViewModel: MetadataSettingsViewModel,
-    themeViewModel: ThemeViewModel
-) {
+fun Main.Config.Layout.Screen() {
+    val filePreferencesViewModel: FilePreferencesViewModel = hiltViewModel()
+    val fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel()
+    val mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel()
+    val mangaDexViewModel: MangaRemoteInfoViewModel = hiltViewModel()
+    val metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel()
+    val themeViewModel: ThemeViewModel = hiltViewModel()
+
     val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
     val scrollState = rememberScrollState()
 
+    LaunchedEffect(Unit) {
+        launch {
+            filePreferencesViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            fileSystemAccessViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            mangaDirectoryViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            mangaDexViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            metadataSettingsViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            themeViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+    }
+
+    val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
+    val selectedExtension by filePreferencesViewModel.selectedExtension.collectAsState()
+    val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
+    
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
     val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
 
     val metadataIndexing by mangaDexViewModel.isIndexing.collectAsState()
     val metadataProgress by mangaDexViewModel.progress.collectAsState()
+
+    val uiState = ConfigUiState(
+        useDynamicColor = useDynamicColor,
+        isLibraryIndexing = libraryIndexing,
+        selectedExtension = selectedExtension,
+        generateComicInfo = generateComicInfo,
+        isMetadataIndexing = metadataIndexing,
+        folderUri = fileSystemAccessViewModel.folderUri,
+        libraryProgress = if (libraryProgress >= 0) libraryProgress / 100f else null,
+        metadataProgress = if (metadataProgress >= 0) metadataProgress / 100f else null
+    )
+
+    val onAction: (ConfigAction) -> Unit = { action ->
+        when (action) {
+            is ConfigAction.UpdateDynamicColor -> themeViewModel.setDynamicColor(action.enabled)
+            is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
+            is ConfigAction.UpdateFileExtension -> filePreferencesViewModel.saveExtension(action.extension)
+            is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
+            ConfigAction.DeepScanLibrary -> mangaDirectoryViewModel.deepScanLibrary()
+            ConfigAction.QuickSyncLibrary -> mangaDirectoryViewModel.syncLibrary()
+            ConfigAction.SyncMangadexMetadata -> mangaDexViewModel.rescanMangas()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -78,7 +147,10 @@ fun Main.Config.Layout.Screen(
                     icon = Icons.Rounded.Palette,
                     iconColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Main.Config.Component.ThemeSettings(themeViewModel)
+                    Main.Config.Component.ThemeSettings(
+                        useDynamicColor = uiState.useDynamicColor,
+                        onDynamicColorChange = { onAction(ConfigAction.UpdateDynamicColor(it)) }
+                    )
                 }
 
                 PrettyConfigCard(
@@ -87,13 +159,23 @@ fun Main.Config.Layout.Screen(
                     iconColor = MaterialTheme.colorScheme.secondary
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Main.Config.Component.SelectFolder(context, fileSystemAccessViewModel)
+                        Main.Config.Component.SelectFolder(
+                            context = context,
+                            folderUri = uiState.folderUri,
+                            onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
+                        )
                         Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
 
-                        Main.Config.Component.PreferSavedFile(filePreferencesViewModel)
+                        Main.Config.Component.PreferSavedFile(
+                            selected = uiState.selectedExtension,
+                            onSelect = { onAction(ConfigAction.UpdateFileExtension(it)) }
+                        )
                         Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
 
-                        Main.Config.Component.MetadataExportSettings(metadataSettingsViewModel)
+                        Main.Config.Component.MetadataExportSettings(
+                            enabled = uiState.generateComicInfo,
+                            onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
+                        )
                     }
                 }
 
@@ -102,7 +184,10 @@ fun Main.Config.Layout.Screen(
                     icon = Icons.Rounded.Settings,
                     iconColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Main.Config.Component.SyncLibraryArchive(mangaDirectoryViewModel)
+                    Main.Config.Component.SyncLibraryArchive(
+                        onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
+                        onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
+                    )
                 }
 
                 PrettyConfigCard(
@@ -110,7 +195,9 @@ fun Main.Config.Layout.Screen(
                     icon = Icons.Rounded.CloudSync,
                     iconColor = MaterialTheme.colorScheme.tertiary
                 ) {
-                    Main.Config.Component.SyncMangadexData(mangaDexViewModel)
+                    Main.Config.Component.SyncMangadexData(
+                        onRescan = { onAction(ConfigAction.SyncMangadexMetadata) }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -123,10 +210,10 @@ fun Main.Config.Layout.Screen(
                     .padding(all = 18.dp),
             ) {
                 Acerola.Layout.ProgressIndicator(
-                    isLoading = libraryIndexing || metadataIndexing,
+                    isLoading = uiState.isLibraryIndexing || uiState.isMetadataIndexing,
                     progress = when {
-                        metadataIndexing && metadataProgress >= 0 -> metadataProgress / 100f
-                        libraryIndexing && libraryProgress >= 0 -> libraryProgress / 100f
+                        uiState.isMetadataIndexing -> uiState.metadataProgress
+                        uiState.isLibraryIndexing -> uiState.libraryProgress
                         else -> null
                     },
                 )
@@ -165,8 +252,8 @@ private fun ConfigHeader() {
 @Composable
 private fun PrettyConfigCard(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconColor: androidx.compose.ui.graphics.Color,
+    icon: ImageVector,
+    iconColor: Color,
     content: @Composable () -> Unit
 ) {
     Acerola.Component.Card(

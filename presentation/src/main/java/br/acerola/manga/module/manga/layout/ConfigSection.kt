@@ -22,28 +22,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
-import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
-import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
-import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.module.manga.Manga
-import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.module.manga.component.PaginationPreference
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMetadata
+import br.acerola.manga.module.manga.state.MangaAction
+import br.acerola.manga.module.manga.state.MangaSyncAction
+import br.acerola.manga.module.manga.state.MangaUiState
 import br.acerola.manga.presentation.R
 
 fun Manga.Layout.ConfigSection(
     scope: LazyListScope,
-    directory: MangaDirectoryDto,
-    remoteInfo: MangaRemoteInfoDto?,
-    mangaViewModel: MangaViewModel,
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
-    chapterArchiveViewModel: ChapterArchiveViewModel,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
+    uiState: MangaUiState,
+    onAction: (MangaAction) -> Unit,
+    onSyncAction: (MangaSyncAction) -> Unit,
 ) {
     scope.item { Spacer(modifier = Modifier.height(24.dp)) }
 
@@ -53,7 +45,10 @@ fun Manga.Layout.ConfigSection(
             icon = Icons.Rounded.Visibility,
             iconColor = MaterialTheme.colorScheme.primary
         ) {
-            Manga.Component.PaginationPreference(mangaViewModel = mangaViewModel)
+            Manga.Component.PaginationPreference(
+                selected = uiState.selectedChapterPerPage,
+                onSelect = { onAction(MangaAction.UpdatePageSize(it)) }
+            )
         }
     }
 
@@ -66,9 +61,8 @@ fun Manga.Layout.ConfigSection(
             iconColor = MaterialTheme.colorScheme.secondary
         ) {
             Manga.Component.SyncMangaArchive(
-                directory = directory,
-                mangaDirectoryViewModel = mangaDirectoryViewModel,
-                chapterArchiveViewModel = chapterArchiveViewModel,
+                onSyncChapters = { onSyncAction(MangaSyncAction.SyncChaptersLocal) },
+                onRescanCover = { onSyncAction(MangaSyncAction.RescanManga) },
             )
         }
     }
@@ -82,10 +76,11 @@ fun Manga.Layout.ConfigSection(
             iconColor = MaterialTheme.colorScheme.tertiary
         ) {
             Manga.Component.SyncMetadata(
-                directory = directory,
-                remoteInfo = remoteInfo,
-                mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
-                chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
+                remoteInfo = uiState.manga.remoteInfo,
+                onSyncMangadexInfo = { onSyncAction(MangaSyncAction.SyncMangadexInfo) },
+                onSyncMangadexChapters = { onSyncAction(MangaSyncAction.SyncMangadexChapters) },
+                onSyncComicInfo = { onSyncAction(MangaSyncAction.SyncComicInfo) },
+                onSyncComicInfoChapters = { onSyncAction(MangaSyncAction.SyncComicInfoChapters) },
             )
         }
     }

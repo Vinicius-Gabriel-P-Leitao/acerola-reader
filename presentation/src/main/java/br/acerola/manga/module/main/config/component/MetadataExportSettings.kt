@@ -17,23 +17,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.MetadataExportSettings(
-    viewModel: MetadataSettingsViewModel
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit
 ) {
-    val generateComicInfo by viewModel.generateComicInfo.collectAsState()
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
@@ -70,8 +66,8 @@ fun Main.Config.Component.MetadataExportSettings(
         }
 
         Switch(
-            checked = generateComicInfo,
-            onCheckedChange = { viewModel.setGenerateComicInfo(it) }
+            checked = enabled,
+            onCheckedChange = onCheckedChange
         )
     }
 }

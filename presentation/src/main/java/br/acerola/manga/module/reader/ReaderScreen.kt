@@ -1,35 +1,77 @@
 package br.acerola.manga.module.reader
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
+import br.acerola.manga.module.reader.layout.BottomControls
 import br.acerola.manga.module.reader.layout.PageContent
+import br.acerola.manga.module.reader.layout.SettingsSheet
+import br.acerola.manga.module.reader.layout.TopBar
+import br.acerola.manga.module.reader.state.ReaderAction
+import br.acerola.manga.presentation.R
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun ReaderScreen(
-    viewModel: ReaderViewModel,
     chapter: ChapterFileDto?,
     chapterId: Long = -1L,
     initialPage: Int,
     mangaId: Long,
+    onBackClick: () -> Unit,
 ) {
+    val viewModel: ReaderViewModel = hiltViewModel()
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
 
     LaunchedEffect(chapter, chapterId, mangaId) {
         if (chapter != null) {
             viewModel.openChapter(mangaId, chapter, initialPage)
         } else if (chapterId != -1L) {
             viewModel.loadAndOpenChapter(mangaId, chapterId, initialPage)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { message ->
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+        }
+    }
+
+    val onAction: (ReaderAction) -> Unit = { action ->
+        when (action) {
+            ReaderAction.NavigateBack -> onBackClick()
+            ReaderAction.ToggleUi -> viewModel.toggleUiVisibility()
+            is ReaderAction.UpdateReadingMode -> viewModel.updateReadingMode(action.mode)
+            is ReaderAction.ChangePage -> viewModel.onSliderChanged(action.index)
+            ReaderAction.LoadNextChapter -> viewModel.loadNextChapter(mangaId)
+            ReaderAction.LoadPreviousChapter -> viewModel.loadPreviousChapter(mangaId)
+            is ReaderAction.PageVisible -> viewModel.onPageVisible(mangaId, state.currentChapter?.id ?: chapterId, action.index)
+            is ReaderAction.CurrentPageChanged -> viewModel.onCurrentPageChanged(mangaId, state.currentChapter?.id ?: chapterId, action.index)
         }
     }
 
@@ -46,17 +88,6 @@ fun ReaderScreen(
         initialFirstVisibleItemIndex = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0))
     )
 
-    // Handle next page action
-    val handleNextAction = {
-        val currentPage = state.currentPage
-        val pageCount = state.pageCount
-
-        if (currentPage < pageCount - 1) {
-            viewModel.onSliderChanged(index = currentPage + 1)
-        }
-        Unit
-    }
-
     LaunchedEffect(pagerState, listState, state.readingMode, mangaId, chapter, chapterId) {
         snapshotFlow {
             if (state.readingMode == ReadingMode.WEBTOON) {
@@ -65,10 +96,7 @@ fun ReaderScreen(
                 pagerState.currentPage
             }
         }.distinctUntilChanged().collectLatest { index ->
-            val activeChapterId = chapter?.id ?: chapterId
-            if (activeChapterId != -1L) {
-                viewModel.onCurrentPageChanged(mangaId, activeChapterId, index)
-            }
+            onAction(ReaderAction.CurrentPageChanged(index))
         }
     }
 
@@ -84,23 +112,65 @@ fun ReaderScreen(
         }
     }
 
-    Reader.Layout.PageContent(
-        pages = state.pages,
-        listState = listState,
-        pagerState = pagerState,
-        pageCount = state.pageCount,
-        readingMode = state.readingMode,
-        onUiToggle = { viewModel.toggleUiVisibility() },
-        onPageRequest = { index ->
-            val activeChapterId = chapter?.id ?: chapterId
-            if (activeChapterId != -1L) {
-                viewModel.onPageVisible(mangaId, activeChapterId, index)
+    var showSettings by remember { mutableStateOf(value = false) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Reader.Layout.PageContent(
+            pages = state.pages,
+            listState = listState,
+            pagerState = pagerState,
+            pageCount = state.pageCount,
+            readingMode = state.readingMode,
+            onUiToggle = { onAction(ReaderAction.ToggleUi) },
+            onPageRequest = { index -> onAction(ReaderAction.PageVisible(index)) },
+            onPrevClick = { onAction(ReaderAction.ChangePage(state.currentPage - 1)) },
+            onNextClick = { onAction(ReaderAction.ChangePage(state.currentPage + 1)) },
+            onZoomChange = {}
+        )
+
+        // UI Overlay
+        val activeChapter = state.currentChapter ?: chapter
+        
+        Reader.Layout.TopBar(
+            title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
+            subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
+            isVisible = state.isUiVisible,
+            onBackClick = { onAction(ReaderAction.NavigateBack) },
+            onSettingsClick = { showSettings = true }
+        )
+
+        AnimatedVisibility(
+            visible = state.isUiVisible,
+            enter = slideInVertically { it },
+            exit = slideOutVertically { it },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+                Reader.Layout.BottomControls(
+                    isLoading = state.isLoading,
+                    pageCount = state.pageCount,
+                    currentPage = state.currentPage,
+                    isChapterRead = state.isChapterRead,
+                    hasNextChapter = state.nextChapterId != null,
+                    hasPreviousChapter = state.previousChapterId != null,
+                    enableNavigation = state.readingMode != ReadingMode.WEBTOON,
+                    onNextChapterClick = { onAction(ReaderAction.LoadNextChapter) },
+                    onPrevClick = { onAction(ReaderAction.ChangePage(state.currentPage - 1)) },
+                    onNextClick = { onAction(ReaderAction.ChangePage(state.currentPage + 1)) },
+                    onPreviousChapterClick = { onAction(ReaderAction.LoadPreviousChapter) }
+                )
             }
-        },
-        onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
-        onNextClick = handleNextAction,
-        onZoomChange = {
-            /* NOTE: O estado do zoom é gerenciado internamente ou via máquina virtual, se necessário, para bloquear a interface do usuário */
         }
-    )
+
+        if (showSettings) {
+            Reader.Layout.SettingsSheet(
+                onDismissRequest = { showSettings = false },
+                currentMode = state.readingMode,
+                onModeSelected = { mode ->
+                    onAction(ReaderAction.UpdateReadingMode(mode))
+                    showSettings = false
+                }
+            )
+        }
+    }
 }

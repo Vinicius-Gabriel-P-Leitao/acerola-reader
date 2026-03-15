@@ -37,14 +37,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
 ) : BaseActivity() {
-    private val fileSystemAccessViewModel: FileSystemAccessViewModel by viewModels()
-    private val metadataSettingsViewModel: MetadataSettingsViewModel by viewModels()
-    private val filePreferencesViewModel: FilePreferencesViewModel by viewModels()
-    private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
-    private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
-    private val historyViewModel: br.acerola.manga.module.main.history.HistoryViewModel by viewModels()
-    private val homeViewModel: br.acerola.manga.module.main.home.HomeViewModel by viewModels()
-    private val themeViewModel: ThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,24 +47,13 @@ class MainActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
-            Main.Home.Layout.Screen(
-                homeViewModel
-            )
+            Main.Home.Layout.Screen()
         }
         defaultComposable(context, Destination.HISTORY) {
-            Main.History.Layout.Screen(
-                historyViewModel
-            )
+            Main.History.Layout.Screen()
         }
         defaultComposable(context, Destination.CONFIG) {
-            Main.Config.Layout.Screen(
-                fileSystemAccessViewModel = fileSystemAccessViewModel,
-                filePreferencesViewModel = filePreferencesViewModel,
-                mangaDirectoryViewModel = mangaDirectoryViewModel,
-                mangaDexViewModel = mangaDexViewModel,
-                metadataSettingsViewModel = metadataSettingsViewModel,
-                themeViewModel = themeViewModel
-            )
+            Main.Config.Layout.Screen()
         }
     }
 
@@ -82,22 +63,6 @@ class MainActivity(
 
     @Composable
     override fun BottomBar(navController: NavHostController) {
-        // TODO: Verificar por que o uiEvents tá sendo carregado aqui
-        val snackbarHostState = LocalSnackbarHostState.current
-        val context = LocalContext.current
-
-        LaunchedEffect(key1 = Unit) {
-            mangaDirectoryViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
-        LaunchedEffect(key1 = Unit) {
-            mangaDexViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
         Acerola.Layout.BottomBar(navController)
     }
 

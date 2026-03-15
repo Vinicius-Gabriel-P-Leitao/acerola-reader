@@ -43,6 +43,7 @@ class ChapterRemoteInfoViewModel @Inject constructor(
     val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     private val _chapterPage = MutableStateFlow<ChapterRemoteInfoPageDto?>(value = null)
 

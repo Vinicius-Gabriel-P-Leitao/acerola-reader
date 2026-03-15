@@ -25,8 +25,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,15 +36,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
-import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.ThemeSettings(
-    themeViewModel: ThemeViewModel
+    useDynamicColor: Boolean,
+    onDynamicColorChange: (Boolean) -> Unit
 ) {
-    val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
     val context = LocalContext.current
 
     Column(
@@ -102,7 +99,7 @@ fun Main.Config.Component.ThemeSettings(
                 subtitle = stringResource(R.string.subtitle_settings_catppuccin_theme),
                 selected = !useDynamicColor,
                 colors = listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky),
-                onClick = { themeViewModel.setDynamicColor(false) }
+                onClick = { onDynamicColorChange(false) }
             )
 
             val dynamicPrimary = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -129,7 +126,7 @@ fun Main.Config.Component.ThemeSettings(
                 subtitle = stringResource(R.string.subtitle_settings_dynamic_color),
                 selected = useDynamicColor,
                 colors = listOf(dynamicPrimary, dynamicSecondary, dynamicTertiary),
-                onClick = { themeViewModel.setDynamicColor(true) }
+                onClick = { onDynamicColorChange(true) }
             )
         }
     }

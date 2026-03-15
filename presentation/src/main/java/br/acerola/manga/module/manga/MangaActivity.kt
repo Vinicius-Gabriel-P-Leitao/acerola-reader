@@ -24,12 +24,6 @@ class MangaActivity(
     override val startDestinationRes: Int = Destination.MANGA.route
 ) : BaseActivity() {
 
-    private val chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel by viewModels()
-    private val mangaRemoteInfoViewModel: MangaRemoteInfoViewModel by viewModels()
-    private val chapterArchiveViewModel: ChapterArchiveViewModel by viewModels()
-    private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
-    private val mangaViewModel: MangaViewModel by viewModels()
-
     object ChapterExtra {
         const val MANGA = "MANGA"
     }
@@ -49,11 +43,6 @@ class MangaActivity(
             if (manga != null) {
                 MangaScreen(
                     manga = manga!!,
-                    mangaViewModel = mangaViewModel,
-                    mangaDirectoryViewModel = mangaDirectoryViewModel,
-                    chapterArchiveViewModel = chapterArchiveViewModel,
-                    mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
-                    chapterRemoteInfoViewModel = chapterRemoteInfoViewModel,
                     onBackClick = { finish() }
                 )
             } else {
@@ -65,27 +54,5 @@ class MangaActivity(
     }
 
     @Composable
-    override fun TopBar(navController: NavHostController) {
-        val snackbarHostState = LocalSnackbarHostState.current
-        val context = LocalContext.current
-
-        // NOTE: Isso emite os erros para o snackbar, porem deve ser tirado daqui
-        LaunchedEffect(key1 = Unit) {
-            mangaViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
-        LaunchedEffect(key1 = Unit) {
-            mangaDirectoryViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
-        LaunchedEffect(key1 = Unit) {
-            mangaRemoteInfoViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-    }
+    override fun TopBar(navController: NavHostController) = Unit
 }

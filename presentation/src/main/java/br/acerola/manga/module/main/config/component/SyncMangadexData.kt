@@ -23,13 +23,12 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.SyncMangadexData(
-    mangaDexViewModel: MangaRemoteInfoViewModel
+    onRescan: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -42,7 +41,7 @@ fun Main.Config.Component.SyncMangadexData(
         ListItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { mangaDexViewModel.rescanMangas() },
+                .clickable { onRescan() },
             headlineContent = {
                 Text(
                     text = stringResource(id = R.string.title_sync_mangadex_remote_info),

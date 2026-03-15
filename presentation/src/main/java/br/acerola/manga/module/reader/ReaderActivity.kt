@@ -35,7 +35,6 @@ class ReaderActivity(
 ) : BaseActivity() {
 
     object PageExtra {
-
         const val PAGE = "PAGE"
         const val MANGA_ID = "MANGA_ID"
         const val CHAPTER_ID = "CHAPTER_ID"
@@ -43,12 +42,10 @@ class ReaderActivity(
     }
 
     companion object {
-
         private const val TAG = "ReaderActivity"
     }
 
     override val applyScaffoldPadding: Boolean = false
-    private val viewModel: ReaderViewModel by viewModels()
 
     val page: ChapterFileDto? by lazy {
         val safeIntent = intent ?: return@lazy null
@@ -64,7 +61,6 @@ class ReaderActivity(
         navController: NavHostController
     ) {
         composable(route = context.getString(Destination.READER.route)) {
-            val state by viewModel.state.collectAsState()
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
             val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
@@ -72,86 +68,18 @@ class ReaderActivity(
             AcerolaLogger.d(TAG, "Navigating to ReaderScreen. Manga: $mangaId, Chapter: $chapterId", LogSource.UI)
 
             ReaderScreen(
-                chapter = state.currentChapter ?: page,
+                chapter = page,
                 chapterId = chapterId,
                 mangaId = mangaId,
-                viewModel = viewModel,
-                initialPage = initialPage
+                initialPage = initialPage,
+                onBackClick = { finish() }
             )
         }
     }
 
     @Composable
-    override fun BottomBar(navController: NavHostController) {
-        val state by viewModel.state.collectAsState()
-        val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
-
-        AnimatedVisibility(
-            visible = state.isUiVisible,
-            enter = slideInVertically { it },
-            exit = slideOutVertically { it }
-        ) {
-            Reader.Layout.BottomControls(
-                pageCount = state.pageCount,
-                currentPage = state.currentPage,
-                isChapterRead = state.isChapterRead,
-                hasNextChapter = state.nextChapterId != null,
-                hasPreviousChapter = state.previousChapterId != null,
-                enableNavigation = state.readingMode != ReadingMode.WEBTOON,
-                isLoading = state.isLoading,
-                onPrevClick = {
-                    AcerolaLogger.d(TAG, "User clicked previous page", LogSource.UI)
-                    viewModel.onSliderChanged(index = state.currentPage - 1)
-                },
-                onNextClick = {
-                    AcerolaLogger.d(TAG, "User clicked next page", LogSource.UI)
-                    viewModel.onSliderChanged(index = state.currentPage + 1)
-                },
-                onNextChapterClick = {
-                    AcerolaLogger.audit(TAG, "User clicked next chapter", LogSource.UI)
-                    viewModel.loadNextChapter(mangaId)
-                },
-                onPreviousChapterClick = {
-                    AcerolaLogger.audit(TAG, "User clicked previous chapter", LogSource.UI)
-                    viewModel.loadPreviousChapter(mangaId)
-                }
-            )
-        }
-    }
+    override fun BottomBar(navController: NavHostController) = Unit
 
     @Composable
-    override fun TopBar(navController: NavHostController) {
-        val state by viewModel.state.collectAsState()
-        var showSettings by remember { mutableStateOf(value = false) }
-
-        val activeChapter = state.currentChapter ?: page
-
-        Box {
-            Reader.Layout.TopBar(
-                title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
-                subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
-                isVisible = state.isUiVisible,
-                onBackClick = {
-                    AcerolaLogger.audit(TAG, "User exited reader via back button", LogSource.UI)
-                    finish()
-                },
-                onSettingsClick = {
-                    AcerolaLogger.d(TAG, "Opening reader settings sheet", LogSource.UI)
-                    showSettings = true
-                })
-
-            if (showSettings) {
-                Reader.Layout.SettingsSheet(
-                    onDismissRequest = { showSettings = false },
-                    currentMode = state.readingMode,
-                    onModeSelected = { mode ->
-                        AcerolaLogger.audit(TAG, "User changed reading mode to $mode", LogSource.UI)
-                        viewModel.updateReadingMode(mode = mode)
-                        showSettings = false
-                    }
-                )
-            }
-        }
-    }
-
+    override fun TopBar(navController: NavHostController) = Unit
 }

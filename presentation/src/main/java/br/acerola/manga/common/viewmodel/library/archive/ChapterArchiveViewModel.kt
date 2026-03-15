@@ -41,6 +41,9 @@ class ChapterArchiveViewModel @Inject constructor(
     private val _progress = MutableStateFlow(value = -1)
     val progress: StateFlow<Int> = _progress.asStateFlow()
 
+    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+
     private val _chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
@@ -121,6 +124,13 @@ class ChapterArchiveViewModel @Inject constructor(
                 if (workInfo != null) {
                     _isIndexing.value = !workInfo.state.isFinished
                     _progress.value = workInfo.progress.getInt("progress", -1)
+
+                    if (workInfo.state == WorkInfo.State.FAILED) {
+                        val errorMessage = workInfo.outputData.getString("error")
+                        if (errorMessage != null) {
+                            _uiEvents.send(UserMessage.Raw(errorMessage))
+                        }
+                    }
                 }
             }
         }

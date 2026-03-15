@@ -32,10 +32,11 @@ import br.acerola.manga.presentation.R
 
 @Composable
 fun Manga.Component.SyncMetadata(
-    directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
+    onSyncMangadexInfo: () -> Unit,
+    onSyncMangadexChapters: () -> Unit,
+    onSyncComicInfo: () -> Unit,
+    onSyncComicInfoChapters: () -> Unit,
 ) {
     val currentSource = remoteInfo?.metadataSource
     Column {
@@ -50,7 +51,7 @@ fun Manga.Component.SyncMetadata(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    mangaRemoteInfoViewModel.syncFromMangadex(directory.id)
+                    onSyncMangadexInfo()
                 },
             headlineContent = { 
                 Text(
@@ -92,7 +93,7 @@ fun Manga.Component.SyncMetadata(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable {
-                        chapterRemoteInfoViewModel.syncChaptersByMangadex(mangaId = remoteInfo.id!!)
+                        onSyncMangadexChapters()
                     },
                 headlineContent = { 
                     Text(
@@ -147,7 +148,7 @@ fun Manga.Component.SyncMetadata(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    mangaRemoteInfoViewModel.syncFromComicInfo(directory.id)
+                    onSyncComicInfo()
                 },
             headlineContent = { 
                 Text(
@@ -187,7 +188,7 @@ fun Manga.Component.SyncMetadata(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable {
-                        chapterRemoteInfoViewModel.syncChaptersByComicInfo(folderId = directory.id)
+                        onSyncComicInfoChapters()
                     },
                 headlineContent = { 
                     Text(
