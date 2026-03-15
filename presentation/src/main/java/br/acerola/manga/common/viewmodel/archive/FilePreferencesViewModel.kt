@@ -23,7 +23,7 @@ class FilePreferencesViewModel @Inject constructor(
     private val context: Context get() = application
 
     val selectedExtension: StateFlow<FileExtension> = FilePreferences.fileExtensionFlow(context)
-        .onEach { AcerolaLogger.d(TAG, "Selected extension updated: $it", LogSource.VIEWMODEL) } // LOG ADICIONADO
+        .onEach { AcerolaLogger.d(TAG, "Selected extension updated: $it", LogSource.VIEWMODEL) }  
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
@@ -31,13 +31,13 @@ class FilePreferencesViewModel @Inject constructor(
         )
 
     fun saveExtension(value: FileExtension) {
-        AcerolaLogger.audit(TAG, "User saving file extension preference: $value", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.audit(TAG, "User saving file extension preference: $value", LogSource.VIEWMODEL)  
         viewModelScope.launch {
             FilePreferences.saveFileExtension(context, extension = value)
         }
     }
 
     companion object {
-        private const val TAG = "FilePreferencesViewModel" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "FilePreferencesViewModel"  
     }
 }

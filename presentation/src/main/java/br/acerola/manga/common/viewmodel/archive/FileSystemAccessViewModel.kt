@@ -17,18 +17,18 @@ class FileSystemAccessViewModel @Inject constructor(
     val folderUri get() = manager.folderUri
 
     fun saveFolderUri(uri: Uri?) {
-        AcerolaLogger.audit(TAG, "User selected new library folder", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.audit(TAG, "User selected new library folder", LogSource.VIEWMODEL)  
         viewModelScope.launch {
             manager.saveFolderUri(uri)
         }
     }
 
     suspend fun loadSavedFolder() {
-        AcerolaLogger.d(TAG, "Loading saved library folder", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.d(TAG, "Loading saved library folder", LogSource.VIEWMODEL)  
         manager.loadFolderUri()
     }
 
     companion object {
-        private const val TAG = "FileSystemAccessViewModel" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "FileSystemAccessViewModel"  
     }
 }

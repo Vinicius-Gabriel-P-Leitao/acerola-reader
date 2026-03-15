@@ -53,7 +53,7 @@ class ChapterArchiveRepository @Inject constructor(
 
     override suspend fun refreshMangaChapters(mangaId: Long, baseUri: android.net.Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Starting chapter sync for mangaId: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.i(TAG, "Starting chapter sync for mangaId: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             _progress.value = 0
 
@@ -88,7 +88,7 @@ class ChapterArchiveRepository @Inject constructor(
                 }
 
                 if (existingChapters.isNotEmpty() && baseUri == null && folder.lastModified >= folderLastModified) {
-                    AcerolaLogger.d(TAG, "No changes detected for manga: ${folder.name}, skipping sync", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "No changes detected for manga: ${folder.name}, skipping sync", LogSource.REPOSITORY)  
                     return@catch
                 }
 
@@ -149,12 +149,12 @@ class ChapterArchiveRepository @Inject constructor(
                 }
 
                 if (chaptersToDelete.isNotEmpty()) {
-                    AcerolaLogger.d(TAG, "Deleting ${chaptersToDelete.size} missing chapters for manga: ${folder.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "Deleting ${chaptersToDelete.size} missing chapters for manga: ${folder.name}", LogSource.REPOSITORY)  
                     chaptersToDelete.forEach { chapterArchiveDao.delete(it) }
                 }
 
                 if (chaptersToInsert.isNotEmpty()) {
-                    AcerolaLogger.d(TAG, "Inserting ${chaptersToInsert.size} new chapters for manga: ${folder.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "Inserting ${chaptersToInsert.size} new chapters for manga: ${folder.name}", LogSource.REPOSITORY)  
                     chapterArchiveDao.insertAll(*chaptersToInsert.toTypedArray())
                 }
 
@@ -162,10 +162,10 @@ class ChapterArchiveRepository @Inject constructor(
                     directoryDao.update(entity = folder.copy(lastModified = folderLastModified))
                 }
 
-                AcerolaLogger.i(TAG, "Finished chapter sync for manga: ${folder.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                AcerolaLogger.i(TAG, "Finished chapter sync for manga: ${folder.name}", LogSource.REPOSITORY)  
                 _progress.value = 100
             }.mapLeft { exception ->
-                AcerolaLogger.e(TAG, "Chapter sync failed for mangaId: $mangaId", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                AcerolaLogger.e(TAG, "Chapter sync failed for mangaId: $mangaId", LogSource.REPOSITORY, throwable = exception)  
                 when (exception) {
                     is IOException -> LibrarySyncError.DiskIOFailure(path = "Unknown", cause = exception)
                     is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
@@ -180,7 +180,7 @@ class ChapterArchiveRepository @Inject constructor(
 
     override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
-            AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)  
             list.toPageDto()
         }.stateIn(
             started = SharingStarted.Lazily,
@@ -191,7 +191,7 @@ class ChapterArchiveRepository @Inject constructor(
 
     override suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
         val offset = page * pageSize
-        AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)  
 
         val realTotal = if (total > 0) {
             total
@@ -215,6 +215,6 @@ class ChapterArchiveRepository @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "ChapterArchiveRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "ChapterArchiveRepository"  
     }
 }

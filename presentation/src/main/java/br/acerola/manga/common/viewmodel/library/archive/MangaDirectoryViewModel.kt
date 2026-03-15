@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import arrow.core.Either
@@ -40,7 +41,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaDirectoryViewModel @Inject constructor(
     private val manager: FileSystemAccessManager,
-    @param:DirectoryCase private val rescanManga: RescanMangaUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
     private val workManager: WorkManager
@@ -56,7 +56,6 @@ class MangaDirectoryViewModel @Inject constructor(
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
-    val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
     val mangaDirectories: StateFlow<List<MangaDirectoryDto>> = observeLibraryUseCase().stateIn(
         viewModelScope,
@@ -88,39 +87,41 @@ class MangaDirectoryViewModel @Inject constructor(
     }
 
     fun rescanMangaByManga(mangaId: Long) {
-        AcerolaLogger.audit(TAG, "Requesting rescan for manga: $mangaId", LogSource.VIEWMODEL) // LOG ADICIONADO
-        viewModelScope.launch {
-            _isIndexing.value = true
-            rescanManga(mangaId).handleResult()
-            _isIndexing.value = false
-        }
+        AcerolaLogger.audit(TAG, "Requesting rescan for manga: $mangaId", LogSource.VIEWMODEL)
+        enqueueSync(LibrarySyncWorker.SYNC_TYPE_SPECIFIC, mangaId)
     }
 
     fun deepScanLibrary() {
-        AcerolaLogger.audit(TAG, "User requested deep library scan", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.audit(TAG, "User requested deep library scan", LogSource.VIEWMODEL)
         enqueueSync(LibrarySyncWorker.SYNC_TYPE_REBUILD)
     }
 
-    private fun enqueueSync(type: String) {
-        AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL) // LOG ADICIONADO
+    private fun enqueueSync(
+        type: String,
+        mangaId: Long? = null
+    ) {
+        AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
         viewModelScope.launch {
-            val uri = getFolderUri() ?: run {
-                AcerolaLogger.w(TAG, "Sync aborted: base folder URI not found", LogSource.VIEWMODEL) // LOG ADICIONADO
+            val uri = getFolderUri() ?: if (type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
+                AcerolaLogger.w(TAG, "Sync aborted: base folder URI not found", LogSource.VIEWMODEL)
                 return@launch
-            }
+            } else null
 
             val syncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
                 .setInputData(
                     workDataOf(
                         LibrarySyncWorker.KEY_SYNC_TYPE to type,
-                        LibrarySyncWorker.KEY_BASE_URI to uri.toString()
+                        LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
+                        LibrarySyncWorker.KEY_MANGA_ID to (mangaId ?: -1L)
                     )
                 )
                 .addTag("library_sync")
                 .build()
 
+            val workName = if (mangaId != null) "library_sync_$mangaId" else "library_sync_unique"
+
             workManager.enqueueUniqueWork(
-                "library_sync_unique",
+                workName,
                 ExistingWorkPolicy.KEEP,
                 syncRequest
             )
@@ -136,9 +137,18 @@ class MangaDirectoryViewModel @Inject constructor(
                     val wasIndexing = _isIndexing.value
                     _isIndexing.value = !workInfo.state.isFinished
                     _progress.value = workInfo.progress.getInt("progress", -1)
-                    
+
                     if (wasIndexing && workInfo.state.isFinished) {
-                        AcerolaLogger.i(TAG, "Sync work finished: ${workInfo.state.name}", LogSource.VIEWMODEL) // LOG ADICIONADO
+                        AcerolaLogger.i(
+                            TAG, "Sync work finished: ${workInfo.state.name}", LogSource.VIEWMODEL
+                        )
+
+                        if (workInfo.state == WorkInfo.State.FAILED) {
+                            val errorMessage = workInfo.outputData.getString("error")
+                            if (errorMessage != null) {
+                                _uiEvents.send(UserMessage.Raw(errorMessage))
+                            }
+                        }
                     }
                 }
             }
@@ -150,14 +160,8 @@ class MangaDirectoryViewModel @Inject constructor(
         return manager.folderUri
     }
 
-    private suspend fun <T> Either<UserMessage, T>.handleResult() {
-        this.onLeft { error ->
-            AcerolaLogger.e(TAG, "Operation error: ${error.uiMessage}", LogSource.VIEWMODEL) // LOG ADICIONADO
-            _uiEvents.send(element = error)
-        }
-    }
-
     companion object {
-        private const val TAG = "MangaDirectoryViewModel" // PADRÃO OBRIGATÓRIO
+
+        private const val TAG = "MangaDirectoryViewModel"
     }
 }

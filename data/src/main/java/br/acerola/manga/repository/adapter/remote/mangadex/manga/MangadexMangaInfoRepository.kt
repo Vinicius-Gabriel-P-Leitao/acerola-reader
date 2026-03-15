@@ -26,14 +26,14 @@ class MangadexMangaInfoRepository @Inject constructor(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<MangaRemoteInfoDto>> = safeApiCall {
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK) // LOG ADICIONADO
+            AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)  
             val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
             val list = response.data.map { it.toDto(context) }
-            AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK) // LOG ADICIONADO
+            AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)  
             list
         }
     }.onLeft {
-        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, t = null) // LOG ADICIONADO (safeApiCall catches internally but onLeft is explicit)
+        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null)   (safeApiCall catches internally but onLeft is explicit)
     }
 
     override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> {
@@ -41,6 +41,6 @@ class MangadexMangaInfoRepository @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "MangadexMangaInfoRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "MangadexMangaInfoRepository"  
     }
 }

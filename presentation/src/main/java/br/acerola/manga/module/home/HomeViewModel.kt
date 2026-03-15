@@ -30,11 +30,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    workManager: WorkManager,
+    historyRepository: HistoryManagementRepository,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
-    private val historyRepository: HistoryManagementRepository,
-    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
@@ -69,8 +69,8 @@ class HomeViewModel @Inject constructor(
             val manga = MangaDto(directory = it, remoteInfo = remoteInfoMap[it.id])
             manga to historyMap[it.id]
         }
-        
-        AcerolaLogger.d(TAG, "Library loaded: ${list.size} mangas found", LogSource.VIEWMODEL) // LOG ADICIONADO
+
+        AcerolaLogger.d(TAG, "Library loaded: ${list.size} mangas found", LogSource.VIEWMODEL)
         list
     }.stateIn(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()
@@ -84,7 +84,7 @@ class HomeViewModel @Inject constructor(
         if (_selectedHomeLayout.value == layout) return
         _selectedHomeLayout.value = layout
 
-        AcerolaLogger.audit(TAG, "User changed home layout to ${layout.name}", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.audit(TAG, "User changed home layout to ${layout.name}", LogSource.VIEWMODEL)
 
         viewModelScope.launch {
             HomeLayoutPreference.saveLayout(context, layout)
@@ -101,11 +101,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun String.normalizeKey(): String {
-        return this.filter { it.isLetterOrDigit() }.lowercase()
-    }
-
     companion object {
-        private const val TAG = "HomeViewModel" // PADRÃO OBRIGATÓRIO
+
+        private const val TAG = "HomeViewModel"
     }
 }

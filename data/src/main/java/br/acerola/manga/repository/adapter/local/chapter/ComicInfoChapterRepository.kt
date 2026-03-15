@@ -50,7 +50,7 @@ class ComicInfoChapterRepository @Inject constructor(
 
     override suspend fun refreshMangaChapters(mangaId: Long, baseUri: android.net.Uri?): Either<LibrarySyncError, Unit> = 
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Starting ComicInfo metadata sync for chapter archives of manga: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.i(TAG, "Starting ComicInfo metadata sync for chapter archives of manga: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             _progress.value = 0
 
@@ -65,7 +65,7 @@ class ComicInfoChapterRepository @Inject constructor(
 
                 val total = localChapters.size
                 if (total == 0) {
-                    AcerolaLogger.d(TAG, "No local chapters found for manga: ${directory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "No local chapters found for manga: ${directory.name}", LogSource.REPOSITORY)  
                     return@catch
                 }
 
@@ -76,7 +76,7 @@ class ComicInfoChapterRepository @Inject constructor(
                         ?.firstOrNull()
 
                     if (result != null) {
-                        AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter}", LogSource.REPOSITORY) // LOG ADICIONADO
+                        AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter}", LogSource.REPOSITORY)  
                         val chapterRemoteInfoEntity = result.toModel(mangaRemoteInfoFk = remoteManga.id)
                         val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
 
@@ -87,10 +87,10 @@ class ComicInfoChapterRepository @Inject constructor(
                     _progress.value = ((index + 1).toFloat() / total.toFloat() * 100).toInt()
                 }
 
-                AcerolaLogger.i(TAG, "Finished ComicInfo sync for manga: ${directory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                AcerolaLogger.i(TAG, "Finished ComicInfo sync for manga: ${directory.name}", LogSource.REPOSITORY)  
                 _progress.value = 100
             }.mapLeft { exception ->
-                AcerolaLogger.e(TAG, "ComicInfo chapter sync failed for manga: $mangaId", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                AcerolaLogger.e(TAG, "ComicInfo chapter sync failed for manga: $mangaId", LogSource.REPOSITORY, throwable = exception)  
                 when (exception) {
                     is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                     else -> LibrarySyncError.UnexpectedError(cause = exception)
@@ -118,6 +118,6 @@ class ComicInfoChapterRepository @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "ComicInfoChapterRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "ComicInfoChapterRepository"  
     }
 }

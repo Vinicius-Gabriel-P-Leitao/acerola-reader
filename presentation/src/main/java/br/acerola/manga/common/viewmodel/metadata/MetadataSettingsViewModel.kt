@@ -21,7 +21,7 @@ class MetadataSettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val generateComicInfo: StateFlow<Boolean> = MetadataPreference.generateComicInfoFlow(context)
-        .onEach { AcerolaLogger.d(TAG, "Generate ComicInfo preference updated: $it", LogSource.VIEWMODEL) } // LOG ADICIONADO
+        .onEach { AcerolaLogger.d(TAG, "Generate ComicInfo preference updated: $it", LogSource.VIEWMODEL) }  
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -29,13 +29,13 @@ class MetadataSettingsViewModel @Inject constructor(
         )
 
     fun setGenerateComicInfo(value: Boolean) {
-        AcerolaLogger.audit(TAG, "User setting Generate ComicInfo preference: $value", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.audit(TAG, "User setting Generate ComicInfo preference: $value", LogSource.VIEWMODEL)  
         viewModelScope.launch {
             MetadataPreference.saveGenerateComicInfo(context, value)
         }
     }
 
     companion object {
-        private const val TAG = "MetadataSettingsViewModel" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "MetadataSettingsViewModel"  
     }
 }

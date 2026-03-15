@@ -31,21 +31,25 @@ class LibrarySyncWorker @AssistedInject constructor(
     companion object {
         const val KEY_SYNC_TYPE = "sync_type"
         const val KEY_BASE_URI = "base_uri"
+        const val KEY_MANGA_ID = "manga_id"
 
         const val SYNC_TYPE_INCREMENTAL = "incremental"
         const val SYNC_TYPE_REFRESH = "refresh"
         const val SYNC_TYPE_REBUILD = "rebuild"
+        const val SYNC_TYPE_SPECIFIC = "specific"
     }
 
     override suspend fun doWork(): Result = coroutineScope {
         val syncType = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_INCREMENTAL
         val baseUriString = inputData.getString(KEY_BASE_URI)
         val baseUri = baseUriString?.toUri()
+        val mangaId = inputData.getLong(KEY_MANGA_ID, -1L)
 
         val title = when (syncType) {
             SYNC_TYPE_INCREMENTAL -> context.getString(R.string.sync_library_title_incremental)
             SYNC_TYPE_REFRESH -> context.getString(R.string.sync_library_title_refresh)
             SYNC_TYPE_REBUILD -> context.getString(R.string.sync_library_title_rebuild)
+            SYNC_TYPE_SPECIFIC -> context.getString(R.string.sync_library_title_generic)
             else -> context.getString(R.string.sync_library_title_generic)
         }
 
@@ -54,7 +58,6 @@ class LibrarySyncWorker @AssistedInject constructor(
             ForegroundInfo(
                 NotificationHelper.SYNC_NOTIFICATION_ID,
                 builder.build(),
-                // TODO: Verificar
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         )
@@ -67,22 +70,27 @@ class LibrarySyncWorker @AssistedInject constructor(
         }
 
         try {
-            val result = when (syncType) {
+            val resultEither = when (syncType) {
                 SYNC_TYPE_INCREMENTAL -> repository.incrementalScan(baseUri)
                 SYNC_TYPE_REFRESH -> repository.refreshLibrary(baseUri)
                 SYNC_TYPE_REBUILD -> repository.rebuildLibrary(baseUri)
+                SYNC_TYPE_SPECIFIC -> if (mangaId != -1L) repository.refreshManga(mangaId) else {
+                    progressJob.cancel()
+                    return@coroutineScope Result.failure(workDataOf("error" to "Manga ID not found"))
+                }
                 else -> repository.incrementalScan(baseUri)
             }
 
             progressJob.cancel()
 
-            result.fold(
+            resultEither.fold(
                 ifLeft = {
+                    val errorMsg = it.uiMessage.asString(context)
                     notificationHelper.showFinishedNotification(
                         context.getString(R.string.sync_library_error_title),
-                        it.uiMessage.asString(context)
+                        errorMsg
                     )
-                    Result.failure()
+                    Result.failure(workDataOf("error" to errorMsg))
                 },
                 ifRight = {
                     notificationHelper.showFinishedNotification(
@@ -94,11 +102,12 @@ class LibrarySyncWorker @AssistedInject constructor(
             )
         } catch (exception: Exception) {
             progressJob.cancel()
+            val errorMsg = exception.message ?: context.getString(R.string.sync_library_unexpected_error)
             notificationHelper.showFinishedNotification(
                 context.getString(R.string.sync_library_fatal_error_title),
-                exception.message ?: context.getString(R.string.sync_library_unexpected_error)
+                errorMsg
             )
-            Result.failure()
+            Result.failure(workDataOf("error" to errorMsg))
         }
     }
 }

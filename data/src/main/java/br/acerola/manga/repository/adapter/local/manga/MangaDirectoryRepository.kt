@@ -66,7 +66,7 @@ class MangaDirectoryRepository @Inject constructor(
 
     override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Syncing specific manga: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.i(TAG, "Syncing specific manga: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             try {
                 Either.catch {
@@ -98,7 +98,7 @@ class MangaDirectoryRepository @Inject constructor(
                     
                     mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = null)
                 }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Failed to refresh specific manga: $mangaId", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                    AcerolaLogger.e(TAG, "Failed to refresh specific manga: $mangaId", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
                         is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
@@ -112,7 +112,7 @@ class MangaDirectoryRepository @Inject constructor(
         }
 
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        AcerolaLogger.i(TAG, "Starting incremental library scan", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.i(TAG, "Starting incremental library scan", LogSource.REPOSITORY)  
         _isIndexing.value = true
         try {
             return withContext(context = Dispatchers.IO) {
@@ -147,16 +147,16 @@ class MangaDirectoryRepository @Inject constructor(
                     val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
 
                     if (removedFolders.isNotEmpty()) {
-                        AcerolaLogger.d(TAG, "Removing ${removedFolders.size} stale folders from DB", LogSource.REPOSITORY) // LOG ADICIONADO
+                        AcerolaLogger.d(TAG, "Removing ${removedFolders.size} stale folders from DB", LogSource.REPOSITORY)  
                         removedFolders.forEach { folder ->
                             directoryDao.delete(entity = folder)
                         }
                     }
 
-                    AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)  
                     processFolderList(foldersToProcess, existingFolders = databaseFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                    AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -172,7 +172,7 @@ class MangaDirectoryRepository @Inject constructor(
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        AcerolaLogger.i(TAG, "Starting refresh library scan", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.i(TAG, "Starting refresh library scan", LogSource.REPOSITORY)  
         _isIndexing.value = true
         try {
             return withContext(context = Dispatchers.IO) {
@@ -186,10 +186,10 @@ class MangaDirectoryRepository @Inject constructor(
                     }
 
                     val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                    AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)  
                     processFolderList(foldersToProcess, existingFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                    AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
                         is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -205,7 +205,7 @@ class MangaDirectoryRepository @Inject constructor(
     }
 
     override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        AcerolaLogger.i(TAG, "Starting deep rebuild of library", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.i(TAG, "Starting deep rebuild of library", LogSource.REPOSITORY)  
         _isIndexing.value = true
         try {
             return withContext(context = Dispatchers.IO) {
@@ -219,7 +219,7 @@ class MangaDirectoryRepository @Inject constructor(
                         }
 
                         val total = allFolders.size
-                        AcerolaLogger.d(TAG, "Deep scanning chapters for $total mangas", LogSource.REPOSITORY) // LOG ADICIONADO
+                        AcerolaLogger.d(TAG, "Deep scanning chapters for $total mangas", LogSource.REPOSITORY)  
 
                         val processed = AtomicInteger(0)
                         _progress.value = 0
@@ -230,7 +230,7 @@ class MangaDirectoryRepository @Inject constructor(
                                     async(context = Dispatchers.IO) {
                                         try {
                                             mangaDirectoryOps.refreshMangaChapters(mangaId = folder.id, baseUri = baseUri).onLeft {
-                                                AcerolaLogger.e(TAG, "Error scanning chapters for ${folder.name}", LogSource.REPOSITORY, t = null) // LOG SUBSTITUÍDO (it is LibrarySyncError, not Exception)
+                                                AcerolaLogger.e(TAG, "Error scanning chapters for ${folder.name}", LogSource.REPOSITORY, throwable = null) // LOG SUBSTITUÍDO (it is LibrarySyncError, not Exception)
                                             }
                                         } finally {
                                             val current = processed.incrementAndGet()
@@ -245,7 +245,7 @@ class MangaDirectoryRepository @Inject constructor(
 
                         _progress.value = -1
                     }.mapLeft { exception ->
-                        AcerolaLogger.e(TAG, "Deep rebuild failed", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                        AcerolaLogger.e(TAG, "Deep rebuild failed", LogSource.REPOSITORY, throwable = exception)  
                         when (exception) {
                             is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
                             is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
@@ -263,7 +263,7 @@ class MangaDirectoryRepository @Inject constructor(
 
     override fun observeLibrary(): StateFlow<List<MangaDirectoryDto>> {
         return directoryDao.getAllMangaDirectory().map { folders ->
-            AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)  
             coroutineScope {
                 folders.map { folder ->
                     async(context = Dispatchers.IO) {
@@ -406,7 +406,7 @@ class MangaDirectoryRepository @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "MangaDirectoryRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "MangaDirectoryRepository"  
         const val CHUNK_SIZE = 50
         const val PROGRESS_THRESHOLD = 5
     }

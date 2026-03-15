@@ -2,12 +2,18 @@ package br.acerola.manga.common.viewmodel.library.archive
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.service.background.LibrarySyncWorker
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
@@ -20,40 +26,42 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class ChapterArchiveViewModel @Inject constructor(
+    private val workManager: WorkManager,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
-    @param:DirectoryCase private val rescanMangaChaptersUseCase: RescanMangaChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
-    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+    private val _progress = MutableStateFlow(value = -1)
+    val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
-    val chapterPage: StateFlow<ChapterArchivePageDto?> = _chapterPage.asStateFlow()
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
-    val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
     private var currentPage = 0
     private val pageSize = 20
     private var total = 0
 
-    fun init(directoryId: Long, firstPage: ChapterArchivePageDto) {
-        AcerolaLogger.d(TAG, "Initializing with directoryId: $directoryId", LogSource.VIEWMODEL) // LOG ADICIONADO
+    fun init(
+        directoryId: Long,
+        firstPage: ChapterArchivePageDto
+    ) {
+        AcerolaLogger.d(TAG, "Initializing with directoryId: $directoryId", LogSource.VIEWMODEL)
         _selectedDirectoryId.value = directoryId
-        total = firstPage.total
-        currentPage = firstPage.page
         _chapterPage.value = firstPage
+        currentPage = firstPage.page
+        total = firstPage.total
     }
 
     fun loadPage(page: Int) {
-        AcerolaLogger.d(TAG, "Loading local chapter page: $page", LogSource.VIEWMODEL) // LOG ADICIONADO
+        AcerolaLogger.d(TAG, "Loading local chapter page: $page", LogSource.VIEWMODEL)
         viewModelScope.launch {
             _chapterPage.value = null
 
@@ -73,22 +81,53 @@ class ChapterArchiveViewModel @Inject constructor(
     }
 
     fun syncChaptersByMangaDirectory(folderId: Long) {
-        AcerolaLogger.audit(TAG, "User requested local chapter rescan", LogSource.VIEWMODEL, mapOf("folderId" to folderId.toString())) // LOG ADICIONADO
+        AcerolaLogger.audit(
+            TAG, "User requested local chapter rescan", LogSource.VIEWMODEL, mapOf("folderId" to folderId.toString())
+        )
+        enqueueSync(LibrarySyncWorker.SYNC_TYPE_SPECIFIC, folderId)
+    }
+
+    private fun enqueueSync(
+        type: String,
+        mangaId: Long
+    ) {
+        AcerolaLogger.d(
+            TAG, "Enqueuing local sync from ChapterViewModel: $type, mangaId: $mangaId", LogSource.VIEWMODEL
+        )
         viewModelScope.launch {
-            _isIndexing.value = true
-            rescanMangaChaptersUseCase(mangaId = folderId).handleResult()
-            _isIndexing.value = false
+            val syncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
+                .setInputData(
+                    workDataOf(
+                        LibrarySyncWorker.KEY_SYNC_TYPE to type,
+                        LibrarySyncWorker.KEY_MANGA_ID to mangaId
+                    )
+                )
+                .addTag("library_sync")
+                .build()
+
+            workManager.enqueueUniqueWork(
+                "library_sync_$mangaId",
+                ExistingWorkPolicy.KEEP,
+                syncRequest
+            )
+
+            observeWorkStatus(syncRequest.id)
         }
     }
 
-    private suspend fun <T> Either<UserMessage, T>.handleResult() {
-        this.onLeft { error ->
-            AcerolaLogger.e(TAG, "Local chapter operation failed: ${error.uiMessage}", LogSource.VIEWMODEL) // LOG ADICIONADO
-            _uiEvents.send(element = error)
+    private fun observeWorkStatus(workerId: UUID) {
+        viewModelScope.launch {
+            workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                if (workInfo != null) {
+                    _isIndexing.value = !workInfo.state.isFinished
+                    _progress.value = workInfo.progress.getInt("progress", -1)
+                }
+            }
         }
     }
 
     companion object {
-        private const val TAG = "ChapterArchiveViewModel" // PADRÃO OBRIGATÓRIO
+
+        private const val TAG = "ChapterArchiveViewModel"
     }
 }

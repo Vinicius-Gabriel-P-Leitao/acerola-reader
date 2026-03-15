@@ -19,15 +19,15 @@ class MangadexFetchCoverRepository @Inject constructor(
     override suspend fun searchCover(url: String, vararg extra: String?): Either<NetworkError, ByteArray> =
         safeApiCall {
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.d(TAG, "Downloading cover from URL: $url", LogSource.NETWORK) // LOG ADICIONADO
+            AcerolaLogger.d(TAG, "Downloading cover from URL: $url", LogSource.NETWORK)  
             val responseBody = api.downloadFile(fileUrl = url)
             responseBody.bytes()
         }
     }.onLeft {
-        AcerolaLogger.e(TAG, "Failed to download cover from MangaDex", LogSource.NETWORK, t = null) // LOG ADICIONADO
+        AcerolaLogger.e(TAG, "Failed to download cover from MangaDex", LogSource.NETWORK, throwable = null)  
     }
 
     companion object {
-        private const val TAG = "MangadexFetchCoverRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "MangadexFetchCoverRepository"  
     }
 }

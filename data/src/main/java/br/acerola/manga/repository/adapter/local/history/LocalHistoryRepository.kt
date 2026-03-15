@@ -36,26 +36,26 @@ class LocalHistoryRepository @Inject constructor(
     }
 
     override suspend fun upsertHistory(history: ReadingHistoryDto) {
-        AcerolaLogger.d(TAG, "Updating history for mangaId: ${history.mangaDirectoryId}", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.d(TAG, "Updating history for mangaId: ${history.mangaDirectoryId}", LogSource.REPOSITORY)  
         readingHistoryDao.upsert(history.toEntity())
     }
 
     override suspend fun markChapterAsRead(mangaId: Long, chapterId: Long) {
-        AcerolaLogger.d(TAG, "Marking chapter $chapterId as read for manga $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.d(TAG, "Marking chapter $chapterId as read for manga $mangaId", LogSource.REPOSITORY)  
         readingHistoryDao.markChapterAsRead(ChapterRead(mangaDirectoryId = mangaId, chapterArchiveId = chapterId))
     }
 
     override suspend fun unmarkChapterAsRead(chapterId: Long) {
-        AcerolaLogger.d(TAG, "Unmarking chapter $chapterId as read", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.d(TAG, "Unmarking chapter $chapterId as read", LogSource.REPOSITORY)  
         readingHistoryDao.unmarkChapterAsRead(chapterId)
     }
 
     override suspend fun deleteHistory(mangaId: Long) {
-        AcerolaLogger.audit(TAG, "User deleting reading history for manga: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+        AcerolaLogger.audit(TAG, "User deleting reading history for manga: $mangaId", LogSource.REPOSITORY)  
         readingHistoryDao.deleteByMangaId(mangaId)
     }
 
     companion object {
-        private const val TAG = "LocalHistoryRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "LocalHistoryRepository"  
     }
 }

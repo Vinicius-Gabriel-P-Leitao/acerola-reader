@@ -66,20 +66,20 @@ class MangadexChapterRepository @Inject constructor(
 
     override suspend fun refreshMangaChapters(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Starting MangaDex chapter metadata sync for manga: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.i(TAG, "Starting MangaDex chapter metadata sync for manga: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             _progress.value = 0
 
             val remoteMangaRelations = try {
                 mangaRemoteInfoDao.getMangaWithRelationsByDirectoryId(mangaId).first()
             } catch (exception: Exception) {
-                AcerolaLogger.e(TAG, "Database error while fetching manga relations", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                AcerolaLogger.e(TAG, "Database error while fetching manga relations", LogSource.REPOSITORY, throwable = exception)  
                 _isIndexing.value = false
                 return@withContext Either.Left(value = LibrarySyncError.DatabaseError(cause = exception))
             }
 
             if (remoteMangaRelations == null) {
-                AcerolaLogger.w(TAG, "Sync aborted: No remote info link for manga $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+                AcerolaLogger.w(TAG, "Sync aborted: No remote info link for manga $mangaId", LogSource.REPOSITORY)  
                 _isIndexing.value = false
                 return@withContext Either.Right(value = Unit)
             }
@@ -89,10 +89,10 @@ class MangadexChapterRepository @Inject constructor(
             mangadexChapterInfoService.searchInfo(manga = remoteManga.mirrorId, limit = 100, onProgress = {
                 _progress.value = it
             }).mapLeft {
-                AcerolaLogger.e(TAG, "MangaDex API request failed for mirrorId: ${remoteManga.mirrorId}", LogSource.REPOSITORY) // LOG ADICIONADO
+                AcerolaLogger.e(TAG, "MangaDex API request failed for mirrorId: ${remoteManga.mirrorId}", LogSource.REPOSITORY)  
                 LibrarySyncError.NetworkError(cause = null)
             }.flatMap { remoteChapters ->
-                AcerolaLogger.d(TAG, "Fetched ${remoteChapters.size} chapters from MangaDex", LogSource.REPOSITORY) // LOG ADICIONADO
+                AcerolaLogger.d(TAG, "Fetched ${remoteChapters.size} chapters from MangaDex", LogSource.REPOSITORY)  
                 _progress.value = 90
                 Either.catch {
                     val localDirectory = directoryDao.getMangaDirectoryById(mangaId)
@@ -101,7 +101,7 @@ class MangadexChapterRepository @Inject constructor(
                     val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(localDirectory.id).first()
 
                     val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
-                    AcerolaLogger.d(TAG, "Matched ${chapterPairs.size} chapters out of ${localChapters.size} local files", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.d(TAG, "Matched ${chapterPairs.size} chapters out of ${localChapters.size} local files", LogSource.REPOSITORY)  
 
                     if (chapterPairs.isEmpty()) {
                         throw MangadexRequestException(
@@ -122,10 +122,10 @@ class MangadexChapterRepository @Inject constructor(
                         directoryId = mangaId, mangaInfo = remoteMangaRelations.toDto()
                     )
 
-                    AcerolaLogger.i(TAG, "MangaDex chapter sync completed for: ${localDirectory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                    AcerolaLogger.i(TAG, "MangaDex chapter sync completed for: ${localDirectory.name}", LogSource.REPOSITORY)  
                     _progress.value = 100
                 }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Error matching/saving MangaDex chapters", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                    AcerolaLogger.e(TAG, "Error matching/saving MangaDex chapters", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                         is MangadexRequestException -> LibrarySyncError.MangadexError(cause = exception)
@@ -211,6 +211,6 @@ class MangadexChapterRepository @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "MangadexChapterRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "MangadexChapterRepository"  
     }
 }

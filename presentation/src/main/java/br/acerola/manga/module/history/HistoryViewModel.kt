@@ -49,7 +49,7 @@ class HistoryViewModel @Inject constructor(
                         history = history
                     )
                 }
-                AcerolaLogger.d(TAG, "History items updated: ${list.size} items found", LogSource.VIEWMODEL) // LOG ADICIONADO
+                AcerolaLogger.d(TAG, "History items updated: ${list.size} items found", LogSource.VIEWMODEL)  
                 list
             }
         }.stateIn(
@@ -59,6 +59,6 @@ class HistoryViewModel @Inject constructor(
         )
 
     companion object {
-        private const val TAG = "HistoryViewModel" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "HistoryViewModel"  
     }
 }

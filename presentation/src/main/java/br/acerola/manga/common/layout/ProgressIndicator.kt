@@ -46,17 +46,16 @@ fun ProgressIndicator(
     var showIndicator by remember { mutableStateOf(false) }
     var isFinished by remember { mutableStateOf(false) }
 
-    // Gerencia a visibilidade e o estado de conclusão
     LaunchedEffect(isLoading) {
         if (isLoading) {
             isFinished = false
             showIndicator = true
         } else {
             if (showIndicator) {
+                delay(2000)
                 isFinished = true
-                delay(2000) // Tempo para o usuário ver o "Check"
-                showIndicator = false
                 isFinished = false
+                showIndicator = false
             }
         }
     }
@@ -80,7 +79,6 @@ fun ProgressIndicator(
                     horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Animação de troca entre Loading e Check
                     AnimatedContent(
                         targetState = isFinished,
                         transitionSpec = {
@@ -114,14 +112,13 @@ fun ProgressIndicator(
                         }
                     }
 
-                    // Animação de troca de Texto
                     AnimatedContent(
                         targetState = isFinished,
+                        label = "SyncStatusText",
                         transitionSpec = {
                             fadeIn(animationSpec = tween(300)) togetherWith
                                     fadeOut(animationSpec = tween(300))
                         },
-                        label = "SyncStatusText"
                     ) { finished ->
                         val text = if (finished) {
                             stringResource(id = R.string.label_sync_complete)

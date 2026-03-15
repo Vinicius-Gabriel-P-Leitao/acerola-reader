@@ -48,7 +48,7 @@ class ComicInfoMangaRepository @Inject constructor(
 
     override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Refreshing manga from ComicInfo.xml: $mangaId", LogSource.REPOSITORY) // LOG ADICIONADO
+            AcerolaLogger.i(TAG, "Refreshing manga from ComicInfo.xml: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             try {
                 Either.catch {
@@ -60,7 +60,7 @@ class ComicInfoMangaRepository @Inject constructor(
                     )
 
                     val bestMatch = fetchedListResult.getOrNull()?.firstOrNull() ?: run {
-                        AcerolaLogger.d(TAG, "No ComicInfo.xml found or matched for: ${directory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                        AcerolaLogger.d(TAG, "No ComicInfo.xml found or matched for: ${directory.name}", LogSource.REPOSITORY)  
                         return@catch
                     }
 
@@ -97,10 +97,10 @@ class ComicInfoMangaRepository @Inject constructor(
                                 mangaRemoteInfoFk = remoteId
                             )
                         }
-                        AcerolaLogger.i(TAG, "Successfully updated metadata from ComicInfo for: ${directory.name}", LogSource.REPOSITORY) // LOG ADICIONADO
+                        AcerolaLogger.i(TAG, "Successfully updated metadata from ComicInfo for: ${directory.name}", LogSource.REPOSITORY)  
                     }
                 }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Error processing ComicInfo for manga: $mangaId", LogSource.REPOSITORY, t = exception) // LOG ADICIONADO
+                    AcerolaLogger.e(TAG, "Error processing ComicInfo for manga: $mangaId", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                         is IOException -> LibrarySyncError.DiskIOFailure(path = "Local", cause = exception)
@@ -121,6 +121,6 @@ class ComicInfoMangaRepository @Inject constructor(
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
 
     companion object {
-        private const val TAG = "ComicInfoMangaRepository" // PADRÃO OBRIGATÓRIO
+        private const val TAG = "ComicInfoMangaRepository"  
     }
 }
