@@ -25,20 +25,20 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
 @Composable
-fun SyncMangaArchive(
-    directory: MangaDirectoryDto,
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
-    chapterArchiveViewModel: ChapterArchiveViewModel,
+fun Manga.Component.SyncMangaArchive(
+    onSyncChapters: () -> Unit,
+    onRescanCover: () -> Unit,
 ) {
     Column {
         ListItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    chapterArchiveViewModel.syncChaptersByMangaDirectory(folderId = directory.id)
+                    onSyncChapters()
                 },
             headlineContent = {
                 Text(
@@ -77,7 +77,7 @@ fun SyncMangaArchive(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    mangaDirectoryViewModel.rescanMangaByManga(mangaId = directory.id)
+                    onRescanCover()
                 },
             headlineContent = {
                 Text(

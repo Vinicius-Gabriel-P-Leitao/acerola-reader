@@ -2,17 +2,15 @@ package br.acerola.manga.module.reader.gesture
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -20,81 +18,103 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
 import br.acerola.manga.config.preference.ReadingMode
+import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
-fun ZoomablePageImage(
+fun Reader.Gesture.ZoomablePageImage(
     pageBitmap: Bitmap?,
     onAreaTap: (TapArea) -> Unit,
     onZoomStatusChange: (Boolean) -> Unit,
     orientation: ReadingMode = ReadingMode.VERTICAL,
 ) {
-    var scale by remember { mutableFloatStateOf(value = 1f) }
-    var offset by remember { mutableStateOf(value = Offset.Zero) }
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
-    val bitmap = remember(key1 = pageBitmap) {
+    val bitmap = remember(pageBitmap) {
         pageBitmap?.asImageBitmap()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(key1 = Unit) {
-                detectTapGestures(onTap = { offset ->
-                    val w = size.width
-                    val h = size.height
-                    val x = offset.x
-                    val y = offset.y
+            .onSizeChanged { containerSize = it }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { tapOffset ->
+                        val w = size.width
+                        val h = size.height
+                        val x = tapOffset.x
+                        val y = tapOffset.y
 
-                    val area = when (orientation) {
-                        ReadingMode.VERTICAL -> when {
-                            y < h * 0.25f -> TapArea.TOP
-                            y > h * 0.75f -> TapArea.BOTTOM
-                            else -> TapArea.CENTER
+                        val area = when (orientation) {
+                            ReadingMode.VERTICAL -> when {
+                                y < h * 0.25f -> TapArea.TOP
+                                y > h * 0.75f -> TapArea.BOTTOM
+                                else -> TapArea.CENTER
+                            }
+                            ReadingMode.HORIZONTAL -> when {
+                                x < w * 0.25f -> TapArea.LEFT
+                                x > w * 0.75f -> TapArea.RIGHT
+                                else -> TapArea.CENTER
+                            }
+                            ReadingMode.WEBTOON -> TapArea.CENTER
                         }
-
-                        ReadingMode.HORIZONTAL -> when {
-                            x < w * 0.25f -> TapArea.LEFT
-                            x > w * 0.75f -> TapArea.RIGHT
-                            else -> TapArea.CENTER
+                        onAreaTap(area)
+                    },
+                    onDoubleTap = {
+                        if (scale > 1f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                            onZoomStatusChange(false)
+                        } else {
+                            scale = 2.5f
+                            onZoomStatusChange(true)
                         }
-
-                        // WARN: Só para satisfazer o when, sem já que o webtoon usa um consumer proprio
-                        ReadingMode.WEBTOON -> TapArea.CENTER
                     }
-
-                    onAreaTap(area)
-                }, onDoubleTap = {
-                    if (scale > 1f) {
-                        scale = 1f
-                        offset = Offset.Zero
-                        onZoomStatusChange(false)
-                    } else {
-                        scale = 2f
-                        onZoomStatusChange(true)
-                    }
-                })
+                )
             }
-            .pointerInput(key1 = Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    val newScale = (scale * zoom).coerceIn(1f, 5f)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val event = awaitPointerEvent()
+                        val zoom = event.calculateZoom()
+                        val pan = event.calculatePan()
 
-                    if (newScale > 1f) {
-                        val maxTranslateX = (newScale - 1) * 1000
-                        val maxTranslateY = (newScale - 1) * 1000
+                        if (zoom != 1f || scale > 1f) {
+                            val newScale = (scale * zoom).coerceIn(1f, 5f)
+                            
+                            val extraWidth = (newScale - 1) * containerSize.width
+                            val extraHeight = (newScale - 1) * containerSize.height
+                            val maxX = extraWidth / 2
+                            val maxY = extraHeight / 2
 
-                        offset = Offset(
-                            x = (offset.x + pan.x).coerceIn(-maxTranslateX, maxTranslateX),
-                            y = (offset.y + pan.y).coerceIn(-maxTranslateY, maxTranslateY)
-                        )
-                    } else {
-                        offset = Offset.Zero
-                    }
+                            val newOffset = if (newScale > 1f) {
+                                Offset(
+                                    x = (offset.x + pan.x * scale).coerceIn(-maxX, maxX),
+                                    y = (offset.y + pan.y * scale).coerceIn(-maxY, maxY)
+                                )
+                            } else {
+                                Offset.Zero
+                            }
 
-                    scale = newScale
-                    onZoomStatusChange(scale > 1.05f)
+                            scale = newScale
+                            offset = newOffset
+                            onZoomStatusChange(scale > 1.05f)
+                            event.changes.forEach { change ->
+                                if (change.positionChanged()) {
+                                    change.consume()
+                                }
+                            }
+                        }
+                    } while (event.changes.any { it.pressed })
                 }
             }
     ) {

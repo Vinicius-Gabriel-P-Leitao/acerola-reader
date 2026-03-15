@@ -1,28 +1,14 @@
 package br.acerola.manga.module.manga.component
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,31 +18,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.Divider
-import br.acerola.manga.common.component.SmartCard
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.module.manga.MangaViewModel
+import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
-import br.acerola.manga.local.database.entity.metadata.MetadataSource
-
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.AutoStories
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material3.Surface
-import androidx.compose.ui.text.font.FontWeight
-
 @Composable
-fun SyncMetadata(
-    directory: MangaDirectoryDto,
+fun Manga.Component.SyncMetadata(
     remoteInfo: MangaRemoteInfoDto?,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
+    onSyncMangadexInfo: () -> Unit,
+    onSyncMangadexChapters: () -> Unit,
+    onSyncComicInfo: () -> Unit,
+    onSyncComicInfoChapters: () -> Unit,
 ) {
     val currentSource = remoteInfo?.metadataSource
     Column {
@@ -71,7 +51,7 @@ fun SyncMetadata(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    mangaRemoteInfoViewModel.syncFromMangadex(directory.id)
+                    onSyncMangadexInfo()
                 },
             headlineContent = { 
                 Text(
@@ -113,7 +93,7 @@ fun SyncMetadata(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable {
-                        chapterRemoteInfoViewModel.syncChaptersByMangadex(mangaId = remoteInfo.id!!)
+                        onSyncMangadexChapters()
                     },
                 headlineContent = { 
                     Text(
@@ -150,7 +130,7 @@ fun SyncMetadata(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Divider(
+        Acerola.Component.Divider(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .alpha(0.3f)
@@ -168,7 +148,7 @@ fun SyncMetadata(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
-                    mangaRemoteInfoViewModel.syncFromComicInfo(directory.id)
+                    onSyncComicInfo()
                 },
             headlineContent = { 
                 Text(
@@ -208,7 +188,7 @@ fun SyncMetadata(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable {
-                        chapterRemoteInfoViewModel.syncChaptersByComicInfo(folderId = directory.id)
+                        onSyncComicInfoChapters()
                     },
                 headlineContent = { 
                     Text(

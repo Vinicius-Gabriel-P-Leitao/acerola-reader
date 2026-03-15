@@ -2,11 +2,13 @@ package br.acerola.manga.common.component
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.FloatingTool
+import br.acerola.manga.common.ux.component.FloatingToolItem
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
@@ -16,35 +18,34 @@ class FloatingToolTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `FloatingTool_deve_expandir_e_exibir_sub-itens_ao_ser_acionado`() {
+    fun `FloatingTool_deve_exibir_itens_ao_ser_clicado`() {
         var itemClicked = false
         val items = listOf(
             FloatingToolItem(
-                icon = { Icon(Icons.Default.Settings, contentDescription = "Config") },
-                label = "Configurações",
+                label = "Ação 1",
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 onClick = { itemClicked = true }
             )
         )
 
         composeTestRule.setContent {
             AcerolaTheme {
-                FloatingTool(
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Menu") },
+                Acerola.Component.FloatingTool(
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Abrir") },
                     items = items
                 )
             }
         }
 
-        // Garante que o item secundário não está visível inicialmente
-        composeTestRule.onNodeWithContentDescription("Menu").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Configurações").assertDoesNotExist()
+        // 1. O item não deve estar visível inicialmente
+        composeTestRule.onNodeWithText("Ação 1").assertDoesNotExist()
 
-        // Aciona a expansão
-        composeTestRule.onNodeWithContentDescription("Menu").performClick()
+        // 2. Clica no botão principal para expandir
+        composeTestRule.onNodeWithContentDescription("Abrir").performClick()
 
-        // Valida se o item expandido aparece e responde ao clique (usando texto do label)
-        composeTestRule.onNodeWithText("Configurações").assertIsDisplayed().performClick()
-        
+        // 3. Agora o item deve aparecer
+        composeTestRule.onNodeWithText("Ação 1").assertIsDisplayed().performClick()
+
         assert(itemClicked)
     }
 }

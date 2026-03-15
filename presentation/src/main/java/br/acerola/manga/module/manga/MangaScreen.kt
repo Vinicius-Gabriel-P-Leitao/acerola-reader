@@ -1,7 +1,6 @@
 package br.acerola.manga.module.manga
 
 import android.content.Intent
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -22,113 +24,182 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.layout.ProgressIndicator
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.GlassButton
+import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.layout.TopBar
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.error.UserMessage
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
-import br.acerola.manga.module.manga.layout.MangaHeader
-import br.acerola.manga.module.manga.layout.MangaTabs
-import br.acerola.manga.module.manga.layout.chaptersSection
-import br.acerola.manga.module.manga.layout.configSection
+import br.acerola.manga.module.manga.layout.ChapterSection
+import br.acerola.manga.module.manga.layout.Header
+import br.acerola.manga.module.manga.layout.ConfigSection
+import br.acerola.manga.module.manga.layout.Tabs
+import br.acerola.manga.module.manga.state.MainTab
+import br.acerola.manga.module.manga.state.MangaAction
+import br.acerola.manga.module.manga.state.MangaChapterAction
+import br.acerola.manga.module.manga.state.MangaSyncAction
+import br.acerola.manga.module.manga.state.MangaUiState
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
 
-enum class MainTab(@param:StringRes val titleRes: Int) {
-    CHAPTERS(titleRes = R.string.title_chapter_tabs_chapters),
-    SETTINGS(titleRes = R.string.title_chapter_tabs_settings)
-}
-
 @Composable
 fun MangaScreen(
     manga: MangaDto,
-    mangaViewModel: MangaViewModel,
-    chapterArchiveViewModel: ChapterArchiveViewModel,
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
+    onBackClick: () -> Unit,
 ) {
+    val mangaViewModel: MangaViewModel = hiltViewModel()
+    val chapterArchiveViewModel: ChapterArchiveViewModel = hiltViewModel()
+    val mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel()
+    val mangaRemoteInfoViewModel: MangaRemoteInfoViewModel = hiltViewModel()
+    val chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel = hiltViewModel()
+
+    val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
+
     LaunchedEffect(key1 = manga.directory.id) {
         mangaViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
     }
 
-    val context = LocalContext.current
+    // Coleta de eventos de UI para snackbars
+    LaunchedEffect(Unit) {
+        launch {
+            mangaViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            mangaDirectoryViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            chapterArchiveViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            mangaRemoteInfoViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+        launch {
+            chapterRemoteInfoViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            }
+        }
+    }
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
-    // NOTE: Vai sobrescrever o que vem do Intent, isso é necessário para atualizar UI
     val mangaState by mangaViewModel.manga.collectAsState()
-    val currentManga = mangaState ?: manga
-
-    // NOTE: Atualizar se a função de sync de métadados for chamada
     val chapterDto by mangaViewModel.chapters.collectAsState()
-
     val chapterIsIndexing by mangaViewModel.chapterIsIndexing.collectAsState()
     val chapterProgress by mangaViewModel.chapterProgress.collectAsState()
-
     val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsState()
     val mangaProgress by mangaViewModel.mangaProgress.collectAsState()
-
     val mangaRemoteIndexing by mangaRemoteInfoViewModel.isIndexing.collectAsState()
     val chapterRemoteIndexing by chapterRemoteInfoViewModel.isIndexing.collectAsState()
+    val history by mangaViewModel.history.collectAsState()
+    val readChapters by mangaViewModel.readChapters.collectAsState()
+    val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsState()
+
+    val currentManga = mangaState ?: manga
+    val totalChapters = chapterDto?.archive?.total ?: 0
+    val currentPage = chapterDto?.archive?.page ?: 0
+
+    val totalPages = remember(key1 = chapterDto?.archive?.total, key2 = chapterDto?.archive?.pageSize) {
+        val size = chapterDto?.archive?.pageSize ?: 1
+        val total = chapterDto?.archive?.total ?: 0
+        if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
+    }
+
+    val uiState = MangaUiState(
+        manga = currentManga,
+        chapters = chapterDto,
+        selectedTab = selectedTab,
+        isIndexing = mangaIsIndexing || chapterIsIndexing || mangaRemoteIndexing || chapterRemoteIndexing,
+        indexingProgress = when {
+            chapterIsIndexing && chapterProgress >= 0 -> chapterProgress / 100f
+            mangaIsIndexing && mangaProgress >= 0 -> mangaProgress / 100f
+            else -> null
+        },
+        history = history,
+        readChapters = readChapters.toSet(),
+        totalChapters = totalChapters,
+        currentPage = currentPage,
+        totalPages = totalPages,
+        selectedChapterPerPage = selectedChapterPerPage
+    )
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val totalChapters = chapterDto?.archive?.total ?: 0
-    val currentPage = chapterDto?.archive?.page ?: 1
-
-    val totalChaptersPerPage = remember(key1 = chapterDto?.archive?.total, key2 = chapterDto?.archive?.pageSize) {
-        val size = chapterDto?.archive?.pageSize ?: 1
-        val total = chapterDto?.archive?.total ?: 0
-
-        if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
-    }
-
-    val history by mangaViewModel.history.collectAsState()
-    val readChapters by mangaViewModel.readChapters.collectAsState()
-
-    val handlePageChange = remember(key1 = mangaViewModel, key2 = listState) {
-        { nextPage: Int ->
-            mangaViewModel.loadPageAsync(nextPage)
-
-            coroutineScope.launch {
-                listState.animateScrollToItem(index = 2)
+    val onChapterAction: (MangaChapterAction) -> Unit = { action ->
+        when (action) {
+            is MangaChapterAction.ChangePage -> {
+                mangaViewModel.loadPageAsync(action.page)
+                coroutineScope.launch {
+                    listState.animateScrollToItem(index = 2)
+                }
             }
-
-            Unit
-        }
-    }
-
-    val handleChapterClick = remember {
-        { chapter: ChapterFileDto, remote: ChapterFeedDto?, initialPage: Int ->
-            val intent = Intent(context, ReaderActivity::class.java).apply {
-                putExtra(ReaderActivity.PageExtra.PAGE, chapter)
-                putExtra(ReaderActivity.PageExtra.MANGA_ID, currentManga.directory.id)
-                putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, initialPage)
+            is MangaChapterAction.ClickChapter -> {
+                val intent = Intent(context, ReaderActivity::class.java).apply {
+                    putExtra(ReaderActivity.PageExtra.PAGE, action.chapter)
+                    putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
+                    putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.initialPage)
+                }
+                context.startActivity(intent)
             }
+            is MangaChapterAction.ClickContinue -> {
+                val chaptersList = uiState.chapters?.archive?.items ?: emptyList()
+                val targetChapter = if (action.chapterId == -1L) {
+                    chaptersList.firstOrNull()
+                } else {
+                    chaptersList.find { it.id == action.chapterId }
+                }
 
-            context.startActivity(intent)
+                targetChapter?.let {
+                    val intent = Intent(context, ReaderActivity::class.java).apply {
+                        putExtra(ReaderActivity.PageExtra.PAGE, it)
+                        putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
+                        putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.lastPage)
+                    }
+                    context.startActivity(intent)
+                }
+            }
+            is MangaChapterAction.ToggleReadStatus -> {
+                mangaViewModel.toggleChapterReadStatus(action.chapterId)
+            }
         }
     }
 
-    val handleContinueClick = { chapterId: Long, lastPage: Int ->
-        val chaptersList = chapterDto?.archive?.items ?: emptyList()
-        val targetChapter = if (chapterId == -1L) {
-            chaptersList.firstOrNull()
-        } else {
-            chaptersList.find { it.id == chapterId }
+    val onSyncAction: (MangaSyncAction) -> Unit = { action ->
+        when (action) {
+            MangaSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.manga.directory.id)
+            MangaSyncAction.RescanManga -> mangaDirectoryViewModel.rescanMangaByManga(uiState.manga.directory.id)
+            MangaSyncAction.SyncMangadexInfo -> mangaRemoteInfoViewModel.syncFromMangadex(uiState.manga.directory.id)
+            MangaSyncAction.SyncMangadexChapters -> uiState.manga.remoteInfo?.id?.let { chapterRemoteInfoViewModel.syncChaptersByMangadex(it) }
+            MangaSyncAction.SyncComicInfo -> mangaRemoteInfoViewModel.syncFromComicInfo(uiState.manga.directory.id)
+            MangaSyncAction.SyncComicInfoChapters -> chapterRemoteInfoViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
         }
+    }
 
-        targetChapter?.let {
-            handleChapterClick(it, null, lastPage)
+    val onAction: (MangaAction) -> Unit = { action ->
+        when (action) {
+            MangaAction.NavigateBack -> onBackClick()
+            is MangaAction.SelectTab -> selectedTab = action.tab
+            is MangaAction.UpdatePageSize -> mangaViewModel.updateChapterPerPage(action.size)
         }
-        Unit
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -143,60 +214,73 @@ fun MangaScreen(
                     .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 item(
-                    key = "header_${currentManga.remoteInfo?.title}", contentType = "header"
+                    key = "header_${uiState.manga.remoteInfo?.title}", contentType = "header"
                 ) {
-                    MangaHeader(
-                        manga = currentManga,
-                        history = history,
-                        onContinueClick = handleContinueClick
+                    Manga.Layout.Header(
+                        manga = uiState.manga,
+                        history = uiState.history,
+                        onContinueClick = { id, page -> onChapterAction(MangaChapterAction.ClickContinue(id, page)) }
                     )
                 }
 
                 item(
-                    key = "tabs_${currentManga.remoteInfo?.title}", contentType = "tabs"
+                    key = "tabs_${uiState.manga.remoteInfo?.title}", contentType = "tabs"
                 ) {
-                    MangaTabs(
-                        totalChapters = totalChapters,
-                        activeTab = selectedTab,
-                        onTabSelected = { selectedTab = it },
+                    Manga.Layout.Tabs(
+                        totalChapters = uiState.totalChapters,
+                        activeTab = uiState.selectedTab,
+                        onTabSelected = { onAction(MangaAction.SelectTab(it)) },
                     )
                 }
 
-                when (selectedTab) {
+                when (uiState.selectedTab) {
                     MainTab.CHAPTERS -> {
-                        chapterDto?.let {
-                            chaptersSection(
+                        uiState.chapters?.let {
+                            Manga.Layout.ChapterSection(
+                                scope = this,
                                 chapters = it,
-                                currentPage = currentPage,
-                                onPageChange = handlePageChange,
-                                totalPages = totalChaptersPerPage,
-                                readChapters = readChapters,
-                                onToggleRead = { id -> mangaViewModel.toggleChapterReadStatus(id) },
-                                onChapterClick = { chapter, remote -> handleChapterClick(chapter, remote, 0) },
+                                currentPage = uiState.currentPage,
+                                onPageChange = { page -> onChapterAction(MangaChapterAction.ChangePage(page)) },
+                                totalPages = uiState.totalPages,
+                                readChapters = uiState.readChapters.toList(),
+                                onToggleRead = { id -> onChapterAction(MangaChapterAction.ToggleReadStatus(id)) },
+                                onChapterClick = { chapter, _ -> onChapterAction(MangaChapterAction.ClickChapter(chapter, 0)) },
                             )
                         }
                     }
 
                     MainTab.SETTINGS -> {
-                        configSection(
-                            mangaViewModel = mangaViewModel,
-                            directory = currentManga.directory,
-                            remoteInfo = currentManga.remoteInfo,
-                            mangaDirectoryViewModel = mangaDirectoryViewModel,
-                            chapterArchiveViewModel = chapterArchiveViewModel,
-                            mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
-                            chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
+                        Manga.Layout.ConfigSection(
+                            scope = this,
+                            uiState = uiState,
+                            onAction = onAction,
+                            onSyncAction = onSyncAction
                         )
                     }
                 }
 
                 item(
-                    key = "spacer_${currentManga.remoteInfo?.title}", contentType = "tabs"
+                    key = "spacer_${uiState.manga.remoteInfo?.title}", contentType = "tabs"
                 ) {
                     Spacer(modifier = Modifier.height(height = 24.dp))
                 }
             }
         }
+
+        Acerola.Layout.TopBar(
+            navigationIcon = {
+                Acerola.Component.GlassButton(
+                    onClick = { onAction(MangaAction.NavigateBack) },
+                    icon = {
+                        Icon(
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(id = R.string.description_icon_navigation_back),
+                        )
+                    }
+                )
+            }
+        )
 
         Box(
             contentAlignment = Alignment.BottomStart,
@@ -204,13 +288,9 @@ fun MangaScreen(
                 .fillMaxSize()
                 .padding(all = 18.dp),
         ) {
-            ProgressIndicator(
-                isLoading = mangaIsIndexing || chapterIsIndexing || mangaRemoteIndexing || chapterRemoteIndexing,
-                progress = when {
-                    chapterIsIndexing && chapterProgress >= 0 -> chapterProgress / 100f
-                    mangaIsIndexing && mangaProgress >= 0 -> mangaProgress / 100f
-                    else -> null
-                },
+            Acerola.Layout.ProgressIndicator(
+                isLoading = uiState.isIndexing,
+                progress = uiState.indexingProgress,
             )
         }
     }

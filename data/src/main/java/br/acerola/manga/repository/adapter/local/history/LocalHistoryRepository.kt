@@ -2,6 +2,8 @@ package br.acerola.manga.repository.adapter.local.history
 
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.database.entity.history.ChapterRead
 import br.acerola.manga.local.mapper.toDto
@@ -34,18 +36,26 @@ class LocalHistoryRepository @Inject constructor(
     }
 
     override suspend fun upsertHistory(history: ReadingHistoryDto) {
+        AcerolaLogger.d(TAG, "Updating history for mangaId: ${history.mangaDirectoryId}", LogSource.REPOSITORY)  
         readingHistoryDao.upsert(history.toEntity())
     }
 
     override suspend fun markChapterAsRead(mangaId: Long, chapterId: Long) {
+        AcerolaLogger.d(TAG, "Marking chapter $chapterId as read for manga $mangaId", LogSource.REPOSITORY)  
         readingHistoryDao.markChapterAsRead(ChapterRead(mangaDirectoryId = mangaId, chapterArchiveId = chapterId))
     }
 
     override suspend fun unmarkChapterAsRead(chapterId: Long) {
+        AcerolaLogger.d(TAG, "Unmarking chapter $chapterId as read", LogSource.REPOSITORY)  
         readingHistoryDao.unmarkChapterAsRead(chapterId)
     }
 
     override suspend fun deleteHistory(mangaId: Long) {
+        AcerolaLogger.audit(TAG, "User deleting reading history for manga: $mangaId", LogSource.REPOSITORY)  
         readingHistoryDao.deleteByMangaId(mangaId)
+    }
+
+    companion object {
+        private const val TAG = "LocalHistoryRepository"  
     }
 }

@@ -70,8 +70,8 @@
     <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
     <string name="description_sync_chapters_internal">Sincronizar capítulos usando metadados internos</string>
 
-    <string name="label_sync_progress">Sincronizando...</string>
-    <string name="label_sync_progress_percent">Sincronizando... %1$d%%</string>
+    <string name="label_sync_progress">Sincronizando…</string>
+    <string name="label_sync_progress_percent">Sincronizando… %1$d%%</string>
     <string name="label_sync_complete">Sincronizado!</string>
 
     <!-- Components -->
@@ -137,4 +137,18 @@
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
     <string name="label_reader_page_format">Página %1$d / %2$d</string>
     <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
-</resources>
+    <string name="label_reader_config_title">Modo de Leitura</string>
+    <string name="label_reader_pages_prefix">Páginas</string>
+    <string name="label_reader_next_chapter">Próximo</string>
+    <string name="label_reader_previous_chapter">Anterior</string>
+    <!-- Theme Settings -->
+    <string name="title_settings_appearance">Aparência</string>
+    <string name="description_settings_appearance">Personalize as cores do aplicativo</string>
+    <string name="title_settings_dynamic_color">Adaptável</string>
+    <string name="subtitle_settings_dynamic_color">Cores do sistema</string>
+    <string name="description_settings_dynamic_color">Usa cores do seu papel de parede (Android 12+)</string>
+    <string name="title_settings_catppuccin_theme">Catppuccin</string>
+    <string name="subtitle_settings_catppuccin_theme">Mocha</string>
+    <string name="description_settings_catppuccin_theme">Usa a paleta de cores original do app</string>
+
+    </resources>

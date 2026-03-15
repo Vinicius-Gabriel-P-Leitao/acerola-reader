@@ -3,9 +3,10 @@ package br.acerola.manga.common.layout
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
-import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
-import br.acerola.manga.presentation.R
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.layout.NavigationBottomBar
+import br.acerola.manga.common.ux.layout.NavigationTopBar
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,39 +14,32 @@ class NavigationBarsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun `NavigationBottomBar_deve_exibir_labels_para_as_abas_principais`() {
+    fun `NavigationBottomBar_deve_exibir_destinos_principais`() {
         composeTestRule.setContent {
+            val navController = rememberNavController()
             AcerolaTheme {
-                val navController = rememberNavController()
-                NavigationBottomBar(navController = navController)
+                Acerola.Layout.NavigationBottomBar(navController = navController)
             }
         }
 
-        // Valida labels globais (strings.xml)
-        val homeLabel = context.getString(R.string.label_home_activity)
-        val historyLabel = context.getString(R.string.label_history_activity)
-        val configLabel = context.getString(R.string.label_config_activity)
-
-        composeTestRule.onNodeWithText(homeLabel, ignoreCase = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText(historyLabel, ignoreCase = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText(configLabel, ignoreCase = true).assertIsDisplayed()
+        // Verifica os labels da navegação inferior
+        composeTestRule.onNodeWithText("Início", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Histórico", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Config", substring = true).assertIsDisplayed()
     }
 
     @Test
-    fun `NavigationTopBar_deve_exibir_ação_de_navegação_de_retorno`() {
+    fun `NavigationTopBar_deve_exibir_o_titulo_da_rota_atual`() {
         composeTestRule.setContent {
+            val navController = rememberNavController()
             AcerolaTheme {
-                val navController = rememberNavController()
-                NavigationTopBar(navController = navController)
+                Acerola.Layout.NavigationTopBar(navController = navController)
             }
         }
 
-        // Valida botão de voltar por descrição parcial
-        val backDescription = context.getString(R.string.description_icon_navigation_back)
-        // Usamos substring=true pois o resource pode ter typos ou ser longo
-        composeTestRule.onNodeWithContentDescription(backDescription, substring = true).assertIsDisplayed()
+        // Como o NavController inicia na rota default, verificamos se o título aparece
+        composeTestRule.onNodeWithText("Acerola", substring = true).assertIsDisplayed()
     }
 }

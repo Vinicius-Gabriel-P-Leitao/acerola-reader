@@ -8,10 +8,11 @@ import arrow.core.Either
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.error.message.LibrarySyncError
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
-import br.acerola.manga.local.mapper.toChapterArchiveModel
 import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import android.provider.DocumentsContract
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Semaphore
@@ -53,6 +53,7 @@ class ChapterArchiveRepository @Inject constructor(
 
     override suspend fun refreshMangaChapters(mangaId: Long, baseUri: android.net.Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Starting chapter sync for mangaId: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             _progress.value = 0
 
@@ -71,8 +72,7 @@ class ChapterArchiveRepository @Inject constructor(
                     chapterFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).filter { 
                         FileExtension.isSupported(ext = it.name) 
                     }
-                    // Infelizmente no MetaData query o lastModified pode vir do pai se não suportado, mas assumimos que o FastHash resolve
-                    folderLastModified = 0 // Forçamos scan se usarmos baseUri pra garantir
+                    folderLastModified = 0 
                 } else {
                     val folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
                     folderLastModified = folderDoc.lastModified()
@@ -87,8 +87,8 @@ class ChapterArchiveRepository @Inject constructor(
                     }.filter { FileExtension.isSupported(ext = it.name) }
                 }
 
-                // Relaxed skip condition
                 if (existingChapters.isNotEmpty() && baseUri == null && folder.lastModified >= folderLastModified) {
+                    AcerolaLogger.d(TAG, "No changes detected for manga: ${folder.name}, skipping sync", LogSource.REPOSITORY)  
                     return@catch
                 }
 
@@ -107,7 +107,7 @@ class ChapterArchiveRepository @Inject constructor(
                     val fileUri = if (baseUri != null) {
                         DocumentsContract.buildDocumentUriUsingTree(baseUri, file.id).toString()
                     } else {
-                        DocumentsContract.buildDocumentUriUsingTree(folderUri, file.id).toString() // Fallback
+                        DocumentsContract.buildDocumentUriUsingTree(folderUri, file.id).toString() 
                     }
                     
                     val existing = existingChaptersMap[fileUri]
@@ -128,7 +128,6 @@ class ChapterArchiveRepository @Inject constructor(
                             chapterSort = if (fractionalPart == 0) integerPart.toString()
                             else "$integerPart.$fractionalPart"
                         } else {
-                            // Fallback: Usa o nome do arquivo limpo como sort key caso não bata no regex
                             chapterSort = name.filter { it.isDigit() || it == '.' || it == ',' }
                                 .replace(',', '.')
                                 .ifBlank { (index + 1).toString() }
@@ -150,10 +149,12 @@ class ChapterArchiveRepository @Inject constructor(
                 }
 
                 if (chaptersToDelete.isNotEmpty()) {
+                    AcerolaLogger.d(TAG, "Deleting ${chaptersToDelete.size} missing chapters for manga: ${folder.name}", LogSource.REPOSITORY)  
                     chaptersToDelete.forEach { chapterArchiveDao.delete(it) }
                 }
 
                 if (chaptersToInsert.isNotEmpty()) {
+                    AcerolaLogger.d(TAG, "Inserting ${chaptersToInsert.size} new chapters for manga: ${folder.name}", LogSource.REPOSITORY)  
                     chapterArchiveDao.insertAll(*chaptersToInsert.toTypedArray())
                 }
 
@@ -161,8 +162,10 @@ class ChapterArchiveRepository @Inject constructor(
                     directoryDao.update(entity = folder.copy(lastModified = folderLastModified))
                 }
 
+                AcerolaLogger.i(TAG, "Finished chapter sync for manga: ${folder.name}", LogSource.REPOSITORY)  
                 _progress.value = 100
             }.mapLeft { exception ->
+                AcerolaLogger.e(TAG, "Chapter sync failed for mangaId: $mangaId", LogSource.REPOSITORY, throwable = exception)  
                 when (exception) {
                     is IOException -> LibrarySyncError.DiskIOFailure(path = "Unknown", cause = exception)
                     is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
@@ -177,6 +180,7 @@ class ChapterArchiveRepository @Inject constructor(
 
     override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
+            AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)  
             list.toPageDto()
         }.stateIn(
             started = SharingStarted.Lazily,
@@ -187,6 +191,7 @@ class ChapterArchiveRepository @Inject constructor(
 
     override suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
         val offset = page * pageSize
+        AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)  
 
         val realTotal = if (total > 0) {
             total
@@ -207,5 +212,9 @@ class ChapterArchiveRepository @Inject constructor(
             .map { list ->
                 list.toPageDto()
             }
+    }
+
+    companion object {
+        private const val TAG = "ChapterArchiveRepository"  
     }
 }

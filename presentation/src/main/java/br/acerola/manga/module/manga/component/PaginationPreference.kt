@@ -1,12 +1,6 @@
 package br.acerola.manga.module.manga.component
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
@@ -22,18 +16,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.RadioGroup
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.RadioGroup
 import br.acerola.manga.config.preference.ChapterPageSizeType
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.presentation.R
 
 @Composable
-fun PaginationPreference(
-    mangaViewModel: MangaViewModel,
+fun Manga.Component.PaginationPreference(
+    selected: ChapterPageSizeType?,
+    onSelect: (ChapterPageSizeType) -> Unit,
 ) {
-    val selected by mangaViewModel.selectedChapterPerPage.collectAsState(initial = null)
     val options = ChapterPageSizeType.entries
-
     val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
 
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -73,12 +68,11 @@ fun PaginationPreference(
             }
         }
 
-        RadioGroup(
+        Acerola.Component.RadioGroup(
             selectedIndex = selectedIndex,
             options = options.map { it.key.lowercase() },
             onSelect = { index ->
-                val extension = options[index]
-                mangaViewModel.updateChapterPerPage(size = extension)
+                onSelect(options[index])
             }
         )
     }

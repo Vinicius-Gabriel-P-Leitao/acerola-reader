@@ -12,91 +12,90 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.SmartCard
-import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
-import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
-import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.module.manga.MangaViewModel
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Card
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.component.PaginationPreference
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMetadata
+import br.acerola.manga.module.manga.state.MangaAction
+import br.acerola.manga.module.manga.state.MangaSyncAction
+import br.acerola.manga.module.manga.state.MangaUiState
 import br.acerola.manga.presentation.R
 
-fun LazyListScope.configSection(
-    directory: MangaDirectoryDto,
-    remoteInfo: MangaRemoteInfoDto?,
-    mangaViewModel: MangaViewModel,
-    mangaDirectoryViewModel: MangaDirectoryViewModel,
-    chapterArchiveViewModel: ChapterArchiveViewModel,
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
+fun Manga.Layout.ConfigSection(
+    scope: LazyListScope,
+    uiState: MangaUiState,
+    onAction: (MangaAction) -> Unit,
+    onSyncAction: (MangaSyncAction) -> Unit,
 ) {
-    item { Spacer(modifier = Modifier.height(24.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(24.dp)) }
 
-    item {
+    scope.item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_settings_display_config),
             icon = Icons.Rounded.Visibility,
             iconColor = MaterialTheme.colorScheme.primary
         ) {
-            PaginationPreference(mangaViewModel = mangaViewModel)
+            Manga.Component.PaginationPreference(
+                selected = uiState.selectedChapterPerPage,
+                onSelect = { onAction(MangaAction.UpdatePageSize(it)) }
+            )
         }
     }
 
-    item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
-    item {
+    scope.item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_text_archive_configs_in_app),
             icon = Icons.Rounded.SdStorage,
             iconColor = MaterialTheme.colorScheme.secondary
         ) {
-            SyncMangaArchive(
-                directory = directory,
-                mangaDirectoryViewModel = mangaDirectoryViewModel,
-                chapterArchiveViewModel = chapterArchiveViewModel,
+            Manga.Component.SyncMangaArchive(
+                onSyncChapters = { onSyncAction(MangaSyncAction.SyncChaptersLocal) },
+                onRescanCover = { onSyncAction(MangaSyncAction.RescanManga) },
             )
         }
     }
 
-    item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
-    item {
+    scope.item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_config_sync_mangadex),
             icon = Icons.Rounded.CloudSync,
             iconColor = MaterialTheme.colorScheme.tertiary
         ) {
-            SyncMetadata(
-                directory = directory,
-                remoteInfo = remoteInfo,
-                mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
-                chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
+            Manga.Component.SyncMetadata(
+                remoteInfo = uiState.manga.remoteInfo,
+                onSyncMangadexInfo = { onSyncAction(MangaSyncAction.SyncMangadexInfo) },
+                onSyncMangadexChapters = { onSyncAction(MangaSyncAction.SyncMangadexChapters) },
+                onSyncComicInfo = { onSyncAction(MangaSyncAction.SyncComicInfo) },
+                onSyncComicInfoChapters = { onSyncAction(MangaSyncAction.SyncComicInfoChapters) },
             )
         }
     }
 
-    item { Spacer(modifier = Modifier.height(48.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(28.dp)) }
 }
 
-@androidx.compose.runtime.Composable
+@Composable
 private fun PrettyConfigCard(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconColor: androidx.compose.ui.graphics.Color,
-    content: @androidx.compose.runtime.Composable () -> Unit
+    iconColor: Color,
+    icon: ImageVector,
+    content: @Composable () -> Unit
 ) {
-    SmartCard(
-        type = CardType.CONTENT,
+    Acerola.Component.Card(
         title = null,
         modifier = Modifier.padding(horizontal = 16.dp),
         colors = CardDefaults.elevatedCardColors(

@@ -7,11 +7,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,9 +28,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.module.reader.Reader
 
 @Composable
-fun WebtoonReader(
+fun Reader.Component.WebtoonReader(
     pageCount: Int,
     onUiToggle: () -> Unit,
     listState: LazyListState,
@@ -45,7 +42,6 @@ fun WebtoonReader(
     var scale by remember { mutableFloatStateOf(value = 1f) }
     var offset by remember { mutableStateOf(value = Offset.Zero) }
 
-    // NOTE: Reporta o estado do zoom ao elemento pai (por exemplo, para ocultar a interface do usuário)
     LaunchedEffect(key1 = scale) {
         onZoomChange(scale > 1.0f)
     }
@@ -53,7 +49,6 @@ fun WebtoonReader(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            // NOTE: Gestos personalizados.
             .pointerInput(key1 = Unit) {
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
@@ -62,7 +57,6 @@ fun WebtoonReader(
                         val event = awaitPointerEvent()
                         val isMultiTouch = event.changes.size > 1
 
-                        // Se o dispositivo estiver multitoque OU já tiver aplicado zoom
                         if (isMultiTouch || isZoomed) {
                             val zoom = event.calculateZoom()
                             val pan = event.calculatePan()
@@ -85,21 +79,17 @@ fun WebtoonReader(
                                 scale = newScale
                                 offset = newOffset
 
-                                // Consumir eventos para impedir que LazyColumn os veja
                                 event.changes.forEach {
                                     if (it.positionChanged()) it.consume()
                                 }
                             }
                         }
-                        // Else: Deixe passar para LazyColumn (Toque único, Escala=1)
-
                     } while (event.changes.any { it.pressed })
                 }
             }
     ) {
         LazyColumn(
             state = listState,
-            // NOTE:  Desativar a rolagem interna da lista quando o zoom estiver aplicado (o deslocamento é  controlado manualmente).
             userScrollEnabled = scale == 1f,
             modifier = Modifier
                 .fillMaxSize()
@@ -115,7 +105,6 @@ fun WebtoonReader(
                     onPageRequest(index)
                 }
 
-                // NOTE: Imagem da Webtoon: Apenas uma imagem, sem zoom individual.
                 val pageBitmap = pages[index]
                 val bitmap = remember(key1 = pageBitmap) {
                     pageBitmap?.asImageBitmap()
@@ -128,7 +117,6 @@ fun WebtoonReader(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            // NOTE: Toque duas vezes na imagem para zoom e zoom-out
                             .pointerInput(key1 = Unit) {
                                 detectTapGestures(
                                     onTap = {
