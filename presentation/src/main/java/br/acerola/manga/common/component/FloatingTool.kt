@@ -48,7 +48,7 @@ fun FloatingTool(
     items: List<FloatingToolItem>,
     modifier: Modifier = Modifier,
     paddingFromEdges: Dp = 16.dp,
-    spacingBetweenItems: Dp = 18.dp
+    spacingBetweenItems: Dp = 14.dp
 ) {
 
     var expanded by remember { mutableStateOf(false) }
@@ -58,8 +58,8 @@ fun FloatingTool(
     ) {
 
         Column(
+            horizontalAlignment = Alignment.End,
             modifier = Modifier.padding(paddingFromEdges),
-            horizontalAlignment = Alignment.End, // alinha tudo pela direita
             verticalArrangement = Arrangement.spacedBy(spacingBetweenItems)
         ) {
 
@@ -67,12 +67,12 @@ fun FloatingTool(
                 reverseLayout = true,
                 contentPadding = PaddingValues(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(spacingBetweenItems),
-                horizontalAlignment = Alignment.End, // alinha itens pela direita
+                horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .heightIn(max = 400.dp)
-                    .graphicsLayer { clip = false },
+                    .graphicsLayer { clip = false }
+                    .padding(end = 4.dp),
             ) {
-
                 itemsIndexed(
                     items = items.reversed(),
                     key = { _, item -> item.label ?: item.hashCode().toString() }) { index, item ->
