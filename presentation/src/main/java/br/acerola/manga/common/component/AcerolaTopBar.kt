@@ -1,8 +1,6 @@
 package br.acerola.manga.common.component
 
-import android.os.Build
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,16 +16,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.acerola.manga.common.modifier.glassStyle
 
 @Composable
-fun AcerolaTopBar(
+fun Acerola.TopBar(
     title: String? = null,
     modifier: Modifier = Modifier,
     navigationIcon: @Composable (() -> Unit)? = null,
@@ -47,7 +44,6 @@ fun AcerolaTopBar(
             navigationIcon?.invoke()
         }
 
-        // Title Box takes exactly the remaining space
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -55,7 +51,7 @@ fun AcerolaTopBar(
             contentAlignment = Alignment.Center
         ) {
             if (title != null) {
-                AcerolaTitleCapsule(text = title)
+                TitleCapsule(text = title)
             }
         }
 
@@ -69,10 +65,11 @@ fun AcerolaTopBar(
 }
 
 @Composable
-fun AcerolaTitleCapsule(
+fun Acerola.TitleCapsule(
     text: String,
     modifier: Modifier = Modifier
 ) {
+    val shape = RoundedCornerShape(24.dp)
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
 
@@ -80,23 +77,9 @@ fun AcerolaTitleCapsule(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentWidth(Alignment.CenterHorizontally)
-            .clip(RoundedCornerShape(24.dp))
             .background(Color.Transparent)
+            .glassStyle(shape, glassColor, borderColor)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .then(
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        Modifier.blur(20.dp)
-                    } else {
-                        Modifier
-                    }
-                )
-                .background(glassColor)
-                .border(0.5.dp, borderColor, RoundedCornerShape(24.dp))
-        )
-
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

@@ -20,8 +20,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.presentation.R
-import br.acerola.manga.common.component.ButtonType
-import br.acerola.manga.common.component.AcerolaButton
+import br.acerola.manga.common.component.Acerola
+import br.acerola.manga.common.component.IconButton
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 
 @Composable
@@ -40,25 +40,25 @@ fun FolderAccess(viewModel: FileSystemAccessViewModel, onFolderSelected: (String
     }
 
     Column {
-        AcerolaButton(
-            type = ButtonType.ICON,
+        Acerola.IconButton(
             onClick = { launcher.launch(input = null) },
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(size = 34.dp)
-                    .clip(CircleShape)
-                    .background(color = MaterialTheme.colorScheme.primary),
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
+            icon = {
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(size = 40.dp)
-                        .padding(all = 4.dp),
-                )
+                        .size(size = 34.dp)
+                        .clip(CircleShape)
+                        .background(color = MaterialTheme.colorScheme.primary),
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
+                        modifier = Modifier
+                            .size(size = 40.dp)
+                            .padding(all = 4.dp),
+                    )
+                }
             }
-        }
+        )
     }
 }

@@ -32,7 +32,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.presentation.R
-import br.acerola.manga.common.component.AcerolaGlassButton
+import br.acerola.manga.common.component.Acerola
+import br.acerola.manga.common.component.GlassButton
+import br.acerola.manga.common.modifier.glassStyle
 
 @Composable
 fun ReaderTopBar(
@@ -56,13 +58,16 @@ fun ReaderTopBar(
         ) {
             // Back Button
             Box(modifier = Modifier.size(48.dp)) {
-                AcerolaGlassButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(id = R.string.description_icon_navigation_back),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                Acerola.GlassButton(
+                    onClick = onBackClick,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(id = R.string.description_icon_navigation_back),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
             }
 
             Box(
@@ -75,13 +80,16 @@ fun ReaderTopBar(
             }
 
             Box(modifier = Modifier.size(48.dp)) {
-                AcerolaGlassButton(onClick = onSettingsClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = stringResource(id = R.string.label_config_activity),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                Acerola.GlassButton(
+                    onClick = onSettingsClick,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(id = R.string.label_config_activity),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
             }
         }
     }
@@ -94,27 +102,14 @@ fun ReaderTitleCapsule(
 ) {
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+    val shape = RoundedCornerShape(24.dp)
 
     Box(
         modifier = Modifier
             .wrapContentWidth(Alignment.CenterHorizontally)
-            .clip(RoundedCornerShape(24.dp))
             .background(Color.Transparent)
+            .glassStyle(shape, glassColor, borderColor)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .then(
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                        Modifier.blur(20.dp)
-                    } else {
-                        Modifier
-                    }
-                )
-                .background(glassColor)
-                .border(0.5.dp, borderColor, RoundedCornerShape(24.dp))
-        )
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)

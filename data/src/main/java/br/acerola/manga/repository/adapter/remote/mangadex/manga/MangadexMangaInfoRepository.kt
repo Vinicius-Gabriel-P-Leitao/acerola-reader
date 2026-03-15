@@ -33,7 +33,7 @@ class MangadexMangaInfoRepository @Inject constructor(
             list
         }
     }.onLeft {
-        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null)   (safeApiCall catches internally but onLeft is explicit)
+        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null) // (safeApiCall catches internally but onLeft is explicit)
     }
 
     override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> {

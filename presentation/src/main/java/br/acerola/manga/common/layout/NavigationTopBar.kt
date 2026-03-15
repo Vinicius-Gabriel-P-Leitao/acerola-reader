@@ -13,8 +13,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import br.acerola.manga.common.component.AcerolaGlassButton
-import br.acerola.manga.common.component.AcerolaTopBar
+import br.acerola.manga.common.component.Acerola
+import br.acerola.manga.common.component.TopBar
+import br.acerola.manga.common.component.GlassButton
 import br.acerola.manga.presentation.R
 import br.acerola.manga.common.navigation.Destination
 
@@ -34,20 +35,23 @@ fun NavigationTopBar(
         stringResource(id = it.label)
     } ?: "Acerola"
 
-    AcerolaTopBar(
+    Acerola.TopBar(
         title = titleText,
         navigationIcon = {
-            AcerolaGlassButton(onClick = {
-                if (!navController.popBackStack()) {
-                    (context as? Activity)?.finish()
+            Acerola.GlassButton(
+                onClick = {
+                    if (!navController.popBackStack()) {
+                        (context as? Activity)?.finish()
+                    }
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(id = R.string.description_icon_navigation_back),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(id = R.string.description_icon_navigation_back),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            )
         },
         actions = {
             Row {

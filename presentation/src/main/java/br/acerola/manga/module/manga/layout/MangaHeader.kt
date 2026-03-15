@@ -35,8 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.ButtonType
-import br.acerola.manga.common.component.AcerolaButton
+import br.acerola.manga.common.component.Acerola
+import br.acerola.manga.common.component.Button
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.local.database.entity.metadata.MetadataSource
@@ -220,8 +220,7 @@ fun MangaHeader(
                 else -> stringResource(id = R.string.label_manga_action_start)
             }
             
-            AcerolaButton(
-                type = ButtonType.TEXT,
+            Acerola.Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     if (history != null) {

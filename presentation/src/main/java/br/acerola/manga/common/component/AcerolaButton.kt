@@ -1,118 +1,66 @@
 package br.acerola.manga.common.component
 
-import android.os.Build
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.modifier.glassStyle
 
-enum class ButtonType {
-    ICON, TEXT, ICON_TEXT, GLASS_ICON
+@Composable
+fun Acerola.IconButton(
+    icon: @Composable () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(onClick = onClick, modifier = modifier) {
+        icon()
+    }
 }
 
 @Composable
-fun AcerolaButton(
-    type: ButtonType,
+fun Acerola.Button(
+    text: String,
     onClick: () -> Unit,
-    text: String? = null,
     modifier: Modifier = Modifier,
-    icon: @Composable (() -> Unit)? = null,
+    icon: @Composable (() -> Unit)? = null
 ) {
-    when (type) {
-        ButtonType.ICON -> {
-            require(icon != null) { "IconButton precisa de um ícone" }
-            IconButton(onClick = onClick, modifier = modifier) {
+    Button(onClick = onClick, modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
                 icon()
+                Spacer(modifier = Modifier.width(8.dp))
             }
-        }
-
-        ButtonType.TEXT -> {
-            require(text != null) { "TextButton precisa de texto" }
-            Button(onClick = onClick, modifier = modifier) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(text)
-                }
-            }
-        }
-
-        ButtonType.ICON_TEXT -> {
-            require(icon != null && text != null) { "Button com ícone + texto precisa de ambos" }
-            Button(onClick = onClick, modifier = modifier) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    icon()
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text)
-                }
-            }
-        }
-
-        ButtonType.GLASS_ICON -> {
-            require(icon != null) { "GlassButton precisa de um ícone" }
-            AcerolaGlassButton(onClick = onClick, modifier = modifier) {
-                icon()
-            }
+            Text(text)
         }
     }
 }
 
 @Composable
-fun AcerolaGlassButton(
-    modifier: Modifier = Modifier,
+fun Acerola.GlassButton(
+    icon: @Composable () -> Unit,
     onClick: () -> Unit,
-    content: @Composable () -> Unit
+    modifier: Modifier = Modifier
 ) {
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
 
-    Box(
+    Surface(
+        onClick = onClick,
+        color = Color.Transparent,
+        shape = CircleShape,
         modifier = modifier
             .size(48.dp)
-            .clip(CircleShape)
-            .background(Color.Transparent)
-            .clickable(onClick = onClick)
+            .glassStyle(CircleShape, glassColor, borderColor)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .then(
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        Modifier.blur(20.dp)
-                    } else {
-                        Modifier
-                    }
-                )
-                .background(glassColor)
-                .border(0.5.dp, borderColor, CircleShape)
-        )
-
-        Box(
-            modifier = Modifier.matchParentSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            content()
+        Box(contentAlignment = Alignment.Center) {
+            icon()
         }
     }
 }

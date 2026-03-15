@@ -25,7 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.AcerolaGlassButton
+import br.acerola.manga.common.component.Acerola
+import br.acerola.manga.common.component.GlassButton
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.presentation.R
@@ -160,33 +161,35 @@ fun ReaderBottomControls(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AcerolaGlassButton(
+                            Acerola.GlassButton(
                                 modifier = Modifier.size(40.dp),
-                                onClick = onPrevClick
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                    contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
-                                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.3f
+                                onClick = onPrevClick,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                        contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
+                                        tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.3f
+                                        )
                                     )
-                                )
-                            }
+                                }
+                            )
 
                             Spacer(modifier = Modifier.width(12.dp))
 
-                            AcerolaGlassButton(
+                            Acerola.GlassButton(
                                 modifier = Modifier.size(40.dp),
-                                onClick = onNextClick
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = stringResource(id = R.string.description_icon_pagination_next),
-                                    tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.3f
+                                onClick = onNextClick,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = stringResource(id = R.string.description_icon_pagination_next),
+                                        tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.3f
+                                        )
                                     )
-                                )
-                            }
+                                }
+                            )
                         }
                     }
 
