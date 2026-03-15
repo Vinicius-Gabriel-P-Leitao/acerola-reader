@@ -18,13 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.modifier.glass
+import br.acerola.manga.common.ux.modifier.glassContainer
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.Reader
@@ -66,9 +66,14 @@ fun Reader.Layout.BottomControls(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Transparent)
-                .glass(shape, glassColor, borderColor)
+                .glassContainer(shape)
         ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .glass(shape, glassColor, borderColor)
+            )
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,7 +122,9 @@ fun Reader.Layout.BottomControls(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLoading) 0.05f else 0.1f))
+                                    .background(
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLoading) 0.05f else 0.1f)
+                                    )
                                     .clickable(enabled = !isLoading, onClick = onPreviousChapterClick)
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 contentAlignment = Alignment.Center
@@ -126,13 +133,17 @@ fun Reader.Layout.BottomControls(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
                                         contentDescription = null,
-                                        tint = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface,
+                                        tint = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.3f
+                                        ) else MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
                                         text = stringResource(id = R.string.label_reader_previous_chapter),
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface,
+                                        color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.3f
+                                        ) else MaterialTheme.colorScheme.onSurface,
                                         maxLines = 1,
                                         modifier = Modifier.padding(start = 4.dp)
                                     )
@@ -153,7 +164,9 @@ fun Reader.Layout.BottomControls(
                                 icon = {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                        contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
+                                        contentDescription = stringResource(
+                                            id = R.string.description_icon_pagination_previous
+                                        ),
                                         tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
                                             alpha = 0.3f
                                         )
@@ -169,7 +182,9 @@ fun Reader.Layout.BottomControls(
                                 icon = {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                        contentDescription = stringResource(id = R.string.description_icon_pagination_next),
+                                        contentDescription = stringResource(
+                                            id = R.string.description_icon_pagination_next
+                                        ),
                                         tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
                                             alpha = 0.3f
                                         )
@@ -184,7 +199,11 @@ fun Reader.Layout.BottomControls(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(if (isLoading) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary)
+                                    .background(
+                                        if (isLoading) MaterialTheme.colorScheme.primary.copy(
+                                            alpha = 0.5f
+                                        ) else MaterialTheme.colorScheme.primary
+                                    )
                                     .clickable(enabled = !isLoading, onClick = onNextChapterClick)
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 contentAlignment = Alignment.Center
@@ -192,15 +211,21 @@ fun Reader.Layout.BottomControls(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = stringResource(id = R.string.label_reader_next_chapter),
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
-                                        color = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.ExtraBold
+                                        ),
+                                        color = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(
+                                            alpha = 0.5f
+                                        ) else MaterialTheme.colorScheme.onPrimary,
                                         maxLines = 1,
                                         modifier = Modifier.padding(end = 4.dp)
                                     )
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                                         contentDescription = null,
-                                        tint = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimary,
+                                        tint = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(
+                                            alpha = 0.5f
+                                        ) else MaterialTheme.colorScheme.onPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }

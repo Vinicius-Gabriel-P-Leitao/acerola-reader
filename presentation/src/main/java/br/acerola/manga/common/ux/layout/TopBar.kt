@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.modifier.glass
+import br.acerola.manga.common.ux.modifier.glassContainer
 
 @Composable
 fun Acerola.Layout.TopBar(
@@ -70,17 +71,22 @@ fun Acerola.Layout.TitleCapsule(
     text: String,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(24.dp)
-    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
+    val shape = RoundedCornerShape(24.dp)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentWidth(Alignment.CenterHorizontally)
-            .background(Color.Transparent)
-            .glass(shape, glassColor, borderColor)
+            .glassContainer(shape)
     ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .glass(shape, glassColor, borderColor)
+        )
+
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

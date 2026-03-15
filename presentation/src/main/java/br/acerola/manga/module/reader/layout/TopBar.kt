@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.modifier.glass
+import br.acerola.manga.common.ux.modifier.glassContainer
 import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.presentation.R
 
@@ -98,16 +99,20 @@ fun Reader.Layout.TitleCapsule(
     title: String,
     subtitle: String
 ) {
-    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val shape = RoundedCornerShape(24.dp)
 
     Box(
         modifier = Modifier
             .wrapContentWidth(Alignment.CenterHorizontally)
-            .background(Color.Transparent)
-            .glass(shape, glassColor, borderColor)
+            .glassContainer(shape)
     ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .glass(shape, glassColor, borderColor)
+        )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)

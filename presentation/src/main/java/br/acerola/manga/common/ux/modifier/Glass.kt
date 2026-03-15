@@ -15,10 +15,9 @@ fun Modifier.glass(
     glassColor: Color,
     borderColor: Color
 ): Modifier = this
-    .clip(shape)
-    .then(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(20.dp)
-        else Modifier
-    )
+    .blur(20.dp)
     .background(glassColor)
     .border(0.5.dp, borderColor, shape)
+
+fun Modifier.glassContainer(shape: Shape): Modifier = this
+    .clip(shape)
