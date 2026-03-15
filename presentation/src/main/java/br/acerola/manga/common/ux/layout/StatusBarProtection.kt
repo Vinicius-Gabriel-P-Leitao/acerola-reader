@@ -1,4 +1,4 @@
-package br.acerola.manga.common.layout
+package br.acerola.manga.common.ux.layout
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalDensity
 @Composable
 fun StatusBarProtection(
     color: Color = MaterialTheme.colorScheme.background,
-    heightProvider: () -> Float = calculateGradientHeight(),
+    heightProvider: () -> Float = _root_ide_package_.br.acerola.manga.common.ux.layout.calculateGradientHeight(),
 ) {
     Canvas(Modifier.fillMaxSize()) {
         val calculatedHeight = heightProvider()

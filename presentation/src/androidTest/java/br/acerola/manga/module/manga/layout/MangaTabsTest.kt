@@ -3,7 +3,7 @@ package br.acerola.manga.module.manga.layout
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.module.manga.MainTab
 import br.acerola.manga.presentation.R
 import org.junit.Rule
@@ -18,7 +18,7 @@ class MangaTabsTest {
     @Test
     fun `MangaTabs_deve_exibir_o_número_total_de_capítulos_na_aba_correspondente`() {
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 MangaTabs(
                     totalChapters = 150,
                     activeTab = MainTab.CHAPTERS,
@@ -37,7 +37,7 @@ class MangaTabsTest {
         var selectedTab: MainTab? = null
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 MangaTabs(
                     totalChapters = 10,
                     activeTab = MainTab.CHAPTERS,

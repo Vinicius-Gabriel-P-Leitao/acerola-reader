@@ -21,10 +21,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.Divider
-import br.acerola.manga.common.component.Card
-import br.acerola.manga.common.layout.ProgressIndicator
+import br.acerola.manga.common.ux.component.CardType
+import br.acerola.manga.common.ux.component.Divider
+import br.acerola.manga.common.ux.component.Card
+import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -87,10 +87,10 @@ fun ConfigScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SelectFolder(context, fileSystemAccessViewModel)
-                        Divider(modifier = Modifier.alpha(0.5f))
+                        _root_ide_package_.br.acerola.manga.common.ux.component.Divider(modifier = Modifier.alpha(0.5f))
 
                         PreferSavedFile(filePreferencesViewModel)
-                        Divider(modifier = Modifier.alpha(0.5f))
+                        _root_ide_package_.br.acerola.manga.common.ux.component.Divider(modifier = Modifier.alpha(0.5f))
 
                         MetadataExportSettings(metadataSettingsViewModel)
                     }
@@ -121,7 +121,7 @@ fun ConfigScreen(
                     .fillMaxSize()
                     .padding(all = 18.dp),
             ) {
-                ProgressIndicator(
+                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
                     isLoading = libraryIndexing || metadataIndexing,
                     progress = when {
                         metadataIndexing && metadataProgress >= 0 -> metadataProgress / 100f
@@ -168,8 +168,8 @@ private fun PrettyConfigCard(
     iconColor: androidx.compose.ui.graphics.Color,
     content: @Composable () -> Unit
 ) {
-    Card(
-        type = CardType.CONTENT,
+    _root_ide_package_.br.acerola.manga.common.ux.component.Card(
+        type = _root_ide_package_.br.acerola.manga.common.ux.component.CardType.CONTENT,
         title = null,
         modifier = Modifier.padding(horizontal = 16.dp),
         colors = CardDefaults.elevatedCardColors(

@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -45,7 +45,7 @@ data class FloatingToolItem(
 @Composable
 fun FloatingTool(
     icon: @Composable () -> Unit,
-    items: List<FloatingToolItem>,
+    items: List<br.acerola.manga.common.ux.component.FloatingToolItem>,
     modifier: Modifier = Modifier,
     paddingFromEdges: Dp = 16.dp,
     spacingBetweenItems: Dp = 14.dp

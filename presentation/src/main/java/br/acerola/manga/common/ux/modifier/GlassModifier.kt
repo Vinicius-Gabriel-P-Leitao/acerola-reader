@@ -1,4 +1,4 @@
-package br.acerola.manga.common.modifier
+package br.acerola.manga.common.ux.modifier
 
 import android.os.Build
 import androidx.compose.foundation.background

@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider

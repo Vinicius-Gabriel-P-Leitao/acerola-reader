@@ -3,7 +3,7 @@ package br.acerola.manga.module.manga.component
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
@@ -19,7 +19,7 @@ class PaginationFooterTest {
         var pageTarget = -1
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 PaginationFooter(
                     currentPage = 0,
                     totalPages = 10,
@@ -47,7 +47,7 @@ class PaginationFooterTest {
         var pageTarget = -1
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 PaginationFooter(
                     currentPage = 0,
                     totalPages = 10,

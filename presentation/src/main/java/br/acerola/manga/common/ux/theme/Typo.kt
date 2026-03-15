@@ -1,4 +1,4 @@
-package br.acerola.manga.common.theme
+package br.acerola.manga.common.ux.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -4,7 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
@@ -18,8 +18,10 @@ class ProgressIndicatorTest {
     @Test
     fun `ProgressIndicator_deve_exibir_texto_de_sincronização_indeterminada_inicialmente`() {
         composeTestRule.setContent {
-            AcerolaTheme {
-                ProgressIndicator(isLoading = true, progress = null)
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
+                    isLoading = true, progress = null
+                )
             }
         }
 
@@ -31,8 +33,10 @@ class ProgressIndicatorTest {
     @Test
     fun `ProgressIndicator_deve_exibir_a_porcentagem_de_progresso_quando_disponível`() {
         composeTestRule.setContent {
-            AcerolaTheme {
-                ProgressIndicator(isLoading = true, progress = 0.5f)
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
+                    isLoading = true, progress = 0.5f
+                )
             }
         }
 
@@ -45,8 +49,10 @@ class ProgressIndicatorTest {
         val isLoading = androidx.compose.runtime.mutableStateOf(true)
 
         composeTestRule.setContent {
-            AcerolaTheme {
-                ProgressIndicator(isLoading = isLoading.value, progress = 1f)
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+                _root_ide_package_.br.acerola.manga.common.ux.layout.ProgressIndicator(
+                    isLoading = isLoading.value, progress = 1f
+                )
             }
         }
 

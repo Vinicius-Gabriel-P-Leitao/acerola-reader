@@ -3,7 +3,7 @@ package br.acerola.manga.module.manga.component
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -35,7 +35,7 @@ class SyncMetadataTest {
         )
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 SyncMetadata(
                     directory = directory,
                     remoteInfo = remoteInfo,

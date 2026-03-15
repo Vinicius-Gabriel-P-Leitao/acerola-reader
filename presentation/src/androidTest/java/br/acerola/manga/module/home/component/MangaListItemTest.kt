@@ -2,7 +2,7 @@ package br.acerola.manga.module.home.component
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
@@ -24,7 +24,7 @@ class MangaListItemTest {
         )
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 MangaListItem(manga = manga, onClick = {})
             }
         }

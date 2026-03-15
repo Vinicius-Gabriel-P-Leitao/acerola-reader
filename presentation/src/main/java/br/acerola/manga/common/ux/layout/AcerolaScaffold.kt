@@ -1,4 +1,4 @@
-package br.acerola.manga.common.layout
+package br.acerola.manga.common.ux.layout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,7 +21,7 @@ fun AcerolaScaffold(
             .fillMaxSize()
             .background(containerColor)
     ) {
-        StatusBarProtection(color = containerColor)
+        _root_ide_package_.br.acerola.manga.common.ux.layout.StatusBarProtection(color = containerColor)
         Box(
             modifier = Modifier
                 .fillMaxSize()

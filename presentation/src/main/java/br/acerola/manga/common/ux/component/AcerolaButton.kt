@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -8,7 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.modifier.glassStyle
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.modifier.glassStyle
 
 @Composable
 fun Acerola.IconButton(

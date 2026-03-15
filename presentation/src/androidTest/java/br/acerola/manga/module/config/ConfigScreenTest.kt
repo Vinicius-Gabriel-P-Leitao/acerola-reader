@@ -4,7 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -38,7 +38,7 @@ class ConfigScreenTest {
         every { fsAccessVM.folderUri } returns null
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 ConfigScreen(
                     filePreferencesViewModel = filePrefsVM,
                     fileSystemAccessViewModel = fsAccessVM,

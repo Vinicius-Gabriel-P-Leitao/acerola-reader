@@ -1,4 +1,4 @@
-package br.acerola.manga.common.layout
+package br.acerola.manga.common.ux.layout
 
 import android.app.Activity
 import androidx.compose.foundation.layout.Row
@@ -13,11 +13,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import br.acerola.manga.common.component.Acerola
-import br.acerola.manga.common.component.TopBar
-import br.acerola.manga.common.component.GlassButton
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.TopBar
+import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.presentation.R
 import br.acerola.manga.common.navigation.Destination
+import br.acerola.manga.common.ux.component.GlassButton
+import br.acerola.manga.common.ux.component.TopBar
 
 @Composable
 fun NavigationTopBar(

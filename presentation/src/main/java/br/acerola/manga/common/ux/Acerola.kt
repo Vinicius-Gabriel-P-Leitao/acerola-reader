@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux
 
 /**
  * Namespace central para todos os componentes visuais customizados do Acerola.

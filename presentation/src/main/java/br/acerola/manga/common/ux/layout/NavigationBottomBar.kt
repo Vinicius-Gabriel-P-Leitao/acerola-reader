@@ -1,4 +1,4 @@
-package br.acerola.manga.common.layout
+package br.acerola.manga.common.ux.layout
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon

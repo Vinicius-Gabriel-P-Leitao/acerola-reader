@@ -4,8 +4,8 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.component.SearchBar
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.component.SearchBar
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
@@ -22,8 +22,8 @@ class SearchBarTest {
         val placeholder = "Buscar..."
 
         composeTestRule.setContent {
-            AcerolaTheme {
-                SearchBar(
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+                _root_ide_package_.br.acerola.manga.common.ux.component.SearchBar(
                     items = items,
                     placeholder = placeholder,
                     itemKey = { it },
@@ -50,8 +50,8 @@ class SearchBarTest {
         val placeholder = "Buscar..."
 
         composeTestRule.setContent {
-            AcerolaTheme {
-                SearchBar(
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
+                _root_ide_package_.br.acerola.manga.common.ux.component.SearchBar(
                     items = items,
                     placeholder = placeholder,
                     itemKey = { it },

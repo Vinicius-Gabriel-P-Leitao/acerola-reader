@@ -2,7 +2,7 @@ package br.acerola.manga.module.home
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -44,7 +44,7 @@ class HomeScreenTest {
         every { viewModel.progress } returns MutableStateFlow(-1)
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 HomeScreen(homeViewModel = viewModel)
             }
         }

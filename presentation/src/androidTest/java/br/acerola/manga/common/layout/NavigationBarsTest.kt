@@ -4,7 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
@@ -18,9 +18,9 @@ class NavigationBarsTest {
     @Test
     fun `NavigationBottomBar_deve_exibir_labels_para_as_abas_principais`() {
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 val navController = rememberNavController()
-                NavigationBottomBar(navController = navController)
+                _root_ide_package_.br.acerola.manga.common.ux.layout.NavigationBottomBar(navController = navController)
             }
         }
 
@@ -37,9 +37,9 @@ class NavigationBarsTest {
     @Test
     fun `NavigationTopBar_deve_exibir_ação_de_navegação_de_retorno`() {
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 val navController = rememberNavController()
-                NavigationTopBar(navController = navController)
+                _root_ide_package_.br.acerola.manga.common.ux.layout.NavigationTopBar(navController = navController)
             }
         }
 

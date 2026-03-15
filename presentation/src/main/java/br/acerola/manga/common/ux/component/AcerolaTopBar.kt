@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,7 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.acerola.manga.common.modifier.glassStyle
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.TitleCapsule
+import br.acerola.manga.common.ux.modifier.glassStyle
 
 @Composable
 fun Acerola.TopBar(

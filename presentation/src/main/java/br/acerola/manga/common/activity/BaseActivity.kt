@@ -23,9 +23,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import br.acerola.manga.common.layout.AcerolaScaffold
-import br.acerola.manga.common.layout.LocalSnackbarHostState
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.layout.AcerolaScaffold
+import br.acerola.manga.common.ux.layout.LocalSnackbarHostState
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -48,13 +48,15 @@ abstract class BaseActivity : ComponentActivity() {
         setContent {
             val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
 
-            AcerolaTheme(dynamicColor = useDynamicColor) {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme(dynamicColor = useDynamicColor) {
                 val navController = rememberNavController()
                 val startDestination = getString(startDestinationRes)
                 val snackbarHostState = remember { SnackbarHostState() }
 
-                CompositionLocalProvider(value = LocalSnackbarHostState provides snackbarHostState) {
-                    AcerolaScaffold {
+                CompositionLocalProvider(
+                    value = _root_ide_package_.br.acerola.manga.common.ux.layout.LocalSnackbarHostState provides snackbarHostState
+                ) {
+                    _root_ide_package_.br.acerola.manga.common.ux.layout.AcerolaScaffold {
                         Scaffold(
                             topBar = { TopBar(navController) },
                             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },

@@ -23,7 +23,7 @@ class RadioGroupTest {
 
         composeTestRule.setContent {
             var selectedIndex by remember { mutableIntStateOf(0) }
-            RadioGroup(
+            _root_ide_package_.br.acerola.manga.common.ux.component.RadioGroup(
                 selectedIndex = selectedIndex,
                 options = options,
                 onSelect = { selectedIndex = it }

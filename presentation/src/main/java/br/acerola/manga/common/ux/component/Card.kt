@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,7 +36,7 @@ enum class CardType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Card(
-    type: CardType,
+    type: br.acerola.manga.common.ux.component.CardType,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     colors: CardColors = CardDefaults.elevatedCardColors(),
@@ -56,7 +56,7 @@ fun Card(
         elevation = elevation,
     ) {
         when (type) {
-            CardType.IMAGE -> {
+            _root_ide_package_.br.acerola.manga.common.ux.component.CardType.IMAGE -> {
                 // TODO: Criar exception personalizada para isso no código.
                 requireNotNull(value = image) {
                     stringResource(
@@ -90,7 +90,7 @@ fun Card(
                 }
             }
 
-            CardType.TEXT -> {
+            _root_ide_package_.br.acerola.manga.common.ux.component.CardType.TEXT -> {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -123,7 +123,7 @@ fun Card(
                 }
             }
 
-            CardType.CONTENT -> {
+            _root_ide_package_.br.acerola.manga.common.ux.component.CardType.CONTENT -> {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

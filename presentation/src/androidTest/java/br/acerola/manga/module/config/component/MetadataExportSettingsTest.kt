@@ -2,7 +2,7 @@ package br.acerola.manga.module.config.component
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import io.mockk.every
 import io.mockk.mockk
@@ -24,7 +24,7 @@ class MetadataExportSettingsTest {
         every { viewModel.generateComicInfo } returns state
 
         composeTestRule.setContent {
-            AcerolaTheme {
+            _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
                 MetadataExportSettings(viewModel = viewModel)
             }
         }

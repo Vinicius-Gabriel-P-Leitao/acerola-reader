@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
