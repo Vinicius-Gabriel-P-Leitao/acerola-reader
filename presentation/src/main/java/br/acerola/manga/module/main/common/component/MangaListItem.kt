@@ -26,8 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.component.Card
-import br.acerola.manga.common.ux.component.CardType
+import br.acerola.manga.common.ux.component.ImageCard
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
@@ -75,9 +74,8 @@ fun Main.Common.Component.MangaListItem(
             .height(height = 120.dp)
             .padding(all = 4.dp)
     ) {
-        Acerola.Component.Card(
+        Acerola.Component.ImageCard(
             onClick = onClick,
-            type = CardType.IMAGE,
             image = coverPainter,
             modifier = Modifier
                 .width(width = 80.dp)

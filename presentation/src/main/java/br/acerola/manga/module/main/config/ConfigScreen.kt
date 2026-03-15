@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
-import br.acerola.manga.common.ux.component.CardType
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
@@ -171,7 +170,6 @@ private fun PrettyConfigCard(
     content: @Composable () -> Unit
 ) {
     Acerola.Component.Card(
-        type = CardType.CONTENT,
         title = null,
         modifier = Modifier.padding(horizontal = 16.dp),
         colors = CardDefaults.elevatedCardColors(
