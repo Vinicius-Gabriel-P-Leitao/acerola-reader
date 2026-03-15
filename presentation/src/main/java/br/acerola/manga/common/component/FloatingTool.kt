@@ -6,19 +6,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,8 +31,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 
 data class FloatingToolItem(
     val icon: @Composable () -> Unit,
@@ -44,74 +48,84 @@ fun FloatingTool(
     items: List<FloatingToolItem>,
     modifier: Modifier = Modifier,
     paddingFromEdges: Dp = 16.dp,
-    spacingBetweenItems: Dp = 12.dp,
+    spacingBetweenItems: Dp = 18.dp
 ) {
-    var expanded by remember { mutableStateOf(value = false) }
+
+    var expanded by remember { mutableStateOf(false) }
 
     Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
+        modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd
     ) {
+
         Column(
-            modifier = Modifier.padding(all = paddingFromEdges),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(space = spacingBetweenItems)
+            modifier = Modifier.padding(paddingFromEdges),
+            horizontalAlignment = Alignment.End, // alinha tudo pela direita
+            verticalArrangement = Arrangement.spacedBy(spacingBetweenItems)
         ) {
+
             LazyColumn(
                 reverseLayout = true,
-                modifier = Modifier.heightIn(max = 400.dp),
-                verticalArrangement = Arrangement.spacedBy(space = spacingBetweenItems)
+                contentPadding = PaddingValues(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(spacingBetweenItems),
+                horizontalAlignment = Alignment.End, // alinha itens pela direita
+                modifier = Modifier
+                    .heightIn(max = 400.dp)
+                    .graphicsLayer { clip = false },
             ) {
+
                 itemsIndexed(
                     items = items.reversed(),
-                    key = { _, item -> item.label ?: item.hashCode() }
-                ) { index, item ->
+                    key = { _, item -> item.label ?: item.hashCode().toString() }) { index, item ->
+
                     val enterDelay = index * 50
                     val exitDelay = (items.size - 1 - index) * 30
+                    val itemZIndex = (items.size - index).toFloat()
 
                     AnimatedVisibility(
                         visible = expanded,
                         enter = slideInHorizontally(
-                            animationSpec = tween(delayMillis = enterDelay),
-                            initialOffsetX = { it / 2 }
-                        ) + fadeIn(animationSpec = tween(delayMillis = enterDelay)),
-                        exit = slideOutHorizontally(
-                            animationSpec = tween(delayMillis = exitDelay),
-                            targetOffsetX = { it / 2 }
-                        ) + fadeOut(animationSpec = tween(delayMillis = exitDelay))
-                    ) {
+                            animationSpec = tween(delayMillis = enterDelay), initialOffsetX = { it / 2 }) + fadeIn(
+                            animationSpec = tween(delayMillis = enterDelay)
+                        ), exit = slideOutHorizontally(
+                            animationSpec = tween(delayMillis = exitDelay), targetOffsetX = { it / 2 }) + fadeOut(
+                            animationSpec = tween(delayMillis = exitDelay)
+                        ), modifier = Modifier
+                            .zIndex(itemZIndex)
+                            .graphicsLayer { clip = false }) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(end = 4.dp)
-                        ) {
+                            modifier = Modifier.graphicsLayer { clip = false }) {
                             item.label?.let { label ->
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
-                                    tonalElevation = 2.dp,
-                                    modifier = Modifier.clickable {
+                                    tonalElevation = 2.dp, modifier = Modifier.clickable {
                                         item.onClick()
                                         expanded = false
-                                    }
-                                ) {
+                                    }) {
                                     Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = label, style = MaterialTheme.typography.labelLarge,
+                                        modifier = Modifier.padding(
+                                            horizontal = 8.dp, vertical = 4.dp
+                                        ), color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
 
                             FloatingActionButton(
+                                modifier = Modifier.size(48.dp),
                                 containerColor = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(size = 48.dp),
+                                elevation = FloatingActionButtonDefaults.elevation(
+                                    defaultElevation = 0.dp,
+                                    pressedElevation = 0.dp,
+                                    focusedElevation = 0.dp,
+                                    hoveredElevation = 0.dp
+                                ),
                                 onClick = {
                                     item.onClick()
                                     expanded = false
-                                },
-                            ) {
+                                }) {
                                 item.icon()
                             }
                         }
@@ -120,10 +134,10 @@ fun FloatingTool(
             }
 
             FloatingActionButton(
-                onClick = { expanded = !expanded },
-                modifier = Modifier.size(size = 56.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-            ) {
+                modifier = Modifier.size(56.dp), containerColor = MaterialTheme.colorScheme.primary,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 4.dp, pressedElevation = 8.dp
+                ), onClick = { expanded = !expanded }) {
                 icon()
             }
         }

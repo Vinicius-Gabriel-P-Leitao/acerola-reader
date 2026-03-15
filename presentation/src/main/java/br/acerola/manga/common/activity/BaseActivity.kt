@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -23,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import br.acerola.manga.common.layout.AcerolaScaffold
 import br.acerola.manga.common.layout.LocalSnackbarHostState
 import br.acerola.manga.common.theme.AcerolaTheme
+import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -30,6 +34,8 @@ abstract class BaseActivity : ComponentActivity() {
     abstract val startDestinationRes: Int
 
     open val applyScaffoldPadding: Boolean = true
+
+    private val themeViewModel: ThemeViewModel by viewModels()
 
     open fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
     }
@@ -40,7 +46,9 @@ abstract class BaseActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            AcerolaTheme() {
+            val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
+
+            AcerolaTheme(dynamicColor = useDynamicColor) {
                 val navController = rememberNavController()
                 val startDestination = getString(startDestinationRes)
                 val snackbarHostState = remember { SnackbarHostState() }

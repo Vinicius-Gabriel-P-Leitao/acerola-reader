@@ -141,4 +141,14 @@
     <string name="label_reader_pages_prefix">Páginas</string>
     <string name="label_reader_next_chapter">Próximo</string>
     <string name="label_reader_previous_chapter">Anterior</string>
+    <!-- Theme Settings -->
+    <string name="title_settings_appearance">Aparência</string>
+    <string name="description_settings_appearance">Personalize as cores do aplicativo</string>
+    <string name="title_settings_dynamic_color">Adaptável</string>
+    <string name="subtitle_settings_dynamic_color">Cores do sistema</string>
+    <string name="description_settings_dynamic_color">Usa cores do seu papel de parede (Android 12+)</string>
+    <string name="title_settings_catppuccin_theme">Catppuccin</string>
+    <string name="subtitle_settings_catppuccin_theme">Mocha</string>
+    <string name="description_settings_catppuccin_theme">Usa a paleta de cores original do app</string>
+
     </resources>

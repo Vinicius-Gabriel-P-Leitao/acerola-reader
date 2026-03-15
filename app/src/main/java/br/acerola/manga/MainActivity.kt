@@ -25,6 +25,7 @@ import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
+import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.config.ConfigScreen
 import br.acerola.manga.module.history.HistoryScreen
 import br.acerola.manga.module.history.HistoryViewModel
@@ -43,6 +44,7 @@ class MainActivity(
     private val mangaDexViewModel: MangaRemoteInfoViewModel by viewModels()
     private val historyViewModel: HistoryViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
+    private val themeViewModel: ThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +68,8 @@ class MainActivity(
                 filePreferencesViewModel = filePreferencesViewModel,
                 mangaDirectoryViewModel = mangaDirectoryViewModel,
                 mangaDexViewModel = mangaDexViewModel,
-                metadataSettingsViewModel = metadataSettingsViewModel
+                metadataSettingsViewModel = metadataSettingsViewModel,
+                themeViewModel = themeViewModel
             )
         }
     }

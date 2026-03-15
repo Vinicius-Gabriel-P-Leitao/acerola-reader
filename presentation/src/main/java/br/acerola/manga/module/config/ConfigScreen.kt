@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,11 +27,13 @@ import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
+import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.config.component.MetadataExportSettings
 import br.acerola.manga.module.config.component.PreferSavedFile
 import br.acerola.manga.module.config.component.SelectFolder
 import br.acerola.manga.module.config.component.SyncLibraryArchive
 import br.acerola.manga.module.config.component.SyncMangadexData
+import br.acerola.manga.module.config.component.ThemeSettings
 import br.acerola.manga.presentation.R
 
 @Composable
@@ -39,7 +42,8 @@ fun ConfigScreen(
     fileSystemAccessViewModel: FileSystemAccessViewModel,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     mangaDexViewModel: MangaRemoteInfoViewModel,
-    metadataSettingsViewModel: MetadataSettingsViewModel
+    metadataSettingsViewModel: MetadataSettingsViewModel,
+    themeViewModel: ThemeViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -58,6 +62,15 @@ fun ConfigScreen(
         ) {
             // Header Principal da Página
             ConfigHeader()
+
+            // Bloco 0: Aparência
+            PrettyConfigCard(
+                title = stringResource(id = R.string.title_settings_appearance),
+                icon = Icons.Rounded.Palette,
+                iconColor = MaterialTheme.colorScheme.primary
+            ) {
+                ThemeSettings(themeViewModel)
+            }
 
             // Bloco 1: Diretório e Arquivos
             PrettyConfigCard(
