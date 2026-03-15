@@ -6,10 +6,17 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.manga.config.preference.HomeLayoutType
+import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.home.HomeViewModel
 import br.acerola.manga.module.main.home.Screen
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -19,6 +26,15 @@ class HomeScreenTest {
     val composeTestRule = createComposeRule()
 
     private val viewModel = mockk<HomeViewModel>(relaxed = true)
+
+    @Before
+    fun setUp() {
+        every { viewModel.selectedHomeLayout } returns MutableStateFlow(HomeLayoutType.LIST)
+        every { viewModel.isIndexing } returns MutableStateFlow(false)
+        every { viewModel.progress } returns MutableStateFlow(-1)
+        every { viewModel.mangas } returns MutableStateFlow(emptyList())
+        every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
+    }
 
     @Test
     fun `HomeScreen_deve_exibir_SearchBar_quando_carregada`() {
