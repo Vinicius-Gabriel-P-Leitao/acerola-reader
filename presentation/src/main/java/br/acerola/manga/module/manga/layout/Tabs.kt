@@ -21,9 +21,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.manga.MainTab
+import br.acerola.manga.module.manga.Manga
 
 @Composable
-fun MangaTabs(
+fun Manga.Layout.Tabs(
     totalChapters: Int,
     activeTab: MainTab,
     onTabSelected: (MainTab) -> Unit,

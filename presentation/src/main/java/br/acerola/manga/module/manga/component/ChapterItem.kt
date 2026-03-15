@@ -19,16 +19,17 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Dialog
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChapterItem(
+fun Manga.Component.ChapterItem(
     chapterRemoteInfoDto: ChapterFeedDto?,
     chapterFileDto: ChapterFileDto,
-    isRead: Boolean = false,
     modifier: Modifier = Modifier,
     onToggleRead: () -> Unit = {},
+    isRead: Boolean = false,
     onClick: () -> Unit
 ) {
     var showDetails by remember { mutableStateOf(value = false) }

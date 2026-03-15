@@ -32,12 +32,13 @@ import br.acerola.manga.common.ux.component.Button
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
 @Composable
-fun MangaHeader(
+fun Manga.Layout.Header(
     manga: MangaDto,
     history: ReadingHistoryDto?,
     onContinueClick: (Long, Int) -> Unit
@@ -225,7 +226,7 @@ fun MangaHeader(
 }
 
 @Composable
-fun GenreBadge(
+private fun GenreBadge(
     text: String, modifier: Modifier = Modifier
 ) {
     Box(
@@ -243,7 +244,7 @@ fun GenreBadge(
 }
 
 @Composable
-fun SourceBadge(
+private fun SourceBadge(
     source: MetadataSource, modifier: Modifier = Modifier
 ) {
     val color = when (source) {
@@ -270,7 +271,7 @@ fun SourceBadge(
 }
 
 @Composable
-fun StatusBadge(
+private fun StatusBadge(
     status: String, modifier: Modifier = Modifier
 ) {
     Box(

@@ -27,10 +27,11 @@ import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewMod
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
 @Composable
-fun SyncMetadata(
+fun Manga.Component.SyncMetadata(
     directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,

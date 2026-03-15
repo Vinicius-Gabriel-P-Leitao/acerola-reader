@@ -26,10 +26,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
 @Composable
-fun PaginationFooter(
+fun Manga.Component.PaginationFooter(
     currentPage: Int,
     totalPages: Int,
     onPageChange: (Int) -> Unit

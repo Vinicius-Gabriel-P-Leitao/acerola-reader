@@ -12,8 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,13 +29,15 @@ import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewM
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.module.manga.component.PaginationPreference
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMetadata
 import br.acerola.manga.presentation.R
 
-fun LazyListScope.configSection(
+fun Manga.Layout.ConfigSection(
+    scope: LazyListScope,
     directory: MangaDirectoryDto,
     remoteInfo: MangaRemoteInfoDto?,
     mangaViewModel: MangaViewModel,
@@ -41,27 +46,27 @@ fun LazyListScope.configSection(
     mangaRemoteInfoViewModel: MangaRemoteInfoViewModel,
     chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel,
 ) {
-    item { Spacer(modifier = Modifier.height(24.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(24.dp)) }
 
-    item {
+    scope.item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_settings_display_config),
             icon = Icons.Rounded.Visibility,
             iconColor = MaterialTheme.colorScheme.primary
         ) {
-            PaginationPreference(mangaViewModel = mangaViewModel)
+            Manga.Component.PaginationPreference(mangaViewModel = mangaViewModel)
         }
     }
 
-    item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
-    item {
+    scope.item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_text_archive_configs_in_app),
             icon = Icons.Rounded.SdStorage,
             iconColor = MaterialTheme.colorScheme.secondary
         ) {
-            SyncMangaArchive(
+            Manga.Component.SyncMangaArchive(
                 directory = directory,
                 mangaDirectoryViewModel = mangaDirectoryViewModel,
                 chapterArchiveViewModel = chapterArchiveViewModel,
@@ -69,15 +74,15 @@ fun LazyListScope.configSection(
         }
     }
 
-    item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
-    item {
+    scope.item {
         PrettyConfigCard(
             title = stringResource(id = R.string.title_config_sync_mangadex),
             icon = Icons.Rounded.CloudSync,
             iconColor = MaterialTheme.colorScheme.tertiary
         ) {
-            SyncMetadata(
+            Manga.Component.SyncMetadata(
                 directory = directory,
                 remoteInfo = remoteInfo,
                 mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
@@ -86,15 +91,15 @@ fun LazyListScope.configSection(
         }
     }
 
-    item { Spacer(modifier = Modifier.height(48.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(28.dp)) }
 }
 
-@androidx.compose.runtime.Composable
+@Composable
 private fun PrettyConfigCard(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconColor: androidx.compose.ui.graphics.Color,
-    content: @androidx.compose.runtime.Composable () -> Unit
+    iconColor: Color,
+    icon: ImageVector,
+    content: @Composable () -> Unit
 ) {
     Acerola.Component.Card(
         type = CardType.CONTENT,

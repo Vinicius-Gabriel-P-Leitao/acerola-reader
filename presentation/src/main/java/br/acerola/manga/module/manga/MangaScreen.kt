@@ -38,10 +38,10 @@ import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewMod
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
-import br.acerola.manga.module.manga.layout.MangaHeader
-import br.acerola.manga.module.manga.layout.MangaTabs
-import br.acerola.manga.module.manga.layout.chaptersSection
-import br.acerola.manga.module.manga.layout.configSection
+import br.acerola.manga.module.manga.layout.ChapterSection
+import br.acerola.manga.module.manga.layout.Header
+import br.acerola.manga.module.manga.layout.ConfigSection
+import br.acerola.manga.module.manga.layout.Tabs
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
@@ -153,7 +153,7 @@ fun MangaScreen(
                 item(
                     key = "header_${currentManga.remoteInfo?.title}", contentType = "header"
                 ) {
-                    MangaHeader(
+                    Manga.Layout.Header(
                         manga = currentManga,
                         history = history,
                         onContinueClick = handleContinueClick
@@ -163,7 +163,7 @@ fun MangaScreen(
                 item(
                     key = "tabs_${currentManga.remoteInfo?.title}", contentType = "tabs"
                 ) {
-                    MangaTabs(
+                    Manga.Layout.Tabs(
                         totalChapters = totalChapters,
                         activeTab = selectedTab,
                         onTabSelected = { selectedTab = it },
@@ -173,7 +173,8 @@ fun MangaScreen(
                 when (selectedTab) {
                     MainTab.CHAPTERS -> {
                         chapterDto?.let {
-                            chaptersSection(
+                            Manga.Layout.ChapterSection(
+                                scope = this,
                                 chapters = it,
                                 currentPage = currentPage,
                                 onPageChange = handlePageChange,
@@ -186,7 +187,8 @@ fun MangaScreen(
                     }
 
                     MainTab.SETTINGS -> {
-                        configSection(
+                        Manga.Layout.ConfigSection(
+                            scope = this,
                             mangaViewModel = mangaViewModel,
                             directory = currentManga.directory,
                             remoteInfo = currentManga.remoteInfo,

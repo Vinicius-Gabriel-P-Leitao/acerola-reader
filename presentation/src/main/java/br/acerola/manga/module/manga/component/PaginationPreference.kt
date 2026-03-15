@@ -19,11 +19,12 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.RadioGroup
 import br.acerola.manga.config.preference.ChapterPageSizeType
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.presentation.R
 
 @Composable
-fun PaginationPreference(
+fun Manga.Component.PaginationPreference(
     mangaViewModel: MangaViewModel,
 ) {
     val selected by mangaViewModel.selectedChapterPerPage.collectAsState(initial = null)

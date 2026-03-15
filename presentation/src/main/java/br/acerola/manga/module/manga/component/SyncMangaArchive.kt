@@ -25,10 +25,11 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
 @Composable
-fun SyncMangaArchive(
+fun Manga.Component.SyncMangaArchive(
     directory: MangaDirectoryDto,
     mangaDirectoryViewModel: MangaDirectoryViewModel,
     chapterArchiveViewModel: ChapterArchiveViewModel,
