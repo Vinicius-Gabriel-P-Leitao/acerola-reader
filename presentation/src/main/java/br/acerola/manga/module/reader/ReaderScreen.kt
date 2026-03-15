@@ -11,7 +11,7 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.module.reader.layout.ReaderContent
+import br.acerola.manga.module.reader.layout.PageContent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -84,7 +84,7 @@ fun ReaderScreen(
         }
     }
 
-    ReaderContent(
+    Reader.Layout.PageContent(
         pages = state.pages,
         listState = listState,
         pagerState = pagerState,

@@ -3,7 +3,6 @@ package br.acerola.manga.module.reader.layout
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.presentation.R
 import org.junit.Rule
 import org.junit.Test
@@ -18,7 +17,7 @@ class ReaderTopBarTest {
     fun `ReaderTopBar_deve_exibir_título_e_subtítulo_dinâmicos_corretamente`() {
         composeTestRule.setContent {
             _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                ReaderTopBar(
+                TopBar(
                     title = "Capítulo 01",
                     subtitle = "Ordem: 1",
                     isVisible = true,
@@ -37,7 +36,7 @@ class ReaderTopBarTest {
         var settingsClicked = false
         composeTestRule.setContent {
             _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                ReaderTopBar(
+                TopBar(
                     title = "Capítulo 01",
                     subtitle = "Ordem: 1",
                     isVisible = true,

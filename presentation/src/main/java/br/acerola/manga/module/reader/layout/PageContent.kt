@@ -8,12 +8,13 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import br.acerola.manga.config.preference.ReadingMode
+import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.module.reader.component.HorizontalPagedReader
 import br.acerola.manga.module.reader.component.VerticalPagedReader
 import br.acerola.manga.module.reader.component.WebtoonReader
 
 @Composable
-fun ReaderContent(
+fun Reader.Layout.PageContent(
     pageCount: Int,
     pagerState: PagerState,
     onUiToggle: () -> Unit,
@@ -28,7 +29,7 @@ fun ReaderContent(
     Box(modifier = Modifier.fillMaxSize()) {
         when (readingMode) {
             ReadingMode.HORIZONTAL -> {
-                HorizontalPagedReader(
+                Reader.Component.HorizontalPagedReader(
                     pages = pages,
                     onUiToggle = onUiToggle,
                     pagerState = pagerState,
@@ -40,7 +41,7 @@ fun ReaderContent(
             }
 
             ReadingMode.VERTICAL -> {
-                VerticalPagedReader(
+                Reader.Component.VerticalPagedReader(
                     pages = pages,
                     onUiToggle = onUiToggle,
                     pagerState = pagerState,
@@ -52,7 +53,7 @@ fun ReaderContent(
             }
 
             ReadingMode.WEBTOON -> {
-                WebtoonReader(
+                Reader.Component.WebtoonReader(
                     pageCount = pageCount,
                     pages = pages,
                     listState = listState,

@@ -17,17 +17,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import br.acerola.manga.config.preference.ReadingMode
+import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.module.reader.state.TapArea
 
 @Composable
-fun ZoomablePageImage(
+fun Reader.Gesture.ZoomablePageImage(
     pageBitmap: Bitmap?,
     onAreaTap: (TapArea) -> Unit,
     onZoomStatusChange: (Boolean) -> Unit,

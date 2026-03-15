@@ -4,7 +4,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,10 +31,11 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.modifier.glass
+import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.presentation.R
 
 @Composable
-fun ReaderTopBar(
+fun Reader.Layout.TopBar(
     title: String,
     subtitle: String,
     isVisible: Boolean,
@@ -64,7 +74,7 @@ fun ReaderTopBar(
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                ReaderTitleCapsule(title = title, subtitle = subtitle)
+                TitleCapsule(title = title, subtitle = subtitle)
             }
 
             Box(modifier = Modifier.size(48.dp)) {
@@ -84,7 +94,7 @@ fun ReaderTopBar(
 }
 
 @Composable
-fun ReaderTitleCapsule(
+fun Reader.Layout.TitleCapsule(
     title: String,
     subtitle: String
 ) {
@@ -92,12 +102,12 @@ fun ReaderTitleCapsule(
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
     val shape = RoundedCornerShape(24.dp)
 
-    Box(modifier = Modifier.wrapContentWidth(Alignment.CenterHorizontally)) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .glass(shape, glassColor, borderColor)
-        )
+    Box(
+        modifier = Modifier
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .background(Color.Transparent)
+            .glass(shape, glassColor, borderColor)
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)

@@ -27,12 +27,13 @@ import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.modifier.glass
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.presentation.R
 
 private const val TAG = "ReaderBottomControls"
 
 @Composable
-fun ReaderBottomControls(
+fun Reader.Layout.BottomControls(
     pageCount: Int,
     currentPage: Int,
     onPrevClick: () -> Unit,
@@ -62,13 +63,12 @@ fun ReaderBottomControls(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .glass(shape, glassColor, borderColor)
-            )
-            
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Transparent)
+                .glass(shape, glassColor, borderColor)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

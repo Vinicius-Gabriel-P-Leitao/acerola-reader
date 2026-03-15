@@ -23,9 +23,9 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.module.reader.layout.ReaderBottomControls
-import br.acerola.manga.module.reader.layout.ReaderSettingsSheet
-import br.acerola.manga.module.reader.layout.ReaderTopBar
+import br.acerola.manga.module.reader.layout.BottomControls
+import br.acerola.manga.module.reader.layout.SettingsSheet
+import br.acerola.manga.module.reader.layout.TopBar
 import br.acerola.manga.presentation.R
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -86,7 +86,7 @@ class ReaderActivity(
             visible = state.isUiVisible,
             enter = slideInVertically { it },
             exit = slideOutVertically { it }) {
-            ReaderBottomControls(
+            Reader.Layout.BottomControls(
                 pageCount = state.pageCount,
                 currentPage = state.currentPage,
                 enableNavigation = state.readingMode != ReadingMode.WEBTOON,
@@ -122,7 +122,7 @@ class ReaderActivity(
         val activeChapter = state.currentChapter ?: page
 
         Box {
-            ReaderTopBar(
+            Reader.Layout.TopBar(
                 title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
                 subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
                 isVisible = state.isUiVisible,
@@ -136,7 +136,7 @@ class ReaderActivity(
                 })
 
             if (showSettings) {
-                ReaderSettingsSheet(
+                Reader.Layout.SettingsSheet(
                     onDismissRequest = { showSettings = false },
                     currentMode = state.readingMode,
                     onModeSelected = { mode ->
@@ -148,4 +148,5 @@ class ReaderActivity(
             }
         }
     }
+
 }

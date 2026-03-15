@@ -4,7 +4,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.config.preference.ReadingMode
 import org.junit.Rule
 import org.junit.Test
@@ -22,7 +21,7 @@ class ReaderContentTest {
             val listState = rememberLazyListState()
 
             _root_ide_package_.br.acerola.manga.common.ux.theme.AcerolaTheme {
-                ReaderContent(
+                PageContent(
                     pageCount = 5,
                     pagerState = pagerState,
                     listState = listState,
