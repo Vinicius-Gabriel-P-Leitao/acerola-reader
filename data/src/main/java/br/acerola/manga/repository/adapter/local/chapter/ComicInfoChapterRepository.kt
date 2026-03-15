@@ -5,8 +5,8 @@ import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
@@ -17,7 +17,6 @@ import br.acerola.manga.local.mapper.toModel
 import br.acerola.manga.repository.di.ComicInfo
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
-import br.acerola.manga.util.normalizeTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

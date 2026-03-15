@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.config.preference.FilePreferences
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -3,8 +3,8 @@ package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi

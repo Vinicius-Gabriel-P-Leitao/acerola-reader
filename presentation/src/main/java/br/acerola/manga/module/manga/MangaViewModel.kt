@@ -12,8 +12,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase

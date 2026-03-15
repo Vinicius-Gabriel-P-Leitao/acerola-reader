@@ -8,12 +8,11 @@ import arrow.core.Either
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
-import br.acerola.manga.local.mapper.toChapterArchiveModel
 import br.acerola.manga.local.mapper.toPageDto
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import android.provider.DocumentsContract
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Semaphore

@@ -11,8 +11,8 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.error.exception.MangadexRequestException
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao

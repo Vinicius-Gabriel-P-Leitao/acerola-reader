@@ -106,11 +106,11 @@ está planejado para o futuro.
     *   [x] **Implementar uma classe de logs ou função de faz um wrapper para o Log.** Essa classe ou função tem
         de padronizar os logs do projeto para que fique fácil de buscar e filtrar
 * **Adiciona função de trocar thema:**
-    *   [ ] **Thema adaptável** Isso já é default do android então só dataStore para salvar preferencia.
-    *   [ ] **Thema default vai ser o cattpuccin** Deixar ele default e melhorar cores para thema branco.
+    *   [x] **Thema adaptável** Isso já é default do android então só dataStore para salvar preferencia.
+    *   [x] **Thema default vai ser o cattpuccin** Deixar ele default e melhorar cores para thema branco.
 * **Corrigir bug de notificação para todos os sync**
-   *    [ ] **Corrigir o sync para métadados na config geral** Sync do mangadex geral não gera notifição e deixa com 
-        o app rodando em background. 
+   *    [ ] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera 
+        notifição e deixa com o app rodando em background, verificar se existe outro que tem o mesmo problema. 
 
 ## Pilha de Tecnologia
 

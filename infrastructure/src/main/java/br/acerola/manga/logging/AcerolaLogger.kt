@@ -1,4 +1,4 @@
-package br.acerola.manga.infrastructure.logging
+package br.acerola.manga.logging
 
 import android.util.Log
 import br.acerola.manga.infrastructure.BuildConfig
@@ -39,9 +39,9 @@ object AcerolaLogger {
     }
 
     private fun log(
-        level: LogLevel,
         tag: String,
         msg: String,
+        level: LogLevel,
         source: LogSource,
         throwable: Throwable? = null
     ) {

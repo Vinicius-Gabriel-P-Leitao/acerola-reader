@@ -10,8 +10,8 @@ import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.background.MetadataSyncWorker
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase

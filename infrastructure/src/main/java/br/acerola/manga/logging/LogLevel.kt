@@ -1,4 +1,4 @@
-package br.acerola.manga.infrastructure.logging
+package br.acerola.manga.logging
 
 enum class LogLevel(val label: String) {
     VERBOSE("V"),

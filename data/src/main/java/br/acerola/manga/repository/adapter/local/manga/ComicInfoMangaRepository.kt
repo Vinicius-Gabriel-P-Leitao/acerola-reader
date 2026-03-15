@@ -1,14 +1,13 @@
 package br.acerola.manga.repository.adapter.local.manga
 
-import android.content.Context
 import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
@@ -18,7 +17,6 @@ import br.acerola.manga.repository.di.ComicInfo
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

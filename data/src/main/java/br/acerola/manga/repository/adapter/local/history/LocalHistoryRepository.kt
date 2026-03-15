@@ -2,8 +2,8 @@ package br.acerola.manga.repository.adapter.local.history
 
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.database.entity.history.ChapterRead
 import br.acerola.manga.local.mapper.toDto

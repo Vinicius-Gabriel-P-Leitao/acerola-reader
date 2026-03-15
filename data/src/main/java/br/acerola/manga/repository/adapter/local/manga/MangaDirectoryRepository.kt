@@ -12,9 +12,8 @@ import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
-import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toDto
@@ -23,7 +22,6 @@ import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.util.ContentQueryHelper
-import br.acerola.manga.util.FastFileMetadata
 import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +39,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger

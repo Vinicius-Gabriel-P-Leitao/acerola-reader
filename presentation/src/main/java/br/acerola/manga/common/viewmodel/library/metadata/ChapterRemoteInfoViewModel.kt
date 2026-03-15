@@ -6,8 +6,8 @@ import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.UserMessage
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.ComicInfoCase
 import br.acerola.manga.usecase.di.MangadexCase

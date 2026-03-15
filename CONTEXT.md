@@ -18,7 +18,7 @@ Acerola is an Android application designed for manga enthusiasts to manage their
 - **Retrofit**: `3.0.0`
 - **Coil**: `2.7.0`
 - **Coroutines**: `1.10.2`
-- **Arrow**: `2.2.1.1`
+- **Arrow**: `2.2.1.1` 
 
 ## Architecture
 The project follows a **Clean Architecture** approach with **MVVM** in the presentation layer:

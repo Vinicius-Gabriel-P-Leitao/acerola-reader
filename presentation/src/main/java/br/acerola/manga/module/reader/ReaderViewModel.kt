@@ -11,8 +11,8 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.error.message.ChapterError
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.state.ReaderUiState
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.service.reader.PageRepository

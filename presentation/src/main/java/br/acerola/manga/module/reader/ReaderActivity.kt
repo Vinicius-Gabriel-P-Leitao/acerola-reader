@@ -21,8 +21,8 @@ import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.infrastructure.logging.AcerolaLogger
-import br.acerola.manga.infrastructure.logging.LogSource
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.layout.ReaderBottomControls
 import br.acerola.manga.module.reader.layout.ReaderSettingsSheet
 import br.acerola.manga.module.reader.layout.ReaderTopBar
