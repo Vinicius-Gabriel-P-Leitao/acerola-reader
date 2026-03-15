@@ -1,4 +1,4 @@
-package br.acerola.manga.common.ux.component
+package br.acerola.manga.common.ux.layout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -22,11 +22,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.component.TitleCapsule
-import br.acerola.manga.common.ux.modifier.glassStyle
+import br.acerola.manga.common.ux.modifier.glass
 
 @Composable
-fun Acerola.TopBar(
+fun Acerola.Layout.TopBar(
     title: String? = null,
     modifier: Modifier = Modifier,
     navigationIcon: @Composable (() -> Unit)? = null,
@@ -67,7 +66,7 @@ fun Acerola.TopBar(
 }
 
 @Composable
-fun Acerola.TitleCapsule(
+fun Acerola.Layout.TitleCapsule(
     text: String,
     modifier: Modifier = Modifier
 ) {
@@ -80,7 +79,7 @@ fun Acerola.TitleCapsule(
             .fillMaxWidth()
             .wrapContentWidth(Alignment.CenterHorizontally)
             .background(Color.Transparent)
-            .glassStyle(shape, glassColor, borderColor)
+            .glass(shape, glassColor, borderColor)
     ) {
         Text(
             text = text,

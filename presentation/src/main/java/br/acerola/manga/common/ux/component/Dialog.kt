@@ -9,10 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun ModalDialog(
+fun Acerola.Component.Dialog(
     show: Boolean,
     onDismiss: () -> Unit,
     title: String? = null,

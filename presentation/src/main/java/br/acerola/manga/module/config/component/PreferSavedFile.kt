@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.module.config.layout.FilePreference
@@ -70,7 +71,7 @@ fun PreferSavedFile(
             }
         }
 
-        _root_ide_package_.br.acerola.manga.common.ux.component.Divider()
+        Acerola.Component.Divider()
 
         FilePreference(filePreferencesViewModel)
     }

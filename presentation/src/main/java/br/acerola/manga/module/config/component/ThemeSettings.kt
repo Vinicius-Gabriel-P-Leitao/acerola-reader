@@ -3,13 +3,27 @@ package br.acerola.manga.module.config.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,7 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.acerola.manga.common.theme.*
+import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.presentation.R
 
@@ -86,7 +100,7 @@ fun ThemeSettings(
                 title = stringResource(R.string.title_settings_catppuccin_theme),
                 subtitle = stringResource(R.string.subtitle_settings_catppuccin_theme),
                 selected = !useDynamicColor,
-                colors = listOf(Mauve, Pink, Sky),
+                colors = listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky),
                 onClick = { themeViewModel.setDynamicColor(false) }
             )
 
@@ -131,7 +145,9 @@ fun ThemeCard(
 ) {
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
     val backgroundColor =
-        if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surfaceVariant.copy(
+        if (selected) MaterialTheme.colorScheme.primary.copy(
+            alpha = 0.05f
+        ) else MaterialTheme.colorScheme.surfaceVariant.copy(
             alpha = 0.3f
         )
 
@@ -147,14 +163,12 @@ fun ThemeCard(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Preview Colors
             Box(
                 modifier = Modifier
                     .size(60.dp)
                     .padding(4.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Background circle
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -164,7 +178,6 @@ fun ThemeCard(
                         )
                 )
 
-                // Small circles overlapping
                 Row(
                     horizontalArrangement = Arrangement.spacedBy((-12).dp),
                     verticalAlignment = Alignment.CenterVertically

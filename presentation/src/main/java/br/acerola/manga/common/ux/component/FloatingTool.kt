@@ -7,23 +7,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +23,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import br.acerola.manga.common.ux.Acerola
 
 data class FloatingToolItem(
     val icon: @Composable () -> Unit,
@@ -43,14 +32,13 @@ data class FloatingToolItem(
 )
 
 @Composable
-fun FloatingTool(
+fun Acerola.Component.FloatingTool(
     icon: @Composable () -> Unit,
-    items: List<br.acerola.manga.common.ux.component.FloatingToolItem>,
+    items: List<FloatingToolItem>,
     modifier: Modifier = Modifier,
     paddingFromEdges: Dp = 16.dp,
     spacingBetweenItems: Dp = 14.dp
 ) {
-
     var expanded by remember { mutableStateOf(false) }
 
     Box(
@@ -58,8 +46,7 @@ fun FloatingTool(
     ) {
 
         Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.padding(paddingFromEdges),
+            horizontalAlignment = Alignment.End, modifier = Modifier.padding(paddingFromEdges),
             verticalArrangement = Arrangement.spacedBy(spacingBetweenItems)
         ) {
 
@@ -83,15 +70,15 @@ fun FloatingTool(
 
                     AnimatedVisibility(
                         visible = expanded,
+                        modifier = Modifier.zIndex(itemZIndex).graphicsLayer { clip = false },
                         enter = slideInHorizontally(
                             animationSpec = tween(delayMillis = enterDelay), initialOffsetX = { it / 2 }) + fadeIn(
                             animationSpec = tween(delayMillis = enterDelay)
                         ), exit = slideOutHorizontally(
                             animationSpec = tween(delayMillis = exitDelay), targetOffsetX = { it / 2 }) + fadeOut(
                             animationSpec = tween(delayMillis = exitDelay)
-                        ), modifier = Modifier
-                            .zIndex(itemZIndex)
-                            .graphicsLayer { clip = false }) {
+                        )
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -114,15 +101,11 @@ fun FloatingTool(
                             }
 
                             FloatingActionButton(
-                                modifier = Modifier.size(48.dp),
-                                containerColor = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(48.dp), containerColor = MaterialTheme.colorScheme.secondary,
                                 elevation = FloatingActionButtonDefaults.elevation(
-                                    defaultElevation = 0.dp,
-                                    pressedElevation = 0.dp,
-                                    focusedElevation = 0.dp,
+                                    defaultElevation = 0.dp, pressedElevation = 0.dp, focusedElevation = 0.dp,
                                     hoveredElevation = 0.dp
-                                ),
-                                onClick = {
+                                ), onClick = {
                                     item.onClick()
                                     expanded = false
                                 }) {

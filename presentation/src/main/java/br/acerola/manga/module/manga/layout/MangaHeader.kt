@@ -5,15 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -35,8 +27,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.Acerola
-import br.acerola.manga.common.component.Button
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Button
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.local.database.entity.metadata.MetadataSource
@@ -177,7 +169,6 @@ fun MangaHeader(
             }
         }
 
-        // NOTE: Sinopse
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,21 +203,18 @@ fun MangaHeader(
 
             Spacer(modifier = Modifier.height(height = 8.dp))
 
-            // TODO: Inserir o botão de iniciar a leitura do primeiro mangá ou o ultimo lido vai ter duas labels INICIAR |
-            //  CONTINUAR com icone diferente e teremos histórico de capitulo.
             val buttonText = when {
                 history?.isCompleted == true -> stringResource(id = R.string.label_manga_action_reread)
                 history != null -> stringResource(id = R.string.label_manga_action_continue)
                 else -> stringResource(id = R.string.label_manga_action_start)
             }
             
-            Acerola.Button(
+            Acerola.Component.Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     if (history != null) {
                         onContinueClick(history.chapterArchiveId, history.lastPage)
                     } else {
-                        // Se não houver histórico, inicia do primeiro capítulo (id -1 para sinalizar primeiro)
                         onContinueClick(-1L, 0)
                     }
                 },
@@ -301,4 +289,3 @@ fun StatusBadge(
         )
     }
 }
-                        

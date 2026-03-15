@@ -25,13 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.presentation.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun <T> SearchBar(
+fun <T> Acerola.Component.SearchBar(
     items: List<T>,
     placeholder: String,
     itemKey: (T) -> Any,

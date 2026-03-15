@@ -26,10 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.FloatingTool
-import br.acerola.manga.common.component.FloatingToolItem
-import br.acerola.manga.common.layout.ProgressIndicator
-import br.acerola.manga.common.component.SearchBar
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.FloatingTool
+import br.acerola.manga.common.ux.component.FloatingToolItem
+import br.acerola.manga.common.ux.component.SearchBar
+import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
@@ -52,13 +53,12 @@ fun HomeScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            SearchBar<Pair<MangaDto, ReadingHistoryDto?>>(
+            Acerola.Component.SearchBar(
                 items = mangas,
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
                 itemKey = { (manga, _) -> manga.directory.id },
                 searchKey = { (manga, _) -> manga.directory.name },
-                modifier = Modifier
-                    .padding(all = 6.dp),
+                modifier = Modifier.padding(all = 6.dp),
                 itemContent = { (manga, history) ->
                     MangaListItem(
                         manga = manga,
@@ -81,7 +81,7 @@ fun HomeScreen(
                 })
 
             if (mangas.isEmpty() && !isIndexing) {
-//                EmptyState(error)
+                EmptyState()
             } else {
                 val gridCells = when (layout) {
                     HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
@@ -124,7 +124,7 @@ fun HomeScreen(
             }
         }
 
-        FloatingTool(
+        Acerola.Component.FloatingTool(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Edit,
@@ -165,7 +165,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(all = 8.dp),
         ) {
-            ProgressIndicator(
+            Acerola.Layout.ProgressIndicator(
                 isLoading = isIndexing,
                 progress = if (progress >= 0) progress / 100f else null,
             )
@@ -174,7 +174,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun EmptyState(error: Throwable?) {
+private fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
@@ -184,13 +184,6 @@ private fun EmptyState(error: Throwable?) {
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            error?.let {
-                Text(
-                    text = it.message.toString(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
         }
     }
 }

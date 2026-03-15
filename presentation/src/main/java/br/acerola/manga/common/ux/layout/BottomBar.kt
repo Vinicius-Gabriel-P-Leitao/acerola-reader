@@ -1,27 +1,20 @@
 package br.acerola.manga.common.ux.layout
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import br.acerola.manga.common.navigation.Destination
+import br.acerola.manga.common.ux.Acerola
 
 @Composable
-fun NavigationBottomBar(navController: NavHostController) {
-    val context = LocalContext.current
-
+fun Acerola.Layout.BottomBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 

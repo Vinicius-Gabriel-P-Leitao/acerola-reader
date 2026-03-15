@@ -1,9 +1,7 @@
 package br.acerola.manga.module.reader.layout
 
-import android.os.Build
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,14 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.Acerola
-import br.acerola.manga.common.component.GlassButton
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.GlassButton
+import br.acerola.manga.common.ux.modifier.glass
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.presentation.R
@@ -55,6 +53,7 @@ fun ReaderBottomControls(
 
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+    val shape = RoundedCornerShape(32.dp)
 
     Box(
         modifier = Modifier
@@ -63,26 +62,13 @@ fun ReaderBottomControls(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(32.dp))
-                .background(Color.Transparent)
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .then(
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            Modifier.blur(25.dp)
-                        } else {
-                            Modifier
-                        }
-                    )
-                    .background(glassColor)
-                    .border(0.5.dp, borderColor, RoundedCornerShape(32.dp))
+                    .glass(shape, glassColor, borderColor)
             )
-
+            
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -161,7 +147,7 @@ fun ReaderBottomControls(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Acerola.GlassButton(
+                            Acerola.Component.GlassButton(
                                 modifier = Modifier.size(40.dp),
                                 onClick = onPrevClick,
                                 icon = {
@@ -177,7 +163,7 @@ fun ReaderBottomControls(
 
                             Spacer(modifier = Modifier.width(12.dp))
 
-                            Acerola.GlassButton(
+                            Acerola.Component.GlassButton(
                                 modifier = Modifier.size(40.dp),
                                 onClick = onNextClick,
                                 icon = {

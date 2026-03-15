@@ -23,7 +23,7 @@ class SmartButtonTest {
     fun `botão_do_tipo_texto_deve_exibir_a_label_corretamente`() {
         var clicked = false
         composeTestRule.setContent {
-            Acerola.Button(
+            Acerola.Component.Button(
                 text = "Clique Aqui",
                 onClick = { clicked = true }
             )
@@ -36,7 +36,7 @@ class SmartButtonTest {
     @Test
     fun `botão_do_tipo_ícone_deve_exibir_a_descrição_de_conteúdo_corretamente`() {
         composeTestRule.setContent {
-            Acerola.IconButton(
+            Acerola.Component.IconButton(
                 onClick = {},
                 icon = { Icon(Icons.Default.Add, contentDescription = "Adicionar") }
             )
@@ -48,7 +48,7 @@ class SmartButtonTest {
     @Test
     fun `botão_do_tipo_misto_deve_exibir_ícone_e_texto_simultaneamente`() {
         composeTestRule.setContent {
-            Acerola.Button(
+            Acerola.Component.Button(
                 text = "Salvar",
                 onClick = {},
                 icon = { Icon(Icons.Default.Add, contentDescription = "Icone") }

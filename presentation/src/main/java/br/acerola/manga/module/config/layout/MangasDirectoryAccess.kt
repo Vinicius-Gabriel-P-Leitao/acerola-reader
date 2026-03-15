@@ -3,10 +3,7 @@ package br.acerola.manga.module.config.layout
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -19,10 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.presentation.R
-import br.acerola.manga.common.component.Acerola
-import br.acerola.manga.common.component.IconButton
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.IconButton
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
+import br.acerola.manga.presentation.R
 
 @Composable
 fun FolderAccess(viewModel: FileSystemAccessViewModel, onFolderSelected: (String) -> Unit = {}) {
@@ -40,7 +37,7 @@ fun FolderAccess(viewModel: FileSystemAccessViewModel, onFolderSelected: (String
     }
 
     Column {
-        Acerola.IconButton(
+        Acerola.Component.IconButton(
             onClick = { launcher.launch(input = null) },
             icon = {
                 Box(

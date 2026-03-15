@@ -10,8 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
-import br.acerola.manga.common.layout.LocalSnackbarHostState
-import br.acerola.manga.common.layout.NavigationTopBar
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel

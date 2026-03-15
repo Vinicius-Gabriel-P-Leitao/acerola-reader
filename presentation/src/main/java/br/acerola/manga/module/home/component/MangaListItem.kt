@@ -11,19 +11,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.Card
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Card
+import br.acerola.manga.common.ux.component.CardType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.presentation.R
 import coil.compose.rememberAsyncImagePainter
@@ -70,7 +75,7 @@ fun MangaListItem(
             .height(height = 120.dp)
             .padding(all = 4.dp)
     ) {
-        Card(
+        Acerola.Component.Card(
             onClick = onClick,
             type = CardType.IMAGE,
             image = coverPainter,
@@ -120,7 +125,7 @@ fun MangaListItem(
         }
 
         if (onPlayClick != null) {
-            androidx.compose.material3.IconButton(
+            IconButton(
                 onClick = onPlayClick,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -130,8 +135,8 @@ fun MangaListItem(
                         shape = RoundedCornerShape(12.dp)
                     )
             ) {
-                androidx.compose.material3.Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.PlayArrow,
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
                     contentDescription = stringResource(id = R.string.description_icon_continue_reading),
                     tint = MaterialTheme.colorScheme.primary
                 )

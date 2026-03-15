@@ -17,8 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.CardType
-import br.acerola.manga.common.component.Card
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Card
+import br.acerola.manga.common.ux.component.CardType
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
@@ -95,7 +96,7 @@ private fun PrettyConfigCard(
     iconColor: androidx.compose.ui.graphics.Color,
     content: @androidx.compose.runtime.Composable () -> Unit
 ) {
-    Card(
+    Acerola.Component.Card(
         type = CardType.CONTENT,
         title = null,
         modifier = Modifier.padding(horizontal = 16.dp),

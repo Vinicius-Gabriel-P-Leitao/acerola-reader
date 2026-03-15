@@ -1,8 +1,6 @@
 package br.acerola.manga.module.reader.layout
 
-import android.os.Build
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,13 +13,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.modifier.glass
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.presentation.R
 
@@ -34,6 +32,7 @@ fun ReaderSettingsSheet(
 ) {
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+    val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
     ModalBottomSheet(
         containerColor = Color.Transparent,
@@ -42,30 +41,12 @@ fun ReaderSettingsSheet(
         scrimColor = Color.Black.copy(alpha = 0.4f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                .background(Color.Transparent)
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .then(
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            Modifier.blur(30.dp)
-                        } else {
-                            Modifier
-                        }
-                    )
-                    .background(glassColor)
-                    .border(
-                        width = 0.5.dp,
-                        color = borderColor,
-                        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-                    )
+                    .glass(shape, glassColor, borderColor)
             )
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -11,11 +11,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import br.acerola.manga.common.ux.Acerola
 
 @Composable
-fun StatusBarProtection(
+fun Acerola.Layout.StatusBarProtection(
     color: Color = MaterialTheme.colorScheme.background,
-    heightProvider: () -> Float = _root_ide_package_.br.acerola.manga.common.ux.layout.calculateGradientHeight(),
+    heightProvider: () -> Float = calculateGradientHeight(),
 ) {
     Canvas(Modifier.fillMaxSize()) {
         val calculatedHeight = heightProvider()
@@ -36,7 +37,7 @@ fun StatusBarProtection(
 }
 
 @Composable
-fun calculateGradientHeight(): () -> Float {
+private fun calculateGradientHeight(): () -> Float {
     val statusBars = WindowInsets.statusBars
     val density = LocalDensity.current
     return { statusBars.getTop(density).times(other = 1.2f) }

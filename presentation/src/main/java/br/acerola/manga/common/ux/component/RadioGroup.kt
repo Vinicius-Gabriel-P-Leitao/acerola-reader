@@ -13,9 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
 
 @Composable
-fun RadioGroup(
+fun Acerola.Component.RadioGroup(
     selectedIndex: Int,
     options: List<String>,
     onSelect: (Int) -> Unit

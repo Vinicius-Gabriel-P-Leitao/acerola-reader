@@ -1,4 +1,4 @@
-package br.acerola.manga.common.ux.layout
+package br.acerola.manga.common.ux.theme.local
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.staticCompositionLocalOf

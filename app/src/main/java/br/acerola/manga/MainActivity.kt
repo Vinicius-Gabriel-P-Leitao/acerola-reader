@@ -17,8 +17,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
-import br.acerola.manga.common.ux.layout.LocalSnackbarHostState
-import br.acerola.manga.common.ux.layout.NavigationBottomBar
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.manga.common.ux.layout.BottomBar
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
@@ -81,7 +82,7 @@ class MainActivity(
     @Composable
     override fun BottomBar(navController: NavHostController) {
         // TODO: Verificar por que o uiEvents tá sendo carregado aqui
-        val snackbarHostState = _root_ide_package_.br.acerola.manga.common.ux.layout.LocalSnackbarHostState.current
+        val snackbarHostState = LocalSnackbarHostState.current
         val context = LocalContext.current
 
         LaunchedEffect(key1 = Unit) {
@@ -96,7 +97,7 @@ class MainActivity(
             }
         }
 
-        _root_ide_package_.br.acerola.manga.common.ux.layout.NavigationBottomBar(navController)
+        Acerola.Layout.BottomBar(navController)
     }
 
     private fun NavGraphBuilder.defaultComposable(

@@ -7,6 +7,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.reader.layout.ReaderContent
@@ -32,7 +34,7 @@ fun ReaderScreen(
     }
 
     if (state.isLoading || state.pageCount == 0) {
-        br.acerola.manga.common.layout.ProgressIndicator(isLoading = true)
+        Acerola.Layout.ProgressIndicator(isLoading = true)
         return
     }
 

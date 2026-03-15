@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.presentation.R
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.module.config.layout.FolderAccess
@@ -97,7 +98,7 @@ fun SelectFolder(
                 }
             }
 
-            Divider()
+            Acerola.Component.Divider()
 
             Text(
                 text = stringResource(

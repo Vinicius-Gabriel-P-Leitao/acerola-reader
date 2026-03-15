@@ -27,10 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.component.Acerola
-import br.acerola.manga.common.component.TopBar
-import br.acerola.manga.common.component.GlassButton
-import br.acerola.manga.common.layout.ProgressIndicator
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.GlassButton
+import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
@@ -206,16 +206,15 @@ fun MangaScreen(
             }
         }
 
-        // Floating Top Bar with Glass Back Button
-        Acerola.TopBar(
+        Acerola.Layout.TopBar(
             navigationIcon = {
-                Acerola.GlassButton(
+                Acerola.Component.GlassButton(
                     onClick = onBackClick,
                     icon = {
                         Icon(
+                            tint = MaterialTheme.colorScheme.onSurface,
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.description_icon_navigation_back),
-                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 )
@@ -228,7 +227,7 @@ fun MangaScreen(
                 .fillMaxSize()
                 .padding(all = 18.dp),
         ) {
-            ProgressIndicator(
+            Acerola.Layout.ProgressIndicator(
                 isLoading = mangaIsIndexing || chapterIsIndexing || mangaRemoteIndexing || chapterRemoteIndexing,
                 progress = when {
                     chapterIsIndexing && chapterProgress >= 0 -> chapterProgress / 100f

@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.presentation.R
 
 enum class CardType {
@@ -35,8 +36,8 @@ enum class CardType {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Card(
-    type: br.acerola.manga.common.ux.component.CardType,
+fun Acerola.Component.Card(
+    type: CardType,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     colors: CardColors = CardDefaults.elevatedCardColors(),
@@ -47,8 +48,6 @@ fun Card(
     text: String? = null,
     content: @Composable () -> Unit = {},
 ) {
-    val context = LocalContext.current
-
     ElevatedCard(
         colors = colors,
         onClick = onClick,
@@ -56,8 +55,7 @@ fun Card(
         elevation = elevation,
     ) {
         when (type) {
-            _root_ide_package_.br.acerola.manga.common.ux.component.CardType.IMAGE -> {
-                // TODO: Criar exception personalizada para isso no código.
+            CardType.IMAGE -> {
                 requireNotNull(value = image) {
                     stringResource(
                         id = R.string.message_image_parameter_required_smart_card
@@ -90,7 +88,7 @@ fun Card(
                 }
             }
 
-            _root_ide_package_.br.acerola.manga.common.ux.component.CardType.TEXT -> {
+            CardType.TEXT -> {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -123,7 +121,7 @@ fun Card(
                 }
             }
 
-            _root_ide_package_.br.acerola.manga.common.ux.component.CardType.CONTENT -> {
+            CardType.CONTENT -> {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

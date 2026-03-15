@@ -9,9 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import br.acerola.manga.common.ux.Acerola
 
 @Composable
-fun AcerolaScaffold(
+fun Acerola.Layout.Scaffold(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.background,
     content: @Composable BoxScope.() -> Unit
@@ -21,7 +22,7 @@ fun AcerolaScaffold(
             .fillMaxSize()
             .background(containerColor)
     ) {
-        _root_ide_package_.br.acerola.manga.common.ux.layout.StatusBarProtection(color = containerColor)
+        StatusBarProtection(color = containerColor)
         Box(
             modifier = Modifier
                 .fillMaxSize()

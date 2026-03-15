@@ -1,8 +1,9 @@
-package br.acerola.manga.common.ux.theme
+package br.acerola.manga.common.ux.theme.color
 
 import androidx.compose.ui.graphics.Color
 
 object CatppuccinMocha {
+
     val Rosewater = Color(0xFFF5E0DC)
     val Flamingo = Color(0xFFF2CDCD)
     val Pink = Color(0xFFF5C2E7)
@@ -32,6 +33,7 @@ object CatppuccinMocha {
 }
 
 object CatppuccinLatte {
+
     val Rosewater = Color(0xFFDC8A78)
     val Flamingo = Color(0xFFDD7878)
     val Pink = Color(0xFFEA76CB)
@@ -60,18 +62,3 @@ object CatppuccinLatte {
     val Crust = Color(0xFFDCE0E8)
 }
 
-// Mantendo compatibilidade com o que já existe (default Mocha)
-val Mauve = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Mauve
-val Pink = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Pink
-val Sky = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Sky
-val Red = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Red
-val Maroon = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Maroon
-val Base = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Base
-val Text = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Text
-val Subtext = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Subtext0
-val Subtext1 = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Subtext1
-val Surface = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Surface0
-val Surface0 = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Surface0
-val Surface1 = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Surface1
-val Surface2 = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Surface2
-val Overlay0 = _root_ide_package_.br.acerola.manga.common.ux.theme.CatppuccinMocha.Overlay0
