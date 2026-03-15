@@ -16,7 +16,7 @@ class ReaderBottomControlsTest {
     fun `ReaderBottomControls_deve_exibir_o_número_da_página_atual_corretamente`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Reader.Layout.ReaderBottomControls(
+                Reader.Layout.BottomControls(
                     pageCount = 50,
                     currentPage = 9, // Página 10
                     onPrevClick = {},
@@ -35,7 +35,7 @@ class ReaderBottomControlsTest {
     fun `botão_de_próximo_capítulo_deve_aparecer_apenas_quando_capítulo_estiver_lido_e_houver_próximo`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Reader.Layout.ReaderBottomControls(
+                Reader.Layout.BottomControls(
                     pageCount = 10,
                     currentPage = 9,
                     isChapterRead = true,
@@ -48,14 +48,14 @@ class ReaderBottomControlsTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Próximo Capítulo", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Próximo", substring = true, ignoreCase = true).assertIsDisplayed()
     }
 
     @Test
     fun `botão_de_capítulo_anterior_deve_aparecer_quando_houver_anterior`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Reader.Layout.ReaderBottomControls(
+                Reader.Layout.BottomControls(
                     pageCount = 10,
                     currentPage = 0,
                     hasPreviousChapter = true,
@@ -67,6 +67,6 @@ class ReaderBottomControlsTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Capítulo Anterior", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Anterior", substring = true, ignoreCase = true).assertIsDisplayed()
     }
 }

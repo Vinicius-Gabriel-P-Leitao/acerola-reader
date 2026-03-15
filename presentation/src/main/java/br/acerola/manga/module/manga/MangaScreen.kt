@@ -56,13 +56,12 @@ import kotlinx.coroutines.launch
 fun MangaScreen(
     manga: MangaDto,
     onBackClick: () -> Unit,
+    mangaViewModel: MangaViewModel = hiltViewModel(),
+    chapterArchiveViewModel: ChapterArchiveViewModel = hiltViewModel(),
+    mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
+    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel = hiltViewModel(),
+    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel = hiltViewModel(),
 ) {
-    val mangaViewModel: MangaViewModel = hiltViewModel()
-    val chapterArchiveViewModel: ChapterArchiveViewModel = hiltViewModel()
-    val mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel()
-    val mangaRemoteInfoViewModel: MangaRemoteInfoViewModel = hiltViewModel()
-    val chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel = hiltViewModel()
-
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
 

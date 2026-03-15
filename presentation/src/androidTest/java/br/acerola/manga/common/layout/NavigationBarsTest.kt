@@ -4,8 +4,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.layout.NavigationBottomBar
-import br.acerola.manga.common.ux.layout.NavigationTopBar
+import br.acerola.manga.common.ux.layout.BottomBar
+import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
@@ -16,30 +16,29 @@ class NavigationBarsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `NavigationBottomBar_deve_exibir_destinos_principais`() {
+    fun `BottomBar_deve_exibir_destinos_principais`() {
         composeTestRule.setContent {
             val navController = rememberNavController()
             AcerolaTheme {
-                Acerola.Layout.NavigationBottomBar(navController = navController)
+                Acerola.Layout.BottomBar(navController = navController)
             }
         }
 
-        // Verifica os labels da navegação inferior
-        composeTestRule.onNodeWithText("Início", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Histórico", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Config", substring = true).assertIsDisplayed()
+        // Verifica os labels da navegação inferior (usando strings do sistema se possível, ou aproximadas)
+        // HOME, HISTORY, CONFIG
+        composeTestRule.onNodeWithText("home", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Histórico", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurações", ignoreCase = true).assertIsDisplayed()
     }
 
     @Test
-    fun `NavigationTopBar_deve_exibir_o_titulo_da_rota_atual`() {
+    fun `TopBar_deve_exibir_o_titulo_informado`() {
         composeTestRule.setContent {
-            val navController = rememberNavController()
             AcerolaTheme {
-                Acerola.Layout.NavigationTopBar(navController = navController)
+                Acerola.Layout.TopBar(title = "Teste Titulo")
             }
         }
 
-        // Como o NavController inicia na rota default, verificamos se o título aparece
-        composeTestRule.onNodeWithText("Acerola", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Teste Titulo").assertIsDisplayed()
     }
 }

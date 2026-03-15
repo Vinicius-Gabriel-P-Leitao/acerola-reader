@@ -16,7 +16,7 @@ class ReaderTopBarTest {
     fun `ReaderTopBar_deve_exibir_titulo_e_subtitulo_corretamente`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Reader.Layout.ReaderTopBar(
+                Reader.Layout.TopBar(
                     title = "Solo Leveling",
                     subtitle = "Capítulo 150",
                     isVisible = true,
@@ -34,7 +34,7 @@ class ReaderTopBarTest {
     fun `ReaderTopBar_deve_ficar_oculta_quando_isVisible_for_falso`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Reader.Layout.ReaderTopBar(
+                Reader.Layout.TopBar(
                     title = "Qualquer",
                     subtitle = "Coisa",
                     isVisible = false,

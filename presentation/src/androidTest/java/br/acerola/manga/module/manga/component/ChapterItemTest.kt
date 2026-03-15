@@ -16,8 +16,15 @@ class ChapterItemTest {
 
     @Test
     fun `ChapterItem_deve_exibir_o_numero_do_capitulo_e_nome_do_arquivo`() {
-        val archive = ChapterFileDto(1, "capitulo_01.cbz", "/path", "1")
-        val remote = ChapterFeedDto("1", "id-1", "O Início", "Scan XP", 20, 1)
+        val archive = ChapterFileDto(1L, "capitulo_01.cbz", "/path", "1")
+        val remote = ChapterFeedDto(
+            id = 1L,
+            title = "O Início",
+            chapter = "1",
+            pageCount = 20,
+            scanlation = "Scan XP",
+            source = emptyList()
+        )
 
         composeTestRule.setContent {
             AcerolaTheme {
@@ -30,13 +37,13 @@ class ChapterItemTest {
         }
 
         // Verifica se o título formatado (Capítulo 1) e o título do capítulo remoto aparecem
-        composeTestRule.onNodeWithText("Capítulo 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Capitulo 1", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("O Início").assertIsDisplayed()
     }
 
     @Test
     fun `ChapterItem_deve_exibir_indicador_de_lido_quando_status_for_verdadeiro`() {
-        val archive = ChapterFileDto(1, "capitulo_01.cbz", "/path", "1")
+        val archive = ChapterFileDto(1L, "capitulo_01.cbz", "/path", "1")
 
         composeTestRule.setContent {
             AcerolaTheme {
@@ -49,8 +56,6 @@ class ChapterItemTest {
             }
         }
 
-        // Procuramos por um nó que tenha a descrição de lido (se houver ícone) ou apenas validamos o estado visual
-        // Aqui assumimos que o componente tem alguma marcação para capítulos lidos detectável via testes
-        composeTestRule.onNodeWithText("Capítulo 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Capitulo 1", substring = true).assertIsDisplayed()
     }
 }

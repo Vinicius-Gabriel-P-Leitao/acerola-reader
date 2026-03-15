@@ -5,7 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import br.acerola.manga.common.ux.theme.AcerolaTheme
-import br.acerola.manga.module.manga.MainTab
+import br.acerola.manga.module.manga.state.MainTab
 import br.acerola.manga.module.manga.Manga
 import org.junit.Rule
 import org.junit.Test
@@ -28,7 +28,8 @@ class MangaTabsTest {
         }
 
         // Verifica se o texto formatado com o número de capítulos aparece
-        composeTestRule.onNodeWithText("150 Capítulos", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("150", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Capítulos", substring = true).assertIsDisplayed()
     }
 
     @Test

@@ -1,12 +1,13 @@
 package br.acerola.manga.module.config.component
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import br.acerola.manga.common.ux.theme.AcerolaTheme
-import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.MutableStateFlow
+import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.config.component.MetadataExportSettings
 import org.junit.Rule
 import org.junit.Test
 
@@ -15,19 +16,25 @@ class MetadataExportSettingsTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<MetadataSettingsViewModel>(relaxed = true)
-
     @Test
     fun `MetadataExportSettings_deve_exibir_switch_de_geracao_de_ComicInfo`() {
-        every { viewModel.generateComicInfo } returns MutableStateFlow(true)
-
+        var checked = true
         composeTestRule.setContent {
             AcerolaTheme {
-                MetadataExportSettings(viewModel = viewModel)
+                Main.Config.Component.MetadataExportSettings(
+                    enabled = checked,
+                    onCheckedChange = { checked = it }
+                )
             }
         }
 
         // Verifica se o título e a descrição da configuração aparecem
         composeTestRule.onNodeWithText("Gerar ComicInfo.xml", substring = true).assertIsDisplayed()
+        
+        // Clica no switch usando matcher de Role
+        composeTestRule.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch))
+            .performClick()
+        
+        assert(!checked)
     }
 }

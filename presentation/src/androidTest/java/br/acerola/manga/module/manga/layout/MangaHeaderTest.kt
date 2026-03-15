@@ -19,7 +19,15 @@ class MangaHeaderTest {
     @Test
     fun `MangaHeader_deve_exibir_o_titulo_remoto_quando_disponivel`() {
         val manga = MangaDto(
-            directory = MangaDirectoryDto(1, "Pasta", "", null, null, 0, null),
+            directory = MangaDirectoryDto(
+                id = 1L,
+                name = "Pasta",
+                path = "",
+                coverUri = null,
+                bannerUri = null,
+                lastModified = 0L,
+                chapterTemplate = null
+            ),
             remoteInfo = MangaRemoteInfoDto(
                 mirrorId = "md-1",
                 title = "Manga Fantástico",

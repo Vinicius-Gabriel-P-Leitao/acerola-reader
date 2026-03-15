@@ -31,14 +31,19 @@ class SearchBarTest {
             }
         }
 
-        // 1. Verifica se todos aparecem inicialmente
-        composeTestRule.onNodeWithText("Dragon Ball").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Naruto").assertIsDisplayed()
+        // 1. Verifica se todos aparecem inicialmente (LazyColumn dentro do SearchBar só aparece quando ativo ou no histórico dependendo da impl)
+        // No nosso caso, o SearchBar do M3 precisa estar ativo para mostrar o conteúdo.
+        
+        // Clica no SearchBar para ativar
+        composeTestRule.onNodeWithText("Buscar...").performClick()
 
-        // 2. Digita \"One\" na busca
+        // 2. Verifica se Dragon Ball aparece na lista filtrada inicial (que são todos)
+        composeTestRule.onNodeWithText("Dragon Ball").assertIsDisplayed()
+
+        // 3. Digita "One" na busca
         composeTestRule.onNodeWithText("Buscar...").performTextInput("One")
 
-        // 3. Verifica se apenas One Piece aparece
+        // 4. Verifica se apenas One Piece aparece
         composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
         composeTestRule.onNodeWithText("Naruto").assertDoesNotExist()
     }
@@ -56,6 +61,7 @@ class SearchBarTest {
             }
         }
 
+        composeTestRule.onNodeWithText("Buscar...").performClick()
         composeTestRule.onNodeWithText("Buscar...").performTextInput("Inexistente")
         composeTestRule.onNodeWithText("Nenhum resultado encontrado", substring = true).assertIsDisplayed()
     }

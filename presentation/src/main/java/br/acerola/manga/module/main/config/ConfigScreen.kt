@@ -49,15 +49,16 @@ import br.acerola.manga.presentation.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun Main.Config.Layout.Screen() {
-    val filePreferencesViewModel: FilePreferencesViewModel = hiltViewModel()
-    val fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel()
-    val mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel()
-    val mangaDexViewModel: MangaRemoteInfoViewModel = hiltViewModel()
-    val metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel()
-    val themeViewModel: ThemeViewModel = hiltViewModel()
-
+fun Main.Config.Layout.Screen(
+    metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel(),
+    fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
+    filePreferencesViewModel: FilePreferencesViewModel = hiltViewModel(),
+    mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
+    mangaDexViewModel: MangaRemoteInfoViewModel = hiltViewModel(),
+    themeViewModel: ThemeViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
+
     val snackbarHostState = LocalSnackbarHostState.current
     val scrollState = rememberScrollState()
 
@@ -106,12 +107,12 @@ fun Main.Config.Layout.Screen() {
 
     val uiState = ConfigUiState(
         useDynamicColor = useDynamicColor,
-        isLibraryIndexing = libraryIndexing,
+        folderUri = fileSystemAccessViewModel.folderUri,
         selectedExtension = selectedExtension,
         generateComicInfo = generateComicInfo,
-        isMetadataIndexing = metadataIndexing,
-        folderUri = fileSystemAccessViewModel.folderUri,
+        isLibraryIndexing = libraryIndexing,
         libraryProgress = if (libraryProgress >= 0) libraryProgress / 100f else null,
+        isMetadataIndexing = metadataIndexing,
         metadataProgress = if (metadataProgress >= 0) metadataProgress / 100f else null
     )
 
