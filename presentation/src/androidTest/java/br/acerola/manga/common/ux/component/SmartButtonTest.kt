@@ -1,4 +1,4 @@
-package br.acerola.manga.common.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add

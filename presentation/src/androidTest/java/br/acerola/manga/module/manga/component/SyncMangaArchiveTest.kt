@@ -14,7 +14,7 @@ class SyncMangaArchiveTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve exibir opcoes de sincronizacao local`() {
+    fun deve_exibir_opcoes_de_sincronizacao_local() {
         composeTestRule.setContent {
             Manga.Component.SyncMangaArchive(
                 onSyncChapters = {},
@@ -23,11 +23,11 @@ class SyncMangaArchiveTest {
         }
 
         composeTestRule.onNodeWithText("Sincronizar capítulos", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Atualizar capa e banner", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Sincronizar cover e banner", substring = true).assertIsDisplayed()
     }
 
     @Test
-    fun `deve chamar onSyncChapters ao clicar na opcao correspondente`() {
+    fun deve_chamar_onSyncChapters_ao_clicar_na_opcao_correspondente() {
         var clicked = false
         composeTestRule.setContent {
             Manga.Component.SyncMangaArchive(
@@ -41,7 +41,7 @@ class SyncMangaArchiveTest {
     }
 
     @Test
-    fun `deve chamar onRescanCover ao clicar na opcao correspondente`() {
+    fun deve_chamar_onRescanCover_ao_clicar_na_opcao_correspondente() {
         var clicked = false
         composeTestRule.setContent {
             Manga.Component.SyncMangaArchive(
@@ -50,7 +50,7 @@ class SyncMangaArchiveTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Atualizar capa e banner", substring = true).performClick()
+        composeTestRule.onNodeWithText("Sincronizar cover e banner", substring = true).performClick()
         assert(clicked)
     }
 }

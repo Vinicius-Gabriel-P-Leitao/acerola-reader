@@ -1,4 +1,4 @@
-package br.acerola.manga.module.history
+package br.acerola.manga.module.main.history
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider

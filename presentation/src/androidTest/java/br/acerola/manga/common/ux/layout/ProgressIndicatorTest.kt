@@ -1,4 +1,4 @@
-package br.acerola.manga.common.layout
+package br.acerola.manga.common.ux.layout
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule

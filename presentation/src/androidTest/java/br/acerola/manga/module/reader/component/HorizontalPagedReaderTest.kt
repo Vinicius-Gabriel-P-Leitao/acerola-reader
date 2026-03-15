@@ -12,7 +12,7 @@ class HorizontalPagedReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve solicitar pagina ao exibir index do pager`() {
+    fun `deve_solicitar_pagina_ao_exibir_index_do_pager`() {
         var requestedIndex = -1
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })

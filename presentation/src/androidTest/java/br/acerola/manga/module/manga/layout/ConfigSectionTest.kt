@@ -5,10 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.manga.__fixtures__.MangaFixtures
-import br.acerola.manga.config.preference.ChapterPageSizeType
-import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.module.manga.Manga
-import br.acerola.manga.module.manga.state.MangaUiState
 import org.junit.Rule
 import org.junit.Test
 
@@ -18,14 +15,8 @@ class ConfigSectionTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve exibir todas as secoes de configuracao do manga`() {
-        val uiState = MangaUiState(
-            manga = MangaDto(
-                directory = MangaFixtures.createMangaDirectoryDto(),
-                remoteInfo = null
-            ),
-            selectedChapterPerPage = ChapterPageSizeType.SHORT
-        )
+    fun deve_exibir_todas_as_secoes_de_configuracao_do_manga() {
+        val uiState = MangaFixtures.createMangaUiState()
 
         composeTestRule.setContent {
             LazyColumn {
@@ -40,6 +31,7 @@ class ConfigSectionTest {
 
         composeTestRule.onNodeWithText("Configurações de Exibição", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Configuração dos arquivos", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Sincronizar metadados", substring = true).assertIsDisplayed()
+        // Usa o texto completo para evitar ambiguidade com o item interno "Sincronizar metadados"
+        composeTestRule.onNodeWithText("Sincronizar metadados com mangadex", substring = true).assertIsDisplayed()
     }
 }

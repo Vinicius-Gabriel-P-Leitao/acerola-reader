@@ -1,4 +1,4 @@
-package br.acerola.manga.module.config
+package br.acerola.manga.module.main.config
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider

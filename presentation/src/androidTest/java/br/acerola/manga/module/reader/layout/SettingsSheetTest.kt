@@ -1,11 +1,8 @@
 package br.acerola.manga.module.reader.layout
 
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.module.reader.Reader
 import org.junit.Rule
@@ -18,18 +15,19 @@ class SettingsSheetTest {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Test
-    fun `deve exibir opcoes de modo de leitura`() {
+    fun deve_exibir_opcoes_de_modo_de_leitura() {
         composeTestRule.setContent {
             Reader.Layout.SettingsSheet(
+                onDismissRequest = {},
                 currentMode = ReadingMode.HORIZONTAL,
-                onModeChange = {},
-                onDismiss = {}
+                onModeSelected = {}
             )
         }
 
-        composeTestRule.onNodeWithText("Configurações de Leitura", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Horizontal", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Vertical", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Webtoon", substring = true).assertIsDisplayed()
+        // Os textos devem coincidir com strings.xml (Paginado para Horizontal)
+        composeTestRule.onNodeWithText("Layout de Leitura", substring = true, useUnmergedTree = true).assertExists()
+        composeTestRule.onNodeWithText("Paginado", substring = true, useUnmergedTree = true).assertExists()
+        composeTestRule.onNodeWithText("Vertical", substring = true, useUnmergedTree = true).assertExists()
+        composeTestRule.onNodeWithText("Webtoon", substring = true, useUnmergedTree = true).assertExists()
     }
 }

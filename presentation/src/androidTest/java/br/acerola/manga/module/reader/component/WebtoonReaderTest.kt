@@ -12,7 +12,7 @@ class WebtoonReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve solicitar paginas no modo webtoon`() {
+    fun `deve_solicitar_paginas_no_modo_webtoon`() {
         var requestedIndices = mutableSetOf<Int>()
         composeTestRule.setContent {
             val listState = rememberLazyListState()
@@ -21,12 +21,12 @@ class WebtoonReaderTest {
                 listState = listState,
                 pageCount = 10,
                 onUiToggle = {},
-                onPageRequest = { requestedIndices.add(it) }
+                onPageRequest = { requestedIndices.add(it) },
+                onZoomChange = {}
             )
         }
 
         composeTestRule.waitForIdle()
-        // Pelo menos o primeiro item deve ser solicitado
         assert(requestedIndices.contains(0))
     }
 }

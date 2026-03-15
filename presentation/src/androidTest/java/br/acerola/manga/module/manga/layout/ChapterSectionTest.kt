@@ -17,7 +17,7 @@ class ChapterSectionTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve exibir lista de capitulos e footer de paginacao`() {
+    fun `deve_exibir_lista_de_capitulos_e_footer_de_paginacao`() {
         val chapters = ChapterDto(
             archive = MangaFixtures.createChapterArchivePageDto(
                 items = MangaFixtures.createChapterList(2)

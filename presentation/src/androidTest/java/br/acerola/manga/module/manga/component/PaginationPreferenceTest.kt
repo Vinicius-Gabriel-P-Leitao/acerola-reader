@@ -6,8 +6,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import br.acerola.manga.config.preference.ChapterPageSizeType
 import br.acerola.manga.module.manga.Manga
-import br.acerola.manga.module.manga.MangaViewModel
-import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
 
@@ -17,7 +15,7 @@ class PaginationPreferenceTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve exibir titulo e opcoes de paginacao`() {
+    fun deve_exibir_titulo_e_opcoes_de_paginacao() {
         composeTestRule.setContent {
             Manga.Component.PaginationPreference(
                 selected = ChapterPageSizeType.SHORT,
@@ -26,13 +24,13 @@ class PaginationPreferenceTest {
         }
 
         composeTestRule.onNodeWithText("Capítulos por página", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("20", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("25", ignoreCase = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("50", ignoreCase = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("100", ignoreCase = true).assertIsDisplayed()
     }
 
     @Test
-    fun `deve chamar onSelect ao clicar em uma opcao`() {
+    fun deve_chamar_onSelect_ao_clicar_em_uma_opcao() {
         var selectedSize: ChapterPageSizeType? = null
         composeTestRule.setContent {
             Manga.Component.PaginationPreference(

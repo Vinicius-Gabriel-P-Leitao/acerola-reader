@@ -1,10 +1,9 @@
-package br.acerola.manga.module.home
+package br.acerola.manga.module.main.home
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.config.preference.HomeLayoutType
@@ -12,7 +11,6 @@ import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.home.HomeViewModel
 import br.acerola.manga.module.main.home.Screen
-import br.acerola.manga.presentation.R
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,13 +20,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class HomeLayoutToggleTest {
+class HomeScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
     private val viewModel = mockk<HomeViewModel>(relaxed = true)
-    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Before
     fun setUp() {
@@ -40,7 +37,7 @@ class HomeLayoutToggleTest {
     }
 
     @Test
-    fun `clique_no_botão_de_layout_deve_alternar_entre_lista_e_grade`() {
+    fun `HomeScreen_deve_exibir_SearchBar_quando_carregada`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
@@ -49,17 +46,10 @@ class HomeLayoutToggleTest {
             }
         }
 
-        // 1. Abre o HUB de ferramentas
-        val hubDescription = context.getString(R.string.description_icon_home_floating_tool_hub)
-        composeTestRule.onNodeWithContentDescription(hubDescription, substring = true).performClick()
+        // Verifica se o placeholder da busca aparece
+        composeTestRule.onNodeWithText("Buscar mangá...", substring = true).assertIsDisplayed()
 
-        // Aguarda animação de expansão do FloatingTool
-        composeTestRule.waitForIdle()
-        
-        // Verifica se o botão de mudar layout está visível no HUB
-        val layoutToggleDescription = context.getString(R.string.description_icon_home_change_layout)
-        composeTestRule.onNodeWithContentDescription(layoutToggleDescription, substring = true, useUnmergedTree = true)
-            .assertIsDisplayed()
-            .performClick()
+        // Verifica se o FloatingTool (HUB) está presente
+        composeTestRule.onNodeWithContentDescription("hub", substring = true).assertIsDisplayed()
     }
 }

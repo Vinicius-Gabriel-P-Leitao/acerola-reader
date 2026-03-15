@@ -12,7 +12,7 @@ class VerticalPagedReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve solicitar pagina ao exibir index do pager vertical`() {
+    fun `deve_solicitar_pagina_ao_exibir_index_do_pager_vertical`() {
         var requestedIndex = -1
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
