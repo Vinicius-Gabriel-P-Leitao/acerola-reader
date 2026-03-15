@@ -185,7 +185,10 @@ private fun PrettyConfigCard(
                 )
             }
 
-            content()
+            // Conteúdo indentado para criar hierarquia
+            Box(modifier = Modifier.padding(start = 12.dp)) {
+                content()
+            }
         }
     }
 }

@@ -93,21 +93,21 @@ fun ProgressIndicator(
                             Icon(
                                 imageVector = Icons.Rounded.CheckCircle,
                                 contentDescription = null,
-                                tint = br.acerola.manga.common.theme.Green,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
                         } else {
                             if (progress == null) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(size = 24.dp),
-                                    color = MaterialTheme.colorScheme.secondary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     strokeWidth = 3.dp
                                 )
                             } else {
                                 CircularProgressIndicator(
                                     progress = { progress.coerceIn(0f, 1f) },
                                     modifier = Modifier.size(size = 24.dp),
-                                    color = MaterialTheme.colorScheme.secondary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     strokeWidth = 3.dp
                                 )
                             }
@@ -139,7 +139,7 @@ fun ProgressIndicator(
                         Text(
                             text = text,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (finished) br.acerola.manga.common.theme.Green else MaterialTheme.colorScheme.onSurface
+                            color = if (finished) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
