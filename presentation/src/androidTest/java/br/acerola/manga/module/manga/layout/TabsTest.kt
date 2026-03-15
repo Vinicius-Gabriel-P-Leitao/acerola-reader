@@ -10,7 +10,7 @@ import br.acerola.manga.module.manga.Manga
 import org.junit.Rule
 import org.junit.Test
 
-class MangaTabsTest {
+class TabsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()

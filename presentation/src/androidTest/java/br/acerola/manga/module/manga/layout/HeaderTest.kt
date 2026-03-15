@@ -11,7 +11,7 @@ import br.acerola.manga.module.manga.Manga
 import org.junit.Rule
 import org.junit.Test
 
-class MangaHeaderTest {
+class HeaderTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()

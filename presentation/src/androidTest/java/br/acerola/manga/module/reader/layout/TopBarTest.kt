@@ -7,7 +7,7 @@ import br.acerola.manga.module.reader.Reader
 import org.junit.Rule
 import org.junit.Test
 
-class ReaderTopBarTest {
+class TopBarTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
