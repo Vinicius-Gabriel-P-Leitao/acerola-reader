@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.acerola.manga.config.preference.AppTheme
 import br.acerola.manga.config.preference.ThemePreference
 import br.acerola.manga.error.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,16 +26,16 @@ class ThemeViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    val useDynamicColor: StateFlow<Boolean> = ThemePreference.dynamicColorFlow(context)
+    val currentTheme: StateFlow<AppTheme> = ThemePreference.themeFlow(context)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = false
+            initialValue = AppTheme.CATPPUCCIN
         )
 
-    fun setDynamicColor(enabled: Boolean) {
+    fun setTheme(theme: AppTheme) {
         viewModelScope.launch {
-            ThemePreference.saveDynamicColor(context, enabled)
+            ThemePreference.saveTheme(context, theme)
         }
     }
 }

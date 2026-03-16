@@ -3,28 +3,18 @@ package br.acerola.manga.module.main.config.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,16 +25,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Button
+import br.acerola.manga.common.ux.component.Dialog
+import br.acerola.manga.common.ux.theme.color.Alucard
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
+import br.acerola.manga.common.ux.theme.color.Dracula
+import br.acerola.manga.common.ux.theme.color.NordDark
+import br.acerola.manga.common.ux.theme.color.NordLight
+import br.acerola.manga.config.preference.AppTheme
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.presentation.R
 
 @Composable
 fun Main.Config.Component.ThemeSettings(
-    useDynamicColor: Boolean,
-    onDynamicColorChange: (Boolean) -> Unit
+    currentTheme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit
 ) {
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+    var showThemeDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -97,38 +97,103 @@ fun Main.Config.Component.ThemeSettings(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.title_settings_catppuccin_theme),
                 subtitle = stringResource(R.string.subtitle_settings_catppuccin_theme),
-                selected = !useDynamicColor,
+                selected = currentTheme == AppTheme.CATPPUCCIN,
                 colors = listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky),
-                onClick = { onDynamicColorChange(false) }
+                onClick = { onThemeChange(AppTheme.CATPPUCCIN) }
             )
 
-            val dynamicPrimary = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                dynamicDarkColorScheme(context).primary
+            val dynamicColors = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                val currentScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                listOf(currentScheme.primary, currentScheme.secondary, currentScheme.tertiary)
             } else {
-                MaterialTheme.colorScheme.primary
-            }
-
-            val dynamicSecondary = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                dynamicDarkColorScheme(context).secondary
-            } else {
-                MaterialTheme.colorScheme.secondary
-            }
-
-            val dynamicTertiary = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                dynamicDarkColorScheme(context).tertiary
-            } else {
-                MaterialTheme.colorScheme.tertiary
+                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
             }
 
             ThemeCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.title_settings_dynamic_color),
                 subtitle = stringResource(R.string.subtitle_settings_dynamic_color),
-                selected = useDynamicColor,
-                colors = listOf(dynamicPrimary, dynamicSecondary, dynamicTertiary),
-                onClick = { onDynamicColorChange(true) }
+                selected = currentTheme == AppTheme.DYNAMIC,
+                colors = dynamicColors,
+                onClick = { onThemeChange(AppTheme.DYNAMIC) }
             )
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Acerola.Component.Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { showThemeDialog = true },
+            text = stringResource(id = R.string.label_settings_see_more_themes),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        )
+    }
+
+    if (showThemeDialog) {
+        Acerola.Component.Dialog(
+            show = showThemeDialog,
+            onDismiss = { showThemeDialog = false },
+            title = stringResource(id = R.string.title_dialog_select_theme),
+            confirmButtonContent = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text(stringResource(id = R.string.label_dialog_close))
+                }
+            }
+        ) {
+            val themes = listOf(
+                AppTheme.CATPPUCCIN to listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky),
+                AppTheme.NORD to if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(NordLight.Primary, NordLight.Secondary, NordLight.Tertiary),
+                AppTheme.DRACULA to if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(Alucard.Purple, Alucard.Pink, Alucard.Cyan),
+                AppTheme.DYNAMIC to dynamicColorsFromContext(context, isDark)
+            )
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.height(300.dp)
+            ) {
+                items(themes) { (theme, colors) ->
+                    val themeTitle = when(theme) {
+                        AppTheme.CATPPUCCIN -> stringResource(R.string.title_settings_catppuccin_theme)
+                        AppTheme.NORD -> stringResource(R.string.title_settings_nord_theme)
+                        AppTheme.DRACULA -> stringResource(R.string.title_settings_dracula_theme)
+                        AppTheme.DYNAMIC -> stringResource(R.string.title_settings_dynamic_color)
+                    }
+                    
+                    val themeSubtitle = when(theme) {
+                        AppTheme.CATPPUCCIN -> stringResource(R.string.subtitle_settings_catppuccin_theme)
+                        AppTheme.NORD -> stringResource(R.string.subtitle_settings_nord_theme)
+                        AppTheme.DRACULA -> stringResource(R.string.subtitle_settings_dracula_theme)
+                        AppTheme.DYNAMIC -> stringResource(R.string.subtitle_settings_dynamic_color)
+                    }
+
+                    ThemeCard(
+                        title = themeTitle,
+                        subtitle = themeSubtitle,
+                        selected = currentTheme == theme,
+                        colors = colors,
+                        onClick = {
+                            onThemeChange(theme)
+                            showThemeDialog = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun dynamicColorsFromContext(context: android.content.Context, isDark: Boolean): List<Color> {
+    return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        val scheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        listOf(scheme.primary, scheme.secondary, scheme.tertiary)
+    } else {
+        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
     }
 }
 
@@ -197,14 +262,16 @@ private fun ThemeCard(
                 text = title,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
 
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
             )
 
             if (selected) {

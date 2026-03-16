@@ -95,7 +95,7 @@ fun Main.Config.Layout.Screen(
         }
     }
 
-    val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
+    val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val selectedExtension by filePreferencesViewModel.selectedExtension.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     
@@ -106,7 +106,7 @@ fun Main.Config.Layout.Screen(
     val metadataProgress by mangaDexViewModel.progress.collectAsState()
 
     val uiState = ConfigUiState(
-        useDynamicColor = useDynamicColor,
+        selectedTheme = selectedTheme,
         folderUri = fileSystemAccessViewModel.folderUri,
         selectedExtension = selectedExtension,
         generateComicInfo = generateComicInfo,
@@ -118,7 +118,7 @@ fun Main.Config.Layout.Screen(
 
     val onAction: (ConfigAction) -> Unit = { action ->
         when (action) {
-            is ConfigAction.UpdateDynamicColor -> themeViewModel.setDynamicColor(action.enabled)
+            is ConfigAction.UpdateTheme -> themeViewModel.setTheme(action.theme)
             is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
             is ConfigAction.UpdateFileExtension -> filePreferencesViewModel.saveExtension(action.extension)
             is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
@@ -149,8 +149,8 @@ fun Main.Config.Layout.Screen(
                     iconColor = MaterialTheme.colorScheme.primary
                 ) {
                     Main.Config.Component.ThemeSettings(
-                        useDynamicColor = uiState.useDynamicColor,
-                        onDynamicColorChange = { onAction(ConfigAction.UpdateDynamicColor(it)) }
+                        currentTheme = uiState.selectedTheme,
+                        onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) }
                     )
                 }
 

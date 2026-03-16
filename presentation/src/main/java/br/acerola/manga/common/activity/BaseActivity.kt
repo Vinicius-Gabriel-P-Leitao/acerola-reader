@@ -47,9 +47,9 @@ abstract class BaseActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val useDynamicColor by themeViewModel.useDynamicColor.collectAsState()
+            val currentTheme by themeViewModel.currentTheme.collectAsState()
 
-            AcerolaTheme(dynamicColor = useDynamicColor) {
+            AcerolaTheme(theme = currentTheme) {
                 val navController = rememberNavController()
                 val startDestination = getString(startDestinationRes)
                 val snackbarHostState = remember { SnackbarHostState() }

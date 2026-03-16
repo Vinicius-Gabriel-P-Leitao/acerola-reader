@@ -151,4 +151,13 @@
     <string name="subtitle_settings_catppuccin_theme">Mocha</string>
     <string name="description_settings_catppuccin_theme">Usa a paleta de cores original do app</string>
 
+    <string name="title_settings_nord_theme">Nord</string>
+    <string name="subtitle_settings_nord_theme">Arctic ice</string>
+
+    <string name="title_settings_dracula_theme">Dracula</string>
+    <string name="subtitle_settings_dracula_theme">Vampire theme</string>
+
+    <string name="label_settings_see_more_themes">Ver mais</string>
+    <string name="title_dialog_select_theme">Escolha um Tema</string>
+
     </resources>
