@@ -14,6 +14,7 @@ import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
+import br.acerola.manga.config.preference.AppTheme
 import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.main.Main
@@ -44,7 +45,7 @@ class ConfigScreenTest {
     fun setUp() {
         val emptyEvents = MutableSharedFlow<UserMessage>().asSharedFlow()
         
-        every { themeVM.useDynamicColor } returns MutableStateFlow(false)
+        every { themeVM.currentTheme } returns MutableStateFlow(AppTheme.CATPPUCCIN)
         every { themeVM.uiEvents } returns emptyEvents
         
         every { filePrefsVM.selectedExtension } returns MutableStateFlow(FileExtension.CBZ)

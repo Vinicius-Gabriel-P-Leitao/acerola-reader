@@ -3,6 +3,7 @@ package br.acerola.manga.common.viewmodel.theme
 import android.app.Application
 import app.cash.turbine.test
 import br.acerola.manga.MainDispatcherRule
+import br.acerola.manga.config.preference.AppTheme
 import br.acerola.manga.config.preference.ThemePreference
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
@@ -30,8 +31,8 @@ class ThemeViewModelTest {
     @Before
     fun setup() {
         mockkObject(ThemePreference)
-        every { ThemePreference.dynamicColorFlow(any()) } returns flowOf(true)
-        coEvery { ThemePreference.saveDynamicColor(any(), any()) } returns Unit
+        every { ThemePreference.themeFlow(any()) } returns flowOf(AppTheme.CATPPUCCIN)
+        coEvery { ThemePreference.saveTheme(any(), any()) } returns Unit
 
         viewModel = ThemeViewModel(application)
     }
@@ -42,15 +43,15 @@ class ThemeViewModelTest {
     }
 
     @Test
-    fun `deve emitir estado de cor dinamica ao inicializar`() = runTest {
-        viewModel.useDynamicColor.test {
-            assertThat(awaitItem()).isTrue()
+    fun `deve emitir tema atual ao inicializar`() = runTest {
+        viewModel.currentTheme.test {
+            assertThat(awaitItem()).isEqualTo(AppTheme.CATPPUCCIN)
         }
     }
 
     @Test
-    fun `deve chamar saveDynamicColor ao alterar configuracao`() = runTest {
-        viewModel.setDynamicColor(false)
-        io.mockk.coVerify { ThemePreference.saveDynamicColor(any<android.content.Context>(), false) }
+    fun `deve chamar saveTheme ao alterar configuracao`() = runTest {
+        viewModel.setTheme(AppTheme.NORD)
+        io.mockk.coVerify { ThemePreference.saveTheme(any(), AppTheme.NORD) }
     }
 }

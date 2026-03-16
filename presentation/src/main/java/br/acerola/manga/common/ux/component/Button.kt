@@ -29,9 +29,10 @@ fun Acerola.Component.Button(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
     icon: @Composable (() -> Unit)? = null
 ) {
-    Button(onClick = onClick, modifier = modifier) {
+    Button(onClick = onClick, modifier = modifier, colors = colors) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center

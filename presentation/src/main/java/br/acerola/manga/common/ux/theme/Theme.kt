@@ -15,10 +15,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import br.acerola.manga.common.ux.theme.color.Alucard
 import br.acerola.manga.common.ux.theme.color.CatppuccinLatte
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
+import br.acerola.manga.common.ux.theme.color.Dracula
+import br.acerola.manga.common.ux.theme.color.NordDark
+import br.acerola.manga.common.ux.theme.color.NordLight
+import br.acerola.manga.config.preference.AppTheme
 
-private val DarkColorScheme = darkColorScheme(
+private val CatppuccinDarkColorScheme = darkColorScheme(
     primary = CatppuccinMocha.Mauve,
     onPrimary = CatppuccinMocha.Base,
     primaryContainer = CatppuccinMocha.Surface2,
@@ -44,7 +49,7 @@ private val DarkColorScheme = darkColorScheme(
     onErrorContainer = CatppuccinMocha.Text
 )
 
-private val LightColorScheme = lightColorScheme(
+private val CatppuccinLightColorScheme = lightColorScheme(
     primary = CatppuccinLatte.Mauve,
     onPrimary = CatppuccinLatte.Base,
     primaryContainer = CatppuccinLatte.Surface2,
@@ -70,6 +75,94 @@ private val LightColorScheme = lightColorScheme(
     onErrorContainer = CatppuccinLatte.Text
 )
 
+private val NordDarkColorScheme = darkColorScheme(
+    primary = NordDark.Primary,
+    onPrimary = NordDark.Background,
+    primaryContainer = NordDark.SurfaceVariant,
+    onPrimaryContainer = NordDark.Primary,
+    secondary = NordDark.Secondary,
+    onSecondary = NordDark.Background,
+    secondaryContainer = NordDark.SurfaceVariant,
+    onSecondaryContainer = NordDark.Secondary,
+    tertiary = NordDark.Tertiary,
+    onTertiary = NordDark.Background,
+    background = NordDark.Background,
+    onBackground = NordDark.Text,
+    surface = NordDark.Surface,
+    onSurface = NordDark.Text,
+    surfaceVariant = NordDark.SurfaceVariant,
+    onSurfaceVariant = NordDark.Subtext,
+    outline = NordDark.Outline,
+    error = NordDark.Error,
+    onError = NordDark.Text
+)
+
+private val NordLightColorScheme = lightColorScheme(
+    primary = NordLight.Primary,
+    onPrimary = NordLight.Background,
+    primaryContainer = NordLight.SurfaceVariant,
+    onPrimaryContainer = NordLight.Primary,
+    secondary = NordLight.Secondary,
+    onSecondary = NordLight.Background,
+    secondaryContainer = NordLight.SurfaceVariant,
+    onSecondaryContainer = NordLight.Secondary,
+    tertiary = NordLight.Tertiary,
+    onTertiary = NordLight.Background,
+    background = NordLight.Background,
+    onBackground = NordLight.Text,
+    surface = NordLight.Surface,
+    onSurface = NordLight.Text,
+    surfaceVariant = NordLight.SurfaceVariant,
+    onSurfaceVariant = NordLight.Subtext,
+    outline = NordLight.Outline,
+    error = NordLight.Error,
+    onError = NordLight.Background
+)
+
+private val DraculaColorScheme = darkColorScheme(
+    primary = Dracula.Purple,
+    onPrimary = Dracula.Background,
+    primaryContainer = Dracula.CurrentLine,
+    onPrimaryContainer = Dracula.Purple,
+    secondary = Dracula.Pink,
+    onSecondary = Dracula.Background,
+    secondaryContainer = Dracula.CurrentLine,
+    onSecondaryContainer = Dracula.Pink,
+    tertiary = Dracula.Cyan,
+    onTertiary = Dracula.Background,
+    background = Dracula.Background,
+    onBackground = Dracula.Foreground,
+    surface = Dracula.Background,
+    onSurface = Dracula.Foreground,
+    surfaceVariant = Dracula.CurrentLine,
+    onSurfaceVariant = Dracula.Foreground,
+    outline = Dracula.Comment,
+    error = Dracula.Red,
+    onError = Dracula.Foreground
+)
+
+private val AlucardColorScheme = lightColorScheme(
+    primary = Alucard.Purple,
+    onPrimary = Alucard.Background,
+    primaryContainer = Alucard.CurrentLine,
+    onPrimaryContainer = Alucard.Purple,
+    secondary = Alucard.Pink,
+    onSecondary = Alucard.Background,
+    secondaryContainer = Alucard.CurrentLine,
+    onSecondaryContainer = Alucard.Pink,
+    tertiary = Alucard.Cyan,
+    onTertiary = Alucard.Background,
+    background = Alucard.Background,
+    onBackground = Alucard.Foreground,
+    surface = Alucard.Background,
+    onSurface = Alucard.Foreground,
+    surfaceVariant = Alucard.CurrentLine,
+    onSurfaceVariant = Alucard.Foreground,
+    outline = Alucard.Comment,
+    error = Alucard.Red,
+    onError = Alucard.Foreground
+)
+
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
@@ -83,17 +176,21 @@ val Typography = Typography(
 @Composable
 fun AcerolaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    theme: AppTheme = AppTheme.CATPPUCCIN,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context: Context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val colorScheme = when (theme) {
+        AppTheme.DYNAMIC -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val context: Context = LocalContext.current
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            } else {
+                if (darkTheme) CatppuccinDarkColorScheme else CatppuccinLightColorScheme
+            }
         }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        AppTheme.NORD -> if (darkTheme) NordDarkColorScheme else NordLightColorScheme
+        AppTheme.DRACULA -> if (darkTheme) DraculaColorScheme else AlucardColorScheme
+        AppTheme.CATPPUCCIN -> if (darkTheme) CatppuccinDarkColorScheme else CatppuccinLightColorScheme
     }
 
     MaterialTheme(

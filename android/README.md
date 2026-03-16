@@ -108,19 +108,18 @@ está planejado para o futuro.
     *   [x] **Thema adaptável** Isso já é default do android então só dataStore para salvar preferencia.
     *   [x] **Thema default vai ser o cattpuccin** Deixar ele default e melhorar cores para thema branco.
 * **Corrigir bug de notificação para todos os sync**
-   *    [ ] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera 
+   *    [x] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera 
         notifição e deixa com o app rodando em background, verificar se existe outro que tem o mesmo problema. 
 * **Adicionar novos themas, Nord e Dracula**
-    *    [ ] **Adicionar Dracula e Alucard** Dracula vai ser o dark e o Alucard o claro
-    *    [ ] **Adicionar o Nord** Verificar como o nord pode ser aplicado em claro e escuro
+    *    [x] **Adicionar Dracula e Alucard** Dracula vai ser o dark e o Alucard o claro
+    *    [x] **Adicionar o Nord** Verificar como o nord pode ser aplicado em claro e escuro
 
 ## Pilha de Tecnologia
 
 * **Linguagem:** [Kotlin](https://kotlinlang.org/)
 * **UI:** [Jetpack Compose](https://developer.android.com/jetpack/compose)
 * **Arquitetura:** MVVM (Model-View-ViewModel)
-* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
-  e [Flow](https://kotlinlang.org/docs/flow.html)
+* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) e [Flow](https://kotlinlang.org/docs/flow.html)
 * **Banco de Dados:** [Room](https://developer.android.com/training/data-storage/room)
 * **Carregamento de Imagens:** [Coil](https://coil-kt.github.io/coil/)
 * **Injeção de Dependências:** Manual (via ViewModelFactories)
