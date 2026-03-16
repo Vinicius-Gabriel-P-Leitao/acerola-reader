@@ -46,6 +46,9 @@ fun Main.Config.Component.ThemeSettings(
     val isDark = isSystemInDarkTheme()
     var showThemeDialog by remember { mutableStateOf(false) }
 
+    // Determina qual tema estático exibir no primeiro card
+    val staticThemeToDisplay = if (currentTheme == AppTheme.DYNAMIC) AppTheme.CATPPUCCIN else currentTheme
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,28 +96,23 @@ fun Main.Config.Component.ThemeSettings(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Card 1: Tema Atual (ou Catppuccin se estiver em Adaptável)
             ThemeCard(
                 modifier = Modifier.weight(1f),
-                title = stringResource(R.string.title_settings_catppuccin_theme),
-                subtitle = stringResource(R.string.subtitle_settings_catppuccin_theme),
-                selected = currentTheme == AppTheme.CATPPUCCIN,
-                colors = listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky),
-                onClick = { onThemeChange(AppTheme.CATPPUCCIN) }
+                title = getThemeTitle(staticThemeToDisplay),
+                subtitle = getThemeSubtitle(staticThemeToDisplay),
+                selected = currentTheme == staticThemeToDisplay,
+                colors = getThemeColors(staticThemeToDisplay, isDark, context),
+                onClick = { onThemeChange(staticThemeToDisplay) }
             )
 
-            val dynamicColors = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                val currentScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-                listOf(currentScheme.primary, currentScheme.secondary, currentScheme.tertiary)
-            } else {
-                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
-            }
-
+            // Card 2: Tema Adaptável
             ThemeCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.title_settings_dynamic_color),
                 subtitle = stringResource(R.string.subtitle_settings_dynamic_color),
                 selected = currentTheme == AppTheme.DYNAMIC,
-                colors = dynamicColors,
+                colors = dynamicColorsFromContext(context, isDark),
                 onClick = { onThemeChange(AppTheme.DYNAMIC) }
             )
         }
@@ -143,12 +141,7 @@ fun Main.Config.Component.ThemeSettings(
                 }
             }
         ) {
-            val themes = listOf(
-                AppTheme.CATPPUCCIN to listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky),
-                AppTheme.NORD to if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(NordLight.Primary, NordLight.Secondary, NordLight.Tertiary),
-                AppTheme.DRACULA to if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(Alucard.Purple, Alucard.Pink, Alucard.Cyan),
-                AppTheme.DYNAMIC to dynamicColorsFromContext(context, isDark)
-            )
+            val themes = AppTheme.entries
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -156,26 +149,12 @@ fun Main.Config.Component.ThemeSettings(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.height(300.dp)
             ) {
-                items(themes) { (theme, colors) ->
-                    val themeTitle = when(theme) {
-                        AppTheme.CATPPUCCIN -> stringResource(R.string.title_settings_catppuccin_theme)
-                        AppTheme.NORD -> stringResource(R.string.title_settings_nord_theme)
-                        AppTheme.DRACULA -> stringResource(R.string.title_settings_dracula_theme)
-                        AppTheme.DYNAMIC -> stringResource(R.string.title_settings_dynamic_color)
-                    }
-                    
-                    val themeSubtitle = when(theme) {
-                        AppTheme.CATPPUCCIN -> stringResource(R.string.subtitle_settings_catppuccin_theme)
-                        AppTheme.NORD -> stringResource(R.string.subtitle_settings_nord_theme)
-                        AppTheme.DRACULA -> stringResource(R.string.subtitle_settings_dracula_theme)
-                        AppTheme.DYNAMIC -> stringResource(R.string.subtitle_settings_dynamic_color)
-                    }
-
+                items(themes) { theme ->
                     ThemeCard(
-                        title = themeTitle,
-                        subtitle = themeSubtitle,
+                        title = getThemeTitle(theme),
+                        subtitle = getThemeSubtitle(theme),
                         selected = currentTheme == theme,
-                        colors = colors,
+                        colors = getThemeColors(theme, isDark, context),
                         onClick = {
                             onThemeChange(theme)
                             showThemeDialog = false
@@ -184,6 +163,36 @@ fun Main.Config.Component.ThemeSettings(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun getThemeTitle(theme: AppTheme): String {
+    return when (theme) {
+        AppTheme.CATPPUCCIN -> stringResource(R.string.title_settings_catppuccin_theme)
+        AppTheme.NORD -> stringResource(R.string.title_settings_nord_theme)
+        AppTheme.DRACULA -> stringResource(R.string.title_settings_dracula_theme)
+        AppTheme.DYNAMIC -> stringResource(R.string.title_settings_dynamic_color)
+    }
+}
+
+@Composable
+private fun getThemeSubtitle(theme: AppTheme): String {
+    return when (theme) {
+        AppTheme.CATPPUCCIN -> stringResource(R.string.subtitle_settings_catppuccin_theme)
+        AppTheme.NORD -> stringResource(R.string.subtitle_settings_nord_theme)
+        AppTheme.DRACULA -> stringResource(R.string.subtitle_settings_dracula_theme)
+        AppTheme.DYNAMIC -> stringResource(R.string.subtitle_settings_dynamic_color)
+    }
+}
+
+@Composable
+private fun getThemeColors(theme: AppTheme, isDark: Boolean, context: android.content.Context): List<Color> {
+    return when (theme) {
+        AppTheme.CATPPUCCIN -> listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
+        AppTheme.NORD -> if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(NordLight.Primary, NordLight.Secondary, NordLight.Tertiary)
+        AppTheme.DRACULA -> if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(Alucard.Purple, Alucard.Pink, Alucard.Cyan)
+        AppTheme.DYNAMIC -> dynamicColorsFromContext(context, isDark)
     }
 }
 
