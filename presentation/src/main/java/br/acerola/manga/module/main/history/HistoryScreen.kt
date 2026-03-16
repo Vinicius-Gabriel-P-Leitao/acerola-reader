@@ -31,8 +31,9 @@ import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
-fun Main.History.Layout.Screen() {
-    val viewModel: HistoryViewModel = hiltViewModel()
+fun Main.History.Layout.Screen(
+    viewModel: HistoryViewModel = hiltViewModel()
+) {
     val historyItems by viewModel.historyItems.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current

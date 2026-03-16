@@ -42,10 +42,11 @@ fun ReaderScreen(
     initialPage: Int,
     mangaId: Long,
     onBackClick: () -> Unit,
+    viewModel: ReaderViewModel = hiltViewModel(),
 ) {
-    val viewModel: ReaderViewModel = hiltViewModel()
-    val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+
+    val state by viewModel.state.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current
 
     LaunchedEffect(chapter, chapterId, mangaId) {

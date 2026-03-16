@@ -47,8 +47,9 @@ import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.presentation.R
 
 @Composable
-fun Main.Home.Layout.Screen() {
-    val homeViewModel: HomeViewModel = hiltViewModel()
+fun Main.Home.Layout.Screen(
+    homeViewModel: HomeViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
 

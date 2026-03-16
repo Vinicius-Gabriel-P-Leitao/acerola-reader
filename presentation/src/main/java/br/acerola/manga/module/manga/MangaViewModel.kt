@@ -9,13 +9,13 @@ import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.di.MangadexCase

@@ -105,6 +105,8 @@ mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "moc
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
+androidx-test-core = { group = "androidx.test", name = "core", version = "1.7.0" }
+androidx-test-core-ktx = { group = "androidx.test", name = "core-ktx", version = "1.7.0" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiJunit" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "uiJunit" }
 

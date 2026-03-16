@@ -26,8 +26,8 @@ class PaginationFooterTest {
             }
         }
 
-        // Verifica se o texto indicando a página atual e o total aparece
-        composeTestRule.onNodeWithText("Página 1 de 10").assertIsDisplayed()
+        // Verifica se o texto indicando a página atual e o total aparece conforme R.string.label_pagination_format ("%1$d / %2$d")
+        composeTestRule.onNodeWithText("1 / 10").assertIsDisplayed()
     }
 
     @Test
