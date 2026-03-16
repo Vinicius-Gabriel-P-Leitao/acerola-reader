@@ -10,8 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
-import br.acerola.manga.common.layout.LocalSnackbarHostState
-import br.acerola.manga.common.layout.NavigationTopBar
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -24,12 +23,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MangaActivity(
     override val startDestinationRes: Int = Destination.MANGA.route
 ) : BaseActivity() {
-
-    private val chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel by viewModels()
-    private val mangaRemoteInfoViewModel: MangaRemoteInfoViewModel by viewModels()
-    private val chapterArchiveViewModel: ChapterArchiveViewModel by viewModels()
-    private val mangaDirectoryViewModel: MangaDirectoryViewModel by viewModels()
-    private val mangaViewModel: MangaViewModel by viewModels()
 
     object ChapterExtra {
         const val MANGA = "MANGA"
@@ -50,11 +43,7 @@ class MangaActivity(
             if (manga != null) {
                 MangaScreen(
                     manga = manga!!,
-                    mangaViewModel = mangaViewModel,
-                    mangaDirectoryViewModel = mangaDirectoryViewModel,
-                    chapterArchiveViewModel = chapterArchiveViewModel,
-                    mangaRemoteInfoViewModel = mangaRemoteInfoViewModel,
-                    chapterRemoteInfoViewModel = chapterRemoteInfoViewModel
+                    onBackClick = { finish() }
                 )
             } else {
                 LaunchedEffect(Unit) {
@@ -65,29 +54,5 @@ class MangaActivity(
     }
 
     @Composable
-    override fun TopBar(navController: NavHostController) {
-        val snackbarHostState = LocalSnackbarHostState.current
-        val context = LocalContext.current
-
-        // NOTE: Isso emite os erros para o snackbar, porem deve ser tirado daqui
-        LaunchedEffect(key1 = Unit) {
-            mangaViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
-        LaunchedEffect(key1 = Unit) {
-            mangaDirectoryViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
-        LaunchedEffect(key1 = Unit) {
-            mangaRemoteInfoViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
-
-        NavigationTopBar(navController)
-    }
+    override fun TopBar(navController: NavHostController) = Unit
 }

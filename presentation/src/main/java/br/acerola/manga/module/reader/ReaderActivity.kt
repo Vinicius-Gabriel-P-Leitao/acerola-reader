@@ -7,22 +7,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -30,18 +21,18 @@ import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.module.reader.layout.ReaderBottomControls
-import br.acerola.manga.module.reader.layout.ReaderTopBar
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
+import br.acerola.manga.module.reader.layout.BottomControls
+import br.acerola.manga.module.reader.layout.SettingsSheet
+import br.acerola.manga.module.reader.layout.TopBar
 import br.acerola.manga.presentation.R
-import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class ReaderActivity(
     override val startDestinationRes: Int = Destination.READER.route
 ) : BaseActivity() {
-    override val applyScaffoldPadding: Boolean = false
-    private val viewModel: ReaderViewModel by viewModels()
 
     object PageExtra {
         const val PAGE = "PAGE"
@@ -49,6 +40,12 @@ class ReaderActivity(
         const val CHAPTER_ID = "CHAPTER_ID"
         const val INITIAL_PAGE = "INITIAL_PAGE"
     }
+
+    companion object {
+        private const val TAG = "ReaderActivity"
+    }
+
+    override val applyScaffoldPadding: Boolean = false
 
     val page: ChapterFileDto? by lazy {
         val safeIntent = intent ?: return@lazy null
@@ -59,81 +56,30 @@ class ReaderActivity(
         }
     }
 
-    override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+    override fun NavGraphBuilder.setupNavGraph(
+        context: Context,
+        navController: NavHostController
+    ) {
         composable(route = context.getString(Destination.READER.route)) {
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
             val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
-            
+
+            AcerolaLogger.d(TAG, "Navigating to ReaderScreen. Manga: $mangaId, Chapter: $chapterId", LogSource.UI)
+
             ReaderScreen(
                 chapter = page,
                 chapterId = chapterId,
                 mangaId = mangaId,
-                viewModel = viewModel,
-                initialPage = initialPage
+                initialPage = initialPage,
+                onBackClick = { finish() }
             )
         }
     }
 
     @Composable
-    override fun BottomBar(navController: NavHostController) {
-        val state by viewModel.state.collectAsState()
-
-        AnimatedVisibility(
-            visible = state.isUiVisible,
-            enter = slideInVertically { it },
-            exit = slideOutVertically { it }) {
-            ReaderBottomControls(
-                pageCount = state.pageCount,
-                currentPage = state.currentPage,
-                enableNavigation = state.readingMode != ReadingMode.WEBTOON,
-                onPrevClick = { viewModel.onSliderChanged(index = state.currentPage - 1) },
-                onNextClick = { viewModel.onSliderChanged(index = state.currentPage + 1) },
-            )
-        }
-    }
+    override fun BottomBar(navController: NavHostController) = Unit
 
     @Composable
-    override fun TopBar(navController: NavHostController) {
-        val state by viewModel.state.collectAsState()
-        var showMenu by remember { mutableStateOf(value = false) }
-
-        Box {
-            ReaderTopBar(
-                title = page?.name ?: stringResource(id = R.string.label_reader_activity),
-                subtitle = stringResource(id = R.string.label_reader_chapter_order, page?.chapterSort ?: "-"),
-                isVisible = state.isUiVisible,
-                onBackClick = { finish() },
-                onSettingsClick = { showMenu = true })
-
-            if (showMenu) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentSize(Alignment.TopEnd)
-                        .padding(
-                            top = 48.dp, end = 8.dp
-                        )
-                ) {
-                    DropdownMenu(
-                        expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_horizontal)) }, onClick = {
-                            viewModel.updateReadingMode(mode = ReadingMode.HORIZONTAL)
-                            showMenu = false
-                        })
-
-                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_vertical)) }, onClick = {
-                            viewModel.updateReadingMode(mode = ReadingMode.VERTICAL)
-                            showMenu = false
-                        })
-
-                        DropdownMenuItem(text = { Text(text = stringResource(id = R.string.label_reader_mode_webtoon)) }, onClick = {
-                            viewModel.updateReadingMode(mode = ReadingMode.WEBTOON)
-                            showMenu = false
-                        })
-                    }
-                }
-            }
-        }
-    }
+    override fun TopBar(navController: NavHostController) = Unit
 }

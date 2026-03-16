@@ -10,6 +10,8 @@ import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.background.MetadataSyncWorker
 import br.acerola.manga.usecase.di.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
@@ -25,12 +27,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
-    @param:MangadexCase private val rescanManga: RescanMangaUseCase<MangaRemoteInfoDto>,
-    @param:MangadexCase private val syncLibraryUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     private val workManager: WorkManager
 ) : ViewModel() {
@@ -38,7 +39,7 @@ class MangaRemoteInfoViewModel @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    private val _progress = MutableStateFlow<Int>(value = -1)
+    private val _progress = MutableStateFlow(value = -1)
     val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
@@ -51,51 +52,61 @@ class MangaRemoteInfoViewModel @Inject constructor(
     )
 
     fun syncLibrary() {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            syncLibraryUseCase.sync(baseUri = null).handleResult()
-            _isIndexing.value = false
-        }
+        AcerolaLogger.d(TAG, "Requesting library metadata sync", LogSource.VIEWMODEL)
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, -1L, MetadataSyncWorker.SYNC_TYPE_SYNC)
     }
 
     fun rescanMangas() {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            syncLibraryUseCase.rescan(baseUri = null).handleResult()
-            _isIndexing.value = false
-        }
+        AcerolaLogger.d(TAG, "Requesting library rescan", LogSource.VIEWMODEL)
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, -1L, MetadataSyncWorker.SYNC_TYPE_RESCAN)
     }
 
     fun rescanMangaByManga(mangaId: Long) {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            rescanManga(mangaId).handleResult()
-            _isIndexing.value = false
-        }
+        AcerolaLogger.audit(TAG, "User requested metadata rescan for manga: $mangaId", LogSource.VIEWMODEL)
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, mangaId, MetadataSyncWorker.SYNC_TYPE_RESCAN)
     }
 
     fun syncFromMangadex(directoryId: Long) {
-        enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, directoryId)
+        AcerolaLogger.audit(
+            TAG, "User requested metadata sync from MangaDex", LogSource.VIEWMODEL,
+            mapOf("directoryId" to directoryId.toString())
+        )
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, directoryId, MetadataSyncWorker.SYNC_TYPE_SYNC)
     }
 
     fun syncFromComicInfo(directoryId: Long) {
-        enqueueMetadataSync(MetadataSyncWorker.SOURCE_COMICINFO, directoryId)
+        AcerolaLogger.audit(
+            TAG, "User requested metadata sync from ComicInfo.xml", LogSource.VIEWMODEL,
+            mapOf("directoryId" to directoryId.toString())
+        )
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_COMICINFO, directoryId, MetadataSyncWorker.SYNC_TYPE_SYNC)
     }
 
-    private fun enqueueMetadataSync(source: String, directoryId: Long) {
+    private fun enqueueMetadataSync(
+        source: String,
+        directoryId: Long,
+        type: String = MetadataSyncWorker.SYNC_TYPE_SYNC
+    ) {
+        AcerolaLogger.d(
+            TAG, "Enqueuing metadata sync worker: source=$source, directoryId=$directoryId, type=$type",
+            LogSource.VIEWMODEL
+        )
         viewModelScope.launch {
             val syncRequest = OneTimeWorkRequestBuilder<MetadataSyncWorker>()
                 .setInputData(
                     workDataOf(
+                        MetadataSyncWorker.KEY_SYNC_TYPE to type,
                         MetadataSyncWorker.KEY_SYNC_SOURCE to source,
-                        MetadataSyncWorker.KEY_DIRECTORY_ID to directoryId
+                        MetadataSyncWorker.KEY_DIRECTORY_ID to directoryId,
                     )
                 )
                 .addTag("metadata_sync")
                 .build()
 
+            val workName = if (directoryId == -1L) "metadata_sync_library_$source" else "metadata_sync_${directoryId}"
+
             workManager.enqueueUniqueWork(
-                "metadata_sync_${directoryId}",
+                workName,
                 ExistingWorkPolicy.KEEP,
                 syncRequest
             )
@@ -104,20 +115,34 @@ class MangaRemoteInfoViewModel @Inject constructor(
         }
     }
 
-    private fun observeWorkStatus(workerId: java.util.UUID) {
+    private fun observeWorkStatus(workerId: UUID) {
         viewModelScope.launch {
             workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
                 if (workInfo != null) {
+                    val wasIndexing = _isIndexing.value
                     _isIndexing.value = !workInfo.state.isFinished
-                    _progress.value = if (workInfo.state == WorkInfo.State.RUNNING) -1 else 0
+                    _progress.value = workInfo.progress.getInt("progress", -1)
+
+                    if (wasIndexing && workInfo.state.isFinished) {
+                        AcerolaLogger.i(
+                            TAG, "Metadata sync worker finished: ${workInfo.state.name}", LogSource.VIEWMODEL
+                        )
+
+                        if (workInfo.state == WorkInfo.State.FAILED) {
+                            val errorMessage = workInfo.outputData.getString("error")
+                            if (errorMessage != null) {
+                                // Usando UserMessage.Raw que implementa uiMessage: UiText
+                                _uiEvents.send(UserMessage.Raw(errorMessage))
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    private suspend fun <T> Either<UserMessage, T>.handleResult() {
-        this.onLeft { error ->
-            _uiEvents.send(element = error)
-        }
+    companion object {
+
+        private const val TAG = "MangaRemoteInfoViewModel"
     }
 }

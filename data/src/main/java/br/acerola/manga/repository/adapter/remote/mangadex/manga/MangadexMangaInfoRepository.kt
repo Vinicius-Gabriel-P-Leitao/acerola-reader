@@ -4,6 +4,8 @@ import android.content.Context
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
@@ -15,24 +17,30 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-
 class MangadexMangaInfoRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val api: MangadexMangaInfoApi
 ) : RemoteInfoOperationsRepository<MangaRemoteInfoDto, String> {
 
-    // TODO: Criar um progresso simples, esse progresso vai ser só pra saber que isso iniciou
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<MangaRemoteInfoDto>> = safeApiCall {
         withContext(context = Dispatchers.IO) {
+            AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)  
             val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
-            response.data.map { it.toDto(context) }
+            val list = response.data.map { it.toDto(context) }
+            AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)  
+            list
         }
+    }.onLeft {
+        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null) // (safeApiCall catches internally but onLeft is explicit)
     }
 
     override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> {
-        // NOTE: MangaDex é apenas leitura para nós
         return Either.Right(Unit)
+    }
+
+    companion object {
+        private const val TAG = "MangadexMangaInfoRepository"  
     }
 }

@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.module.main.history.HistoryViewModel
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase

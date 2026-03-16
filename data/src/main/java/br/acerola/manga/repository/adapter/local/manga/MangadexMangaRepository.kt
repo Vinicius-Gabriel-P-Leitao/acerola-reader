@@ -11,6 +11,8 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.exception.IntegrityException
 import br.acerola.manga.error.exception.MangadexRequestException
 import br.acerola.manga.error.message.LibrarySyncError
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
@@ -68,17 +70,16 @@ class MangadexMangaRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    /**
-     * Atualiza os metadados de um mangá específico baseado no ID da pasta local.
-     */
     override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Initiating MangaDex sync for manga: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             try {
                 Either.catch {
                     val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
                     executeSync(folders = listOf(directory), baseUri = null)
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Refresh specific MangaDex metadata failed", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                         else -> LibrarySyncError.UnexpectedError(cause = exception)
@@ -89,10 +90,8 @@ class MangadexMangaRepository @Inject constructor(
             }
         }
 
-    /**
-     * Busca metadados remotos para pastas locais que ainda não possuem associação.
-     */
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+        AcerolaLogger.i(TAG, "Starting incremental MangaDex sync", LogSource.REPOSITORY)  
         _isIndexing.value = true
 
         try {
@@ -107,12 +106,15 @@ class MangadexMangaRepository @Inject constructor(
                     }
 
                     if (remoteInfoToSync.isEmpty()) {
+                        AcerolaLogger.d(TAG, "No new mangas to sync with MangaDex", LogSource.REPOSITORY)  
                         _progress.value = -1
                         return@catch
                     }
 
+                    AcerolaLogger.d(TAG, "Found ${remoteInfoToSync.size} mangas needing metadata", LogSource.REPOSITORY)  
                     executeSync(folders = remoteInfoToSync, baseUri)
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Incremental MangaDex scan failed", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                         else -> LibrarySyncError.UnexpectedError(cause = exception)
@@ -125,6 +127,7 @@ class MangadexMangaRepository @Inject constructor(
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+        AcerolaLogger.i(TAG, "Starting full library MangaDex refresh", LogSource.REPOSITORY)  
         _isIndexing.value = true
 
         try {
@@ -139,6 +142,7 @@ class MangadexMangaRepository @Inject constructor(
 
                     executeSync(folders = mangaLibraryFolders, baseUri)
                 }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Full MangaDex refresh failed", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {
                         is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                         else -> LibrarySyncError.UnexpectedError(cause = exception)
@@ -156,6 +160,7 @@ class MangadexMangaRepository @Inject constructor(
 
     override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
         return mangaRemoteInfoDao.getAllMangasWithRelations().map { remoteInfoRelations ->
+            AcerolaLogger.d(TAG, "Observed MangaDex metadata update: ${remoteInfoRelations.size} entries", LogSource.REPOSITORY)  
             coroutineScope {
                 remoteInfoRelations.map { remoteInfo ->
                     async(context = Dispatchers.IO) {
@@ -176,6 +181,7 @@ class MangadexMangaRepository @Inject constructor(
 
         val rootPath = baseUri?.toString() ?: MangaDirectoryPreference.folderUriFlow(context).firstOrNull()
         if (rootPath.isNullOrBlank()) {
+            AcerolaLogger.w(TAG, "Sync aborted: root library path is null", LogSource.REPOSITORY)  
             _progress.value = -1
             return
         }
@@ -194,6 +200,7 @@ class MangadexMangaRepository @Inject constructor(
                 } ?: fetchedList.firstOrNull()
 
                 if (bestMatch != null) {
+                    AcerolaLogger.v(TAG, "Found best match for '$title' -> '${bestMatch.title}'", LogSource.REPOSITORY)  
                     val existingRemote = mangaRemoteInfoDao.getMangaByDirectoryId(current.id).firstOrNull()
                     
                     val mangaToSave = bestMatch.toModel().copy(
@@ -227,13 +234,15 @@ class MangadexMangaRepository @Inject constructor(
                             )
                         }
 
-                        // Gera o ComicInfo.xml se a preferência estiver ativa
                         metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
                     }
+                } else {
+                    AcerolaLogger.d(TAG, "No MangaDex match found for: $title", LogSource.REPOSITORY)  
                 }
             }
 
             result.onLeft { exception ->
+                AcerolaLogger.e(TAG, "Error syncing metadata for ${current.name}", LogSource.REPOSITORY, throwable = exception)  
                 when (exception) {
                     is SQLiteException, is IntegrityException -> LibrarySyncError.DatabaseError(cause = exception)
                     is IOException -> LibrarySyncError.DiskIOFailure(path = current.path, cause = exception)
@@ -251,5 +260,9 @@ class MangadexMangaRepository @Inject constructor(
 
     private fun normalizeName(name: String): String {
         return name.filter { it.isLetterOrDigit() }.lowercase()
+    }
+
+    companion object {
+        private const val TAG = "MangadexMangaRepository"  
     }
 }
