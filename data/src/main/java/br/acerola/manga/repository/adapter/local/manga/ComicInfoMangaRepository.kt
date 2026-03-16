@@ -46,7 +46,7 @@ class ComicInfoMangaRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+    override suspend fun refreshManga(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             AcerolaLogger.i(TAG, "Refreshing manga from ComicInfo.xml: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true

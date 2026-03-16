@@ -13,7 +13,7 @@ interface MangaManagementRepository<T> {
 
     fun observeLibrary(): StateFlow<List<T>>
 
-    suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit>
+    suspend fun refreshManga(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit>
     suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit>

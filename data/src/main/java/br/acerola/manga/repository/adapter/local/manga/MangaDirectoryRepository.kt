@@ -9,6 +9,7 @@ import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.flatMap
 import br.acerola.manga.config.preference.FileExtension
+import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
@@ -64,7 +65,7 @@ class MangaDirectoryRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+    override suspend fun refreshManga(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             AcerolaLogger.i(TAG, "Syncing specific manga: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
@@ -72,31 +73,48 @@ class MangaDirectoryRepository @Inject constructor(
                 Either.catch {
                     val existingManga = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
 
-                    val folderDoc = DocumentFile.fromSingleUri(context, existingManga.path.toUri())
+                    val folderUri = existingManga.path.toUri()
+                    val folderDoc = DocumentFile.fromSingleUri(context, folderUri)
 
                     if (folderDoc == null || !folderDoc.isDirectory) return@catch
 
-                    if (existingManga.lastModified >= folderDoc.lastModified()) return@catch
-
-                    val banner = folderDoc.listFiles().firstOrNull { isBanner(name = it.name) }
-                    val cover = folderDoc.listFiles().firstOrNull { isCover(name = it.name) }
-                    val hasComicInfo = folderDoc.findFile("ComicInfo.xml") != null
-
-                    val firstChapter = folderDoc.listFiles().firstOrNull { file ->
-                        file.isFile && FileExtension.isSupported(ext = file.name)
+                    if (existingManga.lastModified >= folderDoc.lastModified()) {
+                        mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = baseUri)
+                        return@catch
                     }
 
-                    val detectedTemplate = firstChapter?.name?.let {
+                    val rootUri = baseUri ?: MangaDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
+                        ?: return@catch
+
+                    val folderId = DocumentsContract.getDocumentId(folderUri)
+                    val folderChildren = ContentQueryHelper.listFiles(context, rootUri, folderId)
+
+                    val bannerMetadata = folderChildren.firstOrNull { isBanner(it.name) }
+                    val coverMetadata = folderChildren.firstOrNull { isCover(it.name) }
+                    val hasComicInfo = folderChildren.any { it.name == "ComicInfo.xml" }
+
+                    val firstChapterName = folderChildren.firstOrNull { 
+                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && FileExtension.isSupported(ext = it.name)
+                    }?.name
+
+                    val detectedTemplate = firstChapterName?.let {
                         detectTemplate(fileName = it)
                     }
 
+                    val bannerDoc = bannerMetadata?.let { 
+                        DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
+                    }
+                    val coverDoc = coverMetadata?.let { 
+                        DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
+                    }
+
                     val updatedManga = folderDoc.toMangaDirectoryModel(
-                        cover, banner, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo
+                        coverDoc, bannerDoc, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo
                     ).copy(id = existingManga.id)
 
                     directoryDao.update(entity = updatedManga)
                     
-                    mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = null)
+                    mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = rootUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Failed to refresh specific manga: $mangaId", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {

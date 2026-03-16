@@ -74,7 +74,7 @@ class LibrarySyncWorker @AssistedInject constructor(
                 SYNC_TYPE_INCREMENTAL -> repository.incrementalScan(baseUri)
                 SYNC_TYPE_REFRESH -> repository.refreshLibrary(baseUri)
                 SYNC_TYPE_REBUILD -> repository.rebuildLibrary(baseUri)
-                SYNC_TYPE_SPECIFIC -> if (mangaId != -1L) repository.refreshManga(mangaId) else {
+                SYNC_TYPE_SPECIFIC -> if (mangaId != -1L) repository.refreshManga(mangaId, baseUri) else {
                     progressJob.cancel()
                     return@coroutineScope Result.failure(workDataOf("error" to "Manga ID not found"))
                 }

@@ -39,7 +39,7 @@ está planejado para o futuro.
 ### 🚧 Planejado / Em Andamento
 
 * **Leitor de Mangás Integrado:**
-    *   [x] Suporte completo para formatos `.cbz` e `.cbr`.
+    *   [x] Suporte completo para formatos `.cbz` e `.cbr`. 
 * **Configuração e Gerenciamento do Mangá (Refatoração):**
     *   [X] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
     *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
