@@ -70,14 +70,14 @@ class MangadexMangaRepository @Inject constructor(
     private val _isIndexing = MutableStateFlow(value = false)
     override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    override suspend fun refreshManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+    override suspend fun refreshManga(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(context = Dispatchers.IO) {
             AcerolaLogger.i(TAG, "Initiating MangaDex sync for manga: $mangaId", LogSource.REPOSITORY)  
             _isIndexing.value = true
             try {
                 Either.catch {
                     val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
-                    executeSync(folders = listOf(directory), baseUri = null)
+                    executeSync(folders = listOf(directory), baseUri = baseUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Refresh specific MangaDex metadata failed", LogSource.REPOSITORY, throwable = exception)  
                     when (exception) {

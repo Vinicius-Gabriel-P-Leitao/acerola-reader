@@ -18,6 +18,7 @@ import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import br.acerola.manga.usecase.di.DirectoryCase
 import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
 import br.acerola.manga.util.normalizeChapter
+import br.acerola.manga.config.permission.FileSystemAccessManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +33,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChapterArchiveViewModel @Inject constructor(
     private val workManager: WorkManager,
+    private val manager: FileSystemAccessManager,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
@@ -98,10 +100,14 @@ class ChapterArchiveViewModel @Inject constructor(
             TAG, "Enqueuing local sync from ChapterViewModel: $type, mangaId: $mangaId", LogSource.VIEWMODEL
         )
         viewModelScope.launch {
+            manager.loadFolderUri()
+            val uri = manager.folderUri
+
             val syncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
                 .setInputData(
                     workDataOf(
                         LibrarySyncWorker.KEY_SYNC_TYPE to type,
+                        LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
                         LibrarySyncWorker.KEY_MANGA_ID to mangaId
                     )
                 )
