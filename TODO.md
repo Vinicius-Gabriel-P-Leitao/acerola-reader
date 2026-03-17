@@ -77,14 +77,16 @@ está planejado para o futuro.
 ---
 
 * **Download de Traduções via MangaDex:**
-    *   [ ] **Busca de tradução:** Localizar capítulos traduzidos por nome do mangá, ID do MangaDex ou URL do mangá.
-    *   [ ] **Seleção de idioma:** Permitir ao usuário escolher o idioma da tradução antes de baixar.
-    *   [ ] **Download como `.cbz`:** Baixar as páginas do capítulo e empacotar automaticamente em arquivo `.cbz` na
+    *   [x] **Busca de tradução:** Localizar capítulos traduzidos por nome do mangá, ID do MangaDex ou URL do mangá.
+    *   [x] **Seleção de idioma:** Permitir ao usuário escolher o idioma da tradução antes de baixar.
+    *   [x] **Download como `.cbz`:** Baixar as páginas do capítulo e empacotar automaticamente em arquivo `.cbz` na
         pasta do mangá correspondente.
     *   [x] **Fila de download:** Gerenciar múltiplos downloads simultâneos com progresso individual por capítulo
         (tarefa de background com notificação).
-    *   [ ] **Integração com biblioteca:** Após o download, acionar sync automático para que o capítulo apareça na
+    *   [x] **Integração com biblioteca:** Após o download, acionar sync automático para que o capítulo apareça na
         biblioteca sem intervenção manual.
+    *   [x] **Melhorar visualização:** Melhorar visualização de que o mangá está sendo baixado e mostrar a fila de 
+        chapters já baixados.
 * **Filtros e Ordenação da Biblioteca (Home Screen):**
     *   [ ] **Ordenação:** Suporte a Asc/Desc para os critérios abaixo:
         * Título (A–Z / Z–A).
