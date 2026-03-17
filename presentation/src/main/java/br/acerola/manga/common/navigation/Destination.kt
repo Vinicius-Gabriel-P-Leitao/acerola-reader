@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import br.acerola.manga.presentation.R
@@ -39,6 +40,12 @@ enum class Destination(
         label = R.string.label_history_activity,
         route = R.string.navigation_history_activity,
         contentDescriptionRes = R.string.description_history_activity,
+    ),
+    SEARCH(
+        icon = Icons.Default.Search,
+        label = R.string.label_search_activity,
+        route = R.string.navigation_search_activity,
+        contentDescriptionRes = R.string.description_search_activity,
     ),
     CONFIG(
         icon = Icons.Default.Settings,

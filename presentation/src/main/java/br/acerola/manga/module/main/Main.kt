@@ -17,6 +17,10 @@ object Main {
     }
     object Home {
         object Component
-        object  Layout
+        object Layout
+    }
+    object Search {
+        object Component
+        object Layout
     }
 }

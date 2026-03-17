@@ -33,6 +33,7 @@ data class ChapterAttributes(
     val volume: String?,
     val chapter: String?,
     val title: String?,
+    val translatedLanguage: String? = null,
     val pages: Int = 0,
     val version: Int
 )

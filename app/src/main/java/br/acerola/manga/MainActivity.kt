@@ -31,6 +31,7 @@ import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.Screen
 import br.acerola.manga.module.main.history.Screen
 import br.acerola.manga.module.main.home.Screen
+import br.acerola.manga.module.main.search.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -51,6 +52,9 @@ class MainActivity(
         }
         defaultComposable(context, Destination.HISTORY) {
             Main.History.Layout.Screen()
+        }
+        defaultComposable(context, Destination.SEARCH) {
+            Main.Search.Layout.Screen()
         }
         defaultComposable(context, Destination.CONFIG) {
             Main.Config.Layout.Screen()
