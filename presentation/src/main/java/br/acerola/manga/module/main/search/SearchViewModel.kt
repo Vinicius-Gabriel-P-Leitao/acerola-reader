@@ -7,6 +7,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import br.acerola.manga.config.pattern.ArchiveFormatPattern
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
@@ -136,16 +137,15 @@ class SearchViewModel @Inject constructor(
                 return@launch
             }
 
-            // CBR is RAR format — no Java/Kotlin library can write RAR, only read.
-            // Downloads are always saved as .cbz (ZIP) regardless of the archive preference.
-            val fileExtension = ".cbz"
+            val fileExtension = ArchiveFormatPattern.CBZ.extension
             val mangaTitle = state.selectedManga?.title ?: return@launch
 
             val orderedChapters = state.chapters.filter { it.id in state.selectedChapterIds }
             val chapterIds = orderedChapters.map { it.id }.toTypedArray()
             val chapterNumbers = orderedChapters.map { it.chapter ?: it.id }.toTypedArray()
 
-            val coverUrl = state.selectedManga?.cover?.url ?: ""
+            val coverUrl = state.selectedManga.cover?.url
+            val coverFileName = state.selectedManga.cover?.fileName
 
             val downloadRequest = OneTimeWorkRequestBuilder<ChapterDownloadWorker>()
                 .setInputData(
@@ -156,6 +156,7 @@ class SearchViewModel @Inject constructor(
                         ChapterDownloadWorker.KEY_FILE_EXTENSION to fileExtension,
                         ChapterDownloadWorker.KEY_BASE_URI to baseUri,
                         ChapterDownloadWorker.KEY_COVER_URL to coverUrl,
+                        ChapterDownloadWorker.KEY_COVER_FILE_NAME to coverFileName,
                     )
                 )
                 .addTag(ChapterDownloadWorker.DOWNLOAD_TAG)

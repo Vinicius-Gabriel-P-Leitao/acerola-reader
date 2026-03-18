@@ -1,6 +1,8 @@
 package br.acerola.manga.usecase.download
 
 import androidx.documentfile.provider.DocumentFile
+import br.acerola.manga.repository.di.Mangadex
+import br.acerola.manga.repository.port.BinaryOperationsRepository
 import br.acerola.manga.service.compact.ArchiveCompactService
 import br.acerola.manga.service.download.ChapterDownloadService
 import javax.inject.Inject
@@ -9,7 +11,8 @@ import javax.inject.Singleton
 @Singleton
 class DownloadChaptersUseCase @Inject constructor(
     private val chapterDownloadService: ChapterDownloadService,
-    private val archiveCompactService: ArchiveCompactService
+    private val archiveCompactService: ArchiveCompactService,
+    @param:Mangadex private val coverRepository: BinaryOperationsRepository<String>
 ) {
     data class ChapterEntry(val id: String, val fileName: String)
 
@@ -19,10 +22,11 @@ class DownloadChaptersUseCase @Inject constructor(
         mangaFolder: DocumentFile,
         chapters: List<ChapterEntry>,
         coverUrl: String?,
+        coverFileName: String?,
         onProgress: suspend (Int) -> Unit
     ): Result {
-        if (!coverUrl.isNullOrBlank()) {
-            downloadCover(coverUrl, mangaFolder)
+        if (!coverUrl.isNullOrBlank() && !coverFileName.isNullOrBlank()) {
+            downloadCover(coverUrl, coverFileName, mangaFolder)
         }
 
         var downloadedCount = 0
@@ -36,16 +40,17 @@ class DownloadChaptersUseCase @Inject constructor(
             }
 
             val pageUrls = chapterDownloadService.getPageUrls(entry.id).getOrNull()
-            if (pageUrls == null) {
+
+            if (pageUrls.isNullOrEmpty()) {
                 errorCount++
                 return@forEachIndexed
             }
 
-            val pageEntries = pageUrls.mapIndexedNotNull { pageIndex, url ->
-                val bytes = chapterDownloadService.downloadBytes(url) ?: return@mapIndexedNotNull null
-                val extension = url.substringAfterLast('.', "jpg")
+            val pageEntries = downloadPageEntries(pageUrls)
 
-                "%04d.$extension".format(pageIndex) to bytes
+            if (pageEntries == null || pageEntries.size < pageUrls.size) {
+                errorCount++
+                return@forEachIndexed
             }
 
             archiveCompactService.createCbz(mangaFolder, entry.fileName, pageEntries)
@@ -57,13 +62,31 @@ class DownloadChaptersUseCase @Inject constructor(
         return Result(downloadedCount = downloadedCount, errorCount = errorCount)
     }
 
-    private suspend fun downloadCover(coverUrl: String, mangaFolder: DocumentFile) {
-        val extension = coverUrl.substringAfterLast('.', "jpg").substringBefore('?')
-        val coverFileName = "cover.$extension"
-        if (mangaFolder.findFile(coverFileName) != null) return
+    private suspend fun downloadPageEntries(pageUrls: List<String>): List<Pair<String, ByteArray>>? {
+        val entries = mutableListOf<Pair<String, ByteArray>>()
 
-        val bytes = chapterDownloadService.downloadBytes(coverUrl) ?: return
+        pageUrls.forEachIndexed { pageIndex, url ->
+            val bytes = chapterDownloadService.downloadBytes(url) ?: return null
+
+            val fileName = url.substringAfterLast('/').substringBefore('?')
+            val extension = fileName.substringAfterLast('.', "jpg")
+
+            entries.add("%04d.$extension".format(pageIndex) to bytes)
+        }
+        return entries
+    }
+
+    private suspend fun downloadCover(
+        coverUrl: String,
+        coverFileName: String,
+        mangaFolder: DocumentFile
+    ) {
+        if (mangaFolder.findFile(coverFileName) != null) return
+        val bytes = coverRepository.searchCover(coverUrl).getOrNull() ?: return
+
+        val extension = coverFileName.substringAfterLast('.', "jpg")
         val mimeType = if (extension == "png") "image/png" else "image/jpeg"
+
         archiveCompactService.saveImage(mangaFolder, coverFileName, mimeType, bytes)
     }
 }

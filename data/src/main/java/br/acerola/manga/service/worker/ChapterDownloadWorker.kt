@@ -2,6 +2,8 @@ package br.acerola.manga.service.worker
 
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.work.HiltWorker
@@ -34,9 +36,11 @@ class ChapterDownloadWorker @AssistedInject constructor(
         const val KEY_FILE_EXTENSION = "file_extension"
         const val KEY_BASE_URI = "base_uri"
         const val KEY_COVER_URL = "cover_url"
+        const val KEY_COVER_FILE_NAME = "cover_file_name"
         const val DOWNLOAD_TAG = "chapter_download"
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override suspend fun doWork(): Result {
         val chapterIds = inputData.getStringArray(KEY_CHAPTER_IDS) ?: return Result.failure(
             workDataOf("error" to "No chapter IDs provided")
@@ -50,6 +54,7 @@ class ChapterDownloadWorker @AssistedInject constructor(
             workDataOf("error" to "No base URI provided")
         )
         val coverUrl = inputData.getString(KEY_COVER_URL)
+        val coverFileName = inputData.getString(KEY_COVER_FILE_NAME)
 
         val builder = notificationHelper.createBaseNotification(
             context.getString(R.string.download_chapter_title),
@@ -80,6 +85,7 @@ class ChapterDownloadWorker @AssistedInject constructor(
             mangaFolder = mangaFolder,
             chapters = chapters,
             coverUrl = coverUrl,
+            coverFileName = coverFileName,
             onProgress = { progress ->
                 setProgress(workDataOf("progress" to progress))
                 notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
