@@ -181,6 +181,8 @@
     <string name="label_search_download_queued">Download de %1$d capítulo(s) enfileirado</string>
     <string name="label_search_no_library_uri">Selecione a pasta da biblioteca nas Configurações primeiro</string>
     <string name="label_search_no_chapters_selected">Selecione ao menos um capítulo</string>
+    <string name="label_search_download_all">Baixar tudo</string>
+    <string name="label_search_page_indicator">Página %1$d de %2$d</string>
     <string name="description_icon_search_submit">Buscar</string>
     <string name="description_icon_search_clear">Limpar busca</string>
 

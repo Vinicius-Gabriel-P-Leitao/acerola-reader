@@ -25,9 +25,11 @@ class SearchMangaUseCase @Inject constructor(
 
     suspend fun getChaptersByLanguage(
         mangaId: String,
-        language: String
-    ): Either<NetworkError, List<ChapterRemoteInfoDto>> =
-        downloadRepository.getChaptersByLanguage(mangaId, language).map { (chapters, _) -> chapters }
+        language: String,
+        page: Int = 0,
+        limit: Int = 100,
+    ): Either<NetworkError, Pair<List<ChapterRemoteInfoDto>, Int>> =
+        downloadRepository.getChaptersByLanguage(mangaId, language, limit, page * limit)
 
     private fun extractMangadexId(query: String): String? {
         MangadexPattern.titleUrl.find(query)?.groupValues?.get(1)?.let { return it }

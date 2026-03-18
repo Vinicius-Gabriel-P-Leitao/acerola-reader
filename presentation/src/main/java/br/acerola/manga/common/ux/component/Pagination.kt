@@ -1,4 +1,4 @@
-package br.acerola.manga.module.manga.component
+package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,11 +26,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.module.manga.Manga
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.presentation.R
 
 @Composable
-fun Manga.Component.PaginationFooter(
+fun Acerola.Component.Pagination(
     currentPage: Int,
     totalPages: Int,
     onPageChange: (Int) -> Unit
@@ -39,12 +39,12 @@ fun Manga.Component.PaginationFooter(
 
     val lastPageIndex = totalPages - 1
     val currentBlock = currentPage / 5
-
     val startPage = currentBlock * 5
     val endPage = (startPage + 5).coerceAtMost(maximumValue = totalPages)
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
     ) {
@@ -62,14 +62,14 @@ fun Manga.Component.PaginationFooter(
             modifier = Modifier.fillMaxWidth()
         ) {
             IconButton(
-                onClick = { onPageChange(currentPage - 1) }, enabled = currentPage > 0
+                onClick = { onPageChange(currentPage - 1) },
+                enabled = currentPage > 0
             ) {
                 Icon(
                     contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.3f
-                    )
+                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                 )
             }
 
@@ -79,20 +79,23 @@ fun Manga.Component.PaginationFooter(
             ) {
                 for (page in startPage until endPage) {
                     val isSelected = page == currentPage
-
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(size = 36.dp)
                             .clip(shape = RoundedCornerShape(size = 8.dp))
-                            .background(color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { onPageChange(page) })
-                    {
+                            .background(
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { onPageChange(page) }
+                    ) {
                         Text(
                             text = (page + 1).toString(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
