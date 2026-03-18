@@ -5,8 +5,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.module.main.history.HistoryViewModel
-import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import io.mockk.every
 import io.mockk.mockk
@@ -26,22 +26,21 @@ import org.junit.Test
 class HistoryViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    
-    private lateinit var historyRepository: HistoryManagementRepository
+
+    private lateinit var observeHistoryUseCase: ObserveHistoryUseCase
     private lateinit var directoryRepo: MangaManagementRepository<MangaDirectoryDto>
     private lateinit var mangadexRepo: MangaManagementRepository<MangaRemoteInfoDto>
-    
+
     private lateinit var viewModel: HistoryViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        
-        historyRepository = mockk()
+
+        observeHistoryUseCase = mockk()
         directoryRepo = mockk()
         mangadexRepo = mockk()
 
-        // Mock StateFlow properties
         every { directoryRepo.isIndexing } returns MutableStateFlow(false)
         every { directoryRepo.progress } returns MutableStateFlow(-1)
         every { mangadexRepo.isIndexing } returns MutableStateFlow(false)
@@ -76,22 +75,21 @@ class HistoryViewModelTest {
             hasComicInfo = false
         )
 
-        every { historyRepository.getAllRecentHistoryWithChapter() } returns MutableStateFlow(listOf(historyDto))
+        every { observeHistoryUseCase() } returns MutableStateFlow(listOf(historyDto))
         every { directoryRepo.observeLibrary() } returns MutableStateFlow(listOf(directoryDto))
         every { mangadexRepo.observeLibrary() } returns MutableStateFlow(emptyList())
 
         viewModel = HistoryViewModel(
-            historyRepository,
+            observeHistoryUseCase,
             ObserveLibraryUseCase(mangadexRepo),
             ObserveLibraryUseCase(directoryRepo)
         )
 
         // Act & Assert
         viewModel.historyItems.test {
-            // Skip initial value (emptyList)
             val initial = awaitItem()
             assertEquals(0, initial.size)
-            
+
             val result = awaitItem()
             assertEquals(1, result.size)
             assertEquals("Test Manga", result[0].manga.directory.name)

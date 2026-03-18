@@ -11,17 +11,17 @@ import org.junit.Test
 import com.google.common.truth.Truth.assertThat
 import arrow.core.right
 
-class PageRepositoryTest {
+class ChapterReaderServiceTest {
 
     private val factory = mockk<ChapterSourceFactory>()
     private val bitmapCache = mockk<BitmapCacheService>(relaxed = true)
     private val source = mockk<ChapterSourceService>(relaxed = true)
     
-    private lateinit var repository: PageRepository
+    private lateinit var repository: ChapterReaderService
 
     @Before
     fun setup() {
-        repository = PageRepository(factory, bitmapCache)
+        repository = ChapterReaderService(factory, bitmapCache)
         every { factory.create(any()) } returns source.right()
     }
 

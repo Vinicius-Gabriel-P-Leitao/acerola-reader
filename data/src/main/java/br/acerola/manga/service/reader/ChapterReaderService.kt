@@ -22,14 +22,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PageRepository @Inject constructor(
+class ChapterReaderService @Inject constructor(
     private val factory: ChapterSourceFactory,
     private val bitmapCache: BitmapCacheService
 ) {
+
+    private val tempStorage = ByteArray(64 * 1024)
     private lateinit var source: ChapterSourceService
     private val prefetchSemaphore = Semaphore(permits = 1)
     private val decodeDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private val tempStorage = ByteArray(64 * 1024)
 
     fun openChapter(chapter: ChapterFileDto): Either<ChapterError, Unit> {
         return factory.create(chapter).map { newSource ->
@@ -77,7 +78,11 @@ class PageRepository @Inject constructor(
         }
     }
 
-    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
         val (height: Int, width: Int) = options.outHeight to options.outWidth
         var inSampleSize = 1
 
@@ -91,7 +96,10 @@ class PageRepository @Inject constructor(
         return inSampleSize
     }
 
-    fun prefetchWindow(center: Int, total: Int) {
+    fun prefetchWindow(
+        center: Int,
+        total: Int
+    ) {
         // Prefetch 2 à frente e 2 atrás
         val range = ((center - 2)..(center + 2)).filter { it >= 0 && it < total }
 

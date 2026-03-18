@@ -11,7 +11,7 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.service.reader.PageRepository
+import br.acerola.manga.service.reader.ChapterReaderService
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
@@ -34,7 +34,7 @@ class ReaderViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val repository = mockk<PageRepository>(relaxed = true)
+    private val repository = mockk<ChapterReaderService>(relaxed = true)
     private val historyRepository = mockk<HistoryManagementRepository>(relaxed = true)
     private val chapterRepository = mockk<ChapterManagementRepository<ChapterArchivePageDto>>(relaxed = true)
     private lateinit var getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>

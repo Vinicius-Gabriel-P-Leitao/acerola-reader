@@ -8,30 +8,36 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
-import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.state.ReaderUiState
-import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.service.reader.PageRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.service.reader.ChapterReaderService
 import br.acerola.manga.usecase.DirectoryCase
+import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.history.SaveReadingProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
-    private val repository: PageRepository,
+    private val repository: ChapterReaderService,
     @param:ApplicationContext private val context: Context,
-    // TODO: Tem que virar um useCase
-    private val historyRepository: HistoryManagementRepository,
+    private val saveReadingProgressUseCase: SaveReadingProgressUseCase,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
@@ -138,6 +144,7 @@ class ReaderViewModel @Inject constructor(
 
         AcerolaLogger.i(TAG, "Fetching metadata for chapter ID: $chapterId", LogSource.VIEWMODEL)
         _state.update { it.copy(isLoading = true) }
+
         viewModelScope.launch {
             getChaptersUseCase.observeByManga(mangaId)
                 .combine(getChaptersUseCase.isIndexing) { pageDto, isIndexing ->
@@ -201,10 +208,9 @@ class ReaderViewModel @Inject constructor(
                     _state.update { it.copy(isChapterRead = true) }
                 }
 
-                if (!markedAsReadInSession.contains(chapterId)) {
+                if (markedAsReadInSession.add(chapterId)) {
                     viewModelScope.launch {
-                        historyRepository.markChapterAsRead(mangaId, chapterId)
-                        markedAsReadInSession.add(chapterId)
+                        saveReadingProgressUseCase.markAsRead(mangaId, chapterId)
                     }
                 }
             }
@@ -221,9 +227,9 @@ class ReaderViewModel @Inject constructor(
         _state.update { it.copy(currentPage = index) }
 
         val pageCount = _state.value.pageCount
-        val isCompletion = pageCount > 0 && index >= pageCount - 1
+        val isLastPage = pageCount > 0 && index >= pageCount - 1
 
-        if (isCompletion) {
+        if (isLastPage) {
             if (!_state.value.isChapterRead) {
                 AcerolaLogger.audit(
                     tag = TAG,
@@ -244,25 +250,20 @@ class ReaderViewModel @Inject constructor(
     }
 
     private suspend fun persistHistory(
-        mangaDirectoryId: Long,
-        chapterArchiveId: Long,
-        index: Int
+        mangaId: Long,
+        chapterId: Long,
+        page: Int
     ) {
-        historyRepository.upsertHistory(
-            ReadingHistoryDto(
-                mangaDirectoryId = mangaDirectoryId,
-                chapterArchiveId = chapterArchiveId,
-                lastPage = index,
-                isCompleted = false,
-                updatedAt = System.currentTimeMillis()
-            )
-        )
-
         val pageCount = _state.value.pageCount
-        if (pageCount > 0 && index >= pageCount - 1 && !markedAsReadInSession.contains(chapterArchiveId)) {
-            historyRepository.markChapterAsRead(mangaDirectoryId, chapterArchiveId)
-            markedAsReadInSession.add(chapterArchiveId)
-        }
+        val isLastPage = pageCount > 0 && page >= pageCount - 1
+        val shouldMarkAsRead = isLastPage && markedAsReadInSession.add(chapterId)
+
+        saveReadingProgressUseCase.saveProgress(
+            mangaId = mangaId,
+            chapterId = chapterId,
+            page = page,
+            markAsRead = shouldMarkAsRead
+        )
     }
 
     fun onSliderChanged(index: Int) {
@@ -311,7 +312,6 @@ class ReaderViewModel @Inject constructor(
     }
 
     companion object {
-
         private const val TAG = "ReaderViewModel"
     }
 }
