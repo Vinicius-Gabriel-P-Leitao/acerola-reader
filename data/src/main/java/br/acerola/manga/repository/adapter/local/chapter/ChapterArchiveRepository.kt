@@ -2,20 +2,21 @@ package br.acerola.manga.repository.adapter.local.chapter
 
 import android.content.Context
 import android.database.sqlite.SQLiteException
+import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
+import arrow.core.getOrElse
 import br.acerola.manga.config.pattern.ArchiveFormatPattern
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.logging.AcerolaLogger
-import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.mapper.toPageDto
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.port.ChapterManagementRepository
-import android.provider.DocumentsContract
 import br.acerola.manga.util.ContentQueryHelper
 import br.acerola.manga.util.templateToRegex
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -69,13 +70,15 @@ class ChapterArchiveRepository @Inject constructor(
 
                 if (baseUri != null) {
                     val folderDocId = DocumentsContract.getDocumentId(folderUri)
-                    chapterFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).filter { 
-                        ArchiveFormatPattern.isSupported(ext = it.name)
-                    }
-                    folderLastModified = 0 
+                    chapterFiles = ContentQueryHelper.listFiles(
+                        context, baseUri, folderDocId
+                    ).getOrElse { return@catch }.filter { ArchiveFormatPattern.isSupported(ext = it.name) }
+
+                    folderLastModified = 0
                 } else {
                     val folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
                     folderLastModified = folderDoc.lastModified()
+
                     chapterFiles = folderDoc.listFiles().filter { it.isFile }.map { 
                         br.acerola.manga.util.FastFileMetadata(
                             id = DocumentsContract.getDocumentId(it.uri),
@@ -104,6 +107,7 @@ class ChapterArchiveRepository @Inject constructor(
                     val match = chapterRegex.matchEntire(input = name)
 
                     val currentFastHash = "${file.name}|${file.size}|${file.lastModified}"
+
                     val fileUri = if (baseUri != null) {
                         DocumentsContract.buildDocumentUriUsingTree(baseUri, file.id).toString()
                     } else {
@@ -191,11 +195,10 @@ class ChapterArchiveRepository @Inject constructor(
 
     override suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
         val offset = page * pageSize
-        AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)  
+        AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)
 
-        val realTotal = if (total > 0) {
-            total
-        } else chapterArchiveDao.countChaptersByMangaDirectory(folderId = mangaId)
+        val realTotal = if (total > 0) total
+        else chapterArchiveDao.countChaptersByMangaDirectory(folderId = mangaId)
 
         val items = chapterArchiveDao.getChaptersPaged(
             pageSize = pageSize, folderId = mangaId, offset = offset
