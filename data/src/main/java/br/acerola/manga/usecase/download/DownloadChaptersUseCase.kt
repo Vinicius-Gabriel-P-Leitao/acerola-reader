@@ -10,8 +10,8 @@ import javax.inject.Singleton
 
 @Singleton
 class DownloadChaptersUseCase @Inject constructor(
-    private val chapterDownloadService: ChapterDownloadService,
     private val archiveCompactService: ArchiveCompactService,
+    private val chapterDownloadService: ChapterDownloadService,
     @param:Mangadex private val coverRepository: BinaryOperationsRepository<String>
 ) {
     data class ChapterEntry(val id: String, val fileName: String)
