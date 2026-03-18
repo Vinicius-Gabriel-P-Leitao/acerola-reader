@@ -2,7 +2,8 @@ package br.acerola.manga.service.compact
 
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.service.compact.ArchiveCompactService
+import arrow.core.Either
+import br.acerola.manga.error.message.IoError
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -18,9 +19,11 @@ class CbzCompactService @Inject constructor(
         folder: DocumentFile,
         fileName: String,
         pageEntries: List<Pair<String, ByteArray>>
-    ): Boolean {
-        val file = folder.createFile("application/octet-stream", fileName) ?: return false
-        return try {
+    ): Either<IoError, Unit> {
+        val file = folder.createFile("application/octet-stream", fileName)
+            ?: return Either.Left(IoError.FileWriteError(path = fileName))
+
+        return Either.catch {
             context.contentResolver.openOutputStream(file.uri)?.use { outStream ->
                 ZipOutputStream(outStream).use { zip ->
                     pageEntries.forEach { (entryName, bytes) ->
@@ -30,10 +33,10 @@ class CbzCompactService @Inject constructor(
                     }
                 }
             }
-            true
-        } catch (e: Exception) {
+            Unit
+        }.mapLeft { cause ->
             file.delete()
-            false
+            IoError.FileWriteError(path = fileName, cause = cause) as IoError
         }
     }
 
@@ -42,14 +45,16 @@ class CbzCompactService @Inject constructor(
         fileName: String,
         mimeType: String,
         bytes: ByteArray
-    ): Boolean {
-        val file = folder.createFile(mimeType, fileName) ?: return false
-        return try {
+    ): Either<IoError, Unit> {
+        val file = folder.createFile(mimeType, fileName)
+            ?: return Either.Left(IoError.FileWriteError(path = fileName))
+
+        return Either.catch {
             context.contentResolver.openOutputStream(file.uri)?.use { it.write(bytes) }
-            true
-        } catch (e: Exception) {
+            Unit
+        }.mapLeft { cause ->
             file.delete()
-            false
+            IoError.FileWriteError(path = fileName, cause = cause) as IoError
         }
     }
 }

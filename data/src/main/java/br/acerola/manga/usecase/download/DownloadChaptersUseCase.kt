@@ -44,11 +44,12 @@ class DownloadChaptersUseCase @Inject constructor(
             val pageEntries = pageUrls.mapIndexedNotNull { pageIndex, url ->
                 val bytes = chapterDownloadService.downloadBytes(url) ?: return@mapIndexedNotNull null
                 val extension = url.substringAfterLast('.', "jpg")
+
                 "%04d.$extension".format(pageIndex) to bytes
             }
 
-            val success = archiveCompactService.createCbz(mangaFolder, entry.fileName, pageEntries)
-            if (success) downloadedCount++ else errorCount++
+            archiveCompactService.createCbz(mangaFolder, entry.fileName, pageEntries)
+                .fold(ifLeft = { errorCount++ }, ifRight = { downloadedCount++ })
 
             onProgress(((downloadedCount.toFloat() / chapters.size) * 100).toInt())
         }
