@@ -70,6 +70,7 @@ class DownloadViewModel @Inject constructor(
                 selectedLanguage = language,
                 isLoadingChapters = true,
                 chapters = emptyList(),
+                allSeenChapters = emptyMap(),
                 selectedChapterIds = emptySet(),
                 totalChapters = 0,
                 currentPage = 0,
@@ -94,10 +95,11 @@ class DownloadViewModel @Inject constructor(
                     _uiEvents.send(UserMessage.Raw(error.uiMessage.asString(context)))
                 },
                 ifRight = { (chapters, total) ->
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isLoadingChapters = false,
                             chapters = chapters,
+                            allSeenChapters = state.allSeenChapters + chapters.associateBy { it.id },
                             totalChapters = total,
                             currentPage = page,
                         )
@@ -118,9 +120,11 @@ class DownloadViewModel @Inject constructor(
         }
     }
 
+    // Accumulates selections across pages — never replaces previous pages' selections
     private fun selectAll() {
         _uiState.update { state ->
-            state.copy(selectedChapterIds = state.chapters.map { it.id }.toSet())
+            val pageIds = state.chapters.map { it.id }.toSet()
+            state.copy(selectedChapterIds = state.selectedChapterIds + pageIds)
         }
     }
 
@@ -137,7 +141,11 @@ class DownloadViewModel @Inject constructor(
                 _uiEvents.send(UserMessage.Raw(context.getString(R.string.label_search_no_library_uri)))
                 return@launch
             }
-            val ordered = state.chapters.filter { it.id in state.selectedChapterIds }
+            // Use allSeenChapters to cover selections from any page already visited
+            val ordered = state.allSeenChapters
+                .filterKeys { it in state.selectedChapterIds }
+                .values
+                .sortedBy { it.chapter?.toDoubleOrNull() ?: Double.MAX_VALUE }
             enqueueChapters(state, baseUri, ordered)
         }
     }
@@ -146,7 +154,6 @@ class DownloadViewModel @Inject constructor(
         val state = _uiState.value
         val mangaId = state.manga?.mirrorId ?: return
         val language = state.selectedLanguage
-        val total = state.totalChapters
         val limit = state.chaptersPerPage
 
         viewModelScope.launch {
@@ -155,23 +162,32 @@ class DownloadViewModel @Inject constructor(
                 return@launch
             }
             _uiState.update { it.copy(isDownloading = true) }
+
             val allChapters = mutableListOf<ChapterRemoteInfoDto>()
             var page = 0
-            while (allChapters.size < total || (total == 0 && page == 0)) {
+            var hasMore = true
+
+            while (hasMore) {
+                var failed = false
                 searchMangaUseCase.getChaptersByLanguage(mangaId, language, page, limit).fold(
                     ifLeft = { error ->
                         _uiEvents.send(UserMessage.Raw(error.uiMessage.asString(context)))
                         _uiState.update { it.copy(isDownloading = false) }
-                        return@launch
+                        failed = true
                     },
-                    ifRight = { (chapters, fetchedTotal) ->
-                        if (chapters.isEmpty()) return@launch
-                        allChapters.addAll(chapters)
-                        if (allChapters.size >= fetchedTotal) return@launch
-                        page++
+                    ifRight = { (chapters, total) ->
+                        if (chapters.isEmpty()) {
+                            hasMore = false
+                        } else {
+                            allChapters.addAll(chapters)
+                            hasMore = allChapters.size < total
+                            page++
+                        }
                     }
                 )
+                if (failed) return@launch
             }
+
             _uiState.update { it.copy(isDownloading = false) }
             enqueueChapters(state, baseUri, allChapters)
         }

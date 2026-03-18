@@ -1,8 +1,6 @@
 package br.acerola.manga.usecase.download
 
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.repository.di.Mangadex
-import br.acerola.manga.repository.port.BinaryOperationsRepository
 import br.acerola.manga.service.compact.ArchiveCompactService
 import br.acerola.manga.service.download.ChapterDownloadService
 import javax.inject.Inject
@@ -10,9 +8,8 @@ import javax.inject.Singleton
 
 @Singleton
 class DownloadChaptersUseCase @Inject constructor(
-    private val archiveCompactService: ArchiveCompactService,
     private val chapterDownloadService: ChapterDownloadService,
-    @param:Mangadex private val coverRepository: BinaryOperationsRepository<String>
+    private val archiveCompactService: ArchiveCompactService,
 ) {
     data class ChapterEntry(val id: String, val fileName: String)
 
@@ -82,7 +79,7 @@ class DownloadChaptersUseCase @Inject constructor(
         mangaFolder: DocumentFile
     ) {
         if (mangaFolder.findFile(coverFileName) != null) return
-        val bytes = coverRepository.searchCover(coverUrl).getOrNull() ?: return
+        val bytes = chapterDownloadService.downloadBytes(coverUrl) ?: return
 
         val extension = coverFileName.substringAfterLast('.', "jpg")
         val mimeType = if (extension == "png") "image/png" else "image/jpeg"

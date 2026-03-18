@@ -6,6 +6,7 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 data class DownloadUiState(
     val manga: MangaRemoteInfoDto? = null,
     val chapters: List<ChapterRemoteInfoDto> = emptyList(),
+    val allSeenChapters: Map<String, ChapterRemoteInfoDto> = emptyMap(),
     val totalChapters: Int = 0,
     val currentPage: Int = 0,
     val chaptersPerPage: Int = 100,

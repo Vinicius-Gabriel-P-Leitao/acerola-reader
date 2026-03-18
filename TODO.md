@@ -88,6 +88,9 @@ metadados de fontes online populares.
 - [ ] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
 - [ ] **Paginação no download:** Mangás com 300+ capítulos mostram apenas 0/100 — exibir de forma paginada e permitir baixar tudo em sequência.
 - [ ] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário escolher qual usar no download.
+- [ ] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra 
+  selecionar tudo, trocar pagina e clicar no selecionar tudo e ele considerar a as duas paginas e o bottom sheet a 
+  seção está bem desorganizada.
 
 #### Filtros e Ordenação — Home Screen
 - [ ] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.

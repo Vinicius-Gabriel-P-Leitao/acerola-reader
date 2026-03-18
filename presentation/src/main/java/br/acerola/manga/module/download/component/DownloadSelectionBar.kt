@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,11 +52,13 @@ fun Download.Component.DownloadSelectionBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // Row 1: count badge + loading indicator
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
                     modifier = Modifier
@@ -79,45 +82,53 @@ fun Download.Component.DownloadSelectionBar(
                     )
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                val allSelected = uiState.totalChapters > 0 &&
-                        uiState.selectedChapterIds.size == uiState.totalChapters
-
-                SingleChoiceSegmentedButtonRow {
-                    SegmentedButton(
-                        selected = allSelected,
-                        onClick = { onAction(DownloadAction.SelectAll) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = 0,
-                            count = 2,
-                            baseShape = RoundedCornerShape(8.dp)
-                        ),
-                        icon = {}
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_search_select_all),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                    SegmentedButton(
-                        selected = uiState.selectedChapterIds.isEmpty(),
-                        onClick = { onAction(DownloadAction.DeselectAll) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = 1,
-                            count = 2,
-                            baseShape = RoundedCornerShape(8.dp)
-                        ),
-                        icon = {}
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_search_deselect_all),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                if (uiState.isDownloading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
 
+            // Row 2: full-width segmented button for page selection
+            val pageAllSelected = uiState.chapters.isNotEmpty() &&
+                    uiState.chapters.all { it.id in uiState.selectedChapterIds }
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = pageAllSelected,
+                    onClick = { onAction(DownloadAction.SelectAll) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = 0,
+                        count = 2,
+                        baseShape = RoundedCornerShape(8.dp)
+                    ),
+                    icon = {}
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_search_select_all),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+                SegmentedButton(
+                    selected = uiState.selectedChapterIds.isEmpty(),
+                    onClick = { onAction(DownloadAction.DeselectAll) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = 1,
+                        count = 2,
+                        baseShape = RoundedCornerShape(8.dp)
+                    ),
+                    icon = {}
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_search_deselect_all),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+
+            // Row 3: action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
