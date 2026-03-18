@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangaHistoryUseCase @Inject constructor(
+class ObserveMangaHistoryUseCase @Inject constructor(
     private val historyRepository: HistoryManagementRepository
 ) {
     fun observeByManga(mangaId: Long): Flow<ReadingHistoryDto?> =

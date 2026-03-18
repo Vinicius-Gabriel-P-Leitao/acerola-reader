@@ -15,12 +15,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-class GetChaptersUseCaseTest {
+class ObserveChaptersUseCaseTest {
 
     @MockK
     lateinit var repository: ChapterManagementRepository<ChapterArchivePageDto>
 
-    private lateinit var useCase: GetChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var useCase: ObserveChaptersUseCase<ChapterArchivePageDto>
 
     @Before
     fun setUp() {
@@ -28,7 +28,7 @@ class GetChaptersUseCaseTest {
         every { repository.progress } returns MutableStateFlow(value = 0)
         every { repository.isIndexing } returns MutableStateFlow(value = false)
 
-        useCase = GetChaptersUseCase(chapterRepository = repository)
+        useCase = ObserveChaptersUseCase(chapterRepository = repository)
     }
 
     @Test

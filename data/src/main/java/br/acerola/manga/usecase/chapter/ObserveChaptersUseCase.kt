@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * UseCase unificado para operações de leitura de capítulos (paginação, fluxo contínuo ou lista específica).
  */
-open class GetChaptersUseCase<T>(
+open class ObserveChaptersUseCase<T>(
     private val chapterRepository: ChapterManagementRepository<T>
 ) {
 

@@ -15,8 +15,8 @@ import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.state.ReaderUiState
 import br.acerola.manga.service.reader.ChapterReaderService
 import br.acerola.manga.usecase.DirectoryCase
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
-import br.acerola.manga.usecase.history.SaveReadingProgressUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.usecase.history.TrackReadingProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.cancelChildren
@@ -37,8 +37,8 @@ import javax.inject.Inject
 class ReaderViewModel @Inject constructor(
     private val repository: ChapterReaderService,
     @param:ApplicationContext private val context: Context,
-    private val saveReadingProgressUseCase: SaveReadingProgressUseCase,
-    @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
+    private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
+    @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(value = ReaderUiState())
@@ -86,7 +86,7 @@ class ReaderViewModel @Inject constructor(
         seenPages.clear()
 
         viewModelScope.launch {
-            getChaptersUseCase.observeByManga(mangaId)
+            observeChaptersUseCase.observeByManga(mangaId)
                 .filter { it.items.isNotEmpty() }
                 .take(1)
                 .collect { pageDto ->
@@ -146,8 +146,8 @@ class ReaderViewModel @Inject constructor(
         _state.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
-            getChaptersUseCase.observeByManga(mangaId)
-                .combine(getChaptersUseCase.isIndexing) { pageDto, isIndexing ->
+            observeChaptersUseCase.observeByManga(mangaId)
+                .combine(observeChaptersUseCase.isIndexing) { pageDto, isIndexing ->
                     pageDto to isIndexing
                 }
                 .collect { (pageDto, isIndexing) ->
@@ -210,7 +210,7 @@ class ReaderViewModel @Inject constructor(
 
                 if (markedAsReadInSession.add(chapterId)) {
                     viewModelScope.launch {
-                        saveReadingProgressUseCase.markAsRead(mangaId, chapterId)
+                        trackReadingProgressUseCase.markAsRead(mangaId, chapterId)
                     }
                 }
             }
@@ -258,7 +258,7 @@ class ReaderViewModel @Inject constructor(
         val isLastPage = pageCount > 0 && page >= pageCount - 1
         val shouldMarkAsRead = isLastPage && markedAsReadInSession.add(chapterId)
 
-        saveReadingProgressUseCase.saveProgress(
+        trackReadingProgressUseCase.saveProgress(
             mangaId = mangaId,
             chapterId = chapterId,
             page = page,

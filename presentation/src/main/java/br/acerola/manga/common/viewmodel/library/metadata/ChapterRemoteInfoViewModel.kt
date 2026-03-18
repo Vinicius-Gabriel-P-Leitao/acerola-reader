@@ -13,7 +13,7 @@ import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.worker.MetadataSyncWorker
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.MangadexCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChapterRemoteInfoViewModel @Inject constructor(
     private val workManager: WorkManager,
-    @param:MangadexCase private val getMangadexChaptersUseCase: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
+    @param:MangadexCase private val getMangadexChaptersUseCase: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
 
     private val _isIndexing = MutableStateFlow(value = false)

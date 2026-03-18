@@ -13,7 +13,7 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
@@ -43,7 +43,7 @@ class MangaDirectoryViewModelTest {
     private val chapterRepo = mockk<ChapterManagementRepository<ChapterArchivePageDto>>(relaxed = true)
     private val mangaRepo = mockk<MangaManagementRepository<MangaDirectoryDto>>(relaxed = true)
     
-    private lateinit var getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
     private lateinit var observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>
     
     private lateinit var viewModel: MangaDirectoryViewModel
@@ -61,10 +61,10 @@ class MangaDirectoryViewModelTest {
         every { chapterRepo.isIndexing } returns MutableStateFlow(false)
         every { chapterRepo.progress } returns MutableStateFlow(-1)
 
-        getChaptersUseCase = GetChaptersUseCase(chapterRepo)
+        observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
         observeLibraryUseCase = ObserveLibraryUseCase(mangaRepo)
 
-        viewModel = MangaDirectoryViewModel(manager, getChaptersUseCase, observeLibraryUseCase, workManager)
+        viewModel = MangaDirectoryViewModel(manager, observeChaptersUseCase, observeLibraryUseCase, workManager)
     }
 
     @After
@@ -83,7 +83,7 @@ class MangaDirectoryViewModelTest {
         every { mangaRepo.observeLibrary() } returns MutableStateFlow(directories)
         
         // Re-instanciar para pegar o novo flow
-        viewModel = MangaDirectoryViewModel(manager, getChaptersUseCase, observeLibraryUseCase, workManager)
+        viewModel = MangaDirectoryViewModel(manager, observeChaptersUseCase, observeLibraryUseCase, workManager)
 
         viewModel.mangaDirectories.test {
             assertThat(awaitItem()).isEqualTo(directories)

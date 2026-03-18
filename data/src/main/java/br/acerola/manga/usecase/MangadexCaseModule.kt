@@ -5,11 +5,11 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.usecase.manga.RescanMangaChaptersUseCase
-import br.acerola.manga.usecase.manga.RescanMangaUseCase
+import br.acerola.manga.usecase.library.RescanMangaChaptersUseCase
+import br.acerola.manga.usecase.library.RescanMangaUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -60,7 +60,7 @@ object MangadexCaseModule {
     @MangadexCase
     fun provideGetChaptersUseCase(
         @MangadexFsOps chapterOps: ChapterManagementRepository<ChapterRemoteInfoPageDto>
-    ): GetChaptersUseCase<ChapterRemoteInfoPageDto> {
-        return GetChaptersUseCase(chapterRepository = chapterOps)
+    ): ObserveChaptersUseCase<ChapterRemoteInfoPageDto> {
+        return ObserveChaptersUseCase(chapterRepository = chapterOps)
     }
 }

@@ -17,8 +17,8 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.usecase.DirectoryCase
 import br.acerola.manga.usecase.MangadexCase
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
-import br.acerola.manga.usecase.history.MangaHistoryUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.usecase.history.ObserveMangaHistoryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,12 +42,12 @@ import kotlin.math.max
 
 @HiltViewModel
 class MangaViewModel @Inject constructor(
-    private val mangaHistoryUseCase: MangaHistoryUseCase,
+    private val observeMangaHistoryUseCase: ObserveMangaHistoryUseCase,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
-    @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
+    @param:DirectoryCase private val directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>,
+    @param:MangadexCase private val mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
@@ -140,7 +140,7 @@ class MangaViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val history: StateFlow<ReadingHistoryDto?> = _selectedDirectoryId.flatMapLatest { id ->
         if (id == null) flowOf(null)
-        else mangaHistoryUseCase.observeByManga(id)
+        else observeMangaHistoryUseCase.observeByManga(id)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -150,7 +150,7 @@ class MangaViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val readChapters: StateFlow<List<Long>> = _selectedDirectoryId.flatMapLatest { id ->
         if (id == null) flowOf(emptyList())
-        else mangaHistoryUseCase.observeReadChapters(id)
+        else observeMangaHistoryUseCase.observeReadChapters(id)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -257,7 +257,7 @@ class MangaViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            mangaHistoryUseCase.toggleReadStatus(mangaId, chapterId, isRead)
+            observeMangaHistoryUseCase.toggleReadStatus(mangaId, chapterId, isRead)
         }
     }
 

@@ -6,7 +6,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SaveReadingProgressUseCase @Inject constructor(
+class TrackReadingProgressUseCase @Inject constructor(
     private val historyRepository: HistoryManagementRepository
 ) {
     suspend fun saveProgress(mangaId: Long, chapterId: Long, page: Int, markAsRead: Boolean) {

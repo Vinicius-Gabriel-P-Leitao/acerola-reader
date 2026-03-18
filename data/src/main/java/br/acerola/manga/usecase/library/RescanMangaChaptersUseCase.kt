@@ -1,4 +1,4 @@
-package br.acerola.manga.usecase.manga
+package br.acerola.manga.usecase.library
 
 import arrow.core.Either
 import br.acerola.manga.error.message.LibrarySyncError

@@ -13,7 +13,7 @@ import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.worker.LibrarySyncWorker
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.DirectoryCase
 import br.acerola.manga.util.normalizeChapter
 import br.acerola.manga.config.permission.FileSystemAccessManager
@@ -32,7 +32,7 @@ import javax.inject.Inject
 class ChapterArchiveViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val manager: FileSystemAccessManager,
-    @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
+    @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
     private val _isIndexing = MutableStateFlow(value = false)
@@ -68,7 +68,7 @@ class ChapterArchiveViewModel @Inject constructor(
         viewModelScope.launch {
             _chapterPage.value = null
 
-            val result: ChapterArchivePageDto = getChaptersUseCase.loadPage(
+            val result: ChapterArchivePageDto = observeChaptersUseCase.loadPage(
                 mangaId = _selectedDirectoryId.value!!,
                 pageSize = pageSize,
                 total = total,

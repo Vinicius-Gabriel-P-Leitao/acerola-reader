@@ -3,6 +3,7 @@ package br.acerola.manga.usecase.manga
 import arrow.core.Either
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.usecase.library.RescanMangaUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
