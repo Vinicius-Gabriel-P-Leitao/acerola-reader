@@ -30,6 +30,7 @@ import javax.inject.Inject
 class ReaderViewModel @Inject constructor(
     private val repository: PageRepository,
     @param:ApplicationContext private val context: Context,
+    // TODO: Tem que virar um useCase
     private val historyRepository: HistoryManagementRepository,
     @param:DirectoryCase private val getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {

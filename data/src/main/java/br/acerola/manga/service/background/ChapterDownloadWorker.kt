@@ -6,31 +6,23 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.manga.data.R
-import br.acerola.manga.network.safeApiCall
-import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
-import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
+import br.acerola.manga.usecase.download.DownloadChaptersUseCase
 import br.acerola.manga.util.NotificationHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 @HiltWorker
 class ChapterDownloadWorker @AssistedInject constructor(
+    private val workManager: WorkManager,
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val chapterInfoApi: MangadexChapterInfoApi,
-    private val downloadApi: MangadexDownloadApi,
-    private val workManager: WorkManager,
+    private val downloadChaptersUseCase: DownloadChaptersUseCase,
 ) : CoroutineWorker(context, workerParams) {
 
     private val notificationHelper = NotificationHelper(context)
@@ -41,21 +33,23 @@ class ChapterDownloadWorker @AssistedInject constructor(
         const val KEY_MANGA_TITLE = "manga_title"
         const val KEY_FILE_EXTENSION = "file_extension"
         const val KEY_BASE_URI = "base_uri"
+        const val KEY_COVER_URL = "cover_url"
         const val DOWNLOAD_TAG = "chapter_download"
     }
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val chapterIds = inputData.getStringArray(KEY_CHAPTER_IDS) ?: return@withContext Result.failure(
+    override suspend fun doWork(): Result {
+        val chapterIds = inputData.getStringArray(KEY_CHAPTER_IDS) ?: return Result.failure(
             workDataOf("error" to "No chapter IDs provided")
         )
         val chapterNumbers = inputData.getStringArray(KEY_CHAPTER_NUMBERS) ?: Array(chapterIds.size) { "" }
-        val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return@withContext Result.failure(
+        val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure(
             workDataOf("error" to "No manga title provided")
         )
         val fileExtension = inputData.getString(KEY_FILE_EXTENSION) ?: ".cbz"
-        val baseUriString = inputData.getString(KEY_BASE_URI) ?: return@withContext Result.failure(
+        val baseUriString = inputData.getString(KEY_BASE_URI) ?: return Result.failure(
             workDataOf("error" to "No base URI provided")
         )
+        val coverUrl = inputData.getString(KEY_COVER_URL)
 
         val builder = notificationHelper.createBaseNotification(
             context.getString(R.string.download_chapter_title),
@@ -70,90 +64,47 @@ class ChapterDownloadWorker @AssistedInject constructor(
             )
         )
 
-        val baseUri = baseUriString.toUri()
-        val libraryRoot = DocumentFile.fromTreeUri(context, baseUri)
-            ?: return@withContext Result.failure(workDataOf("error" to "Cannot access library folder"))
+        val libraryRoot = DocumentFile.fromTreeUri(context, baseUriString.toUri())
+            ?: return Result.failure(workDataOf("error" to "Cannot access library folder"))
 
         val mangaFolder = libraryRoot.findFile(mangaTitle)
             ?: libraryRoot.createDirectory(mangaTitle)
-            ?: return@withContext Result.failure(workDataOf("error" to "Cannot create manga folder: $mangaTitle"))
+            ?: return Result.failure(workDataOf("error" to "Cannot create manga folder: $mangaTitle"))
 
-        var downloadedCount = 0
-        var errorCount = 0
-
-        chapterIds.forEachIndexed { index, chapterId ->
-            val chapterNumber = chapterNumbers.getOrNull(index)?.takeIf { it.isNotBlank() } ?: chapterId
-            val fileName = "$chapterNumber$fileExtension"
-
-            val existingFile = mangaFolder.findFile(fileName)
-            if (existingFile != null) {
-                downloadedCount++
-                val progress = ((downloadedCount.toFloat() / chapterIds.size) * 100).toInt()
-                setProgress(workDataOf("progress" to progress))
-                notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
-                return@forEachIndexed
-            }
-
-            val sourceResult = safeApiCall(timeoutMs = 500L) { chapterInfoApi.getChapterImages(chapterId) }
-            val source = sourceResult.getOrNull()
-            if (source == null) {
-                errorCount++
-                return@forEachIndexed
-            }
-
-            val pageUrls = source.chapter.data.map { "${source.baseUrl}/data/${source.chapter.hash}/$it" }
-
-            val cbzFile = mangaFolder.createFile("application/zip", fileName)
-            if (cbzFile == null) {
-                errorCount++
-                return@forEachIndexed
-            }
-
-            try {
-                context.contentResolver.openOutputStream(cbzFile.uri)?.use { outStream ->
-                    ZipOutputStream(outStream).use { zip ->
-                        pageUrls.forEachIndexed { pageIndex, url ->
-                            val pageResult = safeApiCall(timeoutMs = 200L) { downloadApi.downloadFile(url) }
-                            val bytes = pageResult.getOrNull()?.bytes()
-                            if (bytes != null) {
-                                val extension = url.substringAfterLast('.', "jpg")
-                                zip.putNextEntry(ZipEntry("%04d.$extension".format(pageIndex)))
-                                zip.write(bytes)
-                                zip.closeEntry()
-                            }
-                        }
-                    }
-                }
-                downloadedCount++
-            } catch (e: Exception) {
-                cbzFile.delete()
-                errorCount++
-            }
-
-            val progress = ((downloadedCount.toFloat() / chapterIds.size) * 100).toInt()
-            setProgress(workDataOf("progress" to progress))
-            notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
+        val chapters = chapterIds.mapIndexed { index, id ->
+            val number = chapterNumbers.getOrNull(index)?.takeIf { it.isNotBlank() } ?: id
+            DownloadChaptersUseCase.ChapterEntry(id = id, fileName = "$number$fileExtension")
         }
 
-        triggerLibrarySync(baseUriString)
+        val result = downloadChaptersUseCase(
+            mangaFolder = mangaFolder,
+            chapters = chapters,
+            coverUrl = coverUrl,
+            onProgress = { progress ->
+                setProgress(workDataOf("progress" to progress))
+                notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
+            }
+        )
+
+        triggerPostDownloadSync(baseUriString)
 
         val resultTitle = context.getString(R.string.download_chapter_success_title)
         val resultMessage = context.getString(
             R.string.download_chapter_success_message,
-            downloadedCount,
+            result.downloadedCount,
             chapterIds.size
         )
         notificationHelper.showFinishedNotification(resultTitle, resultMessage, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
 
-        if (errorCount > 0 && downloadedCount == 0) {
-            Result.failure(workDataOf("error" to "All $errorCount downloads failed"))
+        return if (result.errorCount > 0 && result.downloadedCount == 0) {
+            Result.failure(workDataOf("error" to "All ${result.errorCount} downloads failed"))
         } else {
             Result.success()
         }
     }
 
-    private fun triggerLibrarySync(baseUri: String) {
-        val syncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
+    private fun triggerPostDownloadSync(baseUri: String) {
+        val librarySyncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
             .setInputData(
                 workDataOf(
                     LibrarySyncWorker.KEY_SYNC_TYPE to LibrarySyncWorker.SYNC_TYPE_INCREMENTAL,
@@ -163,10 +114,18 @@ class ChapterDownloadWorker @AssistedInject constructor(
             .addTag("library_sync")
             .build()
 
-        workManager.enqueueUniqueWork(
-            "library_sync_after_download",
-            ExistingWorkPolicy.REPLACE,
-            syncRequest
-        )
+        val metadataSyncRequest = OneTimeWorkRequestBuilder<MetadataSyncWorker>()
+            .setInputData(
+                workDataOf(
+                    MetadataSyncWorker.KEY_SYNC_SOURCE to MetadataSyncWorker.SOURCE_MANGADEX,
+                    MetadataSyncWorker.KEY_SYNC_TYPE to MetadataSyncWorker.SYNC_TYPE_SYNC
+                )
+            )
+            .addTag("metadata_sync")
+            .build()
+
+        workManager.beginWith(librarySyncRequest)
+            .then(metadataSyncRequest)
+            .enqueue()
     }
 }

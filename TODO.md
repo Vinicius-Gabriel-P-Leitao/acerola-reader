@@ -39,7 +39,7 @@ está planejado para o futuro.
 ### 🚧 Planejado / Em Andamento
 
 * **Leitor de Mangás Integrado:**
-    *   [x] Suporte completo para formatos `.cbz` e `.cbr`. 
+    *   [x] Suporte completo para formatos `.cbz` e `.cbr`.
 * **Configuração e Gerenciamento do Mangá (Refatoração):**
     *   [X] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
     *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
@@ -85,8 +85,17 @@ está planejado para o futuro.
         (tarefa de background com notificação).
     *   [x] **Integração com biblioteca:** Após o download, acionar sync automático para que o capítulo apareça na
         biblioteca sem intervenção manual.
-    *   [x] **Melhorar visualização:** Melhorar visualização de que o mangá está sendo baixado e mostrar a fila de 
+    *   [ ] **Melhorar visualização:** Melhorar visualização de que o mangá está sendo baixado e mostrar a fila de
         chapters já baixados.
+    *   [ ] **Corrigir problema com paginas de mangá:** Caso o mangá tenha 300 chapters ele mostra só 0/100 deveriam
+        mostrar de forma páginada e o usuário selecionar para baixar tudo e ele saber disso e baixar 100 e depois a
+        próxima página.
+    *   [ ] **Adicionar patterns de regex para o usuário ver e escolher para baixar os mangás:** Os patterns de nome
+        de arquivo tem que ser vizualizável e o usuário ao baixar um mangá poder escolher qual usar.
+    *   [ ] **Corrigir problema:** Corrigir bug de baixar e gerar de fato os cbz e cbr... ao invez dele ele gerar
+        cbz.zip ou cbr.zip
+    *   [ ] **Baixar os métadados junto dos chapter:** Ao invez de só baixar os chapter e cirar a pasta ele baixar
+        primeiros os métadados como cover, genero e etc e ai sim começar a baixar os chapter.
 * **Filtros e Ordenação da Biblioteca (Home Screen):**
     *   [ ] **Ordenação:** Suporte a Asc/Desc para os critérios abaixo:
         * Título (A–Z / Z–A).
@@ -110,18 +119,22 @@ está planejado para o futuro.
     *   [x] **Thema adaptável** Isso já é default do android então só dataStore para salvar preferencia.
     *   [x] **Thema default vai ser o cattpuccin** Deixar ele default e melhorar cores para thema branco.
 * **Corrigir bug de notificação para todos os sync**
-   *    [x] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera 
-        notifição e deixa com o app rodando em background, verificar se existe outro que tem o mesmo problema. 
+    *    [x] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera
+         notifição e deixa com o app rodando em background, verificar se existe outro que tem o mesmo problema.
 * **Adicionar novos themas, Nord e Dracula**
     *    [x] **Adicionar Dracula e Alucard** Dracula vai ser o dark e o Alucard o claro
     *    [x] **Adicionar o Nord** Verificar como o nord pode ser aplicado em claro e escuro
+* **Adicionar função de limpeza dos mangás**
+    *    [x] **Verificar se essa feature faz sentido para executar um job de deletar** Caso o usuário tenha deletado uma
+         pasta ela até some da tela, mas se mantem no banco
 
 ## Pilha de Tecnologia
 
 * **Linguagem:** [Kotlin](https://kotlinlang.org/)
 * **UI:** [Jetpack Compose](https://developer.android.com/jetpack/compose)
 * **Arquitetura:** MVVM (Model-View-ViewModel)
-* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) e [Flow](https://kotlinlang.org/docs/flow.html)
+* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+  e [Flow](https://kotlinlang.org/docs/flow.html)
 * **Banco de Dados:** [Room](https://developer.android.com/training/data-storage/room)
 * **Carregamento de Imagens:** [Coil](https://coil-kt.github.io/coil/)
 * **Injeção de Dependências:** Manual (via ViewModelFactories)

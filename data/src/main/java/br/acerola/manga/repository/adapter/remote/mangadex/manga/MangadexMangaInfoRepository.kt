@@ -26,14 +26,22 @@ class MangadexMangaInfoRepository @Inject constructor(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<MangaRemoteInfoDto>> = safeApiCall {
         withContext(context = Dispatchers.IO) {
-            AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)  
-            val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
-            val list = response.data.map { it.toDto(context) }
-            AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)  
-            list
+            if (UUID_REGEX.matches(manga)) {
+                AcerolaLogger.d(TAG, "Detected UUID — fetching manga by ID: $manga", LogSource.NETWORK)
+
+                val response = api.getMangaById(mangaId = manga)
+                listOf(response.data.toDto(context))
+            } else {
+                AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)
+                val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
+                val list = response.data.map { it.toDto(context) }
+
+                AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)
+                list
+            }
         }
     }.onLeft {
-        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null) // (safeApiCall catches internally but onLeft is explicit)
+        AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null)
     }
 
     override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> {
@@ -41,6 +49,10 @@ class MangadexMangaInfoRepository @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "MangadexMangaInfoRepository"  
+        private const val TAG = "MangadexMangaInfoRepository"
+        private val UUID_REGEX = Regex(
+            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            RegexOption.IGNORE_CASE
+        )
     }
 }

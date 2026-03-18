@@ -7,7 +7,6 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import br.acerola.manga.config.preference.FilePreferences
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
@@ -15,9 +14,9 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.main.search.state.SearchAction
 import br.acerola.manga.module.main.search.state.SearchUiState
-import br.acerola.manga.repository.port.DownloadRepository
 import br.acerola.manga.presentation.R
 import br.acerola.manga.service.background.ChapterDownloadWorker
+import br.acerola.manga.usecase.search.SearchMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -34,7 +33,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val downloadRepository: DownloadRepository,
+    private val searchMangaUseCase: SearchMangaUseCase,
     private val workManager: WorkManager,
 ) : ViewModel() {
 
@@ -67,16 +66,7 @@ class SearchViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, searchResults = emptyList(), selectedManga = null) }
 
         viewModelScope.launch {
-            val mangadexId = extractMangadexId(query)
-            val result = if (mangadexId != null) {
-                AcerolaLogger.d(TAG, "Searching by MangaDex ID: $mangadexId", LogSource.VIEWMODEL)
-                downloadRepository.getMangaById(mangadexId).map { listOf(it) }
-            } else {
-                AcerolaLogger.d(TAG, "Searching by title: $query", LogSource.VIEWMODEL)
-                downloadRepository.searchMangaByTitle(query)
-            }
-
-            result.fold(
+            searchMangaUseCase.search(query).fold(
                 ifLeft = { error ->
                     _uiState.update { it.copy(isLoading = false) }
                     _uiEvents.send(UserMessage.Raw(error.uiMessage.asString(context)))
@@ -101,13 +91,12 @@ class SearchViewModel @Inject constructor(
 
     private fun loadChapters(mangaId: String, language: String) {
         viewModelScope.launch {
-            val result = downloadRepository.getChaptersByLanguage(mangaId, language)
-            result.fold(
+            searchMangaUseCase.getChaptersByLanguage(mangaId, language).fold(
                 ifLeft = { error ->
                     _uiState.update { it.copy(isLoadingChapters = false) }
                     _uiEvents.send(UserMessage.Raw(error.uiMessage.asString(context)))
                 },
-                ifRight = { (chapters, _) ->
+                ifRight = { chapters ->
                     _uiState.update { it.copy(isLoadingChapters = false, chapters = chapters) }
                 }
             )
@@ -147,12 +136,16 @@ class SearchViewModel @Inject constructor(
                 return@launch
             }
 
-            val fileExtension = FilePreferences.fileExtensionFlow(context).firstOrNull()?.extension ?: ".cbz"
+            // CBR is RAR format — no Java/Kotlin library can write RAR, only read.
+            // Downloads are always saved as .cbz (ZIP) regardless of the archive preference.
+            val fileExtension = ".cbz"
             val mangaTitle = state.selectedManga?.title ?: return@launch
 
             val orderedChapters = state.chapters.filter { it.id in state.selectedChapterIds }
             val chapterIds = orderedChapters.map { it.id }.toTypedArray()
             val chapterNumbers = orderedChapters.map { it.chapter ?: it.id }.toTypedArray()
+
+            val coverUrl = state.selectedManga?.cover?.url ?: ""
 
             val downloadRequest = OneTimeWorkRequestBuilder<ChapterDownloadWorker>()
                 .setInputData(
@@ -162,6 +155,7 @@ class SearchViewModel @Inject constructor(
                         ChapterDownloadWorker.KEY_MANGA_TITLE to mangaTitle,
                         ChapterDownloadWorker.KEY_FILE_EXTENSION to fileExtension,
                         ChapterDownloadWorker.KEY_BASE_URI to baseUri,
+                        ChapterDownloadWorker.KEY_COVER_URL to coverUrl,
                     )
                 )
                 .addTag(ChapterDownloadWorker.DOWNLOAD_TAG)
@@ -180,14 +174,6 @@ class SearchViewModel @Inject constructor(
                 )
             )
         }
-    }
-
-    private fun extractMangadexId(query: String): String? {
-        val urlRegex = Regex("mangadex\\.org/title/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})")
-        urlRegex.find(query)?.groupValues?.get(1)?.let { return it }
-        val uuidRegex = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", RegexOption.IGNORE_CASE)
-        if (uuidRegex.matches(query)) return query
-        return null
     }
 
     companion object {
