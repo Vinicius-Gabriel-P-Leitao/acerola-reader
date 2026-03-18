@@ -17,7 +17,7 @@ import br.acerola.manga.module.reader.state.ReaderUiState
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.service.reader.PageRepository
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
-import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.DirectoryCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel

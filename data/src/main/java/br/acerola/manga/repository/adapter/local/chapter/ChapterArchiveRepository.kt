@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteException
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
-import br.acerola.manga.config.pattern.ArchiveFormat
+import br.acerola.manga.config.pattern.ArchiveFormatPattern
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.logging.AcerolaLogger
@@ -70,7 +70,7 @@ class ChapterArchiveRepository @Inject constructor(
                 if (baseUri != null) {
                     val folderDocId = DocumentsContract.getDocumentId(folderUri)
                     chapterFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).filter { 
-                        ArchiveFormat.isSupported(ext = it.name)
+                        ArchiveFormatPattern.isSupported(ext = it.name)
                     }
                     folderLastModified = 0 
                 } else {
@@ -84,7 +84,7 @@ class ChapterArchiveRepository @Inject constructor(
                             lastModified = it.lastModified(),
                             mimeType = ""
                         )
-                    }.filter { ArchiveFormat.isSupported(ext = it.name) }
+                    }.filter { ArchiveFormatPattern.isSupported(ext = it.name) }
                 }
 
                 if (existingChapters.isNotEmpty() && baseUri == null && folder.lastModified >= folderLastModified) {

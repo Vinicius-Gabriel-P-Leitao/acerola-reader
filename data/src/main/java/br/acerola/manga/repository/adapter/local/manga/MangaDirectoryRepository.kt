@@ -8,7 +8,7 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.manga.config.pattern.ArchiveFormat
+import br.acerola.manga.config.pattern.ArchiveFormatPattern
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -94,7 +94,7 @@ class MangaDirectoryRepository @Inject constructor(
                     val hasComicInfo = folderChildren.any { it.name == "ComicInfo.xml" }
 
                     val firstChapterName = folderChildren.firstOrNull { 
-                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && ArchiveFormat.isSupported(ext = it.name)
+                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && ArchiveFormatPattern.isSupported(ext = it.name)
                     }?.name
 
                     val detectedTemplate = firstChapterName?.let {
@@ -383,7 +383,7 @@ class MangaDirectoryRepository @Inject constructor(
             val hasComicInfo = folderChildren.any { it.name == "ComicInfo.xml" }
 
             val firstChapterName = folderChildren.firstOrNull { 
-                ArchiveFormat.isSupported(ext = it.name)
+                ArchiveFormatPattern.isSupported(ext = it.name)
             }?.name
 
             val detectedTemplate = firstChapterName?.let {

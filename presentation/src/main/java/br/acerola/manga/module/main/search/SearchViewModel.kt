@@ -15,7 +15,7 @@ import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.main.search.state.SearchAction
 import br.acerola.manga.module.main.search.state.SearchUiState
 import br.acerola.manga.presentation.R
-import br.acerola.manga.service.background.ChapterDownloadWorker
+import br.acerola.manga.service.worker.ChapterDownloadWorker
 import br.acerola.manga.usecase.search.SearchMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

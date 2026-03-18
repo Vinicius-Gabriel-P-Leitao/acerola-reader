@@ -1,4 +1,4 @@
-package br.acerola.manga.service.background
+package br.acerola.manga.service.worker
 
 import android.content.Context
 import android.content.pm.ServiceInfo

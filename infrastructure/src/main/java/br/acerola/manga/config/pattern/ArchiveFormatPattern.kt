@@ -1,6 +1,6 @@
 package br.acerola.manga.config.pattern
 
-enum class ArchiveFormat(val extension: String) {
+enum class ArchiveFormatPattern(val extension: String) {
     CBZ(extension = ".cbz"), CBR(extension = ".cbr");
 
     companion object {

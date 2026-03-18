@@ -1,4 +1,4 @@
-package br.acerola.manga.service.background
+package br.acerola.manga.service.worker
 
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -9,8 +9,8 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.manga.data.R
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.usecase.di.ComicInfoCase
-import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.ComicInfoCase
+import br.acerola.manga.usecase.MangadexCase
 import br.acerola.manga.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.usecase.metadata.SyncMangaMetadataUseCase
 import br.acerola.manga.util.NotificationHelper

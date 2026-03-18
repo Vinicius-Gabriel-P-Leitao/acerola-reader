@@ -14,8 +14,8 @@ import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.usecase.di.DirectoryCase
-import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.DirectoryCase
+import br.acerola.manga.usecase.MangadexCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

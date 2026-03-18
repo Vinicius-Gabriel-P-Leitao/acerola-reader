@@ -8,7 +8,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import arrow.core.Either
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
@@ -16,11 +15,10 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.service.background.LibrarySyncWorker
+import br.acerola.manga.service.worker.LibrarySyncWorker
 import br.acerola.manga.usecase.chapter.GetChaptersUseCase
-import br.acerola.manga.usecase.di.DirectoryCase
+import br.acerola.manga.usecase.DirectoryCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.usecase.manga.RescanMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
