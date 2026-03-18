@@ -10,7 +10,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.module.main.Main
-import br.acerola.manga.module.main.search.layout.ChapterSelectionLayout
 import br.acerola.manga.module.main.search.layout.SearchLayout
 
 @Composable
@@ -27,17 +26,9 @@ fun Main.Search.Layout.Screen(
         }
     }
 
-    if (uiState.selectedManga != null) {
-        Main.Search.Layout.ChapterSelectionLayout(
-            uiState = uiState,
-            onAction = viewModel::onAction,
-            modifier = Modifier.fillMaxSize()
-        )
-    } else {
-        Main.Search.Layout.SearchLayout(
-            uiState = uiState,
-            onAction = viewModel::onAction,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+    Main.Search.Layout.SearchLayout(
+        uiState = uiState,
+        onAction = viewModel::onAction,
+        modifier = Modifier.fillMaxSize()
+    )
 }

@@ -1,4 +1,4 @@
-package br.acerola.manga.module.main.search.layout
+package br.acerola.manga.module.download.layout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,12 +22,13 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,18 +40,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.component.Pagination
+import br.acerola.manga.common.ux.layout.TopBar
+import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.module.main.Main
-import br.acerola.manga.module.main.search.component.ChapterDownloadItem
-import br.acerola.manga.module.main.search.component.DownloadActionBar
-import br.acerola.manga.module.main.search.state.SearchAction
-import br.acerola.manga.module.main.search.state.SearchUiState
+import br.acerola.manga.module.download.Download
+import br.acerola.manga.module.download.DownloadViewModel
+import br.acerola.manga.module.download.component.ChapterDownloadItem
+import br.acerola.manga.module.download.component.DownloadSelectionBar
+import br.acerola.manga.module.download.state.DownloadAction
+import br.acerola.manga.module.download.state.DownloadUiState
 import br.acerola.manga.presentation.R
 import coil.compose.AsyncImage
 
@@ -70,104 +77,130 @@ private val languageNames = mapOf(
 )
 
 @Composable
-fun Main.Search.Layout.ChapterSelectionLayout(
-    uiState: SearchUiState,
-    onAction: (SearchAction) -> Unit,
-    modifier: Modifier = Modifier,
+fun Download.Layout.DownloadScreen(
+    manga: MangaRemoteInfoDto,
+    onBack: () -> Unit,
+    viewModel: DownloadViewModel = hiltViewModel(),
 ) {
-    val manga = uiState.selectedManga ?: return
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            Main.Search.Component.DownloadActionBar(uiState = uiState, onAction = onAction)
+    LaunchedEffect(manga.mirrorId) {
+        viewModel.init(manga)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { message ->
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
         }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
-        ) {
-            item(key = "header", contentType = "header") {
-                MangaDownloadHeader(
-                    manga = manga,
-                    onBack = { onAction(SearchAction.BackToSearch) }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            bottomBar = {
+                Download.Component.DownloadSelectionBar(
+                    uiState = uiState,
+                    onAction = viewModel::onAction
                 )
             }
-
-            item(key = "chapters_bar", contentType = "bar") {
-                ChaptersSelectionBar(uiState = uiState, onAction = onAction)
-            }
-
-            when {
-                uiState.isLoadingChapters -> {
-                    item(key = "loading") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+            ) {
+                item(key = "header", contentType = "header") {
+                    MangaDownloadHeader(manga = manga)
                 }
 
-                uiState.chapters.isEmpty() -> {
-                    item(key = "empty") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.label_search_no_results),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                item(key = "chapters_bar", contentType = "bar") {
+                    ChaptersSelectionBar(uiState = uiState, onAction = viewModel::onAction)
+                }
+
+                when {
+                    uiState.isLoadingChapters -> {
+                        item(key = "loading") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(240.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+
+                    uiState.chapters.isEmpty() -> {
+                        item(key = "empty") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(240.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.label_search_no_results),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    else -> {
+                        items(
+                            items = uiState.chapters,
+                            key = { it.id },
+                            contentType = { "chapter" }
+                        ) { chapter ->
+                            Download.Component.ChapterDownloadItem(
+                                chapter = chapter,
+                                isSelected = chapter.id in uiState.selectedChapterIds,
+                                onClick = { viewModel.onAction(DownloadAction.ToggleChapter(chapter.id)) }
                             )
                         }
-                    }
-                }
 
-                else -> {
-                    items(
-                        items = uiState.chapters,
-                        key = { it.id },
-                        contentType = { "chapter" }
-                    ) { chapter ->
-                        Main.Search.Component.ChapterDownloadItem(
-                            chapter = chapter,
-                            isSelected = chapter.id in uiState.selectedChapterIds,
-                            onClick = { onAction(SearchAction.ToggleChapter(chapter.id)) }
-                        )
-                    }
-
-                    if (uiState.totalPages > 1) {
-                        item(key = "pagination", contentType = "pagination") {
-                            Acerola.Component.Pagination(
-                                currentPage = uiState.currentPage,
-                                totalPages = uiState.totalPages,
-                                onPageChange = { onAction(SearchAction.ChangePage(it)) }
-                            )
+                        if (uiState.totalPages > 1) {
+                            item(key = "pagination", contentType = "pagination") {
+                                Acerola.Component.Pagination(
+                                    currentPage = uiState.currentPage,
+                                    totalPages = uiState.totalPages,
+                                    onPageChange = { viewModel.onAction(DownloadAction.ChangePage(it)) }
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            item(key = "spacer") {
-                Spacer(modifier = Modifier.height(8.dp))
+                item(key = "spacer") {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
+
+        Acerola.Layout.TopBar(
+            navigationIcon = {
+                Acerola.Component.GlassButton(
+                    onClick = onBack,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.label_search_back_to_results),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
+            }
+        )
     }
 }
 
 @Composable
-private fun MangaDownloadHeader(
-    manga: MangaRemoteInfoDto,
-    onBack: () -> Unit,
-) {
+private fun MangaDownloadHeader(manga: MangaRemoteInfoDto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,19 +232,6 @@ private fun MangaDownloadHeader(
                         )
                     )
             )
-
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.label_search_back_to_results),
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
 
             Row(
                 modifier = Modifier
@@ -270,8 +290,8 @@ private fun MangaDownloadHeader(
 
 @Composable
 private fun ChaptersSelectionBar(
-    uiState: SearchUiState,
-    onAction: (SearchAction) -> Unit,
+    uiState: DownloadUiState,
+    onAction: (DownloadAction) -> Unit,
 ) {
     var languageMenuExpanded by remember { mutableStateOf(false) }
     val availableLanguages = languageNames.keys.toList()
@@ -302,42 +322,26 @@ private fun ChaptersSelectionBar(
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box {
-                    TextButton(onClick = { languageMenuExpanded = true }) {
-                        Text(
-                            text = languageNames[uiState.selectedLanguage] ?: uiState.selectedLanguage,
-                            style = MaterialTheme.typography.labelMedium
+            Box {
+                TextButton(onClick = { languageMenuExpanded = true }) {
+                    Text(
+                        text = languageNames[uiState.selectedLanguage] ?: uiState.selectedLanguage,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+                DropdownMenu(
+                    expanded = languageMenuExpanded,
+                    onDismissRequest = { languageMenuExpanded = false }
+                ) {
+                    availableLanguages.forEach { lang ->
+                        DropdownMenuItem(
+                            text = { Text(languageNames[lang] ?: lang) },
+                            onClick = {
+                                languageMenuExpanded = false
+                                onAction(DownloadAction.SelectLanguage(lang))
+                            }
                         )
                     }
-                    DropdownMenu(
-                        expanded = languageMenuExpanded,
-                        onDismissRequest = { languageMenuExpanded = false }
-                    ) {
-                        availableLanguages.forEach { lang ->
-                            DropdownMenuItem(
-                                text = { Text(languageNames[lang] ?: lang) },
-                                onClick = {
-                                    languageMenuExpanded = false
-                                    onAction(SearchAction.SelectLanguage(lang))
-                                }
-                            )
-                        }
-                    }
-                }
-
-                TextButton(onClick = { onAction(SearchAction.SelectAll) }) {
-                    Text(
-                        text = stringResource(R.string.label_search_select_all),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-
-                TextButton(onClick = { onAction(SearchAction.DeselectAll) }) {
-                    Text(
-                        text = stringResource(R.string.label_search_deselect_all),
-                        style = MaterialTheme.typography.labelMedium
-                    )
                 }
             }
         }

@@ -1,4 +1,4 @@
-package br.acerola.manga.module.main.search.component
+package br.acerola.manga.module.download.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,11 +24,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
-import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.download.Download
 import br.acerola.manga.presentation.R
 
 @Composable
-fun Main.Search.Component.ChapterDownloadItem(
+fun Download.Component.ChapterDownloadItem(
     chapter: ChapterRemoteInfoDto,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -37,7 +37,7 @@ fun Main.Search.Component.ChapterDownloadItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 10.dp, horizontal = 4.dp),
+            .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -80,5 +80,5 @@ fun Main.Search.Component.ChapterDownloadItem(
             }
         }
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 }

@@ -171,8 +171,8 @@
     <string name="label_search_no_results">Nenhum resultado encontrado</string>
     <string name="label_search_chapters">Capítulos</string>
     <string name="label_search_language">Idioma</string>
-    <string name="label_search_select_all">Selecionar todos</string>
-    <string name="label_search_deselect_all">Desmarcar todos</string>
+    <string name="label_search_select_all">Todos</string>
+    <string name="label_search_deselect_all">Nenhum</string>
     <string name="label_search_download">Baixar selecionados (%1$d)</string>
     <string name="label_search_back_to_results">Voltar aos resultados</string>
     <string name="label_search_chapter_item">Cap. %1$s</string>
@@ -183,6 +183,10 @@
     <string name="label_search_no_chapters_selected">Selecione ao menos um capítulo</string>
     <string name="label_search_download_all">Baixar tudo</string>
     <string name="label_search_page_indicator">Página %1$d de %2$d</string>
+    <string name="label_download_activity">Baixar capítulos</string>
+    <string name="navigation_download_activity">download</string>
+    <string name="label_download_selected">Baixar (%1$d)</string>
+    <string name="label_download_all_chapters">Tudo</string>
     <string name="description_icon_search_submit">Buscar</string>
     <string name="description_icon_search_clear">Limpar busca</string>
 

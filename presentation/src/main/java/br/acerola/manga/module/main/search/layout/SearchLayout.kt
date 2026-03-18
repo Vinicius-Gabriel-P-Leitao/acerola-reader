@@ -27,11 +27,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.module.download.DownloadActivity
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.search.component.MangaResultCard
 import br.acerola.manga.module.main.search.state.SearchAction
@@ -54,7 +56,7 @@ fun Main.Search.Layout.SearchLayout(
                 .padding(innerPadding)
         ) {
             SearchInputHeader(uiState = uiState, onAction = onAction)
-            SearchResultsList(uiState = uiState, onAction = onAction, modifier = Modifier.weight(1f))
+            SearchResultsList(uiState = uiState, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -124,9 +126,9 @@ private fun SearchInputHeader(
 @Composable
 private fun SearchResultsList(
     uiState: SearchUiState,
-    onAction: (SearchAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     Box(modifier = modifier.fillMaxWidth()) {
         when {
             uiState.searchResults.isNotEmpty() -> {
@@ -137,7 +139,7 @@ private fun SearchResultsList(
                     items(uiState.searchResults, key = { it.mirrorId }) { manga ->
                         Main.Search.Component.MangaResultCard(
                             manga = manga,
-                            onClick = { onAction(SearchAction.SelectManga(manga)) }
+                            onClick = { DownloadActivity.start(context, manga) }
                         )
                     }
                 }
