@@ -85,11 +85,16 @@ class MangadexChapterRepository @Inject constructor(
             }
 
             val remoteManga = remoteMangaRelations.remoteInfo
+            val mangadexId = remoteMangaRelations.mangadexSource?.mangadexId ?: run {
+                AcerolaLogger.w(TAG, "Sync aborted: No MangaDex source for manga ${remoteManga.id}", LogSource.REPOSITORY)
+                _isIndexing.value = false
+                return@withContext Either.Right(value = Unit)
+            }
 
-            mangadexChapterInfoService.searchInfo(manga = remoteManga.mirrorId, limit = 100, onProgress = {
+            mangadexChapterInfoService.searchInfo(manga = mangadexId, limit = 100, onProgress = {
                 _progress.value = it
             }).mapLeft {
-                AcerolaLogger.e(TAG, "MangaDex API request failed for mirrorId: ${remoteManga.mirrorId}", LogSource.REPOSITORY)  
+                AcerolaLogger.e(TAG, "MangaDex API request failed for mangadexId: $mangadexId", LogSource.REPOSITORY)
                 LibrarySyncError.NetworkError(cause = null)
             }.flatMap { remoteChapters ->
                 AcerolaLogger.d(TAG, "Fetched ${remoteChapters.size} chapters from MangaDex", LogSource.REPOSITORY)  

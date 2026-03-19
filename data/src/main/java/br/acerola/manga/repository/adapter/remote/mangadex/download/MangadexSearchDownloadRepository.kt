@@ -18,8 +18,8 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexSearchDownloadRepository @Inject constructor(
-    @param:Mangadex private val mangaInfoRepo: RemoteInfoOperationsRepository<MangaRemoteInfoDto, String>,
     private val chapterDownloadService: ChapterDownloadService,
+    @param:Mangadex private val mangaInfoRepo: RemoteInfoOperationsRepository<MangaRemoteInfoDto, String>,
 ) : DownloadRepository {
 
     override suspend fun searchMangaByTitle(

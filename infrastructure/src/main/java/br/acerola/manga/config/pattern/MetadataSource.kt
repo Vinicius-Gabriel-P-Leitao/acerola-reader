@@ -3,7 +3,7 @@ package br.acerola.manga.config.pattern
 enum class MetadataSource(val source: String) {
     COMIC_INFO(source = "comic_info"),
     MANGADEX(source = "mangadex"),
-    // TODO: Adicionar Anilist
+    ANILIST(source = "anilist"),
     MANUAL(source = "manual");
 
     companion object {

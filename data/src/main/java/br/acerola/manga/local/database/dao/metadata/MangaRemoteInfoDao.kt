@@ -20,9 +20,6 @@ interface MangaRemoteInfoDao : BaseDao<MangaRemoteInfo> {
     @Query(value = "SELECT * FROM manga_remote_info WHERE id = :mangaId")
     fun getMangaById(mangaId: Long): Flow<MangaRemoteInfo?>
 
-    @Query(value = "SELECT * FROM manga_remote_info WHERE mirror_id = :mirrorId")
-    fun getMangaByMirrorId(mirrorId: String): Flow<MangaRemoteInfo?>
-
     @Query(value = "SELECT * FROM manga_remote_info WHERE manga_directory_fk = :directoryId")
     fun getMangaByDirectoryId(directoryId: Long): Flow<MangaRemoteInfo?>
 

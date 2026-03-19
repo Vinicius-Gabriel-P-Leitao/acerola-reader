@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.apollo)
 }
 
 android {
@@ -22,7 +23,8 @@ android {
 
         buildConfigField("String", "MANGADEX_BASE_URL", "\"https://api.mangadex.org\"")
         buildConfigField("String", "MANGADEX_UPLOAD_URL", "\"https://uploads.mangadex.org\"")
-        buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\""
+        buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
+        buildConfigField("String", "ANILIST_BASE_URL", "\"https://graphql.anilist.co\""
         )
     }
     buildTypes {
@@ -55,6 +57,14 @@ android {
 
 room {
     schemaDirectory(path = "$projectDir/schema")
+}
+
+apollo {
+    service("anilist") {
+        packageName.set("br.acerola.manga.remote.anilist")
+        schemaFile.set(file("src/main/graphql/anilist/schema.graphqls"))
+        srcDir("src/main/graphql/anilist")
+    }
 }
 
 dependencies {

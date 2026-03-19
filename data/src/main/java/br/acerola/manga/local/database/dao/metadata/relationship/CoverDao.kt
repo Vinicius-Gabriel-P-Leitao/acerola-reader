@@ -15,6 +15,6 @@ interface CoverDao : BaseDao<Cover> {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     override suspend fun insertAll(vararg entity: Cover): LongArray
 
-    @Query(value = "SELECT * FROM cover WHERE mirror_id = :mirrorId LIMIT 1")
-    suspend fun getCoverByMirrorId(mirrorId: String): Cover?
+    @Query(value = "SELECT * FROM cover WHERE file_name = :fileName AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    suspend fun getCoverByFileNameAndFk(fileName: String, mangaRemoteInfoFk: Long): Cover?
 }

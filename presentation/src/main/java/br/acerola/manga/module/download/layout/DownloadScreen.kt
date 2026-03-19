@@ -86,7 +86,7 @@ fun Download.Layout.DownloadScreen(
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
 
-    LaunchedEffect(manga.mirrorId) {
+    LaunchedEffect(manga.mangadexId) {
         viewModel.init(manga)
     }
 

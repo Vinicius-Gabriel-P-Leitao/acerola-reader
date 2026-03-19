@@ -30,7 +30,7 @@ class MangaListItemTest {
                 hasComicInfo = false
             ),
             remoteInfo = MangaRemoteInfoDto(
-                mirrorId = "1", title = "Manga em Lista", description = "", status = ""
+                title = "Manga em Lista", description = "", status = ""
             )
         )
 

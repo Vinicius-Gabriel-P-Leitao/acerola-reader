@@ -132,6 +132,7 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 androidx-room = { id = "androidx.room", version.ref = "room" }
+apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 
 [bundles]
 retrofit = ["retrofit", "converter-moshi", "okhttp", "logging-interceptor"]

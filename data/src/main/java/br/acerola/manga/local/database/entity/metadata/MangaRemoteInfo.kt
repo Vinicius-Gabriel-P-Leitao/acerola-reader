@@ -5,13 +5,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import br.acerola.manga.config.pattern.MetadataSource
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 
 @Entity(
     tableName = "manga_remote_info",
     indices = [
-        Index(value = ["mirror_id"], unique = true),
         Index(value = ["manga_directory_fk"], unique = true)
     ],
     foreignKeys = [
@@ -41,13 +39,6 @@ data class MangaRemoteInfo(
 
     @ColumnInfo(name = "publication")
     val publication: Int?,
-
-    // Remover os mirror_id e ir para a tabela de origem.
-    @ColumnInfo(name = "mirror_id")
-    val mirrorId: String,
-
-    @ColumnInfo(name = "metadata_source")
-    val metadataSource: MetadataSource = MetadataSource.MANGADEX,
 
     @ColumnInfo(name = "manga_directory_fk")
     val mangaDirectoryFk: Long? = null

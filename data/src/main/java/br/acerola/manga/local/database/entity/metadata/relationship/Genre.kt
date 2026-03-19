@@ -18,8 +18,7 @@ import br.acerola.manga.local.database.entity.metadata.MangaRemoteInfo
         )
     ],
     indices = [
-        Index(value = ["mirror_id"], unique = false),
-        Index(value = ["genre"], unique = false),
+        Index(value = ["genre", "manga_remote_info_fk"], unique = true),
         Index(value = ["manga_remote_info_fk"])
     ]
 )
@@ -29,10 +28,6 @@ data class Genre(
 
     @ColumnInfo(name = "genre")
     val genre: String,
-
-    // Remover os mirror_id e ir para a tabela de origem.
-    @ColumnInfo(name = "mirror_id")
-    val mirrorId: String,
 
     @ColumnInfo(name = "manga_remote_info_fk")
     val mangaRemoteInfoFk: Long

@@ -6,9 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.cover.CoverDao
-import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
+import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.database.database.DatabaseAcerola
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -50,12 +50,12 @@ class MangaRemoteInfoDaoTest {
     @Test
     fun getAllMangasWithRelations_DeveRetornarMangaComAutoresGenerosECapa() = runBlocking {
         // Arrange
-        val manga = MetadataFixtures.createMangaRemoteInfo(mirrorId = "m1", title = "Manga Test")
+        val manga = MetadataFixtures.createMangaRemoteInfo(title = "Manga Test")
         val mangaId = mangaDao.insert(manga)
 
-        val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Author 1", mirrorId = "a1")
-        val genre = MetadataFixtures.createGenre(mangaId = mangaId, genre = "Action", mirrorId = "g1")
-        val cover = MetadataFixtures.createCover(mangaId = mangaId, url = "url", mirrorId = "c1")
+        val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Author 1")
+        val genre = MetadataFixtures.createGenre(mangaId = mangaId, genre = "Action")
+        val cover = MetadataFixtures.createCover(mangaId = mangaId, url = "url")
 
         authorDao.insert(author)
         genreDao.insert(genre)
@@ -83,7 +83,7 @@ class MangaRemoteInfoDaoTest {
     @Test
     fun deleteManga_DeveRemoverRelacoesEmCascata() = runBlocking {
         // Arrange
-        val manga = MetadataFixtures.createMangaRemoteInfo(mirrorId = "m1")
+        val manga = MetadataFixtures.createMangaRemoteInfo()
         val mangaId = mangaDao.insert(manga)
 
         val author = MetadataFixtures.createAuthor(mangaId = mangaId)

@@ -62,7 +62,10 @@ data class Links(
     val kt: String? = null,
     val mu: String? = null,
     val mal: String? = null,
-    val raw: String? = null
+    val raw: String? = null,
+    val amz: String? = null,
+    val ebj: String? = null,
+    val engtl: String? = null
 )
 
 @JsonClass(generateAdapter = true)

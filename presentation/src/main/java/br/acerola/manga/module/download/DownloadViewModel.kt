@@ -46,9 +46,11 @@ class DownloadViewModel @Inject constructor(
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     fun init(manga: MangaRemoteInfoDto) {
-        if (_uiState.value.manga?.mirrorId == manga.mirrorId) return
+        if (_uiState.value.manga?.mangadexId == manga.mangadexId) return
         _uiState.update { it.copy(manga = manga, isLoadingChapters = true) }
-        loadChapters(manga.mirrorId, _uiState.value.selectedLanguage, page = 0)
+
+        val mangadexId = manga.mangadexId ?: return
+        loadChapters(mangadexId, _uiState.value.selectedLanguage, page = 0)
     }
 
     fun onAction(action: DownloadAction) {
@@ -64,7 +66,7 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun onLanguageSelected(language: String) {
-        val mangaId = _uiState.value.manga?.mirrorId ?: return
+        val mangaId = _uiState.value.manga?.mangadexId ?: return
         _uiState.update {
             it.copy(
                 selectedLanguage = language,
@@ -81,7 +83,7 @@ class DownloadViewModel @Inject constructor(
 
     private fun changePage(page: Int) {
         val state = _uiState.value
-        val mangaId = state.manga?.mirrorId ?: return
+        val mangaId = state.manga?.mangadexId ?: return
         _uiState.update { it.copy(isLoadingChapters = true, chapters = emptyList(), currentPage = page) }
         loadChapters(mangaId, state.selectedLanguage, page = page)
     }
@@ -152,7 +154,7 @@ class DownloadViewModel @Inject constructor(
 
     private fun downloadAll() {
         val state = _uiState.value
-        val mangaId = state.manga?.mirrorId ?: return
+        val mangaId = state.manga?.mangadexId ?: return
         val language = state.selectedLanguage
         val limit = state.chaptersPerPage
 

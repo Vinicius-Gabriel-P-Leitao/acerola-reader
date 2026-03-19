@@ -7,7 +7,6 @@ import br.acerola.manga.error.message.ChapterError
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// TODO: Otimizar o cache das paginas, isso é bem importante
 @Singleton
 class PageCacheService @Inject constructor() {
     private val maxSizeBytes = 60L * 1024 * 1024 // 60MB

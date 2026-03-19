@@ -72,7 +72,7 @@ class MangadexMangaInfoRepositoryTest {
         result.onRight { list ->
             assertEquals(1, list.size)
             assertEquals("Naruto", list[0].title)
-            assertEquals("1", list[0].mirrorId)
+            assertEquals("1", list[0].mangadexId)
         }
     }
 

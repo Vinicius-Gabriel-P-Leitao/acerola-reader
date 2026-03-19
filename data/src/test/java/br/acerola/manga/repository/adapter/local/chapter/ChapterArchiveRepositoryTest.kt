@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
@@ -75,8 +76,8 @@ class ChapterArchiveRepositoryTest {
         every { mockUri.toString() } returns "uri/mock"
         every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockUri
         every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockUri
-        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns emptyList()
-        every { ContentQueryHelper.listFiles(any(), any()) } returns emptyList()
+        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
+        every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
     }
 
     @After

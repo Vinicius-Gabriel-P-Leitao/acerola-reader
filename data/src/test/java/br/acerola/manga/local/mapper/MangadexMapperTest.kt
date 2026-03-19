@@ -52,7 +52,7 @@ class MangadexMapperTest {
 
     @Test
     fun `ChapterMangadexDto toDto deve construir URLs de paginas quando source fornecido`() {
-        val attr = ChapterAttributes("1", "1", "Ch 1", 20, 1)
+        val attr = ChapterAttributes("1", "1", "Ch 1", pages = 20, version = 1)
         val chapterRaw = ChapterMangadexDto("ch1", "chapter", attr, emptyList())
         
         val source = ChapterSourceMangadexDto(
@@ -69,7 +69,7 @@ class MangadexMapperTest {
 
     @Test
     fun `ChapterMangadexDto toDto deve retornar lista vazia de URLs se source for nulo`() {
-        val attr = ChapterAttributes("1", "1", "Ch 1", 20, 1)
+        val attr = ChapterAttributes("1", "1", "Ch 1", pages = 20, version = 1)
         val chapterRaw = ChapterMangadexDto("ch1", "chapter", attr, emptyList())
 
         val dto = chapterRaw.toDto(null)

@@ -11,6 +11,7 @@ import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.database.entity.metadata.source.MangadexSource
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.metadata.MangaMetadataExportService
 import io.mockk.MockKAnnotations
@@ -71,8 +72,20 @@ class MangadexChapterRepositoryTest {
     @Test
     fun `refreshMangaChapters deve sincronizar capitulos remotos com locais`() = runTest {
         val mangaId = 1L
-        val remoteManga = MetadataFixtures.createMangaRemoteInfo(id = mangaId, mirrorId = "manga-123")
-        val relations = MetadataFixtures.createRemoteInfoRelations(remoteInfo = remoteManga)
+        val remoteManga = MetadataFixtures.createMangaRemoteInfo(id = mangaId)
+        val mangadexSource = MangadexSource(
+            mangadexId = "manga-123",
+            anilistId = null,
+            amazonUrl = null,
+            ebookjapanUrl = null,
+            rawUrl = null,
+            engtlUrl = null,
+            mangaRemoteInfoFk = mangaId
+        )
+        val relations = MetadataFixtures.createRemoteInfoRelations(
+            remoteInfo = remoteManga,
+            mangadexSource = mangadexSource
+        )
         val localDir = MangaDirectoryFixtures.createMangaDirectory(id = mangaId)
 
         val localChapters = listOf(ChapterArchive(id = 1, chapter = "1", path = "p", chapterSort = "1", folderPathFk = mangaId))
@@ -99,7 +112,19 @@ class MangadexChapterRepositoryTest {
     fun `refreshMangaChapters deve falhar se nao encontrar match entre local e remoto`() = runTest {
         val mangaId = 1L
         val remoteManga = MetadataFixtures.createMangaRemoteInfo(id = mangaId)
-        val relations = MetadataFixtures.createRemoteInfoRelations(remoteInfo = remoteManga)
+        val mangadexSource = MangadexSource(
+            mangadexId = "manga-123",
+            anilistId = null,
+            amazonUrl = null,
+            ebookjapanUrl = null,
+            rawUrl = null,
+            engtlUrl = null,
+            mangaRemoteInfoFk = mangaId
+        )
+        val relations = MetadataFixtures.createRemoteInfoRelations(
+            remoteInfo = remoteManga,
+            mangadexSource = mangadexSource
+        )
         val localDir = MangaDirectoryFixtures.createMangaDirectory(id = mangaId)
 
         val localChapters = listOf(ChapterArchive(chapter = "2", chapterSort = "2", folderPathFk = mangaId, path = ""))

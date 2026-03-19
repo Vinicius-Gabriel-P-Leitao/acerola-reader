@@ -2,6 +2,7 @@ package br.acerola.manga.usecase
 
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.repository.di.AnilistFsOps
 import br.acerola.manga.repository.di.ComicInfoFsOps
 import br.acerola.manga.repository.di.MangadexFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
@@ -68,12 +69,14 @@ object ComicInfoCaseModule {
 
     @Provides
     fun provideSyncMangaMetadataUseCase(
+        @AnilistFsOps anilistMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>,
         @MangadexFsOps mangadexMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>,
-        @ComicInfoFsOps comicInfoMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>,
         @MangadexFsOps mangadexChapterRepo: ChapterManagementRepository<ChapterRemoteInfoPageDto>,
+        @ComicInfoFsOps comicInfoMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>,
         @ComicInfoFsOps comicInfoChapterRepo: ChapterManagementRepository<ChapterRemoteInfoPageDto>
     ): SyncMangaMetadataUseCase {
         return SyncMangaMetadataUseCase(
+            anilistMangaRepo,
             mangadexMangaRepo,
             mangadexChapterRepo,
             comicInfoMangaRepo,

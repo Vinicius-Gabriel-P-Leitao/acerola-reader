@@ -66,7 +66,7 @@ class MangaScreenTest {
         val manga = MangaDto(
             directory = MangaDirectoryDto(1L, "Test", "path", null, null, 0L, null, false),
             remoteInfo = MangaRemoteInfoDto(
-                mirrorId = "1", title = "Manga de Teste", description = "Desc", status = "Ongoing"
+                title = "Manga de Teste", description = "Desc", status = "Ongoing"
             )
         )
 

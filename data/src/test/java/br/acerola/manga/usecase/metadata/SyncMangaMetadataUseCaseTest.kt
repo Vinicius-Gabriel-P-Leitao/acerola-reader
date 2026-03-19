@@ -17,6 +17,7 @@ import org.junit.Test
 
 class SyncMangaMetadataUseCaseTest {
 
+    @MockK lateinit var anilistMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>
     @MockK lateinit var mangadexMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>
     @MockK lateinit var mangadexChapterRepo: ChapterManagementRepository<ChapterRemoteInfoPageDto>
     @MockK lateinit var comicInfoMangaRepo: MangaManagementRepository<MangaRemoteInfoDto>
@@ -28,6 +29,7 @@ class SyncMangaMetadataUseCaseTest {
     fun setUp() {
         MockKAnnotations.init(this)
         useCase = SyncMangaMetadataUseCase(
+            anilistMangaRepo,
             mangadexMangaRepo,
             mangadexChapterRepo,
             comicInfoMangaRepo,

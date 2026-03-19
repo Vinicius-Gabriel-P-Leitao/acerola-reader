@@ -17,7 +17,6 @@ class SyncMetadataTest {
     @Test
     fun `SyncMetadata_deve_exibir_as_seções_de_MangaDex_e_Arquivo_Local`() {
         val remoteInfo = MangaRemoteInfoDto(
-            mirrorId = "1",
             title = "Manga Teste",
             description = "Desc",
             status = "Ongoing"

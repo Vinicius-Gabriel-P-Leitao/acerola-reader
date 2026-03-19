@@ -10,8 +10,12 @@ import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.BannerDao
 import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
 import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
+import br.acerola.manga.local.database.dao.metadata.source.AnilistSourceDao
+import br.acerola.manga.local.database.dao.metadata.source.ComicInfoSourceDao
+import br.acerola.manga.local.database.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.local.database.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
@@ -19,8 +23,12 @@ import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.database.entity.metadata.ChapterRemoteInfo
 import br.acerola.manga.local.database.entity.metadata.MangaRemoteInfo
 import br.acerola.manga.local.database.entity.metadata.relationship.Author
+import br.acerola.manga.local.database.entity.metadata.relationship.Banner
 import br.acerola.manga.local.database.entity.metadata.relationship.Cover
 import br.acerola.manga.local.database.entity.metadata.relationship.Genre
+import br.acerola.manga.local.database.entity.metadata.source.AnilistSource
+import br.acerola.manga.local.database.entity.metadata.source.ComicInfoSource
+import br.acerola.manga.local.database.entity.metadata.source.MangadexSource
 import br.acerola.manga.local.database.entity.history.ReadingHistory
 import br.acerola.manga.local.database.entity.history.ChapterRead
 
@@ -34,11 +42,15 @@ import br.acerola.manga.local.database.entity.history.ChapterRead
         Author::class,
         Genre::class,
         Cover::class,
+        Banner::class,
         ReadingHistory::class,
-        ChapterRead::class
+        ChapterRead::class,
+        MangadexSource::class,
+        AnilistSource::class,
+        ComicInfoSource::class
     ],
     exportSchema = false,
-    version = 6,
+    version = 8,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class DatabaseAcerola : RoomDatabase() {
@@ -49,6 +61,10 @@ abstract class DatabaseAcerola : RoomDatabase() {
     abstract fun chapterDownloadSourceDao(): ChapterDownloadSourceDao
     abstract fun authorDao(): AuthorDao
     abstract fun coverDao(): CoverDao
+    abstract fun bannerDao(): BannerDao
     abstract fun genreDao(): GenreDao
     abstract fun readingHistoryDao(): ReadingHistoryDao
+    abstract fun mangadexSourceDao(): MangadexSourceDao
+    abstract fun anilistSourceDao(): AnilistSourceDao
+    abstract fun comicInfoSourceDao(): ComicInfoSourceDao
 }

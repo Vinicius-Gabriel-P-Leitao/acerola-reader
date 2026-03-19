@@ -29,7 +29,6 @@ class HeaderTest {
                 chapterTemplate = null
             ),
             remoteInfo = MangaRemoteInfoDto(
-                mirrorId = "md-1",
                 title = "Manga Fantástico",
                 description = "Uma sinopse qualquer",
                 status = "Lançando"

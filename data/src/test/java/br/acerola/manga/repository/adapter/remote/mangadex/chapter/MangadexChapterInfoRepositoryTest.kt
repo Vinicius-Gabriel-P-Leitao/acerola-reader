@@ -87,7 +87,7 @@ class MangadexChapterInfoRepositoryTest {
 
     private fun createChapterDto(id: String) = ChapterMangadexDto(
         id = id, type = "chapter",
-        attributes = ChapterAttributes(null, "1", "Title", 10, 1)
+        attributes = ChapterAttributes(null, "1", "Title", pages = 10, version = 1)
     )
 
     private fun <T> createResponse(data: List<T>, total: Int, offset: Int = 0, limit: Int = 100) = MangaDexResponse(

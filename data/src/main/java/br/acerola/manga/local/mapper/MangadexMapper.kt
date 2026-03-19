@@ -6,6 +6,7 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
+import br.acerola.manga.dto.metadata.manga.LinksDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
@@ -42,8 +43,19 @@ fun MangaMangadexDto.toDto(context: Context): MangaRemoteInfoDto {
     val romanji: String? = attributes.altTitlesList.flatMap { it.entries }.find { it.key == "ja-ro" }?.value
         ?: attributes.titleMap["ja-ro"]
 
+    val linksDto = attributes.links?.let { l ->
+        LinksDto(
+            anilistId = l.al,
+            amazonUrl = l.amz,
+            ebookjapanUrl = l.ebj,
+            rawUrl = l.raw,
+            engtlUrl = l.engtl
+        )
+    }
+
     return MangaRemoteInfoDto(
-        mirrorId = this.id,
+        mangadexId = this.id,
+        anilistId = attributes.links?.al,
         title = attributes.title ?: context.getString(R.string.description_manga_untitled),
         description = attributes.description ?: "",
         romanji = romanji,
@@ -51,7 +63,8 @@ fun MangaMangadexDto.toDto(context: Context): MangaRemoteInfoDto {
         status = attributes.status,
         cover = coverDto,
         genre = genresList,
-        authors = authors
+        authors = authors,
+        links = linksDto
     )
 }
 

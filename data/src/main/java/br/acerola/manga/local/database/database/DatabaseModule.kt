@@ -9,8 +9,12 @@ import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.BannerDao
 import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
 import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
+import br.acerola.manga.local.database.dao.metadata.source.AnilistSourceDao
+import br.acerola.manga.local.database.dao.metadata.source.ComicInfoSourceDao
+import br.acerola.manga.local.database.dao.metadata.source.MangadexSourceDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,6 +52,9 @@ object DatabaseModule {
     fun provideCoverDao(db: DatabaseAcerola): CoverDao = db.coverDao()
 
     @Provides
+    fun provideBannerDao(db: DatabaseAcerola): BannerDao = db.bannerDao()
+
+    @Provides
     fun provideAuthorDao(db: DatabaseAcerola): AuthorDao = db.authorDao()
 
     @Provides
@@ -55,4 +62,13 @@ object DatabaseModule {
 
     @Provides
     fun provideReadingHistoryDao(db: DatabaseAcerola): ReadingHistoryDao = db.readingHistoryDao()
+
+    @Provides
+    fun provideMangadexSourceDao(db: DatabaseAcerola): MangadexSourceDao = db.mangadexSourceDao()
+
+    @Provides
+    fun provideAnilistSourceDao(db: DatabaseAcerola): AnilistSourceDao = db.anilistSourceDao()
+
+    @Provides
+    fun provideComicInfoSourceDao(db: DatabaseAcerola): ComicInfoSourceDao = db.comicInfoSourceDao()
 }

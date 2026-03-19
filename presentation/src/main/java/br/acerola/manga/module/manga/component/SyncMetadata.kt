@@ -26,7 +26,6 @@ import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewM
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.config.pattern.MetadataSource
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 
@@ -38,7 +37,8 @@ fun Manga.Component.SyncMetadata(
     onSyncComicInfo: () -> Unit,
     onSyncComicInfoChapters: () -> Unit,
 ) {
-    val currentSource = remoteInfo?.metadataSource
+    val hasMangadexSource = remoteInfo?.mangadexId != null
+    val hasComicInfoSource = remoteInfo?.localHash != null
     Column {
         Text(
             text = stringResource(id = R.string.label_mangadex_group),
@@ -88,7 +88,7 @@ fun Manga.Component.SyncMetadata(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
-        if (currentSource == MetadataSource.MANGADEX && remoteInfo.id != null) {
+        if (hasMangadexSource && remoteInfo?.id != null) {
             ListItem(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -183,7 +183,7 @@ fun Manga.Component.SyncMetadata(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
-        if (currentSource == MetadataSource.COMIC_INFO) {
+        if (hasComicInfoSource) {
             ListItem(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))

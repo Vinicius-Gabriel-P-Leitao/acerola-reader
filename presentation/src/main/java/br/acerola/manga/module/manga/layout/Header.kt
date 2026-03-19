@@ -31,7 +31,6 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Button
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.config.pattern.MetadataSource
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 import coil.compose.AsyncImage
@@ -147,8 +146,14 @@ fun Manga.Layout.Header(
                             StatusBadge(
                                 status = manga.remoteInfo?.status ?: stringResource(id = R.string.manga_header_unknown)
                             )
-                            manga.remoteInfo?.metadataSource?.let { source ->
-                                SourceBadge(source = source)
+                            manga.remoteInfo?.let { info ->
+                                val sourceLabel = when {
+                                    info.mangadexId != null -> "MANGADEX"
+                                    info.localHash != null -> "COMIC_INFO"
+                                    info.anilistId != null -> "ANILIST"
+                                    else -> null
+                                }
+                                sourceLabel?.let { SourceBadge(source = it) }
                             }
                         }
                     }
@@ -245,13 +250,13 @@ private fun GenreBadge(
 
 @Composable
 private fun SourceBadge(
-    source: MetadataSource, modifier: Modifier = Modifier
+    source: String, modifier: Modifier = Modifier
 ) {
     val color = when (source) {
-        MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
-        MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
-        // TODO: Adicionar Anilist
-        MetadataSource.MANUAL -> MaterialTheme.colorScheme.surfaceVariant
+        "COMIC_INFO" -> MaterialTheme.colorScheme.secondaryContainer
+        "MANGADEX" -> MaterialTheme.colorScheme.tertiaryContainer
+        "ANILIST" -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
     }
 
     Box(
@@ -264,7 +269,7 @@ private fun SourceBadge(
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Text(
-            text = source.name,
+            text = source,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface
         )

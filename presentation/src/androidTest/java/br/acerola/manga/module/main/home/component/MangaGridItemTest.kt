@@ -30,7 +30,7 @@ class MangaGridItemTest {
                 hasComicInfo = false
             ),
             remoteInfo = MangaRemoteInfoDto(
-                mirrorId = "1", title = "Título do Manga", description = "", status = ""
+                title = "Título do Manga", description = "", status = ""
             )
         )
 

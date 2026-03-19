@@ -6,6 +6,15 @@ import br.acerola.manga.error.message.LibrarySyncError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
+
+// FIXME: Para que serve isso.
+data class AnilistLink(val anilistId: String, val remoteInfoId: Long)
+
+// FIXME: Para que serve isso.
+interface AnilistLinkRepository {
+    suspend fun getAnilistLink(directoryId: Long): Either<LibrarySyncError, AnilistLink>
+}
+
 interface MangaManagementRepository<T> {
 
     val progress: StateFlow<Int>

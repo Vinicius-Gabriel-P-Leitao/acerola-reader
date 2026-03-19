@@ -10,6 +10,7 @@ import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import android.provider.DocumentsContract
+import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.util.ContentQueryHelper
 import io.mockk.MockKAnnotations
@@ -41,7 +42,7 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class MangaDirectoryRepositoryTest {
 
-    @MockK lateinit var context: Context
+    @MockK(relaxed = true) lateinit var context: Context
     @MockK lateinit var directoryDao: MangaDirectoryDao
     @MockK lateinit var mangaDirectoryOps: ChapterManagementRepository<ChapterArchivePageDto>
 
@@ -60,8 +61,11 @@ class MangaDirectoryRepositoryTest {
         mockkStatic(DocumentFile::class)
         mockkStatic(DocumentsContract::class)
         mockkObject(ContentQueryHelper)
+        mockkObject(MangaDirectoryPreference)
         
         every { context.contentResolver } returns mockk(relaxed = true)
+        every { context.applicationContext } returns context
+        every { context.filesDir } returns mockk(relaxed = true)
         every { DocumentsContract.getTreeDocumentId(any()) } returns "root_id"
         every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockk(relaxed = true)
         every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockk(relaxed = true)
@@ -69,8 +73,9 @@ class MangaDirectoryRepositoryTest {
         // Mock padrão para evitar 'no answer found'
         every { directoryDao.getAllMangaDirectory() } returns flowOf(emptyList())
         coEvery { mangaDirectoryOps.refreshMangaChapters(any(), any()) } returns Either.Right(Unit)
-        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns emptyList()
-        every { ContentQueryHelper.listFiles(any(), any()) } returns emptyList()
+        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
+        every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
+        every { MangaDirectoryPreference.folderUriFlow(any()) } returns flowOf("content://root")
     }
 
     @After
@@ -79,6 +84,7 @@ class MangaDirectoryRepositoryTest {
         unmockkStatic(DocumentFile::class)
         unmockkStatic(DocumentsContract::class)
         unmockkObject(ContentQueryHelper)
+        unmockkObject(MangaDirectoryPreference)
         Dispatchers.resetMain()
     }
 
@@ -152,8 +158,8 @@ class MangaDirectoryRepositoryTest {
             lastModified = 100L,
             mimeType = DocumentsContract.Document.MIME_TYPE_DIR
         )
-        every { ContentQueryHelper.listFiles(context, rootUri) } returns listOf(newFolderMetadata)
-        every { ContentQueryHelper.listFiles(context, rootUri, "new_id") } returns emptyList()
+        every { ContentQueryHelper.listFiles(context, rootUri) } returns Either.Right(listOf(newFolderMetadata))
+        every { ContentQueryHelper.listFiles(context, rootUri, "new_id") } returns Either.Right(emptyList())
         
         every { DocumentsContract.buildDocumentUriUsingTree(rootUri, "new_id") } returns newUri
         every { DocumentFile.fromSingleUri(context, newUri) } returns newDoc

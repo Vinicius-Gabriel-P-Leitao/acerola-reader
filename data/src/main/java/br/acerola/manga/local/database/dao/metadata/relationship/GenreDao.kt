@@ -17,14 +17,19 @@ interface GenreDao : BaseDao<Genre> {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     override suspend fun insertAll(vararg entity: Genre): LongArray
 
-    @Query(value = "SELECT id FROM genre WHERE mirror_id = :mirrorId LIMIT 1")
-    suspend fun getIdByMirrorId(mirrorId: String): Long?
+    @Query(value = "SELECT id FROM genre WHERE genre = :genre AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    suspend fun getIdByGenreAndFk(
+        genre: String,
+        mangaRemoteInfoFk: Long
+    ): Long?
 
     @Transaction
     suspend fun insertOrGetId(entity: Genre): Long {
         val id = insert(entity)
 
         return if (id != -1L) id
-        else getIdByMirrorId(entity.mirrorId) ?: throw IntegrityException(source = "Genre", key = "mirrorId")
+        else getIdByGenreAndFk(entity.genre, entity.mangaRemoteInfoFk) ?: throw IntegrityException(
+            source = "Genre", key = "genre+fk"
+        )
     }
 }

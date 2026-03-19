@@ -17,14 +17,15 @@ interface AuthorDao : BaseDao<Author> {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     override suspend fun insertAll(vararg entity: Author): LongArray
 
-    @Query(value = "SELECT id FROM author WHERE mirror_id = :mirrorId LIMIT 1")
-    suspend fun getIdByMirrorId(mirrorId: String): Long?
+    @Query(value = "SELECT id FROM author WHERE name = :name AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    suspend fun getIdByNameAndFk(name: String, mangaRemoteInfoFk: Long): Long?
 
     @Transaction
     suspend fun insertOrGetId(entity: Author): Long {
         val id = insert(entity)
 
         return if (id != -1L) id
-        else getIdByMirrorId(entity.mirrorId) ?: throw IntegrityException(source = "Author", key = "mirrorId")
+        else getIdByNameAndFk(entity.name, entity.mangaRemoteInfoFk)
+            ?: throw IntegrityException(source = "Author", key = "name+fk")
     }
 }

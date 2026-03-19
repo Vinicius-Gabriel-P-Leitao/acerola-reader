@@ -6,12 +6,14 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.repository.adapter.local.chapter.ChapterArchiveRepository
 import br.acerola.manga.repository.adapter.local.chapter.MangadexChapterRepository
+import br.acerola.manga.repository.adapter.local.manga.AnilistMangaRepository
 import br.acerola.manga.repository.adapter.local.manga.MangaDirectoryRepository
 import br.acerola.manga.repository.adapter.local.manga.MangadexMangaRepository
 import br.acerola.manga.repository.adapter.local.history.LocalHistoryRepository
+import br.acerola.manga.repository.port.AnilistLinkRepository
 import br.acerola.manga.repository.port.ChapterManagementRepository
-import br.acerola.manga.repository.port.MangaManagementRepository
 import br.acerola.manga.repository.port.HistoryManagementRepository
+import br.acerola.manga.repository.port.MangaManagementRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -30,6 +32,10 @@ annotation class MangadexFsOps
 @Qualifier
 @Retention(value = AnnotationRetention.BINARY)
 annotation class ComicInfoFsOps
+
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class AnilistFsOps
 
 /**
  * Esse modulo é feito para abstrair chamadas de API e uso de DAO, servem para ser usados no ViewModel, ao contrario do
@@ -87,4 +93,17 @@ abstract class LibraryModule {
     abstract fun bindHistoryRepository(
         impl: LocalHistoryRepository
     ): HistoryManagementRepository
+
+    @Binds
+    @Singleton
+    @AnilistFsOps
+    abstract fun bindAnilistMangaRepository(
+        impl: AnilistMangaRepository
+    ): MangaManagementRepository<MangaRemoteInfoDto>
+
+    @Binds
+    @Singleton
+    abstract fun bindAnilistLinkRepository(
+        impl: MangadexMangaRepository
+    ): AnilistLinkRepository
 }

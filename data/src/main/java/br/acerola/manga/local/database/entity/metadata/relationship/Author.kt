@@ -30,8 +30,7 @@ enum class TypeAuthor(val type: String) {
         )
     ],
     indices = [
-        Index(value = ["mirror_id"], unique = false),
-        Index(value = ["name"], unique = false),
+        Index(value = ["name", "manga_remote_info_fk"], unique = true),
         Index(value = ["manga_remote_info_fk"])
     ]
 )
@@ -44,10 +43,6 @@ data class Author(
 
     @ColumnInfo(name = "type")
     val type: TypeAuthor,
-
-    // Remover os mirror_id e ir para a tabela de origem.
-    @ColumnInfo(name = "mirror_id")
-    val mirrorId: String,
 
     @ColumnInfo(name = "manga_remote_info_fk")
     val mangaRemoteInfoFk: Long

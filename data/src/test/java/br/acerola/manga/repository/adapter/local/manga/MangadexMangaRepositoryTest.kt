@@ -13,6 +13,8 @@ import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
+import br.acerola.manga.local.database.dao.metadata.source.MangadexSourceDao
+import br.acerola.manga.repository.port.BinaryOperationsRepository
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
 import br.acerola.manga.service.metadata.MangaMetadataExportService
@@ -47,7 +49,9 @@ class MangadexMangaRepositoryTest {
     @MockK lateinit var directoryDao: MangaDirectoryDao
     @MockK lateinit var coverService: MangaSaveCoverService
     @MockK lateinit var mangaRemoteInfoDao: MangaRemoteInfoDao
+    @MockK lateinit var mangadexSourceDao: MangadexSourceDao
     @MockK lateinit var metadataExportService: MangaMetadataExportService
+    @MockK lateinit var downloadCoverService: BinaryOperationsRepository<String>
     @MockK lateinit var mangadexMangaInfoService: RemoteInfoOperationsRepository<MangaRemoteInfoDto, String>
     @MockK lateinit var mangadexChapterInfoService: RemoteInfoOperationsRepository<ChapterRemoteInfoDto, String>
 
@@ -60,7 +64,8 @@ class MangadexMangaRepositoryTest {
         Dispatchers.setMain(testDispatcher)
 
         repository = MangadexMangaRepository(
-            context, genreDao, authorDao, directoryDao, coverService, mangaRemoteInfoDao, metadataExportService
+            genreDao, authorDao, directoryDao, coverService, mangadexSourceDao,
+            mangaRemoteInfoDao, context, metadataExportService, downloadCoverService
         )
         repository.mangadexMangaInfoService = mangadexMangaInfoService
         repository.mangadexChapterInfoService = mangadexChapterInfoService
@@ -91,9 +96,11 @@ class MangadexMangaRepositoryTest {
         every { mangaRemoteInfoDao.getMangaByDirectoryId(mangaId) } returns flowOf(null)
 
         coEvery { mangaRemoteInfoDao.insert(any()) } returns 2L
+        coEvery { mangadexSourceDao.insert(any()) } returns 1L
         coEvery { authorDao.insert(any()) } returns 1L
         coEvery { genreDao.insert(any()) } returns 1L
-        coEvery { coverService.processCover(any(), any(), any(), any(), any()) } returns 1L
+        coEvery { downloadCoverService.searchCover(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
+        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L
         coEvery { metadataExportService.exportMangaMetadata(any(), any()) } returns Either.Right(Unit)
 
         val result = repository.refreshManga(mangaId)
