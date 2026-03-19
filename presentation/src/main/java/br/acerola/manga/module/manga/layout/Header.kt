@@ -31,7 +31,7 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Button
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.config.pattern.MetadataSource
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 import coil.compose.AsyncImage
@@ -248,8 +248,9 @@ private fun SourceBadge(
     source: MetadataSource, modifier: Modifier = Modifier
 ) {
     val color = when (source) {
-        MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
         MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
+        MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
+        // TODO: Adicionar Anilist
         MetadataSource.MANUAL -> MaterialTheme.colorScheme.surfaceVariant
     }
 

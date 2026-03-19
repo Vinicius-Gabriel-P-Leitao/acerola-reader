@@ -1,4 +1,4 @@
-package br.acerola.manga.local.database.dao.metadata.author
+package br.acerola.manga.local.database.dao.metadata.relationship
 
 import androidx.room.Dao
 import androidx.room.Insert

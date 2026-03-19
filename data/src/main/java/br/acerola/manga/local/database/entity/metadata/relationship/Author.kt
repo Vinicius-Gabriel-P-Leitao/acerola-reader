@@ -45,6 +45,7 @@ data class Author(
     @ColumnInfo(name = "type")
     val type: TypeAuthor,
 
+    // Remover os mirror_id e ir para a tabela de origem.
     @ColumnInfo(name = "mirror_id")
     val mirrorId: String,
 

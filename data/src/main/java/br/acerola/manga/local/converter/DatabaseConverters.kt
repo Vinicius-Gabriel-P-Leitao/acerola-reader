@@ -1,7 +1,7 @@
 package br.acerola.manga.local.converter
 
 import androidx.room.TypeConverter
-import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.config.pattern.MetadataSource
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
 
 class DatabaseConverters {

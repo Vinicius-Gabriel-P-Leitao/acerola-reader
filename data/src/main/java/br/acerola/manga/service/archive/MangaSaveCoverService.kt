@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.dao.metadata.cover.CoverDao
+import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
 import br.acerola.manga.local.database.entity.metadata.relationship.Cover
 import br.acerola.manga.repository.adapter.remote.mangadex.manga.MangadexFetchCoverRepository
 import dagger.hilt.android.qualifiers.ApplicationContext

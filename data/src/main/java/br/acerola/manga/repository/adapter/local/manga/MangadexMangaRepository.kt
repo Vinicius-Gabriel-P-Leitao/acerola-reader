@@ -15,8 +15,8 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toModel

@@ -11,8 +11,8 @@ import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
 import br.acerola.manga.service.metadata.MangaMetadataExportService
@@ -26,7 +26,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
-import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -35,7 +34,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test

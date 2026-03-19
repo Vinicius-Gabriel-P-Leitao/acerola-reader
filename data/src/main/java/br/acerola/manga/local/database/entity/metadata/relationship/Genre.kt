@@ -30,6 +30,7 @@ data class Genre(
     @ColumnInfo(name = "genre")
     val genre: String,
 
+    // Remover os mirror_id e ir para a tabela de origem.
     @ColumnInfo(name = "mirror_id")
     val mirrorId: String,
 
