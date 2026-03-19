@@ -3,7 +3,7 @@ package br.acerola.manga.service.download
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.mapper.toDto
+import br.acerola.manga.local.translator.toDto
 import br.acerola.manga.config.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
 import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi

@@ -11,8 +11,8 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.engine.port.ChapterPort
-import br.acerola.manga.engine.port.MangaPort
+import br.acerola.manga.adapter.port.ChapterPort
+import br.acerola.manga.adapter.port.MangaPort
 import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import com.google.common.truth.Truth.assertThat

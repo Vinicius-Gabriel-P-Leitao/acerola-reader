@@ -3,13 +3,13 @@ package br.acerola.manga.core.usecase.download
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.service.compact.ArchiveCompactService
 import br.acerola.manga.service.download.ChapterDownloadService
-import br.acerola.manga.source.di.Mangadex
+import br.acerola.manga.adapter.di.MangadexSource
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class DownloadChaptersUseCase @Inject constructor(
-    @param:Mangadex private val chapterDownloadService: ChapterDownloadService,
+    @param:MangadexSource private val chapterDownloadService: ChapterDownloadService,
     private val archiveCompactService: ArchiveCompactService,
 ) {
     data class ChapterEntry(val id: String, val fileName: String)

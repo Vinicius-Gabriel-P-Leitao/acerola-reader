@@ -11,8 +11,8 @@ import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.logging.AcerolaLogger
-import br.acerola.manga.engine.port.HistoryManagementRepository
-import br.acerola.manga.engine.port.MangaPort
+import br.acerola.manga.adapter.port.HistoryPort
+import br.acerola.manga.adapter.port.MangaPort
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
@@ -36,7 +36,7 @@ class HomeViewModelTest {
     val coroutineRule = MainDispatcherRule()
 
     private val workManager = mockk<WorkManager>()
-    private val historyRepository = mockk<HistoryManagementRepository>()
+    private val historyRepository = mockk<HistoryPort>()
     
     private val mangadexRepo = mockk<MangaPort<MangaRemoteInfoDto>>(relaxed = true)
     private val directoryRepo = mockk<MangaPort<MangaDirectoryDto>>(relaxed = true)

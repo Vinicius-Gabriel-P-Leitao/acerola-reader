@@ -2,9 +2,9 @@ package br.acerola.manga.core.usecase
 
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.engine.di.DirectoryFsOps
-import br.acerola.manga.engine.port.ChapterPort
-import br.acerola.manga.engine.port.MangaPort
+import br.acerola.manga.adapter.di.DirectoryEngine
+import br.acerola.manga.adapter.port.ChapterPort
+import br.acerola.manga.adapter.port.MangaPort
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaUseCase
@@ -27,7 +27,7 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideSyncLibraryUseCase(
-        @DirectoryFsOps repository: MangaPort<MangaDirectoryDto>
+        @DirectoryEngine repository: MangaPort<MangaDirectoryDto>
     ): SyncLibraryUseCase<MangaDirectoryDto> {
         return SyncLibraryUseCase(repository)
     }
@@ -35,7 +35,7 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideObserveLibraryUseCase(
-        @DirectoryFsOps mangaOps: MangaPort<MangaDirectoryDto>
+        @DirectoryEngine mangaOps: MangaPort<MangaDirectoryDto>
     ): ObserveLibraryUseCase<MangaDirectoryDto> {
         return ObserveLibraryUseCase(
             mangaRepository = mangaOps
@@ -45,7 +45,7 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideRescanMangaUseCase(
-        @DirectoryFsOps mangaOps: MangaPort<MangaDirectoryDto>
+        @DirectoryEngine mangaOps: MangaPort<MangaDirectoryDto>
     ): RescanMangaUseCase<MangaDirectoryDto> {
         return RescanMangaUseCase(
             mangaRepository = mangaOps
@@ -55,7 +55,7 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideRescanMangaChaptersUseCase(
-        @DirectoryFsOps chapterOps: ChapterPort<ChapterArchivePageDto>
+        @DirectoryEngine chapterOps: ChapterPort<ChapterArchivePageDto>
     ): RescanMangaChaptersUseCase<ChapterArchivePageDto> {
         return RescanMangaChaptersUseCase(
             chapterRepository = chapterOps
@@ -65,7 +65,7 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideGetChaptersUseCase(
-        @DirectoryFsOps chapterOps: ChapterPort<ChapterArchivePageDto>
+        @DirectoryEngine chapterOps: ChapterPort<ChapterArchivePageDto>
     ): ObserveChaptersUseCase<ChapterArchivePageDto> {
         return ObserveChaptersUseCase(
             chapterRepository = chapterOps

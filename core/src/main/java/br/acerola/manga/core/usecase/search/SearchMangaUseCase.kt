@@ -5,14 +5,14 @@ import br.acerola.manga.pattern.MangadexPattern
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.source.di.Mangadex
-import br.acerola.manga.source.port.DownloadPort
+import br.acerola.manga.adapter.di.MangadexSource
+import br.acerola.manga.adapter.port.DownloadPort
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SearchMangaUseCase @Inject constructor(
-    @param:Mangadex private val downloadPort: DownloadPort
+    @param:MangadexSource private val downloadPort: DownloadPort
 ) {
     suspend fun search(query: String): Either<NetworkError, List<MangaRemoteInfoDto>> {
         val mangadexId = extractMangadexId(query)

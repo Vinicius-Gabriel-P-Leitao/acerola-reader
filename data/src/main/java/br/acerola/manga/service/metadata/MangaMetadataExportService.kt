@@ -8,7 +8,7 @@ import arrow.core.right
 import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first

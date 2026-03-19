@@ -2,11 +2,11 @@ package br.acerola.manga.core.usecase
 
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.engine.di.AnilistFsOps
-import br.acerola.manga.engine.di.ComicInfoFsOps
-import br.acerola.manga.engine.di.MangadexFsOps
-import br.acerola.manga.engine.port.ChapterPort
-import br.acerola.manga.engine.port.MangaPort
+import br.acerola.manga.adapter.di.AnilistEngine
+import br.acerola.manga.adapter.di.ComicInfoEngine
+import br.acerola.manga.adapter.di.MangadexEngine
+import br.acerola.manga.adapter.port.ChapterPort
+import br.acerola.manga.adapter.port.MangaPort
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaUseCase
@@ -30,7 +30,7 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideSyncLibraryUseCase(
-        @ComicInfoFsOps repository: MangaPort<MangaRemoteInfoDto>
+        @ComicInfoEngine repository: MangaPort<MangaRemoteInfoDto>
     ): SyncLibraryUseCase<MangaRemoteInfoDto> {
         return SyncLibraryUseCase(repository)
     }
@@ -38,7 +38,7 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideObserveLibraryUseCase(
-        @ComicInfoFsOps mangaOps: MangaPort<MangaRemoteInfoDto>
+        @ComicInfoEngine mangaOps: MangaPort<MangaRemoteInfoDto>
     ): ObserveLibraryUseCase<MangaRemoteInfoDto> {
         return ObserveLibraryUseCase(
             mangaRepository = mangaOps
@@ -48,7 +48,7 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideRescanMangaUseCase(
-        @ComicInfoFsOps mangaOps: MangaPort<MangaRemoteInfoDto>
+        @ComicInfoEngine mangaOps: MangaPort<MangaRemoteInfoDto>
     ): RescanMangaUseCase<MangaRemoteInfoDto> {
         return RescanMangaUseCase(
             mangaRepository = mangaOps
@@ -58,7 +58,7 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideRescanMangaChaptersUseCase(
-        @ComicInfoFsOps chapterOps: ChapterPort<ChapterRemoteInfoPageDto>
+        @ComicInfoEngine chapterOps: ChapterPort<ChapterRemoteInfoPageDto>
     ): RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto> {
         return RescanMangaChaptersUseCase(
             chapterRepository = chapterOps
@@ -68,7 +68,7 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideGetChaptersUseCase(
-        @ComicInfoFsOps chapterOps: ChapterPort<ChapterRemoteInfoPageDto>
+        @ComicInfoEngine chapterOps: ChapterPort<ChapterRemoteInfoPageDto>
     ): ObserveChaptersUseCase<ChapterRemoteInfoPageDto> {
         return ObserveChaptersUseCase(
             chapterRepository = chapterOps
@@ -77,11 +77,11 @@ object ComicInfoCaseModule {
 
     @Provides
     fun provideSyncMangaMetadataUseCase(
-        @AnilistFsOps anilistMangaRepo: MangaPort<MangaRemoteInfoDto>,
-        @MangadexFsOps mangadexMangaRepo: MangaPort<MangaRemoteInfoDto>,
-        @MangadexFsOps mangadexChapterRepo: ChapterPort<ChapterRemoteInfoPageDto>,
-        @ComicInfoFsOps comicInfoMangaRepo: MangaPort<MangaRemoteInfoDto>,
-        @ComicInfoFsOps comicInfoChapterRepo: ChapterPort<ChapterRemoteInfoPageDto>
+        @AnilistEngine anilistMangaRepo: MangaPort<MangaRemoteInfoDto>,
+        @MangadexEngine mangadexMangaRepo: MangaPort<MangaRemoteInfoDto>,
+        @MangadexEngine mangadexChapterRepo: ChapterPort<ChapterRemoteInfoPageDto>,
+        @ComicInfoEngine comicInfoMangaRepo: MangaPort<MangaRemoteInfoDto>,
+        @ComicInfoEngine comicInfoChapterRepo: ChapterPort<ChapterRemoteInfoPageDto>
     ): SyncMangaMetadataUseCase {
         return SyncMangaMetadataUseCase(
             anilistMangaRepo,

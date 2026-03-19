@@ -11,9 +11,9 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.logging.AcerolaLogger
-import br.acerola.manga.engine.port.ChapterPort
-import br.acerola.manga.engine.port.HistoryManagementRepository
-import br.acerola.manga.engine.port.MangaPort
+import br.acerola.manga.adapter.port.ChapterPort
+import br.acerola.manga.adapter.port.HistoryPort
+import br.acerola.manga.adapter.port.MangaPort
 import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import com.google.common.truth.Truth.assertThat
@@ -48,7 +48,7 @@ class MangaViewModelTest {
     private lateinit var directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>
     private lateinit var mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
     
-    private val historyRepository = mockk<HistoryManagementRepository>(relaxed = true)
+    private val historyRepository = mockk<HistoryPort>(relaxed = true)
 
     private lateinit var viewModel: MangaViewModel
 

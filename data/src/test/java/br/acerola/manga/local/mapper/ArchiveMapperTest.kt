@@ -4,6 +4,10 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.toMangaDirectoryModel
+import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.translator.toPageDto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

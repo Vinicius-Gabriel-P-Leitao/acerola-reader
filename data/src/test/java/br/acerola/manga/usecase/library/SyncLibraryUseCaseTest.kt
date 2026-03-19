@@ -3,7 +3,7 @@ package br.acerola.manga.usecase.library
 import android.net.Uri
 import arrow.core.Either
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.engine.port.MangaPort
+import br.acerola.manga.adapter.port.MangaPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

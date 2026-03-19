@@ -2,15 +2,15 @@ package br.acerola.manga.core.usecase.history
 
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
-import br.acerola.manga.engine.di.LocalHistoryFsOps
-import br.acerola.manga.engine.port.HistoryManagementRepository
+import br.acerola.manga.adapter.di.LocalHistoryEngine
+import br.acerola.manga.adapter.port.HistoryPort
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ObserveHistoryUseCase @Inject constructor(
-    @param:LocalHistoryFsOps private val historyRepository: HistoryManagementRepository
+    @param:LocalHistoryEngine private val historyRepository: HistoryPort
 ) {
     operator fun invoke(): Flow<List<ReadingHistoryWithChapterDto>> =
         historyRepository.getAllRecentHistoryWithChapter()

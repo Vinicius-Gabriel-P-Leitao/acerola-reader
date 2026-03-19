@@ -1,6 +1,6 @@
 package br.acerola.manga.core.usecase.chapter
 
-import br.acerola.manga.engine.port.ChapterPort
+import br.acerola.manga.adapter.port.ChapterPort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 

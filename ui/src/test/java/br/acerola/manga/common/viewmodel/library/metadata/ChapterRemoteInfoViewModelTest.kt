@@ -9,7 +9,7 @@ import br.acerola.manga.MainDispatcherRule
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.engine.port.ChapterPort
+import br.acerola.manga.adapter.port.ChapterPort
 import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
