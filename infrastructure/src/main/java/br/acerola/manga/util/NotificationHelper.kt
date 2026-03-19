@@ -12,6 +12,7 @@ class NotificationHelper(private val context: Context) {
 
         const val SYNC_CHANNEL_ID = "sync_channel"
         const val SYNC_NOTIFICATION_ID = 1001
+        const val DOWNLOAD_NOTIFICATION_ID = 1002
     }
 
     private val notificationManager =
@@ -42,17 +43,26 @@ class NotificationHelper(private val context: Context) {
             .setProgress(100, 0, true)
     }
 
-    fun updateProgress(builder: NotificationCompat.Builder, progress: Int, max: Int = 100) {
+    fun updateProgress(
+        builder: NotificationCompat.Builder,
+        progress: Int,
+        notificationId: Int = SYNC_NOTIFICATION_ID,
+        max: Int = 100
+    ) {
         val isIndeterminate = progress < 0
         builder.setProgress(max, if (isIndeterminate) 0 else progress, isIndeterminate)
-        notificationManager.notify(SYNC_NOTIFICATION_ID, builder.build())
+        notificationManager.notify(notificationId, builder.build())
     }
 
-    fun cancelNotification() {
-        notificationManager.cancel(SYNC_NOTIFICATION_ID)
+    fun cancelNotification(notificationId: Int = SYNC_NOTIFICATION_ID) {
+        notificationManager.cancel(notificationId)
     }
 
-    fun showFinishedNotification(title: String, content: String) {
+    fun showFinishedNotification(
+        title: String,
+        content: String,
+        notificationId: Int = SYNC_NOTIFICATION_ID
+    ) {
         val builder = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setContentTitle(title)
@@ -61,6 +71,6 @@ class NotificationHelper(private val context: Context) {
             .setAutoCancel(true)
             .setOngoing(false)
 
-        notificationManager.notify(SYNC_NOTIFICATION_ID, builder.build())
+        notificationManager.notify(notificationId, builder.build())
     }
 }

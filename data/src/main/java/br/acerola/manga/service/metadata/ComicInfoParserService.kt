@@ -10,7 +10,7 @@ import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.ComicInfoError
-import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.config.pattern.MetadataSource
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
 import java.io.InputStream

@@ -6,8 +6,8 @@ import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import br.acerola.manga.repository.port.RemoteInfoOperationsRepository
 import br.acerola.manga.service.archive.MangaSaveCoverService
 import io.mockk.MockKAnnotations
@@ -15,7 +15,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue

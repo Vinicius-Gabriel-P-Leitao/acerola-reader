@@ -13,9 +13,9 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.usecase.di.DirectoryCase
-import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.DirectoryCase
+import br.acerola.manga.usecase.MangadexCase
+import br.acerola.manga.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,7 +35,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     workManager: WorkManager,
-    historyRepository: HistoryManagementRepository,
+    observeHistoryUseCase: ObserveHistoryUseCase,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
@@ -65,7 +65,7 @@ class HomeViewModel @Inject constructor(
     val mangas: StateFlow<List<Pair<MangaDto, ReadingHistoryDto?>>> = combine(
         flow = directoryObserve(),
         flow2 = mangadexObserve(),
-        flow3 = historyRepository.getAllRecentHistory()
+        flow3 = observeHistoryUseCase.invokeRecent()
     ) { mangaDirectories, remoteMangaInfo, historyList ->
         val remoteInfoMap = remoteMangaInfo.filter { it.mangaDirectoryFk != null }
             .associateBy { it.mangaDirectoryFk!! }
@@ -109,7 +109,6 @@ class HomeViewModel @Inject constructor(
     }
 
     companion object {
-
         private const val TAG = "HomeViewModel"
     }
 }

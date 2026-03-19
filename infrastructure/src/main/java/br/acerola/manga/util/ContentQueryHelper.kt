@@ -3,6 +3,8 @@ package br.acerola.manga.util
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import arrow.core.Either
+import br.acerola.manga.error.message.IoError
 
 data class FastFileMetadata(
     val id: String,
@@ -14,7 +16,11 @@ data class FastFileMetadata(
 
 object ContentQueryHelper {
 
-    fun listFiles(context: Context, treeUri: Uri, parentDocumentId: String? = null): List<FastFileMetadata> {
+    fun listFiles(
+        context: Context,
+        treeUri: Uri,
+        parentDocumentId: String? = null
+    ): Either<IoError, List<FastFileMetadata>> = Either.catch {
         val documentId = parentDocumentId ?: DocumentsContract.getTreeDocumentId(treeUri)
         val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, documentId)
 
@@ -28,9 +34,7 @@ object ContentQueryHelper {
 
         val files = mutableListOf<FastFileMetadata>()
 
-        context.contentResolver.query(
-            childrenUri, projection, null, null, null
-        )?.use { cursor ->
+        context.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
             val idIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
             val nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             val sizeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
@@ -38,24 +42,18 @@ object ContentQueryHelper {
             val mimeTypeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
 
             while (cursor.moveToNext()) {
-                val id = if (idIndex != -1) cursor.getString(idIndex) else continue
-                val name = if (nameIndex != -1) cursor.getString(nameIndex) else "Unknown"
+                val id = if (idIndex != -1) cursor.getString(idIndex) ?: continue else continue
+                val name = if (nameIndex != -1) cursor.getString(nameIndex) ?: "Unknown" else "Unknown"
                 val size = if (sizeIndex != -1) cursor.getLong(sizeIndex) else 0L
                 val lastModified = if (lastModifiedIndex != -1) cursor.getLong(lastModifiedIndex) else 0L
-                val mimeType = if (mimeTypeIndex != -1) cursor.getString(mimeTypeIndex) else ""
+                val mimeType = if (mimeTypeIndex != -1) cursor.getString(mimeTypeIndex) ?: "" else ""
 
-                files.add(
-                    FastFileMetadata(
-                        id = id,
-                        name = name,
-                        size = size,
-                        lastModified = lastModified,
-                        mimeType = mimeType
-                    )
-                )
+                files.add(FastFileMetadata(id = id, name = name, size = size, lastModified = lastModified, mimeType = mimeType))
             }
         }
 
-        return files
+        files
+    }.mapLeft { cause ->
+        IoError.FileReadError(path = treeUri.toString(), cause = cause)
     }
 }

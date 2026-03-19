@@ -5,14 +5,13 @@ import androidx.lifecycle.viewModelScope
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.main.history.state.HistoryItemState
-import br.acerola.manga.module.main.history.state.HistoryUiState
-import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.usecase.di.DirectoryCase
-import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.DirectoryCase
+import br.acerola.manga.usecase.MangadexCase
+import br.acerola.manga.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,7 +27,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val historyRepository: HistoryManagementRepository,
+    observeHistoryUseCase: ObserveHistoryUseCase,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
 ) : ViewModel() {
@@ -37,7 +36,7 @@ class HistoryViewModel @Inject constructor(
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val historyItems: StateFlow<List<HistoryItemState>> = historyRepository.getAllRecentHistoryWithChapter()
+    val historyItems: StateFlow<List<HistoryItemState>> = observeHistoryUseCase()
         .flatMapLatest { historyList ->
             combine(
                 directoryObserve(),
@@ -51,7 +50,7 @@ class HistoryViewModel @Inject constructor(
                         history = history
                     )
                 }
-                AcerolaLogger.d(TAG, "History items updated: ${list.size} items found", LogSource.VIEWMODEL)  
+                AcerolaLogger.d(TAG, "History items updated: ${list.size} items found", LogSource.VIEWMODEL)
                 list
             }
         }.stateIn(
@@ -61,6 +60,6 @@ class HistoryViewModel @Inject constructor(
         )
 
     companion object {
-        private const val TAG = "HistoryViewModel"  
+        private const val TAG = "HistoryViewModel"
     }
 }

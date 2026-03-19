@@ -33,5 +33,4 @@ abstract class ChapterSourceModule {
     abstract fun bindCbzService(
         impl: CbzChapterSourceService
     ): ChapterSourceService
-
 }

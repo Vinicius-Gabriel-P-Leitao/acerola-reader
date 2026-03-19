@@ -34,7 +34,7 @@ annotation class ComicInfoFsOps
 /**
  * Esse modulo é feito para abstrair chamadas de API e uso de DAO, servem para ser usados no ViewModel, ao contrario do
  *
- * [ApiModule]
+ * [RemoteModule]
  */
 @Module
 @InstallIn(SingletonComponent::class)

@@ -6,11 +6,10 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.manga.MainDispatcherRule
-import br.acerola.manga.__fixtures__.MangaFixtures
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -33,7 +32,7 @@ class ChapterArchiveViewModelTest {
     val coroutineRule = MainDispatcherRule()
 
     private val workManager = mockk<WorkManager>(relaxed = true)
-    private val getChaptersUseCase = mockk<GetChaptersUseCase<ChapterArchivePageDto>>(relaxed = true)
+    private val observeChaptersUseCase = mockk<ObserveChaptersUseCase<ChapterArchivePageDto>>(relaxed = true)
     private lateinit var viewModel: ChapterArchiveViewModel
 
     @Before
@@ -42,7 +41,7 @@ class ChapterArchiveViewModelTest {
         every { AcerolaLogger.d(any<String>(), any<String>(), any<LogSource>()) } returns Unit
         every { AcerolaLogger.audit(any<String>(), any<String>(), any<LogSource>(), any<Map<String, String>>()) } returns Unit
 
-        viewModel = ChapterArchiveViewModel(workManager, getChaptersUseCase)
+        viewModel = ChapterArchiveViewModel(workManager, observeChaptersUseCase)
     }
 
     @After

@@ -15,10 +15,10 @@ import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
-import br.acerola.manga.usecase.di.DirectoryCase
-import br.acerola.manga.usecase.di.MangadexCase
+import br.acerola.manga.usecase.DirectoryCase
+import br.acerola.manga.usecase.MangadexCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.usecase.history.ObserveMangaHistoryUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,22 +42,20 @@ import kotlin.math.max
 
 @HiltViewModel
 class MangaViewModel @Inject constructor(
+    private val observeMangaHistoryUseCase: ObserveMangaHistoryUseCase,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
-    @param:DirectoryCase private val directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>,
-    @param:MangadexCase private val mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>,
-    private val historyRepository: HistoryManagementRepository
+    @param:DirectoryCase private val directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>,
+    @param:MangadexCase private val mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
     val selectedChapterPerPage: StateFlow<ChapterPageSizeType> = _selectedChapterPerPage.asStateFlow()
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
-    val selectedDirectoryId: StateFlow<Long?> = _selectedDirectoryId.asStateFlow()
 
     private val _selectedMangaId = MutableStateFlow<Long?>(value = null)
-    val selectedMangaId: StateFlow<Long?> = _selectedMangaId.asStateFlow()
 
     private val _currentPage = MutableStateFlow(0)
     val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
@@ -142,7 +140,7 @@ class MangaViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val history: StateFlow<ReadingHistoryDto?> = _selectedDirectoryId.flatMapLatest { id ->
         if (id == null) flowOf(null)
-        else historyRepository.getHistoryByMangaId(id)
+        else observeMangaHistoryUseCase.observeByManga(id)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -152,7 +150,7 @@ class MangaViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val readChapters: StateFlow<List<Long>> = _selectedDirectoryId.flatMapLatest { id ->
         if (id == null) flowOf(emptyList())
-        else historyRepository.getReadChaptersByMangaId(id)
+        else observeMangaHistoryUseCase.observeReadChapters(id)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -193,7 +191,6 @@ class MangaViewModel @Inject constructor(
 
             val pagedLocalItems = if (start < total) items.subList(start, end) else emptyList()
 
-            // Match em memória usando normalizeChapter para ignorar variações de string (ex: 0.1 vs 0.01)
             val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
 
             val filteredRemoteItems = pagedLocalItems.mapNotNull { local ->
@@ -212,7 +209,10 @@ class MangaViewModel @Inject constructor(
     )
 
     fun init(folderId: Long, mangaId: Long?) {
-        AcerolaLogger.audit(TAG, "Initializing MangaScreen", LogSource.VIEWMODEL, mapOf("folderId" to folderId.toString(), "mangaId" to mangaId.toString()))  
+        AcerolaLogger.audit(
+            TAG, "Initializing MangaScreen", LogSource.VIEWMODEL,
+            mapOf("folderId" to folderId.toString(), "mangaId" to mangaId.toString())
+        )
         _selectedDirectoryId.value = folderId
         _selectedMangaId.value = mangaId
 
@@ -222,12 +222,11 @@ class MangaViewModel @Inject constructor(
             }
         }
 
-        // Sincroniza o ID remoto interno caso o StateFlow 'manga' encontre um novo vínculo
         viewModelScope.launch {
             manga.collect { mangaDto ->
                 val newRemoteId = mangaDto?.remoteInfo?.id
                 if (newRemoteId != null && newRemoteId != _selectedMangaId.value) {
-                    AcerolaLogger.d(TAG, "Syncing remote ID: $newRemoteId", LogSource.VIEWMODEL)  
+                    AcerolaLogger.d(TAG, "Syncing remote ID: $newRemoteId", LogSource.VIEWMODEL)
                     _selectedMangaId.value = newRemoteId
                 }
             }
@@ -236,7 +235,7 @@ class MangaViewModel @Inject constructor(
 
     fun updateChapterPerPage(size: ChapterPageSizeType) {
         if (_selectedChapterPerPage.value == size) return
-        AcerolaLogger.d(TAG, "Changing chapter page size to: ${size.name}", LogSource.VIEWMODEL)  
+        AcerolaLogger.d(TAG, "Changing chapter page size to: ${size.name}", LogSource.VIEWMODEL)
         _selectedChapterPerPage.value = size
         viewModelScope.launch {
             ChapterPerPagePreference.saveChapterPerPage(context, size)
@@ -244,7 +243,7 @@ class MangaViewModel @Inject constructor(
     }
 
     fun loadPageAsync(page: Int) {
-        AcerolaLogger.d(TAG, "Loading chapter list page: $page", LogSource.VIEWMODEL)  
+        AcerolaLogger.d(TAG, "Loading chapter list page: $page", LogSource.VIEWMODEL)
         _currentPage.value = page
     }
 
@@ -252,14 +251,13 @@ class MangaViewModel @Inject constructor(
         val mangaId = _selectedDirectoryId.value ?: return
         val isRead = readChapters.value.contains(chapterId)
 
-        AcerolaLogger.audit(TAG, "Toggling chapter read status", LogSource.VIEWMODEL, mapOf("chapterId" to chapterId.toString(), "newStatus" to (!isRead).toString()))  
+        AcerolaLogger.audit(
+            TAG, "Toggling chapter read status", LogSource.VIEWMODEL,
+            mapOf("chapterId" to chapterId.toString(), "newStatus" to (!isRead).toString())
+        )
 
         viewModelScope.launch {
-            if (isRead) {
-                historyRepository.unmarkChapterAsRead(chapterId)
-            } else {
-                historyRepository.markChapterAsRead(mangaId, chapterId)
-            }
+            observeMangaHistoryUseCase.toggleReadStatus(mangaId, chapterId, isRead)
         }
     }
 
@@ -268,6 +266,7 @@ class MangaViewModel @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "MangaViewModel"  
+
+        private const val TAG = "MangaViewModel"
     }
 }

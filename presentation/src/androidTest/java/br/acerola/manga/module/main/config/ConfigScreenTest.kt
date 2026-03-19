@@ -8,17 +8,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.config.preference.AppTheme
-import br.acerola.manga.config.preference.FileExtension
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.module.main.Main
-import br.acerola.manga.module.main.config.Screen
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,7 +31,6 @@ class ConfigScreenTest {
     val composeTestRule = createComposeRule()
 
     // Mocks dos ViewModels necessários
-    private val filePrefsVM = mockk<FilePreferencesViewModel>(relaxed = true)
     private val fsAccessVM = mockk<FileSystemAccessViewModel>(relaxed = true)
     private val mangaDirVM = mockk<MangaDirectoryViewModel>(relaxed = true)
     private val mangaDexVM = mockk<MangaRemoteInfoViewModel>(relaxed = true)
@@ -47,9 +43,6 @@ class ConfigScreenTest {
         
         every { themeVM.currentTheme } returns MutableStateFlow(AppTheme.CATPPUCCIN)
         every { themeVM.uiEvents } returns emptyEvents
-        
-        every { filePrefsVM.selectedExtension } returns MutableStateFlow(FileExtension.CBZ)
-        every { filePrefsVM.uiEvents } returns emptyEvents
         
         every { metadataVM.generateComicInfo } returns MutableStateFlow(true)
         every { metadataVM.uiEvents } returns emptyEvents
@@ -71,11 +64,10 @@ class ConfigScreenTest {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
                     Main.Config.Layout.Screen(
-                        filePreferencesViewModel = filePrefsVM,
+                        metadataSettingsViewModel = metadataVM,
                         fileSystemAccessViewModel = fsAccessVM,
                         mangaDirectoryViewModel = mangaDirVM,
                         mangaDexViewModel = mangaDexVM,
-                        metadataSettingsViewModel = metadataVM,
                         themeViewModel = themeVM
                     )
                 }

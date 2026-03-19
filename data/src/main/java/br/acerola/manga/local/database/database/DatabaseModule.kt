@@ -8,9 +8,9 @@ import br.acerola.manga.local.database.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.database.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.database.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.author.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.cover.CoverDao
-import br.acerola.manga.local.database.dao.metadata.genre.GenreDao
+import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
+import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

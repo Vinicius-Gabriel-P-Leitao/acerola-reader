@@ -11,8 +11,8 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.HistoryManagementRepository
-import br.acerola.manga.service.reader.PageRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.service.reader.ChapterReaderService
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
@@ -34,10 +34,10 @@ class ReaderViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val repository = mockk<PageRepository>(relaxed = true)
+    private val repository = mockk<ChapterReaderService>(relaxed = true)
     private val historyRepository = mockk<HistoryManagementRepository>(relaxed = true)
     private val chapterRepository = mockk<ChapterManagementRepository<ChapterArchivePageDto>>(relaxed = true)
-    private lateinit var getChaptersUseCase: GetChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
     private val context = mockk<Context>(relaxed = true)
 
     private lateinit var viewModel: ReaderViewModel
@@ -58,12 +58,12 @@ class ReaderViewModelTest {
         every { chapterRepository.isIndexing } returns MutableStateFlow(false)
         every { chapterRepository.progress } returns MutableStateFlow(-1)
         
-        getChaptersUseCase = GetChaptersUseCase(chapterRepository)
+        observeChaptersUseCase = ObserveChaptersUseCase(chapterRepository)
         
         every { repository.openChapter(any()) } returns Either.Right(Unit)
         coEvery { repository.pageCount() } returns 0
 
-        viewModel = ReaderViewModel(repository, context, historyRepository, getChaptersUseCase)
+        viewModel = ReaderViewModel(repository, context, historyRepository, observeChaptersUseCase)
     }
 
     @After

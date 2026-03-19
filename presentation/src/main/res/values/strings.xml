@@ -7,6 +7,7 @@
     <string name="navigation_history_activity">history</string>
     <string name="navigation_chapters_activity">chapters</string>
     <string name="navigation_reader_activity">reader</string>
+    <string name="navigation_search_activity">search</string>
 
     <!-- Screen label -->
     <string name="label_home_activity">home</string>
@@ -14,6 +15,7 @@
     <string name="label_history_activity">Histórico</string>
     <string name="label_chapters_activity">Capítulos</string>
     <string name="label_reader_activity">Leitor</string>
+    <string name="label_search_activity">Buscar</string>
 
     <!-- Screen content description -->
     <string name="description_home_activity">Tela de início que lista os mangás.</string>
@@ -21,6 +23,7 @@
     <string name="description_history_activity">Tela de histórico de mangás lidos</string>
     <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
     <string name="description_reader_activity">Tela de leitura do capítulo</string>
+    <string name="description_search_activity">Tela de busca e download de capítulos do MangaDex</string>
 
     <!-- Icons -->
     <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
@@ -159,5 +162,32 @@
 
     <string name="label_settings_see_more_themes">Ver mais</string>
     <string name="title_dialog_select_theme">Escolha um Tema</string>
+
+    <!-- Search & Download Screen -->
+    <string name="title_search_screen">Buscar no MangaDex</string>
+    <string name="placeholder_search_mangadex">Nome, ID ou URL do mangá…</string>
+    <string name="label_search_results">Resultados</string>
+    <string name="label_search_empty_state">Busque por um mangá para baixar capítulos traduzidos</string>
+    <string name="label_search_no_results">Nenhum resultado encontrado</string>
+    <string name="label_search_chapters">Capítulos</string>
+    <string name="label_search_language">Idioma</string>
+    <string name="label_search_select_all">Todos</string>
+    <string name="label_search_deselect_all">Nenhum</string>
+    <string name="label_search_download">Baixar selecionados (%1$d)</string>
+    <string name="label_search_back_to_results">Voltar aos resultados</string>
+    <string name="label_search_chapter_item">Cap. %1$s</string>
+    <string name="label_search_chapter_pages">%1$d páginas</string>
+    <string name="label_search_chapter_group">Scan: %1$s</string>
+    <string name="label_search_download_queued">Download de %1$d capítulo(s) enfileirado</string>
+    <string name="label_search_no_library_uri">Selecione a pasta da biblioteca nas Configurações primeiro</string>
+    <string name="label_search_no_chapters_selected">Selecione ao menos um capítulo</string>
+    <string name="label_search_download_all">Baixar tudo</string>
+    <string name="label_search_page_indicator">Página %1$d de %2$d</string>
+    <string name="label_download_activity">Baixar capítulos</string>
+    <string name="navigation_download_activity">download</string>
+    <string name="label_download_selected">Baixar (%1$d)</string>
+    <string name="label_download_all_chapters">Tudo</string>
+    <string name="description_icon_search_submit">Buscar</string>
+    <string name="description_icon_search_clear">Limpar busca</string>
 
     </resources>

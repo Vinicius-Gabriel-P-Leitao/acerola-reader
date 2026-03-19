@@ -30,7 +30,6 @@ import br.acerola.manga.common.ux.component.Card
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
@@ -38,7 +37,6 @@ import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.component.MetadataExportSettings
-import br.acerola.manga.module.main.config.component.PreferSavedFile
 import br.acerola.manga.module.main.config.component.SelectFolder
 import br.acerola.manga.module.main.config.component.SyncLibraryArchive
 import br.acerola.manga.module.main.config.component.SyncMangadexData
@@ -52,7 +50,6 @@ import kotlinx.coroutines.launch
 fun Main.Config.Layout.Screen(
     metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel(),
     fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
-    filePreferencesViewModel: FilePreferencesViewModel = hiltViewModel(),
     mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
     mangaDexViewModel: MangaRemoteInfoViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel()
@@ -63,11 +60,6 @@ fun Main.Config.Layout.Screen(
     val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
-        launch {
-            filePreferencesViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
-            }
-        }
         launch {
             fileSystemAccessViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
@@ -96,7 +88,6 @@ fun Main.Config.Layout.Screen(
     }
 
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
-    val selectedExtension by filePreferencesViewModel.selectedExtension.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
@@ -108,7 +99,6 @@ fun Main.Config.Layout.Screen(
     val uiState = ConfigUiState(
         selectedTheme = selectedTheme,
         folderUri = fileSystemAccessViewModel.folderUri,
-        selectedExtension = selectedExtension,
         generateComicInfo = generateComicInfo,
         isLibraryIndexing = libraryIndexing,
         libraryProgress = if (libraryProgress >= 0) libraryProgress / 100f else null,
@@ -120,7 +110,6 @@ fun Main.Config.Layout.Screen(
         when (action) {
             is ConfigAction.UpdateTheme -> themeViewModel.setTheme(action.theme)
             is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
-            is ConfigAction.UpdateFileExtension -> filePreferencesViewModel.saveExtension(action.extension)
             is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
             ConfigAction.DeepScanLibrary -> mangaDirectoryViewModel.deepScanLibrary()
             ConfigAction.QuickSyncLibrary -> mangaDirectoryViewModel.syncLibrary()
@@ -164,12 +153,6 @@ fun Main.Config.Layout.Screen(
                             context = context,
                             folderUri = uiState.folderUri,
                             onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
-                        )
-                        Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
-
-                        Main.Config.Component.PreferSavedFile(
-                            selected = uiState.selectedExtension,
-                            onSelect = { onAction(ConfigAction.UpdateFileExtension(it)) }
                         )
                         Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
 

@@ -24,7 +24,7 @@ fun Acerola.Layout.BottomBar(navController: NavHostController) {
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Destination.entries.forEachIndexed { _, destination ->
-            if (destination === Destination.HOME || destination === Destination.HISTORY || destination === Destination.CONFIG) {
+            if (destination === Destination.HOME || destination === Destination.HISTORY || destination === Destination.SEARCH || destination === Destination.CONFIG) {
                 val routeString = stringResource(id = destination.route)
 
                 NavigationBarItem(

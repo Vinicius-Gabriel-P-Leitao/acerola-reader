@@ -13,108 +13,111 @@ metadados de fontes online populares.
 * **Interface Personalizável:** Adapte a aparência da sua biblioteca à sua preferência.
 * **Leitor Integrado:** Leia seus mangás diretamente no aplicativo com um leitor projetado para uma experiência fluida.
 
-## Status das Funcionalidades
+---
 
-Este projeto está em desenvolvimento ativo. Abaixo está uma lista das funcionalidades atualmente implementadas e o que
-está planejado para o futuro.
+## Status das Funcionalidades
 
 ### ✅ Implementado
 
-*   [x] **Escaneamento da Biblioteca:** Escaneia as pastas especificadas para detectar mangás e capítulos, persistindo a
-    estrutura em um banco de dados local.
-*   [x] **Sincronização da Biblioteca:** Mantém o banco de dados local sincronizado com o sistema de arquivos,
-    detectando novas adições, renomeações e exclusões.
-*   [x] **Integração com MangaDex:** Busca automaticamente metadados de mangás do MangaDex com base nos nomes das
-    pastas.
-*   [x] **Tela Inicial (Home Screen):** Exibe todos os mangás da sua biblioteca com duas opções de layout: Lista e
-    Grade.
-*   [x] **Tela de Capítulos:** Mostra uma lista de todos os capítulos de um mangá selecionado, juntamente com seus
-    metadados detalhados.
+#### Biblioteca
+- [x] **Escaneamento da Biblioteca:** Escaneia as pastas especificadas para detectar mangás e capítulos, persistindo a estrutura em um banco de dados local.
+- [x] **Sincronização da Biblioteca:** Mantém o banco de dados local sincronizado com o sistema de arquivos, detectando novas adições, renomeações e exclusões.
+- [x] **Integração com MangaDex:** Busca automaticamente metadados de mangás do MangaDex com base nos nomes das pastas.
+- [x] **Tela Inicial (Home Screen):** Exibe todos os mangás da sua biblioteca com dois layouts: Lista e Grade.
+- [x] **Tela de Capítulos:** Mostra uma lista de todos os capítulos de um mangá selecionado com metadados detalhados.
 
-### 🛠️ FIXME (Correções Prioritárias)
+#### Correções (FIXME)
+- [x] **Bug no Primeiro Scan:** Corrigido o mapeamento de capítulos no primeiro scan.
+- [x] **Performance:** Reformulado o `loadPage` da seção de capítulos na tela de detalhes.
 
-*   [x] **Bug no Primeiro Scan:** Verificar por que no primeiro scan de mangás os capítulos não estão sendo mapeados.
-*   [x] **Performance:** Reformular o `loadPage` da seção de capítulos na tela de detalhes do mangá.
+#### Leitor e Configuração do Mangá
+- [x] **Suporte para `.cbz` e `.cbr`** com leitura integrada.
+- [x] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem).
+- [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
+- [x] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa e banner.
+- [x] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
+- [x] **Ações de Limpeza (com confirmação):** Limpar metadados e capítulos.
 
-### 🚧 Planejado / Em Andamento
+#### Configurações Globais
+- [x] **Gerenciamento de Metadados (ComicInfo.xml vs DB):** Gerar/ler `ComicInfo.xml`, resolver conflitos e persistir escolha.
+- [x] **Metadados de Capítulos (MangaDex):** Busca em background, desativada por padrão.
 
-* **Leitor de Mangás Integrado:**
-    *   [x] Suporte completo para formatos `.cbz` e `.cbr`. 
-* **Configuração e Gerenciamento do Mangá (Refatoração):**
-    *   [X] **Sync Individual:** Sincronizar apenas um mangá (MangaDex + Filesystem) buscando novos arquivos.
-    *   [x] **Paginação:** Configuração para alterar a quantidade de capítulos por página.
-    *   [X] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa (`cover.jpg`/`.png`) e banner. Se o
-        banner for removido, a capa assume o lugar.
-    *   [x] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
-    *   [x] **Ações de Limpeza (com confirmação):**
-        * Limpar metadados (remove do DB e apaga `ComicInfo.xml`).
-        * Limpar capítulos (remove todos os arquivos e dados).
-* **Configurações Globais:**
-    *   [x] **Gerenciamento de Metadados (ComicInfo.xml vs DB):**
-        * Gerar `ComicInfo.xml` por padrão; ler se existir.
-        * Resolver conflitos: Adicionar opção "Metadata ComicInfo ? Database" e persistir essa escolha (
-          SQLite/DataStore).
-    *   [x] **Metadados de Capítulos (MangaDex):** Implementar busca (desativado por padrão, execução em background).
-* **Melhorias na UI/UX:**
-    *   [x] **ChapterItem:** Reformular visual para ficar mais agradável.
-    *   [x] **Busca de Capítulos:** Adicionar busca por número (`chapterSort`), nome do capítulo e nome do arquivo
-        (avaliar `SearchBar` do Material3).
-    *   [x] Redesenho da Barra Superior Principal para um visual mais clean (apple liquid glass) parecido porém com
-        tema mais dark.
-* **Background e Performance:**
-    *   [x] **Notificações:** Transformar funções de sync demorado (ex: verificar arquivos existentes) em tarefas de
-        background com notificação de progresso, permitindo sair do app.
-* **Fontes de Metadados Expandidas:**
-    *   [ ] Opção para escolher **AniList** como uma fonte alternativa de metadados.
-    *   [ ] Um painel de configurações para selecionar e configurar o provedor de metadados desejado (MangaDex/AniList).
-* **Rastreamento de Leitura:**
-    *   [x] Marcar capítulos como lidos/não lidos.
-    *   [x] Funcionalidade "Continuar Lendo" para pular rapidamente para o último capítulo lido.
-* **Adicionar funções e melhorar tela de Leitura:**
-    *   [x] A interface já está bem agradável, será feito uma otimização e testes do código de interface.
-    *   [x] Será feito função de clique para trocar página nos modos paginados.
+#### UI/UX
+- [x] **ChapterItem:** Visual reformulado.
+- [x] **Busca de Capítulos:** Por número (`chapterSort`), nome e nome do arquivo.
+- [x] **Redesenho da Barra Superior:** Visual mais clean (apple liquid glass) com tema dark.
+
+#### Background e Performance
+- [x] **Notificações:** Syncs demorados rodam em background com progresso e notificação.
+- [x] **Correção de notificações:** Sync geral do MangaDex e outras funções corrigidos para notificar corretamente.
+
+#### Rastreamento de Leitura
+- [x] Marcar capítulos como lidos/não lidos.
+- [x] Funcionalidade "Continuar Lendo".
+- [x] Otimização da interface do leitor.
+- [x] Clique para trocar página nos modos paginados.
+
+#### Download via MangaDex
+- [x] **Busca de tradução:** Por nome, ID do MangaDex ou URL.
+- [x] **Seleção de idioma** antes do download.
+- [x] **Download como `.cbz`** com empacotamento automático na pasta do mangá.
+- [x] **Fila de download:** Múltiplos downloads simultâneos com progresso e notificação.
+- [x] **Integração com biblioteca:** Sync automático após download.
+- [x] **Correção:** Geração correta de `.cbz`/`.cbr` (sem extensão dupla `.cbz.zip`).
+- [x] **Metadados antes dos capítulos:** Baixa cover, gênero etc. antes de iniciar os capítulos.
+
+#### Temas
+- [x] **Tema adaptável** com persistência via DataStore.
+- [x] **Catppuccin** como tema padrão com melhorias para o tema claro.
+- [x] **Dracula** (dark) e **Alucard** (claro).
+- [x] **Nord** em versões claro e escuro.
+
+#### Logs e Limpeza
+- [x] **Wrapper de logs:** Classe padronizada para facilitar busca e filtragem.
+- [x] **Limpeza de mangás deletados:** Job que remove do banco entradas cujas pastas não existem mais.
 
 ---
 
-* **Download de Traduções via MangaDex:**
-    *   [x] **Busca de tradução:** Localizar capítulos traduzidos por nome do mangá, ID do MangaDex ou URL do mangá.
-    *   [x] **Seleção de idioma:** Permitir ao usuário escolher o idioma da tradução antes de baixar.
-    *   [x] **Download como `.cbz`:** Baixar as páginas do capítulo e empacotar automaticamente em arquivo `.cbz` na
-        pasta do mangá correspondente.
-    *   [x] **Fila de download:** Gerenciar múltiplos downloads simultâneos com progresso individual por capítulo
-        (tarefa de background com notificação).
-    *   [x] **Integração com biblioteca:** Após o download, acionar sync automático para que o capítulo apareça na
-        biblioteca sem intervenção manual.
-    *   [x] **Melhorar visualização:** Melhorar visualização de que o mangá está sendo baixado e mostrar a fila de 
-        chapters já baixados.
-* **Filtros e Ordenação da Biblioteca (Home Screen):**
-    *   [ ] **Ordenação:** Suporte a Asc/Desc para os critérios abaixo:
-        * Título (A–Z / Z–A).
-        * Quantidade de capítulos (menor → maior / maior → menor).
-        * Última atualização / `lastUpdate` (mais recente → mais antigo / mais antigo → mais recente).
-    *   [ ] **Persistência de preferência:** Salvar a ordenação escolhida via DataStore para manter entre sessões.
-    *   [ ] **UI do filtro:** Usar o icone já na tela de HOME, não colocar label só icone mesmo.
-* **Filtros e Ordenação da Tela de Capítulos:**
-    *   [ ] **Tirar autoscroll** Remover autoscroll da tela de chapter quando troco a paginação, deixar o usuário
-        clicar em trocar página e não quebrar
-    *   [ ] **Ordenação:** Suporte a Asc/Desc para os critérios abaixo:
-        * Número do capítulo (`chapterSort`) — crescente / decrescente.
-        * Última atualização / `lastUpdate` (mais recente → mais antigo / mais antigo → mais recente).
-    *   [ ] **Persistência de preferência:** Salvar a ordenação por mangá (ou global) via DataStore.
-    *   [ ] **UI do filtro:** Ícone de ordenação na barra superior da tela de capítulos, abrindo bottom sheet
-        consistente com o da Home.
-* **Implementar mais logs:**
-    *   [x] **Implementar uma classe de logs ou função de faz um wrapper para o Log.** Essa classe ou função tem
-        de padronizar os logs do projeto para que fique fácil de buscar e filtrar
-* **Adiciona função de trocar thema:**
-    *   [x] **Thema adaptável** Isso já é default do android então só dataStore para salvar preferencia.
-    *   [x] **Thema default vai ser o cattpuccin** Deixar ele default e melhorar cores para thema branco.
-* **Corrigir bug de notificação para todos os sync**
-   *    [x] **Corrigir o sync para métadados e outras funções na config geral** Sync do mangadex geral não gera 
-        notifição e deixa com o app rodando em background, verificar se existe outro que tem o mesmo problema. 
-* **Adicionar novos themas, Nord e Dracula**
-    *    [x] **Adicionar Dracula e Alucard** Dracula vai ser o dark e o Alucard o claro
-    *    [x] **Adicionar o Nord** Verificar como o nord pode ser aplicado em claro e escuro
+### 🔲 Pendente
+
+#### Fontes de Metadados Expandidas
+- [ ] Opção para escolher **AniList** como fonte alternativa de metadados.
+- [ ] Painel de configurações para selecionar e configurar o provedor (MangaDex / AniList).
+
+#### Download via MangaDex
+- [ ] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
+- [ ] **Paginação no download:** Mangás com 300+ capítulos mostram apenas 0/100 — exibir de forma paginada e permitir baixar tudo em sequência.
+- [ ] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário escolher qual usar no download.
+- [ ] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra 
+  selecionar tudo, trocar pagina e clicar no selecionar tudo e ele considerar a as duas paginas e o bottom sheet a 
+  seção está bem desorganizada.
+- [ ] **Reorganziar a tabela de métadados:** Essa refatoração vai ter como intuito tranformar a tabela de métadados 
+  agnóstica de origem dos dados e teremos tabelas pequenas auxiliares para poder atender essa relação, quero uma de 
+  mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do 
+  anilist e link para o produto original. 
+
+#### Filtros e Ordenação — Home Screen
+- [ ] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
+- [ ] **Persistência da ordenação** via DataStore.
+- [ ] **UI do filtro:** Usar apenas ícone, sem label.
+
+#### Filtros e Ordenação — Tela de Capítulos
+- [ ] **Remover autoscroll** ao trocar de página.
+- [ ] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
+- [ ] **Persistência da ordenação** por mangá (ou global) via DataStore.
+- [ ] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
+
+#### Verificar e Baixar Novos Capítulos
+- [ ] **Botão "Verificar updates":** Na tela de detalhes do mangá, um botão que consulta o MangaDex e retorna
+  capítulos mais recentes do que o último registrado no banco local.
+- [ ] **Exibir capítulos disponíveis:** Mostrar uma lista/bottom sheet com os capítulos novos encontrados,
+  exibindo número, nome e data de lançamento antes de qualquer ação.
+- [ ] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
+  enfileira no download manager já existente.
+- [ ] **Indicador de "atualizado" ou "tem novidade":** Badge ou ícone na tela de detalhes indicando que
+  existem capítulos no MangaDex além do último local, sem baixar nada automaticamente.
+
+---
 
 ## Pilha de Tecnologia
 

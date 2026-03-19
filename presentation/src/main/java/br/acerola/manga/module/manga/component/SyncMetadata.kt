@@ -26,7 +26,7 @@ import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewM
 import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.local.database.entity.metadata.MetadataSource
+import br.acerola.manga.config.pattern.MetadataSource
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.presentation.R
 

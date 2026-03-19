@@ -5,12 +5,13 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Pagination
 import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.component.ChapterItem
-import br.acerola.manga.module.manga.component.PaginationFooter
 import br.acerola.manga.util.normalizeChapter
 
 fun Manga.Layout.ChapterSection(
@@ -45,7 +46,7 @@ fun Manga.Layout.ChapterSection(
             key = "pagination_footer",
             contentType = "pagination"
         ) {
-            Manga.Component.PaginationFooter(
+            Acerola.Component.Pagination(
                 currentPage = currentPage,
                 totalPages = totalPages,
                 onPageChange = onPageChange

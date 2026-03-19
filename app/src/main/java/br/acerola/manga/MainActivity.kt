@@ -2,7 +2,6 @@ package br.acerola.manga
 
 import android.content.Context
 import android.os.Bundle
-import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -10,27 +9,19 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
-import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.navigation.Destination
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.layout.BottomBar
-import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.manga.common.viewmodel.archive.FilePreferencesViewModel
-import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
-import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
-import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
-import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.Screen
 import br.acerola.manga.module.main.history.Screen
 import br.acerola.manga.module.main.home.Screen
+import br.acerola.manga.module.main.search.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -51,6 +42,9 @@ class MainActivity(
         }
         defaultComposable(context, Destination.HISTORY) {
             Main.History.Layout.Screen()
+        }
+        defaultComposable(context, Destination.SEARCH) {
+            Main.Search.Layout.Screen()
         }
         defaultComposable(context, Destination.CONFIG) {
             Main.Config.Layout.Screen()

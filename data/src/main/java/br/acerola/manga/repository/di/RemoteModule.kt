@@ -30,7 +30,7 @@ annotation class ComicInfo
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class ApiModule {
+abstract class RemoteModule {
     @Binds
     @Singleton
     @Mangadex

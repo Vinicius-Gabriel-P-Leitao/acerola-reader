@@ -33,6 +33,7 @@ data class Cover(
     @ColumnInfo(name = "url")
     val url: String,
 
+    // Remover os mirror_id e ir para a tabela de origem.
     @ColumnInfo(name = "mirror_id")
     val mirrorId: String,
 

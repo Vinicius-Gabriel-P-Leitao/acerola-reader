@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 open class ObserveLibraryUseCase<T>(
     private val mangaRepository: MangaManagementRepository<T>
 ) {
-
     val progress: StateFlow<Int> get() = mangaRepository.progress
     val isIndexing: StateFlow<Boolean> get() = mangaRepository.isIndexing
 

@@ -3,6 +3,12 @@
 
     <application>
         <activity
+            android:name="br.acerola.manga.module.download.DownloadActivity"
+            android:exported="false"
+            android:label="@string/label_download_activity"
+            android:theme="@style/Theme.Acerola" />
+
+        <activity
             android:name="br.acerola.manga.module.manga.MangaActivity"
             android:exported="false"
             android:label="@string/label_chapters_activity"

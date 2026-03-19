@@ -10,7 +10,7 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.port.ChapterManagementRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -35,7 +35,7 @@ class ChapterRemoteInfoViewModelTest {
 
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val repo = mockk<ChapterManagementRepository<ChapterRemoteInfoPageDto>>(relaxed = true)
-    private lateinit var getChaptersUseCase: GetChaptersUseCase<ChapterRemoteInfoPageDto>
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
     private lateinit var viewModel: ChapterRemoteInfoViewModel
 
     @Before
@@ -47,8 +47,8 @@ class ChapterRemoteInfoViewModelTest {
         every { repo.isIndexing } returns MutableStateFlow(false)
         every { repo.progress } returns MutableStateFlow(-1)
         
-        getChaptersUseCase = GetChaptersUseCase(repo)
-        viewModel = ChapterRemoteInfoViewModel(workManager, getChaptersUseCase)
+        observeChaptersUseCase = ObserveChaptersUseCase(repo)
+        viewModel = ChapterRemoteInfoViewModel(workManager, observeChaptersUseCase)
     }
 
     @After

@@ -8,17 +8,18 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.manga.config.preference.FileExtension
+import arrow.core.getOrElse
+import br.acerola.manga.config.pattern.ArchiveFormatPattern
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.logging.AcerolaLogger
-import br.acerola.manga.logging.LogSource
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.entity.archive.MangaDirectory
 import br.acerola.manga.local.mapper.toDto
 import br.acerola.manga.local.mapper.toMangaDirectoryModel
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.repository.di.DirectoryFsOps
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
@@ -87,14 +88,15 @@ class MangaDirectoryRepository @Inject constructor(
                         ?: return@catch
 
                     val folderId = DocumentsContract.getDocumentId(folderUri)
-                    val folderChildren = ContentQueryHelper.listFiles(context, rootUri, folderId)
+                    val folderChildren =
+                        ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
 
                     val bannerMetadata = folderChildren.firstOrNull { isBanner(it.name) }
                     val coverMetadata = folderChildren.firstOrNull { isCover(it.name) }
                     val hasComicInfo = folderChildren.any { it.name == "ComicInfo.xml" }
 
                     val firstChapterName = folderChildren.firstOrNull { 
-                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && FileExtension.isSupported(ext = it.name)
+                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && ArchiveFormatPattern.isSupported(ext = it.name)
                     }?.name
 
                     val detectedTemplate = firstChapterName?.let {
@@ -368,22 +370,23 @@ class MangaDirectoryRepository @Inject constructor(
 
     private fun buildLibrary(context: Context, rootUri: Uri): List<MangaDirectory> {
         val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
-        
-        val allChildren = ContentQueryHelper.listFiles(context, rootUri)
+
+        val allChildren = ContentQueryHelper.listFiles(context, rootUri).getOrElse { return emptyList() }
         val folders = allChildren.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
 
         return folders.map { folderMetadata ->
             val folderUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, folderMetadata.id)
             val folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@map null
-            
-            val folderChildren = ContentQueryHelper.listFiles(context, rootUri, folderMetadata.id)
-            
+
+            val folderChildren =
+                ContentQueryHelper.listFiles(context, rootUri, folderMetadata.id).getOrElse { return@map null }
+
             val bannerMetadata = folderChildren.firstOrNull { isBanner(it.name) }
             val coverMetadata = folderChildren.firstOrNull { isCover(it.name) }
             val hasComicInfo = folderChildren.any { it.name == "ComicInfo.xml" }
 
             val firstChapterName = folderChildren.firstOrNull { 
-                FileExtension.isSupported(ext = it.name)
+                ArchiveFormatPattern.isSupported(ext = it.name)
             }?.name
 
             val detectedTemplate = firstChapterName?.let {

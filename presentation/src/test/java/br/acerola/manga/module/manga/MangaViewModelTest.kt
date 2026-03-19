@@ -14,7 +14,7 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.repository.port.ChapterManagementRepository
 import br.acerola.manga.repository.port.HistoryManagementRepository
 import br.acerola.manga.repository.port.MangaManagementRepository
-import br.acerola.manga.usecase.chapter.GetChaptersUseCase
+import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
@@ -45,8 +45,8 @@ class MangaViewModelTest {
     
     private lateinit var mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>
-    private lateinit var directoryGetChapters: GetChaptersUseCase<ChapterArchivePageDto>
-    private lateinit var mangadexGetChapters: GetChaptersUseCase<ChapterRemoteInfoPageDto>
+    private lateinit var directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
     
     private val historyRepository = mockk<HistoryManagementRepository>(relaxed = true)
 
@@ -84,8 +84,8 @@ class MangaViewModelTest {
 
         mangadexObserve = ObserveLibraryUseCase(mangadexRepo)
         directoryObserve = ObserveLibraryUseCase(directoryRepo)
-        directoryGetChapters = GetChaptersUseCase(directoryChapterRepo)
-        mangadexGetChapters = GetChaptersUseCase(mangadexChapterRepo)
+        directoryGetChapters = ObserveChaptersUseCase(directoryChapterRepo)
+        mangadexGetChapters = ObserveChaptersUseCase(mangadexChapterRepo)
 
         every { historyRepository.getHistoryByMangaId(any()) } returns flowOf(null)
         every { historyRepository.getReadChaptersByMangaId(any()) } returns flowOf(emptyList())

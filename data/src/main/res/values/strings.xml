@@ -39,4 +39,11 @@
     <string name="sync_metadata_success_title">Metadados Atualizados</string>
     <string name="sync_metadata_success_message">Informações baixadas com sucesso.</string>
     <string name="sync_metadata_fetching_error">Erro ao buscar metadados.</string>
+
+    <!-- Chapter Download Worker -->
+    <string name="download_chapter_title">Baixando Capítulos</string>
+    <string name="download_chapter_description">Baixando capítulos de %1$s…</string>
+    <string name="download_chapter_success_title">Download Concluído</string>
+    <string name="download_chapter_success_message">%1$d de %2$d capítulos baixados com sucesso.</string>
+    <string name="download_chapter_error_title">Erro no Download</string>
 </resources>
