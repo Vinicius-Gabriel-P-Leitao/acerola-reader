@@ -2,9 +2,9 @@ package br.acerola.manga.core.usecase
 
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.adapter.di.DirectoryEngine
-import br.acerola.manga.adapter.port.ChapterPort
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.library.DirectoryEngine
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaUseCase

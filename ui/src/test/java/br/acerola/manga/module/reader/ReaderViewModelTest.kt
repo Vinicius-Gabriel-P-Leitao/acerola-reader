@@ -9,8 +9,8 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.logging.AcerolaLogger
-import br.acerola.manga.adapter.port.ChapterPort
-import br.acerola.manga.adapter.port.HistoryPort
+import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.contract.HistoryPort
 import br.acerola.manga.service.reader.ChapterReaderService
 import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
 import com.google.common.truth.Truth.assertThat

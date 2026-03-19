@@ -1,6 +1,6 @@
 package br.acerola.manga.core.usecase.manga
 
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.MangaPort
 import kotlinx.coroutines.flow.StateFlow
 
 /**

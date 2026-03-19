@@ -2,11 +2,11 @@ package br.acerola.manga.core.usecase
 
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.di.AnilistEngine
-import br.acerola.manga.adapter.di.ComicInfoEngine
-import br.acerola.manga.adapter.di.MangadexEngine
-import br.acerola.manga.adapter.port.ChapterPort
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.metadata.anilist.AnilistEngine
+import br.acerola.manga.adapter.metadata.comicinfo.ComicInfoEngine
+import br.acerola.manga.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaUseCase

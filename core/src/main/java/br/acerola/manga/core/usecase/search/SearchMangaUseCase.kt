@@ -5,8 +5,8 @@ import br.acerola.manga.pattern.MangadexPattern
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.adapter.di.MangadexSource
-import br.acerola.manga.adapter.port.DownloadPort
+import br.acerola.manga.adapter.contract.DownloadPort
+import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
 import javax.inject.Inject
 import javax.inject.Singleton
 

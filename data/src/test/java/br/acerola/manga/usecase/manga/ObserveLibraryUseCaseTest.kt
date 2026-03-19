@@ -1,7 +1,7 @@
 package br.acerola.manga.usecase.manga
 
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.MangaPort
 import io.mockk.MockKAnnotations
 import io.mockk.coVerify
 import io.mockk.every

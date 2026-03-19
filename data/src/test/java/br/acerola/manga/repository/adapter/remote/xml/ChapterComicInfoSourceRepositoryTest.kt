@@ -7,7 +7,7 @@ import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.service.metadata.ComicInfoParserService
 import br.acerola.manga.service.reader.ChapterSourceFactory
 import br.acerola.manga.service.reader.port.ChapterSourceService
-import br.acerola.manga.adapter.comicInfo.source.ChapterComicInfoSource
+import br.acerola.manga.adapter.metadata.comicinfo.source.ChapterComicInfoSource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every

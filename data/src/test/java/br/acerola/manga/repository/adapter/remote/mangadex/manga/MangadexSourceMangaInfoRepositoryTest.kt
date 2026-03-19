@@ -7,7 +7,7 @@ import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.manga.MangaAttributes
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
-import br.acerola.manga.adapter.mangadex.source.MangadexMangaInfoSource
+import br.acerola.manga.adapter.metadata.mangadex.source.MangadexMangaInfoSource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every

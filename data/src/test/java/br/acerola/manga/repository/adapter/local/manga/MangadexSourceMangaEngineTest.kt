@@ -7,7 +7,7 @@ import arrow.core.Either
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.mangadex.engine.MangadexMangaEngine
+import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexMangaEngine
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
@@ -15,8 +15,8 @@ import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.database.dao.metadata.source.MangadexSourceDao
-import br.acerola.manga.adapter.port.ImageFetchPort
-import br.acerola.manga.adapter.port.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.ImageFetchPort
+import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
 import br.acerola.manga.service.artwork.MangaSaveCoverService
 import br.acerola.manga.service.metadata.MangaMetadataExportService
 import io.mockk.MockKAnnotations

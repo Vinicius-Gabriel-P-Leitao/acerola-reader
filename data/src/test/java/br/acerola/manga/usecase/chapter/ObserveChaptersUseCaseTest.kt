@@ -1,7 +1,7 @@
 package br.acerola.manga.usecase.chapter
 
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
-import br.acerola.manga.adapter.port.ChapterPort
+import br.acerola.manga.adapter.contract.ChapterPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

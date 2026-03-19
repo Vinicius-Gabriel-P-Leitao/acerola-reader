@@ -5,7 +5,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
-import br.acerola.manga.adapter.directory.ChapterArchiveEngine
+import br.acerola.manga.adapter.library.ChapterArchiveEngine
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao

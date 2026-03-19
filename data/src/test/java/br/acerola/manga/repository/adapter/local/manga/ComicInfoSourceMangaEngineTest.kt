@@ -2,7 +2,7 @@ package br.acerola.manga.repository.adapter.local.manga
 
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.comicInfo.engine.ComicInfoMangaEngine
+import br.acerola.manga.adapter.metadata.comicinfo.engine.ComicInfoMangaEngine
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
@@ -10,8 +10,8 @@ import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.database.dao.metadata.source.ComicInfoSourceDao
-import br.acerola.manga.adapter.port.ImageFetchPort
-import br.acerola.manga.adapter.port.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.ImageFetchPort
+import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
 import br.acerola.manga.service.artwork.MangaSaveCoverService
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery

@@ -3,7 +3,7 @@ package br.acerola.manga.core.usecase.download
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.service.compact.ArchiveCompactService
 import br.acerola.manga.service.download.ChapterDownloadService
-import br.acerola.manga.adapter.di.MangadexSource
+import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
 import javax.inject.Inject
 import javax.inject.Singleton
 

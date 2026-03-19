@@ -11,8 +11,8 @@ import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import android.provider.DocumentsContract
 import br.acerola.manga.config.preference.MangaDirectoryPreference
-import br.acerola.manga.adapter.directory.MangaDirectoryEngine
-import br.acerola.manga.adapter.port.ChapterPort
+import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.library.MangaDirectoryEngine
 import br.acerola.manga.util.ContentQueryHelper
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery

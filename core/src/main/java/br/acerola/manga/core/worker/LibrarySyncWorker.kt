@@ -10,8 +10,8 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.adapter.di.DirectoryEngine
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.library.DirectoryEngine
 import br.acerola.manga.util.NotificationHelper
 import br.acerola.manga.data.R
 import dagger.assisted.Assisted

@@ -3,8 +3,8 @@ package br.acerola.manga.usecase.metadata
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.port.ChapterPort
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.contract.MangaPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

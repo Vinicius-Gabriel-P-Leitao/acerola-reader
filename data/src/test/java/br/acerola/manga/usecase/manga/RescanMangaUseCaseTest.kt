@@ -2,7 +2,7 @@ package br.acerola.manga.usecase.manga
 
 import arrow.core.Either
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.adapter.port.MangaPort
+import br.acerola.manga.adapter.contract.MangaPort
 import br.acerola.manga.usecase.library.RescanMangaUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
