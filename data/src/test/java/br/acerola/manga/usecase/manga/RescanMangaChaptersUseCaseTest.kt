@@ -2,7 +2,7 @@ package br.acerola.manga.usecase.manga
 
 import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
-import br.acerola.manga.repository.port.ChapterManagementRepository
+import br.acerola.manga.engine.port.ChapterPort
 import br.acerola.manga.usecase.library.RescanMangaChaptersUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -18,7 +18,7 @@ import org.junit.Test
 class RescanMangaChaptersUseCaseTest {
 
     @MockK
-    lateinit var repository: ChapterManagementRepository<ChapterArchivePageDto>
+    lateinit var repository: ChapterPort<ChapterArchivePageDto>
     private lateinit var useCase: RescanMangaChaptersUseCase<ChapterArchivePageDto>
 
     @Before

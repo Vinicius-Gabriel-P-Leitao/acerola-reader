@@ -1,7 +1,7 @@
 package br.acerola.manga.usecase.manga
 
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.engine.port.MangaPort
 import io.mockk.MockKAnnotations
 import io.mockk.coVerify
 import io.mockk.every
@@ -17,7 +17,7 @@ import org.junit.Test
 class ObserveLibraryUseCaseTest {
 
     @MockK
-    lateinit var repository: MangaManagementRepository<MangaDirectoryDto>
+    lateinit var repository: MangaPort<MangaDirectoryDto>
     private lateinit var useCase: ObserveLibraryUseCase<MangaDirectoryDto>
 
     @Before

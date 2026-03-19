@@ -1,8 +1,9 @@
 rootProject.name = "acerola"
+include(":ui")
 include(":app")
 include(":data")
-include(":presentation")
-include(":infrastructure")
+include(":core")
+include(":infra")
 
 pluginManagement {
     repositories {
@@ -27,3 +28,4 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+include(":core")

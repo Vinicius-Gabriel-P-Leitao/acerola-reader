@@ -2,7 +2,7 @@ package br.acerola.manga.usecase.manga
 
 import arrow.core.Either
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.repository.port.MangaManagementRepository
+import br.acerola.manga.engine.port.MangaPort
 import br.acerola.manga.usecase.library.RescanMangaUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -18,7 +18,7 @@ import org.junit.Test
 class RescanMangaUseCaseTest {
 
     @MockK
-    lateinit var repository: MangaManagementRepository<MangaDirectoryDto>
+    lateinit var repository: MangaPort<MangaDirectoryDto>
 
     private lateinit var useCase: RescanMangaUseCase<MangaDirectoryDto>
 

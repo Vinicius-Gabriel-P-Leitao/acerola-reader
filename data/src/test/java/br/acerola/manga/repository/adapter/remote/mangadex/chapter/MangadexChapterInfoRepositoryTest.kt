@@ -7,6 +7,7 @@ import br.acerola.manga.remote.mangadex.dto.chapter.ChapterAttributes
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterPage
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
+import br.acerola.manga.source.adapter.mangadex.chapter.MangadexChapterInfoPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,12 +24,12 @@ class MangadexChapterInfoRepositoryTest {
     @MockK
     lateinit var api: MangadexChapterInfoApi
 
-    private lateinit var repository: MangadexChapterInfoRepository
+    private lateinit var repository: MangadexChapterInfoPort
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = MangadexChapterInfoRepository(api)
+        repository = MangadexChapterInfoPort(api)
     }
 
     @Test

@@ -2,6 +2,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.manga
 
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
+import br.acerola.manga.source.adapter.mangadex.manga.MangadexFetchCoverPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -18,12 +19,12 @@ import java.io.IOException
 class MangadexFetchCoverRepositoryTest {
 
     @MockK lateinit var api: MangadexDownloadApi
-    private lateinit var repository: MangadexFetchCoverRepository
+    private lateinit var repository: MangadexFetchCoverPort
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = MangadexFetchCoverRepository(api)
+        repository = MangadexFetchCoverPort(api)
     }
 
     @Test

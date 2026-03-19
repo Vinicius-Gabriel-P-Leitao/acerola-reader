@@ -10,6 +10,7 @@ import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.service.metadata.ComicInfoParserService
 import br.acerola.manga.service.reader.ChapterSourceFactory
 import br.acerola.manga.service.reader.port.ChapterSourceService
+import br.acerola.manga.source.adapter.comicInfo.MangaComicInfoPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -31,12 +32,12 @@ class MangaComicInfoRepositoryTest {
     @MockK lateinit var parser: ComicInfoParserService
     @MockK lateinit var chapterSourceFactory: ChapterSourceFactory
 
-    private lateinit var repository: MangaComicInfoRepository
+    private lateinit var repository: MangaComicInfoPort
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = MangaComicInfoRepository(context, parser, chapterSourceFactory)
+        repository = MangaComicInfoPort(context, parser, chapterSourceFactory)
         
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)

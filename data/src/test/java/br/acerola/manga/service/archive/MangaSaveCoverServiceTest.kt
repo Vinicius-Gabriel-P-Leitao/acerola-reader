@@ -8,6 +8,7 @@ import br.acerola.manga.fixtures.LookupFixtures
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
+import br.acerola.manga.service.assets.MangaSaveCoverService
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

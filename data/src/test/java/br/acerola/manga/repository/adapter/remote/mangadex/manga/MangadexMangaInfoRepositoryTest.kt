@@ -7,6 +7,7 @@ import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.manga.MangaAttributes
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
+import br.acerola.manga.source.adapter.mangadex.manga.MangadexMangaInfoPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -26,12 +27,12 @@ class MangadexMangaInfoRepositoryTest {
     @MockK
     lateinit var api: MangadexMangaInfoApi
 
-    private lateinit var repository: MangadexMangaInfoRepository
+    private lateinit var repository: MangadexMangaInfoPort
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = MangadexMangaInfoRepository(context, api)
+        repository = MangadexMangaInfoPort(context, api)
         every { context.getString(R.string.description_manga_untitled) } returns "Sem título"
     }
 

@@ -1,23 +1,19 @@
 package br.acerola.manga.repository.adapter.remote.xml
 
 import android.content.Context
-import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.service.metadata.ComicInfoParserService
 import br.acerola.manga.service.reader.ChapterSourceFactory
 import br.acerola.manga.service.reader.port.ChapterSourceService
+import br.acerola.manga.source.adapter.comicInfo.ChapterComicInfoPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -30,12 +26,12 @@ class ChapterComicInfoRepositoryTest {
     @MockK lateinit var parser: ComicInfoParserService
     @MockK lateinit var chapterSourceFactory: ChapterSourceFactory
 
-    private lateinit var repository: ChapterComicInfoRepository
+    private lateinit var repository: ChapterComicInfoPort
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = ChapterComicInfoRepository(context, parser, chapterSourceFactory)
+        repository = ChapterComicInfoPort(context, parser, chapterSourceFactory)
     }
 
     @Test
