@@ -1,33 +1,25 @@
 package br.acerola.manga.module.main.common.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.BookmarkRibbon
@@ -44,6 +36,7 @@ import coil.size.SizeResolver
 fun Main.Common.Component.MangaListItem(
     manga: MangaDto,
     subtitle: String? = null,
+    chapterCount: Int = 0,
     isCompleted: Boolean = false,
     onPlayClick: (() -> Unit)? = null,
     onClick: () -> Unit
@@ -74,13 +67,15 @@ fun Main.Common.Component.MangaListItem(
     )
 
     val categoryColor = manga.category?.color
+    val score = manga.remoteInfo?.sources?.anilist?.averageScore?.let { it / 10f }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(height = 120.dp)
+            .height(height = 128.dp)
             .padding(all = 4.dp)
     ) {
+        // Cover Box (80dp width)
         Box(
             modifier = Modifier
                 .width(width = 80.dp)
@@ -89,54 +84,134 @@ fun Main.Common.Component.MangaListItem(
             Acerola.Component.ImageCard(
                 onClick = onClick,
                 image = coverPainter,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 4.dp)
             )
+
+            // Scrim only at the bottom for the source logo visibility
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .align(Alignment.BottomCenter)
+                    .padding(top = 4.dp)
+                    .clip(RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
+                        )
+                    )
+            )
+
+            // Bottom Right: Source Logo Overlay on Image
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 4.dp, end = 4.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                val sourceIcon = when {
+                    manga.remoteInfo?.sources?.mangadex != null -> R.drawable.mangadex_v2
+                    manga.remoteInfo?.sources?.anilist != null -> R.drawable.anilist
+                    else -> null
+                }
+                if (sourceIcon != null) {
+                    Icon(
+                        painter = painterResource(id = sourceIcon),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+            }
 
             if (categoryColor != null) {
                 BookmarkRibbon(
                     color = Color(categoryColor),
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 8.dp)
+                        .align(Alignment.TopStart)
+                        .padding(start = 8.dp)
                         .width(12.dp)
-                        .height(18.dp)
+                        .height(20.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(width = 8.dp))
+        Spacer(modifier = Modifier.width(width = 12.dp))
 
+        // Info Column
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .weight(weight = 1f), verticalArrangement = Arrangement.Center
+                .weight(weight = 1f),
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = title, style = MaterialTheme.typography.titleMedium, maxLines = 1,
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            if (isCompleted || subtitle != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isCompleted) {
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Completed status
+                if (isCompleted) {
+                    Text(
+                        text = stringResource(id = R.string.label_manga_status_read),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = MaterialTheme.shapes.extraSmall
+                            )
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+
+                // Rating
+                if (score != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(14.dp)
+                        )
                         Text(
-                            text = stringResource(id = R.string.label_manga_status_read),
+                            text = score.toString(),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    shape = MaterialTheme.shapes.extraSmall
-                                )
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    if (subtitle != null) {
+                }
+
+                // Chapter Count
+                if (chapterCount > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.AutoStories,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
                         Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
+                            text = chapterCount.toString(),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

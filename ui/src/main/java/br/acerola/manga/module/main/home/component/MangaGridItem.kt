@@ -94,16 +94,14 @@ fun Main.Home.Component.MangaGridItem(
                 .fillMaxWidth()
                 .aspectRatio(ratio = 2f / 3f)
         ) {
-            // Main Cover Card
             Acerola.Component.ImageCard(
                 onClick = onClick,
                 image = coverPainter,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 8.dp) // Space for ribbon to "sobressair"
+                    .padding(top = 8.dp)
             )
 
-            // Scrim only at the bottom for the source logo visibility
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,7 +115,6 @@ fun Main.Home.Component.MangaGridItem(
                     )
             )
 
-            // Bottom Right: Source Logo Overlay on Image
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -139,7 +136,6 @@ fun Main.Home.Component.MangaGridItem(
                 }
             }
 
-            // Bookmark Ribbon (Sobressaindo)
             if (categoryColor != null) {
                 BookmarkRibbon(
                     color = Color(categoryColor),
@@ -154,26 +150,23 @@ fun Main.Home.Component.MangaGridItem(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Title
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 4.dp),
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Info Row (Rating/Chapters + Progress + More)
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                // Rating or Chapter Count
                 if (score != null) {
                     Icon(
                         imageVector = Icons.Rounded.Star,
@@ -202,7 +195,6 @@ fun Main.Home.Component.MangaGridItem(
                     )
                 }
 
-                // Progress (if completed)
                 if (history?.isCompleted == true) {
                     if (score != null || chapterCount > 0) {
                         Text(

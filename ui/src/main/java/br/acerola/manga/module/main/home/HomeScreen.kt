@@ -99,9 +99,10 @@ fun Main.Home.Layout.Screen(
                 itemKey = { (manga, _, _) -> manga.directory.id },
                 searchKey = { (manga, _, _) -> manga.directory.name },
                 modifier = Modifier.padding(all = 6.dp),
-                itemContent = { (manga, history, _) ->
+                itemContent = { (manga, history, chapterCount) ->
                     Main.Common.Component.MangaListItem(
                         manga = manga,
+                        chapterCount = chapterCount,
                         onPlayClick = history?.let {
                             { onAction(HomeAction.ClickContinue(manga, it)) }
                         },
@@ -134,10 +135,10 @@ fun Main.Home.Layout.Screen(
 
                             HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
                                 manga = manga,
-                                onPlayClick = history?.let { h ->
-                                    { onAction(HomeAction.ClickContinue(manga, h)) }
-                                },
-                                onClick = { onAction(HomeAction.ClickManga(manga)) }
+                                chapterCount = chapterCount,
+                                subtitle = manga.remoteInfo?.authors?.name,
+                                onClick = { onAction(HomeAction.ClickManga(manga)) },
+                                onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
                             )
                         }
                     }
