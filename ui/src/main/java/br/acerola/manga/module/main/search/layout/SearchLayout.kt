@@ -136,7 +136,7 @@ private fun SearchResultsList(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(uiState.searchResults, key = { it.mangadexId ?: it.title }) { manga ->
+                    items(uiState.searchResults, key = { it.sources?.mangadex?.mangadexId ?: it.title }) { manga ->
                         Main.Search.Component.MangaResultCard(
                             manga = manga,
                             onClick = { DownloadActivity.start(context, manga) }

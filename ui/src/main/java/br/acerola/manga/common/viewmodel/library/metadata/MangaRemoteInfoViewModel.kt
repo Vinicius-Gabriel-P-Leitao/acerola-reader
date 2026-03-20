@@ -8,12 +8,14 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.core.worker.MetadataSyncWorker
 import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MangaRemoteInfoViewModel @Inject constructor(
     @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    private val manageCategoriesUseCase: ManageCategoriesUseCase,
     private val workManager: WorkManager
 ) : ViewModel() {
 
@@ -47,6 +50,30 @@ class MangaRemoteInfoViewModel @Inject constructor(
         initialValue = emptyList(),
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
     )
+
+    val allCategories: StateFlow<List<CategoryDto>> = manageCategoriesUseCase.getAllCategories().stateIn(
+        scope = viewModelScope,
+        initialValue = emptyList(),
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+    )
+
+    fun createCategory(name: String, color: Int) {
+        viewModelScope.launch {
+            manageCategoriesUseCase.createCategory(name, color)
+        }
+    }
+
+    fun deleteCategory(id: Long) {
+        viewModelScope.launch {
+            manageCategoriesUseCase.deleteCategory(id)
+        }
+    }
+
+    fun updateMangaCategory(directoryId: Long, categoryId: Long?) {
+        viewModelScope.launch {
+            manageCategoriesUseCase.updateMangaCategory(directoryId, categoryId)
+        }
+    }
 
     fun syncLibrary() {
         AcerolaLogger.audit(TAG, "User requested library metadata sync", LogSource.VIEWMODEL)

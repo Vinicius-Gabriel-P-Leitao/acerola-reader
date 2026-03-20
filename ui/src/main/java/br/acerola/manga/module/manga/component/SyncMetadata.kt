@@ -45,8 +45,8 @@ fun Manga.Component.SyncMetadata(
     onSyncComicInfoChapters: () -> Unit,
     onSyncAnilistInfo: () -> Unit,
 ) {
-    val hasMangadexSource = remoteInfo?.mangadexId != null
-    val hasComicInfoSource = remoteInfo?.localHash != null
+    val hasMangadexSource = remoteInfo?.sources?.mangadex?.mangadexId != null
+    val hasComicInfoSource = remoteInfo?.sources?.comicInfo?.localHash != null
 
     Column {
         // NOTE: Mangadex
@@ -98,7 +98,7 @@ fun Manga.Component.SyncMetadata(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
-        if (hasMangadexSource && remoteInfo.id != null) {
+        if (hasMangadexSource && remoteInfo?.id != null) {
             ListItem(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))

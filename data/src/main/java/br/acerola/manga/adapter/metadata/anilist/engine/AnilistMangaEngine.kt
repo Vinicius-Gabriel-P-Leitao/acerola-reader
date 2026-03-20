@@ -95,7 +95,7 @@ class AnilistMangaEngine @Inject constructor(
                             )
                             AcerolaLogger.audit(
                                 TAG, "Successfully synced AniList metadata", LogSource.REPOSITORY,
-                                mapOf("mangaId" to mangaId.toString(), "anilistId" to dto.anilistId.toString())
+                                mapOf("mangaId" to mangaId.toString(), "anilistId" to (dto.sources?.anilist?.anilistId?.toString() ?: ""))
                             )
                         }.mapLeft { exception ->
                             LibrarySyncError.UnexpectedError(cause = exception)
@@ -208,7 +208,7 @@ class AnilistMangaEngine @Inject constructor(
 
         val rootUri = rootPath.toUri()
 
-        dto.anilistCoverImage?.let { url ->
+        dto.sources?.anilist?.coverImage?.let { url ->
             coverFetcher.searchCover(url).onRight { bytes ->
                 coverService.processCover(
                     rootUri = rootUri,
@@ -221,7 +221,7 @@ class AnilistMangaEngine @Inject constructor(
             }
         }
 
-        dto.anilistBannerImage?.let { url ->
+        dto.sources?.anilist?.bannerImage?.let { url ->
             bannerFetcher.searchCover(url).onRight { bytes ->
                 bannerService.processBanner(
                     rootUri = rootUri,

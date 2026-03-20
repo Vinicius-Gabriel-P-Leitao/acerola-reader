@@ -6,6 +6,7 @@ import androidx.room.TypeConverters
 import br.acerola.manga.local.converter.DatabaseConverters
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.category.CategoryDao
 import br.acerola.manga.local.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
@@ -19,6 +20,8 @@ import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.entity.archive.MangaDirectory
+import br.acerola.manga.local.entity.category.Category
+import br.acerola.manga.local.entity.category.MangaCategory
 import br.acerola.manga.local.entity.history.ChapterRead
 import br.acerola.manga.local.entity.history.ReadingHistory
 import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
@@ -47,10 +50,12 @@ import br.acerola.manga.local.entity.metadata.source.MangadexSource
         ChapterRead::class,
         MangadexSource::class,
         AnilistSource::class,
-        ComicInfoSource::class
+        ComicInfoSource::class,
+        Category::class,
+        MangaCategory::class
     ],
     exportSchema = false,
-    version = 8,
+    version = 11,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class DatabaseAcerola : RoomDatabase() {
@@ -67,4 +72,5 @@ abstract class DatabaseAcerola : RoomDatabase() {
     abstract fun mangadexSourceDao(): MangadexSourceDao
     abstract fun anilistSourceDao(): AnilistSourceDao
     abstract fun comicInfoSourceDao(): ComicInfoSourceDao
+    abstract fun categoryDao(): CategoryDao
 }

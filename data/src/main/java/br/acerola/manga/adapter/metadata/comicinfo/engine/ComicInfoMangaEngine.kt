@@ -86,7 +86,7 @@ class ComicInfoMangaEngine @Inject constructor(
 
                     if (remoteId != -1L) {
                         val comicInfoSource = ComicInfoSourceEntity(
-                            localHash = bestMatch.localHash ?: "local-${bestMatch.title.hashCode()}",
+                            localHash = bestMatch.sources?.comicInfo?.localHash ?: "local-${bestMatch.title.hashCode()}",
                             mangaRemoteInfoFk = remoteId
                         )
                         comicInfoSourceDao.insert(comicInfoSource)

@@ -21,6 +21,7 @@ import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.local.entity.archive.MangaDirectory
+import br.acerola.manga.local.entity.relation.RemoteInfoRelations
 import br.acerola.manga.local.translator.toDto
 import br.acerola.manga.local.translator.toMangadexSource
 import br.acerola.manga.local.translator.toModel
@@ -98,54 +99,38 @@ class MangadexMangaEngine @Inject constructor(
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
         AcerolaLogger.i(TAG, "Starting incremental MangaDex sync", LogSource.REPOSITORY)
         _isIndexing.value = true
+        return withContext(context = Dispatchers.IO) {
+            try {
+                val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                val existingRemote = mangaRemoteInfoDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
+                val existingDirectoryIds = existingRemote.mapNotNull { it.mangaDirectoryFk }.toSet()
 
-        try {
-            return withContext(context = Dispatchers.IO) {
-                Either.catch {
-                    val localDirectories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                    val allRemoteMangaInfo = mangaRemoteInfoDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
-                    val existingTitles = allRemoteMangaInfo.map { normalizeName(name = it.title) }.toSet()
-
-                    val remoteInfoToSync = localDirectories.filter {
-                        normalizeName(it.name) !in existingTitles
-                    }
-
-                    if (remoteInfoToSync.isEmpty()) {
-                        AcerolaLogger.d(TAG, "No new mangas to sync with MangaDex", LogSource.REPOSITORY)
-                        _progress.value = -1
-                        return@catch
-                    }
-
-                    AcerolaLogger.d(TAG, "Found ${remoteInfoToSync.size} mangas needing metadata", LogSource.REPOSITORY)
-                    executeSync(folders = remoteInfoToSync, baseUri)
-                }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Incremental MangaDex scan failed", LogSource.REPOSITORY, throwable = exception)
-                    when (exception) {
-                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                        else -> LibrarySyncError.UnexpectedError(cause = exception)
-                    }
+                val foldersToSync = allFolders.filter { folder ->
+                    !existingDirectoryIds.contains(folder.id)
                 }
+
+                executeSync(folders = foldersToSync, baseUri = baseUri)
+                Either.Right(value = Unit)
+            } catch (exception: Exception) {
+                AcerolaLogger.e(TAG, "Incremental MangaDex scan failed", LogSource.REPOSITORY, throwable = exception)
+                when (exception) {
+                    is SQLiteException -> Either.Left(LibrarySyncError.DatabaseError(cause = exception))
+                    else -> Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
+                }
+            } finally {
+                _isIndexing.value = false
             }
-        } finally {
-            _isIndexing.value = false
         }
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
         AcerolaLogger.i(TAG, "Starting full library MangaDex refresh", LogSource.REPOSITORY)
         _isIndexing.value = true
-
-        try {
-            return withContext(context = Dispatchers.IO) {
+        return try {
+            withContext(context = Dispatchers.IO) {
                 Either.catch {
-                    val mangaLibraryFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-
-                    if (mangaLibraryFolders.isEmpty()) {
-                        _progress.value = -1
-                        return@catch
-                    }
-
-                    executeSync(folders = mangaLibraryFolders, baseUri)
+                    val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    executeSync(folders = allFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Full MangaDex refresh failed", LogSource.REPOSITORY, throwable = exception)
                     when (exception) {
@@ -247,7 +232,7 @@ class MangadexMangaEngine @Inject constructor(
 
                         AcerolaLogger.audit(
                             TAG, "Successfully synced MangaDex metadata", LogSource.REPOSITORY,
-                            mapOf("mangaId" to current.id.toString(), "mangadexId" to (bestMatch.mangadexId ?: ""))
+                            mapOf("mangaId" to current.id.toString(), "mangadexId" to (bestMatch.sources?.mangadex?.mangadexId ?: ""))
                         )
 
                         metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
@@ -257,18 +242,7 @@ class MangadexMangaEngine @Inject constructor(
                 }
             }
 
-            result.onLeft { exception ->
-                AcerolaLogger.e(TAG, "Error syncing metadata for ${current.name}", LogSource.REPOSITORY, throwable = exception)
-                when (exception) {
-                    is SQLiteException, is IntegrityException -> LibrarySyncError.DatabaseError(cause = exception)
-                    is IOException -> LibrarySyncError.DiskIOFailure(path = current.path, cause = exception)
-                    is MangadexRequestException -> LibrarySyncError.MangadexError(cause = exception)
-                    else -> LibrarySyncError.UnexpectedError(cause = exception)
-                }
-            }
-
-            val currentProgress = (((index + 1).toFloat() / total.toFloat()) * 100).roundToInt()
-            _progress.value = currentProgress
+            _progress.value = ((index + 1) * 100 / total)
         }
 
         _progress.value = -1

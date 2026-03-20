@@ -9,6 +9,8 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
+import br.acerola.manga.dto.metadata.manga.source.ComicInfoSourceDto
 import br.acerola.manga.error.message.ComicInfoError
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
@@ -152,7 +154,6 @@ private data class ParsedMangaInfo(
 )
 
 private fun ParsedMangaInfo.toDto(): MangaRemoteInfoDto = MangaRemoteInfoDto(
-    localHash = "local-${title.hashCode()}",
     title = title,
     description = summary,
     year = year,
@@ -161,7 +162,12 @@ private fun ParsedMangaInfo.toDto(): MangaRemoteInfoDto = MangaRemoteInfoDto(
     genre = genres.split(",", ";").mapNotNull {
         val g = it.trim()
         if (g.isNotBlank()) GenreDto(id = "local-$g", name = g) else null
-    }
+    },
+    sources = MangaSourcesDto(
+        comicInfo = ComicInfoSourceDto(
+            localHash = "local-${title.hashCode()}"
+        )
+    )
 )
 
 private data class ParsedChapterInfo(

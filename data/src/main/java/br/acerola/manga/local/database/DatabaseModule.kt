@@ -5,6 +5,7 @@ import androidx.room.Room
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.history.ReadingHistoryDao
+import br.acerola.manga.local.dao.category.CategoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
 import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
@@ -71,4 +72,7 @@ object DatabaseModule {
 
     @Provides
     fun provideComicInfoSourceDao(db: DatabaseAcerola): ComicInfoSourceDao = db.comicInfoSourceDao()
+
+    @Provides
+    fun provideCategoryDao(db: DatabaseAcerola): CategoryDao = db.categoryDao()
 }

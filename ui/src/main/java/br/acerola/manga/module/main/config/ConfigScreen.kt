@@ -1,30 +1,17 @@
 package br.acerola.manga.module.main.config
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,6 +37,7 @@ import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewMod
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.config.component.GlobalCategoryManager
 import br.acerola.manga.module.main.config.component.MetadataExportSettings
 import br.acerola.manga.module.main.config.component.SelectFolder
 import br.acerola.manga.module.main.config.component.SyncAnilistData
@@ -104,6 +92,7 @@ fun Main.Config.Layout.Screen(
 
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
+    val allCategories by mangaDexViewModel.allCategories.collectAsState()
     
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
     val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
@@ -130,6 +119,8 @@ fun Main.Config.Layout.Screen(
             ConfigAction.QuickSyncLibrary -> mangaDirectoryViewModel.syncLibrary()
             ConfigAction.SyncMangadexMetadata -> mangaDexViewModel.rescanMangas()
             ConfigAction.SyncAnilistMetadata -> mangaDexViewModel.rescanAnilistMangas()
+            is ConfigAction.CreateCategory -> mangaDexViewModel.createCategory(action.name, action.color)
+            is ConfigAction.DeleteCategory -> mangaDexViewModel.deleteCategory(action.id)
         }
     }
 
@@ -156,6 +147,18 @@ fun Main.Config.Layout.Screen(
                     Main.Config.Component.ThemeSettings(
                         currentTheme = uiState.selectedTheme,
                         onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) }
+                    )
+                }
+
+                PrettyConfigCard(
+                    title = stringResource(id = R.string.title_config_categories),
+                    icon = Icons.Rounded.Bookmark,
+                    iconColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Main.Config.Component.GlobalCategoryManager(
+                        categories = allCategories,
+                        onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
+                        onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) }
                     )
                 }
 

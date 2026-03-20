@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.SdStorage
 import androidx.compose.material.icons.rounded.Visibility
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
 import br.acerola.manga.module.manga.Manga
+import br.acerola.manga.module.manga.component.MangaCategorySelector
 import br.acerola.manga.module.manga.component.PaginationPreference
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMetadata
@@ -55,6 +57,22 @@ fun Manga.Layout.ConfigSection(
             Manga.Component.PaginationPreference(
                 selected = uiState.selectedChapterPerPage,
                 onSelect = { onAction(MangaAction.UpdatePageSize(it)) }
+            )
+        }
+    }
+
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
+
+    scope.item {
+        PrettyConfigCard(
+            title = stringResource(id = R.string.title_config_categories),
+            icon = Icons.Rounded.Bookmark,
+            iconColor = MaterialTheme.colorScheme.primary
+        ) {
+            Manga.Component.MangaCategorySelector(
+                selectedCategory = uiState.manga.category,
+                allCategories = uiState.allCategories,
+                onUpdateMangaCategory = { id -> onAction(MangaAction.UpdateCategory(id)) }
             )
         }
     }

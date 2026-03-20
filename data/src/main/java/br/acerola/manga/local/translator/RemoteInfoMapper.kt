@@ -4,12 +4,17 @@ import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.chapter.ChapterSourceDto
+import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.BannerDto
 import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
-import br.acerola.manga.dto.metadata.manga.LinksDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
+import br.acerola.manga.dto.metadata.manga.source.MangadexSourceDto
+import br.acerola.manga.dto.metadata.manga.source.AnilistSourceDto
+import br.acerola.manga.dto.metadata.manga.source.ComicInfoSourceDto
+import br.acerola.manga.local.entity.category.Category
 import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.entity.metadata.ChapterRemoteInfo
 import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
@@ -19,6 +24,7 @@ import br.acerola.manga.local.entity.metadata.relationship.Cover
 import br.acerola.manga.local.entity.metadata.relationship.Genre
 import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.entity.metadata.source.AnilistSource
+import br.acerola.manga.local.entity.metadata.source.ComicInfoSource
 import br.acerola.manga.local.entity.metadata.source.MangadexSource
 import br.acerola.manga.local.entity.relation.RemoteInfoRelations
 import kotlin.collections.map
@@ -26,9 +32,6 @@ import kotlin.collections.map
 fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
     return MangaRemoteInfoDto(
         id = this.remoteInfo.id,
-        mangadexId = this.mangadexSource?.mangadexId,
-        anilistId = this.anilistSource?.anilistId?.toString() ?: this.mangadexSource?.anilistId,
-        localHash = this.comicInfoSource?.localHash,
         title = this.remoteInfo.title,
         description = this.remoteInfo.description,
         romanji = this.remoteInfo.romanji,
@@ -38,13 +41,46 @@ fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
         cover = this.cover.firstOrNull()?.toDto(),
         banner = this.banner.firstOrNull()?.toDto(),
         genre = this.genre.map { it.toDto() },
-        links = this.mangadexSource?.toLinksDto(),
-        anilistScore = this.anilistSource?.averageScore,
-        anilistPopularity = this.anilistSource?.popularity,
-        anilistTrending = this.anilistSource?.trending,
-        anilistCoverImage = this.anilistSource?.coverImage,
-        anilistBannerImage = this.anilistSource?.bannerImage,
-        mangaDirectoryFk = this.remoteInfo.mangaDirectoryFk
+        mangaDirectoryFk = this.remoteInfo.mangaDirectoryFk,
+        sources = MangaSourcesDto(
+            mangadex = this.mangadexSource?.toDto(),
+            anilist = this.anilistSource?.toDto(),
+            comicInfo = this.comicInfoSource?.toDto()
+        )
+    )
+}
+
+fun MangadexSource.toDto(): MangadexSourceDto = MangadexSourceDto(
+    mangadexId = mangadexId,
+    anilistId = anilistId,
+    amazonUrl = amazonUrl,
+    ebookjapanUrl = ebookjapanUrl,
+    rawUrl = rawUrl,
+    engtlUrl = engtlUrl
+)
+
+fun AnilistSource.toDto(): AnilistSourceDto = AnilistSourceDto(
+    anilistId = anilistId,
+    averageScore = averageScore,
+    popularity = popularity,
+    trending = trending,
+    coverImage = coverImage,
+    bannerImage = bannerImage
+)
+
+fun ComicInfoSource.toDto(): ComicInfoSourceDto = ComicInfoSourceDto(
+    localHash = localHash
+)
+
+fun Category.toCategoryDto(): CategoryDto {
+    return CategoryDto(
+        id = id, name = name, color = color
+    )
+}
+
+fun CategoryDto.toCategoryModel(): Category {
+    return Category(
+        id = id, name = name, color = color
     )
 }
 
@@ -148,34 +184,31 @@ fun ChapterRemoteInfoDto.toDownloadSources(
     }
 }
 
-fun MangadexSource.toLinksDto(): LinksDto = LinksDto(
-    anilistId = anilistId,
-    amazonUrl = amazonUrl,
-    ebookjapanUrl = ebookjapanUrl,
-    rawUrl = rawUrl,
-    engtlUrl = engtlUrl
-)
+fun MangaRemoteInfoDto.toMangadexSource(mangaRemoteInfoFk: Long): MangadexSource {
+    val mangadex = sources?.mangadex ?: throw IllegalStateException("MangaDex source is null in DTO")
+    return MangadexSource(
+        mangadexId = mangadex.mangadexId,
+        anilistId = mangadex.anilistId,
+        amazonUrl = mangadex.amazonUrl,
+        ebookjapanUrl = mangadex.ebookjapanUrl,
+        rawUrl = mangadex.rawUrl,
+        engtlUrl = mangadex.engtlUrl,
+        mangaRemoteInfoFk = mangaRemoteInfoFk
+    )
+}
 
-fun MangaRemoteInfoDto.toMangadexSource(mangaRemoteInfoFk: Long): MangadexSource = MangadexSource(
-    mangadexId = mangadexId ?: "",
-    anilistId = links?.anilistId,
-    amazonUrl = links?.amazonUrl,
-    ebookjapanUrl = links?.ebookjapanUrl,
-    rawUrl = links?.rawUrl,
-    engtlUrl = links?.engtlUrl,
-    mangaRemoteInfoFk = mangaRemoteInfoFk
-)
-
-fun MangaRemoteInfoDto.toAnilistSource(mangaRemoteInfoFk: Long): AnilistSource = AnilistSource(
-    anilistId = anilistId?.toIntOrNull()
-        ?: throw IllegalStateException("AniList ID is null or not a number in DTO"),
-    averageScore = anilistScore,
-    popularity = anilistPopularity,
-    trending = anilistTrending,
-    coverImage = anilistCoverImage,
-    bannerImage = anilistBannerImage,
-    mangaRemoteInfoFk = mangaRemoteInfoFk
-)
+fun MangaRemoteInfoDto.toAnilistSource(mangaRemoteInfoFk: Long): AnilistSource {
+    val anilist = sources?.anilist ?: throw IllegalStateException("AniList source is null in DTO")
+    return AnilistSource(
+        anilistId = anilist.anilistId,
+        averageScore = anilist.averageScore,
+        popularity = anilist.popularity,
+        trending = anilist.trending,
+        coverImage = anilist.coverImage,
+        bannerImage = anilist.bannerImage,
+        mangaRemoteInfoFk = mangaRemoteInfoFk
+    )
+}
 
 fun List<ChapterRemoteInfo>.toPageDto(
     sources: List<ChapterDownloadSource> = emptyList(), pageSize: Int = this.size, total: Int = this.size, page: Int = 0

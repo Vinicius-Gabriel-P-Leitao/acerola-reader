@@ -17,6 +17,7 @@ import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -39,6 +40,7 @@ class HomeViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
+    private val manageCategoriesUseCase: ManageCategoriesUseCase,
 ) : ViewModel() {
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
@@ -65,15 +67,20 @@ class HomeViewModel @Inject constructor(
     val mangas: StateFlow<List<Pair<MangaDto, ReadingHistoryDto?>>> = combine(
         flow = directoryObserve(),
         flow2 = mangadexObserve(),
-        flow3 = observeHistoryUseCase.invokeRecent()
-    ) { mangaDirectories, remoteMangaInfo, historyList ->
+        flow3 = observeHistoryUseCase.invokeRecent(),
+        flow4 = manageCategoriesUseCase.getAllMangaCategories()
+    ) { mangaDirectories, remoteMangaInfo, historyList, categoryMap ->
         val remoteInfoMap = remoteMangaInfo.filter { it.mangaDirectoryFk != null }
             .associateBy { it.mangaDirectoryFk!! }
 
         val historyMap = historyList.associateBy { it.mangaDirectoryId }
 
         val list = mangaDirectories.map {
-            val manga = MangaDto(directory = it, remoteInfo = remoteInfoMap[it.id])
+            val manga = MangaDto(
+                directory = it, 
+                remoteInfo = remoteInfoMap[it.id],
+                category = categoryMap[it.id]
+            )
             manga to historyMap[it.id]
         }
 

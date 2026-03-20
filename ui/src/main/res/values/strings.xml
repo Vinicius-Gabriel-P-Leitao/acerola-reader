@@ -194,4 +194,16 @@
     <string name="description_icon_search_submit">Buscar</string>
     <string name="description_icon_search_clear">Limpar busca</string>
 
+    <!-- Categories -->
+    <string name="title_config_categories">Categorias e Marcações</string>
+    <string name="description_config_categories">Organize seus arquivos com marcações personalizadas</string>
+    <string name="label_category_name">Nome da Categoria</string>
+    <string name="label_category_color">Cor</string>
+    <string name="action_add_category">Adicionar Categoria</string>
+    <string name="action_select_category">Selecionar Categoria</string>
+    <string name="action_manage_categories">Gerenciar Categorias</string>
+    <string name="action_delete_category">Excluir Categoria</string>
+    <string name="label_category_empty">Nenhuma categoria cadastrada</string>
+    <string name="placeholder_category_name">Ex: Light Novel, HQ, Manga…</string>
+
     </resources>
