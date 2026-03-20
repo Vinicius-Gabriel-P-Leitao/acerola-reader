@@ -70,6 +70,12 @@ class MangaRemoteInfoViewModelTest {
     }
 
     @Test
+    fun `deve sincronizar manga especifico do anilist`() {
+        viewModel.syncFromAnilist(1L)
+        verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
+    }
+
+    @Test
     fun `deve refletir progresso do WorkManager`() = runTest {
         val workInfo = mockk<WorkInfo>()
         every { workInfo.state } returns WorkInfo.State.RUNNING

@@ -190,6 +190,7 @@ fun MangaScreen(
             MangaSyncAction.SyncMangadexChapters -> uiState.manga.remoteInfo?.id?.let { chapterRemoteInfoViewModel.syncChaptersByMangadex(it) }
             MangaSyncAction.SyncComicInfo -> mangaRemoteInfoViewModel.syncFromComicInfo(uiState.manga.directory.id)
             MangaSyncAction.SyncComicInfoChapters -> chapterRemoteInfoViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
+            MangaSyncAction.SyncAnilistInfo -> mangaRemoteInfoViewModel.syncFromAnilist(uiState.manga.directory.id)
         }
     }
 

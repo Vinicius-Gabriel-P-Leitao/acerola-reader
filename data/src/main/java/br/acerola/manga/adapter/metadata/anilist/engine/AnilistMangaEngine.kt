@@ -8,15 +8,16 @@ import arrow.core.flatMap
 import br.acerola.manga.adapter.contract.MangaPort
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistFetchBannerSource
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistFetchCoverSource
-import br.acerola.manga.adapter.metadata.anilist.source.AnilistMangaInfoSource
-import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexMangaEngine
+import br.acerola.manga.adapter.metadata.anilist.source.AnilistSearchByTitleSource
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.AnilistSourceDao
+import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
 import br.acerola.manga.local.translator.toAnilistSource
 import br.acerola.manga.local.translator.toModel
 import br.acerola.manga.service.artwork.MangaSaveBannerService
@@ -36,13 +37,13 @@ class AnilistMangaEngine @Inject constructor(
     private val genreDao: GenreDao,
     private val authorDao: AuthorDao,
     private val directoryDao: MangaDirectoryDao,
+    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
     private val anilistSourceDao: AnilistSourceDao,
     private val coverService: MangaSaveCoverService,
     private val coverFetcher: AnilistFetchCoverSource,
     private val bannerService: MangaSaveBannerService,
     private val bannerFetcher: AnilistFetchBannerSource,
-    private val anilistInfoRepository: AnilistMangaInfoSource,
-    private val mangadexEngine: MangadexMangaEngine,
+    private val anilistSearchByTitleSource: AnilistSearchByTitleSource,
     @param:ApplicationContext private val context: Context,
 ) : MangaPort<MangaRemoteInfoDto> {
 
@@ -59,35 +60,123 @@ class AnilistMangaEngine @Inject constructor(
         withContext(Dispatchers.IO) {
             _isIndexing.value = true
             try {
-                mangadexEngine.getAnilistLink(mangaId).flatMap { link ->
-                    anilistInfoRepository.searchInfo(manga = link.anilistId)
-                        .mapLeft { networkError ->
-                            LibrarySyncError.UnexpectedError(cause = Exception(networkError.toString()))
-                        }
-                        .flatMap { results ->
-                            val dto = results.firstOrNull()
-                                ?: return@flatMap Either.Left(
-                                    LibrarySyncError.UnexpectedError(
-                                        cause = Exception("No AniList results for ID: ${link.anilistId}")
-                                    )
-                                )
+                val directory = directoryDao.getMangaDirectoryById(mangaId)
+                    ?: return@withContext Either.Left(
+                        LibrarySyncError.UnexpectedError(cause = Exception("Directory not found: $mangaId"))
+                    )
 
-                            Either.Companion.catch {
-                                persistAnilistData(
-                                    mangaId = mangaId,
-                                    remoteInfoId = link.remoteInfoId,
-                                    dto = dto,
-                                    baseUri = baseUri
-                                )
-                            }.mapLeft { exception ->
-                                LibrarySyncError.UnexpectedError(cause = exception)
-                            }
+                val normalizedDirName = normalizeName(directory.name)
+
+                anilistSearchByTitleSource.searchInfo(manga = directory.name, limit = 10)
+                    .mapLeft { networkError ->
+                        LibrarySyncError.UnexpectedError(cause = Exception(networkError.toString()))
+                    }
+                    .flatMap { results ->
+                        val dto = results.find { candidate ->
+                            normalizeName(candidate.title) == normalizedDirName ||
+                                    normalizeName(candidate.romanji.orEmpty()) == normalizedDirName
+                        } ?: results.firstOrNull()
+                        ?: return@flatMap Either.Left(
+                            LibrarySyncError.UnexpectedError(
+                                cause = Exception("No AniList results for title: ${directory.name}")
+                            )
+                        )
+
+                        Either.catch {
+                            val remoteInfoId = getOrCreateRemoteInfo(mangaId, dto)
+                            persistAnilistData(
+                                mangaId = mangaId,
+                                remoteInfoId = remoteInfoId,
+                                dto = dto,
+                                baseUri = baseUri
+                            )
+                        }.mapLeft { exception ->
+                            LibrarySyncError.UnexpectedError(cause = exception)
                         }
-                }
+                    }
             } finally {
                 _isIndexing.value = false
             }
         }
+
+    private fun normalizeName(name: String): String {
+        return name.filter { it.isLetterOrDigit() }.lowercase()
+    }
+
+    override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
+        return MutableStateFlow(emptyList<MangaRemoteInfoDto>()).asStateFlow()
+    }
+
+    override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
+        withContext(Dispatchers.IO) {
+            try {
+                val directories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                directories.forEachIndexed { index, directory ->
+                    refreshManga(directory.id, baseUri)
+                    _progress.value = ((index + 1) * 100 / directories.size.coerceAtLeast(1))
+                }
+                Either.Right(Unit)
+            } catch (exception: Exception) {
+                Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
+            }
+        }
+
+    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
+        refreshLibrary(baseUri)
+
+    override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> =
+        withContext(Dispatchers.IO) {
+            try {
+                val directories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                val toSync = directories.filter { directory ->
+                    val remoteInfo =
+                        mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).firstOrNull() ?: return@filter true
+
+                    val anilistSource = anilistSourceDao.getByMangaRemoteInfoFk(remoteInfo.id)
+                    anilistSource == null
+                }
+                toSync.forEachIndexed { index, directory ->
+                    refreshManga(directory.id, baseUri)
+                    _progress.value = ((index + 1) * 100 / toSync.size.coerceAtLeast(1))
+                }
+                Either.Right(Unit)
+            } catch (exception: Exception) {
+                Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
+            }
+        }
+
+    private suspend fun getOrCreateRemoteInfo(
+        directoryId: Long,
+        dto: MangaRemoteInfoDto
+    ): Long {
+        val existing = mangaRemoteInfoDao.getMangaByDirectoryId(directoryId).firstOrNull()
+
+        val remoteInfo = if (existing != null) {
+            existing.copy(
+                title = dto.title ?: existing.title,
+                description = dto.description ?: existing.description,
+                romanji = dto.romanji ?: existing.romanji,
+                status = dto.status ?: existing.status,
+                publication = dto.year ?: existing.publication
+            )
+        } else {
+            MangaRemoteInfo(
+                title = dto.title ?: "",
+                description = dto.description ?: "",
+                romanji = dto.romanji ?: "",
+                status = dto.status ?: "UNKNOWN",
+                publication = dto.year,
+                mangaDirectoryFk = directoryId
+            )
+        }
+
+        return if (existing != null) {
+            mangaRemoteInfoDao.update(remoteInfo)
+            existing.id
+        } else {
+            mangaRemoteInfoDao.insert(remoteInfo)
+        }
+    }
 
     private suspend fun persistAnilistData(
         mangaId: Long,
@@ -98,6 +187,10 @@ class AnilistMangaEngine @Inject constructor(
         val dtoWithId = dto.copy(id = remoteInfoId)
 
         anilistSourceDao.insert(dtoWithId.toAnilistSource(remoteInfoId))
+
+        // Clear existing related info to ensure we switch to AniList's list
+        authorDao.deleteAuthorsByMangaRemoteInfoFk(remoteInfoId)
+        genreDao.deleteGenresByMangaRemoteInfoFk(remoteInfoId)
 
         dto.authors?.let { authorDao.insert(it.toModel(mangaId = remoteInfoId)) }
         dto.genre.forEach { genreDao.insert(it.toModel(mangaId = remoteInfoId)) }
@@ -136,16 +229,6 @@ class AnilistMangaEngine @Inject constructor(
             }
         }
     }
-
-    override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
-        return MutableStateFlow(emptyList<MangaRemoteInfoDto>()).asStateFlow()
-    }
-
-    // TODO: Implementar atraves  do Page(page: $page, perPage: $perPage) {} ele faz uma busca paginada e vai ser boa
-    //  para isso
-    override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
-    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
-    override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 
     companion object {
 

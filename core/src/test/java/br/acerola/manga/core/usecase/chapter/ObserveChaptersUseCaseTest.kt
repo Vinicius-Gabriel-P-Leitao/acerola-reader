@@ -1,4 +1,4 @@
-package br.acerola.manga.usecase.chapter
+package br.acerola.manga.core.usecase.chapter
 
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.adapter.contract.ChapterPort

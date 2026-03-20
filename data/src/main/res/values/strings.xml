@@ -33,6 +33,7 @@
     <!-- Metadata Sync Worker -->
     <string name="sync_metadata_title_mangadex">Buscando Metadados (MangaDex)</string>
     <string name="sync_metadata_title_comicinfo">Lendo ComicInfo.xml</string>
+    <string name="sync_metadata_title_anilist">Buscando Metadados (AniList)</string>
     <string name="sync_metadata_title_generic">Sincronizando Metadados...</string>
     <string name="sync_metadata_description_fetching">Buscando informações para sua biblioteca...</string>
     <string name="sync_metadata_error_title">Erro nos Metadados</string>

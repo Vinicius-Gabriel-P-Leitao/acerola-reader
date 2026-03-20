@@ -6,12 +6,10 @@ import br.acerola.manga.error.message.LibrarySyncError
 import kotlinx.coroutines.flow.StateFlow
 
 interface MangaPort<T> {
-
     val progress: StateFlow<Int>
     val isIndexing: StateFlow<Boolean>
 
     fun observeLibrary(): StateFlow<List<T>>
-
     suspend fun refreshManga(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit>
     suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>

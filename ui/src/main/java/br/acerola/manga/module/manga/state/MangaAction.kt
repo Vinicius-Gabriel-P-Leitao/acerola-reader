@@ -23,4 +23,5 @@ sealed interface MangaSyncAction {
     data object SyncMangadexChapters : MangaSyncAction
     data object SyncComicInfo : MangaSyncAction
     data object SyncComicInfoChapters : MangaSyncAction
+    data object SyncAnilistInfo : MangaSyncAction
 }

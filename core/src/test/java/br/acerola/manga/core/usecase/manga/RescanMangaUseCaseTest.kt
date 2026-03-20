@@ -1,41 +1,43 @@
-package br.acerola.manga.usecase.manga
+package br.acerola.manga.core.usecase.manga
 
+import arrow.core.Either
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.core.usecase.library.RescanMangaUseCase
 import io.mockk.MockKAnnotations
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-class ObserveLibraryUseCaseTest {
+class RescanMangaUseCaseTest {
 
     @MockK
     lateinit var repository: MangaPort<MangaDirectoryDto>
-    private lateinit var useCase: ObserveLibraryUseCase<MangaDirectoryDto>
+
+    private lateinit var useCase: RescanMangaUseCase<MangaDirectoryDto>
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
         every { repository.progress } returns MutableStateFlow(value = 0)
         every { repository.isIndexing } returns MutableStateFlow(value = false)
-        useCase = ObserveLibraryUseCase(mangaRepository = repository)
+
+        useCase = RescanMangaUseCase(mangaRepository = repository)
     }
 
     @Test
-    fun `invoke deve retornar fluxo da biblioteca`() = runTest {
-        val list = listOf(mockk<MangaDirectoryDto>())
-        every { repository.observeLibrary() } returns MutableStateFlow(value = list)
+    fun `invoke deve chamar refreshManga`() = runTest {
+        coEvery { repository.refreshManga(mangaId = 1L) } returns Either.Right(value = Unit)
 
-        val result = useCase().first()
+        val result = useCase(mangaId = 1L)
 
-        assertEquals(list, result)
-        coVerify { repository.observeLibrary() }
+        assertTrue(result.isRight())
+        coVerify { repository.refreshManga(mangaId = 1L) }
     }
 }

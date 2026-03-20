@@ -2,29 +2,33 @@ package br.acerola.manga.core.worker
 
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import br.acerola.manga.core.usecase.AnilistCase
+import br.acerola.manga.core.usecase.ComicInfoCase
 import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.library.SyncLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.SyncMangaMetadataUseCase
 import br.acerola.manga.data.R
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.core.usecase.ComicInfoCase
 import br.acerola.manga.util.NotificationHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import br.acerola.manga.core.usecase.metadata.SyncMangaMetadataUseCase
 
 @HiltWorker
 class MetadataSyncWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
     private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
+    @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
     @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
 ) : CoroutineWorker(context, workerParams) {
@@ -38,11 +42,13 @@ class MetadataSyncWorker @AssistedInject constructor(
 
         const val SOURCE_MANGADEX = "mangadex"
         const val SOURCE_COMICINFO = "comicinfo"
+        const val SOURCE_ANILIST = "anilist"
 
         const val SYNC_TYPE_SYNC = "sync"
         const val SYNC_TYPE_RESCAN = "rescan"
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override suspend fun doWork(): Result = coroutineScope {
         val source = inputData.getString(KEY_SYNC_SOURCE) ?: SOURCE_MANGADEX
         val directoryId = inputData.getLong(KEY_DIRECTORY_ID, -1L)
@@ -51,6 +57,7 @@ class MetadataSyncWorker @AssistedInject constructor(
         val title = when (source) {
             SOURCE_MANGADEX -> context.getString(R.string.sync_metadata_title_mangadex)
             SOURCE_COMICINFO -> context.getString(R.string.sync_metadata_title_comicinfo)
+            SOURCE_ANILIST -> context.getString(R.string.sync_metadata_title_anilist)
             else -> context.getString(R.string.sync_metadata_title_generic)
         }
 
@@ -67,6 +74,7 @@ class MetadataSyncWorker @AssistedInject constructor(
             val progressFlow = when (source) {
                 SOURCE_MANGADEX -> mangadexSyncUseCase.progress
                 SOURCE_COMICINFO -> comicInfoSyncUseCase.progress
+                SOURCE_ANILIST -> anilistSyncUseCase.progress
                 else -> mangadexSyncUseCase.progress
             }
 
@@ -82,6 +90,7 @@ class MetadataSyncWorker @AssistedInject constructor(
                 when (source) {
                     SOURCE_MANGADEX -> syncMangaMetadataUseCase.syncFromMangadex(directoryId)
                     SOURCE_COMICINFO -> syncMangaMetadataUseCase.syncFromComicInfo(directoryId)
+                    SOURCE_ANILIST -> syncMangaMetadataUseCase.syncFromAnilist(directoryId)
                     else -> syncMangaMetadataUseCase.syncFromMangadex(directoryId)
                 }
             } else {
@@ -89,6 +98,7 @@ class MetadataSyncWorker @AssistedInject constructor(
                 val useCase = when (source) {
                     SOURCE_MANGADEX -> mangadexSyncUseCase
                     SOURCE_COMICINFO -> comicInfoSyncUseCase
+                    SOURCE_ANILIST -> anilistSyncUseCase
                     else -> mangadexSyncUseCase
                 }
 

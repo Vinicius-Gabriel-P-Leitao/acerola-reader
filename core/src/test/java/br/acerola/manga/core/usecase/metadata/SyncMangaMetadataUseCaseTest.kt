@@ -1,4 +1,4 @@
-package br.acerola.manga.usecase.metadata
+package br.acerola.manga.core.usecase.metadata
 
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
@@ -72,5 +72,16 @@ class SyncMangaMetadataUseCaseTest {
 
         assertTrue(result.isLeft())
         coVerify(exactly = 0) { mangadexChapterRepo.refreshMangaChapters(any()) }
+    }
+
+    @Test
+    fun syncFromAnilist_deve_chamar_refreshManga_no_repositorio_anilist() = runTest {
+        val mangaId = 1L
+        coEvery { anilistMangaRepo.refreshManga(mangaId) } returns Either.Right(Unit)
+
+        val result = useCase.syncFromAnilist(mangaId)
+
+        assertTrue(result.isRight())
+        coVerify(exactly = 1) { anilistMangaRepo.refreshManga(mangaId) }
     }
 }

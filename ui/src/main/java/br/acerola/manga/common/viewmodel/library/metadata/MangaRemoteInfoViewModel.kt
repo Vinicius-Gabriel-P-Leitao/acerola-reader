@@ -79,6 +79,14 @@ class MangaRemoteInfoViewModel @Inject constructor(
         enqueueMetadataSync(MetadataSyncWorker.SOURCE_COMICINFO, directoryId, MetadataSyncWorker.SYNC_TYPE_SYNC)
     }
 
+    fun syncFromAnilist(directoryId: Long) {
+        AcerolaLogger.audit(
+            TAG, "User requested metadata sync from AniList", LogSource.VIEWMODEL,
+            mapOf("directoryId" to directoryId.toString())
+        )
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_ANILIST, directoryId, MetadataSyncWorker.SYNC_TYPE_SYNC)
+    }
+
     private fun enqueueMetadataSync(
         source: String,
         directoryId: Long,

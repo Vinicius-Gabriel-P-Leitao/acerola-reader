@@ -1,4 +1,4 @@
-package br.acerola.manga.usecase.library
+package br.acerola.manga.core.usecase.library
 
 import android.net.Uri
 import arrow.core.Either

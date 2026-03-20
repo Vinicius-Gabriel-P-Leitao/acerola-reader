@@ -23,6 +23,9 @@ interface GenreDao : BaseDao<Genre> {
         mangaRemoteInfoFk: Long
     ): Long?
 
+    @Query(value = "DELETE FROM genre WHERE manga_remote_info_fk = :mangaRemoteInfoFk")
+    suspend fun deleteGenresByMangaRemoteInfoFk(mangaRemoteInfoFk: Long)
+
     @Transaction
     suspend fun insertOrGetId(entity: Genre): Long {
         val id = insert(entity)

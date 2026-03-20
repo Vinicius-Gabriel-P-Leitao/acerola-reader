@@ -1,9 +1,9 @@
-package br.acerola.manga.usecase.manga
+package br.acerola.manga.core.usecase.manga
 
 import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.usecase.library.RescanMangaChaptersUseCase
+import br.acerola.manga.core.usecase.library.RescanMangaChaptersUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

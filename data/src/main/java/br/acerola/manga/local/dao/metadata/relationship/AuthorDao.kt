@@ -20,6 +20,9 @@ interface AuthorDao : BaseDao<Author> {
     @Query(value = "SELECT id FROM author WHERE name = :name AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
     suspend fun getIdByNameAndFk(name: String, mangaRemoteInfoFk: Long): Long?
 
+    @Query(value = "DELETE FROM author WHERE manga_remote_info_fk = :mangaRemoteInfoFk")
+    suspend fun deleteAuthorsByMangaRemoteInfoFk(mangaRemoteInfoFk: Long)
+
     @Transaction
     suspend fun insertOrGetId(entity: Author): Long {
         val id = insert(entity)

@@ -60,6 +60,7 @@
 
     <string name="label_sync_group">Sincronizar</string>
     <string name="label_mangadex_group">MangaDex</string>
+    <string name="label_anilist_group">AniList</string>
     <string name="label_library_context">Biblioteca</string>
     <string name="label_local_file_group">Arquivo Local</string>
 
@@ -68,6 +69,9 @@
 
     <string name="title_settings_chapters_per_page">Capítulos por página</string>
     <string name="description_settings_chapters_per_page">Quantidade de itens exibidos na lista</string>
+
+    <string name="title_sync_anilist_remote_info">Sync AniList Info</string>
+    <string name="description_sync_anilist_remote_info">Busca metadados no AniList pelo título do mangá</string>
 
     <string name="title_sync_comic_info">Sincronizar ComicInfo.xml</string>
     <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
