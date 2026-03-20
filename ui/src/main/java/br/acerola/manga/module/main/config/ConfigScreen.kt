@@ -1,7 +1,16 @@
 package br.acerola.manga.module.main.config
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -11,7 +20,12 @@ import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -140,6 +154,26 @@ fun Main.Config.Layout.Screen(
                 ConfigHeader()
 
                 PrettyConfigCard(
+                    title = stringResource(id = R.string.title_text_archive_configs_in_app),
+                    icon = Icons.Rounded.FolderOpen,
+                    iconColor = MaterialTheme.colorScheme.secondary
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Main.Config.Component.SelectFolder(
+                            context = context,
+                            folderUri = uiState.folderUri,
+                            onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
+                        )
+                        Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
+
+                        Main.Config.Component.MetadataExportSettings(
+                            enabled = uiState.generateComicInfo,
+                            onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
+                        )
+                    }
+                }
+
+                PrettyConfigCard(
                     title = stringResource(id = R.string.title_settings_appearance),
                     icon = Icons.Rounded.Palette,
                     iconColor = MaterialTheme.colorScheme.primary
@@ -160,26 +194,6 @@ fun Main.Config.Layout.Screen(
                         onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
                         onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) }
                     )
-                }
-
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.title_text_archive_configs_in_app),
-                    icon = Icons.Rounded.FolderOpen,
-                    iconColor = MaterialTheme.colorScheme.secondary
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Main.Config.Component.SelectFolder(
-                            context = context,
-                            folderUri = uiState.folderUri,
-                            onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
-                        )
-                        Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
-
-                        Main.Config.Component.MetadataExportSettings(
-                            enabled = uiState.generateComicInfo,
-                            onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
-                        )
-                    }
                 }
 
                 PrettyConfigCard(
