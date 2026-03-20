@@ -10,4 +10,5 @@ sealed interface ConfigAction {
     data object DeepScanLibrary : ConfigAction
     data object QuickSyncLibrary : ConfigAction
     data object SyncMangadexMetadata : ConfigAction
+    data object SyncAnilistMetadata : ConfigAction
 }

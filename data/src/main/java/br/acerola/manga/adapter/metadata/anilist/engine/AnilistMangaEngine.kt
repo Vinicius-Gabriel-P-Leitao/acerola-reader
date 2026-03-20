@@ -20,6 +20,8 @@ import br.acerola.manga.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
 import br.acerola.manga.local.translator.toAnilistSource
 import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.artwork.MangaSaveBannerService
 import br.acerola.manga.service.artwork.MangaSaveCoverService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -58,6 +60,7 @@ class AnilistMangaEngine @Inject constructor(
         baseUri: Uri?
     ): Either<LibrarySyncError, Unit> =
         withContext(Dispatchers.IO) {
+            AcerolaLogger.audit(TAG, "Initiating AniList sync for manga: $mangaId", LogSource.REPOSITORY)
             _isIndexing.value = true
             try {
                 val directory = directoryDao.getMangaDirectoryById(mangaId)
@@ -90,6 +93,10 @@ class AnilistMangaEngine @Inject constructor(
                                 dto = dto,
                                 baseUri = baseUri
                             )
+                            AcerolaLogger.audit(
+                                TAG, "Successfully synced AniList metadata", LogSource.REPOSITORY,
+                                mapOf("mangaId" to mangaId.toString(), "anilistId" to dto.anilistId.toString())
+                            )
                         }.mapLeft { exception ->
                             LibrarySyncError.UnexpectedError(cause = exception)
                         }
@@ -109,6 +116,7 @@ class AnilistMangaEngine @Inject constructor(
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(Dispatchers.IO) {
+            AcerolaLogger.audit(TAG, "Starting full library AniList refresh", LogSource.REPOSITORY)
             try {
                 val directories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
                 directories.forEachIndexed { index, directory ->
@@ -126,6 +134,7 @@ class AnilistMangaEngine @Inject constructor(
 
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(Dispatchers.IO) {
+            AcerolaLogger.audit(TAG, "Starting incremental AniList sync", LogSource.REPOSITORY)
             try {
                 val directories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
                 val toSync = directories.filter { directory ->
@@ -151,16 +160,14 @@ class AnilistMangaEngine @Inject constructor(
     ): Long {
         val existing = mangaRemoteInfoDao.getMangaByDirectoryId(directoryId).firstOrNull()
 
-        val remoteInfo = if (existing != null) {
-            existing.copy(
-                title = dto.title ?: existing.title,
-                description = dto.description ?: existing.description,
-                romanji = dto.romanji ?: existing.romanji,
-                status = dto.status ?: existing.status,
-                publication = dto.year ?: existing.publication
-            )
-        } else {
-            MangaRemoteInfo(
+        val remoteInfo = existing?.copy(
+            title = dto.title ?: existing.title,
+            description = dto.description ?: existing.description,
+            romanji = dto.romanji ?: existing.romanji,
+            status = dto.status ?: existing.status,
+            publication = dto.year ?: existing.publication
+        )
+            ?: MangaRemoteInfo(
                 title = dto.title ?: "",
                 description = dto.description ?: "",
                 romanji = dto.romanji ?: "",
@@ -168,7 +175,6 @@ class AnilistMangaEngine @Inject constructor(
                 publication = dto.year,
                 mangaDirectoryFk = directoryId
             )
-        }
 
         return if (existing != null) {
             mangaRemoteInfoDao.update(remoteInfo)
@@ -188,7 +194,6 @@ class AnilistMangaEngine @Inject constructor(
 
         anilistSourceDao.insert(dtoWithId.toAnilistSource(remoteInfoId))
 
-        // Clear existing related info to ensure we switch to AniList's list
         authorDao.deleteAuthorsByMangaRemoteInfoFk(remoteInfoId)
         genreDao.deleteGenresByMangaRemoteInfoFk(remoteInfoId)
 

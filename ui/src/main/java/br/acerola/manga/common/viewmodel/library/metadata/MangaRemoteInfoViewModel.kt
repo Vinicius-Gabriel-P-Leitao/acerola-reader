@@ -49,13 +49,18 @@ class MangaRemoteInfoViewModel @Inject constructor(
     )
 
     fun syncLibrary() {
-        AcerolaLogger.d(TAG, "Requesting library metadata sync", LogSource.VIEWMODEL)
+        AcerolaLogger.audit(TAG, "User requested library metadata sync", LogSource.VIEWMODEL)
         enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, -1L, MetadataSyncWorker.SYNC_TYPE_SYNC)
     }
 
     fun rescanMangas() {
-        AcerolaLogger.d(TAG, "Requesting library rescan", LogSource.VIEWMODEL)
+        AcerolaLogger.audit(TAG, "User requested library metadata rescan", LogSource.VIEWMODEL)
         enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, -1L, MetadataSyncWorker.SYNC_TYPE_RESCAN)
+    }
+
+    fun rescanAnilistMangas() {
+        AcerolaLogger.audit(TAG, "User requested library AniList metadata rescan", LogSource.VIEWMODEL)
+        enqueueMetadataSync(MetadataSyncWorker.SOURCE_ANILIST, -1L, MetadataSyncWorker.SYNC_TYPE_RESCAN)
     }
 
     fun rescanMangaByManga(mangaId: Long) {

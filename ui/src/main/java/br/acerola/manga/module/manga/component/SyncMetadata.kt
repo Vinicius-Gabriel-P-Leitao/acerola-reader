@@ -49,6 +49,7 @@ fun Manga.Component.SyncMetadata(
     val hasComicInfoSource = remoteInfo?.localHash != null
 
     Column {
+        // NOTE: Mangadex
         Text(
             text = stringResource(id = R.string.label_mangadex_group),
             style = MaterialTheme.typography.labelLarge,
@@ -148,6 +149,7 @@ fun Manga.Component.SyncMetadata(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // NOTE: Anilist
         Text(
             text = stringResource(id = R.string.label_anilist_group),
             style = MaterialTheme.typography.labelLarge,
@@ -203,6 +205,7 @@ fun Manga.Component.SyncMetadata(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // NOTE: ComicInfo
         Text(
             text = stringResource(id = R.string.label_local_file_group),
             style = MaterialTheme.typography.labelLarge,

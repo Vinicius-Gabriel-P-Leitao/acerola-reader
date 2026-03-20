@@ -8,7 +8,6 @@ import arrow.core.Either
 import br.acerola.manga.adapter.contract.ImageFetchPort
 import br.acerola.manga.adapter.contract.MangaPort
 import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
-import br.acerola.manga.adapter.metadata.anilist.AnilistLink
 import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
@@ -246,6 +245,11 @@ class MangadexMangaEngine @Inject constructor(
                             }
                         }
 
+                        AcerolaLogger.audit(
+                            TAG, "Successfully synced MangaDex metadata", LogSource.REPOSITORY,
+                            mapOf("mangaId" to current.id.toString(), "mangadexId" to (bestMatch.mangadexId ?: ""))
+                        )
+
                         metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
                     }
                 } else {
@@ -268,25 +272,6 @@ class MangadexMangaEngine @Inject constructor(
         }
 
         _progress.value = -1
-    }
-
-    suspend fun getAnilistLink(directoryId: Long): Either<LibrarySyncError, AnilistLink> {
-        val remoteInfo = mangaRemoteInfoDao.getMangaByDirectoryId(directoryId).firstOrNull()
-            ?: return Either.Left(
-                LibrarySyncError.UnexpectedError(cause = Exception("No remote info found for directory: $directoryId"))
-            )
-
-        val mangadexSource = mangadexSourceDao.getByMangaRemoteInfoFk(remoteInfo.id)
-            ?: return Either.Left(
-                LibrarySyncError.UnexpectedError(cause = Exception("No MangaDex source found for manga: ${remoteInfo.id}"))
-            )
-
-        val anilistId = mangadexSource.anilistId
-            ?: return Either.Left(
-                LibrarySyncError.UnexpectedError(cause = Exception("No AniList ID found for manga: ${remoteInfo.id}"))
-            )
-
-        return Either.Right(AnilistLink(anilistId = anilistId, remoteInfoId = remoteInfo.id))
     }
 
     private fun normalizeName(name: String): String {
