@@ -93,13 +93,13 @@ fun Main.Home.Layout.Screen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Acerola.Component.SearchBar<Pair<MangaDto, ReadingHistoryDto?>>(
+            Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
                 items = uiState.mangas,
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-                itemKey = { (manga, _) -> manga.directory.id },
-                searchKey = { (manga, _) -> manga.directory.name },
+                itemKey = { (manga, _, _) -> manga.directory.id },
+                searchKey = { (manga, _, _) -> manga.directory.name },
                 modifier = Modifier.padding(all = 6.dp),
-                itemContent = { (manga, history) ->
+                itemContent = { (manga, history, _) ->
                     Main.Common.Component.MangaListItem(
                         manga = manga,
                         onPlayClick = history?.let {
@@ -123,12 +123,15 @@ fun Main.Home.Layout.Screen(
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
-                    items(items = uiState.mangas) { (manga, history) ->
+                    items(items = uiState.mangas) { (manga, history, chapterCount) ->
                         when (uiState.layout) {
                             HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
                                 manga = manga,
+                                history = history,
+                                chapterCount = chapterCount,
                                 onClick = { onAction(HomeAction.ClickManga(manga)) }
                             )
+
                             HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
                                 manga = manga,
                                 onPlayClick = history?.let { h ->

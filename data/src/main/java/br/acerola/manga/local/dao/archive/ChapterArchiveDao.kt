@@ -66,4 +66,12 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
 
     @Query("SELECT * FROM chapter_archive WHERE manga_directory_fk = :folderId AND chapter_sort IN (:chapters)")
     fun getChaptersByMangaAndSorts(folderId: Long, chapters: List<String>): Flow<List<ChapterArchive>>
-}
+
+    @Query("SELECT manga_directory_fk, COUNT(*) as count FROM chapter_archive GROUP BY manga_directory_fk")
+    fun getAllChapterCounts(): Flow<List<MangaChapterCount>>
+    }
+
+    data class MangaChapterCount(
+    val manga_directory_fk: Long,
+    val count: Int
+    )

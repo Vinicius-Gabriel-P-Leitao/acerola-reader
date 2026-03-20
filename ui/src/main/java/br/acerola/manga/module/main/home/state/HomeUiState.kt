@@ -5,8 +5,8 @@ import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 
 data class HomeUiState(
-    val layout: HomeLayoutType = HomeLayoutType.LIST,
     val isIndexing: Boolean = false,
     val indexingProgress: Float? = null,
-    val mangas: List<Pair<MangaDto, ReadingHistoryDto?>> = emptyList()
+    val layout: HomeLayoutType = HomeLayoutType.LIST,
+    val mangas: List<Triple<MangaDto, ReadingHistoryDto?, Int>> = emptyList()
 )

@@ -10,7 +10,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 @Immutable
 data class MangaDto(
+    val category: CategoryDto? = null,
     val directory: MangaDirectoryDto,
     val remoteInfo: MangaRemoteInfoDto?,
-    val category: CategoryDto? = null
 ): Parcelable

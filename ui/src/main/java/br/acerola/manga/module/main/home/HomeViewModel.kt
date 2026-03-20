@@ -15,6 +15,7 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
+import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
@@ -41,6 +42,7 @@ class HomeViewModel @Inject constructor(
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     private val manageCategoriesUseCase: ManageCategoriesUseCase,
+    private val getChapterCountUseCase: GetChapterCountUseCase,
 ) : ViewModel() {
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
@@ -64,12 +66,13 @@ class HomeViewModel @Inject constructor(
             viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = -1
         )
 
-    val mangas: StateFlow<List<Pair<MangaDto, ReadingHistoryDto?>>> = combine(
+    val mangas: StateFlow<List<Triple<MangaDto, ReadingHistoryDto?, Int>>> = combine(
         flow = directoryObserve(),
         flow2 = mangadexObserve(),
         flow3 = observeHistoryUseCase.invokeRecent(),
-        flow4 = manageCategoriesUseCase.getAllMangaCategories()
-    ) { mangaDirectories, remoteMangaInfo, historyList, categoryMap ->
+        flow4 = manageCategoriesUseCase.getAllMangaCategories(),
+        flow5 = getChapterCountUseCase()
+    ) { mangaDirectories, remoteMangaInfo, historyList, categoryMap, chapterCounts ->
         val remoteInfoMap = remoteMangaInfo.filter { it.mangaDirectoryFk != null }
             .associateBy { it.mangaDirectoryFk!! }
 
@@ -81,7 +84,7 @@ class HomeViewModel @Inject constructor(
                 remoteInfo = remoteInfoMap[it.id],
                 category = categoryMap[it.id]
             )
-            manga to historyMap[it.id]
+            Triple(manga, historyMap[it.id], chapterCounts[it.id] ?: 0)
         }
 
         AcerolaLogger.d(TAG, "Library loaded: ${list.size} mangas found", LogSource.VIEWMODEL)
