@@ -86,13 +86,13 @@ class RemainingDaosTest {
         val coverDao = db.coverDao()
 
         val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val cover = MetadataFixtures.createCover(mangaId = mangaId, mirrorId = "cov-99")
+        val cover = MetadataFixtures.createCover(mangaId = mangaId, fileName = "cover.jpg")
 
         coverDao.insert(cover)
-        val result = coverDao.getCoverByMirrorId("cov-99")
+        val result = coverDao.getCoverByFileNameAndFk(fileName = "cover.jpg", mangaRemoteInfoFk = mangaId)
 
         assertNotNull(result)
-        assertEquals("cov-99", result?.mirrorId)
+        assertEquals("cover.jpg", result?.fileName)
     }
 
     @Test
@@ -101,10 +101,10 @@ class RemainingDaosTest {
         val genreDao = db.genreDao()
 
         val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val genre = MetadataFixtures.createGenre(mangaId = mangaId, mirrorId = "gen-99")
+        val genre = MetadataFixtures.createGenre(mangaId = mangaId, genre = "Shonen")
 
         genreDao.insert(genre)
-        val result = genreDao.getIdByMirrorId("gen-99")
+        val result = genreDao.getIdByGenreAndFk(genre = "Shonen", mangaRemoteInfoFk = mangaId)
 
         assertNotNull(result)
     }

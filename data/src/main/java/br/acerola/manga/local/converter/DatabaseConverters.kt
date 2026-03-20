@@ -1,8 +1,7 @@
 package br.acerola.manga.local.converter
 
 import androidx.room.TypeConverter
-import br.acerola.manga.config.pattern.MetadataSource
-import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
 
 class DatabaseConverters {
 
@@ -17,10 +16,4 @@ class DatabaseConverters {
 
     @TypeConverter
     fun fromStatusChat(status: TypeAuthor): String = status.type
-
-    @TypeConverter
-    fun toMetadataSource(source: String): MetadataSource = MetadataSource.from(source)
-
-    @TypeConverter
-    fun fromMetadataSource(source: MetadataSource): String = source.source
 }

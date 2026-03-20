@@ -1,7 +1,7 @@
 package br.acerola.manga.remote.mangadex.dto.manga
 
 import br.acerola.manga.data.BuildConfig
-import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -62,7 +62,10 @@ data class Links(
     val kt: String? = null,
     val mu: String? = null,
     val mal: String? = null,
-    val raw: String? = null
+    val raw: String? = null,
+    val amz: String? = null,
+    val ebj: String? = null,
+    val engtl: String? = null
 )
 
 @JsonClass(generateAdapter = true)

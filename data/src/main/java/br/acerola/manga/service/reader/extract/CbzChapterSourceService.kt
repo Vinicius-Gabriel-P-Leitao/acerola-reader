@@ -15,9 +15,7 @@ import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import javax.inject.Inject
-import javax.inject.Singleton
 
-// TODO: Estudar mais as libs e fazer uma otimização e organização da busca desses dados
 class CbzChapterSourceService @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ChapterSourceService {

@@ -5,7 +5,6 @@ import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.message.ChapterError
 import java.io.InputStream
 
-// TODO:  fun open(chapter: ChapterFileDto): ChapterSourceService trazer essa função para essa interface
 interface ChapterSourceService {
 
     suspend fun pageCount(): Int

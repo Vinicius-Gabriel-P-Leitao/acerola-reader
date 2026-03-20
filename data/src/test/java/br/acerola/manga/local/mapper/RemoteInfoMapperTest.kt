@@ -2,6 +2,9 @@ package br.acerola.manga.local.mapper
 
 import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.translator.toPageDto
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

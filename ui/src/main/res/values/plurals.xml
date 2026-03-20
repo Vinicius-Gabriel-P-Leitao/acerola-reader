@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="description_sync_mangadex_remote_info_supporting">
+        <item quantity="one">Busca metadados do manga por titulo.</item>
+        <item quantity="other">Busca metadados dos mangas por titulos.</item>
+    </plurals>
+</resources>

@@ -9,16 +9,19 @@ import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.database.entity.metadata.ChapterRemoteInfo
 import br.acerola.manga.local.database.entity.metadata.MangaRemoteInfo
 import br.acerola.manga.local.database.entity.metadata.relationship.Author
+import br.acerola.manga.local.database.entity.metadata.relationship.Banner
 import br.acerola.manga.local.database.entity.metadata.relationship.Cover
 import br.acerola.manga.local.database.entity.metadata.relationship.Genre
 import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.local.database.entity.metadata.source.AnilistSource
+import br.acerola.manga.local.database.entity.metadata.source.ComicInfoSource
+import br.acerola.manga.local.database.entity.metadata.source.MangadexSource
 import br.acerola.manga.local.database.entity.relation.RemoteInfoRelations
 
 object MetadataFixtures {
 
     fun createMangaRemoteInfo(
         id: Long = 10,
-        mirrorId: String = "manga-123",
         title: String = "Naruto",
         description: String = "Ninja story",
         romanji: String = "Naruto",
@@ -26,7 +29,6 @@ object MetadataFixtures {
         publication: Int = 1999
     ) = MangaRemoteInfo(
         id = id,
-        mirrorId = mirrorId,
         title = title,
         description = description,
         romanji = romanji,
@@ -77,7 +79,7 @@ object MetadataFixtures {
     )
 
     fun createMangaRemoteInfoDto(
-        mirrorId: String = "manga-123",
+        mangadexId: String? = "manga-123",
         title: String = "Naruto",
         description: String = "Desc",
         status: String = "ongoing",
@@ -86,7 +88,7 @@ object MetadataFixtures {
         genre: List<GenreDto> = emptyList(),
         cover: CoverDto? = null
     ) = MangaRemoteInfoDto(
-        mirrorId = mirrorId,
+        mangadexId = mangadexId,
         title = title,
         description = description,
         status = status,
@@ -95,16 +97,24 @@ object MetadataFixtures {
         genre = genre,
         cover = cover
     )
-    
+
     fun createRemoteInfoRelations(
         remoteInfo: MangaRemoteInfo = createMangaRemoteInfo(),
+        mangadexSource: MangadexSource? = null,
+        anilistSource: AnilistSource? = null,
+        comicInfoSource: ComicInfoSource? = null,
         authors: List<Author> = emptyList(),
         covers: List<Cover> = emptyList(),
+        banners: List<Banner> = emptyList(),
         genres: List<Genre> = emptyList()
     ) = RemoteInfoRelations(
         remoteInfo = remoteInfo,
+        mangadexSource = mangadexSource,
+        anilistSource = anilistSource,
+        comicInfoSource = comicInfoSource,
         author = authors,
         cover = covers,
+        banner = banners,
         genre = genres
     )
 
@@ -112,22 +122,19 @@ object MetadataFixtures {
         id: Long = 1,
         name: String = "Kishimoto",
         type: TypeAuthor = TypeAuthor.AUTHOR,
-        mirrorId: String = "auth-1",
         mangaId: Long = 10
-    ) = Author(id = id, name = name, type = type, mirrorId = mirrorId, mangaRemoteInfoFk = mangaId)
+    ) = Author(id = id, name = name, type = type, mangaRemoteInfoFk = mangaId)
 
     fun createGenre(
         id: Long = 1,
         genre: String = "Shonen",
-        mirrorId: String = "gen-1",
         mangaId: Long = 10
-    ) = Genre(id = id, genre = genre, mirrorId = mirrorId, mangaRemoteInfoFk = mangaId)
+    ) = Genre(id = id, genre = genre, mangaRemoteInfoFk = mangaId)
 
     fun createCover(
         id: Long = 1,
         url: String = "http://cover.jpg",
         fileName: String = "cover.jpg",
-        mirrorId: String = "cov-1",
         mangaId: Long = 10
-    ) = Cover(id = id, url = url, fileName = fileName, mirrorId = mirrorId, mangaRemoteInfoFk = mangaId)
+    ) = Cover(id = id, url = url, fileName = fileName, mangaRemoteInfoFk = mangaId)
 }

@@ -1,0 +1,197 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">acerola</string>
+    <!-- UI description -->
+    <!-- Screen navigation -->
+    <string name="navigation_home_activity">home</string>
+    <string name="navigation_config_activity">config</string>
+    <string name="navigation_history_activity">history</string>
+    <string name="navigation_chapters_activity">chapters</string>
+    <string name="navigation_reader_activity">reader</string>
+    <string name="navigation_search_activity">search</string>
+
+    <!-- Screen label -->
+    <string name="label_home_activity">home</string>
+    <string name="label_config_activity">Configurações</string>
+    <string name="label_history_activity">Histórico</string>
+    <string name="label_chapters_activity">Capítulos</string>
+    <string name="label_reader_activity">Leitor</string>
+    <string name="label_search_activity">Buscar</string>
+
+    <!-- Screen content description -->
+    <string name="description_home_activity">Tela de início que lista os mangás.</string>
+    <string name="description_config_activity">Tela de configurações</string>
+    <string name="description_history_activity">Tela de histórico de mangás lidos</string>
+    <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
+    <string name="description_reader_activity">Tela de leitura do capítulo</string>
+    <string name="description_search_activity">Tela de busca e download de capítulos do MangaDex</string>
+
+    <!-- Icons -->
+    <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
+    <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
+    <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o manga.</string>
+    <string name="description_icon_sync_manga_directory">Sincronização somente das pastas ou dos mangás completos.</string>
+    <string name="description_icon_sync_mangadex">Sincronização de dados do mangadex.</string>
+    <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
+    <string name="description_icon_home_change_layout">Mudar Visualização</string>
+    <string name="description_icon_home_filter">Filtro</string>
+
+    <!-- Text title -->
+    <string name="title_text_archive_configs_in_app">Configuração dos arquivos</string>
+    <string name="title_text_mangadex_configs_in_app">Configuração do mangadex</string>
+    <string name="title_text_config_select_path_manga">Pasta dos mangás</string>
+    <string name="title_preference_file_extension">Tipo do arquivo a ser salvo</string>
+    <string name="title_config_sync_mangadex">Sincronizar metadados com mangadex</string>
+    <string name="title_chapter_item_chapter_number">Capitulo %1$s</string>
+    <string name="title_sync_mangadex_remote_info">Sincronizar metadados</string>
+    <string name="title_chapter_tabs_chapters">Capítulos (%1$d)</string>
+    <string name="title_chapter_tabs_settings">Configurações</string>
+
+    <!-- Text other types -->
+    <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
+    <string name="description_text_selected_manga_directory">Pasta selecionada: %1$s</string>
+    <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
+    <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
+    <string name="description_text_home_deep_sync">Sincronização profunda</string>
+    <string name="description_text_home_deep_sync_supporting">Verifica todos os arquivos. Pode demorar.</string>
+    <string name="description_text_home_quick_sync">Sincronização rápida</string>
+    <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos.</string>
+    <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
+    <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
+
+    <string name="label_sync_group">Sincronizar</string>
+    <string name="label_mangadex_group">MangaDex</string>
+    <string name="label_anilist_group">Configuração do AniList</string>
+    <string name="label_library_context">Biblioteca</string>
+    <string name="label_local_file_group">Arquivo Local</string>
+
+    <string name="title_preference_metadata_comic_info">Gerar ComicInfo.xml</string>
+    <string name="description_preference_metadata_comic_info">Criar arquivo de metadados na pasta ao sincronizar com fontes externas.</string>
+
+    <string name="title_settings_chapters_per_page">Capítulos por página</string>
+    <string name="description_settings_chapters_per_page">Quantidade de itens exibidos na lista</string>
+
+    <string name="title_sync_anilist_remote_info">Sincronizar metadados</string>
+    <string name="description_sync_anilist_remote_info">Busca metadados no AniList pelo título do mangá</string>
+
+    <string name="title_sync_comic_info">Sincronizar ComicInfo.xml</string>
+    <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
+    <string name="description_sync_chapters_internal">Sincronizar capítulos usando metadados internos</string>
+
+    <string name="label_sync_progress">Sincronizando…</string>
+    <string name="label_sync_progress_percent">Sincronizando… %1$d%%</string>
+    <string name="label_sync_complete">Sincronizado!</string>
+
+    <!-- Components -->
+    <string name="message_image_parameter_required_smart_card">A image não pode ser nula para CardType.IMAGE</string>
+    <string name="message_path_not_found">Pasta não encontrada.</string>
+    <string name="description_icon_search_close">Fechar busca</string>
+    <string name="description_text_search_no_results">Nenhum resultado encontrado</string>
+
+    <!-- Settings Section -->
+    <string name="title_settings_display_config">Configurações de Exibição</string>
+    <string name="title_settings_page_preferences">Preferências da página</string>
+    <string name="title_settings_file_config">Configurações dos Arquivos</string>
+    <string name="title_settings_sync_files">Sincronizar arquivos</string>
+    <string name="title_sync_chapters">Sincronizar capítulos</string>
+    <string name="description_sync_chapters_local">Sincroniza metadados de cada capítulo local</string>
+    <string name="description_sync_chapters_remote">Sincroniza numeração oficial e datas</string>
+    <string name="title_sync_cover_banner">Sincronizar cover e banner</string>
+    <string name="description_sync_cover_banner">Busca imagens já baixadas na pasta</string>
+
+    <string name="description_icon_pagination_previous">Página Anterior</string>
+    <string name="description_icon_pagination_next">Próxima Página</string>
+    <string name="label_pagination_format">%1$d / %2$d</string>
+
+    <!-- Chapter Item & Details -->
+    <string name="description_icon_chapter_more_options">Mais opções</string>
+    <string name="label_dialog_close">Fechar</string>
+    <string name="label_chapter_detail_file">Arquivo</string>
+    <string name="label_chapter_detail_title">Título</string>
+    <string name="label_chapter_detail_scanlation">Grupo de tradução</string>
+    <string name="label_chapter_detail_pages">Páginas</string>
+    <string name="label_chapter_scanlation_prefix">Scan: %1$s</string>
+
+    <!-- Manga Header -->
+    <string name="manga_header_cover_description">Capa do mangá</string>
+    <string name="manga_header_unknown">Desconhecido</string>
+    <string name="manga_header_synopsis_title">Sinopse</string>
+    <string name="manga_header_no_description">Nenhuma descrição disponível.</string>
+    <string name="manga_header_read_less">Ler menos</string>
+    <string name="manga_header_read_more">Ler mais</string>
+    <string name="manga_header_read_now">Ler agora</string>
+
+    <!-- Reader Modes -->
+    <string name="label_reader_mode_horizontal">Paginado</string>
+    <string name="label_reader_mode_vertical">Vertical</string>
+    <string name="label_reader_mode_webtoon">Webtoon</string>
+
+    <!-- Manga Actions -->
+    <string name="label_manga_action_reread">Reler</string>
+    <string name="label_manga_action_continue">Continuar</string>
+    <string name="label_manga_action_start">Iniciar</string>
+    <string name="label_manga_status_read">Lido</string>
+
+    <!-- Actions -->
+    <string name="action_mark_as_read">Marcar como lido</string>
+    <string name="action_mark_as_unread">Marcar como não lido</string>
+    <string name="label_reader_next_page">Próximo</string>
+    <string name="description_icon_continue_reading">Continuar leitura</string>
+
+    <!-- History & Reader Info -->
+    <string name="title_history_screen">Histórico de Leitura</string>
+    <string name="description_history_empty_state">Nenhum mangá lido recentemente</string>
+    <string name="label_chapter_unknown">Capítulo desconhecido</string>
+    <string name="label_reader_chapter_order">Ordem: %1$s</string>
+    <string name="label_reader_page_format">Página %1$d / %2$d</string>
+    <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
+    <string name="label_reader_config_title">Modo de Leitura</string>
+    <string name="label_reader_pages_prefix">Páginas</string>
+    <string name="label_reader_next_chapter">Próximo</string>
+    <string name="label_reader_previous_chapter">Anterior</string>
+    <!-- Theme Settings -->
+    <string name="title_settings_appearance">Aparência</string>
+    <string name="description_settings_appearance">Personalize as cores do aplicativo</string>
+    <string name="title_settings_dynamic_color">Adaptável</string>
+    <string name="subtitle_settings_dynamic_color">Cores do sistema</string>
+    <string name="description_settings_dynamic_color">Usa cores do seu papel de parede (Android 12+)</string>
+    <string name="title_settings_catppuccin_theme">Catppuccin</string>
+    <string name="subtitle_settings_catppuccin_theme">Mocha</string>
+    <string name="description_settings_catppuccin_theme">Usa a paleta de cores original do app</string>
+
+    <string name="title_settings_nord_theme">Nord</string>
+    <string name="subtitle_settings_nord_theme">Arctic ice</string>
+
+    <string name="title_settings_dracula_theme">Dracula</string>
+    <string name="subtitle_settings_dracula_theme">Vampire theme</string>
+
+    <string name="label_settings_see_more_themes">Ver mais</string>
+    <string name="title_dialog_select_theme">Escolha um Tema</string>
+
+    <!-- Search & Download Screen -->
+    <string name="title_search_screen">Buscar no MangaDex</string>
+    <string name="placeholder_search_mangadex">Nome, ID ou URL do mangá…</string>
+    <string name="label_search_results">Resultados</string>
+    <string name="label_search_empty_state">Busque por um mangá para baixar capítulos traduzidos</string>
+    <string name="label_search_no_results">Nenhum resultado encontrado</string>
+    <string name="label_search_chapters">Capítulos</string>
+    <string name="label_search_language">Idioma</string>
+    <string name="label_search_select_all">Todos</string>
+    <string name="label_search_deselect_all">Nenhum</string>
+    <string name="label_search_download">Baixar selecionados (%1$d)</string>
+    <string name="label_search_back_to_results">Voltar aos resultados</string>
+    <string name="label_search_chapter_item">Cap. %1$s</string>
+    <string name="label_search_chapter_pages">%1$d páginas</string>
+    <string name="label_search_chapter_group">Scan: %1$s</string>
+    <string name="label_search_download_queued">Download de %1$d capítulo(s) enfileirado</string>
+    <string name="label_search_no_library_uri">Selecione a pasta da biblioteca nas Configurações primeiro</string>
+    <string name="label_search_no_chapters_selected">Selecione ao menos um capítulo</string>
+    <string name="label_search_download_all">Baixar tudo</string>
+    <string name="label_search_page_indicator">Página %1$d de %2$d</string>
+    <string name="label_download_activity">Baixar capítulos</string>
+    <string name="navigation_download_activity">download</string>
+    <string name="label_download_selected">Baixar (%1$d)</string>
+    <string name="label_download_all_chapters">Tudo</string>
+    <string name="description_icon_search_submit">Buscar</string>
+    <string name="description_icon_search_clear">Limpar busca</string>
+
+    </resources>

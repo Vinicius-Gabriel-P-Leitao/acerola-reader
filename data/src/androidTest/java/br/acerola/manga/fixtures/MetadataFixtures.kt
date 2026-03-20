@@ -12,7 +12,6 @@ object MetadataFixtures {
 
     fun createMangaRemoteInfo(
         id: Long = 0,
-        mirrorId: String = "manga-123",
         title: String = "Naruto",
         description: String = "Ninja story",
         romanji: String = "Naruto",
@@ -20,7 +19,6 @@ object MetadataFixtures {
         publication: Int = 1999
     ) = MangaRemoteInfo(
         id = id,
-        mirrorId = mirrorId,
         title = title,
         description = description,
         romanji = romanji,
@@ -62,25 +60,21 @@ object MetadataFixtures {
         id: Long = 0,
         name: String = "Kishimoto",
         type: TypeAuthor = TypeAuthor.AUTHOR,
-        mirrorId: String = "auth-1",
         mangaId: Long = 0
     ) = Author(
-        id = id, 
-        name = name, 
-        type = type, 
-        mirrorId = mirrorId, 
+        id = id,
+        name = name,
+        type = type,
         mangaRemoteInfoFk = mangaId
     )
 
     fun createGenre(
         id: Long = 0,
         genre: String = "Shonen",
-        mirrorId: String = "gen-1",
         mangaId: Long = 0
     ) = Genre(
-        id = id, 
-        genre = genre, 
-        mirrorId = mirrorId, 
+        id = id,
+        genre = genre,
         mangaRemoteInfoFk = mangaId
     )
 
@@ -88,13 +82,11 @@ object MetadataFixtures {
         id: Long = 0,
         url: String = "http://cover.jpg",
         fileName: String = "cover.jpg",
-        mirrorId: String = "cov-1",
         mangaId: Long = 0
     ) = Cover(
-        id = id, 
-        url = url, 
-        fileName = fileName, 
-        mirrorId = mirrorId, 
+        id = id,
+        url = url,
+        fileName = fileName,
         mangaRemoteInfoFk = mangaId
     )
 }

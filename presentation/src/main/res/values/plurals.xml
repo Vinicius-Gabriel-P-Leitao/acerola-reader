@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <plurals name="description_sync_mangadex_remote_info_supporting">
-        <item quantity="one">Busca informações da obra na API.</item>
-        <item quantity="other">Busca informações das obras na API.</item>
-    </plurals>
-</resources>

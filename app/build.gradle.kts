@@ -48,8 +48,8 @@ android {
 
 dependencies {
     implementation(project(":data"))
-    implementation(project(":presentation"))
-    implementation(project(":infrastructure"))
+    implementation(project(":ui"))
+    implementation(project(":infra"))
 
     // --- Core ---
     implementation(libs.androidx.core.ktx)

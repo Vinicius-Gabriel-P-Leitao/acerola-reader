@@ -10,7 +10,6 @@ import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.ComicInfoError
-import br.acerola.manga.config.pattern.MetadataSource
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
 import java.io.InputStream
@@ -27,10 +26,10 @@ class ComicInfoParserService @Inject constructor() {
         parser.setInput(inputStream, null)
 
         var title = ""
-        var series = ""
-        var summary = ""
         var writer = ""
         var genres = ""
+        var series = ""
+        var summary = ""
         var year: Int? = null
 
         // Avança até a primeira tag
@@ -60,19 +59,7 @@ class ComicInfoParserService @Inject constructor() {
         val finalTitle = series.ifBlank { title }
         if (finalTitle.isBlank()) return ComicInfoError.UnrecognizedMetadata("Unknown").left()
 
-        MangaRemoteInfoDto(
-            mirrorId = "local-${finalTitle.hashCode()}",
-            title = finalTitle,
-            description = summary,
-            year = year,
-            status = "Unknown",
-            metadataSource = MetadataSource.COMIC_INFO,
-            authors = if (writer.isNotBlank()) AuthorDto(id = "local-author", name = writer, type = "author") else null,
-            genre = genres.split(",", ";").mapNotNull {
-                val genre = it.trim()
-                if (genre.isNotBlank()) GenreDto(id = "local-$genre", name = genre) else null
-            }
-        ).right()
+        ParsedMangaInfo(title = finalTitle, writer = writer, genres = genres, summary = summary, year = year).toDto().right()
     }.mapLeft { ComicInfoError.InvalidXmlFormat(it) }.flatMap { it }
 
     fun parseChapterInfo(inputStream: InputStream): Either<ComicInfoError, ChapterRemoteInfoDto> = Either.catch {
@@ -105,14 +92,7 @@ class ComicInfoParserService @Inject constructor() {
             eventType = parser.next()
         }
 
-        ChapterRemoteInfoDto(
-            id = "local-$number",
-            chapter = number,
-            volume = volume,
-            title = title,
-            pages = pageCount,
-            mangadexVersion = 0
-        ).right()
+        ParsedChapterInfo(title = title, number = number, volume = volume, pageCount = pageCount).toDto().right()
     }.mapLeft { ComicInfoError.InvalidXmlFormat(it) }.flatMap { it }
 
     private fun processComicInfo(parser: XmlPullParser, onTagFound: (String, String) -> Unit) {
@@ -162,3 +142,40 @@ class ComicInfoParserService @Inject constructor() {
         return result
     }
 }
+
+private data class ParsedMangaInfo(
+    val title: String,
+    val writer: String,
+    val genres: String,
+    val summary: String,
+    val year: Int?
+)
+
+private fun ParsedMangaInfo.toDto(): MangaRemoteInfoDto = MangaRemoteInfoDto(
+    localHash = "local-${title.hashCode()}",
+    title = title,
+    description = summary,
+    year = year,
+    status = "Unknown",
+    authors = if (writer.isNotBlank()) AuthorDto(id = "local-author", name = writer, type = "author") else null,
+    genre = genres.split(",", ";").mapNotNull {
+        val g = it.trim()
+        if (g.isNotBlank()) GenreDto(id = "local-$g", name = g) else null
+    }
+)
+
+private data class ParsedChapterInfo(
+    val title: String,
+    val number: String,
+    val volume: String,
+    val pageCount: Int
+)
+
+private fun ParsedChapterInfo.toDto(): ChapterRemoteInfoDto = ChapterRemoteInfoDto(
+    id = "local-$number",
+    chapter = number,
+    volume = volume,
+    title = title,
+    pages = pageCount,
+    mangadexVersion = 0
+)

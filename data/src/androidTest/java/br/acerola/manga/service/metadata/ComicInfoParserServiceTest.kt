@@ -115,7 +115,6 @@ class ComicInfoParserServiceTest {
     @Test
     fun serialize_deve_gerar_xml_valido() {
         val info = MangaRemoteInfoDto(
-            mirrorId = "1",
             title = "Berserk",
             description = "Guts struggle",
             status = "ongoing",
