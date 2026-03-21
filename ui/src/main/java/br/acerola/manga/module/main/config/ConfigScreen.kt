@@ -1,19 +1,15 @@
 package br.acerola.manga.module.main.config
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,7 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
@@ -95,7 +90,7 @@ fun Main.Config.Layout.Screen(
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
-    
+
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
     val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
 
@@ -141,19 +136,19 @@ fun Main.Config.Layout.Screen(
 
                 // NOTE: Arquivos Locais
                 SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
-                
+
                 Main.Config.Component.SelectFolder(
                     context = context,
                     folderUri = uiState.folderUri,
                     onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
                 )
-                
+
                 Main.Config.Component.MetadataExportSettings(
                     enabled = uiState.generateComicInfo,
                     onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
                 )
 
-                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Aparência
                 SectionHeader(stringResource(id = R.string.title_settings_appearance))
@@ -163,7 +158,7 @@ fun Main.Config.Layout.Screen(
                     onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) }
                 )
 
-                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Categorias
                 SectionHeader(stringResource(id = R.string.title_config_categories))
@@ -174,7 +169,7 @@ fun Main.Config.Layout.Screen(
                     onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) }
                 )
 
-                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Biblioteca
                 SectionHeader(stringResource(id = R.string.label_library_context))
@@ -184,7 +179,7 @@ fun Main.Config.Layout.Screen(
                     onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
                 )
 
-                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Metadados
                 SectionHeader(stringResource(id = R.string.title_sync_external_metadata))

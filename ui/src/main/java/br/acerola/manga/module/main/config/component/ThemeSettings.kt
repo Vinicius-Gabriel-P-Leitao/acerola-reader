@@ -1,32 +1,49 @@
 package br.acerola.manga.module.main.config.component
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.component.Dialog
 import br.acerola.manga.common.ux.theme.color.Alucard
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
 import br.acerola.manga.common.ux.theme.color.Dracula
@@ -43,10 +60,7 @@ fun Main.Config.Component.ThemeSettings(
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    var showThemeDialog by remember { mutableStateOf(false) }
-
-    // Determina qual tema estático exibir no primeiro card
-    val staticThemeToDisplay = if (currentTheme == AppTheme.DYNAMIC) AppTheme.CATPPUCCIN else currentTheme
+    val themes = AppTheme.entries
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -84,74 +98,20 @@ fun Main.Config.Component.ThemeSettings(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Card 1: Tema Atual (ou Catppuccin se estiver em Adaptável)
-            ThemeCard(
-                modifier = Modifier.weight(1f),
-                title = getThemeTitle(staticThemeToDisplay),
-                subtitle = getThemeSubtitle(staticThemeToDisplay),
-                selected = currentTheme == staticThemeToDisplay,
-                colors = getThemeColors(staticThemeToDisplay, isDark, context),
-                onClick = { onThemeChange(staticThemeToDisplay) }
-            )
-
-            // Card 2: Tema Adaptável
-            ThemeCard(
-                modifier = Modifier.weight(1f),
-                title = stringResource(R.string.title_settings_dynamic_color),
-                subtitle = stringResource(R.string.subtitle_settings_dynamic_color),
-                selected = currentTheme == AppTheme.DYNAMIC,
-                colors = dynamicColorsFromContext(context, isDark),
-                onClick = { onThemeChange(AppTheme.DYNAMIC) }
-            )
-        }
-
-        TextButton(
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(end = 16.dp),
-            onClick = { showThemeDialog = true }
-        ) {
-            Text(stringResource(id = R.string.label_settings_see_more_themes))
-        }
-    }
-
-    if (showThemeDialog) {
-        Acerola.Component.Dialog(
-            show = showThemeDialog,
-            onDismiss = { showThemeDialog = false },
-            title = stringResource(id = R.string.title_dialog_select_theme),
-            confirmButtonContent = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text(stringResource(id = R.string.label_dialog_close))
-                }
-            }
-        ) {
-            val themes = AppTheme.entries
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.height(300.dp)
-            ) {
-                items(themes) { theme ->
-                    ThemeCard(
-                        title = getThemeTitle(theme),
-                        subtitle = getThemeSubtitle(theme),
-                        selected = currentTheme == theme,
-                        colors = getThemeColors(theme, isDark, context),
-                        onClick = {
-                            onThemeChange(theme)
-                            showThemeDialog = false
-                        }
-                    )
-                }
+            items(themes) { theme ->
+                ThemeCard(
+                    modifier = Modifier.width(150.dp),
+                    title = getThemeTitle(theme),
+                    subtitle = getThemeSubtitle(theme),
+                    selected = currentTheme == theme,
+                    colors = getThemeColors(theme, isDark, context),
+                    onClick = { onThemeChange(theme) }
+                )
             }
         }
     }
@@ -178,17 +138,28 @@ private fun getThemeSubtitle(theme: AppTheme): String {
 }
 
 @Composable
-private fun getThemeColors(theme: AppTheme, isDark: Boolean, context: android.content.Context): List<Color> {
+private fun getThemeColors(
+    theme: AppTheme,
+    isDark: Boolean,
+    context: Context
+): List<Color> {
     return when (theme) {
-        AppTheme.CATPPUCCIN -> listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
-        AppTheme.NORD -> if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(NordLight.Primary, NordLight.Secondary, NordLight.Tertiary)
-        AppTheme.DRACULA -> if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(Alucard.Purple, Alucard.Pink, Alucard.Cyan)
         AppTheme.DYNAMIC -> dynamicColorsFromContext(context, isDark)
+        AppTheme.CATPPUCCIN -> listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
+        AppTheme.DRACULA -> if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(
+            Alucard.Purple, Alucard.Pink, Alucard.Cyan
+        )
+        AppTheme.NORD -> if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(
+            NordLight.Primary, NordLight.Secondary, NordLight.Tertiary
+        )
     }
 }
 
 @Composable
-private fun dynamicColorsFromContext(context: android.content.Context, isDark: Boolean): List<Color> {
+private fun dynamicColorsFromContext(
+    context: Context,
+    isDark: Boolean
+): List<Color> {
     return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
         val scheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         listOf(scheme.primary, scheme.secondary, scheme.tertiary)
@@ -207,14 +178,15 @@ private fun ThemeCard(
     onClick: () -> Unit
 ) {
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-    val containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
+    val containerColor =
+        if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
 
     OutlinedCard(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
-        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(borderColor))
+        border = CardDefaults.outlinedCardBorder().copy(brush = SolidColor(borderColor))
     ) {
         Column(
             modifier = Modifier.padding(12.dp),

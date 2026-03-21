@@ -22,6 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +75,19 @@ fun Main.Home.Layout.Screen(
         mangas = mangas
     )
 
+    var query by rememberSaveable { mutableStateOf("") }
+    var searchActive by rememberSaveable { mutableStateOf(false) }
+
+    val filteredMangas = remember(query, uiState.mangas) {
+        if (query.isEmpty()) {
+            uiState.mangas
+        } else {
+            uiState.mangas.filter { (manga, _, _) ->
+                manga.directory.name.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
     val onAction: (HomeAction) -> Unit = { action ->
         when (action) {
             is HomeAction.UpdateLayout -> homeViewModel.updateHomeLayout(action.layout)
@@ -94,10 +111,14 @@ fun Main.Home.Layout.Screen(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
-                items = uiState.mangas,
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = { searchActive = false },
+                active = searchActive,
+                onActiveChange = { searchActive = it },
+                items = filteredMangas,
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
                 itemKey = { (manga, _, _) -> manga.directory.id },
-                searchKey = { (manga, _, _) -> manga.directory.name },
                 modifier = Modifier.padding(all = 6.dp),
                 itemContent = { (manga, history, chapterCount) ->
                     Main.Common.Component.MangaListItem(

@@ -1,8 +1,8 @@
 package br.acerola.manga.config.preference
 
 enum class AppTheme(val key: String) {
-    CATPPUCCIN(key = "catppuccin"),
     DYNAMIC(key = "dynamic"),
+    CATPPUCCIN(key = "catppuccin"),
     DRACULA(key = "dracula"),
     NORD(key = "nord");
 
