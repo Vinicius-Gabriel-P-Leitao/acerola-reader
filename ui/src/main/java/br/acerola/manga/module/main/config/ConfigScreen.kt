@@ -14,8 +14,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Palette
@@ -148,8 +156,8 @@ fun Main.Config.Layout.Screen(
                     .padding(paddingValues)
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ConfigHeader()
 
@@ -253,7 +261,7 @@ fun Main.Config.Layout.Screen(
 private fun ConfigHeader() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
         Box(
             modifier = Modifier
@@ -281,20 +289,28 @@ private fun PrettyConfigCard(
     title: String,
     icon: ImageVector,
     iconColor: Color,
+    defaultExpanded: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    var expanded by rememberSaveable { mutableStateOf(defaultExpanded) }
+
     Acerola.Component.Card(
         title = null,
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 8.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 12.dp, start = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -317,12 +333,32 @@ private fun PrettyConfigCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Icon(
+                    imageVector = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Recolher" else "Expandir",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Box(modifier = Modifier.padding(start = 12.dp)) {
-                content()
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    Acerola.Component.Divider(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .alpha(0.3f)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        content()
+                    }
+                }
             }
         }
     }

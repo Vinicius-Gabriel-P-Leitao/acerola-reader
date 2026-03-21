@@ -10,8 +10,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.SdStorage
 import androidx.compose.material.icons.rounded.Visibility
@@ -30,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Card
+import br.acerola.manga.common.ux.component.Divider
+import androidx.compose.ui.draw.alpha
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.component.MangaCategorySelector
 import br.acerola.manga.module.manga.component.PaginationPreference
@@ -46,7 +57,7 @@ fun Manga.Layout.ConfigSection(
     onAction: (MangaAction) -> Unit,
     onSyncAction: (MangaSyncAction) -> Unit,
 ) {
-    scope.item { Spacer(modifier = Modifier.height(24.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
     scope.item {
         PrettyConfigCard(
@@ -61,7 +72,7 @@ fun Manga.Layout.ConfigSection(
         }
     }
 
-    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(12.dp)) }
 
     scope.item {
         PrettyConfigCard(
@@ -77,7 +88,7 @@ fun Manga.Layout.ConfigSection(
         }
     }
 
-    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(12.dp)) }
 
     scope.item {
         PrettyConfigCard(
@@ -92,11 +103,11 @@ fun Manga.Layout.ConfigSection(
         }
     }
 
-    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(12.dp)) }
 
     scope.item {
         PrettyConfigCard(
-            title = stringResource(id = R.string.title_config_sync_mangadex),
+            title = stringResource(id = R.string.title_sync_external_metadata),
             icon = Icons.Rounded.CloudSync,
             iconColor = MaterialTheme.colorScheme.tertiary
         ) {
@@ -111,7 +122,7 @@ fun Manga.Layout.ConfigSection(
         }
     }
 
-    scope.item { Spacer(modifier = Modifier.height(28.dp)) }
+    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 }
 
 @Composable
@@ -119,20 +130,28 @@ private fun PrettyConfigCard(
     title: String,
     iconColor: Color,
     icon: ImageVector,
+    defaultExpanded: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    var expanded by rememberSaveable { mutableStateOf(defaultExpanded) }
+
     Acerola.Component.Card(
         title = null,
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 8.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 12.dp, start = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -156,10 +175,32 @@ private fun PrettyConfigCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Icon(
+                    imageVector = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Recolher" else "Expandir",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            content()
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    Acerola.Component.Divider(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .alpha(0.3f)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        content()
+                    }
+                }
+            }
         }
     }
 }

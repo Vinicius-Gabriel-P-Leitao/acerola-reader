@@ -43,6 +43,7 @@
     <string name="title_config_sync_mangadex">Sincronizar metadados com mangadex</string>
     <string name="title_chapter_item_chapter_number">Capitulo %1$s</string>
     <string name="title_sync_mangadex_remote_info">Sincronizar metadados</string>
+    <string name="title_sync_external_metadata">Sincronizar metadados</string>
     <string name="title_chapter_tabs_chapters">Capítulos (%1$d)</string>
     <string name="title_chapter_tabs_settings">Configurações</string>
 
