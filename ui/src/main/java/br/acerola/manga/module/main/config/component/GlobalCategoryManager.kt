@@ -55,48 +55,52 @@ fun Main.Config.Component.GlobalCategoryManager(
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(id = R.string.description_config_categories),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            IconButton(onClick = { showCreateDialog = true }) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = stringResource(id = R.string.action_add_category),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        if (categories.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                contentAlignment = Alignment.Center
-            ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        ListItem(
+            modifier = Modifier.clickable { showCreateDialog = true },
+            headlineContent = {
                 Text(
-                    text = stringResource(id = R.string.label_category_empty),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    text = stringResource(id = R.string.action_add_category),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
-            }
-        } else {
+            },
+            supportingContent = {
+                Text(
+                    text = stringResource(id = R.string.description_config_categories),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            },
+            leadingContent = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = null
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
+
+        if (categories.isNotEmpty()) {
             LazyRow(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(categories) { category ->
-                    AssistChip(
+                    InputChip(
                         onClick = { },
                         label = { Text(text = category.name) },
+                        selected = true,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Rounded.Bookmark,
@@ -111,7 +115,11 @@ fun Main.Config.Component.GlobalCategoryManager(
                                 contentDescription = stringResource(id = R.string.action_delete_category),
                                 modifier = Modifier.size(16.dp).clickable { onDeleteCategory(category.id) }
                             )
-                        }
+                        },
+                        colors = InputChipDefaults.inputChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            selectedLabelColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                 }
             }

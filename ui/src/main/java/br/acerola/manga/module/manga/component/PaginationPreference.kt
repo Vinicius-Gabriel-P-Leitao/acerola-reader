@@ -23,6 +23,11 @@ import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.MangaViewModel
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun Manga.Component.PaginationPreference(
     selected: ChapterPageSizeType?,
@@ -31,49 +36,48 @@ fun Manga.Component.PaginationPreference(
     val options = ChapterPageSizeType.entries
     val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
 
-    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 12.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.AutoStories,
-                        modifier = Modifier.size(22.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                        contentDescription = null
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column {
+    Column {
+        ListItem(
+            headlineContent = {
                 Text(
                     text = stringResource(id = R.string.title_settings_chapters_per_page),
-                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+            },
+            supportingContent = {
                 Text(
                     text = stringResource(id = R.string.description_settings_chapters_per_page),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-        }
-
-        Acerola.Component.RadioGroup(
-            selectedIndex = selectedIndex,
-            options = options.map { it.key.lowercase() },
-            onSelect = { index ->
-                onSelect(options[index])
-            }
+            },
+            leadingContent = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.AutoStories,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = null
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
+
+        Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+            Acerola.Component.RadioGroup(
+                selectedIndex = selectedIndex,
+                options = options.map { it.key.lowercase() },
+                onSelect = { index ->
+                    onSelect(options[index])
+                }
+            )
+        }
     }
 }

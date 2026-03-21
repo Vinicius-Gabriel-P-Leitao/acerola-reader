@@ -22,30 +22,18 @@ fun Manga.Component.MangaCategorySelector(
     allCategories: List<CategoryDto>,
     onUpdateMangaCategory: (Long?) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(id = R.string.action_select_category),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
+    Column(modifier = Modifier.fillMaxWidth()) {
         if (allCategories.isEmpty()) {
             Text(
                 text = stringResource(id = R.string.label_category_empty),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             )
         } else {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(allCategories) { category ->

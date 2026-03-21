@@ -7,32 +7,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.material.icons.rounded.CloudSync
-import androidx.compose.material.icons.rounded.FolderOpen
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,15 +24,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.component.Card
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
@@ -155,87 +135,69 @@ fun Main.Config.Layout.Screen(
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .verticalScroll(scrollState),
             ) {
                 ConfigHeader()
 
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.title_text_archive_configs_in_app),
-                    icon = Icons.Rounded.FolderOpen,
-                    iconColor = MaterialTheme.colorScheme.secondary
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Main.Config.Component.SelectFolder(
-                            context = context,
-                            folderUri = uiState.folderUri,
-                            onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
-                        )
-                        Acerola.Component.Divider(modifier = Modifier.alpha(0.5f))
+                // NOTE: Arquivos Locais
+                SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
+                
+                Main.Config.Component.SelectFolder(
+                    context = context,
+                    folderUri = uiState.folderUri,
+                    onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
+                )
+                
+                Main.Config.Component.MetadataExportSettings(
+                    enabled = uiState.generateComicInfo,
+                    onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
+                )
 
-                        Main.Config.Component.MetadataExportSettings(
-                            enabled = uiState.generateComicInfo,
-                            onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
-                        )
-                    }
-                }
+                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.title_settings_appearance),
-                    icon = Icons.Rounded.Palette,
-                    iconColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Main.Config.Component.ThemeSettings(
-                        currentTheme = uiState.selectedTheme,
-                        onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) }
-                    )
-                }
+                // NOTE: Aparência
+                SectionHeader(stringResource(id = R.string.title_settings_appearance))
 
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.title_config_categories),
-                    icon = Icons.Rounded.Bookmark,
-                    iconColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Main.Config.Component.GlobalCategoryManager(
-                        categories = allCategories,
-                        onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
-                        onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) }
-                    )
-                }
+                Main.Config.Component.ThemeSettings(
+                    currentTheme = uiState.selectedTheme,
+                    onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) }
+                )
 
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.label_library_context),
-                    icon = Icons.Rounded.Settings,
-                    iconColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Main.Config.Component.SyncLibraryArchive(
-                        onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
-                        onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
-                    )
-                }
+                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.title_text_mangadex_configs_in_app),
-                    icon = Icons.Rounded.CloudSync,
-                    iconColor = MaterialTheme.colorScheme.tertiary
-                ) {
-                    Main.Config.Component.SyncMangadexData(
-                        onRescan = { onAction(ConfigAction.SyncMangadexMetadata) }
-                    )
-                }
+                // NOTE: Categorias
+                SectionHeader(stringResource(id = R.string.title_config_categories))
 
-                PrettyConfigCard(
-                    title = stringResource(id = R.string.label_anilist_group),
-                    icon = Icons.Rounded.CloudSync,
-                    iconColor = MaterialTheme.colorScheme.tertiary
-                ) {
-                    Main.Config.Component.SyncAnilistData(
-                        onRescan = { onAction(ConfigAction.SyncAnilistMetadata) }
-                    )
-                }
+                Main.Config.Component.GlobalCategoryManager(
+                    categories = allCategories,
+                    onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
+                    onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) }
+                )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+
+                // NOTE: Biblioteca
+                SectionHeader(stringResource(id = R.string.label_library_context))
+
+                Main.Config.Component.SyncLibraryArchive(
+                    onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
+                    onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
+                )
+
+                Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+
+                // NOTE: Metadados
+                SectionHeader(stringResource(id = R.string.title_sync_external_metadata))
+
+                Main.Config.Component.SyncMangadexData(
+                    onRescan = { onAction(ConfigAction.SyncMangadexMetadata) }
+                )
+
+                Main.Config.Component.SyncAnilistData(
+                    onRescan = { onAction(ConfigAction.SyncAnilistMetadata) }
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
             }
 
             Box(
@@ -259,25 +221,14 @@ fun Main.Config.Layout.Screen(
 
 @Composable
 private fun ConfigHeader() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .height(32.dp)
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(2.dp)
-                )
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
         Text(
             text = stringResource(id = R.string.label_config_activity),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -285,81 +236,12 @@ private fun ConfigHeader() {
 }
 
 @Composable
-private fun PrettyConfigCard(
-    title: String,
-    icon: ImageVector,
-    iconColor: Color,
-    defaultExpanded: Boolean = false,
-    content: @Composable () -> Unit
-) {
-    var expanded by rememberSaveable { mutableStateOf(defaultExpanded) }
-
-    Acerola.Component.Card(
-        title = null,
-        modifier = Modifier.padding(horizontal = 8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded }
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = iconColor.copy(alpha = 0.15f),
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = iconColor,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Icon(
-                    imageVector = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Recolher" else "Expandir",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            AnimatedVisibility(visible = expanded) {
-                Column {
-                    Acerola.Component.Divider(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .alpha(0.3f)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        content()
-                    }
-                }
-            }
-        }
-    }
+private fun SectionHeader(title: String) {
+    Text(
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.secondary,
+        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
+    )
 }

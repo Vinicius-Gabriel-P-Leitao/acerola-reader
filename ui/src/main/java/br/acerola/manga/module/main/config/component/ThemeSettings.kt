@@ -26,7 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.component.Button
 import br.acerola.manga.common.ux.component.Dialog
 import br.acerola.manga.common.ux.theme.color.Alucard
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
@@ -50,50 +49,45 @@ fun Main.Config.Component.ThemeSettings(
     val staticThemeToDisplay = if (currentTheme == AppTheme.DYNAMIC) AppTheme.CATPPUCCIN else currentTheme
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Filled.Palette,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp),
-                        contentDescription = null,
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(width = 12.dp))
-
-            Column {
+        ListItem(
+            headlineContent = {
                 Text(
                     text = stringResource(R.string.title_settings_appearance),
-                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+            },
+            supportingContent = {
                 Text(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     text = stringResource(R.string.description_settings_appearance)
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+            },
+            leadingContent = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Filled.Palette,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp),
+                            contentDescription = null,
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Card 1: Tema Atual (ou Catppuccin se estiver em Adaptável)
@@ -117,17 +111,14 @@ fun Main.Config.Component.ThemeSettings(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Acerola.Component.Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { showThemeDialog = true },
-            text = stringResource(id = R.string.label_settings_see_more_themes),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        )
+        TextButton(
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = 16.dp),
+            onClick = { showThemeDialog = true }
+        ) {
+            Text(stringResource(id = R.string.label_settings_see_more_themes))
+        }
     }
 
     if (showThemeDialog) {
@@ -215,21 +206,15 @@ private fun ThemeCard(
     colors: List<Color>,
     onClick: () -> Unit
 ) {
-    val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
-    val backgroundColor =
-        if (selected) MaterialTheme.colorScheme.primary.copy(
-            alpha = 0.05f
-        ) else MaterialTheme.colorScheme.surfaceVariant.copy(
-            alpha = 0.3f
-        )
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+    val containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
 
-    Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .border(2.dp, borderColor, RoundedCornerShape(16.dp)),
-        color = backgroundColor,
-        tonalElevation = if (selected) 4.dp else 0.dp
+    OutlinedCard(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
+        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(borderColor))
     ) {
         Column(
             modifier = Modifier.padding(12.dp),

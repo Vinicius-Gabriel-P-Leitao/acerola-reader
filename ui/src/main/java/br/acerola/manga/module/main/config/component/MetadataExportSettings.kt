@@ -25,49 +25,52 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun Main.Config.Component.MetadataExportSettings(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-    ) {
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Filled.Description,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
-                    contentDescription = null
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
+    ListItem(
+        headlineContent = {
             Text(
                 text = stringResource(id = R.string.title_preference_metadata_comic_info),
-                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+        },
+        supportingContent = {
             Text(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
                 text = stringResource(id = R.string.description_preference_metadata_comic_info),
+                style = MaterialTheme.typography.bodySmall,
             )
-        }
-
-        Switch(
-            checked = enabled,
-            onCheckedChange = onCheckedChange
-        )
-    }
+        },
+        leadingContent = {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.Description,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                        contentDescription = null
+                    )
+                }
+            }
+        },
+        trailingContent = {
+            Switch(
+                checked = enabled,
+                onCheckedChange = onCheckedChange
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    )
 }

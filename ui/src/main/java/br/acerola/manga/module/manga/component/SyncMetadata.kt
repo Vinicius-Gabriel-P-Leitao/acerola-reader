@@ -39,6 +39,8 @@ import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+
 @Composable
 fun Manga.Component.SyncMetadata(
     remoteInfo: MangaRemoteInfoDto?,
@@ -53,20 +55,8 @@ fun Manga.Component.SyncMetadata(
     val hasComicInfoSource = remoteInfo?.sources?.comicInfo?.localHash != null
 
     Column {
-        // NOTE: Mangadex
-        Text(
-            text = stringResource(id = R.string.label_mangadex_group),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         ListItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable {
-                    onSyncMangadexInfo()
-                },
+            modifier = Modifier.clickable { onSyncMangadexInfo() },
             headlineContent = { 
                 Text(
                     text = stringResource(id = R.string.title_sync_mangadex_remote_info),
@@ -81,13 +71,12 @@ fun Manga.Component.SyncMetadata(
                         count = 1
                     ),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -114,11 +103,7 @@ fun Manga.Component.SyncMetadata(
 
         if (hasMangadexSource && remoteInfo?.id != null && syncSource == MetadataSource.MANGADEX) {
             ListItem(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable {
-                        onSyncMangadexChapters()
-                    },
+                modifier = Modifier.clickable { onSyncMangadexChapters() },
                 headlineContent = { 
                     Text(
                         text = stringResource(id = R.string.title_sync_chapters),
@@ -130,13 +115,12 @@ fun Manga.Component.SyncMetadata(
                     Text(
                         text = stringResource(id = R.string.description_sync_chapters_remote),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     ) 
                 },
                 leadingContent = {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                         modifier = Modifier.size(40.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -153,30 +137,8 @@ fun Manga.Component.SyncMetadata(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Acerola.Component.Divider(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .alpha(0.3f)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // NOTE: Anilist
-        Text(
-            text = stringResource(id = R.string.label_anilist_group),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         ListItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable {
-                    onSyncAnilistInfo()
-                },
+            modifier = Modifier.clickable { onSyncAnilistInfo() },
             headlineContent = {
                 Text(
                     text = stringResource(id = R.string.title_sync_anilist_remote_info),
@@ -188,13 +150,12 @@ fun Manga.Component.SyncMetadata(
                 Text(
                     text = stringResource(id = R.string.description_sync_anilist_remote_info),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -211,7 +172,7 @@ fun Manga.Component.SyncMetadata(
                     Icon(
                         imageVector = Icons.Rounded.CheckCircle,
                         contentDescription = "Active",
-                        tint = MaterialTheme.colorScheme.secondary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -219,30 +180,8 @@ fun Manga.Component.SyncMetadata(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Acerola.Component.Divider(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .alpha(0.3f)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // NOTE: ComicInfo
-        Text(
-            text = stringResource(id = R.string.label_local_file_group),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.tertiary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         ListItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable {
-                    onSyncComicInfo()
-                },
+            modifier = Modifier.clickable { onSyncComicInfo() },
             headlineContent = { 
                 Text(
                     text = stringResource(id = R.string.title_sync_comic_info),
@@ -254,20 +193,19 @@ fun Manga.Component.SyncMetadata(
                 Text(
                     text = stringResource(id = R.string.description_sync_comic_info),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 ) 
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Rounded.Description,
                             modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.tertiary,
+                            tint = MaterialTheme.colorScheme.primary,
                             contentDescription = null
                         )
                     }
@@ -278,7 +216,7 @@ fun Manga.Component.SyncMetadata(
                     Icon(
                         imageVector = Icons.Rounded.CheckCircle,
                         contentDescription = "Active",
-                        tint = MaterialTheme.colorScheme.tertiary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -288,11 +226,7 @@ fun Manga.Component.SyncMetadata(
 
         if (hasComicInfoSource && syncSource == MetadataSource.COMIC_INFO) {
             ListItem(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable {
-                        onSyncComicInfoChapters()
-                    },
+                modifier = Modifier.clickable { onSyncComicInfoChapters() },
                 headlineContent = { 
                     Text(
                         text = stringResource(id = R.string.title_sync_chapters),
@@ -304,20 +238,19 @@ fun Manga.Component.SyncMetadata(
                     Text(
                         text = stringResource(id = R.string.description_sync_chapters_internal),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     ) 
                 },
                 leadingContent = {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                         modifier = Modifier.size(40.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Rounded.AutoStories,
                                 modifier = Modifier.size(22.dp),
-                                tint = MaterialTheme.colorScheme.tertiary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 contentDescription = null
                             )
                         }

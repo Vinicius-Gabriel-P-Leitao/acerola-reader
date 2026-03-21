@@ -51,156 +51,89 @@ import br.acerola.manga.module.manga.state.MangaSyncAction
 import br.acerola.manga.module.manga.state.MangaUiState
 import br.acerola.manga.ui.R
 
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.secondary,
+        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
+    )
+}
+
 fun Manga.Layout.ConfigSection(
     scope: LazyListScope,
     uiState: MangaUiState,
     onAction: (MangaAction) -> Unit,
-    onSyncAction: (MangaSyncAction) -> Unit,
+    onSyncAction: (MangaSyncAction) -> Unit
 ) {
     scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
+    // NOTE: Configurações de Exibição
     scope.item {
-        PrettyConfigCard(
-            title = stringResource(id = R.string.title_settings_display_config),
-            icon = Icons.Rounded.Visibility,
-            iconColor = MaterialTheme.colorScheme.primary
-        ) {
-            Manga.Component.PaginationPreference(
-                selected = uiState.selectedChapterPerPage,
-                onSelect = { onAction(MangaAction.UpdatePageSize(it)) }
-            )
-        }
+        SectionHeader(stringResource(id = R.string.title_settings_display_config))
     }
-
-    scope.item { Spacer(modifier = Modifier.height(12.dp)) }
 
     scope.item {
-        PrettyConfigCard(
-            title = stringResource(id = R.string.title_config_categories),
-            icon = Icons.Rounded.Bookmark,
-            iconColor = MaterialTheme.colorScheme.primary
-        ) {
-            Manga.Component.MangaCategorySelector(
-                selectedCategory = uiState.manga.category,
-                allCategories = uiState.allCategories,
-                onUpdateMangaCategory = { id -> onAction(MangaAction.UpdateCategory(id)) }
-            )
-        }
+        Manga.Component.PaginationPreference(
+            selected = uiState.selectedChapterPerPage,
+            onSelect = { onAction(MangaAction.UpdatePageSize(it)) }
+        )
     }
-
-    scope.item { Spacer(modifier = Modifier.height(12.dp)) }
 
     scope.item {
-        PrettyConfigCard(
-            title = stringResource(id = R.string.title_text_archive_configs_in_app),
-            icon = Icons.Rounded.SdStorage,
-            iconColor = MaterialTheme.colorScheme.secondary
-        ) {
-            Manga.Component.SyncMangaArchive(
-                onSyncChapters = { onSyncAction(MangaSyncAction.SyncChaptersLocal) },
-                onRescanCover = { onSyncAction(MangaSyncAction.RescanManga) },
-            )
-        }
+        Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
     }
 
-    scope.item { Spacer(modifier = Modifier.height(12.dp)) }
+    // NOTE: Categorias
+    scope.item {
+        SectionHeader(stringResource(id = R.string.title_config_categories))
+    }
 
     scope.item {
-        PrettyConfigCard(
-            title = stringResource(id = R.string.title_sync_external_metadata),
-            icon = Icons.Rounded.CloudSync,
-            iconColor = MaterialTheme.colorScheme.tertiary
-        ) {
-            Manga.Component.SyncMetadata(
-                remoteInfo = uiState.manga.remoteInfo,
-                onSyncMangadexInfo = { onSyncAction(MangaSyncAction.SyncMangadexInfo) },
-                onSyncMangadexChapters = { onSyncAction(MangaSyncAction.SyncMangadexChapters) },
-                onSyncComicInfo = { onSyncAction(MangaSyncAction.SyncComicInfo) },
-                onSyncComicInfoChapters = { onSyncAction(MangaSyncAction.SyncComicInfoChapters) },
-                onSyncAnilistInfo = { onSyncAction(MangaSyncAction.SyncAnilistInfo) },
-            )
-        }
+        Manga.Component.MangaCategorySelector(
+            selectedCategory = uiState.manga.category,
+            allCategories = uiState.allCategories,
+            onUpdateMangaCategory = { id -> onAction(MangaAction.UpdateCategory(id)) }
+        )
     }
 
-    scope.item { Spacer(modifier = Modifier.height(16.dp)) }
-}
-
-@Composable
-private fun PrettyConfigCard(
-    title: String,
-    iconColor: Color,
-    icon: ImageVector,
-    defaultExpanded: Boolean = false,
-    content: @Composable () -> Unit
-) {
-    var expanded by rememberSaveable { mutableStateOf(defaultExpanded) }
-
-    Acerola.Component.Card(
-        title = null,
-        modifier = Modifier.padding(horizontal = 8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded }
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = iconColor.copy(alpha = 0.15f),
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = iconColor,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Icon(
-                    imageVector = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Recolher" else "Expandir",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            AnimatedVisibility(visible = expanded) {
-                Column {
-                    Acerola.Component.Divider(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .alpha(0.3f)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        content()
-                    }
-                }
-            }
-        }
+    scope.item {
+        Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
     }
+
+    // NOTE: Arquivos Locais
+    scope.item {
+        SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
+    }
+
+    scope.item {
+        Manga.Component.SyncMangaArchive(
+            onSyncChapters = { onSyncAction(MangaSyncAction.SyncChaptersLocal) },
+            onRescanCover = { onSyncAction(MangaSyncAction.RescanManga) },
+        )
+    }
+
+    scope.item {
+        Acerola.Component.Divider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+    }
+
+    // NOTE: Metadados Externos
+    scope.item {
+        SectionHeader(stringResource(id = R.string.title_sync_external_metadata))
+    }
+
+    scope.item {
+        Manga.Component.SyncMetadata(
+            remoteInfo = uiState.manga.remoteInfo,
+            onSyncMangadexInfo = { onSyncAction(MangaSyncAction.SyncMangadexInfo) },
+            onSyncMangadexChapters = { onSyncAction(MangaSyncAction.SyncMangadexChapters) },
+            onSyncComicInfo = { onSyncAction(MangaSyncAction.SyncComicInfo) },
+            onSyncComicInfoChapters = { onSyncAction(MangaSyncAction.SyncComicInfoChapters) },
+            onSyncAnilistInfo = { onSyncAction(MangaSyncAction.SyncAnilistInfo) },
+        )
+    }
+
+    scope.item { Spacer(modifier = Modifier.height(32.dp)) }
 }

@@ -26,54 +26,42 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+
 @Composable
 fun Main.Config.Component.SyncAnilistData(
     onRescan: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(id = R.string.label_anilist_group),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        ListItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { onRescan() },
-            headlineContent = {
-                Text(
-                    text = stringResource(id = R.string.title_sync_anilist_remote_info),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(
-                        id = R.string.description_sync_anilist_remote_info
-                    ), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            leadingContent = {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(id = R.drawable.anilist),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            },
-            colors = ListItemDefaults.colors(
-                containerColor = Color.Transparent
+    ListItem(
+        modifier = Modifier.clickable { onRescan() },
+        headlineContent = {
+            Text(
+                text = stringResource(id = R.string.title_sync_anilist_remote_info),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
-        )
-    }
+        },
+        supportingContent = {
+            Text(
+                text = stringResource(id = R.string.description_sync_anilist_remote_info),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        },
+        leadingContent = {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(id = R.drawable.anilist),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    )
 }

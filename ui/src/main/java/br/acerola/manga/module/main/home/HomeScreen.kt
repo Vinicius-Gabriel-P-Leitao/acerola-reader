@@ -120,7 +120,7 @@ fun Main.Home.Layout.Screen(
 
                 LazyVerticalGrid(
                     columns = gridCells,
-                    contentPadding = PaddingValues(all = 8.dp),
+                    contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
