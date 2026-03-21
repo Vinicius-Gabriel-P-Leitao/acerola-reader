@@ -3,6 +3,7 @@ package br.acerola.manga.dto.metadata.manga
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
+import br.acerola.manga.pattern.MetadataSource
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -19,6 +20,7 @@ data class MangaRemoteInfoDto(
     val authors: AuthorDto? = null,
     val genre: List<GenreDto> = emptyList(),
     val mangaDirectoryFk: Long? = null,
+    val syncSource: MetadataSource? = null,
     val sources: MangaSourcesDto? = null
 ) : Parcelable
 

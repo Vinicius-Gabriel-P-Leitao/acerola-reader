@@ -27,6 +27,7 @@ import br.acerola.manga.local.entity.metadata.source.AnilistSource
 import br.acerola.manga.local.entity.metadata.source.ComicInfoSource
 import br.acerola.manga.local.entity.metadata.source.MangadexSource
 import br.acerola.manga.local.entity.relation.RemoteInfoRelations
+import br.acerola.manga.pattern.MetadataSource
 import kotlin.collections.map
 
 fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
@@ -42,6 +43,7 @@ fun RemoteInfoRelations.toDto(): MangaRemoteInfoDto {
         banner = this.banner.firstOrNull()?.toDto(),
         genre = this.genre.map { it.toDto() },
         mangaDirectoryFk = this.remoteInfo.mangaDirectoryFk,
+        syncSource = MetadataSource.from(this.remoteInfo.syncSource),
         sources = MangaSourcesDto(
             mangadex = this.mangadexSource?.toDto(),
             anilist = this.anilistSource?.toDto(),
@@ -158,7 +160,8 @@ fun MangaRemoteInfoDto.toModel(): MangaRemoteInfo {
         romanji = this.romanji.orEmpty(),
         status = this.status,
         publication = this.year ?: 0,
-        mangaDirectoryFk = this.mangaDirectoryFk
+        mangaDirectoryFk = this.mangaDirectoryFk,
+        syncSource = this.syncSource?.source
     )
 }
 

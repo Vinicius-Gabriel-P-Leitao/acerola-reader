@@ -7,7 +7,7 @@ enum class MetadataSource(val source: String) {
     MANUAL(source = "manual");
 
     companion object {
-        fun from(value: String?): MetadataSource =
-            entries.find { it.source.equals(value, ignoreCase = true) } ?: MANGADEX
+        fun from(value: String?): MetadataSource? =
+            entries.find { it.source.equals(value, ignoreCase = true) }
     }
 }

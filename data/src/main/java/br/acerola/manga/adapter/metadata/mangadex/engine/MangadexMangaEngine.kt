@@ -25,6 +25,7 @@ import br.acerola.manga.local.entity.relation.RemoteInfoRelations
 import br.acerola.manga.local.translator.toDto
 import br.acerola.manga.local.translator.toMangadexSource
 import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.artwork.MangaSaveCoverService
@@ -196,7 +197,8 @@ class MangadexMangaEngine @Inject constructor(
 
                     val mangaToSave = bestMatch.toModel().copy(
                         id = existingRemote?.id ?: 0L,
-                        mangaDirectoryFk = current.id
+                        mangaDirectoryFk = current.id,
+                        syncSource = MetadataSource.MANGADEX.source
                     )
 
                     val mangaId = if (existingRemote != null) {

@@ -18,6 +18,7 @@ import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.manga.local.entity.metadata.source.ComicInfoSource as ComicInfoSourceEntity
 import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.artwork.MangaSaveCoverService
@@ -74,7 +75,8 @@ class ComicInfoMangaEngine @Inject constructor(
 
                     val mangaToSave = bestMatch.toModel().copy(
                         id = existingRemote?.id ?: 0L,
-                        mangaDirectoryFk = directory.id
+                        mangaDirectoryFk = directory.id,
+                        syncSource = MetadataSource.COMIC_INFO.source
                     )
 
                     val remoteId = if (existingRemote != null) {

@@ -1,6 +1,7 @@
 package br.acerola.manga.module.manga.component
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -34,6 +36,7 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.module.manga.Manga
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 
 @Composable
@@ -45,6 +48,7 @@ fun Manga.Component.SyncMetadata(
     onSyncComicInfoChapters: () -> Unit,
     onSyncAnilistInfo: () -> Unit,
 ) {
+    val syncSource = remoteInfo?.syncSource
     val hasMangadexSource = remoteInfo?.sources?.mangadex?.mangadexId != null
     val hasComicInfoSource = remoteInfo?.sources?.comicInfo?.localHash != null
 
@@ -95,10 +99,20 @@ fun Manga.Component.SyncMetadata(
                     }
                 }
             },
+            trailingContent = {
+                if (syncSource == MetadataSource.MANGADEX) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = "Active",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
-        if (hasMangadexSource && remoteInfo?.id != null) {
+        if (hasMangadexSource && remoteInfo?.id != null && syncSource == MetadataSource.MANGADEX) {
             ListItem(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -192,6 +206,16 @@ fun Manga.Component.SyncMetadata(
                     }
                 }
             },
+            trailingContent = {
+                if (syncSource == MetadataSource.ANILIST) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = "Active",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
@@ -249,10 +273,20 @@ fun Manga.Component.SyncMetadata(
                     }
                 }
             },
+            trailingContent = {
+                if (syncSource == MetadataSource.COMIC_INFO) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = "Active",
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
-        if (hasComicInfoSource) {
+        if (hasComicInfoSource && syncSource == MetadataSource.COMIC_INFO) {
             ListItem(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
