@@ -1,30 +1,32 @@
 package br.acerola.manga.util
 
 import br.acerola.manga.pattern.ArchiveFormatPattern
+import br.acerola.manga.pattern.ChapterTemplatePattern
 
-/**
- * Converte um template de usuário em uma Regex robusta.
- * O objetivo é ser tolerante a espaços e tratar o '*' como curinga universal.
- */
 fun templateToRegex(template: String): Regex {
     val extensions = ArchiveFormatPattern.entries.joinToString("|") { it.name.lowercase() }
-    
-    var pattern = template
-        .trim()
+    val cleaned = template.replace(".+", "*").replace(".*", "*")
+    val pattern = cleaned
         .replace("(", "\\(")
         .replace(")", "\\)")
         .replace("[", "\\[")
-        .replace("]", "\\]")
+        .replace("]", "\\]").replace(".", "\\.")
         .replace("{value}", "(\\d+)")
         .replace("{sub}", "(?:[.,](\\d+))?")
-        // A macro de extensão agora captura o ponto opcionalmente para ser flexível
         .replace("{extension}", "\\.?($extensions)")
-        .replace(" ", "\\s*")
-        // Trata o ponto literal: se for um ponto seguido de *, vira curinga. Se for ponto sozinho, vira ponto literal.
-        .replace(".*", ".*?")
-        .replace("*", ".*?")
-        // Garante que pontos literais restantes sejam escapados
-        .replace(Regex("(?<!\\\\)\\."), "\\.")
+        .replace("*", ".*?").replace(" ", "\\s*")
 
     return Regex(pattern = "^$pattern$", option = RegexOption.IGNORE_CASE)
+}
+
+fun detectTemplate(fileName: String): String {
+    ChapterTemplatePattern.presets.values.forEach { template ->
+        val regex = templateToRegex(template)
+
+        if (regex.matches(input = fileName)) {
+            return template
+        }
+    }
+
+    return "Ch. {value}{sub}.*.{extension}"
 }

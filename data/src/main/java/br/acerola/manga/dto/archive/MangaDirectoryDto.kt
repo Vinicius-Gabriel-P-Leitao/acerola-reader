@@ -15,6 +15,7 @@ data class MangaDirectoryDto(
     val bannerUri: Uri?,
     val lastModified: Long,
     val chapterTemplateFk: Long?,
+    // TODO: Remover esse campos que devem estar nos metadados
     val hasComicInfo: Boolean = false,
     val externalSyncEnabled: Boolean = true,
     ) : Parcelable

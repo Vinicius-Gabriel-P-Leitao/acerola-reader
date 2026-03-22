@@ -37,9 +37,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): DatabaseAcerola {
         return Room.databaseBuilder(
-            context,
-            DatabaseAcerola::class.java,
-            "acerola_database"
+            context, DatabaseAcerola::class.java, "acerola_database"
         )
         .addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
