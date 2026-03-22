@@ -9,9 +9,11 @@ import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
@@ -22,6 +24,7 @@ class MangaMetadataExportService @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val parserService: ComicInfoParserService,
     private val directoryDao: MangaDirectoryDao,
+    private val remoteInfoDao: MangaRemoteInfoDao,
 ) {
 
     suspend fun exportFull(
@@ -49,8 +52,9 @@ class MangaMetadataExportService @Inject constructor(
                 val xmlContent = parserService.serialize(remoteInfo)
                 writeXmlToFolder(folderDoc, "ComicInfo.xml", xmlContent)
 
-                if (!directory.hasComicInfo) {
-                    directoryDao.update(directory.copy(hasComicInfo = true))
+                val remoteInfoEntity = remoteInfoDao.getMangaByDirectoryId(directoryId).firstOrNull()
+                if (remoteInfoEntity != null && !remoteInfoEntity.hasComicInfo) {
+                    remoteInfoDao.update(remoteInfoEntity.copy(hasComicInfo = true))
                 }
             }
             Unit
@@ -58,8 +62,9 @@ class MangaMetadataExportService @Inject constructor(
     }
 
     private fun writeXmlToFolder(folderDoc: DocumentFile, fileName: String, content: String) {
-        val xmlFile = folderDoc.findFile(fileName) ?: folderDoc.createFile("text/xml", fileName)
-            ?: throw IOException("Could not create metadata file: $fileName")
+        val xmlFile = folderDoc.findFile(fileName) ?: folderDoc.createFile("text/xml", fileName) ?: throw IOException(
+            "Could not create metadata file: $fileName"
+        )
 
         context.contentResolver.openOutputStream(xmlFile.uri)?.use { output ->
             output.write(content.toByteArray(Charsets.UTF_8))

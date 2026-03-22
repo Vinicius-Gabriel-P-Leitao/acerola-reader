@@ -18,8 +18,7 @@ fun MangaDirectory.toDto(): MangaDirectoryDto {
         coverUri = cover?.toUri(),
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
-        chapterTemplate = chapterTemplate,
-        hasComicInfo = hasComicInfo,
+        chapterTemplateFk = chapterTemplateFk,
         externalSyncEnabled = externalSyncEnabled,
     )
 }
@@ -32,13 +31,13 @@ fun ChapterArchive.toDto(): ChapterFileDto {
 
 fun MangaDirectoryDto.toModel(): MangaDirectory {
     return MangaDirectory(
+        id = id,
         name = name,
         path = path,
         cover = coverUri?.toString(),
         banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis(),
-        chapterTemplate = chapterTemplate,
-        hasComicInfo = hasComicInfo,
+        chapterTemplateFk = chapterTemplateFk,
         externalSyncEnabled = externalSyncEnabled
     )
 }
@@ -58,16 +57,15 @@ fun List<ChapterArchive>.toPageDto(
 }
 
 fun DocumentFile.toMangaDirectoryModel(
-    cover: DocumentFile?, banner: DocumentFile?, chapterTemplate: String?, hasComicInfo: Boolean, externalSyncEnabled: Boolean = true
+    cover: DocumentFile?, banner: DocumentFile?, chapterTemplateFk: Long?, externalSyncEnabled: Boolean = true
 ): MangaDirectory {
     return MangaDirectory(
         name = name ?: "Unknown",
         path = uri.toString(),
         cover = cover?.uri?.toString(),
         banner = banner?.uri?.toString(),
-        chapterTemplate = chapterTemplate,
+        chapterTemplateFk = chapterTemplateFk,
         lastModified = lastModified(),
-        hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled,
     )
 }
@@ -89,17 +87,15 @@ fun FastFileMetadata.toMangaDirectoryModel(
     folderUri: String,
     coverPath: String?,
     bannerPath: String?,
-    chapterTemplate: String?,
-    hasComicInfo: Boolean
+    chapterTemplateFk: Long?
 ): MangaDirectory {
     return MangaDirectory(
         name = name,
         path = folderUri,
         cover = coverPath,
         banner = bannerPath,
-        chapterTemplate = chapterTemplate,
+        chapterTemplateFk = chapterTemplateFk,
         lastModified = lastModified,
-        hasComicInfo = hasComicInfo,
     )
 }
 

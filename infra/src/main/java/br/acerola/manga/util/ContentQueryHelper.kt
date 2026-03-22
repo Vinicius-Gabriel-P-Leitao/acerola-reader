@@ -3,6 +3,7 @@ package br.acerola.manga.util
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.manga.error.message.IoError
 
@@ -12,6 +13,14 @@ data class FastFileMetadata(
     val name: String,
     val mimeType: String,
     val lastModified: Long,
+)
+
+fun DocumentFile.toFastMetadata() = FastFileMetadata(
+    mimeType = "",
+    size = length(),
+    name = name ?: "",
+    lastModified = lastModified(),
+    id = DocumentsContract.getDocumentId(uri),
 )
 
 object ContentQueryHelper {

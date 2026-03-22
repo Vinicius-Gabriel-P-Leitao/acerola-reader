@@ -46,13 +46,16 @@ import br.acerola.manga.module.main.config.state.ConfigUiState
 import br.acerola.manga.ui.R
 import kotlinx.coroutines.launch
 
+import br.acerola.manga.module.main.config.component.TemplateManager
+
 @Composable
 fun Main.Config.Layout.Screen(
     metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel(),
     fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
     mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
     mangaDexViewModel: MangaRemoteInfoViewModel = hiltViewModel(),
-    themeViewModel: ThemeViewModel = hiltViewModel()
+    themeViewModel: ThemeViewModel = hiltViewModel(),
+    templateViewModel: TemplateConfigViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
@@ -90,6 +93,7 @@ fun Main.Config.Layout.Screen(
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
+    val templates by templateViewModel.templates.collectAsState()
 
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
     val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
@@ -148,7 +152,14 @@ fun Main.Config.Layout.Screen(
                     onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
                 )
 
+                Main.Config.Component.TemplateManager(
+                    templates = templates,
+                    onAddTemplate = { label, pattern -> templateViewModel.onAddTemplate(label, pattern) },
+                    onDeleteTemplate = { id -> templateViewModel.onDeleteTemplate(id) }
+                )
+
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+
 
                 // NOTE: Aparência
                 SectionHeader(stringResource(id = R.string.title_settings_appearance))
