@@ -7,7 +7,8 @@ import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,6 +17,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -29,13 +31,14 @@ class MangaMetadataExportServiceTest {
     @MockK lateinit var context: Context
     @MockK lateinit var parserService: ComicInfoParserService
     @MockK lateinit var directoryDao: MangaDirectoryDao
+    @MockK lateinit var remoteInfoDao: MangaRemoteInfoDao
 
     private lateinit var service: MangaMetadataExportService
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        service = MangaMetadataExportService(context, parserService, directoryDao)
+        service = MangaMetadataExportService(context, parserService, directoryDao, remoteInfoDao)
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)
     }
@@ -51,6 +54,7 @@ class MangaMetadataExportServiceTest {
         val mangaId = 1L
         val directory = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, path = "content://manga")
         val remoteInfo = MetadataFixtures.createMangaRemoteInfoDto()
+        val remoteInfoEntity = MetadataFixtures.createMangaRemoteInfo(mangaDirectoryFk = mangaId, hasComicInfo = false)
         val mockUri = mockk<Uri>()
         val mockFolder = mockk<DocumentFile>()
         val mockFile = mockk<DocumentFile>()
@@ -70,12 +74,13 @@ class MangaMetadataExportServiceTest {
         every { context.contentResolver } returns mockResolver
         every { mockResolver.openOutputStream(any()) } returns mockOutputStream
         
-        coEvery { directoryDao.update(any()) } returns Unit
+        every { remoteInfoDao.getMangaByDirectoryId(mangaId) } returns flowOf(remoteInfoEntity)
+        coEvery { remoteInfoDao.update(any()) } returns Unit
 
         val result = service.exportMangaMetadata(mangaId, remoteInfo)
 
         assertTrue("Deveria retornar sucesso mas foi $result", result.isRight())
-        coVerify { directoryDao.update(match { it.hasComicInfo }) }
+        coVerify { remoteInfoDao.update(match { it.hasComicInfo }) }
     }
 
     @Test
@@ -93,7 +98,7 @@ class MangaMetadataExportServiceTest {
         every { mockFolder.findFile(any()) } returns null
         
         every { parserService.serialize(any()) } returns ""
-        // Simula falha ao criar arquivo (retornando nulo, que agora lança IOException)
+        // Simula falha ao criar arquivo
         every { mockFolder.createFile(any(), any()) } returns null
 
         val result = service.exportMangaMetadata(mangaId, remoteInfo)

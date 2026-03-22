@@ -4,17 +4,18 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
+import arrow.core.right
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexMangaEngine
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
-import br.acerola.manga.local.database.dao.metadata.source.MangadexSourceDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.dao.metadata.relationship.GenreDao
+import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.adapter.contract.ImageFetchPort
 import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
 import br.acerola.manga.service.artwork.MangaSaveCoverService
@@ -68,8 +69,8 @@ class MangadexSourceMangaEngineTest {
             genreDao, authorDao, directoryDao, coverService, mangadexSourceDao,
             mangaRemoteInfoDao, context, metadataExportService, downloadCoverService
         )
-        repository.mangadexMangaInfoService = mangadexMangaInfoService
-        repository.mangadexChapterInfoService = mangadexChapterInfoService
+        repository.mangadexSourceMangaInfoService = mangadexMangaInfoService
+        repository.mangadexSourceChapterInfoService = mangadexChapterInfoService
 
         mockkObject(MangaDirectoryPreference)
         mockkStatic(Uri::class)
@@ -101,7 +102,7 @@ class MangadexSourceMangaEngineTest {
         coEvery { authorDao.insert(any()) } returns 1L
         coEvery { genreDao.insert(any()) } returns 1L
         coEvery { downloadCoverService.searchCover(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
-        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L
+        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L.right()
         coEvery { metadataExportService.exportMangaMetadata(any(), any()) } returns Either.Right(Unit)
 
         val result = repository.refreshManga(mangaId)

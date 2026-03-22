@@ -13,8 +13,9 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.adapter.contract.ChapterPort
 import br.acerola.manga.adapter.contract.MangaPort
-import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.manga.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.core.usecase.manga.ExtractCoverFromChapterUseCase
+import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -39,6 +40,7 @@ class MangaDirectoryViewModelTest {
 
     private val manager = mockk<FileSystemAccessManager>(relaxed = true)
     private val workManager = mockk<WorkManager>(relaxed = true)
+    private val extractCoverFromChapterUseCase = mockk<ExtractCoverFromChapterUseCase>(relaxed = true)
     
     private val chapterRepo = mockk<ChapterPort<ChapterArchivePageDto>>(relaxed = true)
     private val mangaRepo = mockk<MangaPort<MangaDirectoryDto>>(relaxed = true)
@@ -64,8 +66,16 @@ class MangaDirectoryViewModelTest {
         observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
         observeLibraryUseCase = ObserveLibraryUseCase(mangaRepo)
 
-        viewModel = MangaDirectoryViewModel(manager, observeChaptersUseCase, observeLibraryUseCase, workManager)
+        viewModel = createViewModel()
     }
+
+    private fun createViewModel() = MangaDirectoryViewModel(
+        workManager = workManager,
+        manager = manager,
+        extractCoverFromChapterUseCase = extractCoverFromChapterUseCase,
+        observeLibraryUseCase = observeLibraryUseCase,
+        observeChaptersUseCase = observeChaptersUseCase
+    )
 
     @After
     fun tearDown() {
@@ -82,8 +92,7 @@ class MangaDirectoryViewModelTest {
         val directories = listOf(mockk<MangaDirectoryDto>())
         every { mangaRepo.observeLibrary() } returns MutableStateFlow(directories)
         
-        // Re-instanciar para pegar o novo flow
-        viewModel = MangaDirectoryViewModel(manager, observeChaptersUseCase, observeLibraryUseCase, workManager)
+        viewModel = createViewModel()
 
         viewModel.mangaDirectories.test {
             assertThat(awaitItem()).isEqualTo(directories)

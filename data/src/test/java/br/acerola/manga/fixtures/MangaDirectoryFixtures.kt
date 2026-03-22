@@ -2,7 +2,7 @@ package br.acerola.manga.fixtures
 
 import android.net.Uri
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.local.database.entity.archive.MangaDirectory
+import br.acerola.manga.local.entity.archive.MangaDirectory
 import io.mockk.mockk
 
 object MangaDirectoryFixtures {
@@ -14,8 +14,7 @@ object MangaDirectoryFixtures {
         cover: String? = null,
         banner: String? = null,
         lastModified: Long = 1000L,
-        chapterTemplate: String? = null,
-        hasComicInfo: Boolean = false
+        chapterTemplateFk: Long? = null,
     ) = MangaDirectory(
         id = id,
         name = name,
@@ -23,8 +22,7 @@ object MangaDirectoryFixtures {
         cover = cover,
         banner = banner,
         lastModified = lastModified,
-        chapterTemplate = chapterTemplate,
-        hasComicInfo = hasComicInfo
+        chapterTemplateFk = chapterTemplateFk,
     )
 
     fun createMangaDirectoryDto(
@@ -34,8 +32,7 @@ object MangaDirectoryFixtures {
         coverUri: Uri? = null,
         bannerUri: Uri? = null,
         lastModified: Long = 1000L,
-        chapterTemplate: String? = null,
-        hasComicInfo: Boolean = false
+        chapterTemplateFk: Long? = null,
     ) = MangaDirectoryDto(
         id = id,
         name = name,
@@ -43,7 +40,6 @@ object MangaDirectoryFixtures {
         coverUri = coverUri,
         bannerUri = bannerUri,
         lastModified = lastModified,
-        chapterTemplate = chapterTemplate,
-        hasComicInfo = hasComicInfo
+        chapterTemplateFk = chapterTemplateFk,
     )
 }

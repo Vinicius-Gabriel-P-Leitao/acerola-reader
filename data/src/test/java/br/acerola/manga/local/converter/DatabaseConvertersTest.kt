@@ -1,6 +1,6 @@
 package br.acerola.manga.local.converter
 
-import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

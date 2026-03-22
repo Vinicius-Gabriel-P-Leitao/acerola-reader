@@ -5,18 +5,18 @@ import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.local.database.entity.metadata.ChapterDownloadSource
-import br.acerola.manga.local.database.entity.metadata.ChapterRemoteInfo
-import br.acerola.manga.local.database.entity.metadata.MangaRemoteInfo
-import br.acerola.manga.local.database.entity.metadata.relationship.Author
-import br.acerola.manga.local.database.entity.metadata.relationship.Banner
-import br.acerola.manga.local.database.entity.metadata.relationship.Cover
-import br.acerola.manga.local.database.entity.metadata.relationship.Genre
-import br.acerola.manga.local.database.entity.metadata.relationship.TypeAuthor
-import br.acerola.manga.local.database.entity.metadata.source.AnilistSource
-import br.acerola.manga.local.database.entity.metadata.source.ComicInfoSource
-import br.acerola.manga.local.database.entity.metadata.source.MangadexSource
-import br.acerola.manga.local.database.entity.relation.RemoteInfoRelations
+import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
+import br.acerola.manga.local.entity.metadata.ChapterRemoteInfo
+import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
+import br.acerola.manga.local.entity.metadata.relationship.Author
+import br.acerola.manga.local.entity.metadata.relationship.Banner
+import br.acerola.manga.local.entity.metadata.relationship.Cover
+import br.acerola.manga.local.entity.metadata.relationship.Genre
+import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.local.entity.metadata.source.AnilistSource
+import br.acerola.manga.local.entity.metadata.source.ComicInfoSource
+import br.acerola.manga.local.entity.metadata.source.MangadexSource
+import br.acerola.manga.local.entity.relation.RemoteInfoRelations
 
 object MetadataFixtures {
 
@@ -26,14 +26,20 @@ object MetadataFixtures {
         description: String = "Ninja story",
         romanji: String = "Naruto",
         status: String = "ongoing",
-        publication: Int = 1999
+        publication: Int = 1999,
+        mangaDirectoryFk: Long? = null,
+        syncSource: String? = null,
+        hasComicInfo: Boolean = false
     ) = MangaRemoteInfo(
         id = id,
         title = title,
         description = description,
         romanji = romanji,
         status = status,
-        publication = publication
+        publication = publication,
+        mangaDirectoryFk = mangaDirectoryFk,
+        syncSource = syncSource,
+        hasComicInfo = hasComicInfo
     )
 
     fun createChapterRemoteInfo(
@@ -79,7 +85,6 @@ object MetadataFixtures {
     )
 
     fun createMangaRemoteInfoDto(
-        mangadexId: String? = "manga-123",
         title: String = "Naruto",
         description: String = "Desc",
         status: String = "ongoing",
@@ -88,7 +93,6 @@ object MetadataFixtures {
         genre: List<GenreDto> = emptyList(),
         cover: CoverDto? = null
     ) = MangaRemoteInfoDto(
-        mangadexId = mangadexId,
         title = title,
         description = description,
         status = status,

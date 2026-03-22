@@ -8,7 +8,7 @@ import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import android.provider.DocumentsContract
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.adapter.contract.ChapterPort
@@ -39,12 +39,17 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
+import br.acerola.manga.service.template.ChapterTemplateMatcher
+import br.acerola.manga.service.template.ChapterTemplateService
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MangaDirectoryEngineTest {
 
     @MockK(relaxed = true) lateinit var context: Context
     @MockK lateinit var directoryDao: MangaDirectoryDao
     @MockK lateinit var mangaDirectoryOps: ChapterPort<ChapterArchivePageDto>
+    @MockK lateinit var templateService: ChapterTemplateService
+    @MockK lateinit var templateMatcher: ChapterTemplateMatcher
 
     private lateinit var repository: MangaDirectoryEngine
     private val testDispatcher = StandardTestDispatcher()
@@ -54,7 +59,7 @@ class MangaDirectoryEngineTest {
         MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
 
-        repository = MangaDirectoryEngine(context, directoryDao)
+        repository = MangaDirectoryEngine(directoryDao, context, templateService, templateMatcher)
         repository.mangaDirectoryOps = mangaDirectoryOps
 
         mockkStatic(Uri::class)
@@ -76,6 +81,8 @@ class MangaDirectoryEngineTest {
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
         every { MangaDirectoryPreference.folderUriFlow(any()) } returns flowOf("content://root")
+        coEvery { templateService.getTemplates() } returns emptyList()
+        every { templateMatcher.detect(any(), any()) } returns null
     }
 
     @After
@@ -190,11 +197,12 @@ class MangaDirectoryEngineTest {
     fun `deve retornar DiskIOFailure quando ocorrer IOException`() = runTest {
         val rootUri = mockk<Uri>()
         every { Uri.parse(any()) } returns rootUri
-        every { DocumentFile.fromTreeUri(context, rootUri) } throws IOException("IO Failure")
+        every { DocumentFile.fromTreeUri(context, rootUri) } returns mockk()
+        every { ContentQueryHelper.listFiles(any(), any()) } throws IOException("IO Failure")
 
         val result = repository.refreshLibrary(rootUri)
 
-        assertTrue(result.isLeft())
+        assertTrue("Esperado erro de disco, mas foi $result", result.isLeft())
         result.onLeft { assertTrue(it is LibrarySyncError.DiskIOFailure) }
     }
 

@@ -1,15 +1,16 @@
 package br.acerola.manga.repository.adapter.local.manga
 
 import arrow.core.Either
+import arrow.core.right
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.adapter.metadata.comicinfo.engine.ComicInfoMangaEngine
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
-import br.acerola.manga.local.database.dao.metadata.relationship.GenreDao
-import br.acerola.manga.local.database.dao.metadata.source.ComicInfoSourceDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
+import br.acerola.manga.local.dao.metadata.relationship.GenreDao
+import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.manga.adapter.contract.ImageFetchPort
 import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
 import br.acerola.manga.service.artwork.MangaSaveCoverService
@@ -33,7 +34,7 @@ class ComicInfoSourceMangaEngineTest {
     @MockK lateinit var mangaRemoteInfoDao: MangaRemoteInfoDao
     @MockK lateinit var comicInfoSourceDao: ComicInfoSourceDao
     @MockK lateinit var downloadCoverService: ImageFetchPort<String>
-    @MockK lateinit var comicInfoService: RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
+    @MockK lateinit var comicInfoSourceService: RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
 
     private lateinit var repository: ComicInfoMangaEngine
 
@@ -44,7 +45,7 @@ class ComicInfoSourceMangaEngineTest {
             genreDao, authorDao, directoryDao, coverService,
             mangaRemoteInfoDao, comicInfoSourceDao, downloadCoverService
         )
-        repository.comicInfoService = comicInfoService
+        repository.comicInfoSourceService = comicInfoSourceService
     }
 
     @Test
@@ -55,7 +56,7 @@ class ComicInfoSourceMangaEngineTest {
 
         coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns directory
         coEvery {
-            comicInfoService.searchInfo(any(), any(), any(), any(), *anyVararg())
+            comicInfoSourceService.searchInfo(any(), any(), any(), any(), *anyVararg())
         } returns Either.Right(listOf(infoFound))
 
         every { mangaRemoteInfoDao.getMangaByDirectoryId(mangaId) } returns flowOf(null)
@@ -65,12 +66,12 @@ class ComicInfoSourceMangaEngineTest {
         coEvery { authorDao.insert(any()) } returns 1L
         coEvery { genreDao.insert(any()) } returns 1L
         coEvery { downloadCoverService.searchCover(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
-        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L
+        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L.right()
 
         val result = repository.refreshManga(mangaId)
 
         assertTrue("Deveria ser sucesso mas foi: $result", result.isRight())
-        coVerify { comicInfoService.searchInfo(eq("Local Manga"), any(), any(), any(), *anyVararg()) }
+        coVerify { comicInfoSourceService.searchInfo(eq("Local Manga"), any(), any(), any(), *anyVararg()) }
     }
 
     @Test
@@ -80,7 +81,7 @@ class ComicInfoSourceMangaEngineTest {
         val infoFound = MetadataFixtures.createMangaRemoteInfoDto()
 
         coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns MangaDirectoryFixtures.createMangaDirectory(id = mangaId)
-        coEvery { comicInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) } returns Either.Right(listOf(infoFound))
+        coEvery { comicInfoSourceService.searchInfo(any(), any(), any(), any(), *anyVararg()) } returns Either.Right(listOf(infoFound))
         every { mangaRemoteInfoDao.getMangaByDirectoryId(mangaId) } returns flowOf(existingRemote)
 
         coEvery { mangaRemoteInfoDao.update(any()) } returns Unit
@@ -88,7 +89,7 @@ class ComicInfoSourceMangaEngineTest {
         coEvery { authorDao.insert(any()) } returns 1L
         coEvery { genreDao.insert(any()) } returns 1L
         coEvery { downloadCoverService.searchCover(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
-        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L
+        coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L.right()
 
         val result = repository.refreshManga(mangaId)
 

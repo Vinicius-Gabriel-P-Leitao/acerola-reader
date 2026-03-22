@@ -12,8 +12,7 @@ object MangaDirectoryFixtures {
         cover: String? = null,
         banner: String? = null,
         lastModified: Long = 1000L,
-        chapterTemplate: String? = null,
-        hasComicInfo: Boolean = false
+        chapterTemplateFk: Long? = null
     ) = MangaDirectory(
         id = id,
         name = name,
@@ -21,7 +20,6 @@ object MangaDirectoryFixtures {
         cover = cover,
         banner = banner,
         lastModified = lastModified,
-        chapterTemplate = chapterTemplate,
-        hasComicInfo = hasComicInfo
+        chapterTemplateFk = chapterTemplateFk
     )
 }

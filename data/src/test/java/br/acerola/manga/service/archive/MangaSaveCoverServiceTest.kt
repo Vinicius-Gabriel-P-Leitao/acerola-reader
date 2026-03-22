@@ -1,14 +1,18 @@
 package br.acerola.manga.service.archive
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import br.acerola.manga.error.message.IoError
 import br.acerola.manga.fixtures.LookupFixtures
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.dao.metadata.relationship.CoverDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.dao.metadata.relationship.CoverDao
 import br.acerola.manga.service.artwork.MangaSaveCoverService
+import br.acerola.manga.service.file.FileStorageService
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,25 +24,23 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.io.OutputStream
 
 class MangaSaveCoverServiceTest {
 
-    @MockK
-    lateinit var context: Context
-    @MockK
-    lateinit var coverDao: CoverDao
-    @MockK
-    lateinit var directoryDao: MangaDirectoryDao
+    @MockK lateinit var context: Context
+    @MockK lateinit var coverDao: CoverDao
+    @MockK lateinit var directoryDao: MangaDirectoryDao
+    @MockK lateinit var fileStorageService: FileStorageService
 
     private lateinit var service: MangaSaveCoverService
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        service = MangaSaveCoverService(coverDao, directoryDao, context)
+        service = MangaSaveCoverService(coverDao, directoryDao, fileStorageService, context)
         mockkStatic(DocumentFile::class)
     }
 
@@ -55,24 +57,16 @@ class MangaSaveCoverServiceTest {
 
         val rootDoc = mockk<DocumentFile>()
         val mangaDoc = mockk<DocumentFile>()
-        val newFileDoc = mockk<DocumentFile>()
+        val savedFileDoc = mockk<DocumentFile>()
         val fileUri = mockk<Uri>()
 
         every { DocumentFile.fromTreeUri(context, rootUri) } returns rootDoc
-        every { rootDoc.exists() } returns true
         every { rootDoc.findFile("One Piece") } returns mangaDoc
-        every { mangaDoc.canWrite() } returns true
-
-        every { mangaDoc.findFile("cover.png") } returns null
-        every { mangaDoc.createFile("image/png", "cover.png") } returns newFileDoc
-        every { newFileDoc.uri } returns fileUri
+        every { mangaDoc.findFile(any()) } returns savedFileDoc
+        every { savedFileDoc.uri } returns fileUri
         every { fileUri.toString() } returns "content://cover/1"
 
-        val outputStream = mockk<OutputStream>(relaxed = true)
-        val resolver = mockk<ContentResolver>()
-        every { context.contentResolver } returns resolver
-        every { resolver.openOutputStream(fileUri) } returns outputStream
-
+        coEvery { fileStorageService.saveFile(any(), any(), any(), any()) } returns Unit.right()
         coEvery { directoryDao.getMangaDirectoryById(1) } returns mangaDir
         coEvery { directoryDao.update(any()) } returns Unit
         coEvery { coverDao.insert(any()) } returns 10L
@@ -81,26 +75,26 @@ class MangaSaveCoverServiceTest {
         val result = service.processCover(rootUri, 1, bytes, coverDto.url, "One Piece", 100)
 
         // Assert
-        assertEquals(10L, result)
-        coVerify { outputStream.write(bytes) }
+        assertTrue(result.isRight())
+        result.onRight { assertEquals(10L, it) }
+        coVerify { fileStorageService.saveFile(mangaDoc, "cover.png", "image/png", bytes) }
         coVerify { directoryDao.update(match { it.cover == "content://cover/1" }) }
     }
 
     @Test
-    fun `processCover deve apenas atualizar coverDao se nao conseguir acessar FS`() = runTest {
+    fun `processCover deve retornar FileNotFound se nao conseguir acessar FS`() = runTest {
         // Arrange
         val rootUri = mockk<Uri>()
         val bytes = byteArrayOf(0, 1, 2)
         val coverUrl = "https://mangadex.org/covers/1/a.jpg"
 
         every { DocumentFile.fromTreeUri(context, rootUri) } returns null
-        coEvery { coverDao.insert(any()) } returns 10L
 
         // Act
         val result = service.processCover(rootUri, 1, bytes, coverUrl, "One Piece", 100)
 
         // Assert
-        assertEquals(10L, result)
-        coVerify(exactly = 0) { directoryDao.update(any()) }
+        assertTrue(result.isLeft())
+        result.onLeft { assertTrue(it is IoError.FileNotFound) }
     }
 }
