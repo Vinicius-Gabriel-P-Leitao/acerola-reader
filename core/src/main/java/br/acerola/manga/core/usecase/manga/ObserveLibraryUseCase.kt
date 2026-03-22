@@ -15,4 +15,7 @@ open class ObserveLibraryUseCase<T>(
     operator fun invoke(): StateFlow<List<T>> {
         return mangaRepository.observeLibrary()
     }
+
+    suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean) =
+        mangaRepository.updateMangaSettings(mangaId, externalSyncEnabled)
 }

@@ -47,4 +47,8 @@ sealed interface LibrarySyncError : UserMessage {
     ) : LibrarySyncError {
         override val uiMessage = UiText.StringResource(resId = R.string.description_generic_internal_error)
     }
+
+    data object ExternalSyncDisabled : LibrarySyncError {
+        override val uiMessage = UiText.StringResource(resId = R.string.error_sync_disabled)
+    }
 }

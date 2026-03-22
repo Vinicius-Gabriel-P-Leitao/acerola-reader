@@ -206,6 +206,10 @@ fun MangaScreen(
                 uiState.manga.directory.id,
                 action.categoryId
             )
+            is MangaAction.ToggleExternalSync -> mangaDirectoryViewModel.updateExternalSyncEnabled(
+                uiState.manga.directory.id,
+                action.enabled
+            )
         }
     }
 

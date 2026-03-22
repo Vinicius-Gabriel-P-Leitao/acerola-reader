@@ -40,6 +40,7 @@ import br.acerola.manga.ui.R
 @Composable
 fun Manga.Component.SyncMetadata(
     remoteInfo: MangaRemoteInfoDto?,
+    externalSyncEnabled: Boolean,
     onSyncMangadexInfo: () -> Unit,
     onSyncMangadexChapters: () -> Unit,
     onSyncComicInfo: () -> Unit,
@@ -51,31 +52,33 @@ fun Manga.Component.SyncMetadata(
     val hasComicInfoSource = remoteInfo?.sources?.comicInfo?.localHash != null
 
     Column {
-        // NOTE: Mangadex
-        MangadexSection(
-            isActive = syncSource == MetadataSource.MANGADEX,
-            hasChapters = hasMangadexSource && remoteInfo?.id != null,
-            onSyncInfo = onSyncMangadexInfo,
-            onSyncChapters = onSyncMangadexChapters
-        )
+        if (externalSyncEnabled) {
+            // NOTE: Mangadex
+            MangadexSection(
+                isActive = syncSource == MetadataSource.MANGADEX,
+                hasChapters = hasMangadexSource && remoteInfo?.id != null,
+                onSyncInfo = onSyncMangadexInfo,
+                onSyncChapters = onSyncMangadexChapters
+            )
 
-        Acerola.Component.Divider(
-            modifier = Modifier
-                .padding(vertical = 12.dp, horizontal = 16.dp)
-                .alpha(0.2f)
-        )
+            Acerola.Component.Divider(
+                modifier = Modifier
+                    .padding(vertical = 12.dp, horizontal = 16.dp)
+                    .alpha(0.2f)
+            )
 
-        // NOTE: Anilist
-        AnilistSection(
-            isActive = syncSource == MetadataSource.ANILIST,
-            onSyncInfo = onSyncAnilistInfo
-        )
+            // NOTE: Anilist
+            AnilistSection(
+                isActive = syncSource == MetadataSource.ANILIST,
+                onSyncInfo = onSyncAnilistInfo
+            )
 
-        Acerola.Component.Divider(
-            modifier = Modifier
-                .padding(vertical = 12.dp, horizontal = 16.dp)
-                .alpha(0.2f)
-        )
+            Acerola.Component.Divider(
+                modifier = Modifier
+                    .padding(vertical = 12.dp, horizontal = 16.dp)
+                    .alpha(0.2f)
+            )
+        }
 
         // NOTE: ComicInfo
         ComicInfoSection(

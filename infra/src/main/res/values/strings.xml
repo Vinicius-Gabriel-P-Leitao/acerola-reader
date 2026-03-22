@@ -46,6 +46,7 @@
     <string name="error_unrecognized_metadata">Não foi possível reconhecer os metadados em: %1$s</string>
 
     <!-- Notification Channels -->
+    <string name="error_sync_disabled">A sincronização externa está desativada para este mangá.</string>
     <string name="sync_notification_channel_name">Sincronização de Biblioteca</string>
     <string name="sync_notification_channel_description">Notificações de progresso de sincronização
         de mangás</string>

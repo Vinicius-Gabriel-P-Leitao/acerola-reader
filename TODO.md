@@ -94,7 +94,7 @@ metadados de fontes online populares.
 - [x] Painel de configurações para selecionar e configurar o provedor (MangaDex / AniList / ComicInfo) com feedback de fonte ativa.
 
 #### Download via MangaDex
-- [ ] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
+- [x] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
 - [x] **Paginação no download:** Mangás com 300+ capítulos mostram apenas 0/100 — exibir de forma paginada e 
   permitir baixar tudo em sequência.
 - [x] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra 

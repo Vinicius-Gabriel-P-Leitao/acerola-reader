@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.module.manga.component.MangaCategorySelector
+import br.acerola.manga.module.manga.component.MangaExternalSyncToggle
 import br.acerola.manga.module.manga.component.PaginationPreference
 import br.acerola.manga.module.manga.component.SyncMangaArchive
 import br.acerola.manga.module.manga.component.SyncMetadata
@@ -97,8 +98,16 @@ fun Manga.Layout.ConfigSection(
     }
 
     scope.item {
+        Manga.Component.MangaExternalSyncToggle(
+            enabled = uiState.manga.directory.externalSyncEnabled,
+            onToggle = { onAction(MangaAction.ToggleExternalSync(it)) }
+        )
+    }
+
+    scope.item {
         Manga.Component.SyncMetadata(
             remoteInfo = uiState.manga.remoteInfo,
+            externalSyncEnabled = uiState.manga.directory.externalSyncEnabled,
             onSyncMangadexInfo = { onSyncAction(MangaSyncAction.SyncMangadexInfo) },
             onSyncMangadexChapters = { onSyncAction(MangaSyncAction.SyncMangadexChapters) },
             onSyncComicInfo = { onSyncAction(MangaSyncAction.SyncComicInfo) },

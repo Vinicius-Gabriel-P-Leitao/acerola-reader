@@ -82,8 +82,14 @@ class MangadexMangaEngine @Inject constructor(
             AcerolaLogger.i(TAG, "Initiating MangaDex sync for manga: $mangaId", LogSource.REPOSITORY)
             _isIndexing.value = true
             try {
+                val directory = directoryDao.getMangaDirectoryById(mangaId)
+                    ?: return@withContext Either.Left(LibrarySyncError.UnexpectedError(Exception("Directory not found")))
+
+                if (!directory.externalSyncEnabled) {
+                    return@withContext Either.Left(LibrarySyncError.ExternalSyncDisabled)
+                }
+
                 Either.catch {
-                    val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
                     executeSync(folders = listOf(directory), baseUri = baseUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Refresh specific MangaDex metadata failed", LogSource.REPOSITORY, throwable = exception)
@@ -107,7 +113,7 @@ class MangadexMangaEngine @Inject constructor(
                 val existingDirectoryIds = existingRemote.mapNotNull { it.mangaDirectoryFk }.toSet()
 
                 val foldersToSync = allFolders.filter { folder ->
-                    !existingDirectoryIds.contains(folder.id)
+                    !existingDirectoryIds.contains(folder.id) && folder.externalSyncEnabled
                 }
 
                 executeSync(folders = foldersToSync, baseUri = baseUri)
@@ -130,7 +136,8 @@ class MangadexMangaEngine @Inject constructor(
         return try {
             withContext(context = Dispatchers.IO) {
                 Either.catch {
-                    val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    val allFolders = (directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList())
+                        .filter { it.externalSyncEnabled }
                     executeSync(folders = allFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Full MangaDex refresh failed", LogSource.REPOSITORY, throwable = exception)
