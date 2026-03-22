@@ -191,7 +191,7 @@ fun Main.Home.Layout.Screen(
                     },
                 ),
 
-                // TODO: Criar filtragem por categoria.
+                // NOTE: Criar filtragem por categoria.
                 FloatingToolItem(
                     icon = {
                         Icon(

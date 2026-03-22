@@ -11,7 +11,7 @@ import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 
-// TODO: Não existe muito o que otimizar aqui além do erro para formato invalido
+// TODO: Usar um erro traduzido aqui, fazer ele respeitar o meu tratamento de erro
 @Singleton
 class ChapterSourceFactory @Inject constructor(
     private val cbzProvider: Provider<CbzChapterSourceService>,

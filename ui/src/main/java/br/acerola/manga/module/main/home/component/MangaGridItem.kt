@@ -211,9 +211,9 @@ fun Main.Home.Component.MangaGridItem(
                 }
             }
 
-            // TODO: Adicionar funções
+            // NOTE: Adicionar funções
             IconButton(
-                onClick = { /* TODO: Open menu */ },
+                onClick = { /* NOTE: Open menu */ },
                 modifier = Modifier.size(24.dp)
             ) {
                 Icon(
