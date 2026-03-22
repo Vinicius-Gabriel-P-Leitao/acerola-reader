@@ -15,4 +15,10 @@ abstract class CompactServiceModule {
     abstract fun bindArchiveCompactService(
         impl: CbzCompactService
     ): ArchiveCompactService
+
+    @Binds
+    @Singleton
+    abstract fun bindPdfToCbzConverterService(
+        impl: DefaultPdfToCbzConverterService
+    ): PdfToCbzConverterService
 }

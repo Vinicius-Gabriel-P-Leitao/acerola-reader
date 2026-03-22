@@ -1,8 +1,6 @@
 package br.acerola.manga.module.reader
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
@@ -17,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -146,7 +145,7 @@ fun ReaderScreen(
             exit = slideOutVertically { it },
             modifier = Modifier.fillMaxSize()
         ) {
-            Box(contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+            Box(contentAlignment = Alignment.BottomCenter) {
                 Reader.Layout.BottomControls(
                     isLoading = state.isLoading,
                     pageCount = state.pageCount,

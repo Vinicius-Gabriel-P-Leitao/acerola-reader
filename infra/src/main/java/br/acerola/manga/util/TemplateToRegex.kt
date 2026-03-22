@@ -1,15 +1,17 @@
 package br.acerola.manga.util
 
+import br.acerola.manga.pattern.ArchiveFormatPattern
 import br.acerola.manga.pattern.ChapterTemplatePattern
 
 fun templateToRegex(template: String): Regex {
+    val extensions = ArchiveFormatPattern.entries.joinToString("|") { it.name.lowercase() }
     val cleaned = template.replace(oldValue = ".+", newValue = "*").replace(oldValue = ".*", newValue = "*")
     val pattern = cleaned.replace(oldValue = "(", newValue = "\\(").replace(oldValue = ")", newValue = "\\)")
         .replace(oldValue = "[", newValue = "\\[").replace(oldValue = "]", newValue = "\\]")
         .replace(oldValue = ".", newValue = "\\.")
         .replace(oldValue = "{value}", newValue = "(\\d+)")
         .replace(oldValue = "{sub}", newValue = "(?:[.,](\\d+))?")
-        .replace(oldValue = "{extension}", newValue = "(cbz|cbr)")
+        .replace(oldValue = "{extension}", newValue = "($extensions)")
         .replace(oldValue = "*", newValue = ".*?")
         .replace(oldValue = " ", newValue = "\\s*")
 

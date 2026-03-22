@@ -208,6 +208,6 @@
     <string name="placeholder_category_name">Ex: Light Novel, HQ, Manga…</string>
 
     <string name="label_config_external_sync">Sincronização Externa</string>
-    <string name="description_config_external_sync">Permitir buscar metadados automaticamente no MangaDex ou AniList para este item</string>
+    <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
 
     </resources>

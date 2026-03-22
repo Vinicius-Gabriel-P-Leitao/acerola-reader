@@ -18,6 +18,7 @@ import br.acerola.manga.local.translator.toPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
+import br.acerola.manga.service.compact.PdfToCbzConverterService
 import br.acerola.manga.util.ContentQueryHelper
 import br.acerola.manga.util.FastFileMetadata
 import br.acerola.manga.util.templateToRegex
@@ -38,12 +39,12 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.text.get
 
 @Singleton
 class ChapterArchiveEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val chapterArchiveDao: ChapterArchiveDao,
+    private val pdfToCbzConverterService: PdfToCbzConverterService,
     @param:ApplicationContext private val context: Context
 ) : ChapterPort<ChapterArchivePageDto> {
 
@@ -64,25 +65,24 @@ class ChapterArchiveEngine @Inject constructor(
             Either.catch {
                 val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@catch
                 val folderUri = folder.path.toUri()
+                val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}{sub}.*.{extension}")
 
                 val existingChapters = chapterArchiveDao.getChaptersByMangaDirectoryList(folderId = mangaId)
                 val existingChaptersMap = existingChapters.associateBy { it.path }
 
-                val chapterFiles: List<FastFileMetadata>
+                var allFiles: List<FastFileMetadata>
                 val folderLastModified: Long
+                val folderDoc: DocumentFile
 
                 if (baseUri != null) {
                     val folderDocId = DocumentsContract.getDocumentId(folderUri)
-                    chapterFiles = ContentQueryHelper.listFiles(
-                        context, baseUri, folderDocId
-                    ).getOrElse { return@catch }.filter { ArchiveFormatPattern.isSupported(ext = it.name) }
-
+                    allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
                     folderLastModified = 0
+                    folderDoc = DocumentFile.fromTreeUri(context, folderUri) ?: return@catch
                 } else {
-                    val folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
+                    folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
                     folderLastModified = folderDoc.lastModified()
-
-                    chapterFiles = folderDoc.listFiles().filter { it.isFile }.map {
+                    allFiles = folderDoc.listFiles().filter { it.isFile }.map {
                         FastFileMetadata(
                             id = DocumentsContract.getDocumentId(it.uri),
                             name = it.name ?: "",
@@ -90,8 +90,55 @@ class ChapterArchiveEngine @Inject constructor(
                             lastModified = it.lastModified(),
                             mimeType = ""
                         )
-                    }.filter { ArchiveFormatPattern.isSupported(ext = it.name) }
+                    }
                 }
+
+                // Process PDFs to CBZ
+                val pdfFiles = allFiles.filter { it.name.endsWith(".pdf", ignoreCase = true) }
+                val cbzNames = allFiles.map { it.name }.toSet()
+                
+                if (pdfFiles.isNotEmpty()) {
+                    var needsRefresh = false
+                    pdfFiles.forEach { pdf ->
+                        val match = chapterRegex.matchEntire(pdf.name)
+                        if (match != null) {
+                            val targetCbzName = pdf.name.substringBeforeLast('.') + ".cbz"
+                            if (!cbzNames.contains(targetCbzName)) {
+                                AcerolaLogger.i(TAG, "Converting PDF to CBZ: ${pdf.name} -> $targetCbzName", LogSource.REPOSITORY)
+                                val pdfDocUri = if (baseUri != null) {
+                                    DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
+                                } else {
+                                    DocumentsContract.buildDocumentUriUsingTree(folderUri, pdf.id)
+                                }
+                                val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri)
+                                if (pdfDoc != null) {
+                                    pdfToCbzConverterService.convertPdfToCbz(folderDoc, pdfDoc, targetCbzName)
+                                    needsRefresh = true
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (needsRefresh) {
+                        // Re-fetch
+                        if (baseUri != null) {
+                            val folderDocId = DocumentsContract.getDocumentId(folderUri)
+                            allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
+                        } else {
+                            allFiles = folderDoc.listFiles().filter { it.isFile }.map {
+                                FastFileMetadata(
+                                    id = DocumentsContract.getDocumentId(it.uri),
+                                    name = it.name ?: "",
+                                    size = it.length(),
+                                    lastModified = it.lastModified(),
+                                    mimeType = ""
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val chapterFiles = allFiles.filter { ArchiveFormatPattern.isIndexable(ext = it.name) }
 
                 if (existingChapters.isNotEmpty() && baseUri == null && folder.lastModified >= folderLastModified) {
                     AcerolaLogger.d(TAG, "No changes detected for manga: ${folder.name}, skipping sync", LogSource.REPOSITORY)
@@ -99,8 +146,6 @@ class ChapterArchiveEngine @Inject constructor(
                 }
 
                 _progress.value = 30
-
-                val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}{sub}.*.cbz")
 
                 val chaptersToInsert = mutableListOf<ChapterArchive>()
                 val chaptersToDelete = existingChapters.toMutableList()
