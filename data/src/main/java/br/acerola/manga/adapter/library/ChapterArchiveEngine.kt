@@ -19,7 +19,7 @@ import br.acerola.manga.local.translator.toPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
-import br.acerola.manga.service.compact.PdfToCbzConverterService
+import br.acerola.manga.service.compact.DefaultPdfToCbzConverterService
 import br.acerola.manga.util.ContentQueryHelper
 import br.acerola.manga.util.FastFileMetadata
 import br.acerola.manga.util.templateToRegex
@@ -45,8 +45,8 @@ import javax.inject.Singleton
 class ChapterArchiveEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val chapterArchiveDao: ChapterArchiveDao,
-    private val pdfToCbzConverterService: PdfToCbzConverterService,
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val pdfToCbzConverterService: DefaultPdfToCbzConverterService,
 ) : ChapterPort<ChapterArchivePageDto> {
 
     private val semaphore = Semaphore(permits = 3)

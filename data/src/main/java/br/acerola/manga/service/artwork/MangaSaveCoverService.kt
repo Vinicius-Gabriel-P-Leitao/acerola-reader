@@ -41,16 +41,17 @@ class MangaSaveCoverService @Inject constructor(
                     val finalFileName = MediaFilePattern.COVER.defaultFileName
 
                     val oldFile = mangaDir.findFile(finalFileName)
-                    if (oldFile != null && oldFile.exists()) {
-                        oldFile.delete()
-                    }
+                    if (oldFile != null && oldFile.exists()) oldFile.delete()
 
                     val newFile = mangaDir.createFile("image/png", finalFileName)
 
                     if (newFile != null) {
                         context.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
-                            outputStream.write(bytes)
+                            outputStream.write(
+                                bytes
+                            )
                         }
+
                         savedUriString = newFile.uri.toString()
                     }
                 }
@@ -61,16 +62,15 @@ class MangaSaveCoverService @Inject constructor(
 
         if (savedUriString != null) {
             val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
-            if (directory != null) {
-                directoryDao.update(entity = directory.copy(cover = savedUriString))
-            }
+            if (directory != null) directoryDao.update(entity = directory.copy(cover = savedUriString))
+
         }
 
         // TODO: Fazer toModel
         val coverEntity = Cover(
-            fileName = MediaFilePattern.COVER.defaultFileName,
             url = coverUrl,
-            mangaRemoteInfoFk = mangaRemoteInfoFk
+            mangaRemoteInfoFk = mangaRemoteInfoFk,
+            fileName = MediaFilePattern.COVER.defaultFileName,
         )
 
         val insertedId = coverDao.insert(entity = coverEntity)

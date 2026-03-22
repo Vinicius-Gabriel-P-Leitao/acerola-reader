@@ -2,6 +2,7 @@ package br.acerola.manga.service.compact
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Bitmap.createBitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
@@ -18,11 +19,11 @@ import javax.inject.Singleton
 
 @Singleton
 class DefaultPdfToCbzConverterService @Inject constructor(
+    private val archiveCompactService: CbzCompactService,
     @param:ApplicationContext private val context: Context,
-    private val archiveCompactService: ArchiveCompactService
-) : PdfToCbzConverterService {
+) {
 
-    override suspend fun convertPdfToCbz(
+    suspend fun convertPdfToCbz(
         folder: DocumentFile,
         pdfFile: DocumentFile,
         cbzFileName: String
@@ -44,8 +45,8 @@ class DefaultPdfToCbzConverterService @Inject constructor(
                 // Increase scale for better reading quality
                 val width = (page.width * 2.0).toInt()
                 val height = (page.height * 2.0).toInt()
-                
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+                val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
                 
                 val canvas = Canvas(bitmap)
                 canvas.drawColor(Color.WHITE)

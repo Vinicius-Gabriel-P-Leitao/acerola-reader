@@ -98,6 +98,8 @@
     <string name="description_sync_chapters_remote">Sincroniza numeração oficial e datas</string>
     <string name="title_sync_cover_banner">Sincronizar cover e banner</string>
     <string name="description_sync_cover_banner">Busca imagens já baixadas na pasta</string>
+    <string name="title_extract_first_page_as_cover">Usar página do capítulo como cover</string>
+    <string name="description_extract_first_page_as_cover">Extrai a primeira página do primeiro capítulo para usar como capa</string>
 
     <string name="description_icon_pagination_previous">Página Anterior</string>
     <string name="description_icon_pagination_next">Próxima Página</string>

@@ -46,12 +46,11 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.text.get
 
 @Singleton
 class MangaDirectoryEngine @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
+    @param:ApplicationContext private val context: Context,
 ) : MangaPort<MangaDirectoryDto> {
 
     private val semaphore = Semaphore(permits = 3)
