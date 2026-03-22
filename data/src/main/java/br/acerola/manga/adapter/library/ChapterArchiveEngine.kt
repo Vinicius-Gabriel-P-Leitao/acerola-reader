@@ -14,6 +14,7 @@ import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
+import br.acerola.manga.local.translator.toChapterArchiveModel
 import br.acerola.manga.local.translator.toPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
@@ -186,13 +187,11 @@ class ChapterArchiveEngine @Inject constructor(
                         }
 
                         chaptersToInsert.add(
-                            ChapterArchive(
-                                chapter = name,
-                                path = fileUri,
-                                checksum = null,
-                                fastHash = currentFastHash,
+                            file.toChapterArchiveModel(
+                                mangaId = mangaId,
+                                fileUri = fileUri,
                                 chapterSort = chapterSort,
-                                folderPathFk = mangaId
+                                fastHash = currentFastHash
                             )
                         )
                     }

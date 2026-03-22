@@ -8,10 +8,10 @@ import br.acerola.manga.error.message.IoError
 
 data class FastFileMetadata(
     val id: String,
-    val name: String,
     val size: Long,
+    val name: String,
+    val mimeType: String,
     val lastModified: Long,
-    val mimeType: String
 )
 
 object ContentQueryHelper {

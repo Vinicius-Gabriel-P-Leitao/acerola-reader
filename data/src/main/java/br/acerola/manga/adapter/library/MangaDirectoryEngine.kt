@@ -413,13 +413,11 @@ class MangaDirectoryEngine @Inject constructor(
                 detectTemplate(fileName = it)
             }
 
-            MangaDirectory(
-                name = folderMetadata.name,
-                path = folderUri.toString(),
-                cover = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
-                banner = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+            folderMetadata.toMangaDirectoryModel(
+                folderUri = folderUri.toString(),
+                coverPath = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+                bannerPath = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
                 chapterTemplate = detectedTemplate,
-                lastModified = folderMetadata.lastModified,
                 hasComicInfo = hasComicInfo,
             )
         }.filterNotNull()
