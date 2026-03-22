@@ -104,7 +104,8 @@ metadados de fontes online populares.
 - [x] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra 
   selecionar tudo, trocar pagina e clicar no selecionar tudo e ele considerar a as duas paginas e o bottom sheet a 
   seção está bem desorganizada.
-- [ ] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário escolher qual usar no download.
+- [x] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário 
+  escolher qual usar no download.
 - [x] **Reorganziar a tabela de métadados:** Essa refatoração vai ter como intuito tranformar a tabela de métadados 
   agnóstica de origem dos dados e teremos tabelas pequenas auxiliares para poder atender essa relação, quero uma de 
   mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do 

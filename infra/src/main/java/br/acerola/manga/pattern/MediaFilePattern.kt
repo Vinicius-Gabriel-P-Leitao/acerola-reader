@@ -7,15 +7,31 @@ enum class MediaFilePattern(val baseName: String) {
     val defaultFileName: String get() = "$baseName.png"
 
     fun matches(fileName: String): Boolean {
+        if (fileName.isBlank()) return false
         val lower = fileName.lowercase()
-        val base = lower.substringBeforeLast(".")
-        val ext = lower.substringAfterLast(".", missingDelimiterValue = "")
-
-        return base == baseName && ext in SUPPORTED_EXTENSIONS
+        return lower.substringBeforeLast(".").contains(baseName) && isImage(lower)
     }
 
     companion object {
-        private val SUPPORTED_EXTENSIONS = setOf("png", "jpg", "jpeg")
+        private val SUPPORTED_EXTENSIONS = setOf("png", "jpg", "jpeg", "webp")
+
+        fun isImage(fileName: String?): Boolean {
+            if (fileName.isNullOrBlank()) return false
+            val ext = fileName.substringAfterLast(".", missingDelimiterValue = "").lowercase()
+            return ext in SUPPORTED_EXTENSIONS
+        }
+
+        fun isCover(fileName: String?): Boolean {
+            if (fileName.isNullOrBlank()) return false
+            val lower = fileName.lowercase()
+            return (lower.contains("cover") || lower.startsWith("folder") || lower.startsWith("front") || lower.startsWith("00")) && isImage(lower)
+        }
+
+        fun isBanner(fileName: String?): Boolean {
+            if (fileName.isNullOrBlank()) return false
+            val lower = fileName.lowercase()
+            return lower.contains("banner") && isImage(lower)
+        }
 
         fun from(fileName: String): MediaFilePattern? =
             entries.find { it.matches(fileName) }

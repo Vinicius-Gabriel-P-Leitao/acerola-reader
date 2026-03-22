@@ -19,7 +19,6 @@ fun MangaDirectory.toDto(): MangaDirectoryDto {
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
         chapterTemplateFk = chapterTemplateFk,
-        hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled,
     )
 }
@@ -32,13 +31,13 @@ fun ChapterArchive.toDto(): ChapterFileDto {
 
 fun MangaDirectoryDto.toModel(): MangaDirectory {
     return MangaDirectory(
+        id = id,
         name = name,
         path = path,
         cover = coverUri?.toString(),
         banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis(),
         chapterTemplateFk = chapterTemplateFk,
-        hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled
     )
 }
@@ -58,7 +57,7 @@ fun List<ChapterArchive>.toPageDto(
 }
 
 fun DocumentFile.toMangaDirectoryModel(
-    cover: DocumentFile?, banner: DocumentFile?, chapterTemplateFk: Long?, hasComicInfo: Boolean, externalSyncEnabled: Boolean = true
+    cover: DocumentFile?, banner: DocumentFile?, chapterTemplateFk: Long?, externalSyncEnabled: Boolean = true
 ): MangaDirectory {
     return MangaDirectory(
         name = name ?: "Unknown",
@@ -67,7 +66,6 @@ fun DocumentFile.toMangaDirectoryModel(
         banner = banner?.uri?.toString(),
         chapterTemplateFk = chapterTemplateFk,
         lastModified = lastModified(),
-        hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled,
     )
 }
@@ -89,8 +87,7 @@ fun FastFileMetadata.toMangaDirectoryModel(
     folderUri: String,
     coverPath: String?,
     bannerPath: String?,
-    chapterTemplateFk: Long?,
-    hasComicInfo: Boolean
+    chapterTemplateFk: Long?
 ): MangaDirectory {
     return MangaDirectory(
         name = name,
@@ -99,7 +96,6 @@ fun FastFileMetadata.toMangaDirectoryModel(
         banner = bannerPath,
         chapterTemplateFk = chapterTemplateFk,
         lastModified = lastModified,
-        hasComicInfo = hasComicInfo,
     )
 }
 

@@ -3,10 +3,17 @@ package br.acerola.manga.pattern
 import arrow.core.Either
 import br.acerola.manga.error.message.TemplateError
 
-// TODO: Erros devem estar em Ingles e variáveis também, tranforma validMacros em Enum
-object TemplateValidator {
+enum class TemplateMacro(val tag: String) {
+    VALUE("value"),
+    SUB("sub"),
+    EXTENSION("extension");
 
-    private val validMacros = setOf("value", "sub", "extension")
+    companion object {
+        fun fromTag(tag: String) = entries.find { it.tag == tag }
+    }
+}
+
+object TemplateValidator {
 
     fun validateCustomTemplate(input: String): Either<TemplateError, Unit> {
         var valueCount = 0
@@ -22,27 +29,28 @@ object TemplateValidator {
             if (input[cursor] == '{') {
                 val end = input.indexOf('}', cursor)
                 if (end == -1) {
-                    return Either.Left(TemplateError.InvalidPattern("Macro malformada"))
+                    return Either.Left(TemplateError.InvalidPattern("Malformed macro"))
                 }
 
                 val tag = input.substring(cursor + 1, end)
+                val macro = TemplateMacro.fromTag(tag)
 
-                if (tag !in validMacros) {
+                if (macro == null) {
                     return Either.Left(
-                        TemplateError.InvalidPattern("Macro inválida: $tag")
+                        TemplateError.InvalidPattern("Invalid macro: $tag")
                     )
                 }
 
-                when (tag) {
-                    "value" -> {
+                when (macro) {
+                    TemplateMacro.VALUE -> {
                         valueCount++
                         if (valueIdx == -1) valueIdx = cursor
                     }
-                    "sub" -> {
+                    TemplateMacro.SUB -> {
                         subCount++
                         if (subIdx == -1) subIdx = cursor
                     }
-                    "extension" -> {
+                    TemplateMacro.EXTENSION -> {
                         extCount++
                         if (extIdx == -1) extIdx = cursor
                     }
@@ -53,38 +61,33 @@ object TemplateValidator {
             cursor++
         }
 
-        // R1: {value} é obrigatório
         if (valueCount != 1) {
-            return Either.Left(TemplateError.InvalidPattern("Obrigatório conter exatamente um {value}"))
+            return Either.Left(TemplateError.InvalidPattern("Exactly one {value} is required"))
         }
 
-        // R2: {sub} é opcional (máximo 1)
         if (subCount > 1) {
-            return Either.Left(TemplateError.InvalidPattern("Apenas um {sub} é permitido"))
+            return Either.Left(TemplateError.InvalidPattern("Only one {sub} is allowed"))
         }
 
-        // R3: {extension} é obrigatório (exatamente 1)
         if (extCount != 1) {
-            return Either.Left(TemplateError.InvalidPattern("Obrigatório conter exatamente um {extension}"))
+            return Either.Left(TemplateError.InvalidPattern("Exactly one {extension} is required"))
         }
 
-        // R4: Ordem - {value} deve ser a primeira macro
         if (subIdx != -1 && subIdx < valueIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{value} deve vir antes do {sub}"))
+            return Either.Left(TemplateError.InvalidPattern("{value} must come before {sub}"))
         }
+        
         if (extIdx < valueIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{value} deve vir antes do {extension}"))
+            return Either.Left(TemplateError.InvalidPattern("{value} must come before {extension}"))
         }
 
-        // R5: Ordem - {sub} deve vir antes do {extension}
         if (subIdx != -1 && extIdx < subIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{sub} deve vir antes do {extension}"))
+            return Either.Left(TemplateError.InvalidPattern("{sub} must come before {extension}"))
         }
 
-        // R6: Final da string - {extension} deve ser o sufixo final (após trim)
         val trimmed = input.trim()
-        if (!trimmed.endsWith("{extension}")) {
-            return Either.Left(TemplateError.InvalidPattern("{extension} deve estar obrigatoriamente no final do padrão"))
+        if (!trimmed.endsWith("{${TemplateMacro.EXTENSION.tag}}")) {
+            return Either.Left(TemplateError.InvalidPattern("{extension} must be at the end of the pattern"))
         }
 
         return Either.Right(Unit)

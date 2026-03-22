@@ -40,10 +40,6 @@ data class MangaDirectory(
     @ColumnInfo(name = "chapter_template_fk")
     val chapterTemplateFk: Long?,
 
-    // TODO: Tirar isso daqui e colocar em métadata
-    @ColumnInfo(name = "has_comic_info")
-    val hasComicInfo: Boolean = false,
-
     @ColumnInfo(name = "external_sync_enabled")
     val externalSyncEnabled: Boolean = true,
 )

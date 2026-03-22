@@ -1,9 +1,11 @@
 package br.acerola.manga.service.template
 
 import arrow.core.Either
+import arrow.core.flatMap
 import br.acerola.manga.error.message.TemplateError
 import br.acerola.manga.local.dao.archive.ChapterTemplateDao
 import br.acerola.manga.local.entity.archive.ChapterTemplateEntity
+import br.acerola.manga.pattern.TemplateMacro
 import br.acerola.manga.pattern.TemplateValidator
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -21,40 +23,32 @@ class ChapterTemplateService @Inject constructor(
 
     suspend fun addTemplate(label: String, pattern: String): Either<TemplateError, Unit> {
         val trimmed = pattern.trim()
-        val extensionMacro = "{extension}"
-        
-        val transformedPattern = if (!trimmed.contains(extensionMacro)) {
-            // Apenas anexa o curinga e a extensão de forma limpa
-            if (trimmed.endsWith("*") || trimmed.endsWith(".")) {
-                "$trimmed$extensionMacro"
-            } else {
-                "$trimmed*$extensionMacro"
+        val extensionTag = "{${TemplateMacro.EXTENSION.tag}}"
+
+        val transformedPattern = when {
+            !trimmed.contains(extensionTag) -> {
+                val connector = if (trimmed.endsWith("*") || trimmed.endsWith(".")) "" else "*"
+                "$trimmed$connector$extensionTag"
             }
-        } else {
-            // Garante que nada exista após a macro {extension}
-            val index = trimmed.indexOf(extensionMacro)
-            trimmed.substring(0, index + extensionMacro.length)
+            else -> trimmed.substring(0, trimmed.indexOf(extensionTag) + extensionTag.length)
         }
 
-        val validation = TemplateValidator.validateCustomTemplate(transformedPattern)
-        if (validation.isLeft()) {
-            return Either.Left(validation.leftOrNull()!!)
-        }
+        return TemplateValidator.validateCustomTemplate(transformedPattern)
+            .flatMap {
+                val entity = createCustomTemplate(label.trim(), transformedPattern)
+                val insertedId = dao.insert(entity)
+                if (insertedId == -1L) Either.Left(TemplateError.Duplicate)
+                else Either.Right(Unit)
+            }
+    }
 
-        // TODO: Fazer toModel
-        val entity = ChapterTemplateEntity(
-            label = label.trim(),
-            pattern = transformedPattern,
+    private fun createCustomTemplate(label: String, pattern: String): ChapterTemplateEntity {
+        return ChapterTemplateEntity(
+            label = label,
+            pattern = pattern,
             isDefault = false,
             priority = 1
         )
-
-        val insertedId = dao.insert(entity)
-        if (insertedId == -1L) {
-            return Either.Left(TemplateError.Duplicate)
-        }
-
-        return Either.Right(Unit)
     }
 
     suspend fun removeTemplate(id: Long): Either<TemplateError, Unit> {
