@@ -5,7 +5,8 @@ import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 
 data class HistoryItemState(
     val manga: MangaDto,
-    val history: ReadingHistoryWithChapterDto
+    val history: ReadingHistoryWithChapterDto,
+    val chapterCount: Int = 0
 )
 
 data class HistoryUiState(

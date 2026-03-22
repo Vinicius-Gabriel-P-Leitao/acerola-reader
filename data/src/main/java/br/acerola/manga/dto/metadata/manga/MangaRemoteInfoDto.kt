@@ -2,17 +2,14 @@ package br.acerola.manga.dto.metadata.manga
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
+import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
+import br.acerola.manga.pattern.MetadataSource
 import kotlinx.parcelize.Parcelize
-
-// FIXME: Tá sabendo de origem dos dados não pode saber
 
 @Parcelize
 @Immutable
 data class MangaRemoteInfoDto(
     val id: Long? = null,
-    val mangadexId: String? = null,
-    val anilistId: String? = null,
-    val localHash: String? = null,
     val title: String,
     val description: String,
     val romanji: String? = null,
@@ -22,13 +19,9 @@ data class MangaRemoteInfoDto(
     val banner: BannerDto? = null,
     val authors: AuthorDto? = null,
     val genre: List<GenreDto> = emptyList(),
-    val links: LinksDto? = null,
-    val anilistScore: Int? = null,
-    val anilistPopularity: Int? = null,
-    val anilistTrending: Int? = null,
-    val anilistCoverImage: String? = null,
-    val anilistBannerImage: String? = null,
-    val mangaDirectoryFk: Long? = null
+    val mangaDirectoryFk: Long? = null,
+    val syncSource: MetadataSource? = null,
+    val sources: MangaSourcesDto? = null
 ) : Parcelable
 
 @Parcelize
@@ -60,14 +53,4 @@ data class AuthorDto(
     val id: String,
     val name: String,
     val type: String
-) : Parcelable
-
-@Parcelize
-@Immutable
-data class LinksDto(
-    val anilistId: String? = null,
-    val amazonUrl: String? = null,
-    val ebookjapanUrl: String? = null,
-    val rawUrl: String? = null,
-    val engtlUrl: String? = null,
 ) : Parcelable

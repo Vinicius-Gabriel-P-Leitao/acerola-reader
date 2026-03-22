@@ -101,17 +101,18 @@ fun Main.History.Layout.Screen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.items, key = { it.manga.directory.id }) { item ->
-                        val chapterInfo =
-                            item.history.chapterName ?: stringResource(id = R.string.label_chapter_unknown)
+                        val chapterInfo = item.history.chapterName ?: stringResource(
+                            id = R.string.label_chapter_unknown
+                        )
+
                         val progressInfo = stringResource(
-                            id = R.string.label_history_chapter_progress,
-                            chapterInfo,
-                            item.history.lastPage + 1
+                            id = R.string.label_history_chapter_progress, chapterInfo, item.history.lastPage + 1
                         )
 
                         Main.Common.Component.MangaListItem(
                             manga = item.manga,
                             subtitle = progressInfo,
+                            chapterCount = item.chapterCount,
                             isCompleted = item.history.isCompleted,
                             onPlayClick = { onAction(HistoryAction.ClickContinue(item.manga, item.history)) },
                             onClick = { onAction(HistoryAction.ClickManga(item.manga)) }

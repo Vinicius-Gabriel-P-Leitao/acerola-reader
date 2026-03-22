@@ -47,64 +47,54 @@ fun Reader.Layout.SettingsSheet(
     currentMode: ReadingMode,
     onModeSelected: (ReadingMode) -> Unit
 ) {
-    val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
-    val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-
     ModalBottomSheet(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.surface,
         onDismissRequest = onDismissRequest,
         contentWindowInsets = { WindowInsets.navigationBars },
         scrimColor = Color.Black.copy(alpha = 0.4f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .glass(shape, glassColor, borderColor)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                text = stringResource(id = R.string.label_reader_config_title),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(vertical = 24.dp)
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 32.dp)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.label_reader_config_title),
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(vertical = 24.dp)
-                )
 
-                Text(
-                    text = "Layout de Leitura",
-                    style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary),
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+            Text(
+                text = "Layout de Leitura",
+                style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary),
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
 
-                ReadingModeItem(
-                    title = stringResource(id = R.string.label_reader_mode_horizontal),
-                    icon = Icons.Default.AutoStories,
-                    isSelected = currentMode == ReadingMode.HORIZONTAL,
-                    onClick = { onModeSelected(ReadingMode.HORIZONTAL) }
-                )
+            ReadingModeItem(
+                title = stringResource(id = R.string.label_reader_mode_horizontal),
+                icon = Icons.Default.AutoStories,
+                isSelected = currentMode == ReadingMode.HORIZONTAL,
+                onClick = { onModeSelected(ReadingMode.HORIZONTAL) }
+            )
 
-                ReadingModeItem(
-                    title = stringResource(id = R.string.label_reader_mode_vertical),
-                    icon = Icons.Default.ViewHeadline,
-                    isSelected = currentMode == ReadingMode.VERTICAL,
-                    onClick = { onModeSelected(ReadingMode.VERTICAL) }
-                )
+            ReadingModeItem(
+                title = stringResource(id = R.string.label_reader_mode_vertical),
+                icon = Icons.Default.ViewHeadline,
+                isSelected = currentMode == ReadingMode.VERTICAL,
+                onClick = { onModeSelected(ReadingMode.VERTICAL) }
+            )
 
-                ReadingModeItem(
-                    title = stringResource(id = R.string.label_reader_mode_webtoon),
-                    icon = Icons.Default.VerticalAlignBottom,
-                    isSelected = currentMode == ReadingMode.WEBTOON,
-                    onClick = { onModeSelected(ReadingMode.WEBTOON) }
-                )
-            }
+            ReadingModeItem(
+                title = stringResource(id = R.string.label_reader_mode_webtoon),
+                icon = Icons.Default.VerticalAlignBottom,
+                isSelected = currentMode == ReadingMode.WEBTOON,
+                onClick = { onModeSelected(ReadingMode.WEBTOON) }
+            )
         }
     }
 }

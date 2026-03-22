@@ -22,6 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +75,19 @@ fun Main.Home.Layout.Screen(
         mangas = mangas
     )
 
+    var query by rememberSaveable { mutableStateOf("") }
+    var searchActive by rememberSaveable { mutableStateOf(false) }
+
+    val filteredMangas = remember(query, uiState.mangas) {
+        if (query.isEmpty()) {
+            uiState.mangas
+        } else {
+            uiState.mangas.filter { (manga, _, _) ->
+                manga.directory.name.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
     val onAction: (HomeAction) -> Unit = { action ->
         when (action) {
             is HomeAction.UpdateLayout -> homeViewModel.updateHomeLayout(action.layout)
@@ -93,15 +110,20 @@ fun Main.Home.Layout.Screen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Acerola.Component.SearchBar<Pair<MangaDto, ReadingHistoryDto?>>(
-                items = uiState.mangas,
+            Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = { searchActive = false },
+                active = searchActive,
+                onActiveChange = { searchActive = it },
+                items = filteredMangas,
                 placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-                itemKey = { (manga, _) -> manga.directory.id },
-                searchKey = { (manga, _) -> manga.directory.name },
+                itemKey = { (manga, _, _) -> manga.directory.id },
                 modifier = Modifier.padding(all = 6.dp),
-                itemContent = { (manga, history) ->
+                itemContent = { (manga, history, chapterCount) ->
                     Main.Common.Component.MangaListItem(
                         manga = manga,
+                        chapterCount = chapterCount,
                         onPlayClick = history?.let {
                             { onAction(HomeAction.ClickContinue(manga, it)) }
                         },
@@ -119,22 +141,25 @@ fun Main.Home.Layout.Screen(
 
                 LazyVerticalGrid(
                     columns = gridCells,
-                    contentPadding = PaddingValues(all = 8.dp),
+                    contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
-                    items(items = uiState.mangas) { (manga, history) ->
+                    items(items = uiState.mangas) { (manga, history, chapterCount) ->
                         when (uiState.layout) {
                             HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
                                 manga = manga,
+                                history = history,
+                                chapterCount = chapterCount,
                                 onClick = { onAction(HomeAction.ClickManga(manga)) }
                             )
+
                             HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
                                 manga = manga,
-                                onPlayClick = history?.let { h ->
-                                    { onAction(HomeAction.ClickContinue(manga, h)) }
-                                },
-                                onClick = { onAction(HomeAction.ClickManga(manga)) }
+                                chapterCount = chapterCount,
+                                subtitle = manga.remoteInfo?.authors?.name,
+                                onClick = { onAction(HomeAction.ClickManga(manga)) },
+                                onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
                             )
                         }
                     }

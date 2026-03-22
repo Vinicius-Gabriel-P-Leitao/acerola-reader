@@ -3,6 +3,8 @@ package br.acerola.manga.local.translator
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
+import br.acerola.manga.dto.metadata.manga.source.AnilistSourceDto
 import br.acerola.manga.remote.anilist.MediaDetailsQuery
 import br.acerola.manga.remote.anilist.MediaSearchQuery
 
@@ -25,7 +27,6 @@ fun MediaSearchQuery.Medium.toDto(): MangaRemoteInfoDto {
     }
 
     return MangaRemoteInfoDto(
-        anilistId = this.id.toString(),
         title = title,
         romanji = this.title?.romaji,
         description = this.description?.cleanHtml() ?: "",
@@ -33,11 +34,16 @@ fun MediaSearchQuery.Medium.toDto(): MangaRemoteInfoDto {
         year = this.startDate?.year,
         authors = author,
         genre = genres,
-        anilistScore = this.averageScore,
-        anilistPopularity = this.popularity,
-        anilistTrending = this.trending,
-        anilistCoverImage = this.coverImage?.large,
-        anilistBannerImage = this.bannerImage
+        sources = MangaSourcesDto(
+            anilist = AnilistSourceDto(
+                anilistId = this.id,
+                averageScore = this.averageScore,
+                popularity = this.popularity,
+                trending = this.trending,
+                coverImage = this.coverImage?.large,
+                bannerImage = this.bannerImage
+            )
+        )
     )
 }
 
@@ -60,7 +66,6 @@ fun MediaDetailsQuery.Media.toDto(): MangaRemoteInfoDto {
     }
 
     return MangaRemoteInfoDto(
-        anilistId = this.id.toString(),
         title = title,
         romanji = this.title?.romaji,
         description = this.description?.cleanHtml() ?: "",
@@ -68,11 +73,16 @@ fun MediaDetailsQuery.Media.toDto(): MangaRemoteInfoDto {
         year = this.startDate?.year,
         authors = author,
         genre = genres,
-        anilistScore = this.averageScore,
-        anilistPopularity = this.popularity,
-        anilistTrending = this.trending,
-        anilistCoverImage = this.coverImage?.large,
-        anilistBannerImage = this.bannerImage
+        sources = MangaSourcesDto(
+            anilist = AnilistSourceDto(
+                anilistId = this.id,
+                averageScore = this.averageScore,
+                popularity = this.popularity,
+                trending = this.trending,
+                coverImage = this.coverImage?.large,
+                bannerImage = this.bannerImage
+            )
+        )
     )
 }
 

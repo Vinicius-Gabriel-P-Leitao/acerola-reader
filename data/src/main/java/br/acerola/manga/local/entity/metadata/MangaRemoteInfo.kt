@@ -41,5 +41,8 @@ data class MangaRemoteInfo(
     val publication: Int?,
 
     @ColumnInfo(name = "manga_directory_fk")
-    val mangaDirectoryFk: Long? = null
+    val mangaDirectoryFk: Long? = null,
+
+    @ColumnInfo(name = "sync_source")
+    val syncSource: String? = null
 )

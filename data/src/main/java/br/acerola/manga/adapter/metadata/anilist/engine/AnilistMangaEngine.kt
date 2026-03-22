@@ -21,6 +21,7 @@ import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
 import br.acerola.manga.local.translator.toAnilistSource
 import br.acerola.manga.local.translator.toModel
 import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.artwork.MangaSaveBannerService
 import br.acerola.manga.service.artwork.MangaSaveCoverService
@@ -95,7 +96,7 @@ class AnilistMangaEngine @Inject constructor(
                             )
                             AcerolaLogger.audit(
                                 TAG, "Successfully synced AniList metadata", LogSource.REPOSITORY,
-                                mapOf("mangaId" to mangaId.toString(), "anilistId" to dto.anilistId.toString())
+                                mapOf("mangaId" to mangaId.toString(), "anilistId" to (dto.sources?.anilist?.anilistId?.toString() ?: ""))
                             )
                         }.mapLeft { exception ->
                             LibrarySyncError.UnexpectedError(cause = exception)
@@ -165,7 +166,8 @@ class AnilistMangaEngine @Inject constructor(
             description = dto.description ?: existing.description,
             romanji = dto.romanji ?: existing.romanji,
             status = dto.status ?: existing.status,
-            publication = dto.year ?: existing.publication
+            publication = dto.year ?: existing.publication,
+            syncSource = MetadataSource.ANILIST.source
         )
             ?: MangaRemoteInfo(
                 title = dto.title ?: "",
@@ -173,7 +175,8 @@ class AnilistMangaEngine @Inject constructor(
                 romanji = dto.romanji ?: "",
                 status = dto.status ?: "UNKNOWN",
                 publication = dto.year,
-                mangaDirectoryFk = directoryId
+                mangaDirectoryFk = directoryId,
+                syncSource = MetadataSource.ANILIST.source
             )
 
         return if (existing != null) {
@@ -208,7 +211,7 @@ class AnilistMangaEngine @Inject constructor(
 
         val rootUri = rootPath.toUri()
 
-        dto.anilistCoverImage?.let { url ->
+        dto.sources?.anilist?.coverImage?.let { url ->
             coverFetcher.searchCover(url).onRight { bytes ->
                 coverService.processCover(
                     rootUri = rootUri,
@@ -221,7 +224,7 @@ class AnilistMangaEngine @Inject constructor(
             }
         }
 
-        dto.anilistBannerImage?.let { url ->
+        dto.sources?.anilist?.bannerImage?.let { url ->
             bannerFetcher.searchCover(url).onRight { bytes ->
                 bannerService.processBanner(
                     rootUri = rootUri,

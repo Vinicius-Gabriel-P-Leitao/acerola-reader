@@ -33,75 +33,76 @@ import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.layout.FolderAccess
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun Main.Config.Component.SelectFolder(
     context: Context,
     folderUri: Uri?,
     onFolderSelected: (Uri?) -> Unit
 ) {
-    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Filled.Folder,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                            contentDescription = null
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.title_text_config_select_path_manga),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(id = R.string.description_text_config_select_path_manga),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
+    val documentFile = remember(folderUri) {
+        folderUri?.let {
+            try {
+                DocumentFile.fromTreeUri(context, it)
+            } catch (e: Exception) {
+                null
             }
-
-            Main.Config.Layout.FolderAccess(onFolderSelected = onFolderSelected)
-        }
-
-        folderUri?.let { uri ->
-            val documentFile = remember(uri) {
-                try {
-                    DocumentFile.fromTreeUri(context, uri)
-                } catch (e: Exception) {
-                    null
-                }
-            }
-
-            Acerola.Component.Divider()
-
-            Text(
-                text = stringResource(
-                    id = R.string.description_text_selected_manga_directory,
-                    documentFile?.name ?: stringResource(id = R.string.message_path_not_found)
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
         }
     }
+
+    ListItem(
+        headlineContent = {
+            Text(
+                text = stringResource(id = R.string.title_text_config_select_path_manga),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        supportingContent = {
+            Column {
+                Text(
+                    text = stringResource(id = R.string.description_text_config_select_path_manga),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                if (folderUri != null) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.description_text_selected_manga_directory,
+                            documentFile?.name ?: stringResource(id = R.string.message_path_not_found)
+                        ),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        },
+        leadingContent = {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.Folder,
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                        contentDescription = null
+                    )
+                }
+            }
+        },
+        trailingContent = {
+            Main.Config.Layout.FolderAccess(onFolderSelected = onFolderSelected)
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    )
 }

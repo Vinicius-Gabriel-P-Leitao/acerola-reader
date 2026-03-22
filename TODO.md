@@ -37,15 +37,21 @@ metadados de fontes online populares.
 - [x] **Gerenciamento de Imagens:** Carregar, trocar, salvar e remover capa e banner.
 - [x] **Informações de Armazenamento:** Exibir tamanho do mangá em GB ou MB.
 - [x] **Ações de Limpeza (com confirmação):** Limpar metadados e capítulos.
+- [x] **Interface do Leitor:** Ajuste do BottomSheet de configurações para visual opaco e integrado ao tema.
 
 #### Configurações Globais
 - [x] **Gerenciamento de Metadados (ComicInfo.xml vs DB):** Gerar/ler `ComicInfo.xml`, resolver conflitos e persistir escolha.
 - [x] **Metadados de Capítulos (MangaDex):** Busca em background, desativada por padrão.
+- [x] **Redesign Flat (Material 3):** Reformulação total das telas de configuração para um visual plano e moderno, seguindo os padrões do Material You.
+- [x] **Padronização de Fontes de Metadados:** Implementação do Enum `MetadataSource` de ponta a ponta (Banco -> Engine -> UI).
+- [x] **Feedback de Fonte Ativa:** Identificação visual (Badge/Check) da fonte que provê os metadados atuais.
+- [x] **Sincronização Contextual:** Botões de sincronizar capítulos aparecem apenas quando a fonte correspondente está ativa.
 
 #### UI/UX
 - [x] **ChapterItem:** Visual reformulado.
 - [x] **Busca de Capítulos:** Por número (`chapterSort`), nome e nome do arquivo.
 - [x] **Redesenho da Barra Superior:** Visual mais clean (apple liquid glass) com tema dark.
+- [x] **Home Screen:** Ajuste de padding inferior para evitar sobreposição do FAB (FloatingTool) com os itens da lista.
 
 #### Background e Performance
 - [x] **Notificações:** Syncs demorados rodam em background com progresso e notificação.
@@ -85,7 +91,7 @@ metadados de fontes online populares.
 
 #### Fontes de Metadados Expandidas
 - [x] Opção para escolher **AniList** como fonte alternativa de metadados.
-- [ ] Painel de configurações para selecionar e configurar o provedor (MangaDex / AniList).
+- [x] Painel de configurações para selecionar e configurar o provedor (MangaDex / AniList / ComicInfo) com feedback de fonte ativa.
 
 #### Download via MangaDex
 - [ ] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.

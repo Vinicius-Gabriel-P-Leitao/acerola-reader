@@ -11,8 +11,10 @@ import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.main.history.state.HistoryItemState
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
+import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -30,6 +32,8 @@ class HistoryViewModel @Inject constructor(
     observeHistoryUseCase: ObserveHistoryUseCase,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
+    private val manageCategoriesUseCase: ManageCategoriesUseCase,
+    private val getChapterCountUseCase: GetChapterCountUseCase,
 ) : ViewModel() {
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
@@ -40,14 +44,21 @@ class HistoryViewModel @Inject constructor(
         .flatMapLatest { historyList ->
             combine(
                 directoryObserve(),
-                mangadexObserve()
-            ) { directories, remoteInfos ->
+                mangadexObserve(),
+                manageCategoriesUseCase.getAllMangaCategories(),
+                getChapterCountUseCase()
+            ) { directories, remoteInfos, categoryMap, chapterCounts ->
                 val list = historyList.mapNotNull { history ->
                     val directory = directories.find { it.id == history.mangaDirectoryId } ?: return@mapNotNull null
                     val remote = remoteInfos.find { it.mangaDirectoryFk == history.mangaDirectoryId }
                     HistoryItemState(
-                        manga = MangaDto(directory = directory, remoteInfo = remote),
-                        history = history
+                        manga = MangaDto(
+                            directory = directory,
+                            remoteInfo = remote,
+                            category = categoryMap[directory.id]
+                        ),
+                        history = history,
+                        chapterCount = chapterCounts[directory.id] ?: 0
                     )
                 }
                 AcerolaLogger.d(TAG, "History items updated: ${list.size} items found", LogSource.VIEWMODEL)

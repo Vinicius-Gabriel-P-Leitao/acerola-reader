@@ -11,4 +11,6 @@ sealed interface ConfigAction {
     data object QuickSyncLibrary : ConfigAction
     data object SyncMangadexMetadata : ConfigAction
     data object SyncAnilistMetadata : ConfigAction
+    data class CreateCategory(val name: String, val color: Int) : ConfigAction
+    data class DeleteCategory(val id: Long) : ConfigAction
 }

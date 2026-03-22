@@ -148,9 +148,9 @@ fun Manga.Layout.Header(
                             )
                             manga.remoteInfo?.let { info ->
                                 val sourceLabel = when {
-                                    info.mangadexId != null -> "MANGADEX"
-                                    info.localHash != null -> "COMIC_INFO"
-                                    info.anilistId != null -> "ANILIST"
+                                    info.sources?.mangadex?.mangadexId != null -> "MANGADEX"
+                                    info.sources?.comicInfo?.localHash != null -> "COMIC_INFO"
+                                    info.sources?.anilist?.anilistId != null -> "ANILIST"
                                     else -> null
                                 }
                                 sourceLabel?.let { SourceBadge(source = it) }

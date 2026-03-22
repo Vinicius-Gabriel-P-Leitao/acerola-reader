@@ -7,6 +7,7 @@ sealed interface MangaAction {
     data object NavigateBack : MangaAction
     data class SelectTab(val tab: MainTab) : MangaAction
     data class UpdatePageSize(val size: ChapterPageSizeType) : MangaAction
+    data class UpdateCategory(val categoryId: Long?) : MangaAction
 }
 
 sealed interface MangaChapterAction {

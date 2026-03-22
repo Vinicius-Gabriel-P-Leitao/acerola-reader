@@ -2,6 +2,7 @@ package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,57 +13,40 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.ui.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun <T> Acerola.Component.SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    active: Boolean,
+    onActiveChange: (Boolean) -> Unit,
+    isLoading: Boolean = false,
     items: List<T>,
     placeholder: String,
     itemKey: (T) -> Any,
-    searchKey: (T) -> String,
     modifier: Modifier = Modifier,
     itemContent: @Composable (T) -> Unit
 ) {
-    var query by remember { mutableStateOf(value = "") }
-    var active by remember { mutableStateOf(value = false) }
-    var filteredItems by remember { mutableStateOf(value = items) }
-
-    LaunchedEffect(key1 = query, key2 = items) {
-        withContext(context = Dispatchers.Default) {
-            filteredItems = if (query.isEmpty()) {
-                items
-            } else {
-                items.filter { item ->
-                    searchKey(item).contains(other = query, ignoreCase = true)
-                }
-            }
-        }
-    }
-
     SearchBar(
         query = query,
         active = active,
         modifier = modifier,
-        onSearch = { active = false },
-        onQueryChange = { query = it },
-        onActiveChange = { active = it },
+        onSearch = onSearch,
+        onQueryChange = onQueryChange,
+        onActiveChange = onActiveChange,
         shape = RoundedCornerShape(size = 8.dp),
         placeholder = { Text(text = placeholder) },
         leadingIcon = {
@@ -70,7 +54,13 @@ fun <T> Acerola.Component.SearchBar(
         },
         trailingIcon = {
             if (active) {
-                IconButton(onClick = { query = ""; active = false }) {
+                IconButton(onClick = {
+                    if (query.isNotEmpty()) {
+                        onQueryChange("")
+                    } else {
+                        onActiveChange(false)
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(id = R.string.description_icon_search_close)
@@ -79,7 +69,14 @@ fun <T> Acerola.Component.SearchBar(
             }
         },
     ) {
-        if (filteredItems.isEmpty()) {
+        if (isLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        if (items.isEmpty() && !isLoading) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -96,7 +93,7 @@ fun <T> Acerola.Component.SearchBar(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
-                    items = filteredItems,
+                    items = items,
                     key = { item -> itemKey(item) }
                 ) { item ->
                     itemContent(item)

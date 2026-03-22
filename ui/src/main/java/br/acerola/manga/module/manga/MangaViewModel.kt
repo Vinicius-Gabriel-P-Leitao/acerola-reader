@@ -20,6 +20,7 @@ import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.history.ObserveMangaHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -48,6 +49,7 @@ class MangaViewModel @Inject constructor(
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
+    private val manageCategoriesUseCase: ManageCategoriesUseCase,
 ) : ViewModel() {
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
@@ -110,12 +112,17 @@ class MangaViewModel @Inject constructor(
         viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = -1
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val manga: StateFlow<MangaDto?> = combine(
         flow = _selectedDirectoryId,
         flow2 = _selectedMangaId,
         flow3 = directoryObserve(),
         flow4 = mangadexObserve(),
-    ) { folderId, remoteInfoId, directories, remoteInfos ->
+        flow5 = _selectedDirectoryId.flatMapLatest { id ->
+            if (id == null) flowOf(null)
+            else manageCategoriesUseCase.getCategoryByMangaId(id)
+        }
+    ) { folderId, remoteInfoId, directories, remoteInfos, category ->
         if (folderId == null) return@combine null
         val directory = directories.find { it.id == folderId } ?: return@combine null
 
@@ -130,7 +137,7 @@ class MangaViewModel @Inject constructor(
             remote = remoteInfos.find { it.title.normalizeKey() == normalizedName }
         }
 
-        MangaDto(directory = directory, remoteInfo = remote)
+        MangaDto(directory = directory, remoteInfo = remote, category = category)
     }.stateIn(
         initialValue = null,
         scope = viewModelScope,

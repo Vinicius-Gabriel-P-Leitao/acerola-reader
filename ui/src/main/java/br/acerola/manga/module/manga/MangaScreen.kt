@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -111,6 +112,7 @@ fun MangaScreen(
     val history by mangaViewModel.history.collectAsState()
     val readChapters by mangaViewModel.readChapters.collectAsState()
     val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsState()
+    val allCategories by mangaRemoteInfoViewModel.allCategories.collectAsState()
 
     val currentManga = mangaState ?: manga
     val totalChapters = chapterDto?.archive?.total ?: 0
@@ -137,7 +139,8 @@ fun MangaScreen(
         totalChapters = totalChapters,
         currentPage = currentPage,
         totalPages = totalPages,
-        selectedChapterPerPage = selectedChapterPerPage
+        selectedChapterPerPage = selectedChapterPerPage,
+        allCategories = allCategories
     )
 
     val coroutineScope = rememberCoroutineScope()
@@ -199,8 +202,14 @@ fun MangaScreen(
             MangaAction.NavigateBack -> onBackClick()
             is MangaAction.SelectTab -> selectedTab = action.tab
             is MangaAction.UpdatePageSize -> mangaViewModel.updateChapterPerPage(action.size)
+            is MangaAction.UpdateCategory -> mangaRemoteInfoViewModel.updateMangaCategory(
+                uiState.manga.directory.id,
+                action.categoryId
+            )
         }
     }
+
+    var expandedCardId by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(

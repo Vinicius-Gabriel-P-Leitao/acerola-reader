@@ -28,6 +28,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+
 @Composable
 fun Manga.Component.SyncMangaArchive(
     onSyncChapters: () -> Unit,
@@ -35,11 +37,7 @@ fun Manga.Component.SyncMangaArchive(
 ) {
     Column {
         ListItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable {
-                    onSyncChapters()
-                },
+            modifier = Modifier.clickable { onSyncChapters() },
             headlineContent = {
                 Text(
                     text = stringResource(id = R.string.title_sync_chapters),
@@ -51,20 +49,19 @@ fun Manga.Component.SyncMangaArchive(
                 Text(
                     text = stringResource(id = R.string.description_sync_chapters_local),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.secondary,
                             contentDescription = null
                         )
                     }
@@ -74,11 +71,7 @@ fun Manga.Component.SyncMangaArchive(
         )
 
         ListItem(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable {
-                    onRescanCover()
-                },
+            modifier = Modifier.clickable { onRescanCover() },
             headlineContent = {
                 Text(
                     text = stringResource(id = R.string.title_sync_cover_banner),
@@ -90,20 +83,19 @@ fun Manga.Component.SyncMangaArchive(
                 Text(
                     text = stringResource(id = R.string.description_sync_cover_banner),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.ImageSearch,
                             modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.secondary,
                             contentDescription = null
                         )
                     }

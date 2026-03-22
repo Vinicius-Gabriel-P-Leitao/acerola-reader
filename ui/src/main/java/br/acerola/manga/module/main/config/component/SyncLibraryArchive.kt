@@ -28,21 +28,16 @@ import androidx.compose.ui.unit.dp
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.shape.CircleShape
+
 @Composable
 fun Main.Config.Component.SyncLibraryArchive(
     onDeepScan: () -> Unit,
     onQuickSync: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(id = R.string.label_sync_group),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         ListItem(
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onDeepScan() },
+            modifier = Modifier.clickable { onDeepScan() },
             headlineContent = { 
                 Text(
                     text = stringResource(id = R.string.description_text_home_deep_sync),
@@ -54,13 +49,12 @@ fun Main.Config.Component.SyncLibraryArchive(
                 Text(
                     text = stringResource(id = R.string.description_text_home_deep_sync_supporting),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 ) 
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -76,10 +70,8 @@ fun Main.Config.Component.SyncLibraryArchive(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
 
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-
         ListItem(
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onQuickSync() },
+            modifier = Modifier.clickable { onQuickSync() },
             headlineContent = {
                 Text(
                     text = stringResource(id = R.string.description_text_home_quick_sync),
@@ -91,13 +83,12 @@ fun Main.Config.Component.SyncLibraryArchive(
                 Text(
                     text = stringResource(id = R.string.description_text_home_quick_sync_supporting),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingContent = {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {

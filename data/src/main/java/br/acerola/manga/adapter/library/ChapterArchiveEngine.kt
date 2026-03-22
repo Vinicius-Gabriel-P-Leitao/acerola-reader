@@ -220,6 +220,12 @@ class ChapterArchiveEngine @Inject constructor(
             }
     }
 
+    fun observeAllChapterCounts(): Flow<Map<Long, Int>> {
+        return chapterArchiveDao.getAllChapterCounts().map { list ->
+            list.associate { it.manga_directory_fk to it.count }
+        }
+    }
+
     companion object {
         private const val TAG = "ChapterArchiveRepository"
     }

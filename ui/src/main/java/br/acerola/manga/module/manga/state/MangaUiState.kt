@@ -6,6 +6,7 @@ import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
+import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.ui.R
 
@@ -25,7 +26,8 @@ data class MangaUiState(
     val totalChapters: Int,
     val currentPage: Int,
     val totalPages: Int,
-    val selectedChapterPerPage: ChapterPageSizeType
+    val selectedChapterPerPage: ChapterPageSizeType,
+    val allCategories: List<CategoryDto> = emptyList()
 )
 
 data class MangaConfigUiState(
