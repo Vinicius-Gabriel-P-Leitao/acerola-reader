@@ -86,6 +86,10 @@ metadados de fontes online populares.
 
 ### 🔲 Pendente
 
+#### ❗ Principal Mudar todos arquivos que usam RemoteInfo para Metadata:
+- [x]  necessário para não ter conflito de dominio, vai ser tudo virado para Metadata de RemoteInfo, já que agora os 
+  sources tem tabelas para eles mesmos, será mudado também nome de tabela e colunas.
+
 #### ❗ Principal refatoração e organização do modulo data:
 - [x] Organizar o modulo data de forma que o source e o engine consigam ficar armoniosos.
 
@@ -128,6 +132,7 @@ metadados de fontes online populares.
   existem capítulos no MangaDex além do último local, sem baixar nada automaticamente.
 
 ---
+
 
 ## Pilha de Tecnologia
 
