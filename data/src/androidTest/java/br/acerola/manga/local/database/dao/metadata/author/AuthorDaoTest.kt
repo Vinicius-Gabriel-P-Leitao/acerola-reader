@@ -6,9 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
-import br.acerola.manga.local.database.database.DatabaseAcerola
+import br.acerola.manga.local.database.DatabaseAcerola
+import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals

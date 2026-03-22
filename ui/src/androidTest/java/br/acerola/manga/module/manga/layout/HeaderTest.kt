@@ -8,6 +8,7 @@ import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.module.manga.Manga
+import br.acerola.manga.module.manga.layout.Header
 import org.junit.Rule
 import org.junit.Test
 
@@ -26,7 +27,7 @@ class HeaderTest {
                 coverUri = null,
                 bannerUri = null,
                 lastModified = 0L,
-                chapterTemplate = null
+                chapterTemplateFk = null
             ),
             remoteInfo = MangaRemoteInfoDto(
                 title = "Manga Fantástico",

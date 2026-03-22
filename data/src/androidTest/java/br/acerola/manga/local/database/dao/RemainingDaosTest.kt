@@ -7,7 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.database.DatabaseAcerola
+import br.acerola.manga.local.database.DatabaseAcerola
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After

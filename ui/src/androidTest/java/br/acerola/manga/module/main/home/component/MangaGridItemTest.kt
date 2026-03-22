@@ -26,8 +26,7 @@ class MangaGridItemTest {
                 coverUri = null,
                 bannerUri = null,
                 lastModified = 0L,
-                chapterTemplate = null,
-                hasComicInfo = false
+                chapterTemplateFk = null
             ),
             remoteInfo = MangaRemoteInfoDto(
                 title = "Título do Manga", description = "", status = ""

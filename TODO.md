@@ -122,6 +122,10 @@ metadados de fontes online populares.
 - [ ] **Persistência da ordenação** por mangá (ou global) via DataStore.
 - [ ] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
 
+#### Adicionar action no botão de ...  de cada mangá
+- [ ] **Adicionar bookmark** Adicionar uma action de bookmark nos seção de action
+- [ ] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar 
+
 #### Verificar e Baixar Novos Capítulos
 - [ ] **Botão "Verificar updates":** Na tela de detalhes do mangá, um botão que consulta o MangaDex e retorna
   capítulos mais recentes do que o último registrado no banco local.

@@ -4,8 +4,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Pagination
 import br.acerola.manga.common.ux.theme.AcerolaTheme
-import br.acerola.manga.module.manga.Manga
 import org.junit.Rule
 import org.junit.Test
 
@@ -15,10 +16,10 @@ class PaginationFooterTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `PaginationFooter_deve_exibir_o_indicador_de_paginas_corretamente`() {
+    fun `Pagination_deve_exibir_o_indicador_de_paginas_corretamente`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Manga.Component.PaginationFooter(
+                Acerola.Component.Pagination(
                     currentPage = 0,
                     totalPages = 10,
                     onPageChange = {}
@@ -31,11 +32,11 @@ class PaginationFooterTest {
     }
 
     @Test
-    fun `PaginationFooter_deve_chamar_onPageChange_ao_clicar_em_uma_pagina`() {
+    fun `Pagination_deve_chamar_onPageChange_ao_clicar_em_uma_pagina`() {
         var selectedPage = -1
         composeTestRule.setContent {
             AcerolaTheme {
-                Manga.Component.PaginationFooter(
+                Acerola.Component.Pagination(
                     currentPage = 0,
                     totalPages = 5,
                     onPageChange = { selectedPage = it }
