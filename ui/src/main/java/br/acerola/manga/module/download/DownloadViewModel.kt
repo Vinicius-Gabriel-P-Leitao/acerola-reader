@@ -32,6 +32,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.work.WorkInfo
+import br.acerola.manga.module.main.search.state.DownloadProgress
+import kotlinx.coroutines.flow.collectLatest
+
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -51,6 +55,31 @@ class DownloadViewModel @Inject constructor(
 
         val mangadexId = manga.sources?.mangadex?.mangadexId ?: return
         loadChapters(mangadexId, _uiState.value.selectedLanguage, page = 0)
+        observeDownloadProgress(manga.title)
+    }
+
+    private fun observeDownloadProgress(mangaTitle: String) {
+        viewModelScope.launch {
+            workManager.getWorkInfosForUniqueWorkFlow("chapter_download_$mangaTitle").collectLatest { workInfos ->
+                val info = workInfos.firstOrNull { 
+                    it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED 
+                }
+                
+                if (info != null) {
+                    val progress = DownloadProgress(
+                        mangaTitle = mangaTitle,
+                        progress = info.progress.getInt("progress", 0),
+                        currentChapterId = info.progress.getString("currentChapterId"),
+                        currentChapterFileName = info.progress.getString("currentChapterFileName"),
+                        totalChapters = info.progress.getInt("totalChapters", 0),
+                        isRunning = info.state == WorkInfo.State.RUNNING
+                    )
+                    _uiState.update { it.copy(activeDownload = progress) }
+                } else {
+                    _uiState.update { it.copy(activeDownload = null) }
+                }
+            }
+        }
     }
 
     fun onAction(action: DownloadAction) {
@@ -221,6 +250,7 @@ class DownloadViewModel @Inject constructor(
                     )
                 )
                 .addTag(ChapterDownloadWorker.DOWNLOAD_TAG)
+                .addTag("chapter_download_$mangaTitle")
                 .build()
         )
 

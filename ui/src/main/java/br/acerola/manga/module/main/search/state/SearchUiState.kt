@@ -6,4 +6,5 @@ data class SearchUiState(
     val query: String = "",
     val isLoading: Boolean = false,
     val searchResults: List<MangaRemoteInfoDto> = emptyList(),
+    val downloadQueue: List<DownloadProgress> = emptyList(),
 )

@@ -27,14 +27,21 @@ import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.module.download.Download
 import br.acerola.manga.ui.R
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+
 @Composable
 fun Download.Component.ChapterDownloadItem(
     chapter: ChapterRemoteInfoDto,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isDownloading: Boolean = false,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 16.dp),
@@ -48,17 +55,28 @@ fun Download.Component.ChapterDownloadItem(
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            val chapterLabel = chapter.chapter?.let {
-                stringResource(R.string.label_search_chapter_item, it)
-            } ?: chapter.title ?: chapter.id
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val chapterLabel = chapter.chapter?.let {
+                    stringResource(R.string.label_search_chapter_item, it)
+                } ?: chapter.title ?: chapter.id
 
-            Text(
-                text = chapterLabel,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+                Text(
+                    text = chapterLabel,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (isDownloading) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (chapter.pages > 0) {
                     Text(

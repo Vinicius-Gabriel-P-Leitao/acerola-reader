@@ -3,6 +3,8 @@ package br.acerola.manga.module.download.state
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 
+import br.acerola.manga.module.main.search.state.DownloadProgress
+
 data class DownloadUiState(
     val manga: MangaRemoteInfoDto? = null,
     val chapters: List<ChapterRemoteInfoDto> = emptyList(),
@@ -14,6 +16,7 @@ data class DownloadUiState(
     val selectedLanguage: String = "pt-br",
     val selectedChapterIds: Set<String> = emptySet(),
     val isDownloading: Boolean = false,
+    val activeDownload: DownloadProgress? = null,
 ) {
     val totalPages: Int
         get() = if (chaptersPerPage > 0) ((totalChapters + chaptersPerPage - 1) / chaptersPerPage) else 1

@@ -33,6 +33,8 @@ import br.acerola.manga.module.main.search.state.SearchAction
 import br.acerola.manga.module.main.search.state.SearchUiState
 import br.acerola.manga.ui.R
 
+import br.acerola.manga.module.main.search.component.DownloadQueueComponent
+
 @Composable
 fun Main.Search.Layout.SearchLayout(
     uiState: SearchUiState,
@@ -82,6 +84,10 @@ fun Main.Search.Layout.SearchLayout(
                     manga = manga,
                     onClick = { DownloadActivity.start(context, manga) }
                 )
+            }
+
+            if (!searchActive) {
+                DownloadQueueComponent(queue = uiState.downloadQueue)
             }
 
             if (!searchActive && uiState.searchResults.isEmpty() && !uiState.isLoading) {

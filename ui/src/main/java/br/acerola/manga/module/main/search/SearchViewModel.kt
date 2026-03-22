@@ -19,10 +19,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import br.acerola.manga.core.worker.ChapterDownloadWorker
+import br.acerola.manga.module.main.search.state.DownloadProgress
+import kotlinx.coroutines.flow.collectLatest
+
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val searchMangaUseCase: SearchMangaUseCase,
+    private val workManager: WorkManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -30,6 +37,35 @@ class SearchViewModel @Inject constructor(
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+
+    init {
+        observeDownloadQueue()
+    }
+
+    private fun observeDownloadQueue() {
+        viewModelScope.launch {
+            workManager.getWorkInfosByTagFlow(ChapterDownloadWorker.DOWNLOAD_TAG).collectLatest { workInfos ->
+                val queue = workInfos
+                    .filter { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
+                    .map { info ->
+                        val mangaTitle = info.tags.firstOrNull { it.startsWith("chapter_download_") && it != ChapterDownloadWorker.DOWNLOAD_TAG }
+                            ?.removePrefix("chapter_download_")
+                            ?: info.progress.getString(ChapterDownloadWorker.KEY_MANGA_TITLE)
+                            ?: "Manga"
+
+                        DownloadProgress(
+                            mangaTitle = mangaTitle,
+                            progress = info.progress.getInt("progress", 0),
+                            currentChapterId = info.progress.getString("currentChapterId"),
+                            currentChapterFileName = info.progress.getString("currentChapterFileName"),
+                            totalChapters = info.progress.getInt("totalChapters", 0),
+                            isRunning = info.state == WorkInfo.State.RUNNING
+                        )
+                    }
+                _uiState.update { it.copy(downloadQueue = queue) }
+            }
+        }
+    }
 
     fun onAction(action: SearchAction) {
         when (action) {

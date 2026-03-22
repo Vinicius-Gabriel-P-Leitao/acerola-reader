@@ -86,8 +86,16 @@ class ChapterDownloadWorker @AssistedInject constructor(
             chapters = chapters,
             coverUrl = coverUrl,
             coverFileName = coverFileName,
-            onProgress = { progress ->
-                setProgress(workDataOf("progress" to progress))
+            onProgress = { progress, currentChapter ->
+                setProgress(
+                    workDataOf(
+                        "progress" to progress,
+                        "currentChapterId" to currentChapter?.id,
+                        "currentChapterFileName" to currentChapter?.fileName,
+                        "totalChapters" to chapters.size,
+                        KEY_MANGA_TITLE to mangaTitle
+                    )
+                )
                 notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
             }
         )

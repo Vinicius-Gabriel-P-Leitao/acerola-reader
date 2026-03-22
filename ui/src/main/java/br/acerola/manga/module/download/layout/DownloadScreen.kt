@@ -58,6 +58,7 @@ import br.acerola.manga.module.download.component.ChapterDownloadItem
 import br.acerola.manga.module.download.component.DownloadSelectionBar
 import br.acerola.manga.module.download.state.DownloadAction
 import br.acerola.manga.module.download.state.DownloadUiState
+import br.acerola.manga.module.main.search.component.DownloadQueueComponent
 import br.acerola.manga.ui.R
 import coil.compose.AsyncImage
 
@@ -75,6 +76,7 @@ private val languageNames = mapOf(
     "zh" to "中文",
     "id" to "Indonesia"
 )
+
 
 @Composable
 fun Download.Layout.DownloadScreen(
@@ -114,6 +116,13 @@ fun Download.Layout.DownloadScreen(
             ) {
                 item(key = "header", contentType = "header") {
                     MangaDownloadHeader(manga = manga)
+                }
+
+                item(key = "active_download", contentType = "active_download") {
+                    DownloadQueueComponent(
+                        queue = listOfNotNull(uiState.activeDownload),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                 }
 
                 item(key = "chapters_bar", contentType = "bar") {
@@ -160,6 +169,7 @@ fun Download.Layout.DownloadScreen(
                             Download.Component.ChapterDownloadItem(
                                 chapter = chapter,
                                 isSelected = chapter.id in uiState.selectedChapterIds,
+                                isDownloading = chapter.id == uiState.activeDownload?.currentChapterId,
                                 onClick = { viewModel.onAction(DownloadAction.ToggleChapter(chapter.id)) }
                             )
                         }
