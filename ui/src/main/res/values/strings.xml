@@ -214,4 +214,17 @@
     <string name="label_config_external_sync">Sincronização Externa</string>
     <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
 
-    </resources>
+        <!-- Chapter Naming Templates -->
+    <string name="title_chapter_naming_templates">Padrões de Nomenclatura de Capítulos</string>
+    <string name="action_add_template">Adicionar Padrão</string>
+    <string name="label_system_template">SISTEMA</string>
+    <string name="description_icon_delete_template">Excluir Padrão</string>
+    <string name="title_dialog_new_template">Novo Padrão</string>
+    <string name="label_template_label">Nome (ex: Meu Padrão)</string>
+    <string name="label_template_pattern">Padrão (ex: Cap. {value})</string>
+    <string name="placeholder_template_pattern">{value}, {sub}</string>
+    <string name="description_template_macros">{value} é obrigatório. {extension} é adicionado automaticamente ao final.</string>
+    <string name="action_add">Adicionar</string>
+    <string name="action_cancel">Cancelar</string>
+
+</resources>

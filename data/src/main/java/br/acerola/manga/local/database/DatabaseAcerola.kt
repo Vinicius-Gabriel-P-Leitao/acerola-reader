@@ -19,6 +19,7 @@ import br.acerola.manga.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
+import br.acerola.manga.local.entity.archive.ChapterTemplateEntity
 import br.acerola.manga.local.entity.archive.MangaDirectory
 import br.acerola.manga.local.entity.category.Category
 import br.acerola.manga.local.entity.category.MangaCategory
@@ -38,6 +39,7 @@ import br.acerola.manga.local.entity.metadata.source.MangadexSource
 @Database(
     entities = [
         MangaDirectory::class,
+        ChapterTemplateEntity::class,
         MangaRemoteInfo::class,
         ChapterArchive::class,
         ChapterRemoteInfo::class,
@@ -55,12 +57,13 @@ import br.acerola.manga.local.entity.metadata.source.MangadexSource
         MangaCategory::class
     ],
     exportSchema = false,
-    version = 1,
+    version = 2,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class DatabaseAcerola : RoomDatabase() {
     abstract fun chapterArchiveDao(): ChapterArchiveDao
     abstract fun mangaDirectoryDao(): MangaDirectoryDao
+    abstract fun chapterTemplateDao(): br.acerola.manga.local.dao.archive.ChapterTemplateDao
     abstract fun mangaMangaRemoteInfoDao(): MangaRemoteInfoDao
     abstract fun chapterRemoteInfoDao(): ChapterRemoteInfoDao
     abstract fun chapterDownloadSourceDao(): ChapterDownloadSourceDao

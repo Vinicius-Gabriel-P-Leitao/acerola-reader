@@ -22,8 +22,9 @@ import br.acerola.manga.local.translator.toMangaDirectoryModel
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
+import br.acerola.manga.service.template.ChapterTemplateMatcher
+import br.acerola.manga.service.template.ChapterTemplateService
 import br.acerola.manga.util.ContentQueryHelper
-import br.acerola.manga.util.detectTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +40,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,9 +51,9 @@ import javax.inject.Singleton
 class MangaDirectoryEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     @param:ApplicationContext private val context: Context,
+    private val templateService: ChapterTemplateService,
+    private val templateMatcher: ChapterTemplateMatcher,
 ) : MangaPort<MangaDirectoryDto> {
-
-    private val semaphore = Semaphore(permits = 3)
 
     @Inject
     @DirectoryEngine
@@ -98,8 +98,9 @@ class MangaDirectoryEngine @Inject constructor(
                         it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && ArchiveFormatPattern.isSupported(ext = it.name)
                     }?.name
 
+                    val templates = templateService.getTemplates()
                     val detectedTemplate = firstChapterName?.let {
-                        detectTemplate(fileName = it)
+                        templateMatcher.detect(it, templates)
                     }
 
                     val bannerDoc = bannerMetadata?.let {
@@ -110,7 +111,7 @@ class MangaDirectoryEngine @Inject constructor(
                     }
 
                     val updatedManga = folderDoc.toMangaDirectoryModel(
-                        coverDoc, bannerDoc, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo
+                        coverDoc, bannerDoc, chapterTemplateFk = detectedTemplate?.id, hasComicInfo = hasComicInfo
                     ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
 
                     directoryDao.update(entity = updatedManga)
@@ -387,11 +388,14 @@ class MangaDirectoryEngine @Inject constructor(
         mangaDirectoryOps.refreshMangaChapters(mangaId = finalMangaId, baseUri = baseUri)
     }
 
-    private fun buildLibrary(context: Context, rootUri: Uri): List<MangaDirectory> {
-        val pickedDir = DocumentFile.fromTreeUri(context, rootUri) ?: return emptyList()
-
+    private suspend fun buildLibrary(
+        context: Context,
+        rootUri: Uri
+    ): List<MangaDirectory> {
         val allChildren = ContentQueryHelper.listFiles(context, rootUri).getOrElse { return emptyList() }
         val folders = allChildren.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
+
+        val templates = templateService.getTemplates()
 
         return folders.map { folderMetadata ->
             val folderUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, folderMetadata.id)
@@ -409,14 +413,14 @@ class MangaDirectoryEngine @Inject constructor(
             }?.name
 
             val detectedTemplate = firstChapterName?.let {
-                detectTemplate(fileName = it)
+                templateMatcher.detect(it, templates)
             }
 
             folderMetadata.toMangaDirectoryModel(
                 folderUri = folderUri.toString(),
                 coverPath = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
                 bannerPath = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
-                chapterTemplate = detectedTemplate,
+                chapterTemplateFk = detectedTemplate?.id,
                 hasComicInfo = hasComicInfo,
             )
         }.filterNotNull()
@@ -425,6 +429,7 @@ class MangaDirectoryEngine @Inject constructor(
     private fun isCover(name: String?): Boolean {
         if (name == null) return false
         val lower = name.lowercase()
+        // TODO: Colocar pattern
         if (lower.contains("cover") && isImage(lower)) return true
         return (lower.startsWith("folder") || lower.startsWith("front") || lower.startsWith("00")) && isImage(lower)
     }
@@ -436,6 +441,7 @@ class MangaDirectoryEngine @Inject constructor(
     }
 
     private fun isImage(name: String): Boolean {
+        // TODO: Colocar pattern
         return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".webp")
     }
 

@@ -14,12 +14,15 @@ import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
+import br.acerola.manga.local.entity.archive.ChapterTemplateEntity
 import br.acerola.manga.local.translator.toChapterArchiveModel
 import br.acerola.manga.local.translator.toPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
 import br.acerola.manga.service.compact.DefaultPdfToCbzConverterService
+import br.acerola.manga.service.template.ChapterTemplateMatcher
+import br.acerola.manga.service.template.ChapterTemplateService
 import br.acerola.manga.util.ContentQueryHelper
 import br.acerola.manga.util.FastFileMetadata
 import br.acerola.manga.util.templateToRegex
@@ -47,6 +50,8 @@ class ChapterArchiveEngine @Inject constructor(
     private val chapterArchiveDao: ChapterArchiveDao,
     @param:ApplicationContext private val context: Context,
     private val pdfToCbzConverterService: DefaultPdfToCbzConverterService,
+    private val templateService: ChapterTemplateService,
+    private val templateMatcher: ChapterTemplateMatcher,
 ) : ChapterPort<ChapterArchivePageDto> {
 
     private val semaphore = Semaphore(permits = 3)
@@ -66,23 +71,17 @@ class ChapterArchiveEngine @Inject constructor(
             Either.catch {
                 val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@catch
                 val folderUri = folder.path.toUri()
-                val chapterRegex = templateToRegex(template = folder.chapterTemplate ?: "{value}{sub}.*.{extension}")
 
-                val existingChapters = chapterArchiveDao.getChaptersByMangaDirectoryList(folderId = mangaId)
-                val existingChaptersMap = existingChapters.associateBy { it.path }
-
+                // 1. List files first
                 var allFiles: List<FastFileMetadata>
-                val folderLastModified: Long
                 val folderDoc: DocumentFile
 
                 if (baseUri != null) {
                     val folderDocId = DocumentsContract.getDocumentId(folderUri)
                     allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
-                    folderLastModified = 0
                     folderDoc = DocumentFile.fromTreeUri(context, folderUri) ?: return@catch
                 } else {
                     folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
-                    folderLastModified = folderDoc.lastModified()
                     allFiles = folderDoc.listFiles().filter { it.isFile }.map {
                         FastFileMetadata(
                             id = DocumentsContract.getDocumentId(it.uri),
@@ -94,23 +93,53 @@ class ChapterArchiveEngine @Inject constructor(
                     }
                 }
 
+                // 2. Smart Template Detection (Best Fit)
+                val allTemplates = templateService.getTemplates()
+                var activeTemplate = folder.chapterTemplateFk?.let { id ->
+                    allTemplates.find { it.id == id }
+                }
+
+                if (activeTemplate == null && allFiles.isNotEmpty()) {
+                    val filenames = allFiles.map { it.name }
+                    activeTemplate = findBestTemplate(filenames, allTemplates)
+                        ?: allTemplates.find { it.id == -2L } // Fallback to "Ch."
+                        ?: allTemplates.firstOrNull()
+
+                    // Persist smart choice
+                    if (activeTemplate != null) {
+                        directoryDao.update(folder.copy(chapterTemplateFk = activeTemplate.id))
+                    }
+                }
+
+                val chapterRegex =
+                    templateToRegex(template = activeTemplate?.pattern ?: "Chapter {value}{sub}.*.{extension}")
+
+                val existingChapters = chapterArchiveDao.getChaptersByMangaDirectoryList(folderId = mangaId)
+                val existingChaptersMap = existingChapters.associateBy { it.path }
+                val folderLastModified = if (baseUri == null) folderDoc.lastModified() else 0
+
                 // Process PDFs to CBZ
-                val pdfFiles = allFiles.filter { it.name.endsWith(".pdf", ignoreCase = true) }
+                val pdfFiles = allFiles.filter { it.name.endsWith(ArchiveFormatPattern.PDF.extension, ignoreCase = true) }
                 val cbzNames = allFiles.map { it.name }.toSet()
                 
                 if (pdfFiles.isNotEmpty()) {
                     var needsRefresh = false
                     pdfFiles.forEach { pdf ->
-                        val match = chapterRegex.matchEntire(pdf.name)
+                        // Validate PDF by faking it as CBZ for the regex
+                        val fakeCbzName = pdf.name.substringBeforeLast(".") + ArchiveFormatPattern.CBZ.extension
+                        val match = chapterRegex.matchEntire(fakeCbzName)
+
                         if (match != null) {
-                            val targetCbzName = pdf.name.substringBeforeLast('.') + ".cbz"
+                            val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormatPattern.CBZ.extension
                             if (!cbzNames.contains(targetCbzName)) {
                                 AcerolaLogger.i(TAG, "Converting PDF to CBZ: ${pdf.name} -> $targetCbzName", LogSource.REPOSITORY)
+
                                 val pdfDocUri = if (baseUri != null) {
                                     DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
                                 } else {
                                     DocumentsContract.buildDocumentUriUsingTree(folderUri, pdf.id)
                                 }
+
                                 val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri)
                                 if (pdfDoc != null) {
                                     pdfToCbzConverterService.convertPdfToCbz(folderDoc, pdfDoc, targetCbzName)
@@ -127,6 +156,7 @@ class ChapterArchiveEngine @Inject constructor(
                             allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
                         } else {
                             allFiles = folderDoc.listFiles().filter { it.isFile }.map {
+                                // TODO: Fazer toModel
                                 FastFileMetadata(
                                     id = DocumentsContract.getDocumentId(it.uri),
                                     name = it.name ?: "",
@@ -228,6 +258,27 @@ class ChapterArchiveEngine @Inject constructor(
                 _progress.value = -1
             }
         }
+
+    private fun findBestTemplate(filenames: List<String>, templates: List<ChapterTemplateEntity>): ChapterTemplateEntity? {
+        if (filenames.isEmpty()) return null
+
+        val counts = templates.associateWith { template ->
+            val regex = templateToRegex(template.pattern)
+            filenames.count { filename ->
+                // Valida o nome original ou o nome sem extensão (para PDFs)
+                regex.matches(filename) || regex.matches(filename.substringBeforeLast(".") + ".cbz")
+            }
+        }
+
+        return counts.entries
+            .filter { it.value > 0 }
+            .sortedWith(
+                compareByDescending<Map.Entry<ChapterTemplateEntity, Int>> { it.value }
+                    .thenByDescending { it.key.id > 0 } // Prioriza usuários
+                    .thenByDescending { it.key.id } // Prioriza IDs maiores (mais recentes)
+            )
+            .firstOrNull()?.key
+    }
 
     override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->

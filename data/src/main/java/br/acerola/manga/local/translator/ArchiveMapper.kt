@@ -18,7 +18,7 @@ fun MangaDirectory.toDto(): MangaDirectoryDto {
         coverUri = cover?.toUri(),
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
-        chapterTemplate = chapterTemplate,
+        chapterTemplateFk = chapterTemplateFk,
         hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled,
     )
@@ -37,7 +37,7 @@ fun MangaDirectoryDto.toModel(): MangaDirectory {
         cover = coverUri?.toString(),
         banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis(),
-        chapterTemplate = chapterTemplate,
+        chapterTemplateFk = chapterTemplateFk,
         hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled
     )
@@ -58,14 +58,14 @@ fun List<ChapterArchive>.toPageDto(
 }
 
 fun DocumentFile.toMangaDirectoryModel(
-    cover: DocumentFile?, banner: DocumentFile?, chapterTemplate: String?, hasComicInfo: Boolean, externalSyncEnabled: Boolean = true
+    cover: DocumentFile?, banner: DocumentFile?, chapterTemplateFk: Long?, hasComicInfo: Boolean, externalSyncEnabled: Boolean = true
 ): MangaDirectory {
     return MangaDirectory(
         name = name ?: "Unknown",
         path = uri.toString(),
         cover = cover?.uri?.toString(),
         banner = banner?.uri?.toString(),
-        chapterTemplate = chapterTemplate,
+        chapterTemplateFk = chapterTemplateFk,
         lastModified = lastModified(),
         hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled,
@@ -89,7 +89,7 @@ fun FastFileMetadata.toMangaDirectoryModel(
     folderUri: String,
     coverPath: String?,
     bannerPath: String?,
-    chapterTemplate: String?,
+    chapterTemplateFk: Long?,
     hasComicInfo: Boolean
 ): MangaDirectory {
     return MangaDirectory(
@@ -97,7 +97,7 @@ fun FastFileMetadata.toMangaDirectoryModel(
         path = folderUri,
         cover = coverPath,
         banner = bannerPath,
-        chapterTemplate = chapterTemplate,
+        chapterTemplateFk = chapterTemplateFk,
         lastModified = lastModified,
         hasComicInfo = hasComicInfo,
     )
