@@ -46,12 +46,11 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.text.get
 
 @Singleton
 class MangaDirectoryEngine @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val directoryDao: MangaDirectoryDao,
+    @param:ApplicationContext private val context: Context,
 ) : MangaPort<MangaDirectoryDto> {
 
     private val semaphore = Semaphore(permits = 3)
@@ -413,13 +412,11 @@ class MangaDirectoryEngine @Inject constructor(
                 detectTemplate(fileName = it)
             }
 
-            MangaDirectory(
-                name = folderMetadata.name,
-                path = folderUri.toString(),
-                cover = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
-                banner = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+            folderMetadata.toMangaDirectoryModel(
+                folderUri = folderUri.toString(),
+                coverPath = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+                bannerPath = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
                 chapterTemplate = detectedTemplate,
-                lastModified = folderMetadata.lastModified,
                 hasComicInfo = hasComicInfo,
             )
         }.filterNotNull()

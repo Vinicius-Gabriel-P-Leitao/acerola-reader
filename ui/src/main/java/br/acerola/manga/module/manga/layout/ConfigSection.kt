@@ -85,6 +85,7 @@ fun Manga.Layout.ConfigSection(
         Manga.Component.SyncMangaArchive(
             onSyncChapters = { onSyncAction(MangaSyncAction.SyncChaptersLocal) },
             onRescanCover = { onSyncAction(MangaSyncAction.RescanManga) },
+            onExtractFirstPageAsCover = { onSyncAction(MangaSyncAction.ExtractFirstPageAsCover) }
         )
     }
 

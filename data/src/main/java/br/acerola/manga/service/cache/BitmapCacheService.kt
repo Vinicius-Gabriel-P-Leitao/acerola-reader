@@ -9,7 +9,7 @@ import javax.inject.Singleton
 class BitmapCacheService @Inject constructor() {
 
     private val maxMemory = Runtime.getRuntime().maxMemory()
-    private val cacheSize = (maxMemory / 8).toInt() // 1/8 da memória disponível
+    private val cacheSize = (maxMemory / 8).toInt()
 
     private val cache = object : LruCache<String, Bitmap>(cacheSize) {
         override fun sizeOf(key: String, value: Bitmap): Int {

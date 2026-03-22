@@ -101,7 +101,7 @@ class ChapterReaderService @Inject constructor(
         total: Int
     ) {
         // Prefetch 2 à frente e 2 atrás
-        val range = ((center - 2)..(center + 2)).filter { it >= 0 && it < total }
+        val range = ((center - 2)..(center + 2)).filter { it in 0..<total }
 
         range.forEach { index ->
             CoroutineScope(context = Dispatchers.IO).launch {

@@ -8,6 +8,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.entity.archive.MangaDirectory
 
+import br.acerola.manga.util.FastFileMetadata
+
 fun MangaDirectory.toDto(): MangaDirectoryDto {
     return MangaDirectoryDto(
         id = id,
@@ -67,6 +69,37 @@ fun DocumentFile.toMangaDirectoryModel(
         lastModified = lastModified(),
         hasComicInfo = hasComicInfo,
         externalSyncEnabled = externalSyncEnabled,
+    )
+}
+
+fun FastFileMetadata.toChapterArchiveModel(
+    mangaId: Long, chapterSort: String, fileUri: String, fastHash: String
+): ChapterArchive {
+    return ChapterArchive(
+        chapter = name,
+        path = fileUri,
+        checksum = null,
+        fastHash = fastHash,
+        chapterSort = chapterSort,
+        folderPathFk = mangaId
+    )
+}
+
+fun FastFileMetadata.toMangaDirectoryModel(
+    folderUri: String,
+    coverPath: String?,
+    bannerPath: String?,
+    chapterTemplate: String?,
+    hasComicInfo: Boolean
+): MangaDirectory {
+    return MangaDirectory(
+        name = name,
+        path = folderUri,
+        cover = coverPath,
+        banner = bannerPath,
+        chapterTemplate = chapterTemplate,
+        lastModified = lastModified,
+        hasComicInfo = hasComicInfo,
     )
 }
 

@@ -194,6 +194,7 @@ fun MangaScreen(
             MangaSyncAction.SyncComicInfo -> mangaRemoteInfoViewModel.syncFromComicInfo(uiState.manga.directory.id)
             MangaSyncAction.SyncComicInfoChapters -> chapterRemoteInfoViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
             MangaSyncAction.SyncAnilistInfo -> mangaRemoteInfoViewModel.syncFromAnilist(uiState.manga.directory.id)
+            MangaSyncAction.ExtractFirstPageAsCover -> mangaDirectoryViewModel.extractCoverFromChapter(uiState.manga.directory.id)
         }
     }
 

@@ -3,11 +3,21 @@ package br.acerola.manga.service.artwork
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
+import arrow.core.right
+import br.acerola.manga.error.message.IoError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.relationship.BannerDao
 import br.acerola.manga.local.entity.metadata.relationship.Banner
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.MediaFilePattern
+import br.acerola.manga.service.file.FileStorageService
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,6 +25,7 @@ import javax.inject.Singleton
 class MangaSaveBannerService @Inject constructor(
     private val bannerDao: BannerDao,
     private val directoryDao: MangaDirectoryDao,
+    private val fileStorageService: FileStorageService,
     @param:ApplicationContext private val context: Context,
 ) {
     suspend fun processBanner(
@@ -24,67 +35,66 @@ class MangaSaveBannerService @Inject constructor(
         bannerUrl: String,
         mangaFolderName: String,
         mangaRemoteInfoFk: Long
-    ): Long {
-        var savedUriString: String? = null
-
+    ): Either<IoError, Long> = withContext(Dispatchers.IO) {
         try {
             val rootDir = DocumentFile.fromTreeUri(context, rootUri)
+                ?: return@withContext IoError.FileNotFound("Root directory not accessible").left()
 
-            if (rootDir != null && rootDir.exists()) {
-                var mangaDir = rootDir.findFile(mangaFolderName)
+            val mangaDir = rootDir.findFile(mangaFolderName)
+                ?: rootDir.createDirectory(mangaFolderName)
+                ?: return@withContext IoError.FileWriteError(
+                    mangaFolderName, Exception("Could not create manga directory")
+                ).left()
 
-                if (mangaDir == null) {
-                    mangaDir = rootDir.createDirectory(mangaFolderName)
+            val fileName = MediaFilePattern.BANNER.defaultFileName
+
+            fileStorageService.saveFile(
+                folder = mangaDir,
+                fileName = fileName,
+                mimeType = "image/png",
+                bytes = bytes
+            ).flatMap {
+                val savedUriString = mangaDir.findFile(fileName)?.uri?.toString()
+
+                if (savedUriString != null) {
+                    val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
+                    if (directory != null) {
+                        directoryDao.update(entity = directory.copy(banner = savedUriString))
+                    }
                 }
 
-                if (mangaDir != null && mangaDir.canWrite()) {
-                    val finalFileName = MediaFilePattern.BANNER.defaultFileName
+                val bannerEntity = Banner(
+                    fileName = fileName,
+                    url = bannerUrl,
+                    mangaRemoteInfoFk = mangaRemoteInfoFk
+                )
 
-                    val oldFile = mangaDir.findFile(finalFileName)
-                    if (oldFile != null && oldFile.exists()) {
-                        oldFile.delete()
-                    }
+                val insertedId = bannerDao.insert(entity = bannerEntity)
+                val finalId = if (insertedId != -1L) {
+                    insertedId
+                } else {
+                    val existing = bannerDao.getBannerByFileNameAndFk(
+                        fileName = fileName,
+                        mangaRemoteInfoFk = mangaRemoteInfoFk
+                    ) ?: return@flatMap IoError.FileWriteError(
+                        fileName, Exception("Database inconsistency: Banner not found for update")
+                    ).left()
 
-                    val newFile = mangaDir.createFile("image/png", finalFileName)
-
-                    if (newFile != null) {
-                        context.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
-                            outputStream.write(bytes)
-                        }
-                        savedUriString = newFile.uri.toString()
-                    }
+                    bannerDao.update(entity = existing.copy(url = bannerUrl, fileName = fileName))
+                    existing.id
                 }
+                finalId.right()
             }
         } catch (exception: Exception) {
-            println(exception)
+            AcerolaLogger.e(
+                TAG, "Critical error processing banner for $mangaFolderName", LogSource.REPOSITORY, exception
+            )
+            IoError.FileWriteError(mangaFolderName, exception).left()
         }
+    }
 
-        if (savedUriString != null) {
-            val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
-            if (directory != null) {
-                directoryDao.update(entity = directory.copy(banner = savedUriString))
-            }
-        }
+    companion object {
 
-        // TODO: Fazer toModel
-        val bannerEntity = Banner(
-            fileName = MediaFilePattern.BANNER.defaultFileName,
-            url = bannerUrl,
-            mangaRemoteInfoFk = mangaRemoteInfoFk
-        )
-
-        val insertedId = bannerDao.insert(entity = bannerEntity)
-
-        return if (insertedId != -1L) {
-            insertedId
-        } else {
-            val existing = bannerDao.getBannerByFileNameAndFk(
-                fileName = MediaFilePattern.BANNER.defaultFileName,
-                mangaRemoteInfoFk = mangaRemoteInfoFk
-            ) ?: throw IllegalStateException("Banner not found for fk: $mangaRemoteInfoFk")
-
-            bannerDao.update(entity = existing.copy(url = bannerUrl, fileName = MediaFilePattern.BANNER.defaultFileName))
-            existing.id
-        }
+        private const val TAG = "MangaSaveBannerService"
     }
 }

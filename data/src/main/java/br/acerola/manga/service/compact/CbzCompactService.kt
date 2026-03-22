@@ -13,9 +13,9 @@ import javax.inject.Singleton
 @Singleton
 class CbzCompactService @Inject constructor(
     @param:ApplicationContext private val context: Context
-) : ArchiveCompactService {
+) {
 
-    override suspend fun createCbz(
+    suspend fun createCbz(
         folder: DocumentFile,
         fileName: String,
         pageEntries: List<Pair<String, ByteArray>>
@@ -33,24 +33,6 @@ class CbzCompactService @Inject constructor(
                     }
                 }
             }
-            Unit
-        }.mapLeft { cause ->
-            file.delete()
-            IoError.FileWriteError(path = fileName, cause = cause) as IoError
-        }
-    }
-
-    override suspend fun saveImage(
-        folder: DocumentFile,
-        fileName: String,
-        mimeType: String,
-        bytes: ByteArray
-    ): Either<IoError, Unit> {
-        val file = folder.createFile(mimeType, fileName)
-            ?: return Either.Left(IoError.FileWriteError(path = fileName))
-
-        return Either.catch {
-            context.contentResolver.openOutputStream(file.uri)?.use { it.write(bytes) }
             Unit
         }.mapLeft { cause ->
             file.delete()

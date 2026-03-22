@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 fun Manga.Component.SyncMangaArchive(
     onSyncChapters: () -> Unit,
     onRescanCover: () -> Unit,
+    onExtractFirstPageAsCover: () -> Unit,
 ) {
     Column {
         ListItem(
@@ -82,6 +83,40 @@ fun Manga.Component.SyncMangaArchive(
             supportingContent = {
                 Text(
                     text = stringResource(id = R.string.description_sync_cover_banner),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            },
+            leadingContent = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.ImageSearch,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.secondary,
+                            contentDescription = null
+                        )
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
+
+        ListItem(
+            modifier = Modifier.clickable { onExtractFirstPageAsCover() },
+            headlineContent = {
+                Text(
+                    text = stringResource(id = R.string.title_extract_first_page_as_cover),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            supportingContent = {
+                Text(
+                    text = stringResource(id = R.string.description_extract_first_page_as_cover),
                     style = MaterialTheme.typography.bodySmall,
                 )
             },

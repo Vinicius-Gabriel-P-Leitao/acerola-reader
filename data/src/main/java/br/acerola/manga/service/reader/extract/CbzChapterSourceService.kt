@@ -45,7 +45,6 @@ class CbzChapterSourceService @Inject constructor(
                 is FileNotFoundException -> ChapterError.InvalidChapterData(
                     reason = exception.message ?: "File not found"
                 )
-
                 else -> ChapterError.ExtractionFailed(cause = exception)
             }
         }

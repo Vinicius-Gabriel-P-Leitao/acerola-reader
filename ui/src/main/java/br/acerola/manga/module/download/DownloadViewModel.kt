@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import br.acerola.manga.pattern.ArchiveFormatPattern
 import br.acerola.manga.config.preference.MangaDirectoryPreference
+import br.acerola.manga.core.usecase.search.SearchMangaUseCase
+import br.acerola.manga.core.worker.ChapterDownloadWorker
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
 import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
 import br.acerola.manga.error.UserMessage
@@ -16,9 +18,9 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.download.state.DownloadAction
 import br.acerola.manga.module.download.state.DownloadUiState
+import br.acerola.manga.module.main.search.state.DownloadProgress
+import br.acerola.manga.pattern.ArchiveFormatPattern
 import br.acerola.manga.ui.R
-import br.acerola.manga.core.worker.ChapterDownloadWorker
-import br.acerola.manga.core.usecase.search.SearchMangaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -26,15 +28,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-import androidx.work.WorkInfo
-import br.acerola.manga.module.main.search.state.DownloadProgress
-import kotlinx.coroutines.flow.collectLatest
 
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
@@ -243,10 +242,10 @@ class DownloadViewModel @Inject constructor(
                         ChapterDownloadWorker.KEY_CHAPTER_IDS to chapterIds,
                         ChapterDownloadWorker.KEY_CHAPTER_NUMBERS to chapterNumbers,
                         ChapterDownloadWorker.KEY_MANGA_TITLE to mangaTitle,
-                        ChapterDownloadWorker.KEY_FILE_EXTENSION to ArchiveFormatPattern.CBZ.extension,
                         ChapterDownloadWorker.KEY_BASE_URI to baseUri,
-                        ChapterDownloadWorker.KEY_COVER_URL to state.manga?.cover?.url,
-                        ChapterDownloadWorker.KEY_COVER_FILE_NAME to state.manga?.cover?.fileName,
+                        ChapterDownloadWorker.KEY_COVER_URL to state.manga.cover?.url,
+                        ChapterDownloadWorker.KEY_FILE_EXTENSION to ArchiveFormatPattern.CBZ.extension,
+                        ChapterDownloadWorker.KEY_COVER_FILE_NAME to state.manga.cover?.fileName,
                     )
                 )
                 .addTag(ChapterDownloadWorker.DOWNLOAD_TAG)

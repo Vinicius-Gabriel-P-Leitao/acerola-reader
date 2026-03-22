@@ -1,8 +1,9 @@
 package br.acerola.manga.logging
 
 enum class LogSource {
-    VIEWMODEL,
     REPOSITORY,
+    VIEWMODEL,
+    USECASE,
     NETWORK,
     UI
 }

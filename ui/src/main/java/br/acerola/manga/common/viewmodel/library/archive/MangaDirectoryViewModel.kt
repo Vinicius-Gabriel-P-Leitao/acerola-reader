@@ -9,16 +9,17 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.manga.config.permission.FileSystemAccessManager
+import br.acerola.manga.core.usecase.DirectoryCase
+import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.core.usecase.manga.ExtractCoverFromChapterUseCase
+import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.worker.LibrarySyncWorker
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.core.worker.LibrarySyncWorker
-import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.manga.core.usecase.DirectoryCase
-import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -38,10 +39,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MangaDirectoryViewModel @Inject constructor(
+    private val workManager: WorkManager,
     private val manager: FileSystemAccessManager,
-    @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+    private val extractCoverFromChapterUseCase: ExtractCoverFromChapterUseCase,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
-    private val workManager: WorkManager
+    @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
 
     private val _progress = MutableStateFlow<Int>(value = -1)
@@ -97,6 +99,21 @@ class MangaDirectoryViewModel @Inject constructor(
     fun updateExternalSyncEnabled(mangaId: Long, enabled: Boolean) {
         viewModelScope.launch {
             observeLibraryUseCase.updateMangaSettings(mangaId, enabled)
+        }
+    }
+
+    fun extractCoverFromChapter(mangaId: Long) {
+        viewModelScope.launch {
+            _isIndexing.value = true
+            extractCoverFromChapterUseCase(mangaId).fold(
+                ifLeft = { error ->
+                    _uiEvents.send(error)
+                },
+                ifRight = {
+                    // Success
+                }
+            )
+            _isIndexing.value = false
         }
     }
 

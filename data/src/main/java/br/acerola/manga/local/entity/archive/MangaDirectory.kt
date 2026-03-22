@@ -31,6 +31,7 @@ data class MangaDirectory(
     @ColumnInfo(name = "chapter_template")
     val chapterTemplate: String?,
 
+    // TODO: Tranformar ambos os campos em dominio da de MangaRemoteInfo
     @ColumnInfo(name = "has_comic_info")
     val hasComicInfo: Boolean = false,
 
