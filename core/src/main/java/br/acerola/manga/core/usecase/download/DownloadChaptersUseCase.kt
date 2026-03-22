@@ -21,7 +21,7 @@ class DownloadChaptersUseCase @Inject constructor(
         chapters: List<ChapterEntry>,
         coverUrl: String?,
         coverFileName: String?,
-        onProgress: suspend (Int) -> Unit
+        onProgress: suspend (progress: Int, currentChapter: ChapterEntry?) -> Unit
     ): Result {
         if (!coverUrl.isNullOrBlank() && !coverFileName.isNullOrBlank()) {
             downloadCover(coverUrl, coverFileName, mangaFolder)
@@ -31,9 +31,11 @@ class DownloadChaptersUseCase @Inject constructor(
         var errorCount = 0
 
         chapters.forEachIndexed { _, entry ->
+            onProgress(((downloadedCount.toFloat() / chapters.size) * 100).toInt(), entry)
+
             if (mangaFolder.findFile(entry.fileName) != null) {
                 downloadedCount++
-                onProgress(((downloadedCount.toFloat() / chapters.size) * 100).toInt())
+                onProgress(((downloadedCount.toFloat() / chapters.size) * 100).toInt(), entry)
                 return@forEachIndexed
             }
 
@@ -54,9 +56,10 @@ class DownloadChaptersUseCase @Inject constructor(
             archiveCompactService.createCbz(mangaFolder, entry.fileName, pageEntries)
                 .fold(ifLeft = { errorCount++ }, ifRight = { downloadedCount++ })
 
-            onProgress(((downloadedCount.toFloat() / chapters.size) * 100).toInt())
+            onProgress(((downloadedCount.toFloat() / chapters.size) * 100).toInt(), entry)
         }
 
+        onProgress(100, null)
         return Result(downloadedCount = downloadedCount, errorCount = errorCount)
     }
 

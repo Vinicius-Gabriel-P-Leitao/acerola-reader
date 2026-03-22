@@ -33,4 +33,7 @@ data class MangaDirectory(
 
     @ColumnInfo(name = "has_comic_info")
     val hasComicInfo: Boolean = false,
+
+    @ColumnInfo(name = "external_sync_enabled")
+    val externalSyncEnabled: Boolean = true,
 )

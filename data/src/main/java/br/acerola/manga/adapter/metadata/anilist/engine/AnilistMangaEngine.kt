@@ -66,8 +66,12 @@ class AnilistMangaEngine @Inject constructor(
             try {
                 val directory = directoryDao.getMangaDirectoryById(mangaId)
                     ?: return@withContext Either.Left(
-                        LibrarySyncError.UnexpectedError(cause = Exception("Directory not found: $mangaId"))
+                        LibrarySyncError.UnexpectedError(cause = Exception("Directory not found"))
                     )
+
+                if (!directory.externalSyncEnabled) {
+                    return@withContext Either.Left(LibrarySyncError.ExternalSyncDisabled)
+                }
 
                 val normalizedDirName = normalizeName(directory.name)
 
@@ -119,7 +123,8 @@ class AnilistMangaEngine @Inject constructor(
         withContext(Dispatchers.IO) {
             AcerolaLogger.audit(TAG, "Starting full library AniList refresh", LogSource.REPOSITORY)
             try {
-                val directories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                val directories = (directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList())
+                    .filter { it.externalSyncEnabled }
                 directories.forEachIndexed { index, directory ->
                     refreshManga(directory.id, baseUri)
                     _progress.value = ((index + 1) * 100 / directories.size.coerceAtLeast(1))
@@ -137,7 +142,8 @@ class AnilistMangaEngine @Inject constructor(
         withContext(Dispatchers.IO) {
             AcerolaLogger.audit(TAG, "Starting incremental AniList sync", LogSource.REPOSITORY)
             try {
-                val directories = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                val directories = (directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList())
+                    .filter { it.externalSyncEnabled }
                 val toSync = directories.filter { directory ->
                     val remoteInfo =
                         mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).firstOrNull() ?: return@filter true

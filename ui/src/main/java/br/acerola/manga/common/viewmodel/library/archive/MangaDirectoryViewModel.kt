@@ -94,6 +94,12 @@ class MangaDirectoryViewModel @Inject constructor(
         enqueueSync(LibrarySyncWorker.SYNC_TYPE_REBUILD)
     }
 
+    fun updateExternalSyncEnabled(mangaId: Long, enabled: Boolean) {
+        viewModelScope.launch {
+            observeLibraryUseCase.updateMangaSettings(mangaId, enabled)
+        }
+    }
+
     private fun enqueueSync(
         type: String,
         mangaId: Long? = null

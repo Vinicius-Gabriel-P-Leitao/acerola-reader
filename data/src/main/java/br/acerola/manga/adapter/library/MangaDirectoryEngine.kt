@@ -112,7 +112,7 @@ class MangaDirectoryEngine @Inject constructor(
 
                     val updatedManga = folderDoc.toMangaDirectoryModel(
                         coverDoc, bannerDoc, chapterTemplate = detectedTemplate, hasComicInfo = hasComicInfo
-                    ).copy(id = existingManga.id)
+                    ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
 
                     directoryDao.update(entity = updatedManga)
 
@@ -281,6 +281,26 @@ class MangaDirectoryEngine @Inject constructor(
         }
     }
 
+    override suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit> =
+        withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Updating manga settings: $mangaId (externalSyncEnabled=$externalSyncEnabled)", LogSource.REPOSITORY)
+            try {
+                Either.catch {
+                    val existingManga = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
+                    val updatedManga = existingManga.copy(externalSyncEnabled = externalSyncEnabled)
+                    directoryDao.update(entity = updatedManga)
+                }.mapLeft { exception ->
+                    AcerolaLogger.e(TAG, "Failed to update manga settings: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                    when (exception) {
+                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                        else -> LibrarySyncError.UnexpectedError(cause = exception)
+                    }
+                }
+            } finally {
+                // No progress needed for setting updates
+            }
+        }
+
     override fun observeLibrary(): StateFlow<List<MangaDirectoryDto>> {
         return directoryDao.getAllMangaDirectory().map { folders ->
             AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
@@ -358,7 +378,7 @@ class MangaDirectoryEngine @Inject constructor(
         val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
 
         val finalMangaId = if (existing != null) {
-            val updated = folder.copy(id = existing.id)
+            val updated = folder.copy(id = existing.id, externalSyncEnabled = existing.externalSyncEnabled)
             directoryDao.update(entity = updated)
             existing.id
         } else {

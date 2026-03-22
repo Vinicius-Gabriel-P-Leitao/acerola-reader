@@ -94,12 +94,13 @@ metadados de fontes online populares.
 - [x] Painel de configurações para selecionar e configurar o provedor (MangaDex / AniList / ComicInfo) com feedback de fonte ativa.
 
 #### Download via MangaDex
-- [ ] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
-- [ ] **Paginação no download:** Mangás com 300+ capítulos mostram apenas 0/100 — exibir de forma paginada e permitir baixar tudo em sequência.
-- [ ] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário escolher qual usar no download.
-- [ ] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra 
+- [x] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
+- [x] **Paginação no download:** Mangás com 300+ capítulos mostram apenas 0/100 — exibir de forma paginada e 
+  permitir baixar tudo em sequência.
+- [x] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra 
   selecionar tudo, trocar pagina e clicar no selecionar tudo e ele considerar a as duas paginas e o bottom sheet a 
   seção está bem desorganizada.
+- [ ] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário escolher qual usar no download.
 - [x] **Reorganziar a tabela de métadados:** Essa refatoração vai ter como intuito tranformar a tabela de métadados 
   agnóstica de origem dos dados e teremos tabelas pequenas auxiliares para poder atender essa relação, quero uma de 
   mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do 

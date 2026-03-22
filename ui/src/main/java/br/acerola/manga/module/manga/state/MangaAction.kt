@@ -8,6 +8,7 @@ sealed interface MangaAction {
     data class SelectTab(val tab: MainTab) : MangaAction
     data class UpdatePageSize(val size: ChapterPageSizeType) : MangaAction
     data class UpdateCategory(val categoryId: Long?) : MangaAction
+    data class ToggleExternalSync(val enabled: Boolean) : MangaAction
 }
 
 sealed interface MangaChapterAction {

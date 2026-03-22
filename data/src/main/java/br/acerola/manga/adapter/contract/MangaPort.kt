@@ -14,4 +14,5 @@ interface MangaPort<T> {
     suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit>
+    suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 }
