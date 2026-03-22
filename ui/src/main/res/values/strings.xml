@@ -147,6 +147,8 @@
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
     <string name="label_reader_page_format">Página %1$d / %2$d</string>
     <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
+    <string name="label_history_hero_most_recent">MAIS RECENTE</string>
+    <string name="label_history_hero_continue">CONTINUAR LENDO</string>
     <string name="label_reader_config_title">Modo de Leitura</string>
     <string name="label_reader_pages_prefix">Páginas</string>
     <string name="label_reader_next_chapter">Próximo</string>

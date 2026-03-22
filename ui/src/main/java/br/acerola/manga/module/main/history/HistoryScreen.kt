@@ -4,7 +4,9 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -24,6 +27,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.common.component.MangaListItem
+import br.acerola.manga.module.main.history.component.HistoryHeroCard
 import br.acerola.manga.module.main.history.state.HistoryAction
 import br.acerola.manga.module.main.history.state.HistoryUiState
 import br.acerola.manga.module.manga.MangaActivity
@@ -34,8 +38,8 @@ import br.acerola.manga.ui.R
 fun Main.History.Layout.Screen(
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
-    val historyItems by viewModel.historyItems.collectAsState()
     val context = LocalContext.current
+    val historyItems by viewModel.historyItems.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current
 
     LaunchedEffect(Unit) {
@@ -87,7 +91,7 @@ fun Main.History.Layout.Screen(
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = stringResource(id = R.string.description_history_empty_state),
@@ -100,7 +104,20 @@ fun Main.History.Layout.Screen(
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.items, key = { it.manga.directory.id }) { item ->
+                    item {
+                        val firstItem = uiState.items.first()
+                        Main.History.Component.HistoryHeroCard(
+                            manga = firstItem.manga,
+                            onClick = { onAction(HistoryAction.ClickManga(firstItem.manga)) },
+                            onContinueClick = { onAction(HistoryAction.ClickContinue(firstItem.manga, firstItem.history)) }
+                        )
+
+                        if (uiState.items.size > 1) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+
+                    items(uiState.items.drop(1), key = { it.manga.directory.id }) { item ->
                         val chapterInfo = item.history.chapterName ?: stringResource(
                             id = R.string.label_chapter_unknown
                         )
