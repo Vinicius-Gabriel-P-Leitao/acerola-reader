@@ -94,7 +94,7 @@
     <string name="title_settings_file_config">Configurações dos Arquivos</string>
     <string name="title_settings_sync_files">Sincronizar arquivos</string>
     <string name="title_sync_chapters">Sincronizar capítulos</string>
-    <string name="description_sync_chapters_local">Sincroniza metadados de cada capítulo local</string>
+    <string name="description_sync_chapters_local">Sincroniza capítulos local</string>
     <string name="description_sync_chapters_remote">Sincroniza numeração oficial e datas</string>
     <string name="title_sync_cover_banner">Sincronizar cover e banner</string>
     <string name="description_sync_cover_banner">Busca imagens já baixadas na pasta</string>

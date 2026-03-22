@@ -64,8 +64,8 @@ class DefaultPdfToCbzConverterService @Inject constructor(
             }
             
             archiveCompactService.createCbz(folder, cbzFileName, pageEntries)
-        } catch (e: Exception) {
-            Either.Left(IoError.FileWriteError(cbzFileName, e))
+        } catch (exception: Exception) {
+            Either.Left(IoError.FileWriteError(cbzFileName, exception))
         } finally {
             pdfRenderer?.close()
             fileDescriptor?.close()
