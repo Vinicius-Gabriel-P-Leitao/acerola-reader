@@ -1,4 +1,4 @@
-package br.acerola.manga.local.translator
+package br.acerola.manga.local.translator.remote
 
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
@@ -8,7 +8,7 @@ import br.acerola.manga.dto.metadata.manga.source.AnilistSourceDto
 import br.acerola.manga.remote.anilist.MediaDetailsQuery
 import br.acerola.manga.remote.anilist.MediaSearchQuery
 
-fun MediaSearchQuery.Medium.toDto(): MangaMetadataDto {
+fun MediaSearchQuery.Medium.toViewDto(): MangaMetadataDto {
     val title = this.title?.userPreferred ?: this.title?.romaji ?: ""
 
     val author = this.staff?.edges.orEmpty()
@@ -47,7 +47,7 @@ fun MediaSearchQuery.Medium.toDto(): MangaMetadataDto {
     )
 }
 
-fun MediaDetailsQuery.Media.toDto(): MangaMetadataDto {
+fun MediaDetailsQuery.Media.toViewDto(): MangaMetadataDto {
     val title = this.title?.userPreferred ?: this.title?.romaji ?: ""
 
     val author = this.staff?.edges.orEmpty()

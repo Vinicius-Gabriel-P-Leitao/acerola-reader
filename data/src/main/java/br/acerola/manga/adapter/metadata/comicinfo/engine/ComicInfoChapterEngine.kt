@@ -14,8 +14,8 @@ import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
 import br.acerola.manga.local.dao.metadata.MangaMetadataDao
-import br.acerola.manga.local.translator.toDownloadSources
-import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.translator.persistence.toDownloadSourcesEntities
+import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import kotlinx.coroutines.Dispatchers
@@ -78,10 +78,10 @@ class ComicInfoChapterEngine @Inject constructor(
 
                     if (result != null) {
                         AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter}", LogSource.REPOSITORY)
-                        val chapterRemoteInfoEntity = result.toModel(mangaRemoteInfoFk = remoteManga.id)
+                        val chapterRemoteInfoEntity = result.toEntity(mangaRemoteInfoFk = remoteManga.id)
                         val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
 
-                        val downloadSourceEntities = result.toDownloadSources(chapterFk = chapterRemoteInfoId)
+                        val downloadSourceEntities = result.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
                         chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
                     }
 

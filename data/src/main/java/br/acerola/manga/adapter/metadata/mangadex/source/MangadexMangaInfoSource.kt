@@ -6,7 +6,7 @@ import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.config.network.safeApiCall
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.remote.mangadex.api.MangadexMangaMetadataClient
@@ -30,11 +30,11 @@ class MangadexMangaInfoSource @Inject constructor(
                 AcerolaLogger.d(TAG, "Detected UUID — fetching manga by ID: $manga", LogSource.NETWORK)
 
                 val response = api.getMangaById(mangaId = manga)
-                listOf(response.data.toDto(context))
+                listOf(response.data.toViewDto(context))
             } else {
                 AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)
                 val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
-                val list = response.data.map { it.toDto(context) }
+                val list = response.data.map { it.toViewDto(context) }
 
                 AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)
                 list

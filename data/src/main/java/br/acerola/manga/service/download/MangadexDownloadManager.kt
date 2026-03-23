@@ -3,7 +3,7 @@ package br.acerola.manga.service.download
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.config.network.safeApiCall
 import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.manga.remote.mangadex.api.MangadexMangaDownloadClient
@@ -31,7 +31,7 @@ class MangadexDownloadManager @Inject constructor(
                 limit = limit,
                 offset = offset
             )
-            val chapters = response.data.map { it.toDto() }
+            val chapters = response.data.map { it.toViewDto() }
             chapters to response.total
         }
     }

@@ -4,7 +4,7 @@ import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.local.dao.category.CategoryDao
 import br.acerola.manga.local.entity.category.Category
 import br.acerola.manga.local.entity.category.MangaCategory
-import br.acerola.manga.local.translator.toCategoryDto
+import br.acerola.manga.local.translator.ui.toViewDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -15,7 +15,7 @@ class CategoryManager @Inject constructor(
     private val categoryDao: CategoryDao
 ) {
     fun getAllCategories(): Flow<List<CategoryDto>> = categoryDao.getAllCategories().map { list ->
-        list.map { it.toCategoryDto() }
+        list.map { it.toViewDto() }
     }
 
     suspend fun createCategory(name: String, color: Int) {
@@ -38,7 +38,7 @@ class CategoryManager @Inject constructor(
     }
 
     fun getCategoryByMangaId(directoryId: Long): Flow<CategoryDto?> = 
-        categoryDao.getCategoryByMangaId(directoryId).map { it?.toCategoryDto() }
+        categoryDao.getCategoryByMangaId(directoryId).map { it?.toViewDto() }
 
     fun getAllMangaCategories(): Flow<Map<Long, CategoryDto>> = 
         categoryDao.getAllMangaCategoriesJoined().map { list ->

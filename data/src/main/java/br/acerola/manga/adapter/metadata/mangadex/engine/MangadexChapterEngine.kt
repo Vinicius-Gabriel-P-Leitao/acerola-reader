@@ -19,10 +19,10 @@ import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
 import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
-import br.acerola.manga.local.translator.toDownloadSources
-import br.acerola.manga.local.translator.toDto
-import br.acerola.manga.local.translator.toModel
-import br.acerola.manga.local.translator.toPageDto
+import br.acerola.manga.local.translator.persistence.toDownloadSourcesEntities
+import br.acerola.manga.local.translator.persistence.toEntity
+import br.acerola.manga.local.translator.ui.toViewDto
+import br.acerola.manga.local.translator.ui.toViewPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.service.metadata.MetadataExporter
@@ -116,15 +116,15 @@ class MangadexChapterEngine @Inject constructor(
                     }
 
                     chapterPairs.forEach { (archive, remote) ->
-                        val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = remoteManga.id)
+                        val chapterRemoteInfoEntity = remote.toEntity(mangaRemoteInfoFk = remoteManga.id)
                         val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
 
-                        val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
+                        val downloadSourceEntities = remote.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
                         chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
                     }
 
                     metadataExportService.exportFull(
-                        directoryId = mangaId, mangaInfo = remoteMangaRelations.toDto()
+                        directoryId = mangaId, mangaInfo = remoteMangaRelations.toViewDto()
                     )
 
                     AcerolaLogger.i(TAG, "MangaDex chapter sync completed for: ${localDirectory.name}", LogSource.REPOSITORY)
@@ -153,7 +153,7 @@ class MangadexChapterEngine @Inject constructor(
                     chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
                 }.orEmpty()
 
-                emit(value = chapters.toPageDto(sources = sources))
+                emit(value = chapters.toViewPageDto(sources = sources))
             }
         }.stateIn(
             started = SharingStarted.Lazily,
@@ -176,7 +176,7 @@ class MangadexChapterEngine @Inject constructor(
             chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
         }.orEmpty()
 
-        return chapters.toPageDto(
+        return chapters.toViewPageDto(
             sources = sources, pageSize = pageSize, total = realTotal, page = page
         )
     }
@@ -191,7 +191,7 @@ class MangadexChapterEngine @Inject constructor(
                     chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
                 } ?: emptyList()
 
-                emit(value = chapterList.toPageDto(sources = sources))
+                emit(value = chapterList.toViewPageDto(sources = sources))
             }
         }
     }

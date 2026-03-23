@@ -1,35 +1,13 @@
-package br.acerola.manga.local.translator
+package br.acerola.manga.local.translator.persistence
 
-import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.entity.archive.MangaDirectory
-
 import br.acerola.manga.util.FastFileMetadata
 
-fun MangaDirectory.toDto(): MangaDirectoryDto {
-    return MangaDirectoryDto(
-        id = id,
-        name = name,
-        path = path,
-        coverUri = cover?.toUri(),
-        bannerUri = banner?.toUri(),
-        lastModified = lastModified,
-        chapterTemplateFk = chapterTemplateFk,
-        externalSyncEnabled = externalSyncEnabled,
-    )
-}
-
-fun ChapterArchive.toDto(): ChapterFileDto {
-    return ChapterFileDto(
-        id = id, name = chapter, path = path, chapterSort = chapterSort
-    )
-}
-
-fun MangaDirectoryDto.toModel(): MangaDirectory {
+fun MangaDirectoryDto.toEntity(): MangaDirectory {
     return MangaDirectory(
         id = id,
         name = name,
@@ -42,21 +20,13 @@ fun MangaDirectoryDto.toModel(): MangaDirectory {
     )
 }
 
-fun ChapterFileDto.toModel(folderId: Long): ChapterArchive {
+fun ChapterFileDto.toEntity(folderId: Long): ChapterArchive {
     return ChapterArchive(
         chapter = name, path = path, chapterSort = chapterSort, folderPathFk = folderId
     )
 }
 
-fun List<ChapterArchive>.toPageDto(
-    pageSize: Int = this.size, total: Int = this.size, page: Int = 0
-): ChapterArchivePageDto {
-    return ChapterArchivePageDto(
-        items = this.map { it.toDto() }, pageSize = pageSize, total = total, page = page
-    )
-}
-
-fun DocumentFile.toMangaDirectoryModel(
+fun DocumentFile.toMangaDirectoryEntity(
     cover: DocumentFile?, banner: DocumentFile?, chapterTemplateFk: Long?, externalSyncEnabled: Boolean = true
 ): MangaDirectory {
     return MangaDirectory(
@@ -70,7 +40,7 @@ fun DocumentFile.toMangaDirectoryModel(
     )
 }
 
-fun FastFileMetadata.toChapterArchiveModel(
+fun FastFileMetadata.toChapterArchiveEntity(
     mangaId: Long, chapterSort: String, fileUri: String, fastHash: String
 ): ChapterArchive {
     return ChapterArchive(
@@ -83,7 +53,7 @@ fun FastFileMetadata.toChapterArchiveModel(
     )
 }
 
-fun FastFileMetadata.toMangaDirectoryModel(
+fun FastFileMetadata.toMangaDirectoryEntity(
     folderUri: String,
     coverPath: String?,
     bannerPath: String?,
@@ -99,7 +69,7 @@ fun FastFileMetadata.toMangaDirectoryModel(
     )
 }
 
-fun DocumentFile.toChapterArchiveModel(
+fun DocumentFile.toChapterArchiveEntity(
     mangaId: Long, chapterSort: String, checksum: String?, fastHash: String?
 ): ChapterArchive {
     return ChapterArchive(

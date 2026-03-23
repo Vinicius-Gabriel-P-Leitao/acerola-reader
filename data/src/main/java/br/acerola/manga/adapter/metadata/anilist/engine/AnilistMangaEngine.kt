@@ -18,8 +18,8 @@ import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.manga.local.entity.metadata.MangaMetadata
-import br.acerola.manga.local.translator.toAnilistSource
-import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.translator.persistence.toAnilistSourceEntity
+import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.LogSource
@@ -201,13 +201,13 @@ class AnilistMangaEngine @Inject constructor(
     ) {
         val dtoWithId = dto.copy(id = remoteInfoId)
 
-        anilistSourceDao.insert(dtoWithId.toAnilistSource(remoteInfoId))
+        anilistSourceDao.insert(dtoWithId.toAnilistSourceEntity(remoteInfoId))
 
         authorDao.deleteAuthorsByMangaRemoteInfoFk(remoteInfoId)
         genreDao.deleteGenresByMangaRemoteInfoFk(remoteInfoId)
 
-        dto.authors?.let { authorDao.insert(it.toModel(mangaId = remoteInfoId)) }
-        dto.genre.forEach { genreDao.insert(it.toModel(mangaId = remoteInfoId)) }
+        dto.authors?.let { authorDao.insert(it.toEntity(mangaId = remoteInfoId)) }
+        dto.genre.forEach { genreDao.insert(it.toEntity(mangaId = remoteInfoId)) }
 
         val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return
 

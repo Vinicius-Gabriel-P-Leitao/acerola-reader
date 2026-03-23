@@ -19,6 +19,7 @@ import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.history.ObserveMangaHistoryUseCase
+import br.acerola.manga.core.usecase.history.TrackReadingProgressUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.manga.util.normalizeChapter
@@ -44,6 +45,7 @@ import kotlin.math.max
 @HiltViewModel
 class MangaViewModel @Inject constructor(
     private val observeMangaHistoryUseCase: ObserveMangaHistoryUseCase,
+    private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
@@ -264,7 +266,7 @@ class MangaViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            observeMangaHistoryUseCase.toggleReadStatus(mangaId, chapterId, isRead)
+            trackReadingProgressUseCase.toggleReadStatus(mangaId, chapterId, isRead)
         }
     }
 

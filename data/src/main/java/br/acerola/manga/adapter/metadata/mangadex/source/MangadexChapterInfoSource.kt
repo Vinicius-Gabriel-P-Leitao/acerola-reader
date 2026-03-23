@@ -5,7 +5,7 @@ import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.config.network.safeApiCall
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
@@ -60,7 +60,7 @@ class MangadexChapterInfoSource @Inject constructor(
                     semaphore.withPermit {
                         val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
                         val source = sourceResult.getOrNull()
-                        item.toDto(source)
+                        item.toViewDto(source)
                     }
                 }
             }.awaitAll()

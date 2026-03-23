@@ -17,8 +17,8 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.entity.archive.MangaDirectory
-import br.acerola.manga.local.translator.toDto
-import br.acerola.manga.local.translator.toMangaDirectoryModel
+import br.acerola.manga.local.translator.persistence.toMangaDirectoryEntity
+import br.acerola.manga.local.translator.ui.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
@@ -110,7 +110,7 @@ class MangaDirectoryEngine @Inject constructor(
                         DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
                     }
 
-                    val updatedManga = folderDoc.toMangaDirectoryModel(
+                    val updatedManga = folderDoc.toMangaDirectoryEntity(
                         coverDoc, bannerDoc, chapterTemplateFk = detectedTemplate?.id
                     ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
 
@@ -307,7 +307,7 @@ class MangaDirectoryEngine @Inject constructor(
             coroutineScope {
                 folders.map { folder ->
                     async(context = Dispatchers.IO) {
-                        folder.toDto()
+                        folder.toViewDto()
                     }
                 }.awaitAll()
             }
@@ -415,7 +415,7 @@ class MangaDirectoryEngine @Inject constructor(
                 templateMatcher.detect(it, templates)
             }
 
-            folderMetadata.toMangaDirectoryModel(
+            folderMetadata.toMangaDirectoryEntity(
                 folderUri = folderUri.toString(),
                 coverPath = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
                 bannerPath = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },

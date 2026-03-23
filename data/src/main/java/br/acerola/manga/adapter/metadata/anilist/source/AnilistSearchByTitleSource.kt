@@ -4,7 +4,7 @@ import arrow.core.Either
 import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.remote.anilist.AnilistApollo
 import br.acerola.manga.remote.anilist.MediaSearchQuery
 import com.apollographql.apollo.ApolloClient
@@ -40,7 +40,7 @@ class AnilistSearchByTitleSource @Inject constructor(
                 .execute()
 
             response.data?.Page?.media.orEmpty()
-                .mapNotNull { it?.toDto() }
+                .mapNotNull { it?.toViewDto() }
         }.mapLeft { NetworkError.UnexpectedError(cause = it) }
     }
 

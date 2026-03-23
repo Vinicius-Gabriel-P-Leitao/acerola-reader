@@ -15,8 +15,8 @@ import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.entity.archive.ChapterTemplate
-import br.acerola.manga.local.translator.toChapterArchiveModel
-import br.acerola.manga.local.translator.toPageDto
+import br.acerola.manga.local.translator.persistence.toChapterArchiveEntity
+import br.acerola.manga.local.translator.ui.toViewPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
@@ -198,7 +198,7 @@ class ChapterArchiveEngine @Inject constructor(
                         }
 
                         chaptersToInsert.add(
-                            file.toChapterArchiveModel(
+                            file.toChapterArchiveEntity(
                                 mangaId = mangaId,
                                 fileUri = fileUri,
                                 chapterSort = chapterSort,
@@ -266,7 +266,7 @@ class ChapterArchiveEngine @Inject constructor(
     override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
             AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
-            list.toPageDto()
+            list.toViewPageDto()
         }.stateIn(
             started = SharingStarted.Lazily,
             scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
@@ -285,7 +285,7 @@ class ChapterArchiveEngine @Inject constructor(
             pageSize = pageSize, folderId = mangaId, offset = offset
         )
 
-        return items.toPageDto(pageSize = pageSize, total = realTotal, page = page)
+        return items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
     }
 
     override fun observeSpecificChapters(
@@ -294,7 +294,7 @@ class ChapterArchiveEngine @Inject constructor(
     ): Flow<ChapterArchivePageDto> {
         return chapterArchiveDao.getChaptersByMangaAndSorts(folderId = mangaId, chapters = chapters)
             .map { list ->
-                list.toPageDto()
+                list.toViewPageDto()
             }
     }
 

@@ -4,7 +4,7 @@ import arrow.core.Either
 import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.remote.anilist.AnilistApollo
 import br.acerola.manga.remote.anilist.MediaDetailsQuery
 import com.apollographql.apollo.ApolloClient
@@ -39,7 +39,7 @@ class AnilistMangaInfoSource @Inject constructor(
             val media = response.data?.Media
                 ?: return@catch emptyList<MangaMetadataDto>()
 
-            listOf(media.toDto())
+            listOf(media.toViewDto())
         }.mapLeft { NetworkError.UnexpectedError(cause = it) }
     }
 

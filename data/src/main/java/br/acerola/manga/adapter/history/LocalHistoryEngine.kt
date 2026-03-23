@@ -5,8 +5,8 @@ import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.manga.local.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.entity.history.ChapterRead
-import br.acerola.manga.local.translator.toDto
-import br.acerola.manga.local.translator.toEntity
+import br.acerola.manga.local.translator.persistence.toEntity
+import br.acerola.manga.local.translator.ui.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import kotlinx.coroutines.flow.Flow
@@ -20,15 +20,15 @@ class LocalHistoryEngine @Inject constructor(
 ) : HistoryGateway {
 
     override fun getHistoryByMangaId(mangaId: Long): Flow<ReadingHistoryDto?> {
-        return readingHistoryDao.getByMangaId(mangaId).map { it?.toDto() }
+        return readingHistoryDao.getByMangaId(mangaId).map { it?.toViewDto() }
     }
 
     override fun getAllRecentHistory(): Flow<List<ReadingHistoryDto>> {
-        return readingHistoryDao.getAllRecent().map { list -> list.map { it.toDto() } }
+        return readingHistoryDao.getAllRecent().map { list -> list.map { it.toViewDto() } }
     }
 
     override fun getAllRecentHistoryWithChapter(): Flow<List<ReadingHistoryWithChapterDto>> {
-        return readingHistoryDao.getAllRecentWithChapterName().map { list -> list.map { it.toDto() } }
+        return readingHistoryDao.getAllRecentWithChapterName().map { list -> list.map { it.toViewDto() } }
     }
 
     override fun getReadChaptersByMangaId(mangaId: Long): Flow<List<Long>> {
@@ -51,7 +51,7 @@ class LocalHistoryEngine @Inject constructor(
     }
 
     override suspend fun deleteHistory(mangaId: Long) {
-        AcerolaLogger.audit(TAG, "User deleting reading history for manga: $mangaId", LogSource.REPOSITORY)
+        AcerolaLogger.audit(TAG, "User deleting reading reading history for manga: $mangaId", LogSource.REPOSITORY)
         readingHistoryDao.deleteByMangaId(mangaId)
     }
 

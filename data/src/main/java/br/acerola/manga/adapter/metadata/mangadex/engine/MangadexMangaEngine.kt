@@ -19,9 +19,9 @@ import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.local.entity.archive.MangaDirectory
-import br.acerola.manga.local.translator.toDto
-import br.acerola.manga.local.translator.toMangadexSource
-import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.translator.persistence.toEntity
+import br.acerola.manga.local.translator.persistence.toMangadexSourceEntity
+import br.acerola.manga.local.translator.ui.toViewDto
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
@@ -158,7 +158,7 @@ class MangadexMangaEngine @Inject constructor(
             coroutineScope {
                 remoteInfoRelations.map { remoteInfo ->
                     async(context = Dispatchers.IO) {
-                        remoteInfo.toDto()
+                        remoteInfo.toViewDto()
                     }
                 }.awaitAll()
             }
@@ -197,7 +197,7 @@ class MangadexMangaEngine @Inject constructor(
                     AcerolaLogger.v(TAG, "Found best match for '$title' -> '${bestMatch.title}'", LogSource.REPOSITORY)
                     val existingRemote = mangaMetadataDao.getMangaByDirectoryId(current.id).firstOrNull()
 
-                    val mangaToSave = bestMatch.toModel().copy(
+                    val mangaToSave = bestMatch.toEntity().copy(
                         id = existingRemote?.id ?: 0L,
                         mangaDirectoryFk = current.id,
                         syncSource = MetadataSource.MANGADEX.source
@@ -211,14 +211,14 @@ class MangadexMangaEngine @Inject constructor(
                     }
 
                     if (mangaId != -1L) {
-                        mangadexSourceDao.insert(bestMatch.toMangadexSource(mangaId))
+                        mangadexSourceDao.insert(bestMatch.toMangadexSourceEntity(mangaId))
 
                         bestMatch.authors?.let {
-                            authorDao.insert(entity = it.toModel(mangaId = mangaId))
+                            authorDao.insert(entity = it.toEntity(mangaId = mangaId))
                         }
 
                         bestMatch.genre.forEach {
-                            genreDao.insert(entity = it.toModel(mangaId = mangaId))
+                            genreDao.insert(entity = it.toEntity(mangaId = mangaId))
                         }
 
                         bestMatch.cover?.let { dto ->

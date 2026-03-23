@@ -11,7 +11,7 @@ import arrow.core.left
 import br.acerola.manga.error.message.IoError
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.ui.toViewDto
 import br.acerola.manga.pattern.MediaFilePattern
 import br.acerola.manga.service.file.FileStorageHandler
 import br.acerola.manga.service.reader.ChapterSourceFactory
@@ -44,7 +44,7 @@ class CoverExtractor @Inject constructor(
         val folderDoc = DocumentFile.fromTreeUri(context, folderUri) ?: DocumentFile.fromSingleUri(context, folderUri)
             ?: return@withContext IoError.FileReadError(directory.path, Exception("Could not resolve folder document")).left()
 
-        val chapterDto = firstChapter.toDto()
+        val chapterDto = firstChapter.toViewDto()
 
         chapterSourceFactory.create(chapterDto).mapLeft { 
             IoError.FileReadError(chapterDto.path, Exception(it.toString())) 

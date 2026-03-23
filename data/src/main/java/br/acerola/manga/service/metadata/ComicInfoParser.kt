@@ -6,12 +6,11 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
-import br.acerola.manga.dto.metadata.manga.AuthorDto
-import br.acerola.manga.dto.metadata.manga.GenreDto
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.dto.metadata.manga.source.ComicInfoSourceDto
-import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
 import br.acerola.manga.error.message.ComicInfoError
+import br.acerola.manga.local.translator.infra.ParsedComicInfo
+import br.acerola.manga.local.translator.infra.toChapterDto
+import br.acerola.manga.local.translator.infra.toMangaDto
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
 import java.io.InputStream
@@ -34,12 +33,10 @@ class ComicInfoParser @Inject constructor() {
         var summary = ""
         var year: Int? = null
 
-        // Avança até a primeira tag
         var eventType = parser.eventType
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
                 if (parser.name == "ComicInfo") {
-                    // Entrou no nó raiz, processa os filhos
                     processComicInfo(parser) { tag, value ->
                         when (tag) {
                             "Title" -> title = value
@@ -58,10 +55,16 @@ class ComicInfoParser @Inject constructor() {
             eventType = parser.next()
         }
 
-        val finalTitle = series.ifBlank { title }
-        if (finalTitle.isBlank()) return ComicInfoError.UnrecognizedMetadata("Unknown").left()
+        if (series.isBlank() && title.isBlank()) return ComicInfoError.UnrecognizedMetadata("Unknown").left()
 
-        ParsedMangaInfo(title = finalTitle, writer = writer, genres = genres, summary = summary, year = year).toDto().right()
+        ParsedComicInfo(
+            title = title,
+            series = series,
+            writer = writer,
+            genres = genres,
+            summary = summary,
+            year = year
+        ).toMangaDto().right()
     }.mapLeft { ComicInfoError.InvalidXmlFormat(it) }.flatMap { it }
 
     fun parseChapterInfo(inputStream: InputStream): Either<ComicInfoError, ChapterMetadataDto> = Either.catch {
@@ -94,7 +97,12 @@ class ComicInfoParser @Inject constructor() {
             eventType = parser.next()
         }
 
-        ParsedChapterInfo(title = title, number = number, volume = volume, pageCount = pageCount).toDto().right()
+        ParsedComicInfo(
+            title = title,
+            number = number,
+            volume = volume,
+            pageCount = pageCount
+        ).toChapterDto().right()
     }.mapLeft { ComicInfoError.InvalidXmlFormat(it) }.flatMap { it }
 
     private fun processComicInfo(parser: XmlPullParser, onTagFound: (String, String) -> Unit) {
@@ -139,52 +147,8 @@ class ComicInfoParser @Inject constructor() {
         var result = ""
         if (parser.next() == XmlPullParser.TEXT) {
             result = parser.text
-            parser.nextTag() // Move para o END_TAG
+            parser.nextTag() 
         }
         return result
     }
 }
-
-
-
-// FIXME, isso aqui não faz sentido, tirar tem que estar em data/src/main/java/br/acerola/manga/local/translator
-private data class ParsedMangaInfo(
-    val title: String,
-    val writer: String,
-    val genres: String,
-    val summary: String,
-    val year: Int?
-)
-
-private fun ParsedMangaInfo.toDto(): MangaMetadataDto = MangaMetadataDto(
-    title = title,
-    description = summary,
-    year = year,
-    status = "Unknown",
-    authors = if (writer.isNotBlank()) AuthorDto(id = "local-author", name = writer, type = "author") else null,
-    genre = genres.split(",", ";").mapNotNull {
-        val g = it.trim()
-        if (g.isNotBlank()) GenreDto(id = "local-$g", name = g) else null
-    },
-    sources = MangaSourcesDto(
-        comicInfo = ComicInfoSourceDto(
-            localHash = "local-${title.hashCode()}"
-        )
-    )
-)
-
-private data class ParsedChapterInfo(
-    val title: String,
-    val number: String,
-    val volume: String,
-    val pageCount: Int
-)
-
-private fun ParsedChapterInfo.toDto(): ChapterMetadataDto = ChapterMetadataDto(
-    id = "local-$number",
-    chapter = number,
-    volume = volume,
-    title = title,
-    pages = pageCount,
-    mangadexVersion = 0
-)

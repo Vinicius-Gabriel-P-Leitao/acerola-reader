@@ -17,7 +17,7 @@ import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.manga.local.entity.metadata.source.ComicInfoSource as ComicInfoSourceEntity
-import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
@@ -73,7 +73,7 @@ class ComicInfoMangaEngine @Inject constructor(
 
                     val existingRemote = mangaMetadataDao.getMangaByDirectoryId(directory.id).firstOrNull()
 
-                    val mangaToSave = bestMatch.toModel().copy(
+                    val mangaToSave = bestMatch.toEntity().copy(
                         id = existingRemote?.id ?: 0L,
                         mangaDirectoryFk = directory.id,
                         syncSource = MetadataSource.COMIC_INFO.source
@@ -94,11 +94,11 @@ class ComicInfoMangaEngine @Inject constructor(
                         comicInfoSourceDao.insert(comicInfoSource)
 
                         bestMatch.authors?.let {
-                            authorDao.insert(entity = it.toModel(mangaId = remoteId))
+                            authorDao.insert(entity = it.toEntity(mangaId = remoteId))
                         }
 
                         bestMatch.genre.forEach {
-                            genreDao.insert(entity = it.toModel(mangaId = remoteId))
+                            genreDao.insert(entity = it.toEntity(mangaId = remoteId))
                         }
 
                         bestMatch.cover?.let { dto ->

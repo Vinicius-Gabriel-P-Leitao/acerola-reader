@@ -1,4 +1,4 @@
-package br.acerola.manga.local.translator
+package br.acerola.manga.local.translator.remote
 
 import android.content.Context
 import br.acerola.manga.data.R
@@ -13,7 +13,7 @@ import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
 
-fun MangaMangadexDto.toDto(context: Context): MangaMetadataDto {
+fun MangaMangadexDto.toViewDto(context: Context): MangaMetadataDto {
     val attributes = this.attributes
 
     val authors = if (this.authorName != null && this.authorId != null) {
@@ -40,7 +40,6 @@ fun MangaMangadexDto.toDto(context: Context): MangaMetadataDto {
         } else null
     }
 
-    // NOTE: Sigla para tradução de romanji é default ja-ro
     val romanji: String? = attributes.altTitlesList.flatMap { it.entries }.find { it.key == "ja-ro" }?.value
         ?: attributes.titleMap["ja-ro"]
 
@@ -68,7 +67,7 @@ fun MangaMangadexDto.toDto(context: Context): MangaMetadataDto {
     )
 }
 
-fun ChapterMangadexDto.toDto(source: ChapterSourceMangadexDto? = null): ChapterMetadataDto {
+fun ChapterMangadexDto.toViewDto(source: ChapterSourceMangadexDto? = null): ChapterMetadataDto {
     val attributes = this.attributes
     val scanlatorName = this.scanlationGroups.firstNotNullOfOrNull { it.attributes?.name }
 
