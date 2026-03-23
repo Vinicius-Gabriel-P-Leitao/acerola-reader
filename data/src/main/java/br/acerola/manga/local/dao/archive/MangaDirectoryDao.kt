@@ -10,11 +10,14 @@ import kotlinx.coroutines.flow.firstOrNull
 
 @Dao
 interface MangaDirectoryDao : BaseDao<MangaDirectory>{
-    @Query(value = "SELECT * FROM manga_directory ORDER BY id ASC")
+    @Query(value = "SELECT * FROM manga_directory WHERE hidden = 0 ORDER BY id ASC")
     fun getAllMangaDirectory(): Flow<List<MangaDirectory>>
 
     @Query(value = "SELECT * FROM manga_directory WHERE id = :mangaId")
     suspend fun getMangaDirectoryById(mangaId: Long): MangaDirectory?
+
+    @Query(value = "UPDATE manga_directory SET hidden = :hidden WHERE id = :mangaId")
+    suspend fun setHidden(mangaId: Long, hidden: Boolean)
 
     @Transaction
     suspend fun upsertMangaDirectoryTransaction(
