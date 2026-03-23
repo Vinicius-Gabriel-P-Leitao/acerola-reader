@@ -5,31 +5,28 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
-import br.acerola.manga.adapter.contract.ImageFetchPort
-import br.acerola.manga.adapter.contract.MangaPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.provider.ImageProvider
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
 import br.acerola.manga.config.preference.MangaDirectoryPreference
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.error.exception.IntegrityException
-import br.acerola.manga.error.exception.MangadexRequestException
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.manga.local.entity.archive.MangaDirectory
-import br.acerola.manga.local.entity.relation.RemoteInfoRelations
 import br.acerola.manga.local.translator.toDto
 import br.acerola.manga.local.translator.toMangadexSource
 import br.acerola.manga.local.translator.toModel
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.service.artwork.MangaSaveCoverService
-import br.acerola.manga.service.metadata.MangaMetadataExportService
+import br.acerola.manga.service.artwork.CoverSaver
+import br.acerola.manga.service.metadata.MetadataExporter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,31 +42,29 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
-import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.roundToInt
 
 @Singleton
 class MangadexMangaEngine @Inject constructor(
     private val genreDao: GenreDao,
     private val authorDao: AuthorDao,
     private val directoryDao: MangaDirectoryDao,
-    private val coverService: MangaSaveCoverService,
+    private val coverService: CoverSaver,
     private val mangadexSourceDao: MangadexSourceDao,
-    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
+    private val mangaMetadataDao: MangaMetadataDao,
     @param:ApplicationContext private val context: Context,
-    private val metadataExportService: MangaMetadataExportService,
-    @param:MangadexSource private val downloadCoverService: ImageFetchPort<String>
-) : MangaPort<MangaRemoteInfoDto> {
+    private val metadataExportService: MetadataExporter,
+    @param:MangadexSource private val downloadCoverService: ImageProvider<String>
+) : MangaGateway<MangaMetadataDto> {
 
     @Inject
     @MangadexSource
-    lateinit var mangadexSourceChapterInfoService: RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
 
     @Inject
     @MangadexSource
-    lateinit var mangadexSourceMangaInfoService: RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
+    lateinit var mangadexSourceMangaInfoService: MetadataProvider<MangaMetadataDto, String>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -109,7 +104,7 @@ class MangadexMangaEngine @Inject constructor(
         return withContext(context = Dispatchers.IO) {
             try {
                 val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                val existingRemote = mangaRemoteInfoDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
+                val existingRemote = mangaMetadataDao.getAllMangaRemoteInfo().firstOrNull() ?: emptyList()
                 val existingDirectoryIds = existingRemote.mapNotNull { it.mangaDirectoryFk }.toSet()
 
                 val foldersToSync = allFolders.filter { folder ->
@@ -156,8 +151,8 @@ class MangadexMangaEngine @Inject constructor(
         return refreshLibrary(baseUri)
     }
 
-    override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
-        return mangaRemoteInfoDao.getAllMangasWithRelations().map { remoteInfoRelations ->
+    override fun observeLibrary(): StateFlow<List<MangaMetadataDto>> {
+        return mangaMetadataDao.getAllMangasWithRelations().map { remoteInfoRelations ->
             AcerolaLogger.d(TAG, "Observed MangaDex metadata update: ${remoteInfoRelations.size} entries", LogSource.REPOSITORY)
 
             coroutineScope {
@@ -200,7 +195,7 @@ class MangadexMangaEngine @Inject constructor(
 
                 if (bestMatch != null) {
                     AcerolaLogger.v(TAG, "Found best match for '$title' -> '${bestMatch.title}'", LogSource.REPOSITORY)
-                    val existingRemote = mangaRemoteInfoDao.getMangaByDirectoryId(current.id).firstOrNull()
+                    val existingRemote = mangaMetadataDao.getMangaByDirectoryId(current.id).firstOrNull()
 
                     val mangaToSave = bestMatch.toModel().copy(
                         id = existingRemote?.id ?: 0L,
@@ -209,10 +204,10 @@ class MangadexMangaEngine @Inject constructor(
                     )
 
                     val mangaId = if (existingRemote != null) {
-                        mangaRemoteInfoDao.update(mangaToSave)
+                        mangaMetadataDao.update(mangaToSave)
                         existingRemote.id
                     } else {
-                        mangaRemoteInfoDao.insert(mangaToSave)
+                        mangaMetadataDao.insert(mangaToSave)
                     }
 
                     if (mangaId != -1L) {
@@ -227,7 +222,7 @@ class MangadexMangaEngine @Inject constructor(
                         }
 
                         bestMatch.cover?.let { dto ->
-                            downloadCoverService.searchCover(dto.url).onRight { bytes ->
+                            downloadCoverService.searchMedia(dto.url).onRight { bytes ->
                                 coverService.processCover(
                                     rootUri = rootUri,
                                     folderId = current.id,

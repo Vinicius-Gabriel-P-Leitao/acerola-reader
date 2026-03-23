@@ -2,7 +2,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterAttributes
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
@@ -22,7 +22,7 @@ import java.io.IOException
 class MangadexSourceChapterInfoRepositoryTest {
 
     @MockK
-    lateinit var api: MangadexChapterInfoApi
+    lateinit var api: MangadexChapterMetadataClient
 
     private lateinit var repository: MangadexChapterInfoSource
 

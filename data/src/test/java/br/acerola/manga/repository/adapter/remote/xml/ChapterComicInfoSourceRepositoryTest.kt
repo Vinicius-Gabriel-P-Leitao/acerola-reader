@@ -2,11 +2,11 @@ package br.acerola.manga.repository.adapter.remote.xml
 
 import android.content.Context
 import arrow.core.Either
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.service.metadata.ComicInfoParserService
+import br.acerola.manga.service.metadata.ComicInfoParser
 import br.acerola.manga.service.reader.ChapterSourceFactory
-import br.acerola.manga.service.reader.port.ChapterSourceService
+import br.acerola.manga.service.reader.contract.PageSource
 import br.acerola.manga.adapter.metadata.comicinfo.source.ChapterComicInfoSource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -23,7 +23,7 @@ import java.io.InputStream
 class ChapterComicInfoSourceRepositoryTest {
 
     @MockK lateinit var context: Context
-    @MockK lateinit var parser: ComicInfoParserService
+    @MockK lateinit var parser: ComicInfoParser
     @MockK lateinit var chapterSourceFactory: ChapterSourceFactory
 
     private lateinit var repository: ChapterComicInfoSource
@@ -37,9 +37,9 @@ class ChapterComicInfoSourceRepositoryTest {
     @Test
     fun searchInfo_deve_extrair_ComicInfo_de_dentro_do_arquivo_do_capitulo() = runTest {
         val chapterUri = "content://manga/ch1.cbz"
-        val sourceService = mockk<ChapterSourceService>()
+        val sourceService = mockk<PageSource>()
         val inputStream = mockk<InputStream>(relaxed = true)
-        val expectedInfo = ChapterRemoteInfoDto(id = "1", chapter = "1", mangadexVersion = 0)
+        val expectedInfo = ChapterMetadataDto(id = "1", chapter = "1", mangadexVersion = 0)
 
         coEvery { chapterSourceFactory.create(any()) } returns Either.Right(sourceService)
         coEvery { sourceService.getFileStream("ComicInfo.xml") } returns Either.Right(inputStream)
@@ -57,7 +57,7 @@ class ChapterComicInfoSourceRepositoryTest {
 
     @Test
     fun searchInfo_deve_retornar_NotFound_se_arquivo_nao_contiver_ComicInfo() = runTest {
-        val sourceService = mockk<ChapterSourceService>()
+        val sourceService = mockk<PageSource>()
         coEvery { chapterSourceFactory.create(any()) } returns Either.Right(sourceService)
         coEvery { sourceService.getFileStream("ComicInfo.xml") } returns Either.Left(mockk())
         every { sourceService.close() } returns Unit

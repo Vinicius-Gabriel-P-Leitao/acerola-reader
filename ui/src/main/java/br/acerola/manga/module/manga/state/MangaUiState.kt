@@ -7,7 +7,7 @@ import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.metadata.category.CategoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.ui.R
 
 enum class MainTab(@param:StringRes val titleRes: Int) {
@@ -32,6 +32,6 @@ data class MangaUiState(
 
 data class MangaConfigUiState(
     val directory: MangaDirectoryDto,
-    val remoteInfo: MangaRemoteInfoDto?,
+    val remoteInfo: MangaMetadataDto?,
     val selectedChapterPerPage: ChapterPageSizeType?
 )

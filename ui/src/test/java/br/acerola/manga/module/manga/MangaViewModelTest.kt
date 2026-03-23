@@ -5,10 +5,10 @@ import br.acerola.manga.MainDispatcherRule
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.HistoryPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.HistoryGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.history.ObserveMangaHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
@@ -27,16 +27,16 @@ class MangaViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val historyPort = mockk<HistoryPort>(relaxed = true)
+    private val historyGateway = mockk<HistoryGateway>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
-    private val mangadexRepo = mockk<MangaPort<MangaRemoteInfoDto>>(relaxed = true)
-    private val directoryRepo = mockk<MangaPort<MangaDirectoryDto>>(relaxed = true)
-    private val directoryChapterRepo = mockk<ChapterPort<ChapterArchivePageDto>>(relaxed = true)
-    private val mangadexChapterRepo = mockk<ChapterPort<ChapterRemoteInfoPageDto>>(relaxed = true)
+    private val mangadexRepo = mockk<MangaGateway<MangaMetadataDto>>(relaxed = true)
+    private val directoryRepo = mockk<MangaGateway<MangaDirectoryDto>>(relaxed = true)
+    private val directoryChapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
+    private val mangadexChapterRepo = mockk<ChapterGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
     private lateinit var observeMangaHistoryUseCase: ObserveMangaHistoryUseCase
-    private lateinit var mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>
+    private lateinit var mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>
     private lateinit var directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>
     private lateinit var mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
@@ -45,8 +45,8 @@ class MangaViewModelTest {
 
     @Before
     fun setup() {
-        every { historyPort.getHistoryByMangaId(any()) } returns MutableStateFlow(null)
-        every { historyPort.getReadChaptersByMangaId(any()) } returns MutableStateFlow(emptyList())
+        every { historyGateway.getHistoryByMangaId(any()) } returns MutableStateFlow(null)
+        every { historyGateway.getReadChaptersByMangaId(any()) } returns MutableStateFlow(emptyList())
         every { mangadexRepo.observeLibrary() } returns MutableStateFlow(emptyList())
         every { directoryRepo.observeLibrary() } returns MutableStateFlow(emptyList())
         
@@ -60,7 +60,7 @@ class MangaViewModelTest {
         every { mangadexChapterRepo.isIndexing } returns MutableStateFlow(false)
         every { mangadexChapterRepo.progress } returns MutableStateFlow(-1)
 
-        observeMangaHistoryUseCase = ObserveMangaHistoryUseCase(historyPort)
+        observeMangaHistoryUseCase = ObserveMangaHistoryUseCase(historyGateway)
         mangadexObserve = ObserveLibraryUseCase(mangadexRepo)
         directoryObserve = ObserveLibraryUseCase(directoryRepo)
         directoryGetChapters = ObserveChaptersUseCase(directoryChapterRepo)

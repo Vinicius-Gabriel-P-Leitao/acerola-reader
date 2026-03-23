@@ -3,8 +3,8 @@ package br.acerola.manga.service.reader
 import arrow.core.Either
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.error.message.ChapterError
-import br.acerola.manga.service.reader.extract.CbrChapterSourceService
-import br.acerola.manga.service.reader.extract.CbzChapterSourceService
+import br.acerola.manga.service.reader.extract.CbrPageResolver
+import br.acerola.manga.service.reader.extract.CbzPageResolver
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertTrue
@@ -14,12 +14,12 @@ import javax.inject.Provider
 
 class ChapterSourceFactoryTest {
 
-    private lateinit var cbzProvider: Provider<CbzChapterSourceService>
-    private lateinit var cbrProvider: Provider<CbrChapterSourceService>
+    private lateinit var cbzProvider: Provider<CbzPageResolver>
+    private lateinit var cbrProvider: Provider<CbrPageResolver>
     private lateinit var factory: ChapterSourceFactory
 
-    private val cbzService = mockk<CbzChapterSourceService>()
-    private val cbrService = mockk<CbrChapterSourceService>()
+    private val cbzService = mockk<CbzPageResolver>()
+    private val cbrService = mockk<CbrPageResolver>()
 
     @Before
     fun setUp() {
@@ -36,7 +36,7 @@ class ChapterSourceFactoryTest {
         val result = factory.create(chapter)
 
         assertTrue(result.isRight())
-        result.onRight { assertTrue(it is CbzChapterSourceService) }
+        result.onRight { assertTrue(it is CbzPageResolver) }
     }
 
     @Test
@@ -47,7 +47,7 @@ class ChapterSourceFactoryTest {
         val result = factory.create(chapter)
 
         assertTrue(result.isRight())
-        result.onRight { assertTrue(it is CbrChapterSourceService) }
+        result.onRight { assertTrue(it is CbrPageResolver) }
     }
 
     @Test

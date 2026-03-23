@@ -1,7 +1,7 @@
 package br.acerola.manga.core.usecase
 
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.adapter.metadata.anilist.AnilistEngine
 import br.acerola.manga.core.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
@@ -22,16 +22,16 @@ object AnilistCaseModule {
     @Provides
     @AnilistCase
     fun provideSyncLibraryUseCase(
-        @AnilistEngine repository: MangaPort<MangaRemoteInfoDto>
-    ): SyncLibraryUseCase<MangaRemoteInfoDto> {
+        @AnilistEngine repository: MangaGateway<MangaMetadataDto>
+    ): SyncLibraryUseCase<MangaMetadataDto> {
         return SyncLibraryUseCase(repository)
     }
 
     @Provides
     @AnilistCase
     fun provideObserveLibraryUseCase(
-        @AnilistEngine mangaOps: MangaPort<MangaRemoteInfoDto>
-    ): ObserveLibraryUseCase<MangaRemoteInfoDto> {
+        @AnilistEngine mangaOps: MangaGateway<MangaMetadataDto>
+    ): ObserveLibraryUseCase<MangaMetadataDto> {
         return ObserveLibraryUseCase(
             mangaRepository = mangaOps
         )

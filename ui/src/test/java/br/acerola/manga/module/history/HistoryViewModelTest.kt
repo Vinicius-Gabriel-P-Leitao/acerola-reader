@@ -3,9 +3,9 @@ package br.acerola.manga.module.history
 import app.cash.turbine.test
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryWithChapterDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.main.history.HistoryViewModel
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
@@ -31,8 +31,8 @@ class HistoryViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var observeHistoryUseCase: ObserveHistoryUseCase
-    private lateinit var directoryRepo: MangaPort<MangaDirectoryDto>
-    private lateinit var mangadexRepo: MangaPort<MangaRemoteInfoDto>
+    private lateinit var directoryRepo: MangaGateway<MangaDirectoryDto>
+    private lateinit var mangadexRepo: MangaGateway<MangaMetadataDto>
     private lateinit var manageCategoriesUseCase: ManageCategoriesUseCase
     private lateinit var getChapterCountUseCase: GetChapterCountUseCase
 

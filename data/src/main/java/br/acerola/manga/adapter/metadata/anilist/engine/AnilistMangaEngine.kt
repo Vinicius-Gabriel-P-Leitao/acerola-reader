@@ -5,26 +5,26 @@ import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistFetchBannerSource
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistFetchCoverSource
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistSearchByTitleSource
 import br.acerola.manga.config.preference.MangaDirectoryPreference
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.AnilistSourceDao
-import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
+import br.acerola.manga.local.entity.metadata.MangaMetadata
 import br.acerola.manga.local.translator.toAnilistSource
 import br.acerola.manga.local.translator.toModel
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.service.artwork.MangaSaveBannerService
-import br.acerola.manga.service.artwork.MangaSaveCoverService
+import br.acerola.manga.service.artwork.BannerSaver
+import br.acerola.manga.service.artwork.CoverSaver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,15 +40,15 @@ class AnilistMangaEngine @Inject constructor(
     private val genreDao: GenreDao,
     private val authorDao: AuthorDao,
     private val directoryDao: MangaDirectoryDao,
-    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
+    private val mangaMetadataDao: MangaMetadataDao,
     private val anilistSourceDao: AnilistSourceDao,
-    private val coverService: MangaSaveCoverService,
+    private val coverService: CoverSaver,
     private val coverFetcher: AnilistFetchCoverSource,
-    private val bannerService: MangaSaveBannerService,
+    private val bannerService: BannerSaver,
     private val bannerFetcher: AnilistFetchBannerSource,
     private val anilistSearchByTitleSource: AnilistSearchByTitleSource,
     @param:ApplicationContext private val context: Context,
-) : MangaPort<MangaRemoteInfoDto> {
+) : MangaGateway<MangaMetadataDto> {
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -115,8 +115,8 @@ class AnilistMangaEngine @Inject constructor(
         return name.filter { it.isLetterOrDigit() }.lowercase()
     }
 
-    override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
-        return MutableStateFlow(emptyList<MangaRemoteInfoDto>()).asStateFlow()
+    override fun observeLibrary(): StateFlow<List<MangaMetadataDto>> {
+        return MutableStateFlow(emptyList<MangaMetadataDto>()).asStateFlow()
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
@@ -146,7 +146,7 @@ class AnilistMangaEngine @Inject constructor(
                     .filter { it.externalSyncEnabled }
                 val toSync = directories.filter { directory ->
                     val remoteInfo =
-                        mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).firstOrNull() ?: return@filter true
+                        mangaMetadataDao.getMangaByDirectoryId(directory.id).firstOrNull() ?: return@filter true
 
                     val anilistSource = anilistSourceDao.getByMangaRemoteInfoFk(remoteInfo.id)
                     anilistSource == null
@@ -163,9 +163,9 @@ class AnilistMangaEngine @Inject constructor(
 
     private suspend fun getOrCreateRemoteInfo(
         directoryId: Long,
-        dto: MangaRemoteInfoDto
+        dto: MangaMetadataDto
     ): Long {
-        val existing = mangaRemoteInfoDao.getMangaByDirectoryId(directoryId).firstOrNull()
+        val existing = mangaMetadataDao.getMangaByDirectoryId(directoryId).firstOrNull()
 
         val remoteInfo = existing?.copy(
             title = dto.title ?: existing.title,
@@ -175,7 +175,7 @@ class AnilistMangaEngine @Inject constructor(
             publication = dto.year ?: existing.publication,
             syncSource = MetadataSource.ANILIST.source
         )
-            ?: MangaRemoteInfo(
+            ?: MangaMetadata(
                 title = dto.title ?: "",
                 description = dto.description ?: "",
                 romanji = dto.romanji ?: "",
@@ -186,17 +186,17 @@ class AnilistMangaEngine @Inject constructor(
             )
 
         return if (existing != null) {
-            mangaRemoteInfoDao.update(remoteInfo)
+            mangaMetadataDao.update(remoteInfo)
             existing.id
         } else {
-            mangaRemoteInfoDao.insert(remoteInfo)
+            mangaMetadataDao.insert(remoteInfo)
         }
     }
 
     private suspend fun persistAnilistData(
         mangaId: Long,
         remoteInfoId: Long,
-        dto: MangaRemoteInfoDto,
+        dto: MangaMetadataDto,
         baseUri: Uri?
     ) {
         val dtoWithId = dto.copy(id = remoteInfoId)
@@ -218,7 +218,7 @@ class AnilistMangaEngine @Inject constructor(
         val rootUri = rootPath.toUri()
 
         dto.sources?.anilist?.coverImage?.let { url ->
-            coverFetcher.searchCover(url).onRight { bytes ->
+            coverFetcher.searchMedia(url).onRight { bytes ->
                 coverService.processCover(
                     rootUri = rootUri,
                     folderId = directory.id,
@@ -231,7 +231,7 @@ class AnilistMangaEngine @Inject constructor(
         }
 
         dto.sources?.anilist?.bannerImage?.let { url ->
-            bannerFetcher.searchCover(url).onRight { bytes ->
+            bannerFetcher.searchMedia(url).onRight { bytes ->
                 bannerService.processBanner(
                     rootUri = rootUri,
                     folderId = directory.id,

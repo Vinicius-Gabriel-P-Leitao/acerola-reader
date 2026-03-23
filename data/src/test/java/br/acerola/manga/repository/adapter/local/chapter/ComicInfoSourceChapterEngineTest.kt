@@ -1,13 +1,13 @@
 package br.acerola.manga.repository.adapter.local.chapter
 
 import br.acerola.manga.adapter.metadata.comicinfo.engine.ComicInfoChapterEngine
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
-import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.coEvery
@@ -23,10 +23,10 @@ class ComicInfoSourceChapterEngineTest {
 
     @MockK lateinit var directoryDao: MangaDirectoryDao
     @MockK lateinit var chapterArchiveDao: ChapterArchiveDao
-    @MockK lateinit var mangaRemoteInfoDao: MangaRemoteInfoDao
-    @MockK lateinit var chapterRemoteInfoDao: ChapterRemoteInfoDao
+    @MockK lateinit var mangaMetadataDao: MangaMetadataDao
+    @MockK lateinit var chapterMetadataDao: ChapterMetadataDao
     @MockK lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
-    @MockK lateinit var comicInfoSourceService: RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    @MockK lateinit var comicInfoSourceService: MetadataProvider<ChapterMetadataDto, String>
 
     private lateinit var repository: ComicInfoChapterEngine
 
@@ -34,8 +34,8 @@ class ComicInfoSourceChapterEngineTest {
     fun setUp() {
         MockKAnnotations.init(this)
         repository = ComicInfoChapterEngine(
-            directoryDao, chapterArchiveDao, mangaRemoteInfoDao,
-            chapterRemoteInfoDao, chapterDownloadSourceDao
+            directoryDao, chapterArchiveDao, mangaMetadataDao,
+            chapterMetadataDao, chapterDownloadSourceDao
         )
         repository.comicInfoSourceService = comicInfoSourceService
     }
@@ -43,7 +43,7 @@ class ComicInfoSourceChapterEngineTest {
     @Test
     fun `refreshMangaChapters deve retornar erro se nao houver registro remoto`() = runTest {
         coEvery { directoryDao.getMangaDirectoryById(any()) } returns mockk(relaxed = true)
-        every { mangaRemoteInfoDao.getMangaByDirectoryId(any()) } returns flowOf(null)
+        every { mangaMetadataDao.getMangaByDirectoryId(any()) } returns flowOf(null)
 
         val result = repository.refreshMangaChapters(1L)
 

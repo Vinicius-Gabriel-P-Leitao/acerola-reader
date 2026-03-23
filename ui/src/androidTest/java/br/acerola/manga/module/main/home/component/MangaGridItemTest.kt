@@ -5,9 +5,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.main.Main
-import br.acerola.manga.module.main.home.component.MangaGridItem
 import org.junit.Rule
 import org.junit.Test
 
@@ -28,7 +27,7 @@ class MangaGridItemTest {
                 lastModified = 0L,
                 chapterTemplateFk = null
             ),
-            remoteInfo = MangaRemoteInfoDto(
+            remoteInfo = MangaMetadataDto(
                 title = "Título do Manga", description = "", status = ""
             )
         )

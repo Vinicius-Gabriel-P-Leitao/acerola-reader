@@ -11,7 +11,7 @@ import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import android.provider.DocumentsContract
 import br.acerola.manga.config.preference.MangaDirectoryPreference
-import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
 import br.acerola.manga.adapter.library.MangaDirectoryEngine
 import br.acerola.manga.util.ContentQueryHelper
 import io.mockk.MockKAnnotations
@@ -39,17 +39,17 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
-import br.acerola.manga.service.template.ChapterTemplateMatcher
-import br.acerola.manga.service.template.ChapterTemplateService
+import br.acerola.manga.service.template.TemplateMatcher
+import br.acerola.manga.service.template.ChapterNameProcessor
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MangaDirectoryEngineTest {
 
     @MockK(relaxed = true) lateinit var context: Context
     @MockK lateinit var directoryDao: MangaDirectoryDao
-    @MockK lateinit var mangaDirectoryOps: ChapterPort<ChapterArchivePageDto>
-    @MockK lateinit var templateService: ChapterTemplateService
-    @MockK lateinit var templateMatcher: ChapterTemplateMatcher
+    @MockK lateinit var mangaDirectoryOps: ChapterGateway<ChapterArchivePageDto>
+    @MockK lateinit var templateService: ChapterNameProcessor
+    @MockK lateinit var templateMatcher: TemplateMatcher
 
     private lateinit var repository: MangaDirectoryEngine
     private val testDispatcher = StandardTestDispatcher()

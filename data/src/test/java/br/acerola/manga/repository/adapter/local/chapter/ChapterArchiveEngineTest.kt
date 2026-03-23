@@ -39,8 +39,8 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
-import br.acerola.manga.service.compact.DefaultPdfToCbzConverterService
-import br.acerola.manga.service.template.ChapterTemplateService
+import br.acerola.manga.service.compact.PdfToCbzConverter
+import br.acerola.manga.service.template.ChapterNameProcessor
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChapterArchiveEngineTest {
@@ -52,10 +52,10 @@ class ChapterArchiveEngineTest {
     lateinit var chapterArchiveDao: ChapterArchiveDao
 
     @MockK
-    lateinit var templateService: ChapterTemplateService
+    lateinit var templateService: ChapterNameProcessor
 
     @MockK
-    lateinit var pdfToCbzConverterService: DefaultPdfToCbzConverterService
+    lateinit var pdfToCbzConverterService: PdfToCbzConverter
 
     @MockK
     lateinit var context: Context

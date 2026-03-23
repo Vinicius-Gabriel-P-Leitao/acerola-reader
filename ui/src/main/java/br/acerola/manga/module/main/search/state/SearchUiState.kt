@@ -1,10 +1,10 @@
 package br.acerola.manga.module.main.search.state
 
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 
 data class SearchUiState(
     val query: String = "",
     val isLoading: Boolean = false,
-    val searchResults: List<MangaRemoteInfoDto> = emptyList(),
+    val searchResults: List<MangaMetadataDto> = emptyList(),
     val downloadQueue: List<DownloadProgress> = emptyList(),
 )

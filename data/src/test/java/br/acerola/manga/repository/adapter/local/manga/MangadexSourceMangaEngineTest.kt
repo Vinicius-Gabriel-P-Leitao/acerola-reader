@@ -6,20 +6,20 @@ import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.right
 import br.acerola.manga.config.preference.MangaDirectoryPreference
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexMangaEngine
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.MangadexSourceDao
-import br.acerola.manga.adapter.contract.ImageFetchPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
-import br.acerola.manga.service.artwork.MangaSaveCoverService
-import br.acerola.manga.service.metadata.MangaMetadataExportService
+import br.acerola.manga.adapter.contract.provider.ImageProvider
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
+import br.acerola.manga.service.artwork.CoverSaver
+import br.acerola.manga.service.metadata.MetadataExporter
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -49,13 +49,13 @@ class MangadexSourceMangaEngineTest {
     @MockK lateinit var genreDao: GenreDao
     @MockK lateinit var authorDao: AuthorDao
     @MockK lateinit var directoryDao: MangaDirectoryDao
-    @MockK lateinit var coverService: MangaSaveCoverService
-    @MockK lateinit var mangaRemoteInfoDao: MangaRemoteInfoDao
+    @MockK lateinit var coverService: CoverSaver
+    @MockK lateinit var mangaMetadataDao: MangaMetadataDao
     @MockK lateinit var mangadexSourceDao: MangadexSourceDao
-    @MockK lateinit var metadataExportService: MangaMetadataExportService
-    @MockK lateinit var downloadCoverService: ImageFetchPort<String>
-    @MockK lateinit var mangadexMangaInfoService: RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
-    @MockK lateinit var mangadexChapterInfoService: RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    @MockK lateinit var metadataExportService: MetadataExporter
+    @MockK lateinit var downloadCoverService: ImageProvider<String>
+    @MockK lateinit var mangadexMangaInfoService: MetadataProvider<MangaMetadataDto, String>
+    @MockK lateinit var mangadexChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
 
     private lateinit var repository: MangadexMangaEngine
     private val testDispatcher = StandardTestDispatcher()
@@ -67,7 +67,7 @@ class MangadexSourceMangaEngineTest {
 
         repository = MangadexMangaEngine(
             genreDao, authorDao, directoryDao, coverService, mangadexSourceDao,
-            mangaRemoteInfoDao, context, metadataExportService, downloadCoverService
+            mangaMetadataDao, context, metadataExportService, downloadCoverService
         )
         repository.mangadexSourceMangaInfoService = mangadexMangaInfoService
         repository.mangadexSourceChapterInfoService = mangadexChapterInfoService
@@ -95,13 +95,13 @@ class MangadexSourceMangaEngineTest {
 
         coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns dir
         coEvery { mangadexMangaInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) } returns Either.Right(fetchResult)
-        every { mangaRemoteInfoDao.getMangaByDirectoryId(mangaId) } returns flowOf(null)
+        every { mangaMetadataDao.getMangaByDirectoryId(mangaId) } returns flowOf(null)
 
-        coEvery { mangaRemoteInfoDao.insert(any()) } returns 2L
+        coEvery { mangaMetadataDao.insert(any()) } returns 2L
         coEvery { mangadexSourceDao.insert(any()) } returns 1L
         coEvery { authorDao.insert(any()) } returns 1L
         coEvery { genreDao.insert(any()) } returns 1L
-        coEvery { downloadCoverService.searchCover(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
+        coEvery { downloadCoverService.searchMedia(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
         coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L.right()
         coEvery { metadataExportService.exportMangaMetadata(any(), any()) } returns Either.Right(Unit)
 

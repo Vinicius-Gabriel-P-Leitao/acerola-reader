@@ -12,6 +12,6 @@ interface BannerDao : BaseDao<Banner> {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     override suspend fun insert(entity: Banner): Long
 
-    @Query(value = "SELECT * FROM banner WHERE file_name = :fileName AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT * FROM banner WHERE file_name = :fileName AND manga_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
     suspend fun getBannerByFileNameAndFk(fileName: String, mangaRemoteInfoFk: Long): Banner?
 }

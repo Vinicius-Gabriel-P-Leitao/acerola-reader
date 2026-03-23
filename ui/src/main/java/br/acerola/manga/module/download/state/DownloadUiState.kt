@@ -1,14 +1,14 @@
 package br.acerola.manga.module.download.state
 
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 
 import br.acerola.manga.module.main.search.state.DownloadProgress
 
 data class DownloadUiState(
-    val manga: MangaRemoteInfoDto? = null,
-    val chapters: List<ChapterRemoteInfoDto> = emptyList(),
-    val allSeenChapters: Map<String, ChapterRemoteInfoDto> = emptyMap(),
+    val manga: MangaMetadataDto? = null,
+    val chapters: List<ChapterMetadataDto> = emptyList(),
+    val allSeenChapters: Map<String, ChapterMetadataDto> = emptyMap(),
     val totalChapters: Int = 0,
     val currentPage: Int = 0,
     val chaptersPerPage: Int = 100,

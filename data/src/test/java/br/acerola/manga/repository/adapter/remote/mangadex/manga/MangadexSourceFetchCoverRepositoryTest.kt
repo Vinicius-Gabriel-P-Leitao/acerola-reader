@@ -1,7 +1,7 @@
 package br.acerola.manga.repository.adapter.remote.mangadex.manga
 
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
+import br.acerola.manga.remote.mangadex.api.MangadexMangaDownloadClient
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexFetchCoverSource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -18,7 +18,7 @@ import java.io.IOException
 
 class MangadexSourceFetchCoverRepositoryTest {
 
-    @MockK lateinit var api: MangadexDownloadApi
+    @MockK lateinit var api: MangadexMangaDownloadClient
     private lateinit var repository: MangadexFetchCoverSource
 
     @Before
@@ -37,7 +37,7 @@ class MangadexSourceFetchCoverRepositoryTest {
         
         coEvery { api.downloadFile(url) } returns responseBody
 
-        val result = repository.searchCover(url)
+        val result = repository.searchMedia(url)
 
         assertTrue(result.isRight())
         result.onRight { 
@@ -49,7 +49,7 @@ class MangadexSourceFetchCoverRepositoryTest {
     fun `searchCover deve retornar ConnectionFailed em erro de rede`() = runTest {
         coEvery { api.downloadFile(any()) } throws IOException("Net error")
 
-        val result = repository.searchCover("url")
+        val result = repository.searchMedia("url")
 
         assertTrue(result.isLeft())
         result.onLeft { assertTrue(it is NetworkError.ConnectionFailed) }

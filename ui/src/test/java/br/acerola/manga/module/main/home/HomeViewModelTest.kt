@@ -5,9 +5,9 @@ import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.manga.MainDispatcherRule
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.contract.HistoryPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
+import br.acerola.manga.adapter.contract.gateway.HistoryGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
@@ -33,15 +33,15 @@ class HomeViewModelTest {
     val coroutineRule = MainDispatcherRule()
 
     private val workManager = mockk<WorkManager>(relaxed = true)
-    private val historyPort = mockk<HistoryPort>(relaxed = true)
+    private val historyGateway = mockk<HistoryGateway>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
-    private val mangadexRepo = mockk<MangaPort<MangaRemoteInfoDto>>(relaxed = true)
-    private val directoryRepo = mockk<MangaPort<MangaDirectoryDto>>(relaxed = true)
+    private val mangadexRepo = mockk<MangaGateway<MangaMetadataDto>>(relaxed = true)
+    private val directoryRepo = mockk<MangaGateway<MangaDirectoryDto>>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
     private val getChapterCountUseCase = mockk<GetChapterCountUseCase>(relaxed = true)
 
     private lateinit var observeHistoryUseCase: ObserveHistoryUseCase
-    private lateinit var mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>
+    private lateinit var mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>
     
     private lateinit var viewModel: HomeViewModel
@@ -51,13 +51,13 @@ class HomeViewModelTest {
         mockkObject(AcerolaLogger)
         every { AcerolaLogger.d(any(), any(), any()) } returns Unit
 
-        every { historyPort.getAllRecentHistory() } returns MutableStateFlow(emptyList())
+        every { historyGateway.getAllRecentHistory() } returns MutableStateFlow(emptyList())
         every { mangadexRepo.observeLibrary() } returns MutableStateFlow(emptyList())
         every { directoryRepo.observeLibrary() } returns MutableStateFlow(emptyList())
         every { getChapterCountUseCase() } returns MutableStateFlow(emptyMap())
         every { manageCategoriesUseCase.getAllMangaCategories() } returns MutableStateFlow(emptyMap())
 
-        observeHistoryUseCase = ObserveHistoryUseCase(historyPort)
+        observeHistoryUseCase = ObserveHistoryUseCase(historyGateway)
         mangadexObserve = ObserveLibraryUseCase(mangadexRepo)
         directoryObserve = ObserveLibraryUseCase(directoryRepo)
 

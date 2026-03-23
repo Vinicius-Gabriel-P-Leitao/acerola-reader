@@ -1,14 +1,14 @@
 package br.acerola.manga.core.usecase.history
 
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.adapter.contract.HistoryPort
+import br.acerola.manga.adapter.contract.gateway.HistoryGateway
 import br.acerola.manga.adapter.history.LocalHistoryEngine
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TrackReadingProgressUseCase @Inject constructor(
-    @param:LocalHistoryEngine private val historyRepository: HistoryPort
+    @param:LocalHistoryEngine private val historyRepository: HistoryGateway
 ) {
     suspend fun saveProgress(mangaId: Long, chapterId: Long, page: Int, markAsRead: Boolean) {
         historyRepository.upsertHistory(

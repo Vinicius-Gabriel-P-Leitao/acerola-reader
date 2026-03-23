@@ -9,12 +9,12 @@ import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.ChapterMetadataViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.config.preference.ChapterPageSizeType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.UserMessage
 import io.mockk.every
 import io.mockk.mockk
@@ -33,8 +33,8 @@ class MangaScreenTest {
     private val mangaViewModel = mockk<MangaViewModel>(relaxed = true)
     private val chapterArchiveVM = mockk<ChapterArchiveViewModel>(relaxed = true)
     private val mangaDirVM = mockk<MangaDirectoryViewModel>(relaxed = true)
-    private val mangaRemoteVM = mockk<MangaRemoteInfoViewModel>(relaxed = true)
-    private val chapterRemoteVM = mockk<ChapterRemoteInfoViewModel>(relaxed = true)
+    private val mangaRemoteVM = mockk<MangaMetadataViewModel>(relaxed = true)
+    private val chapterRemoteVM = mockk<ChapterMetadataViewModel>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -65,7 +65,7 @@ class MangaScreenTest {
     fun `MangaScreen_deve_exibir_o_titulo_do_manga`() {
         val manga = MangaDto(
             directory = MangaDirectoryDto(1L, "Test", "path", null, null, 0L, null, false),
-            remoteInfo = MangaRemoteInfoDto(
+            remoteInfo = MangaMetadataDto(
                 title = "Manga de Teste", description = "Desc", status = "Ongoing"
             )
         )
@@ -79,8 +79,8 @@ class MangaScreenTest {
                         mangaViewModel = mangaViewModel,
                         chapterArchiveViewModel = chapterArchiveVM,
                         mangaDirectoryViewModel = mangaDirVM,
-                        mangaRemoteInfoViewModel = mangaRemoteVM,
-                        chapterRemoteInfoViewModel = chapterRemoteVM
+                        mangaMetadataViewModel = mangaRemoteVM,
+                        chapterMetadataViewModel = chapterRemoteVM
                     )
                 }
             }

@@ -10,7 +10,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.adapter.library.DirectoryEngine
 import br.acerola.manga.util.NotificationHelper
 import br.acerola.manga.data.R
@@ -25,7 +25,7 @@ import androidx.core.net.toUri
 class LibrarySyncWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
-    @param:DirectoryEngine private val repository: MangaPort<MangaDirectoryDto>
+    @param:DirectoryEngine private val repository: MangaGateway<MangaDirectoryDto>
 ) : CoroutineWorker(context, workerParams) {
 
     private val notificationHelper = NotificationHelper(context)

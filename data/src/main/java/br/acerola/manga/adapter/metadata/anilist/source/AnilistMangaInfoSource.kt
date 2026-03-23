@@ -1,8 +1,8 @@
 package br.acerola.manga.adapter.metadata.anilist.source
 
 import arrow.core.Either
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.translator.toDto
 import br.acerola.manga.remote.anilist.AnilistApollo
@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class AnilistMangaInfoSource @Inject constructor(
     @param:AnilistApollo private val apolloClient: ApolloClient,
-) : RemoteInfoOperationsPort<MangaRemoteInfoDto, String> {
+) : MetadataProvider<MangaMetadataDto, String> {
 
     override suspend fun searchInfo(
         manga: String,
@@ -25,7 +25,7 @@ class AnilistMangaInfoSource @Inject constructor(
         offset: Int,
         onProgress: ((Int) -> Unit)?,
         vararg extra: String?
-    ): Either<NetworkError, List<MangaRemoteInfoDto>> = withContext(Dispatchers.IO) {
+    ): Either<NetworkError, List<MangaMetadataDto>> = withContext(Dispatchers.IO) {
         val anilistId = manga.toIntOrNull()
             ?: return@withContext Either.Left(
                 NetworkError.UnexpectedError(cause = Exception("Invalid AniList ID: $manga"))
@@ -37,7 +37,7 @@ class AnilistMangaInfoSource @Inject constructor(
                 .execute()
 
             val media = response.data?.Media
-                ?: return@catch emptyList<MangaRemoteInfoDto>()
+                ?: return@catch emptyList<MangaMetadataDto>()
 
             listOf(media.toDto())
         }.mapLeft { NetworkError.UnexpectedError(cause = it) }
@@ -45,6 +45,6 @@ class AnilistMangaInfoSource @Inject constructor(
 
     override suspend fun saveInfo(
         manga: String,
-        info: MangaRemoteInfoDto
+        info: MangaMetadataDto
     ): Either<NetworkError, Unit> = Either.Right(Unit)
 }

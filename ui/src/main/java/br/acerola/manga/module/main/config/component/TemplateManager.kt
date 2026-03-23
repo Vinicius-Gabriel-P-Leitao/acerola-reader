@@ -11,13 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.local.entity.archive.ChapterTemplateEntity
+import br.acerola.manga.local.entity.archive.ChapterTemplate
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
 
 @Composable
 fun Main.Config.Component.TemplateManager(
-    templates: List<ChapterTemplateEntity>,
+    templates: List<ChapterTemplate>,
     onAddTemplate: (String, String) -> Unit,
     onDeleteTemplate: (Long) -> Unit
 ) {
@@ -66,7 +66,7 @@ fun Main.Config.Component.TemplateManager(
 
 @Composable
 private fun TemplateItem(
-    template: ChapterTemplateEntity,
+    template: ChapterTemplate,
     onDelete: () -> Unit
 ) {
     Card(

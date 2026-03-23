@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["name"], unique = true)],
     foreignKeys = [
         ForeignKey(
-            entity = ChapterTemplateEntity::class,
+            entity = ChapterTemplate::class,
             parentColumns = ["id"],
             childColumns = ["chapter_template_fk"],
             onDelete = ForeignKey.SET_NULL

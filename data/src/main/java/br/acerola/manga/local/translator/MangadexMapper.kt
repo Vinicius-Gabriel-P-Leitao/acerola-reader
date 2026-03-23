@@ -2,18 +2,18 @@ package br.acerola.manga.local.translator
 
 import android.content.Context
 import br.acerola.manga.data.R
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
 import br.acerola.manga.dto.metadata.manga.source.MangadexSourceDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
 
-fun MangaMangadexDto.toDto(context: Context): MangaRemoteInfoDto {
+fun MangaMangadexDto.toDto(context: Context): MangaMetadataDto {
     val attributes = this.attributes
 
     val authors = if (this.authorName != null && this.authorId != null) {
@@ -53,7 +53,7 @@ fun MangaMangadexDto.toDto(context: Context): MangaRemoteInfoDto {
         engtlUrl = attributes.links?.engtl
     )
 
-    return MangaRemoteInfoDto(
+    return MangaMetadataDto(
         title = attributes.title ?: context.getString(R.string.description_manga_untitled),
         description = attributes.description ?: "",
         romanji = romanji,
@@ -68,7 +68,7 @@ fun MangaMangadexDto.toDto(context: Context): MangaRemoteInfoDto {
     )
 }
 
-fun ChapterMangadexDto.toDto(source: ChapterSourceMangadexDto? = null): ChapterRemoteInfoDto {
+fun ChapterMangadexDto.toDto(source: ChapterSourceMangadexDto? = null): ChapterMetadataDto {
     val attributes = this.attributes
     val scanlatorName = this.scanlationGroups.firstNotNullOfOrNull { it.attributes?.name }
 
@@ -82,7 +82,7 @@ fun ChapterMangadexDto.toDto(source: ChapterSourceMangadexDto? = null): ChapterR
         emptyList()
     }
 
-    return ChapterRemoteInfoDto(
+    return ChapterMetadataDto(
         id = this.id,
         volume = attributes.volume,
         chapter = attributes.chapter,

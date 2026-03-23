@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.dto.archive.ChapterFileDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.service.metadata.ComicInfoParserService
+import br.acerola.manga.service.metadata.ComicInfoParser
 import br.acerola.manga.service.reader.ChapterSourceFactory
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -20,9 +20,9 @@ import javax.inject.Singleton
 @Singleton
 class MangaComicInfoSource @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val parser: ComicInfoParserService,
+    private val parser: ComicInfoParser,
     private val chapterSourceFactory: ChapterSourceFactory
-) : RemoteInfoOperationsPort<MangaRemoteInfoDto, String> {
+) : MetadataProvider<MangaMetadataDto, String> {
 
     override suspend fun searchInfo(
         manga: String,
@@ -30,7 +30,7 @@ class MangaComicInfoSource @Inject constructor(
         offset: Int,
         onProgress: ((Int) -> Unit)?,
         vararg extra: String?,
-    ): Either<NetworkError, List<MangaRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
+    ): Either<NetworkError, List<MangaMetadataDto>> = withContext(context = Dispatchers.IO) {
         val folderUri = extra.getOrNull(index = 0)?.toUri()
             ?: return@withContext Either.Left(value = NetworkError.UnexpectedError(cause = Exception("Folder URI missing in extra[0]")))
 
@@ -96,7 +96,7 @@ class MangaComicInfoSource @Inject constructor(
         Either.Left(value = NetworkError.NotFound())
     }
 
-    override suspend fun saveInfo(manga: String, info: MangaRemoteInfoDto): Either<NetworkError, Unit> =
+    override suspend fun saveInfo(manga: String, info: MangaMetadataDto): Either<NetworkError, Unit> =
         withContext(context = Dispatchers.IO) {
             // NOTE: manga aqui deve ser o URI da pasta pai (root) e info.title o nome da subpasta
             // Mas por simplicidade, vamos assumir que manga é o URI da pasta do mangá

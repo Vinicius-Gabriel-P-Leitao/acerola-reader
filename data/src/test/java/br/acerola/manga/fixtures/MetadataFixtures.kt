@@ -1,13 +1,13 @@
 package br.acerola.manga.fixtures
 
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.CoverDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
-import br.acerola.manga.local.entity.metadata.ChapterRemoteInfo
-import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
+import br.acerola.manga.local.entity.metadata.ChapterMetadata
+import br.acerola.manga.local.entity.metadata.MangaMetadata
 import br.acerola.manga.local.entity.metadata.relationship.Author
 import br.acerola.manga.local.entity.metadata.relationship.Banner
 import br.acerola.manga.local.entity.metadata.relationship.Cover
@@ -16,7 +16,7 @@ import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.entity.metadata.source.AnilistSource
 import br.acerola.manga.local.entity.metadata.source.ComicInfoSource
 import br.acerola.manga.local.entity.metadata.source.MangadexSource
-import br.acerola.manga.local.entity.relation.RemoteInfoRelations
+import br.acerola.manga.local.entity.relation.MetadataRelations
 
 object MetadataFixtures {
 
@@ -30,7 +30,7 @@ object MetadataFixtures {
         mangaDirectoryFk: Long? = null,
         syncSource: String? = null,
         hasComicInfo: Boolean = false
-    ) = MangaRemoteInfo(
+    ) = MangaMetadata(
         id = id,
         title = title,
         description = description,
@@ -49,7 +49,7 @@ object MetadataFixtures {
         pageCount: Int = 20,
         scanlation: String? = "ScanGroup",
         mangaRemoteInfoFk: Long = 10
-    ) = ChapterRemoteInfo(
+    ) = ChapterMetadata(
         id = id,
         title = title,
         chapter = chapter,
@@ -77,7 +77,7 @@ object MetadataFixtures {
         chapter: String = "1",
         mangadexVersion: Int = 1,
         title: String? = null
-    ) = ChapterRemoteInfoDto(
+    ) = ChapterMetadataDto(
         id = id,
         chapter = chapter,
         mangadexVersion = mangadexVersion,
@@ -92,7 +92,7 @@ object MetadataFixtures {
         authors: AuthorDto? = null,
         genre: List<GenreDto> = emptyList(),
         cover: CoverDto? = null
-    ) = MangaRemoteInfoDto(
+    ) = MangaMetadataDto(
         title = title,
         description = description,
         status = status,
@@ -103,7 +103,7 @@ object MetadataFixtures {
     )
 
     fun createRemoteInfoRelations(
-        remoteInfo: MangaRemoteInfo = createMangaRemoteInfo(),
+        remoteInfo: MangaMetadata = createMangaRemoteInfo(),
         mangadexSource: MangadexSource? = null,
         anilistSource: AnilistSource? = null,
         comicInfoSource: ComicInfoSource? = null,
@@ -111,7 +111,7 @@ object MetadataFixtures {
         covers: List<Cover> = emptyList(),
         banners: List<Banner> = emptyList(),
         genres: List<Genre> = emptyList()
-    ) = RemoteInfoRelations(
+    ) = MetadataRelations(
         remoteInfo = remoteInfo,
         mangadexSource = mangadexSource,
         anilistSource = anilistSource,

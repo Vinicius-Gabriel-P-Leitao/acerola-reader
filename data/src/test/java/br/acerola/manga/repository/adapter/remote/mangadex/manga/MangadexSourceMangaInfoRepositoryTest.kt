@@ -3,7 +3,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.manga
 import android.content.Context
 import br.acerola.manga.data.R
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.manga.MangaAttributes
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
@@ -25,7 +25,7 @@ class MangadexSourceMangaInfoRepositoryTest {
     lateinit var context: Context
 
     @MockK
-    lateinit var api: MangadexMangaInfoApi
+    lateinit var api: MangadexMangaMetadataClient
 
     private lateinit var repository: MangadexMangaInfoSource
 

@@ -9,7 +9,7 @@ import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
     workManager: WorkManager,
     observeHistoryUseCase: ObserveHistoryUseCase,
     @param:ApplicationContext private val context: Context,
-    @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     private val manageCategoriesUseCase: ManageCategoriesUseCase,
     private val getChapterCountUseCase: GetChapterCountUseCase,

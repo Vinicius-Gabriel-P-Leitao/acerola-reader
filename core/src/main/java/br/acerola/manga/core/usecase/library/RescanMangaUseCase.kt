@@ -2,14 +2,14 @@ package br.acerola.manga.core.usecase.library
 
 import arrow.core.Either
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import kotlinx.coroutines.flow.StateFlow
 
 /**
  * UseCase para rescanear mangás da biblioteca.
  */
 class RescanMangaUseCase<T>(
-    private val mangaRepository: MangaPort<T>
+    private val mangaRepository: MangaGateway<T>
 ) {
 
     val progress: StateFlow<Int> = mangaRepository.progress

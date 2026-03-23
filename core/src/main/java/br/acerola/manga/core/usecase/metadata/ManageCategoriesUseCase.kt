@@ -1,12 +1,12 @@
 package br.acerola.manga.core.usecase.metadata
 
 import br.acerola.manga.dto.metadata.category.CategoryDto
-import br.acerola.manga.service.metadata.MangaCategoryService
+import br.acerola.manga.service.metadata.CategoryManager
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class ManageCategoriesUseCase @Inject constructor(
-    private val categoryService: MangaCategoryService
+    private val categoryService: CategoryManager
 ) {
     fun getAllCategories(): Flow<List<CategoryDto>> = categoryService.getAllCategories()
 

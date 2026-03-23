@@ -11,8 +11,8 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.manga.ExtractCoverFromChapterUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
@@ -42,8 +42,8 @@ class MangaDirectoryViewModelTest {
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val extractCoverFromChapterUseCase = mockk<ExtractCoverFromChapterUseCase>(relaxed = true)
     
-    private val chapterRepo = mockk<ChapterPort<ChapterArchivePageDto>>(relaxed = true)
-    private val mangaRepo = mockk<MangaPort<MangaDirectoryDto>>(relaxed = true)
+    private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
+    private val mangaRepo = mockk<MangaGateway<MangaDirectoryDto>>(relaxed = true)
     
     private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
     private lateinit var observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>

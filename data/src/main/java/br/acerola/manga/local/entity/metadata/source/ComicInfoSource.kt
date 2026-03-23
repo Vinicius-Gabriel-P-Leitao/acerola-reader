@@ -5,20 +5,20 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
+import br.acerola.manga.local.entity.metadata.MangaMetadata
 
 @Entity(
     tableName = "comic_info_source",
     foreignKeys = [
         ForeignKey(
-            entity = MangaRemoteInfo::class,
+            entity = MangaMetadata::class,
             parentColumns = ["id"],
-            childColumns = ["manga_remote_info_fk"],
+            childColumns = ["manga_metadata_fk"],
             onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["manga_remote_info_fk"], unique = true)
+        Index(value = ["manga_metadata_fk"], unique = true)
     ]
 )
 data class ComicInfoSource(
@@ -28,6 +28,6 @@ data class ComicInfoSource(
     @ColumnInfo(name = "local_hash")
     val localHash: String,
 
-    @ColumnInfo(name = "manga_remote_info_fk")
+    @ColumnInfo(name = "manga_metadata_fk")
     val mangaRemoteInfoFk: Long
 )

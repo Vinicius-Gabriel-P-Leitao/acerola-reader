@@ -6,7 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
-import br.acerola.manga.local.database.DatabaseAcerola
+import br.acerola.manga.local.database.AcerolaDatabase
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -21,14 +21,14 @@ import java.io.IOException
 @SmallTest
 class ChapterArchiveDaoTest {
 
-    private lateinit var db: DatabaseAcerola
+    private lateinit var db: AcerolaDatabase
     private lateinit var dao: br.acerola.manga.local.dao.archive.ChapterArchiveDao
     private lateinit var directoryDao: br.acerola.manga.local.dao.archive.MangaDirectoryDao
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, DatabaseAcerola::class.java)
+        db = Room.inMemoryDatabaseBuilder(context, AcerolaDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = db.chapterArchiveDao()

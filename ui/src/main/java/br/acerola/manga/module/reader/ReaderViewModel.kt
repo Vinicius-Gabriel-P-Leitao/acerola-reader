@@ -13,7 +13,7 @@ import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.state.ReaderUiState
-import br.acerola.manga.service.reader.ChapterReaderService
+import br.acerola.manga.service.reader.ReaderProcessor
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.history.TrackReadingProgressUseCase
@@ -35,7 +35,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
-    private val repository: ChapterReaderService,
+    private val repository: ReaderProcessor,
     @param:ApplicationContext private val context: Context,
     private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
     @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,

@@ -11,8 +11,8 @@ import androidx.work.workDataOf
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.core.usecase.search.SearchMangaUseCase
 import br.acerola.manga.core.worker.ChapterDownloadWorker
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
@@ -48,7 +48,7 @@ class DownloadViewModel @Inject constructor(
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    fun init(manga: MangaRemoteInfoDto) {
+    fun init(manga: MangaMetadataDto) {
         if (_uiState.value.manga?.sources?.mangadex?.mangadexId == manga.sources?.mangadex?.mangadexId) return
         _uiState.update { it.copy(manga = manga, isLoadingChapters = true) }
 
@@ -193,7 +193,7 @@ class DownloadViewModel @Inject constructor(
             }
             _uiState.update { it.copy(isDownloading = true) }
 
-            val allChapters = mutableListOf<ChapterRemoteInfoDto>()
+            val allChapters = mutableListOf<ChapterMetadataDto>()
             var page = 0
             var hasMore = true
 
@@ -226,7 +226,7 @@ class DownloadViewModel @Inject constructor(
     private suspend fun enqueueChapters(
         state: DownloadUiState,
         baseUri: String,
-        chapters: List<ChapterRemoteInfoDto>,
+        chapters: List<ChapterMetadataDto>,
     ) {
         if (chapters.isEmpty()) return
         val mangaTitle = state.manga?.title ?: return

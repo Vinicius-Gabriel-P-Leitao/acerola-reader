@@ -1,16 +1,14 @@
 package br.acerola.manga.repository.adapter.local.chapter
 
-import android.net.Uri
-import arrow.core.Either
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexChapterEngine
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
-import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.service.metadata.MangaMetadataExportService
+import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
+import br.acerola.manga.service.metadata.MetadataExporter
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -30,12 +28,12 @@ import org.junit.Test
 class MangadexSourceChapterEngineTest {
 
     @MockK lateinit var chapterArchiveDao: ChapterArchiveDao
-    @MockK lateinit var mangaRemoteInfoDao: MangaRemoteInfoDao
+    @MockK lateinit var mangaMetadataDao: MangaMetadataDao
     @MockK lateinit var directoryDao: MangaDirectoryDao
-    @MockK lateinit var chapterRemoteInfoDao: ChapterRemoteInfoDao
+    @MockK lateinit var chapterMetadataDao: ChapterMetadataDao
     @MockK lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
-    @MockK lateinit var metadataExportService: MangaMetadataExportService
-    @MockK lateinit var mangadexChapterInfoService: RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    @MockK lateinit var metadataExportService: MetadataExporter
+    @MockK lateinit var mangadexChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
 
     private lateinit var repository: MangadexChapterEngine
     private val testDispatcher = StandardTestDispatcher()
@@ -46,8 +44,8 @@ class MangadexSourceChapterEngineTest {
         Dispatchers.setMain(testDispatcher)
 
         repository = MangadexChapterEngine(
-            directoryDao, chapterArchiveDao, mangaRemoteInfoDao,
-            chapterRemoteInfoDao, metadataExportService, chapterDownloadSourceDao
+            directoryDao, chapterArchiveDao, mangaMetadataDao,
+            chapterMetadataDao, metadataExportService, chapterDownloadSourceDao
         )
         repository.mangadexSourceChapterInfoService = mangadexChapterInfoService
     }
@@ -59,7 +57,7 @@ class MangadexSourceChapterEngineTest {
 
     @Test
     fun `refreshMangaChapters deve retornar sucesso se não houver mangadexId`() = runTest {
-        every { mangaRemoteInfoDao.getMangaWithRelationsByDirectoryId(any()) } returns flowOf(null)
+        every { mangaMetadataDao.getMangaWithRelationsByDirectoryId(any()) } returns flowOf(null)
 
         val result = repository.refreshMangaChapters(1L)
 

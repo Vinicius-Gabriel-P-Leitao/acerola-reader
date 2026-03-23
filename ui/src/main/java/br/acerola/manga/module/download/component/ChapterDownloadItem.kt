@@ -23,18 +23,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.module.download.Download
 import br.acerola.manga.ui.R
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
 fun Download.Component.ChapterDownloadItem(
-    chapter: ChapterRemoteInfoDto,
+    chapter: ChapterMetadataDto,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

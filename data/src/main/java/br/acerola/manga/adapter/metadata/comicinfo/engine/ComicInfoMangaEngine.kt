@@ -4,15 +4,15 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
-import br.acerola.manga.adapter.contract.ImageFetchPort
-import br.acerola.manga.adapter.contract.MangaPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.provider.ImageProvider
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.comicinfo.ComicInfoSource
 import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
@@ -21,7 +21,7 @@ import br.acerola.manga.local.translator.toModel
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.service.artwork.MangaSaveCoverService
+import br.acerola.manga.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,15 +37,15 @@ class ComicInfoMangaEngine @Inject constructor(
     private val genreDao: GenreDao,
     private val authorDao: AuthorDao,
     private val directoryDao: MangaDirectoryDao,
-    private val coverService: MangaSaveCoverService,
-    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
+    private val coverService: CoverSaver,
+    private val mangaMetadataDao: MangaMetadataDao,
     private val comicInfoSourceDao: ComicInfoSourceDao,
-    @param:MangadexSource private val downloadCoverService: ImageFetchPort<String>
-) : MangaPort<MangaRemoteInfoDto> {
+    @param:MangadexSource private val downloadCoverService: ImageProvider<String>
+) : MangaGateway<MangaMetadataDto> {
 
     @Inject
     @ComicInfoSource
-    lateinit var comicInfoSourceService: RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
+    lateinit var comicInfoSourceService: MetadataProvider<MangaMetadataDto, String>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -71,7 +71,7 @@ class ComicInfoMangaEngine @Inject constructor(
                         return@catch
                     }
 
-                    val existingRemote = mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).firstOrNull()
+                    val existingRemote = mangaMetadataDao.getMangaByDirectoryId(directory.id).firstOrNull()
 
                     val mangaToSave = bestMatch.toModel().copy(
                         id = existingRemote?.id ?: 0L,
@@ -80,10 +80,10 @@ class ComicInfoMangaEngine @Inject constructor(
                     )
 
                     val remoteId = if (existingRemote != null) {
-                        mangaRemoteInfoDao.update(entity = mangaToSave)
+                        mangaMetadataDao.update(entity = mangaToSave)
                         existingRemote.id
                     } else {
-                        mangaRemoteInfoDao.insert(entity = mangaToSave)
+                        mangaMetadataDao.insert(entity = mangaToSave)
                     }
 
                     if (remoteId != -1L) {
@@ -102,7 +102,7 @@ class ComicInfoMangaEngine @Inject constructor(
                         }
 
                         bestMatch.cover?.let { dto ->
-                            downloadCoverService.searchCover(dto.url).onRight { bytes ->
+                            downloadCoverService.searchMedia(dto.url).onRight { bytes ->
                                 coverService.processCover(
                                     rootUri = directory.path.toUri(),
                                     folderId = directory.id,
@@ -128,8 +128,8 @@ class ComicInfoMangaEngine @Inject constructor(
             }
         }
 
-    override fun observeLibrary(): StateFlow<List<MangaRemoteInfoDto>> {
-        return MutableStateFlow(value = emptyList<MangaRemoteInfoDto>()).asStateFlow()
+    override fun observeLibrary(): StateFlow<List<MangaMetadataDto>> {
+        return MutableStateFlow(value = emptyList<MangaMetadataDto>()).asStateFlow()
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)

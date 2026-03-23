@@ -5,11 +5,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.service.metadata.ComicInfoParserService
+import br.acerola.manga.service.metadata.ComicInfoParser
 import br.acerola.manga.service.reader.ChapterSourceFactory
-import br.acerola.manga.service.reader.port.ChapterSourceService
+import br.acerola.manga.service.reader.contract.PageSource
 import br.acerola.manga.adapter.metadata.comicinfo.source.MangaComicInfoSource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -29,7 +29,7 @@ import java.io.InputStream
 class MangaComicInfoSourceRepositoryTest {
 
     @MockK lateinit var context: Context
-    @MockK lateinit var parser: ComicInfoParserService
+    @MockK lateinit var parser: ComicInfoParser
     @MockK lateinit var chapterSourceFactory: ChapterSourceFactory
 
     private lateinit var repository: MangaComicInfoSource
@@ -56,7 +56,7 @@ class MangaComicInfoSourceRepositoryTest {
         val folderDoc = mockk<DocumentFile>()
         val xmlFile = mockk<DocumentFile>()
         val inputStream = mockk<InputStream>(relaxed = true)
-        val expectedInfo = mockk<MangaRemoteInfoDto>()
+        val expectedInfo = mockk<MangaMetadataDto>()
 
         every { Uri.parse(any()) } returns folderUri
         every { DocumentFile.fromTreeUri(context, folderUri) } returns folderDoc
@@ -86,9 +86,9 @@ class MangaComicInfoSourceRepositoryTest {
         val folderUri = mockk<Uri>()
         val folderDoc = mockk<DocumentFile>()
         val cbzFile = mockk<DocumentFile>()
-        val sourceService = mockk<ChapterSourceService>()
+        val sourceService = mockk<PageSource>()
         val inputStream = mockk<InputStream>(relaxed = true)
-        val expectedInfo = mockk<MangaRemoteInfoDto>()
+        val expectedInfo = mockk<MangaMetadataDto>()
 
         every { Uri.parse(any()) } returns folderUri
         every { DocumentFile.fromTreeUri(context, folderUri) } returns folderDoc

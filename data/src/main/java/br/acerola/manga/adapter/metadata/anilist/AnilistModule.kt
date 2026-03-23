@@ -1,12 +1,12 @@
 package br.acerola.manga.adapter.metadata.anilist
 
-import br.acerola.manga.adapter.contract.ImageFetchPort
-import br.acerola.manga.adapter.contract.MangaPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.provider.ImageProvider
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.anilist.engine.AnilistMangaEngine
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistFetchCoverSource
 import br.acerola.manga.adapter.metadata.anilist.source.AnilistMangaInfoSource
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,15 +29,15 @@ abstract class AnilistModule {
     @Binds @Singleton @AnilistEngine
     abstract fun bindAnilistMangaEngine(
         impl: AnilistMangaEngine
-    ): MangaPort<MangaRemoteInfoDto>
+    ): MangaGateway<MangaMetadataDto>
 
     @Binds @Singleton @AnilistSource
     abstract fun bindAnilistMangaInfoSource(
         impl: AnilistMangaInfoSource
-    ): RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
+    ): MetadataProvider<MangaMetadataDto, String>
 
     @Binds @Singleton @AnilistSource
     abstract fun bindAnilistFetchCoverSource(
         impl: AnilistFetchCoverSource
-    ): ImageFetchPort<String>
+    ): ImageProvider<String>
 }

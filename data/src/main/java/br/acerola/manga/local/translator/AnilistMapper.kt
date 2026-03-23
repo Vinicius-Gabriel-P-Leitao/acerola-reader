@@ -2,13 +2,13 @@ package br.acerola.manga.local.translator
 
 import br.acerola.manga.dto.metadata.manga.AuthorDto
 import br.acerola.manga.dto.metadata.manga.GenreDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
 import br.acerola.manga.dto.metadata.manga.source.AnilistSourceDto
 import br.acerola.manga.remote.anilist.MediaDetailsQuery
 import br.acerola.manga.remote.anilist.MediaSearchQuery
 
-fun MediaSearchQuery.Medium.toDto(): MangaRemoteInfoDto {
+fun MediaSearchQuery.Medium.toDto(): MangaMetadataDto {
     val title = this.title?.userPreferred ?: this.title?.romaji ?: ""
 
     val author = this.staff?.edges.orEmpty()
@@ -26,7 +26,7 @@ fun MediaSearchQuery.Medium.toDto(): MangaRemoteInfoDto {
         if (!genreName.isNullOrBlank()) GenreDto(id = "anilist-$genreName", name = genreName) else null
     }
 
-    return MangaRemoteInfoDto(
+    return MangaMetadataDto(
         title = title,
         romanji = this.title?.romaji,
         description = this.description?.cleanHtml() ?: "",
@@ -47,7 +47,7 @@ fun MediaSearchQuery.Medium.toDto(): MangaRemoteInfoDto {
     )
 }
 
-fun MediaDetailsQuery.Media.toDto(): MangaRemoteInfoDto {
+fun MediaDetailsQuery.Media.toDto(): MangaMetadataDto {
     val title = this.title?.userPreferred ?: this.title?.romaji ?: ""
 
     val author = this.staff?.edges.orEmpty()
@@ -65,7 +65,7 @@ fun MediaDetailsQuery.Media.toDto(): MangaRemoteInfoDto {
         if (!genreName.isNullOrBlank()) GenreDto(id = "anilist-$genreName", name = genreName) else null
     }
 
-    return MangaRemoteInfoDto(
+    return MangaMetadataDto(
         title = title,
         romanji = this.title?.romaji,
         description = this.description?.cleanHtml() ?: "",

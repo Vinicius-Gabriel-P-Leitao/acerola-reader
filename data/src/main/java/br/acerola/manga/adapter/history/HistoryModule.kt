@@ -1,6 +1,6 @@
 package br.acerola.manga.adapter.history
 
-import br.acerola.manga.adapter.contract.HistoryPort
+import br.acerola.manga.adapter.contract.gateway.HistoryGateway
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,6 +20,6 @@ abstract class HistoryModule {
     @Singleton
     @LocalHistoryEngine
     abstract fun bindHistoryRepository(
-        impl: LocalHistoryEgine
-    ): HistoryPort
+        impl: LocalHistoryEngine
+    ): HistoryGateway
 }

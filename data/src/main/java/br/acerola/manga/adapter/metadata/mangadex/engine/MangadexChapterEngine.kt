@@ -4,19 +4,19 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
 import br.acerola.manga.data.R
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.exception.MangadexRequestException
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
-import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.translator.toDownloadSources
@@ -25,7 +25,7 @@ import br.acerola.manga.local.translator.toModel
 import br.acerola.manga.local.translator.toPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.service.metadata.MangaMetadataExportService
+import br.acerola.manga.service.metadata.MetadataExporter
 import br.acerola.manga.util.normalizeChapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,15 +48,15 @@ import javax.inject.Singleton
 class MangadexChapterEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val chapterArchiveDao: ChapterArchiveDao,
-    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
-    private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
-    private val metadataExportService: MangaMetadataExportService,
+    private val mangaMetadataDao: MangaMetadataDao,
+    private val chapterMetadataDao: ChapterMetadataDao,
+    private val metadataExportService: MetadataExporter,
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
-) : ChapterPort<ChapterRemoteInfoPageDto> {
+) : ChapterGateway<ChapterRemoteInfoPageDto> {
 
     @Inject
     @MangadexSource
-    lateinit var mangadexSourceChapterInfoService: RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -71,7 +71,7 @@ class MangadexChapterEngine @Inject constructor(
             _progress.value = 0
 
             val remoteMangaRelations = try {
-                mangaRemoteInfoDao.getMangaWithRelationsByDirectoryId(mangaId).first()
+                mangaMetadataDao.getMangaWithRelationsByDirectoryId(mangaId).first()
             } catch (exception: Exception) {
                 AcerolaLogger.e(TAG, "Database error while fetching manga relations", LogSource.REPOSITORY, throwable = exception)
                 _isIndexing.value = false
@@ -117,7 +117,7 @@ class MangadexChapterEngine @Inject constructor(
 
                     chapterPairs.forEach { (archive, remote) ->
                         val chapterRemoteInfoEntity = remote.toModel(mangaRemoteInfoFk = remoteManga.id)
-                        val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
+                        val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
 
                         val downloadSourceEntities = remote.toDownloadSources(chapterFk = chapterRemoteInfoId)
                         chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
@@ -145,7 +145,7 @@ class MangadexChapterEngine @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeChapters(mangaId: Long): StateFlow<ChapterRemoteInfoPageDto> {
-        return chapterRemoteInfoDao.getChaptersByMangaRemoteInfo(mangaId).flatMapLatest { chapters ->
+        return chapterMetadataDao.getChaptersByMangaRemoteInfo(mangaId).flatMapLatest { chapters ->
             val chapterIds = chapters.map { it.id }
 
             flow {
@@ -168,9 +168,9 @@ class MangadexChapterEngine @Inject constructor(
         val offset = page * pageSize
 
         val realTotal = if (total != 0) total
-        else chapterRemoteInfoDao.countChaptersByMangaRemoteInfo(mangaId)
+        else chapterMetadataDao.countChaptersByMangaRemoteInfo(mangaId)
 
-        val chapters = chapterRemoteInfoDao.getChaptersPaged(mangaId, pageSize, offset)
+        val chapters = chapterMetadataDao.getChaptersPaged(mangaId, pageSize, offset)
 
         val sources = chapters.takeIf { it.isNotEmpty() }?.map { it.id }?.let {
             chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
@@ -183,7 +183,7 @@ class MangadexChapterEngine @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<ChapterRemoteInfoPageDto> {
-        return chapterRemoteInfoDao.getChaptersByMangaAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
+        return chapterMetadataDao.getChaptersByMangaAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
             val chapterIds = chapterList.map { it.id }
 
             flow {
@@ -197,8 +197,8 @@ class MangadexChapterEngine @Inject constructor(
     }
 
     private fun matchRemoteWithArchive(
-        remote: List<ChapterRemoteInfoDto>, local: List<ChapterArchive>
-    ): List<Pair<ChapterArchive, ChapterRemoteInfoDto>> {
+        remote: List<ChapterMetadataDto>, local: List<ChapterArchive>
+    ): List<Pair<ChapterArchive, ChapterMetadataDto>> {
         val remoteByChapter = remote.mapNotNull { dto ->
             val key = dto.chapter?.normalizeChapter()
 

@@ -9,8 +9,8 @@ import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -23,8 +23,8 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
 import br.acerola.manga.pattern.MediaFilePattern
-import br.acerola.manga.service.template.ChapterTemplateMatcher
-import br.acerola.manga.service.template.ChapterTemplateService
+import br.acerola.manga.service.template.TemplateMatcher
+import br.acerola.manga.service.template.ChapterNameProcessor
 import br.acerola.manga.util.ContentQueryHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -52,13 +52,13 @@ import javax.inject.Singleton
 class MangaDirectoryEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     @param:ApplicationContext private val context: Context,
-    private val templateService: ChapterTemplateService,
-    private val templateMatcher: ChapterTemplateMatcher,
-) : MangaPort<MangaDirectoryDto> {
+    private val templateService: ChapterNameProcessor,
+    private val templateMatcher: TemplateMatcher,
+) : MangaGateway<MangaDirectoryDto> {
 
     @Inject
     @DirectoryEngine
-    lateinit var mangaDirectoryOps: ChapterPort<ChapterArchivePageDto>
+    lateinit var mangaDirectoryOps: ChapterGateway<ChapterArchivePageDto>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()

@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import br.acerola.manga.local.entity.metadata.MangaRemoteInfo
+import br.acerola.manga.local.entity.metadata.MangaMetadata
 
 enum class TypeAuthor(val type: String) {
     AUTHOR(type = "author"),
@@ -23,15 +23,15 @@ enum class TypeAuthor(val type: String) {
     tableName = "author",
     foreignKeys = [
         ForeignKey(
-            entity = MangaRemoteInfo::class,
+            entity = MangaMetadata::class,
             parentColumns = ["id"],
-            childColumns = ["manga_remote_info_fk"],
+            childColumns = ["manga_metadata_fk"],
             onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["name", "manga_remote_info_fk"], unique = true),
-        Index(value = ["manga_remote_info_fk"])
+        Index(value = ["name", "manga_metadata_fk"], unique = true),
+        Index(value = ["manga_metadata_fk"])
     ]
 )
 data class Author(
@@ -44,6 +44,6 @@ data class Author(
     @ColumnInfo(name = "type")
     val type: TypeAuthor,
 
-    @ColumnInfo(name = "manga_remote_info_fk")
+    @ColumnInfo(name = "manga_metadata_fk")
     val mangaRemoteInfoFk: Long
 )

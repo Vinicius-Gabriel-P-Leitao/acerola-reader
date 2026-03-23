@@ -3,17 +3,17 @@ package br.acerola.manga.core.usecase.library
 import android.net.Uri
 import arrow.core.Either
 import br.acerola.manga.error.message.LibrarySyncError
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import kotlinx.coroutines.flow.StateFlow
 
 /**
  * UseCase responsável pela sincronização e reindexação da biblioteca de mangás.
  * Pode ser injetado com qualificadores para operar em diferentes fontes (Local/Remoto).
  *
- * Agora depende diretamente de [MangaPort].
+ * Agora depende diretamente de [MangaGateway].
  */
 class SyncLibraryUseCase<T>(
-    private val repository: MangaPort<T>
+    private val repository: MangaGateway<T>
 ) {
     val progress: StateFlow<Int> = repository.progress
     val isIndexing: StateFlow<Boolean> = repository.isIndexing

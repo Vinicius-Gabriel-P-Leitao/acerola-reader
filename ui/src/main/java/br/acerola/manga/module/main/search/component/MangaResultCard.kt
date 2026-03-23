@@ -21,13 +21,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.main.Main
 import coil.compose.AsyncImage
 
 @Composable
 fun Main.Search.Component.MangaResultCard(
-    manga: MangaRemoteInfoDto,
+    manga: MangaMetadataDto,
     onClick: () -> Unit,
 ) {
     Card(

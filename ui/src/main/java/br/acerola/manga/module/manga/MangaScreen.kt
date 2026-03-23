@@ -35,11 +35,9 @@ import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.ChapterMetadataViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.dto.MangaDto
-import br.acerola.manga.error.UserMessage
-import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.module.manga.layout.ChapterSection
 import br.acerola.manga.module.manga.layout.Header
 import br.acerola.manga.module.manga.layout.ConfigSection
@@ -60,8 +58,8 @@ fun MangaScreen(
     mangaViewModel: MangaViewModel = hiltViewModel(),
     chapterArchiveViewModel: ChapterArchiveViewModel = hiltViewModel(),
     mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
-    mangaRemoteInfoViewModel: MangaRemoteInfoViewModel = hiltViewModel(),
-    chapterRemoteInfoViewModel: ChapterRemoteInfoViewModel = hiltViewModel(),
+    mangaMetadataViewModel: MangaMetadataViewModel = hiltViewModel(),
+    chapterMetadataViewModel: ChapterMetadataViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -88,12 +86,12 @@ fun MangaScreen(
             }
         }
         launch {
-            mangaRemoteInfoViewModel.uiEvents.collect { message ->
+            mangaMetadataViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
             }
         }
         launch {
-            chapterRemoteInfoViewModel.uiEvents.collect { message ->
+            chapterMetadataViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context))
             }
         }
@@ -107,12 +105,12 @@ fun MangaScreen(
     val chapterProgress by mangaViewModel.chapterProgress.collectAsState()
     val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsState()
     val mangaProgress by mangaViewModel.mangaProgress.collectAsState()
-    val mangaRemoteIndexing by mangaRemoteInfoViewModel.isIndexing.collectAsState()
-    val chapterRemoteIndexing by chapterRemoteInfoViewModel.isIndexing.collectAsState()
+    val mangaRemoteIndexing by mangaMetadataViewModel.isIndexing.collectAsState()
+    val chapterRemoteIndexing by chapterMetadataViewModel.isIndexing.collectAsState()
     val history by mangaViewModel.history.collectAsState()
     val readChapters by mangaViewModel.readChapters.collectAsState()
     val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsState()
-    val allCategories by mangaRemoteInfoViewModel.allCategories.collectAsState()
+    val allCategories by mangaMetadataViewModel.allCategories.collectAsState()
 
     val currentManga = mangaState ?: manga
     val totalChapters = chapterDto?.archive?.total ?: 0
@@ -189,11 +187,11 @@ fun MangaScreen(
         when (action) {
             MangaSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.manga.directory.id)
             MangaSyncAction.RescanManga -> mangaDirectoryViewModel.rescanMangaByManga(uiState.manga.directory.id)
-            MangaSyncAction.SyncMangadexInfo -> mangaRemoteInfoViewModel.syncFromMangadex(uiState.manga.directory.id)
-            MangaSyncAction.SyncMangadexChapters -> uiState.manga.remoteInfo?.id?.let { chapterRemoteInfoViewModel.syncChaptersByMangadex(it) }
-            MangaSyncAction.SyncComicInfo -> mangaRemoteInfoViewModel.syncFromComicInfo(uiState.manga.directory.id)
-            MangaSyncAction.SyncComicInfoChapters -> chapterRemoteInfoViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
-            MangaSyncAction.SyncAnilistInfo -> mangaRemoteInfoViewModel.syncFromAnilist(uiState.manga.directory.id)
+            MangaSyncAction.SyncMangadexInfo -> mangaMetadataViewModel.syncFromMangadex(uiState.manga.directory.id)
+            MangaSyncAction.SyncMangadexChapters -> uiState.manga.remoteInfo?.id?.let { chapterMetadataViewModel.syncChaptersByMangadex(it) }
+            MangaSyncAction.SyncComicInfo -> mangaMetadataViewModel.syncFromComicInfo(uiState.manga.directory.id)
+            MangaSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
+            MangaSyncAction.SyncAnilistInfo -> mangaMetadataViewModel.syncFromAnilist(uiState.manga.directory.id)
             MangaSyncAction.ExtractFirstPageAsCover -> mangaDirectoryViewModel.extractCoverFromChapter(uiState.manga.directory.id)
         }
     }
@@ -203,7 +201,7 @@ fun MangaScreen(
             MangaAction.NavigateBack -> onBackClick()
             is MangaAction.SelectTab -> selectedTab = action.tab
             is MangaAction.UpdatePageSize -> mangaViewModel.updateChapterPerPage(action.size)
-            is MangaAction.UpdateCategory -> mangaRemoteInfoViewModel.updateMangaCategory(
+            is MangaAction.UpdateCategory -> mangaMetadataViewModel.updateMangaCategory(
                 uiState.manga.directory.id,
                 action.categoryId
             )
