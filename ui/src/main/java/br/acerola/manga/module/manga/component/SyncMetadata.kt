@@ -56,7 +56,7 @@ fun Manga.Component.SyncMetadata(
             // NOTE: Mangadex
             MangadexSection(
                 isActive = syncSource == MetadataSource.MANGADEX,
-                hasChapters = hasMangadexSource && remoteInfo?.id != null,
+                hasChapters = hasMangadexSource && remoteInfo.id != null,
                 onSyncInfo = onSyncMangadexInfo,
                 onSyncChapters = onSyncMangadexChapters
             )

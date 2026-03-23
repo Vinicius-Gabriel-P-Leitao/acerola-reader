@@ -63,6 +63,8 @@ fun Main.Common.Component.MangaListItem(
         error = placeholderPainter,
         model = ImageRequest.Builder(context)
             .data(data = coverUri)
+            .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
+            .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
             .size(resolver = SizeResolver(imageSize))
             .build(),
     )

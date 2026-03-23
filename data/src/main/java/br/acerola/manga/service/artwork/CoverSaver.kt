@@ -57,7 +57,7 @@ class CoverSaver @Inject constructor(
                 if (savedUriString != null) {
                     val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
                     if (directory != null) {
-                        directoryDao.update(entity = directory.copy(cover = savedUriString))
+                        directoryDao.update(entity = directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
                     }
                 }
 

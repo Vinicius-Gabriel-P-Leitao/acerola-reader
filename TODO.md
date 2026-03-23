@@ -121,9 +121,10 @@ metadados de fontes online populares.
 - [ ] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
 - [ ] **Persistência da ordenação** via DataStore.
 - [ ] **UI do filtro:** Usar apenas ícone, sem label.
+- [ ] **Filtros sem salvar em dataStore:** Filtro por bookmark que o usuário criou, source de metadados ou sem metadados.
 
 #### Filtros e Ordenação — Tela de Capítulos
-- [ ] **Remover autoscroll** ao trocar de página.
+- [ ] **Remover autoscroll** ao trocar de página na tela de manga onde listam os chapters.
 - [ ] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
 - [ ] **Persistência da ordenação** por mangá (ou global) via DataStore.
 - [ ] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
@@ -135,12 +136,8 @@ metadados de fontes online populares.
 #### Verificar e Baixar Novos Capítulos
 - [ ] **Botão "Verificar updates":** Na tela de detalhes do mangá, um botão que consulta o MangaDex e retorna
   capítulos mais recentes do que o último registrado no banco local.
-- [ ] **Exibir capítulos disponíveis:** Mostrar uma lista/bottom sheet com os capítulos novos encontrados,
-  exibindo número, nome e data de lançamento antes de qualquer ação.
-- [ ] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
+- [x] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
   enfileira no download manager já existente.
-- [ ] **Indicador de "atualizado" ou "tem novidade":** Badge ou ícone na tela de detalhes indicando que
-  existem capítulos no MangaDex além do último local, sem baixar nada automaticamente.
 
 ---
 

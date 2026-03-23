@@ -110,7 +110,7 @@ class MangaDirectoryViewModel @Inject constructor(
                     _uiEvents.send(error)
                 },
                 ifRight = {
-                    // Success
+                    rescanMangaByManga(mangaId)
                 }
             )
             _isIndexing.value = false

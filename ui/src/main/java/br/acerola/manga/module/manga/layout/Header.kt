@@ -70,6 +70,8 @@ fun Manga.Layout.Header(
                 contentScale = ContentScale.Crop,
                 model = ImageRequest.Builder(context = context)
                     .data(data = bannerModel)
+                    .memoryCacheKey("${bannerModel}_${manga.directory.lastModified}")
+                    .diskCacheKey("${bannerModel}_${manga.directory.lastModified}")
                     .crossfade(enable = true)
                     .build(),
                 placeholder = placeholderPainter,
@@ -104,6 +106,8 @@ fun Manga.Layout.Header(
                         contentScale = ContentScale.Crop,
                         model = ImageRequest.Builder(context = context)
                             .data(data = manga.directory.coverUri)
+                            .memoryCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
+                            .diskCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
                             .crossfade(enable = true)
                             .build(),
                         placeholder = placeholderPainter,

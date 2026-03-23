@@ -66,7 +66,11 @@ class CoverExtractor @Inject constructor(
                         fileName = MediaFilePattern.COVER.defaultFileName,
                         mimeType = "image/png",
                         bytes = bytes
-                    )
+                    ).also { result ->
+                        if (result.isRight()) {
+                            directoryDao.update(directory.copy(lastModified = System.currentTimeMillis()))
+                        }
+                    }
                 }
             } finally {
                 source.close()
