@@ -90,6 +90,12 @@ metadados de fontes online populares.
 - [x]  necessário para não ter conflito de dominio, vai ser tudo virado para Metadata de RemoteInfo, já que agora os 
   sources tem tabelas para eles mesmos, será mudado também nome de tabela e colunas.
 
+#### ❗ Corrigir bug com troca de source:
+- [x] Problema com troca de qual source é o atual se eu coloco o Mangadex como source ele empreguina e não troca de 
+  forma algum o source, o resto troca, mas o source que aparece em Manga.Layout.Header fica só Mangadex, já quando 
+  via anilist eu consigo trocar, alguma coisa no Sync de métadados está quebrado principalmente quando faço o Sync 
+  via ConfigScreen, a troca de source deve poder ocorrer de foram livre.
+
 #### ❗ Principal refatoração e organização do modulo data:
 - [x] Organizar o modulo data de forma que o source e o engine consigam ficar armoniosos.
 

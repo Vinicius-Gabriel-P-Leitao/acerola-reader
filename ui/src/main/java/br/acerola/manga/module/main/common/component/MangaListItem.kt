@@ -26,6 +26,7 @@ import br.acerola.manga.common.ux.component.BookmarkRibbon
 import br.acerola.manga.common.ux.component.ImageCard
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -111,9 +112,9 @@ fun Main.Common.Component.MangaListItem(
                     .padding(bottom = 4.dp, end = 4.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
-                val sourceIcon = when {
-                    manga.remoteInfo?.sources?.mangadex != null -> R.drawable.mangadex_v2
-                    manga.remoteInfo?.sources?.anilist != null -> R.drawable.anilist
+                val sourceIcon = when (manga.remoteInfo?.syncSource) {
+                    MetadataSource.MANGADEX -> R.drawable.mangadex_v2
+                    MetadataSource.ANILIST -> R.drawable.anilist
                     else -> null
                 }
                 if (sourceIcon != null) {
