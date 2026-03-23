@@ -27,7 +27,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,8 +57,6 @@ fun Main.Common.Component.MangaActionsSheet(
     onBookmark: (categoryId: Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartialExpansion = true)
-
     var showCategorySheet by remember { mutableStateOf(false) }
     var showHideDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -72,7 +69,6 @@ fun Main.Common.Component.MangaActionsSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
     ) {
         Row(
             modifier = Modifier
@@ -236,11 +232,8 @@ private fun MangaCategorySheet(
     onSelect: (categoryId: Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartialExpansion = true)
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
     ) {
         Text(
             text = stringResource(id = R.string.action_bookmark),

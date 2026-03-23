@@ -8,7 +8,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import arrow.core.onLeft
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase

@@ -2,7 +2,6 @@ package br.acerola.manga.module.main.home
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import arrow.core.onLeft
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import br.acerola.manga.config.preference.HomeLayoutPreference

@@ -7,7 +7,7 @@ import br.acerola.manga.error.message.LibrarySyncError
 import javax.inject.Inject
 
 class DeleteMangaUseCase @Inject constructor(
-    @DirectoryEngine private val gateway: MangaLibraryWriteGateway,
+    @param:DirectoryEngine private val gateway: MangaLibraryWriteGateway,
 ) {
     suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> =
         gateway.deleteManga(mangaId)
