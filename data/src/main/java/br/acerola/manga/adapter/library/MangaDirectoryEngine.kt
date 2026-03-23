@@ -11,6 +11,7 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import br.acerola.manga.adapter.contract.gateway.ChapterGateway
 import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.gateway.MangaLibraryWriteGateway
 import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -51,7 +52,7 @@ class MangaDirectoryEngine @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val templateService: ChapterNameProcessor,
     private val templateMatcher: TemplateMatcher,
-) : MangaGateway<MangaDirectoryDto> {
+) : MangaGateway<MangaDirectoryDto>, MangaLibraryWriteGateway {
 
     @Inject
     @DirectoryEngine
@@ -304,6 +305,33 @@ class MangaDirectoryEngine @Inject constructor(
             folders.map { it.toViewDto() }
         }
     }
+
+    override suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+        withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Hiding manga: $mangaId", LogSource.REPOSITORY)
+            Either.catch {
+                directoryDao.setHidden(mangaId, hidden = true)
+            }.mapLeft { exception ->
+                AcerolaLogger.e(TAG, "Failed to hide manga: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                LibrarySyncError.UnexpectedError(cause = exception)
+            }
+        }
+
+    override suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+        withContext(context = Dispatchers.IO) {
+            AcerolaLogger.i(TAG, "Deleting manga: $mangaId", LogSource.REPOSITORY)
+            Either.catch {
+                val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
+                // Delete folder from FS before DB (if FS deletion fails, DB record is preserved)
+                val folderUri = directory.path.toUri()
+                DocumentFile.fromSingleUri(context, folderUri)?.delete()
+                // Remove from DB (CASCADE cleans chapters, metadata, history, etc.)
+                directoryDao.delete(entity = directory)
+            }.mapLeft { exception ->
+                AcerolaLogger.e(TAG, "Failed to delete manga: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                LibrarySyncError.UnexpectedError(cause = exception)
+            }
+        }
 
     private suspend fun processFolderList(
         foldersToProcess: List<MangaDirectory>,
