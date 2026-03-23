@@ -2,6 +2,7 @@ package br.acerola.manga.module.main.home
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import arrow.core.onLeft
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import br.acerola.manga.config.preference.HomeLayoutPreference
@@ -10,8 +11,11 @@ import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
+import br.acerola.manga.core.usecase.manga.DeleteMangaUseCase
+import br.acerola.manga.core.usecase.manga.HideMangaUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
@@ -39,7 +43,9 @@ class HomeViewModel @Inject constructor(
     workManager: WorkManager,
     observeHistoryUseCase: ObserveHistoryUseCase,
     getChapterCountUseCase: GetChapterCountUseCase,
-    manageCategoriesUseCase: ManageCategoriesUseCase,
+    private val manageCategoriesUseCase: ManageCategoriesUseCase,
+    private val hideMangaUseCase: HideMangaUseCase,
+    private val deleteMangaUseCase: DeleteMangaUseCase,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
@@ -50,6 +56,9 @@ class HomeViewModel @Inject constructor(
 
     private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
     val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
+
+    val allCategories: StateFlow<List<CategoryDto>> = manageCategoriesUseCase.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), emptyList())
 
     val isIndexing: StateFlow<Boolean> = workManager.getWorkInfosByTagFlow("library_sync")
         .map { workInfos ->
@@ -95,6 +104,28 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeHomeLayout()
+    }
+
+    fun hideManga(mangaId: Long) {
+        viewModelScope.launch {
+            hideMangaUseCase(mangaId).onLeft { error ->
+                _uiEvents.send(error)
+            }
+        }
+    }
+
+    fun deleteManga(mangaId: Long) {
+        viewModelScope.launch {
+            deleteMangaUseCase(mangaId).onLeft { error ->
+                _uiEvents.send(error)
+            }
+        }
+    }
+
+    fun setMangaCategory(mangaId: Long, categoryId: Long?) {
+        viewModelScope.launch {
+            manageCategoriesUseCase.updateMangaCategory(mangaId, categoryId)
+        }
     }
 
     fun updateHomeLayout(layout: HomeLayoutType) {
