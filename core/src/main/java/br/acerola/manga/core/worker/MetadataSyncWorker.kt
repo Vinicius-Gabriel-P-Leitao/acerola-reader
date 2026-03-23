@@ -28,9 +28,9 @@ class MetadataSyncWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
     private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
-    @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase<MangaMetadataDto>,
-    @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase<MangaMetadataDto>,
-    @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase<MangaMetadataDto>,
+    @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase,
+    @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase,
+    @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
 ) : CoroutineWorker(context, workerParams) {
 
     private val notificationHelper = NotificationHelper(context)

@@ -97,4 +97,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCategoryDao(db: AcerolaDatabase): CategoryDao = db.categoryDao()
+
+    @Provides
+    fun provideMangaSummaryDao(db: AcerolaDatabase): br.acerola.manga.local.dao.view.MangaSummaryDao = db.mangaSummaryDao()
 }

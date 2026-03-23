@@ -28,17 +28,18 @@ object MangadexCaseModule {
     @MangadexCase
     fun provideSyncLibraryUseCase(
         @MangadexEngine repository: MangaGateway<MangaMetadataDto>
-    ): SyncLibraryUseCase<MangaMetadataDto> {
+    ): SyncLibraryUseCase {
         return SyncLibraryUseCase(repository)
     }
 
     @Provides
     @MangadexCase
     fun provideObserveLibraryUseCase(
-        @MangadexEngine mangaOps: MangaGateway<MangaMetadataDto>
+        @MangadexEngine repository: MangaGateway<MangaMetadataDto>
     ): ObserveLibraryUseCase<MangaMetadataDto> {
         return ObserveLibraryUseCase(
-            mangaRepository = mangaOps
+            mangaRepository = repository,
+            syncGateway = repository
         )
     }
 
@@ -46,7 +47,7 @@ object MangadexCaseModule {
     @MangadexCase
     fun provideRescanMangaUseCase(
         @MangadexEngine mangaOps: MangaGateway<MangaMetadataDto>
-    ): RescanMangaUseCase<MangaMetadataDto> {
+    ): RescanMangaUseCase {
         return RescanMangaUseCase(
             mangaRepository = mangaOps
         )

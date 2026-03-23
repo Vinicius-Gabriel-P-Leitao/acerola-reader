@@ -28,17 +28,18 @@ object DirectoryCaseModule {
     @DirectoryCase
     fun provideSyncLibraryUseCase(
         @DirectoryEngine repository: MangaGateway<MangaDirectoryDto>
-    ): SyncLibraryUseCase<MangaDirectoryDto> {
+    ): SyncLibraryUseCase {
         return SyncLibraryUseCase(repository)
     }
 
     @Provides
     @DirectoryCase
-    fun provideObserveLibraryUseCase(
-        @DirectoryEngine mangaOps: MangaGateway<MangaDirectoryDto>
+    fun provideObserveDirectoryUseCase(
+        @DirectoryEngine repository: MangaGateway<MangaDirectoryDto>
     ): ObserveLibraryUseCase<MangaDirectoryDto> {
         return ObserveLibraryUseCase(
-            mangaRepository = mangaOps
+            mangaRepository = repository,
+            syncGateway = repository
         )
     }
 
@@ -46,7 +47,7 @@ object DirectoryCaseModule {
     @DirectoryCase
     fun provideRescanMangaUseCase(
         @DirectoryEngine mangaOps: MangaGateway<MangaDirectoryDto>
-    ): RescanMangaUseCase<MangaDirectoryDto> {
+    ): RescanMangaUseCase {
         return RescanMangaUseCase(
             mangaRepository = mangaOps
         )

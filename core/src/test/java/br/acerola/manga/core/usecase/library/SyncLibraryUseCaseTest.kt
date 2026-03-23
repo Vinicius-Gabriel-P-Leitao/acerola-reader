@@ -21,7 +21,7 @@ class SyncLibraryUseCaseTest {
     @MockK
     lateinit var repository: MangaGateway<MangaDirectoryDto>
 
-    private lateinit var useCase: SyncLibraryUseCase<MangaDirectoryDto>
+    private lateinit var useCase: SyncLibraryUseCase
 
     @Before
     fun setUp() {

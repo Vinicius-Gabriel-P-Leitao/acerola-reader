@@ -4,8 +4,8 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
+import br.acerola.manga.adapter.contract.gateway.MangaSyncGateway
 import br.acerola.manga.adapter.contract.provider.ImageProvider
-import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.comicinfo.ComicInfoSource
 import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
@@ -16,17 +16,16 @@ import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
-import br.acerola.manga.local.entity.metadata.source.ComicInfoSource as ComicInfoSourceEntity
+import br.acerola.manga.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.manga.local.translator.persistence.toEntity
-import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
@@ -41,7 +40,7 @@ class ComicInfoMangaEngine @Inject constructor(
     private val mangaMetadataDao: MangaMetadataDao,
     private val comicInfoSourceDao: ComicInfoSourceDao,
     @param:MangadexSource private val downloadCoverService: ImageProvider<String>
-) : MangaGateway<MangaMetadataDto> {
+) : MangaSyncGateway {
 
     @Inject
     @ComicInfoSource
@@ -71,36 +70,22 @@ class ComicInfoMangaEngine @Inject constructor(
                         return@catch
                     }
 
-                    val existingRemote = mangaMetadataDao.getMangaByDirectoryId(directory.id).firstOrNull()
-
                     val mangaToSave = bestMatch.toEntity().copy(
-                        id = existingRemote?.id ?: 0L,
                         mangaDirectoryFk = directory.id,
                         syncSource = MetadataSource.COMIC_INFO.source
                     )
 
-                    val remoteId = if (existingRemote != null) {
-                        mangaMetadataDao.update(entity = mangaToSave)
-                        existingRemote.id
-                    } else {
-                        mangaMetadataDao.insert(entity = mangaToSave)
-                    }
+                    val remoteId = mangaMetadataDao.upsertMangaMetadataTransaction(
+                        metadata = mangaToSave,
+                        authors = bestMatch.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
+                        genres = bestMatch.genre.map { it.toEntity(mangaId = 0L) },
+                        comicInfoSource = bestMatch.toComicInfoSourceEntity(mangaRemoteInfoFk = 0L),
+                        authorDao = authorDao,
+                        genreDao = genreDao,
+                        comicInfoDao = comicInfoSourceDao
+                    )
 
                     if (remoteId != -1L) {
-                        val comicInfoSource = ComicInfoSourceEntity(
-                            localHash = bestMatch.sources?.comicInfo?.localHash ?: "local-${bestMatch.title.hashCode()}",
-                            mangaRemoteInfoFk = remoteId
-                        )
-                        comicInfoSourceDao.insert(comicInfoSource)
-
-                        bestMatch.authors?.let {
-                            authorDao.insert(entity = it.toEntity(mangaId = remoteId))
-                        }
-
-                        bestMatch.genre.forEach {
-                            genreDao.insert(entity = it.toEntity(mangaId = remoteId))
-                        }
-
                         bestMatch.cover?.let { dto ->
                             downloadCoverService.searchMedia(dto.url).onRight { bytes ->
                                 coverService.processCover(
@@ -127,10 +112,6 @@ class ComicInfoMangaEngine @Inject constructor(
                 _isIndexing.value = false
             }
         }
-
-    override fun observeLibrary(): StateFlow<List<MangaMetadataDto>> {
-        return MutableStateFlow(value = emptyList<MangaMetadataDto>()).asStateFlow()
-    }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
     override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)

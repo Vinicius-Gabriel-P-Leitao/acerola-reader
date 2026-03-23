@@ -13,6 +13,7 @@ import br.acerola.manga.dto.metadata.manga.source.AnilistSourceDto
 import br.acerola.manga.dto.metadata.manga.source.ComicInfoSourceDto
 import br.acerola.manga.dto.metadata.manga.source.MangaSourcesDto
 import br.acerola.manga.dto.metadata.manga.source.MangadexSourceDto
+import br.acerola.manga.dto.view.MangaSummaryDto
 import br.acerola.manga.local.entity.category.Category
 import br.acerola.manga.local.entity.metadata.ChapterDownloadSource
 import br.acerola.manga.local.entity.metadata.ChapterMetadata
@@ -24,6 +25,7 @@ import br.acerola.manga.local.entity.metadata.source.AnilistSource
 import br.acerola.manga.local.entity.metadata.source.ComicInfoSource
 import br.acerola.manga.local.entity.metadata.source.MangadexSource
 import br.acerola.manga.local.entity.relation.MetadataRelations
+import br.acerola.manga.local.entity.view.MangaSummaryView
 import br.acerola.manga.pattern.MetadataSource
 
 fun MetadataRelations.toViewDto(): MangaMetadataDto {
@@ -47,6 +49,17 @@ fun MetadataRelations.toViewDto(): MangaMetadataDto {
         )
     )
 }
+
+fun MangaSummaryView.toViewDto(): MangaSummaryDto = MangaSummaryDto(
+    directoryId = directoryId,
+    folderName = folderName,
+    folderCover = folderCover,
+    folderBanner = folderBanner,
+    externalSync = externalSync,
+    metadataTitle = metadataTitle,
+    activeSource = MetadataSource.from(activeSource),
+    metadataId = metadataId
+)
 
 fun MangadexSource.toViewDto(): MangadexSourceDto = MangadexSourceDto(
     mangadexId = mangadexId,

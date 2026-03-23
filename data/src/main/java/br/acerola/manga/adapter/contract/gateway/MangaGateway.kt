@@ -3,16 +3,31 @@ package br.acerola.manga.adapter.contract.gateway
 import android.net.Uri
 import arrow.core.Either
 import br.acerola.manga.error.message.LibrarySyncError
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-interface MangaGateway<T> {
+/**
+ * Interface apenas para observação de dados (Read).
+ */
+interface MangaReadOnlyGateway<T> {
+    fun observeLibrary(): Flow<List<T>>
+}
+
+/**
+ * Interface apenas para operações de sincronização e progresso (Write/Sync).
+ */
+interface MangaSyncGateway {
     val progress: StateFlow<Int>
     val isIndexing: StateFlow<Boolean>
 
-    fun observeLibrary(): StateFlow<List<T>>
     suspend fun refreshManga(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit>
     suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit>
     suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 }
+
+/**
+ * Interface completa para Engines que leem e escrevem (Diretórios, MangaDex, AniList).
+ */
+interface MangaGateway<T> : MangaReadOnlyGateway<T>, MangaSyncGateway

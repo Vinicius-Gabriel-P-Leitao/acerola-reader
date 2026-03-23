@@ -20,7 +20,7 @@ class RescanMangaUseCaseTest {
     @MockK
     lateinit var repository: MangaGateway<MangaDirectoryDto>
 
-    private lateinit var useCase: RescanMangaUseCase<MangaDirectoryDto>
+    private lateinit var useCase: RescanMangaUseCase
 
     @Before
     fun setUp() {

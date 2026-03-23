@@ -23,24 +23,21 @@ import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
 import br.acerola.manga.pattern.MediaFilePattern
-import br.acerola.manga.service.template.TemplateMatcher
 import br.acerola.manga.service.template.ChapterNameProcessor
+import br.acerola.manga.service.template.TemplateMatcher
 import br.acerola.manga.util.ContentQueryHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
@@ -301,21 +298,11 @@ class MangaDirectoryEngine @Inject constructor(
             }
         }
 
-    override fun observeLibrary(): StateFlow<List<MangaDirectoryDto>> {
+    override fun observeLibrary(): Flow<List<MangaDirectoryDto>> {
         return directoryDao.getAllMangaDirectory().map { folders ->
             AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
-            coroutineScope {
-                folders.map { folder ->
-                    async(context = Dispatchers.IO) {
-                        folder.toViewDto()
-                    }
-                }.awaitAll()
-            }
-        }.stateIn(
-            scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-            started = SharingStarted.Lazily,
-            initialValue = emptyList()
-        )
+            folders.map { it.toViewDto() }
+        }
     }
 
     private suspend fun processFolderList(
@@ -336,7 +323,7 @@ class MangaDirectoryEngine @Inject constructor(
                 coroutineScope {
                     batch.map { folder ->
                         async(context = Dispatchers.IO) {
-                            upsertFolder(folder, existingFolders, baseUri)
+                            upsertFolder(folder = folder, existingFolders = existingFolders, baseUri = baseUri)
                         }
                     }.awaitAll()
                 }
@@ -354,7 +341,7 @@ class MangaDirectoryEngine @Inject constructor(
                 batch.map { folder ->
                     async(context = Dispatchers.IO) {
                         try {
-                            upsertFolder(folder, existingFolders, baseUri)
+                            upsertFolder(folder = folder, existingFolders = existingFolders, baseUri = baseUri)
                         } finally {
                             val current = processed.incrementAndGet()
                             _progress.value = ((current.toFloat() / total) * 100).toInt()
@@ -370,19 +357,12 @@ class MangaDirectoryEngine @Inject constructor(
     }
 
     private suspend fun upsertFolder(
+        baseUri: Uri? = null,
         folder: MangaDirectory,
         existingFolders: List<MangaDirectory>,
-        baseUri: Uri? = null
     ) {
-        val normalizedName = normalizeName(folder.name)
-        val existing = existingFolders.find { normalizeName(it.name) == normalizedName }
-
-        val finalMangaId = if (existing != null) {
-            val updated = folder.copy(id = existing.id, externalSyncEnabled = existing.externalSyncEnabled)
-            directoryDao.update(entity = updated)
-            existing.id
-        } else {
-            directoryDao.insert(entity = folder)
+        val finalMangaId = directoryDao.upsertMangaDirectoryTransaction(folder) {
+            it.filter { char -> char.isLetterOrDigit() }.lowercase()
         }
 
         mangaDirectoryOps.refreshMangaChapters(mangaId = finalMangaId, baseUri = baseUri)

@@ -6,6 +6,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import br.acerola.manga.config.preference.HomeLayoutPreference
 import br.acerola.manga.config.preference.HomeLayoutType
+import br.acerola.manga.core.usecase.DirectoryCase
+import br.acerola.manga.core.usecase.MangadexCase
+import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
+import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
+import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
@@ -13,12 +19,6 @@ import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.core.usecase.DirectoryCase
-import br.acerola.manga.core.usecase.MangadexCase
-import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
-import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
-import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -38,11 +38,11 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     workManager: WorkManager,
     observeHistoryUseCase: ObserveHistoryUseCase,
+    getChapterCountUseCase: GetChapterCountUseCase,
+    manageCategoriesUseCase: ManageCategoriesUseCase,
     @param:ApplicationContext private val context: Context,
     @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
-    private val manageCategoriesUseCase: ManageCategoriesUseCase,
-    private val getChapterCountUseCase: GetChapterCountUseCase,
 ) : ViewModel() {
 
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
@@ -67,11 +67,11 @@ class HomeViewModel @Inject constructor(
         )
 
     val mangas: StateFlow<List<Triple<MangaDto, ReadingHistoryDto?, Int>>> = combine(
-        flow = directoryObserve(),
-        flow2 = mangadexObserve(),
-        flow3 = observeHistoryUseCase.invokeRecent(),
-        flow4 = manageCategoriesUseCase.getAllMangaCategories(),
-        flow5 = getChapterCountUseCase()
+        directoryObserve(),
+        mangadexObserve(),
+        observeHistoryUseCase.invokeRecent(),
+        manageCategoriesUseCase.getAllMangaCategories(),
+        getChapterCountUseCase()
     ) { mangaDirectories, remoteMangaInfo, historyList, categoryMap, chapterCounts ->
         val remoteInfoMap = remoteMangaInfo.filter { it.mangaDirectoryFk != null }
             .associateBy { it.mangaDirectoryFk!! }

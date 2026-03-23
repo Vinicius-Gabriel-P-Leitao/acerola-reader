@@ -34,7 +34,7 @@ abstract class ComicInfoModule {
     @ComicInfoEngine
     abstract fun bindComicInfoMangaRepository(
         impl: ComicInfoMangaEngine
-    ): MangaGateway<MangaMetadataDto>
+    ): br.acerola.manga.adapter.contract.gateway.MangaSyncGateway
 
     @Binds
     @Singleton

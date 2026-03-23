@@ -57,6 +57,9 @@ import br.acerola.manga.local.entity.metadata.source.MangadexSource
         Category::class,
         MangaCategory::class
     ],
+    views = [
+        br.acerola.manga.local.entity.view.MangaSummaryView::class
+    ],
     exportSchema = false,
     version = 2,
 )
@@ -77,4 +80,5 @@ abstract class AcerolaDatabase : RoomDatabase() {
     abstract fun anilistSourceDao(): AnilistSourceDao
     abstract fun comicInfoSourceDao(): ComicInfoSourceDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun mangaSummaryDao(): br.acerola.manga.local.dao.view.MangaSummaryDao
 }

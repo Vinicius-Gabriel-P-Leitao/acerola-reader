@@ -17,6 +17,7 @@ import br.acerola.manga.local.entity.metadata.relationship.Cover
 import br.acerola.manga.local.entity.metadata.relationship.Genre
 import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.manga.local.entity.metadata.source.AnilistSource
+import br.acerola.manga.local.entity.metadata.source.ComicInfoSource
 import br.acerola.manga.local.entity.metadata.source.MangadexSource
 
 fun CategoryDto.toEntity(): Category = Category(
@@ -87,6 +88,14 @@ fun MangaMetadataDto.toAnilistSourceEntity(mangaRemoteInfoFk: Long): AnilistSour
         trending = anilist.trending,
         coverImage = anilist.coverImage,
         bannerImage = anilist.bannerImage,
+        mangaRemoteInfoFk = mangaRemoteInfoFk
+    )
+}
+
+fun MangaMetadataDto.toComicInfoSourceEntity(mangaRemoteInfoFk: Long): ComicInfoSource {
+    val comicInfo = sources?.comicInfo
+    return ComicInfoSource(
+        localHash = comicInfo?.localHash ?: "local-${this.title.hashCode()}",
         mangaRemoteInfoFk = mangaRemoteInfoFk
     )
 }

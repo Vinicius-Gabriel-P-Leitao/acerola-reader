@@ -17,20 +17,21 @@ import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.AnilistSourceDao
-import br.acerola.manga.local.entity.metadata.MangaMetadata
 import br.acerola.manga.local.translator.persistence.toAnilistSourceEntity
 import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
-import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.service.artwork.BannerSaver
 import br.acerola.manga.service.artwork.CoverSaver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -59,8 +60,7 @@ class AnilistMangaEngine @Inject constructor(
     override suspend fun refreshManga(
         mangaId: Long,
         baseUri: Uri?
-    ): Either<LibrarySyncError, Unit> =
-        withContext(Dispatchers.IO) {
+    ): Either<LibrarySyncError, Unit> = withContext(Dispatchers.IO) {
             AcerolaLogger.audit(TAG, "Initiating AniList sync for manga: $mangaId", LogSource.REPOSITORY)
             _isIndexing.value = true
             try {
@@ -91,17 +91,27 @@ class AnilistMangaEngine @Inject constructor(
                         )
 
                         Either.catch {
-                            val remoteInfoId = getOrCreateRemoteInfo(mangaId, dto)
-                            persistAnilistData(
-                                mangaId = mangaId,
-                                remoteInfoId = remoteInfoId,
-                                dto = dto,
-                                baseUri = baseUri
+                            val mangaToSave = dto.toEntity().copy(
+                                mangaDirectoryFk = mangaId, syncSource = MetadataSource.ANILIST.source
                             )
-                            AcerolaLogger.audit(
-                                TAG, "Successfully synced AniList metadata", LogSource.REPOSITORY,
-                                mapOf("mangaId" to mangaId.toString(), "anilistId" to (dto.sources?.anilist?.anilistId?.toString() ?: ""))
+
+                            val remoteInfoId = mangaMetadataDao.upsertMangaMetadataTransaction(
+                                metadata = mangaToSave, authors = dto.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
+                                genres = dto.genre.map { it.toEntity(mangaId = 0L) },
+                                anilistSource = dto.toAnilistSourceEntity(mangaRemoteInfoFk = 0L), authorDao = authorDao, genreDao = genreDao,
+                                anilistDao = anilistSourceDao
                             )
+
+                            if (remoteInfoId != -1L) {
+                                persistAnilistData(
+                                    mangaId = mangaId, remoteInfoId = remoteInfoId, dto = dto, baseUri = baseUri
+                                )
+                                AcerolaLogger.audit(
+                                    TAG, "Successfully synced AniList metadata", LogSource.REPOSITORY, mapOf(
+                                        "mangaId" to mangaId.toString(), "anilistId" to (dto.sources?.anilist?.anilistId?.toString() ?: "")
+                                    )
+                                )
+                            }
                         }.mapLeft { exception ->
                             LibrarySyncError.UnexpectedError(cause = exception)
                         }
@@ -111,12 +121,8 @@ class AnilistMangaEngine @Inject constructor(
             }
         }
 
-    private fun normalizeName(name: String): String {
-        return name.filter { it.isLetterOrDigit() }.lowercase()
-    }
-
-    override fun observeLibrary(): StateFlow<List<MangaMetadataDto>> {
-        return MutableStateFlow(emptyList<MangaMetadataDto>()).asStateFlow()
+    override fun observeLibrary(): Flow<List<MangaMetadataDto>> {
+        return flowOf(emptyList())
     }
 
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
@@ -135,8 +141,7 @@ class AnilistMangaEngine @Inject constructor(
             }
         }
 
-    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
-        refreshLibrary(baseUri)
+    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = refreshLibrary(baseUri)
 
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(Dispatchers.IO) {
@@ -161,36 +166,8 @@ class AnilistMangaEngine @Inject constructor(
             }
         }
 
-    private suspend fun getOrCreateRemoteInfo(
-        directoryId: Long,
-        dto: MangaMetadataDto
-    ): Long {
-        val existing = mangaMetadataDao.getMangaByDirectoryId(directoryId).firstOrNull()
-
-        val remoteInfo = existing?.copy(
-            title = dto.title ?: existing.title,
-            description = dto.description ?: existing.description,
-            romanji = dto.romanji ?: existing.romanji,
-            status = dto.status ?: existing.status,
-            publication = dto.year ?: existing.publication,
-            syncSource = MetadataSource.ANILIST.source
-        )
-            ?: MangaMetadata(
-                title = dto.title ?: "",
-                description = dto.description ?: "",
-                romanji = dto.romanji ?: "",
-                status = dto.status ?: "UNKNOWN",
-                publication = dto.year,
-                mangaDirectoryFk = directoryId,
-                syncSource = MetadataSource.ANILIST.source
-            )
-
-        return if (existing != null) {
-            mangaMetadataDao.update(remoteInfo)
-            existing.id
-        } else {
-            mangaMetadataDao.insert(remoteInfo)
-        }
+    private fun normalizeName(name: String): String {
+        return name.filter { it.isLetterOrDigit() }.lowercase()
     }
 
     private suspend fun persistAnilistData(
@@ -199,16 +176,6 @@ class AnilistMangaEngine @Inject constructor(
         dto: MangaMetadataDto,
         baseUri: Uri?
     ) {
-        val dtoWithId = dto.copy(id = remoteInfoId)
-
-        anilistSourceDao.insert(dtoWithId.toAnilistSourceEntity(remoteInfoId))
-
-        authorDao.deleteAuthorsByMangaRemoteInfoFk(remoteInfoId)
-        genreDao.deleteGenresByMangaRemoteInfoFk(remoteInfoId)
-
-        dto.authors?.let { authorDao.insert(it.toEntity(mangaId = remoteInfoId)) }
-        dto.genre.forEach { genreDao.insert(it.toEntity(mangaId = remoteInfoId)) }
-
         val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return
 
         val rootPath = baseUri?.toString()
