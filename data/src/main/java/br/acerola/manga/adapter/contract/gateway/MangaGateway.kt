@@ -31,3 +31,12 @@ interface MangaSyncGateway {
  * Interface completa para Engines que leem e escrevem (Diretórios, MangaDex, AniList).
  */
 interface MangaGateway<T> : MangaReadOnlyGateway<T>, MangaSyncGateway
+
+/**
+ * Interface para operações de escrita na biblioteca local (ocultar/deletar).
+ * Separada de MangaSyncGateway pois não são operações de sincronização.
+ */
+interface MangaLibraryWriteGateway {
+    suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit>
+    suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit>
+}
