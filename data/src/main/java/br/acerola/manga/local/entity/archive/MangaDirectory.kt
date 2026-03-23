@@ -42,4 +42,7 @@ data class MangaDirectory(
 
     @ColumnInfo(name = "external_sync_enabled")
     val externalSyncEnabled: Boolean = true,
+
+    @ColumnInfo(name = "hidden", defaultValue = "0")
+    val hidden: Boolean = false,
 )

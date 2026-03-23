@@ -27,7 +27,7 @@ interface MangaDirectoryDao : BaseDao<MangaDirectory>{
         val existing = allFolders.find { normalizeName(it.name) == normalizedTarget }
 
         return if (existing != null) {
-            val updated = directory.copy(id = existing.id, externalSyncEnabled = existing.externalSyncEnabled)
+            val updated = directory.copy(id = existing.id, externalSyncEnabled = existing.externalSyncEnabled, hidden = existing.hidden)
             update(entity = updated)
             existing.id
         } else {
