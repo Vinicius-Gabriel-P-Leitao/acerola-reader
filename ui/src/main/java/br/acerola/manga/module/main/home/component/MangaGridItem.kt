@@ -52,6 +52,7 @@ fun Main.Home.Component.MangaGridItem(
     manga: MangaDto,
     history: ReadingHistoryDto? = null,
     chapterCount: Int = 0,
+    onShowActions: () -> Unit = {},
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -217,9 +218,8 @@ fun Main.Home.Component.MangaGridItem(
                 }
             }
 
-            // NOTE: Adicionar funções
             IconButton(
-                onClick = { /* NOTE: Open menu */ },
+                onClick = onShowActions,
                 modifier = Modifier.size(24.dp)
             ) {
                 Icon(

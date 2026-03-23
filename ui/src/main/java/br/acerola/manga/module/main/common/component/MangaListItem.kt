@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,6 +41,7 @@ fun Main.Common.Component.MangaListItem(
     chapterCount: Int = 0,
     isCompleted: Boolean = false,
     onPlayClick: (() -> Unit)? = null,
+    onShowActions: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -237,6 +239,22 @@ fun Main.Common.Component.MangaListItem(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = stringResource(id = R.string.description_icon_continue_reading),
                     tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (onShowActions != null) {
+            IconButton(
+                onClick = onShowActions,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.MoreHoriz,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
