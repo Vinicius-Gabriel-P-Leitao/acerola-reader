@@ -117,6 +117,10 @@ metadados de fontes online populares.
   mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do 
   anilist e link para o produto original. 
 
+#### Otimizar visualmente tela de download
+- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos
+- [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
+
 #### Filtros e Ordenação — Home Screen
 - [ ] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
 - [ ] **Persistência da ordenação** via DataStore.
