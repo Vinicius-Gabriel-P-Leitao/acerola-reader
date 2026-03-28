@@ -117,25 +117,26 @@ metadados de fontes online populares.
   mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do 
   anilist e link para o produto original. 
 
+#### Adicionar action no botão de ...  de cada mangá
+- [x] **Adicionar bookmark** Adicionar uma action de bookmark nos seção de action
+- [x] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar
+
 #### Otimizar visualmente tela de download
 - [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos
 - [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
 
 #### Filtros e Ordenação — Home Screen
-- [ ] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
-- [ ] **Persistência da ordenação** via DataStore.
-- [ ] **UI do filtro:** Usar apenas ícone, sem label.
-- [ ] **Filtros sem salvar em dataStore:** Filtro por bookmark que o usuário criou, source de metadados ou sem metadados.
+- [x] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
+- [x] **Persistência da ordenação** via DataStore.
+- [x] **UI do filtro:** Usar apenas ícone, sem label.
+- [x] **Mostrar os ocultos** Deixar os ocultos aparecerem só quando filtrados
+- [x] **Filtros sem salvar em dataStore:** Filtro por bookmark que o usuário criou, source de metadados ou sem metadados.
 
 #### Filtros e Ordenação — Tela de Capítulos
-- [ ] **Remover autoscroll** ao trocar de página na tela de manga onde listam os chapters.
-- [ ] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
-- [ ] **Persistência da ordenação** por mangá (ou global) via DataStore.
-- [ ] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
-
-#### Adicionar action no botão de ...  de cada mangá
-- [ ] **Adicionar bookmark** Adicionar uma action de bookmark nos seção de action
-- [ ] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar 
+- [x] **Remover autoscroll** ao trocar de página na tela de manga onde listam os chapters.
+- [x] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
+- [x] **Persistência da ordenação** por mangá (ou global) via DataStore.
+- [x] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
 
 #### Verificar e Baixar Novos Capítulos
 - [ ] **Botão "Verificar updates":** Na tela de detalhes do mangá, um botão que consulta o MangaDex e retorna
@@ -144,7 +145,6 @@ metadados de fontes online populares.
   enfileira no download manager já existente.
 
 ---
-
 
 ## Pilha de Tecnologia
 
