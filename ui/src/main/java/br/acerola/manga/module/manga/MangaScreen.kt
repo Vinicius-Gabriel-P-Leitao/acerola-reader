@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -38,6 +39,7 @@ import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.module.manga.component.ChapterSortSheet
 import br.acerola.manga.module.manga.layout.ChapterSection
 import br.acerola.manga.module.manga.layout.Header
 import br.acerola.manga.module.manga.layout.ConfigSection
@@ -110,6 +112,7 @@ fun MangaScreen(
     val history by mangaViewModel.history.collectAsState()
     val readChapters by mangaViewModel.readChapters.collectAsState()
     val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsState()
+    val chapterSortSettings by mangaViewModel.chapterSortSettings.collectAsState()
     val allCategories by mangaMetadataViewModel.allCategories.collectAsState()
 
     val currentManga = mangaState ?: manga
@@ -138,19 +141,19 @@ fun MangaScreen(
         currentPage = currentPage,
         totalPages = totalPages,
         selectedChapterPerPage = selectedChapterPerPage,
+        chapterSortSettings = chapterSortSettings,
         allCategories = allCategories
     )
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
+    var showSortSheet by remember { mutableStateOf(false) }
+
     val onChapterAction: (MangaChapterAction) -> Unit = { action ->
         when (action) {
             is MangaChapterAction.ChangePage -> {
                 mangaViewModel.loadPageAsync(action.page)
-                coroutineScope.launch {
-                    listState.animateScrollToItem(index = 2)
-                }
             }
             is MangaChapterAction.ClickChapter -> {
                 val intent = Intent(context, ReaderActivity::class.java).apply {
@@ -291,6 +294,18 @@ fun MangaScreen(
                         )
                     }
                 )
+            },
+            actions = {
+                Acerola.Component.GlassButton(
+                    onClick = { showSortSheet = true },
+                    icon = {
+                        Icon(
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                        )
+                    }
+                )
             }
         )
 
@@ -303,6 +318,14 @@ fun MangaScreen(
             Acerola.Layout.ProgressIndicator(
                 isLoading = uiState.isIndexing,
                 progress = uiState.indexingProgress,
+            )
+        }
+
+        if (showSortSheet) {
+            Manga.Component.ChapterSortSheet(
+                sortSettings = uiState.chapterSortSettings,
+                onSortChange = { mangaViewModel.updateChapterSort(it) },
+                onDismiss = { showSortSheet = false }
             )
         }
     }

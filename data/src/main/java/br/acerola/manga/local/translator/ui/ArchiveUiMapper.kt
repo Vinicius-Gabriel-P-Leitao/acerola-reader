@@ -17,12 +17,17 @@ fun MangaDirectory.toViewDto(): MangaDirectoryDto {
         lastModified = lastModified,
         chapterTemplateFk = chapterTemplateFk,
         externalSyncEnabled = externalSyncEnabled,
+        hidden = hidden
     )
 }
 
 fun ChapterArchive.toViewDto(): ChapterFileDto {
     return ChapterFileDto(
-        id = id, name = chapter, path = path, chapterSort = chapterSort
+        id = id,
+        name = chapter,
+        path = path,
+        chapterSort = chapterSort,
+        lastModified = lastModified
     )
 }
 

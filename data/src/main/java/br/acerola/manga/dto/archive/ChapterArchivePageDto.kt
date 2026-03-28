@@ -19,5 +19,6 @@ data class ChapterFileDto(
     val id: Long,
     val name: String,
     val path: String,
-    val chapterSort: String
+    val chapterSort: String,
+    val lastModified: Long = 0
 ) : Parcelable

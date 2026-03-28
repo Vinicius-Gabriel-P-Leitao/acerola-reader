@@ -13,6 +13,9 @@ interface MangaDirectoryDao : BaseDao<MangaDirectory>{
     @Query(value = "SELECT * FROM manga_directory WHERE hidden = 0 ORDER BY id ASC")
     fun getAllMangaDirectory(): Flow<List<MangaDirectory>>
 
+    @Query(value = "SELECT * FROM manga_directory ORDER BY id ASC")
+    fun getAllMangaDirectoryIncludingHidden(): Flow<List<MangaDirectory>>
+
     @Query(value = "SELECT * FROM manga_directory WHERE id = :mangaId")
     suspend fun getMangaDirectoryById(mangaId: Long): MangaDirectory?
 
@@ -24,7 +27,7 @@ interface MangaDirectoryDao : BaseDao<MangaDirectory>{
         directory: MangaDirectory,
         normalizeName: (String) -> String
     ): Long {
-        val allFolders = getAllMangaDirectory().firstOrNull() ?: emptyList()
+        val allFolders = getAllMangaDirectoryIncludingHidden().firstOrNull() ?: emptyList()
 
         val normalizedTarget = normalizeName(directory.name)
         val existing = allFolders.find { normalizeName(it.name) == normalizedTarget }

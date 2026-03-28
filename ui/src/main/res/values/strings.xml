@@ -240,4 +240,13 @@
     <string name="dialog_delete_title">Deletar mangá?</string>
     <string name="dialog_delete_message">Esta ação remove o mangá do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
 
+    <!-- Filter & Sort Sheet -->
+    <string name="title_home_filter_sheet">Filtrar e Ordenar</string>
+    <string name="subtitle_home_sort">Ordenar por</string>
+    <string name="subtitle_home_filter">Filtrar por</string>
+    <string name="label_home_filter_show_hidden">Mostrar ocultos</string>
+    <string name="subtitle_home_filter_categories">Categorias</string>
+    <string name="subtitle_home_filter_sources">Fontes de Metadados</string>
+    <string name="title_chapter_sort_sheet">Ordenar Capítulos</string>
+
 </resources>

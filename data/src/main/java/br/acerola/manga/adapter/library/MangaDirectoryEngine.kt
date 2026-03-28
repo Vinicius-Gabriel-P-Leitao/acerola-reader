@@ -139,7 +139,7 @@ class MangaDirectoryEngine @Inject constructor(
 
                     val discoveredFolders: List<MangaDirectory> = buildLibrary(context, rootUri = baseUri)
                     val databaseFolders: List<MangaDirectory> =
-                        directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                        directoryDao.getAllMangaDirectoryIncludingHidden().firstOrNull() ?: emptyList()
 
                     if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
                         _progress.value = -1
@@ -300,7 +300,7 @@ class MangaDirectoryEngine @Inject constructor(
         }
 
     override fun observeLibrary(): Flow<List<MangaDirectoryDto>> {
-        return directoryDao.getAllMangaDirectory().map { folders ->
+        return directoryDao.getAllMangaDirectoryIncludingHidden().map { folders ->
             AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
             folders.map { it.toViewDto() }
         }

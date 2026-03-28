@@ -2,6 +2,9 @@ package br.acerola.manga.module.manga.state
 
 import androidx.annotation.StringRes
 import br.acerola.manga.config.preference.ChapterPageSizeType
+import br.acerola.manga.config.preference.ChapterSortPreferenceData
+import br.acerola.manga.config.preference.ChapterSortType
+import br.acerola.manga.config.preference.SortDirection
 import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -27,6 +30,7 @@ data class MangaUiState(
     val currentPage: Int,
     val totalPages: Int,
     val selectedChapterPerPage: ChapterPageSizeType,
+    val chapterSortSettings: ChapterSortPreferenceData = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING),
     val allCategories: List<CategoryDto> = emptyList()
 )
 
