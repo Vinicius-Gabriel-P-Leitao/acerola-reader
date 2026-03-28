@@ -1,21 +1,28 @@
 package br.acerola.manga.module.main.home.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +33,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.config.preference.HomeSortPreference
@@ -36,7 +45,7 @@ import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.home.state.FilterSettings
 import br.acerola.manga.ui.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun Main.Home.Component.HomeFilterSheet(
     sortSettings: HomeSortPreference,
@@ -58,6 +67,7 @@ fun Main.Home.Component.HomeFilterSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Text(
                 text = stringResource(id = R.string.title_home_filter_sheet),
@@ -65,7 +75,7 @@ fun Main.Home.Component.HomeFilterSheet(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Sort Section
             Text(
@@ -76,6 +86,11 @@ fun Main.Home.Component.HomeFilterSheet(
             )
 
             MangaSortType.entries.forEach { type ->
+                val label = when (type) {
+                    MangaSortType.TITLE -> stringResource(id = R.string.label_sort_title)
+                    MangaSortType.CHAPTER_COUNT -> stringResource(id = R.string.label_sort_chapter_count)
+                    MangaSortType.LAST_UPDATE -> stringResource(id = R.string.label_sort_last_update)
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -84,7 +99,7 @@ fun Main.Home.Component.HomeFilterSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = type.name.replace("_", " "),
+                        text = label,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -112,7 +127,7 @@ fun Main.Home.Component.HomeFilterSheet(
                 }
             }
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Filter Section
             Text(
@@ -142,42 +157,64 @@ fun Main.Home.Component.HomeFilterSheet(
             // Categories (Bookmark Filter)
             Text(
                 text = stringResource(id = R.string.subtitle_home_filter_categories),
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.primary
             )
 
-            Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 FilterChip(
                     selected = filterSettings.bookmarkCategoryId == null,
                     onClick = { onFilterChange(filterSettings.copy(bookmarkCategoryId = null)) },
-                    label = { Text("All") }
+                    label = { Text(stringResource(id = R.string.label_filter_all)) }
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                
                 categories.forEach { category ->
                     FilterChip(
                         selected = filterSettings.bookmarkCategoryId == category.id,
                         onClick = { onFilterChange(filterSettings.copy(bookmarkCategoryId = category.id)) },
-                        label = { Text(category.name) }
+                        label = { Text(category.name) },
+                        leadingIcon = {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(category.color))
+                            )
+                        }
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                 }
             }
 
             // Metadata Sources
             Text(
                 text = stringResource(id = R.string.subtitle_home_filter_sources),
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.primary
             )
 
-            Row(modifier = Modifier.padding(horizontal = 16.dp)) {
-                listOf(null, "MANGADEX", "ANILIST", "COMIC_INFO", "NONE").forEach { source ->
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val sources = listOf(
+                    null to stringResource(id = R.string.label_filter_all),
+                    "MANGADEX" to "MangaDex",
+                    "ANILIST" to "AniList",
+                    "COMIC_INFO" to "ComicInfo",
+                    "NONE" to stringResource(id = R.string.label_filter_none)
+                )
+                
+                sources.forEach { (sourceKey, label) ->
                     FilterChip(
-                        selected = filterSettings.metadataSource == source,
-                        onClick = { onFilterChange(filterSettings.copy(metadataSource = source)) },
-                        label = { Text(source ?: "All") }
+                        selected = filterSettings.metadataSource == sourceKey,
+                        onClick = { onFilterChange(filterSettings.copy(metadataSource = sourceKey)) },
+                        label = { Text(label) }
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                 }
             }
         }

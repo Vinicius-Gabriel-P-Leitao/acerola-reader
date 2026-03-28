@@ -249,4 +249,13 @@
     <string name="subtitle_home_filter_sources">Fontes de Metadados</string>
     <string name="title_chapter_sort_sheet">Ordenar Capítulos</string>
 
+    <string name="label_filter_all">Todos</string>
+    <string name="label_filter_none">Sem metadados</string>
+
+    <!-- Sort Types -->
+    <string name="label_sort_title">Título</string>
+    <string name="label_sort_chapter_count">Quantidade de capítulos</string>
+    <string name="label_sort_last_update">Última atualização</string>
+    <string name="label_sort_number">Número</string>
+
 </resources>

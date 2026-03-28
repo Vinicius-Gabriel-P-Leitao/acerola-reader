@@ -57,6 +57,10 @@ fun Manga.Component.ChapterSortSheet(
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             ChapterSortType.entries.forEach { type ->
+                val label = when (type) {
+                    ChapterSortType.NUMBER -> stringResource(id = R.string.label_sort_number)
+                    ChapterSortType.LAST_UPDATE -> stringResource(id = R.string.label_sort_last_update)
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -65,7 +69,7 @@ fun Manga.Component.ChapterSortSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = type.name.replace("_", " "),
+                        text = label,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge
                     )
