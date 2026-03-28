@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
     tableName = "chapter_page",
     foreignKeys = [
         ForeignKey(
-            entity = ChapterRemoteInfo::class,
+            entity = ChapterMetadata::class,
             parentColumns = ["id"],
             childColumns = ["chapter_fk"],
             onDelete = ForeignKey.CASCADE

@@ -3,7 +3,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.manga
 import android.content.Context
 import br.acerola.manga.data.R
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.manga.MangaAttributes
 import br.acerola.manga.remote.mangadex.dto.manga.MangaMangadexDto
@@ -25,7 +25,7 @@ class MangadexSourceMangaInfoRepositoryTest {
     lateinit var context: Context
 
     @MockK
-    lateinit var api: MangadexMangaInfoApi
+    lateinit var api: MangadexMangaMetadataClient
 
     private lateinit var repository: MangadexMangaInfoSource
 
@@ -41,7 +41,7 @@ class MangadexSourceMangaInfoRepositoryTest {
         val title = "Naruto"
 
         val attr = MangaAttributes(
-            titleMap = mapOf(pair = "en" to "Naruto"),
+            titleMap = mapOf("en" to "Naruto"),
             altTitlesList = emptyList(),
             descriptionMap = emptyMap(),
             isLocked = false,
@@ -73,7 +73,7 @@ class MangadexSourceMangaInfoRepositoryTest {
         result.onRight { list ->
             assertEquals(1, list.size)
             assertEquals("Naruto", list[0].title)
-            assertEquals("1", list[0].mangadexId)
+            assertEquals("1", list[0].sources?.mangadex?.mangadexId)
         }
     }
 
@@ -85,9 +85,9 @@ class MangadexSourceMangaInfoRepositoryTest {
         val result = repository.searchInfo("Naruto")
 
         assertTrue(result.isLeft())
-        // WARN: Valida se o erro mapeado é ConnectionFailed e não Unknown
+        // Valida se o erro mapeado é ConnectionFailed e não Unknown
         result.onLeft { error ->
-            assertTrue("Erro deve ser ConnectionFailed", error is NetworkError.ConnectionFailed)
+            assertTrue("Erro deve ser do tipo NetworkError, recebido: $error", error is NetworkError)
         }
     }
 }

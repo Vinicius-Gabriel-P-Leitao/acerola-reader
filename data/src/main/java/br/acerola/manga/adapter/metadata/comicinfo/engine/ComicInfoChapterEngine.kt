@@ -3,19 +3,19 @@ package br.acerola.manga.adapter.metadata.comicinfo.engine
 import android.database.sqlite.SQLiteException
 import android.net.Uri
 import arrow.core.Either
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.comicinfo.ComicInfoSource
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.ChapterArchiveDao
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
-import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.translator.toDownloadSources
-import br.acerola.manga.local.translator.toModel
+import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
+import br.acerola.manga.local.translator.persistence.toDownloadSourcesEntities
+import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import kotlinx.coroutines.Dispatchers
@@ -34,14 +34,14 @@ import javax.inject.Singleton
 class ComicInfoChapterEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
     private val chapterArchiveDao: ChapterArchiveDao,
-    private val mangaRemoteInfoDao: MangaRemoteInfoDao,
-    private val chapterRemoteInfoDao: ChapterRemoteInfoDao,
+    private val mangaMetadataDao: MangaMetadataDao,
+    private val chapterMetadataDao: ChapterMetadataDao,
     private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
-) : ChapterPort<ChapterRemoteInfoPageDto> {
+) : ChapterGateway<ChapterRemoteInfoPageDto> {
 
     @Inject
     @ComicInfoSource
-    lateinit var comicInfoSourceService: RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    lateinit var comicInfoSourceService: MetadataProvider<ChapterMetadataDto, String>
 
     private val _progress = MutableStateFlow(value = -1)
     override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -59,7 +59,7 @@ class ComicInfoChapterEngine @Inject constructor(
                 val directory = directoryDao.getMangaDirectoryById(mangaId)
                     ?: throw Exception("Directory not found for ID: $mangaId")
 
-                val remoteManga = mangaRemoteInfoDao.getMangaByDirectoryId(directory.id).first()
+                val remoteManga = mangaMetadataDao.getMangaByDirectoryId(directory.id).first()
                     ?: throw Exception("Remote info not found for manga directory: ${directory.name}")
 
                 val localChapters = chapterArchiveDao.getChaptersByMangaDirectory(directory.id).first()
@@ -78,10 +78,10 @@ class ComicInfoChapterEngine @Inject constructor(
 
                     if (result != null) {
                         AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter}", LogSource.REPOSITORY)
-                        val chapterRemoteInfoEntity = result.toModel(mangaRemoteInfoFk = remoteManga.id)
-                        val chapterRemoteInfoId = chapterRemoteInfoDao.insert(chapterRemoteInfoEntity)
+                        val chapterRemoteInfoEntity = result.toEntity(mangaRemoteInfoFk = remoteManga.id)
+                        val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
 
-                        val downloadSourceEntities = result.toDownloadSources(chapterFk = chapterRemoteInfoId)
+                        val downloadSourceEntities = result.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
                         chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
                     }
 

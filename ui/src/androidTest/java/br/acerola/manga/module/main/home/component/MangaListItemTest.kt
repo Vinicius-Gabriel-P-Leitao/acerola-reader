@@ -5,7 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.common.component.MangaListItem
 import org.junit.Rule
@@ -21,16 +21,15 @@ class MangaListItemTest {
         val manga = MangaDto(
             directory = MangaDirectoryDto(
                 id = 1L,
-                name = "Diretório Local",
+                name = "Pasta Manga",
                 path = "",
                 coverUri = null,
                 bannerUri = null,
                 lastModified = 0L,
-                chapterTemplate = null,
-                hasComicInfo = false
+                chapterTemplateFk = null
             ),
-            remoteInfo = MangaRemoteInfoDto(
-                title = "Manga em Lista", description = "", status = ""
+            remoteInfo = MangaMetadataDto(
+                title = "Título do Manga", description = "", status = ""
             )
         )
 
@@ -40,7 +39,7 @@ class MangaListItemTest {
             }
         }
 
-        // Valida se o título é renderizado no componente de lista
-        composeTestRule.onNodeWithText("Manga em Lista").assertIsDisplayed()
+        // Valida se o título é renderizado corretamente
+        composeTestRule.onNodeWithText("Título do Manga").assertIsDisplayed()
     }
 }

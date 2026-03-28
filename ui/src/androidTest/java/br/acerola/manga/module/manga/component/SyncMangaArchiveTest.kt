@@ -18,7 +18,8 @@ class SyncMangaArchiveTest {
         composeTestRule.setContent {
             Manga.Component.SyncMangaArchive(
                 onSyncChapters = {},
-                onRescanCover = {}
+                onRescanCover = {},
+                onExtractFirstPageAsCover = {}
             )
         }
 
@@ -32,7 +33,8 @@ class SyncMangaArchiveTest {
         composeTestRule.setContent {
             Manga.Component.SyncMangaArchive(
                 onSyncChapters = { clicked = true },
-                onRescanCover = {}
+                onRescanCover = {},
+                onExtractFirstPageAsCover = {}
             )
         }
 
@@ -46,7 +48,8 @@ class SyncMangaArchiveTest {
         composeTestRule.setContent {
             Manga.Component.SyncMangaArchive(
                 onSyncChapters = {},
-                onRescanCover = { clicked = true }
+                onRescanCover = { clicked = true },
+                onExtractFirstPageAsCover = {}
             )
         }
 

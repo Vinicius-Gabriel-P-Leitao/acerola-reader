@@ -1,4 +1,4 @@
-package br.acerola.manga.local.database.dao
+package br.acerola.manga.local.database.dao.archive
 
 import android.content.Context
 import androidx.room.Room
@@ -6,14 +6,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
-import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.database.DatabaseAcerola
-import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.database.AcerolaDatabase
+import br.acerola.manga.local.entity.archive.ChapterArchive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,14 +21,14 @@ import java.io.IOException
 @SmallTest
 class ChapterArchiveDaoTest {
 
-    private lateinit var db: DatabaseAcerola
-    private lateinit var dao: br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
-    private lateinit var directoryDao: br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
+    private lateinit var db: AcerolaDatabase
+    private lateinit var dao: br.acerola.manga.local.dao.archive.ChapterArchiveDao
+    private lateinit var directoryDao: br.acerola.manga.local.dao.archive.MangaDirectoryDao
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, DatabaseAcerola::class.java)
+        db = Room.inMemoryDatabaseBuilder(context, AcerolaDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = db.chapterArchiveDao()
@@ -70,7 +68,7 @@ class ChapterArchiveDaoTest {
         // Arrange
         val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory())
         val chapters = List(10) { 
-            ChapterArchive(chapter = it.toString(), path = "p", chapterSort = it.toString(), folderPathFk = folderId) 
+            ChapterArchive(chapter = it.toString(), path = "p$it", chapterSort = it.toString(), folderPathFk = folderId) 
         }
         dao.insertAll(*chapters.toTypedArray())
 
@@ -87,8 +85,8 @@ class ChapterArchiveDaoTest {
         val id1 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(name = "Manga 1"))
         val id2 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(name = "Manga 2"))
         
-        dao.insert(ChapterArchive(chapter = "1", path = "p", chapterSort = "1", folderPathFk = id1))
-        dao.insert(ChapterArchive(chapter = "1", path = "p", chapterSort = "1", folderPathFk = id2))
+        dao.insert(ChapterArchive(chapter = "1", path = "p1", chapterSort = "1", folderPathFk = id1))
+        dao.insert(ChapterArchive(chapter = "1", path = "p2", chapterSort = "1", folderPathFk = id2))
 
         // Act
         dao.deleteChaptersByMangaDirectoryId(id1)

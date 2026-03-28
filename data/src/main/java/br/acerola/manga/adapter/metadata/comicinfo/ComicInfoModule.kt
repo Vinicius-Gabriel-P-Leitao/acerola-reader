@@ -1,15 +1,15 @@
 package br.acerola.manga.adapter.metadata.comicinfo
 
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.MangaPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.comicinfo.engine.ComicInfoChapterEngine
 import br.acerola.manga.adapter.metadata.comicinfo.engine.ComicInfoMangaEngine
 import br.acerola.manga.adapter.metadata.comicinfo.source.ChapterComicInfoSource
 import br.acerola.manga.adapter.metadata.comicinfo.source.MangaComicInfoSource
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -34,26 +34,26 @@ abstract class ComicInfoModule {
     @ComicInfoEngine
     abstract fun bindComicInfoMangaRepository(
         impl: ComicInfoMangaEngine
-    ): MangaPort<MangaRemoteInfoDto>
+    ): br.acerola.manga.adapter.contract.gateway.MangaSyncGateway
 
     @Binds
     @Singleton
     @ComicInfoEngine
     abstract fun bindComicInfoChapterRepository(
         impl: ComicInfoChapterEngine
-    ): ChapterPort<ChapterRemoteInfoPageDto>
+    ): ChapterGateway<ChapterRemoteInfoPageDto>
 
     @Binds
     @Singleton
     @ComicInfoSource
     abstract fun bindComicInfoMangaInfoService(
         impl: MangaComicInfoSource
-    ): RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
+    ): MetadataProvider<MangaMetadataDto, String>
 
     @Binds
     @Singleton
     @ComicInfoSource
     abstract fun bindComicInfoChapterInfoService(
         impl: ChapterComicInfoSource
-    ): RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    ): MetadataProvider<ChapterMetadataDto, String>
 }

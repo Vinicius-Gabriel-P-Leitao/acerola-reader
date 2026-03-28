@@ -1,7 +1,7 @@
 package br.acerola.manga.repository.adapter.local.history
 
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.adapter.history.LocalHistoryEgine
+import br.acerola.manga.adapter.history.LocalHistoryEngine
 import br.acerola.manga.local.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.entity.history.ReadingHistory
 import io.mockk.coEvery
@@ -18,12 +18,12 @@ import org.junit.Test
 class LocalHistoryEngineTest {
 
     private lateinit var readingHistoryDao: ReadingHistoryDao
-    private lateinit var repository: LocalHistoryEgine
+    private lateinit var repository: LocalHistoryEngine
 
     @Before
     fun setUp() {
         readingHistoryDao = mockk()
-        repository = LocalHistoryEgine(readingHistoryDao)
+        repository = LocalHistoryEngine(readingHistoryDao)
     }
 
     @Test

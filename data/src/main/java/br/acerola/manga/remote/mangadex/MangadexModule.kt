@@ -1,9 +1,9 @@
 package br.acerola.manga.remote.mangadex
 
 import br.acerola.manga.data.BuildConfig
-import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
-import br.acerola.manga.remote.mangadex.api.MangadexDownloadApi
-import br.acerola.manga.remote.mangadex.api.MangadexMangaInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
+import br.acerola.manga.remote.mangadex.api.MangadexMangaDownloadClient
+import br.acerola.manga.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.manga.remote.mangadex.interceptor.MangadexInterceptor
 import dagger.Module
 import dagger.Provides
@@ -60,20 +60,20 @@ object MangadexModule {
 
     @Provides
     @Singleton
-    fun provideMangadexMangaInfoApi(@MainApi retrofit: Retrofit): MangadexMangaInfoApi {
-        return retrofit.create(MangadexMangaInfoApi::class.java)
+    fun provideMangadexMangaInfoApi(@MainApi retrofit: Retrofit): MangadexMangaMetadataClient {
+        return retrofit.create(MangadexMangaMetadataClient::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideMangadexDownloadApi(@DownloadApi retrofit: Retrofit): MangadexDownloadApi {
-        return retrofit.create(MangadexDownloadApi::class.java)
+    fun provideMangadexDownloadApi(@DownloadApi retrofit: Retrofit): MangadexMangaDownloadClient {
+        return retrofit.create(MangadexMangaDownloadClient::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideMangadexChapterInfoApi(@MainApi retrofit: Retrofit): MangadexChapterInfoApi {
-        return retrofit.create(MangadexChapterInfoApi::class.java)
+    fun provideMangadexChapterInfoApi(@MainApi retrofit: Retrofit): MangadexChapterMetadataClient {
+        return retrofit.create(MangadexChapterMetadataClient::class.java)
     }
 
 }

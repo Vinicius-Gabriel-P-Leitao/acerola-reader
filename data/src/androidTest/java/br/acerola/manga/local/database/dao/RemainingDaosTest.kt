@@ -7,7 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.database.DatabaseAcerola
+import br.acerola.manga.local.database.AcerolaDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -22,12 +22,12 @@ import java.io.IOException
 @SmallTest
 class RemainingDaosTest {
 
-    private lateinit var db: DatabaseAcerola
+    private lateinit var db: AcerolaDatabase
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, DatabaseAcerola::class.java).allowMainThreadQueries().build()
+        db = Room.inMemoryDatabaseBuilder(context, AcerolaDatabase::class.java).allowMainThreadQueries().build()
     }
 
     @After
@@ -50,7 +50,7 @@ class RemainingDaosTest {
 
     @Test
     fun testChapterRemoteInfoDao() = runBlocking {
-        val mangaDao = db.mangaMangaRemoteInfoDao()
+        val mangaDao = db.mangaRemoteInfoDao()
         val chapterDao = db.chapterRemoteInfoDao()
 
         val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
@@ -65,7 +65,7 @@ class RemainingDaosTest {
 
     @Test
     fun testChapterDownloadSourceDao() = runBlocking {
-        val mangaDao = db.mangaMangaRemoteInfoDao()
+        val mangaDao = db.mangaRemoteInfoDao()
         val chapterDao = db.chapterRemoteInfoDao()
         val sourceDao = db.chapterDownloadSourceDao()
 
@@ -82,7 +82,7 @@ class RemainingDaosTest {
 
     @Test
     fun testCoverDao() = runBlocking {
-        val mangaDao = db.mangaMangaRemoteInfoDao()
+        val mangaDao = db.mangaRemoteInfoDao()
         val coverDao = db.coverDao()
 
         val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
@@ -97,7 +97,7 @@ class RemainingDaosTest {
 
     @Test
     fun testGenreDao() = runBlocking {
-        val mangaDao = db.mangaMangaRemoteInfoDao()
+        val mangaDao = db.mangaRemoteInfoDao()
         val genreDao = db.genreDao()
 
         val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())

@@ -1,14 +1,14 @@
 package br.acerola.manga.adapter.metadata.mangadex.source
 
 import arrow.core.Either
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.config.network.safeApiCall
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.local.translator.toDto
+import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,14 +20,14 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexChapterInfoSource @Inject constructor(
-    private val api: MangadexChapterInfoApi
-) : RemoteInfoOperationsPort<ChapterRemoteInfoDto, String> {
+    private val api: MangadexChapterMetadataClient
+) : MetadataProvider<ChapterMetadataDto, String> {
 
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
-    ): Either<NetworkError, List<ChapterRemoteInfoDto>> = withContext(context = Dispatchers.IO) {
+    ): Either<NetworkError, List<ChapterMetadataDto>> = withContext(context = Dispatchers.IO) {
         AcerolaLogger.d(TAG, "GET /manga/$manga/feed initiated (offset: $offset)", LogSource.NETWORK)
-        val allChapters = mutableListOf<ChapterRemoteInfoDto>()
+        val allChapters = mutableListOf<ChapterMetadataDto>()
         val semaphore = Semaphore(permits = 3)
         var currentOffset = offset
 
@@ -60,7 +60,7 @@ class MangadexChapterInfoSource @Inject constructor(
                     semaphore.withPermit {
                         val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
                         val source = sourceResult.getOrNull()
-                        item.toDto(source)
+                        item.toViewDto(source)
                     }
                 }
             }.awaitAll()
@@ -79,7 +79,7 @@ class MangadexChapterInfoSource @Inject constructor(
         }
     }
 
-    override suspend fun saveInfo(manga: String, info: ChapterRemoteInfoDto): Either<NetworkError, Unit> =
+    override suspend fun saveInfo(manga: String, info: ChapterMetadataDto): Either<NetworkError, Unit> =
         Either.Right(Unit)
 
     companion object {

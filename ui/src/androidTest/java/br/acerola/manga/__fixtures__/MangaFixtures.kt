@@ -7,7 +7,6 @@ import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.module.manga.state.MainTab
 import br.acerola.manga.module.manga.state.MangaUiState
 
@@ -16,7 +15,7 @@ import br.acerola.manga.module.manga.state.MangaUiState
  */
 object MangaFixtures {
     fun createMangaUiState(
-        manga: MangaDto = MangaDto(createMangaDirectoryDto(), null),
+        manga: MangaDto = MangaDto(directory = createMangaDirectoryDto(), remoteInfo = null),
         chapters: ChapterDto? = null,
         selectedTab: MainTab = MainTab.CHAPTERS,
         isIndexing: Boolean = false,
@@ -64,8 +63,7 @@ object MangaFixtures {
         coverUri = null,
         bannerUri = null,
         lastModified = 0L,
-        chapterTemplate = "",
-        hasComicInfo = false
+        chapterTemplateFk = null
     )
 
     fun createReadingHistoryDto(

@@ -32,8 +32,7 @@ object MangaFixtures {
         coverUri = null,
         bannerUri = null,
         lastModified = 0L,
-        chapterTemplate = "",
-        hasComicInfo = false
+        chapterTemplateFk = null
     )
 
     fun createReadingHistoryDto(

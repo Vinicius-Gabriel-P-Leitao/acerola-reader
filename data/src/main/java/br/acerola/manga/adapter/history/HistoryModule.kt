@@ -1,6 +1,6 @@
 package br.acerola.manga.adapter.history
 
-import br.acerola.manga.adapter.contract.HistoryPort
+import br.acerola.manga.adapter.contract.gateway.HistoryGateway
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Qualifier
 @Retention(value = AnnotationRetention.BINARY)
-annotation class LocalHistoryEngine
+annotation class LocalHistory
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -18,8 +18,8 @@ abstract class HistoryModule {
 
     @Binds
     @Singleton
-    @LocalHistoryEngine
+    @LocalHistory
     abstract fun bindHistoryRepository(
-        impl: LocalHistoryEgine
-    ): HistoryPort
+        impl: LocalHistoryEngine
+    ): HistoryGateway
 }

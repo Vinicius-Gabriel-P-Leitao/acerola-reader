@@ -13,6 +13,6 @@ interface AnilistSourceDao : BaseDao<AnilistSource> {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     override suspend fun insert(entity: AnilistSource): Long
 
-    @Query(value = "SELECT * FROM anilist_source WHERE manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT * FROM anilist_source WHERE manga_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
     suspend fun getByMangaRemoteInfoFk(mangaRemoteInfoFk: Long): AnilistSource?
 }

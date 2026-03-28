@@ -30,7 +30,7 @@ import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
@@ -53,7 +53,7 @@ fun Main.Config.Layout.Screen(
     metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel(),
     fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
     mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
-    mangaDexViewModel: MangaRemoteInfoViewModel = hiltViewModel(),
+    mangaDexViewModel: MangaMetadataViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
     templateViewModel: TemplateConfigViewModel = hiltViewModel()
 ) {

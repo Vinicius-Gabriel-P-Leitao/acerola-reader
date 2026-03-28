@@ -9,7 +9,8 @@ import br.acerola.manga.MainDispatcherRule
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.config.permission.FileSystemAccessManager
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -41,7 +42,7 @@ class ChapterArchiveViewModelTest {
         every { AcerolaLogger.d(any<String>(), any<String>(), any<LogSource>()) } returns Unit
         every { AcerolaLogger.audit(any<String>(), any<String>(), any<LogSource>(), any<Map<String, String>>()) } returns Unit
 
-        viewModel = ChapterArchiveViewModel(workManager, observeChaptersUseCase)
+        viewModel = ChapterArchiveViewModel(workManager, mockk(relaxed = true), observeChaptersUseCase)
     }
 
     @After

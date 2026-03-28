@@ -32,14 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Divider
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 
 @Composable
 fun Manga.Component.SyncMetadata(
-    remoteInfo: MangaRemoteInfoDto?,
+    remoteInfo: MangaMetadataDto?,
     externalSyncEnabled: Boolean,
     onSyncMangadexInfo: () -> Unit,
     onSyncMangadexChapters: () -> Unit,
@@ -56,7 +56,7 @@ fun Manga.Component.SyncMetadata(
             // NOTE: Mangadex
             MangadexSection(
                 isActive = syncSource == MetadataSource.MANGADEX,
-                hasChapters = hasMangadexSource && remoteInfo?.id != null,
+                hasChapters = hasMangadexSource && remoteInfo.id != null,
                 onSyncInfo = onSyncMangadexInfo,
                 onSyncChapters = onSyncMangadexChapters
             )

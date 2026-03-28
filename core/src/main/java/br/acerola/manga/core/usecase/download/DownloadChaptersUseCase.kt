@@ -2,17 +2,17 @@ package br.acerola.manga.core.usecase.download
 
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
-import br.acerola.manga.service.compact.CbzCompactService
-import br.acerola.manga.service.download.ChapterDownloadService
-import br.acerola.manga.service.file.FileStorageService
+import br.acerola.manga.service.compact.CbzCompressor
+import br.acerola.manga.service.download.DownloadManager
+import br.acerola.manga.service.file.FileStorageHandler
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class DownloadChaptersUseCase @Inject constructor(
-    @param:MangadexSource private val chapterDownloadService: ChapterDownloadService,
-    private val archiveCompactService: CbzCompactService,
-    private val fileStorageService: FileStorageService,
+    @param:MangadexSource private val downloadManager: DownloadManager,
+    private val archiveCompactService: CbzCompressor,
+    private val fileStorageHandler: FileStorageHandler,
 ) {
     data class ChapterEntry(val id: String, val fileName: String)
 
@@ -41,7 +41,7 @@ class DownloadChaptersUseCase @Inject constructor(
                 return@forEachIndexed
             }
 
-            val pageUrls = chapterDownloadService.getPageUrls(entry.id).getOrNull()
+            val pageUrls = downloadManager.getPageUrls(entry.id).getOrNull()
 
             if (pageUrls.isNullOrEmpty()) {
                 errorCount++
@@ -69,7 +69,7 @@ class DownloadChaptersUseCase @Inject constructor(
         val entries = mutableListOf<Pair<String, ByteArray>>()
 
         pageUrls.forEachIndexed { pageIndex, url ->
-            val bytes = chapterDownloadService.downloadBytes(url) ?: return null
+            val bytes = downloadManager.downloadBytes(url) ?: return null
 
             val fileName = url.substringAfterLast('/').substringBefore('?')
             val extension = fileName.substringAfterLast('.', "jpg")
@@ -85,11 +85,11 @@ class DownloadChaptersUseCase @Inject constructor(
         mangaFolder: DocumentFile
     ) {
         if (mangaFolder.findFile(coverFileName) != null) return
-        val bytes = chapterDownloadService.downloadBytes(coverUrl) ?: return
+        val bytes = downloadManager.downloadBytes(coverUrl) ?: return
 
         val extension = coverFileName.substringAfterLast('.', "jpg")
         val mimeType = if (extension == "png") "image/png" else "image/jpeg"
 
-        fileStorageService.saveFile(mangaFolder, coverFileName, mimeType, bytes)
+        fileStorageHandler.saveFile(mangaFolder, coverFileName, mimeType, bytes)
     }
 }

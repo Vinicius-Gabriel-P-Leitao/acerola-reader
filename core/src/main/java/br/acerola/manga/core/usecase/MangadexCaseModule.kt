@@ -1,9 +1,9 @@
 package br.acerola.manga.core.usecase
 
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.library.RescanMangaChaptersUseCase
@@ -27,26 +27,27 @@ object MangadexCaseModule {
     @Provides
     @MangadexCase
     fun provideSyncLibraryUseCase(
-        @MangadexEngine repository: MangaPort<MangaRemoteInfoDto>
-    ): SyncLibraryUseCase<MangaRemoteInfoDto> {
+        @MangadexEngine repository: MangaGateway<MangaMetadataDto>
+    ): SyncLibraryUseCase {
         return SyncLibraryUseCase(repository)
     }
 
     @Provides
     @MangadexCase
     fun provideObserveLibraryUseCase(
-        @MangadexEngine mangaOps: MangaPort<MangaRemoteInfoDto>
-    ): ObserveLibraryUseCase<MangaRemoteInfoDto> {
+        @MangadexEngine repository: MangaGateway<MangaMetadataDto>
+    ): ObserveLibraryUseCase<MangaMetadataDto> {
         return ObserveLibraryUseCase(
-            mangaRepository = mangaOps
+            mangaRepository = repository,
+            syncGateway = repository
         )
     }
 
     @Provides
     @MangadexCase
     fun provideRescanMangaUseCase(
-        @MangadexEngine mangaOps: MangaPort<MangaRemoteInfoDto>
-    ): RescanMangaUseCase<MangaRemoteInfoDto> {
+        @MangadexEngine mangaOps: MangaGateway<MangaMetadataDto>
+    ): RescanMangaUseCase {
         return RescanMangaUseCase(
             mangaRepository = mangaOps
         )
@@ -55,7 +56,7 @@ object MangadexCaseModule {
     @Provides
     @MangadexCase
     fun provideRescanMangaChaptersUseCase(
-        @MangadexEngine chapterOps: ChapterPort<ChapterRemoteInfoPageDto>
+        @MangadexEngine chapterOps: ChapterGateway<ChapterRemoteInfoPageDto>
     ): RescanMangaChaptersUseCase<ChapterRemoteInfoPageDto> {
         return RescanMangaChaptersUseCase(
             chapterRepository = chapterOps
@@ -65,7 +66,7 @@ object MangadexCaseModule {
     @Provides
     @MangadexCase
     fun provideGetChaptersUseCase(
-        @MangadexEngine chapterOps: ChapterPort<ChapterRemoteInfoPageDto>
+        @MangadexEngine chapterOps: ChapterGateway<ChapterRemoteInfoPageDto>
     ): ObserveChaptersUseCase<ChapterRemoteInfoPageDto> {
         return ObserveChaptersUseCase(
             chapterRepository = chapterOps

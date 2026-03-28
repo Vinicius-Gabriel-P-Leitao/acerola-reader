@@ -6,7 +6,7 @@ import androidx.compose.ui.test.onNodeWithText
 import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.manga.Manga
 import org.junit.Rule
 import org.junit.Test
@@ -26,9 +26,9 @@ class HeaderTest {
                 coverUri = null,
                 bannerUri = null,
                 lastModified = 0L,
-                chapterTemplate = null
+                chapterTemplateFk = null
             ),
-            remoteInfo = MangaRemoteInfoDto(
+            remoteInfo = MangaMetadataDto(
                 title = "Manga Fantástico",
                 description = "Uma sinopse qualquer",
                 status = "Lançando"

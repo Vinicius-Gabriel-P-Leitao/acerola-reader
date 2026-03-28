@@ -51,7 +51,7 @@ import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.component.Pagination
 import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.download.Download
 import br.acerola.manga.module.download.DownloadViewModel
 import br.acerola.manga.module.download.component.ChapterDownloadItem
@@ -80,7 +80,7 @@ private val languageNames = mapOf(
 
 @Composable
 fun Download.Layout.DownloadScreen(
-    manga: MangaRemoteInfoDto,
+    manga: MangaMetadataDto,
     onBack: () -> Unit,
     viewModel: DownloadViewModel = hiltViewModel(),
 ) {
@@ -210,7 +210,7 @@ fun Download.Layout.DownloadScreen(
 }
 
 @Composable
-private fun MangaDownloadHeader(manga: MangaRemoteInfoDto) {
+private fun MangaDownloadHeader(manga: MangaMetadataDto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

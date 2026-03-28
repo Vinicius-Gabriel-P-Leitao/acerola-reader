@@ -1,6 +1,7 @@
 package br.acerola.manga.common.ux.layout
 
 import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import br.acerola.manga.common.ux.Acerola
@@ -15,35 +16,39 @@ class SearchBarTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `SearchBar_deve_filtrar_itens_ao_digitar_na_busca`() {
+    fun `SearchBar_deve_exibir_itens_quando_ativo`() {
         val items = listOf("Dragon Ball", "Naruto", "One Piece")
 
         composeTestRule.setContent {
+            var query by remember { mutableStateOf("") }
+            var active by remember { mutableStateOf(false) }
+            
             AcerolaTheme {
-                Acerola.Component.SearchBar(
-                    items = items,
+                Acerola.Component.SearchBar<String>(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = {},
+                    active = active,
+                    onActiveChange = { active = it },
+                    items = items.filter { it.contains(query, ignoreCase = true) },
                     placeholder = "Buscar...",
-                    itemKey = { it },
-                    searchKey = { it }
+                    itemKey = { it }
                 ) { item ->
                     Text(text = item)
                 }
             }
         }
 
-        // 1. Verifica se todos aparecem inicialmente (LazyColumn dentro do SearchBar só aparece quando ativo ou no histórico dependendo da impl)
-        // No nosso caso, o SearchBar do M3 precisa estar ativo para mostrar o conteúdo.
-        
         // Clica no SearchBar para ativar
         composeTestRule.onNodeWithText("Buscar...").performClick()
 
-        // 2. Verifica se Dragon Ball aparece na lista filtrada inicial (que são todos)
+        // Verifica se Dragon Ball aparece na lista
         composeTestRule.onNodeWithText("Dragon Ball").assertIsDisplayed()
 
-        // 3. Digita "One" na busca
+        // Digita "One" na busca
         composeTestRule.onNodeWithText("Buscar...").performTextInput("One")
 
-        // 4. Verifica se apenas One Piece aparece
+        // Verifica se apenas One Piece aparece
         composeTestRule.onNodeWithText("One Piece").assertIsDisplayed()
         composeTestRule.onNodeWithText("Naruto").assertDoesNotExist()
     }
@@ -51,18 +56,23 @@ class SearchBarTest {
     @Test
     fun `SearchBar_deve_exibir_mensagem_de_vazio_quando_não_houver_resultados`() {
         composeTestRule.setContent {
+            var query by remember { mutableStateOf("") }
+            var active by remember { mutableStateOf(true) }
+
             AcerolaTheme {
-                Acerola.Component.SearchBar(
-                    items = listOf("Bleach"),
+                Acerola.Component.SearchBar<String>(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = {},
+                    active = active,
+                    onActiveChange = { active = it },
+                    items = emptyList(),
                     placeholder = "Buscar...",
-                    itemKey = { it },
-                    searchKey = { it }
+                    itemKey = { it }
                 ) { Text(it) }
             }
         }
 
-        composeTestRule.onNodeWithText("Buscar...").performClick()
-        composeTestRule.onNodeWithText("Buscar...").performTextInput("Inexistente")
         composeTestRule.onNodeWithText("Nenhum resultado encontrado", substring = true).assertIsDisplayed()
     }
 }

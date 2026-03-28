@@ -8,9 +8,9 @@ import arrow.core.Either
 import br.acerola.manga.adapter.library.ChapterArchiveEngine
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
-import br.acerola.manga.local.database.dao.archive.ChapterArchiveDao
-import br.acerola.manga.local.database.dao.archive.MangaDirectoryDao
-import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.dao.archive.ChapterArchiveDao
+import br.acerola.manga.local.dao.archive.MangaDirectoryDao
+import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.util.ContentQueryHelper
 import br.acerola.manga.util.sha256
 import br.acerola.manga.util.templateToRegex
@@ -39,6 +39,9 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
+import br.acerola.manga.service.compact.PdfToCbzConverter
+import br.acerola.manga.service.template.ChapterNameProcessor
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChapterArchiveEngineTest {
 
@@ -47,6 +50,12 @@ class ChapterArchiveEngineTest {
 
     @MockK
     lateinit var chapterArchiveDao: ChapterArchiveDao
+
+    @MockK
+    lateinit var templateService: ChapterNameProcessor
+
+    @MockK
+    lateinit var pdfToCbzConverterService: PdfToCbzConverter
 
     @MockK
     lateinit var context: Context
@@ -59,7 +68,13 @@ class ChapterArchiveEngineTest {
         MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
 
-        repository = ChapterArchiveEngine(directoryDao, chapterArchiveDao, context)
+        repository = ChapterArchiveEngine(
+            directoryDao, 
+            chapterArchiveDao, 
+            templateService,
+            context,
+            pdfToCbzConverterService
+        )
 
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)
@@ -75,6 +90,7 @@ class ChapterArchiveEngineTest {
         every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockUri
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
+        coEvery { templateService.getTemplates() } returns emptyList()
     }
 
     @After

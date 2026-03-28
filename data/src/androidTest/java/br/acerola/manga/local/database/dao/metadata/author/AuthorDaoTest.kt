@@ -6,9 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.manga.fixtures.MetadataFixtures
-import br.acerola.manga.local.database.dao.metadata.MangaRemoteInfoDao
-import br.acerola.manga.local.database.dao.metadata.relationship.AuthorDao
-import br.acerola.manga.local.database.database.DatabaseAcerola
+import br.acerola.manga.local.database.AcerolaDatabase
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
+import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -21,16 +21,16 @@ import java.io.IOException
 @SmallTest
 class AuthorDaoTest {
 
-    private lateinit var db: DatabaseAcerola
+    private lateinit var db: AcerolaDatabase
     private lateinit var authorDao: AuthorDao
-    private lateinit var mangaDao: MangaRemoteInfoDao
+    private lateinit var mangaDao: MangaMetadataDao
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, DatabaseAcerola::class.java).allowMainThreadQueries().build()
+        db = Room.inMemoryDatabaseBuilder(context, AcerolaDatabase::class.java).allowMainThreadQueries().build()
         authorDao = db.authorDao()
-        mangaDao = db.mangaMangaRemoteInfoDao()
+        mangaDao = db.mangaRemoteInfoDao()
     }
 
     @After

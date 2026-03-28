@@ -40,6 +40,7 @@ import br.acerola.manga.common.ux.component.ImageCard
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -51,6 +52,7 @@ fun Main.Home.Component.MangaGridItem(
     manga: MangaDto,
     history: ReadingHistoryDto? = null,
     chapterCount: Int = 0,
+    onShowActions: () -> Unit = {},
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -77,7 +79,12 @@ fun Main.Home.Component.MangaGridItem(
         placeholder = placeholderPainter,
         fallback = placeholderPainter,
         error = placeholderPainter,
-        model = ImageRequest.Builder(context).data(data = coverUri).size(resolver = SizeResolver(imageSize)).build(),
+        model = ImageRequest.Builder(context)
+            .data(data = coverUri)
+            .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
+            .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+            .size(resolver = SizeResolver(imageSize))
+            .build(),
     )
 
     val categoryColor = manga.category?.color
@@ -121,9 +128,9 @@ fun Main.Home.Component.MangaGridItem(
                     .padding(bottom = 8.dp, end = 8.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
-                val sourceIcon = when {
-                    manga.remoteInfo?.sources?.mangadex != null -> R.drawable.mangadex_v2
-                    manga.remoteInfo?.sources?.anilist != null -> R.drawable.anilist
+                val sourceIcon = when (manga.remoteInfo?.syncSource) {
+                    MetadataSource.MANGADEX -> R.drawable.mangadex_v2
+                    MetadataSource.ANILIST -> R.drawable.anilist
                     else -> null
                 }
                 if (sourceIcon != null) {
@@ -211,9 +218,8 @@ fun Main.Home.Component.MangaGridItem(
                 }
             }
 
-            // NOTE: Adicionar funções
             IconButton(
-                onClick = { /* NOTE: Open menu */ },
+                onClick = onShowActions,
                 modifier = Modifier.size(24.dp)
             ) {
                 Icon(

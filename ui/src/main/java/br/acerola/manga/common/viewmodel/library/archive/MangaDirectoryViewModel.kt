@@ -11,8 +11,12 @@ import androidx.work.workDataOf
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.core.usecase.manga.DeleteMangaUseCase
 import br.acerola.manga.core.usecase.manga.ExtractCoverFromChapterUseCase
+import br.acerola.manga.core.usecase.manga.HideMangaUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.core.worker.LibrarySyncWorker
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
@@ -42,6 +46,9 @@ class MangaDirectoryViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val manager: FileSystemAccessManager,
     private val extractCoverFromChapterUseCase: ExtractCoverFromChapterUseCase,
+    private val hideMangaUseCase: HideMangaUseCase,
+    private val deleteMangaUseCase: DeleteMangaUseCase,
+    private val manageCategoriesUseCase: ManageCategoriesUseCase,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
@@ -62,6 +69,9 @@ class MangaDirectoryViewModel @Inject constructor(
         initialValue = emptyList(),
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
     )
+
+    val allCategories: StateFlow<List<CategoryDto>> = manageCategoriesUseCase.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val chapters: StateFlow<List<ChapterFileDto>> = _selectedDirectoryId.flatMapLatest { id ->
@@ -102,6 +112,28 @@ class MangaDirectoryViewModel @Inject constructor(
         }
     }
 
+    fun hideManga(mangaId: Long) {
+        viewModelScope.launch {
+            hideMangaUseCase(mangaId).onLeft { error ->
+                _uiEvents.send(error)
+            }
+        }
+    }
+
+    fun deleteManga(mangaId: Long) {
+        viewModelScope.launch {
+            deleteMangaUseCase(mangaId).onLeft { error ->
+                _uiEvents.send(error)
+            }
+        }
+    }
+
+    fun setMangaCategory(mangaId: Long, categoryId: Long?) {
+        viewModelScope.launch {
+            manageCategoriesUseCase.updateMangaCategory(mangaId, categoryId)
+        }
+    }
+
     fun extractCoverFromChapter(mangaId: Long) {
         viewModelScope.launch {
             _isIndexing.value = true
@@ -110,7 +142,7 @@ class MangaDirectoryViewModel @Inject constructor(
                     _uiEvents.send(error)
                 },
                 ifRight = {
-                    // Success
+                    rescanMangaByManga(mangaId)
                 }
             )
             _isIndexing.value = false

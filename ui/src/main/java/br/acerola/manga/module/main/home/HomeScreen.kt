@@ -42,6 +42,7 @@ import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.module.main.common.component.MangaActionsSheet
 import br.acerola.manga.module.main.common.component.MangaListItem
 import br.acerola.manga.module.main.home.component.MangaGridItem
 import br.acerola.manga.module.main.home.state.HomeAction
@@ -67,6 +68,7 @@ fun Main.Home.Layout.Screen(
     val isIndexing by homeViewModel.isIndexing.collectAsState()
     val progress by homeViewModel.progress.collectAsState()
     val mangas by homeViewModel.mangas.collectAsState()
+    val allCategories by homeViewModel.allCategories.collectAsState()
 
     val uiState = HomeUiState(
         layout = layout,
@@ -74,6 +76,8 @@ fun Main.Home.Layout.Screen(
         indexingProgress = if (progress >= 0) progress / 100f else null,
         mangas = mangas
     )
+
+    var selectedMangaForActions by remember { mutableStateOf<MangaDto?>(null) }
 
     var query by rememberSaveable { mutableStateOf("") }
     var searchActive by rememberSaveable { mutableStateOf(false) }
@@ -151,6 +155,7 @@ fun Main.Home.Layout.Screen(
                                 manga = manga,
                                 history = history,
                                 chapterCount = chapterCount,
+                                onShowActions = { selectedMangaForActions = manga },
                                 onClick = { onAction(HomeAction.ClickManga(manga)) }
                             )
 
@@ -160,6 +165,7 @@ fun Main.Home.Layout.Screen(
                                 subtitle = manga.remoteInfo?.authors?.name,
                                 onClick = { onAction(HomeAction.ClickManga(manga)) },
                                 onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
+                                onShowActions = { selectedMangaForActions = manga },
                             )
                         }
                     }
@@ -211,6 +217,18 @@ fun Main.Home.Layout.Screen(
             Acerola.Layout.ProgressIndicator(
                 isLoading = uiState.isIndexing,
                 progress = uiState.indexingProgress,
+            )
+        }
+
+        val activeManga = selectedMangaForActions
+        if (activeManga != null) {
+            Main.Common.Component.MangaActionsSheet(
+                manga = activeManga,
+                categories = allCategories,
+                onHide = { homeViewModel.hideManga(activeManga.directory.id) },
+                onDelete = { homeViewModel.deleteManga(activeManga.directory.id) },
+                onBookmark = { categoryId -> homeViewModel.setMangaCategory(activeManga.directory.id, categoryId) },
+                onDismiss = { selectedMangaForActions = null },
             )
         }
     }

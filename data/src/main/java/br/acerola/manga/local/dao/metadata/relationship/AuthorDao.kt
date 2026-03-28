@@ -17,10 +17,10 @@ interface AuthorDao : BaseDao<Author> {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     override suspend fun insertAll(vararg entity: Author): LongArray
 
-    @Query(value = "SELECT id FROM author WHERE name = :name AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT id FROM author WHERE name = :name AND manga_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
     suspend fun getIdByNameAndFk(name: String, mangaRemoteInfoFk: Long): Long?
 
-    @Query(value = "DELETE FROM author WHERE manga_remote_info_fk = :mangaRemoteInfoFk")
+    @Query(value = "DELETE FROM author WHERE manga_metadata_fk = :mangaRemoteInfoFk")
     suspend fun deleteAuthorsByMangaRemoteInfoFk(mangaRemoteInfoFk: Long)
 
     @Transaction

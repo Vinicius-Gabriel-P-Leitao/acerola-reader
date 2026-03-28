@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import br.acerola.manga.common.ux.component.BookmarkRibbon
 import br.acerola.manga.common.ux.component.ImageCard
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -39,6 +41,7 @@ fun Main.Common.Component.MangaListItem(
     chapterCount: Int = 0,
     isCompleted: Boolean = false,
     onPlayClick: (() -> Unit)? = null,
+    onShowActions: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -62,6 +65,8 @@ fun Main.Common.Component.MangaListItem(
         error = placeholderPainter,
         model = ImageRequest.Builder(context)
             .data(data = coverUri)
+            .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
+            .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
             .size(resolver = SizeResolver(imageSize))
             .build(),
     )
@@ -111,9 +116,9 @@ fun Main.Common.Component.MangaListItem(
                     .padding(bottom = 4.dp, end = 4.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
-                val sourceIcon = when {
-                    manga.remoteInfo?.sources?.mangadex != null -> R.drawable.mangadex_v2
-                    manga.remoteInfo?.sources?.anilist != null -> R.drawable.anilist
+                val sourceIcon = when (manga.remoteInfo?.syncSource) {
+                    MetadataSource.MANGADEX -> R.drawable.mangadex_v2
+                    MetadataSource.ANILIST -> R.drawable.anilist
                     else -> null
                 }
                 if (sourceIcon != null) {
@@ -234,6 +239,22 @@ fun Main.Common.Component.MangaListItem(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = stringResource(id = R.string.description_icon_continue_reading),
                     tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (onShowActions != null) {
+            IconButton(
+                onClick = onShowActions,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.MoreHoriz,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

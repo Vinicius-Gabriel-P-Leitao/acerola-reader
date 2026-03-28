@@ -8,7 +8,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.download.layout.DownloadScreen
 import br.acerola.manga.ui.R
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,10 +24,10 @@ class DownloadActivity(
         const val MANGA = "MANGA"
     }
 
-    val manga: MangaRemoteInfoDto? by lazy {
+    val manga: MangaMetadataDto? by lazy {
         val safeIntent = intent ?: return@lazy null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            safeIntent.extras?.getParcelable(Extra.MANGA, MangaRemoteInfoDto::class.java)
+            safeIntent.extras?.getParcelable(Extra.MANGA, MangaMetadataDto::class.java)
         } else {
             @Suppress("DEPRECATION")
             safeIntent.extras?.getParcelable(Extra.MANGA)
@@ -48,7 +48,7 @@ class DownloadActivity(
     override fun TopBar(navController: NavHostController) = Unit
 
     companion object {
-        fun start(context: Context, manga: MangaRemoteInfoDto) {
+        fun start(context: Context, manga: MangaMetadataDto) {
             val intent = Intent(context, DownloadActivity::class.java).apply {
                 putExtra(Extra.MANGA, manga)
             }

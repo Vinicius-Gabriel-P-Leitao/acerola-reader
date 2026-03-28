@@ -15,7 +15,7 @@ import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.library.SyncLibraryUseCase
 import br.acerola.manga.core.usecase.metadata.SyncMangaMetadataUseCase
 import br.acerola.manga.data.R
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.util.NotificationHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -28,9 +28,9 @@ class MetadataSyncWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
     private val syncMangaMetadataUseCase: SyncMangaMetadataUseCase,
-    @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
-    @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
-    @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase<MangaRemoteInfoDto>,
+    @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase,
+    @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase,
+    @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
 ) : CoroutineWorker(context, workerParams) {
 
     private val notificationHelper = NotificationHelper(context)

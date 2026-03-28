@@ -5,22 +5,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.config.preference.ChapterPageSizeType
 import br.acerola.manga.config.preference.ChapterPerPagePreference
+import br.acerola.manga.core.usecase.DirectoryCase
+import br.acerola.manga.core.usecase.MangadexCase
+import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.manga.core.usecase.history.ObserveMangaHistoryUseCase
+import br.acerola.manga.core.usecase.history.TrackReadingProgressUseCase
+import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.manga.dto.ChapterDto
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.core.usecase.DirectoryCase
-import br.acerola.manga.core.usecase.MangadexCase
-import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.manga.core.usecase.history.ObserveMangaHistoryUseCase
-import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
-import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.manga.util.normalizeChapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -43,9 +44,10 @@ import kotlin.math.max
 
 @HiltViewModel
 class MangaViewModel @Inject constructor(
-    private val observeMangaHistoryUseCase: ObserveMangaHistoryUseCase,
     @param:ApplicationContext private val context: Context,
-    @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaRemoteInfoDto>,
+    private val observeMangaHistoryUseCase: ObserveMangaHistoryUseCase,
+    private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
+    @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<MangaMetadataDto>,
     @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<MangaDirectoryDto>,
     @param:DirectoryCase private val directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>,
     @param:MangadexCase private val mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
@@ -114,11 +116,11 @@ class MangaViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val manga: StateFlow<MangaDto?> = combine(
-        flow = _selectedDirectoryId,
-        flow2 = _selectedMangaId,
-        flow3 = directoryObserve(),
-        flow4 = mangadexObserve(),
-        flow5 = _selectedDirectoryId.flatMapLatest { id ->
+        _selectedDirectoryId,
+        _selectedMangaId,
+        directoryObserve(),
+        mangadexObserve(),
+        _selectedDirectoryId.flatMapLatest { id ->
             if (id == null) flowOf(null)
             else manageCategoriesUseCase.getCategoryByMangaId(id)
         }
@@ -264,7 +266,7 @@ class MangaViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            observeMangaHistoryUseCase.toggleReadStatus(mangaId, chapterId, isRead)
+            trackReadingProgressUseCase.toggleReadStatus(mangaId, chapterId, isRead)
         }
     }
 

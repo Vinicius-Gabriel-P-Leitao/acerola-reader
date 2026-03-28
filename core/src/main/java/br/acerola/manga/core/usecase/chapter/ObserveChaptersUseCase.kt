@@ -1,6 +1,6 @@
 package br.acerola.manga.core.usecase.chapter
 
-import br.acerola.manga.adapter.contract.ChapterPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
  * UseCase unificado para operações de leitura de capítulos (paginação, fluxo contínuo ou lista específica).
  */
 open class ObserveChaptersUseCase<T>(
-    private val chapterRepository: ChapterPort<T>
+    private val chapterRepository: ChapterGateway<T>
 ) {
 
     val progress: StateFlow<Int> get() = chapterRepository.progress

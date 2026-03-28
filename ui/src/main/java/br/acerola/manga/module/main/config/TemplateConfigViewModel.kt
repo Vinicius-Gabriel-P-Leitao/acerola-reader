@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import br.acerola.manga.core.usecase.template.AddTemplateUseCase
 import br.acerola.manga.core.usecase.template.ObserveTemplatesUseCase
 import br.acerola.manga.core.usecase.template.RemoveTemplateUseCase
-import br.acerola.manga.local.entity.archive.ChapterTemplateEntity
+import br.acerola.manga.local.entity.archive.ChapterTemplate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +20,7 @@ class TemplateConfigViewModel @Inject constructor(
     private val removeTemplate: RemoveTemplateUseCase
 ) : ViewModel() {
 
-    val templates: StateFlow<List<ChapterTemplateEntity>> = observeTemplates()
+    val templates: StateFlow<List<ChapterTemplate>> = observeTemplates()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

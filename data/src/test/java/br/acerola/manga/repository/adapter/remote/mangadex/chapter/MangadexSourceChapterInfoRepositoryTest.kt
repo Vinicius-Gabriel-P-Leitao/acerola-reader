@@ -1,13 +1,13 @@
 package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 
+import br.acerola.manga.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.remote.mangadex.api.MangadexChapterInfoApi
+import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterAttributes
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterPage
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
-import br.acerola.manga.source.adapter.mangadex.chapter.MangadexChapterInfoPort
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,14 +22,14 @@ import java.io.IOException
 class MangadexSourceChapterInfoRepositoryTest {
 
     @MockK
-    lateinit var api: MangadexChapterInfoApi
+    lateinit var api: MangadexChapterMetadataClient
 
-    private lateinit var repository: MangadexChapterInfoPort
+    private lateinit var repository: MangadexChapterInfoSource
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = MangadexChapterInfoPort(api)
+        repository = MangadexChapterInfoSource(api)
     }
 
     @Test
@@ -80,7 +80,7 @@ class MangadexSourceChapterInfoRepositoryTest {
         val result = repository.searchInfo(mangaId, limit = 100)
 
         assertTrue(result.isLeft())
-        // WARN: Valida se o erro é do tipo NetworkError (qualquer subclasse)
+        // Valida se o erro é do tipo NetworkError (qualquer subclasse)
         result.onLeft { error ->
             assertTrue("Erro deve ser do tipo NetworkError, recebido: $error", error is NetworkError)
         }

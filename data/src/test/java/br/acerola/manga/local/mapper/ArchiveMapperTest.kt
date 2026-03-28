@@ -3,7 +3,7 @@ package br.acerola.manga.local.mapper
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
-import br.acerola.manga.local.database.entity.archive.ChapterArchive
+import br.acerola.manga.local.entity.archive.ChapterArchive
 import br.acerola.manga.local.translator.toDto
 import br.acerola.manga.local.translator.toMangaDirectoryModel
 import br.acerola.manga.local.translator.toModel
@@ -49,15 +49,6 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `MangaDirectory toDto deve mapear hasComicInfo corretamente`() {
-        val entity = MangaDirectoryFixtures.createMangaDirectory(hasComicInfo = true)
-        
-        val dto = entity.toDto()
-
-        assertTrue("hasComicInfo deveria ser true", dto.hasComicInfo)
-    }
-
-    @Test
     fun `MangaDirectory toDto deve tratar campos nulos`() {
         val entity = MangaDirectoryFixtures.createMangaDirectory(cover = null, banner = null)
         
@@ -92,8 +83,7 @@ class ArchiveMapperTest {
         val bannerUri = mockk<Uri>()
         val dto = MangaDirectoryFixtures.createMangaDirectoryDto(
             coverUri = coverUri, 
-            bannerUri = bannerUri,
-            hasComicInfo = true
+            bannerUri = bannerUri
         )
         every { coverUri.toString() } returns "uri_cover"
         every { bannerUri.toString() } returns "uri_banner"
@@ -103,7 +93,6 @@ class ArchiveMapperTest {
         assertEquals(dto.name, model.name)
         assertEquals("uri_cover", model.cover)
         assertEquals("uri_banner", model.banner)
-        assertTrue(model.hasComicInfo)
     }
 
     @Test
@@ -149,14 +138,12 @@ class ArchiveMapperTest {
         every { cover.uri.toString() } returns "uri_cover"
         every { banner.uri.toString() } returns "uri_banner"
 
-        val model = folder.toMangaDirectoryModel(cover, banner, "{v}", hasComicInfo = true)
+        val model = folder.toMangaDirectoryModel(cover, banner, chapterTemplateFk = null)
 
         assertEquals("One Piece", model.name)
         assertEquals("uri_folder", model.path)
         assertEquals("uri_cover", model.cover)
         assertEquals("uri_banner", model.banner)
         assertEquals(5000L, model.lastModified)
-        assertEquals("{v}", model.chapterTemplate)
-        assertTrue(model.hasComicInfo)
     }
 }

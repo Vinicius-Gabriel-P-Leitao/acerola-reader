@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["name"], unique = true)],
     foreignKeys = [
         ForeignKey(
-            entity = ChapterTemplateEntity::class,
+            entity = ChapterTemplate::class,
             parentColumns = ["id"],
             childColumns = ["chapter_template_fk"],
             onDelete = ForeignKey.SET_NULL
@@ -42,4 +42,7 @@ data class MangaDirectory(
 
     @ColumnInfo(name = "external_sync_enabled")
     val externalSyncEnabled: Boolean = true,
+
+    @ColumnInfo(name = "hidden", defaultValue = "0")
+    val hidden: Boolean = false,
 )

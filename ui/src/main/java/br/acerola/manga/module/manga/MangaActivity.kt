@@ -2,20 +2,13 @@ package br.acerola.manga.module.manga
 
 import android.content.Context
 import android.os.Build
-import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
-import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.navigation.Destination
-import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
-import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.ChapterRemoteInfoViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
 import br.acerola.manga.dto.MangaDto
 import dagger.hilt.android.AndroidEntryPoint
 

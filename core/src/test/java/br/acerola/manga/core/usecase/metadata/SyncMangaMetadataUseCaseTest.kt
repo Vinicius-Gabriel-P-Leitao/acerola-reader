@@ -2,9 +2,9 @@ package br.acerola.manga.core.usecase.metadata
 
 import arrow.core.Either
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,11 +17,11 @@ import org.junit.Test
 
 class SyncMangaMetadataUseCaseTest {
 
-    @MockK lateinit var anilistMangaRepo: MangaPort<MangaRemoteInfoDto>
-    @MockK lateinit var mangadexMangaRepo: MangaPort<MangaRemoteInfoDto>
-    @MockK lateinit var mangadexChapterRepo: ChapterPort<ChapterRemoteInfoPageDto>
-    @MockK lateinit var comicInfoMangaRepo: MangaPort<MangaRemoteInfoDto>
-    @MockK lateinit var comicInfoChapterRepo: ChapterPort<ChapterRemoteInfoPageDto>
+    @MockK lateinit var anilistMangaRepo: MangaGateway<MangaMetadataDto>
+    @MockK lateinit var mangadexMangaRepo: MangaGateway<MangaMetadataDto>
+    @MockK lateinit var mangadexChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>
+    @MockK lateinit var comicInfoMangaRepo: MangaGateway<MangaMetadataDto>
+    @MockK lateinit var comicInfoChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>
 
     private lateinit var useCase: SyncMangaMetadataUseCase
 

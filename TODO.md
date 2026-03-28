@@ -90,6 +90,12 @@ metadados de fontes online populares.
 - [x]  necessário para não ter conflito de dominio, vai ser tudo virado para Metadata de RemoteInfo, já que agora os 
   sources tem tabelas para eles mesmos, será mudado também nome de tabela e colunas.
 
+#### ❗ Corrigir bug com troca de source:
+- [x] Problema com troca de qual source é o atual se eu coloco o Mangadex como source ele empreguina e não troca de 
+  forma algum o source, o resto troca, mas o source que aparece em Manga.Layout.Header fica só Mangadex, já quando 
+  via anilist eu consigo trocar, alguma coisa no Sync de métadados está quebrado principalmente quando faço o Sync 
+  via ConfigScreen, a troca de source deve poder ocorrer de foram livre.
+
 #### ❗ Principal refatoração e organização do modulo data:
 - [x] Organizar o modulo data de forma que o source e o engine consigam ficar armoniosos.
 
@@ -111,29 +117,34 @@ metadados de fontes online populares.
   mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do 
   anilist e link para o produto original. 
 
+#### Adicionar action no botão de ...  de cada mangá
+- [x] **Adicionar bookmark** Adicionar uma action de bookmark nos seção de action
+- [x] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar
+
+#### Otimizar visualmente tela de download
+- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos
+- [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
+
 #### Filtros e Ordenação — Home Screen
-- [ ] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
-- [ ] **Persistência da ordenação** via DataStore.
-- [ ] **UI do filtro:** Usar apenas ícone, sem label.
+- [x] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
+- [x] **Persistência da ordenação** via DataStore.
+- [x] **UI do filtro:** Usar apenas ícone, sem label.
+- [x] **Mostrar os ocultos** Deixar os ocultos aparecerem só quando filtrados
+- [x] **Filtros sem salvar em dataStore:** Filtro por bookmark que o usuário criou, source de metadados ou sem metadados.
 
 #### Filtros e Ordenação — Tela de Capítulos
-- [ ] **Remover autoscroll** ao trocar de página.
-- [ ] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
-- [ ] **Persistência da ordenação** por mangá (ou global) via DataStore.
-- [ ] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
+- [x] **Remover autoscroll** ao trocar de página na tela de manga onde listam os chapters.
+- [x] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
+- [x] **Persistência da ordenação** por mangá (ou global) via DataStore.
+- [x] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
 
 #### Verificar e Baixar Novos Capítulos
 - [ ] **Botão "Verificar updates":** Na tela de detalhes do mangá, um botão que consulta o MangaDex e retorna
   capítulos mais recentes do que o último registrado no banco local.
-- [ ] **Exibir capítulos disponíveis:** Mostrar uma lista/bottom sheet com os capítulos novos encontrados,
-  exibindo número, nome e data de lançamento antes de qualquer ação.
-- [ ] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
+- [x] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
   enfileira no download manager já existente.
-- [ ] **Indicador de "atualizado" ou "tem novidade":** Badge ou ícone na tela de detalhes indicando que
-  existem capítulos no MangaDex além do último local, sem baixar nada automaticamente.
 
 ---
-
 
 ## Pilha de Tecnologia
 

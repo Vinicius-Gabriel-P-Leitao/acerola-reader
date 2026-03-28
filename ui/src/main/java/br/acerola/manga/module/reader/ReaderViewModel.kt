@@ -8,12 +8,13 @@ import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.config.preference.ReadingModePreference
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
+import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.error.UserMessage
 import br.acerola.manga.error.message.ChapterError
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.module.reader.state.ReaderUiState
-import br.acerola.manga.service.reader.ChapterReaderService
+import br.acerola.manga.service.reader.ReaderProcessor
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.history.TrackReadingProgressUseCase
@@ -35,7 +36,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
-    private val repository: ChapterReaderService,
+    private val repository: ReaderProcessor,
     @param:ApplicationContext private val context: Context,
     private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
     @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
@@ -210,7 +211,7 @@ class ReaderViewModel @Inject constructor(
 
                 if (markedAsReadInSession.add(chapterId)) {
                     viewModelScope.launch {
-                        trackReadingProgressUseCase.markAsRead(mangaId, chapterId)
+                        trackReadingProgressUseCase.markChapterAsRead(mangaId, chapterId)
                     }
                 }
             }
@@ -256,13 +257,19 @@ class ReaderViewModel @Inject constructor(
     ) {
         val pageCount = _state.value.pageCount
         val isLastPage = pageCount > 0 && page >= pageCount - 1
-        val shouldMarkAsRead = isLastPage && markedAsReadInSession.add(chapterId)
+        
+        if (isLastPage && markedAsReadInSession.add(chapterId)) {
+            trackReadingProgressUseCase.markChapterAsRead(mangaId, chapterId)
+        }
 
         trackReadingProgressUseCase.saveProgress(
-            mangaId = mangaId,
-            chapterId = chapterId,
-            page = page,
-            markAsRead = shouldMarkAsRead
+            ReadingHistoryDto(
+                mangaDirectoryId = mangaId,
+                chapterArchiveId = chapterId,
+                lastPage = page,
+                isCompleted = isLastPage,
+                updatedAt = System.currentTimeMillis()
+            )
         )
     }
 

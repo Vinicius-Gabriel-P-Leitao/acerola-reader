@@ -1,7 +1,8 @@
 package br.acerola.manga.adapter.library
 
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.gateway.MangaLibraryWriteGateway
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
 import dagger.Binds
@@ -24,13 +25,20 @@ abstract class DirectoryModule {
     @DirectoryEngine
     abstract fun bindMangaDirectoryRepository(
         impl: MangaDirectoryEngine
-    ): MangaPort<MangaDirectoryDto>
+    ): MangaGateway<MangaDirectoryDto>
 
     @Binds
     @Singleton
     @DirectoryEngine
     abstract fun bindChapterArchiveRepository(
         int: ChapterArchiveEngine
-    ): ChapterPort<ChapterArchivePageDto>
+    ): ChapterGateway<ChapterArchivePageDto>
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindMangaLibraryWriteGateway(
+        impl: MangaDirectoryEngine
+    ): MangaLibraryWriteGateway
 
 }

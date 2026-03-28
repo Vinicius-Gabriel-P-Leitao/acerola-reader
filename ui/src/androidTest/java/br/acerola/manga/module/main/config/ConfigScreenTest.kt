@@ -10,7 +10,7 @@ import br.acerola.manga.common.ux.theme.AcerolaTheme
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
-import br.acerola.manga.common.viewmodel.library.metadata.MangaRemoteInfoViewModel
+import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.config.preference.AppTheme
@@ -33,7 +33,7 @@ class ConfigScreenTest {
     // Mocks dos ViewModels necessários
     private val fsAccessVM = mockk<FileSystemAccessViewModel>(relaxed = true)
     private val mangaDirVM = mockk<MangaDirectoryViewModel>(relaxed = true)
-    private val mangaDexVM = mockk<MangaRemoteInfoViewModel>(relaxed = true)
+    private val mangaDexVM = mockk<MangaMetadataViewModel>(relaxed = true)
     private val metadataVM = mockk<MetadataSettingsViewModel>(relaxed = true)
     private val themeVM = mockk<ThemeViewModel>(relaxed = true)
 

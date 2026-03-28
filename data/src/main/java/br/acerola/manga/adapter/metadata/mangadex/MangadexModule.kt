@@ -1,21 +1,21 @@
 package br.acerola.manga.adapter.metadata.mangadex
 
-import br.acerola.manga.adapter.contract.ChapterPort
-import br.acerola.manga.adapter.contract.DownloadPort
-import br.acerola.manga.adapter.contract.ImageFetchPort
-import br.acerola.manga.adapter.contract.MangaPort
-import br.acerola.manga.adapter.contract.RemoteInfoOperationsPort
+import br.acerola.manga.adapter.contract.gateway.ChapterGateway
+import br.acerola.manga.adapter.contract.provider.DownloadProvider
+import br.acerola.manga.adapter.contract.provider.ImageProvider
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
+import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexChapterEngine
 import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexMangaEngine
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexFetchCoverSource
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexMangaInfoSource
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexSearchDownloadSource
-import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoDto
+import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.manga.dto.metadata.manga.MangaRemoteInfoDto
-import br.acerola.manga.service.download.ChapterDownloadService
-import br.acerola.manga.service.download.MangadexChapterDownloadService
+import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
+import br.acerola.manga.service.download.DownloadManager
+import br.acerola.manga.service.download.MangadexDownloadManager
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -40,14 +40,14 @@ abstract class MangadexModule {
     @MangadexEngine
     abstract fun bindMangadexMangaRepository(
         impl: MangadexMangaEngine
-    ): MangaPort<MangaRemoteInfoDto>
+    ): MangaGateway<MangaMetadataDto>
 
     @Binds
     @Singleton
     @MangadexEngine
     abstract fun bindMangadexChapterRepository(
         impl: MangadexChapterEngine
-    ): ChapterPort<ChapterRemoteInfoPageDto>
+    ): ChapterGateway<ChapterRemoteInfoPageDto>
 
 
     @Binds
@@ -55,33 +55,33 @@ abstract class MangadexModule {
     @MangadexSource
     abstract fun bindMangadexMangaInfoService(
         impl: MangadexMangaInfoSource
-    ): RemoteInfoOperationsPort<MangaRemoteInfoDto, String>
+    ): MetadataProvider<MangaMetadataDto, String>
 
     @Binds
     @Singleton
     @MangadexSource
     abstract fun bindMangadexFetchCoverService(
         impl: MangadexFetchCoverSource
-    ): ImageFetchPort<String>
+    ): ImageProvider<String>
 
     @Binds
     @Singleton
     @MangadexSource
     abstract fun bindChapterDownloadService(
-        impl: MangadexChapterDownloadService
-    ): ChapterDownloadService
+        impl: MangadexDownloadManager
+    ): DownloadManager
 
     @Binds
     @Singleton
     @MangadexSource
     abstract fun bindMangadexChapterInfoService(
         impl: MangadexChapterInfoSource
-    ): RemoteInfoOperationsPort<ChapterRemoteInfoDto, String>
+    ): MetadataProvider<ChapterMetadataDto, String>
 
     @Binds
     @Singleton
     @MangadexSource
     abstract fun bindMangadexDownloadPort(
         impl: MangadexSearchDownloadSource
-    ): DownloadPort
+    ): DownloadProvider
 }

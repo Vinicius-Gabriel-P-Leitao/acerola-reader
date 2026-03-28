@@ -70,6 +70,8 @@ fun Manga.Layout.Header(
                 contentScale = ContentScale.Crop,
                 model = ImageRequest.Builder(context = context)
                     .data(data = bannerModel)
+                    .memoryCacheKey("${bannerModel}_${manga.directory.lastModified}")
+                    .diskCacheKey("${bannerModel}_${manga.directory.lastModified}")
                     .crossfade(enable = true)
                     .build(),
                 placeholder = placeholderPainter,
@@ -104,6 +106,8 @@ fun Manga.Layout.Header(
                         contentScale = ContentScale.Crop,
                         model = ImageRequest.Builder(context = context)
                             .data(data = manga.directory.coverUri)
+                            .memoryCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
+                            .diskCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
                             .crossfade(enable = true)
                             .build(),
                         placeholder = placeholderPainter,
@@ -146,14 +150,8 @@ fun Manga.Layout.Header(
                             StatusBadge(
                                 status = manga.remoteInfo?.status ?: stringResource(id = R.string.manga_header_unknown)
                             )
-                            manga.remoteInfo?.let { info ->
-                                val sourceLabel = when {
-                                    info.sources?.mangadex?.mangadexId != null -> "MANGADEX"
-                                    info.sources?.comicInfo?.localHash != null -> "COMIC_INFO"
-                                    info.sources?.anilist?.anilistId != null -> "ANILIST"
-                                    else -> null
-                                }
-                                sourceLabel?.let { SourceBadge(source = it) }
+                            manga.remoteInfo?.syncSource?.let { source ->
+                                SourceBadge(source = source.displayName)
                             }
                         }
                     }

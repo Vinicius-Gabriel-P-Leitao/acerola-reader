@@ -3,7 +3,7 @@ package br.acerola.manga.core.usecase.library
 import android.net.Uri
 import arrow.core.Either
 import br.acerola.manga.dto.archive.MangaDirectoryDto
-import br.acerola.manga.adapter.contract.MangaPort
+import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -19,9 +19,9 @@ import org.junit.Test
 class SyncLibraryUseCaseTest {
 
     @MockK
-    lateinit var repository: MangaPort<MangaDirectoryDto>
+    lateinit var repository: MangaGateway<MangaDirectoryDto>
 
-    private lateinit var useCase: SyncLibraryUseCase<MangaDirectoryDto>
+    private lateinit var useCase: SyncLibraryUseCase
 
     @Before
     fun setUp() {

@@ -12,8 +12,8 @@ import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.category.CategoryDao
 import br.acerola.manga.local.dao.history.ReadingHistoryDao
 import br.acerola.manga.local.dao.metadata.ChapterDownloadSourceDao
-import br.acerola.manga.local.dao.metadata.ChapterRemoteInfoDao
-import br.acerola.manga.local.dao.metadata.MangaRemoteInfoDao
+import br.acerola.manga.local.dao.metadata.ChapterMetadataDao
+import br.acerola.manga.local.dao.metadata.MangaMetadataDao
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.BannerDao
 import br.acerola.manga.local.dao.metadata.relationship.CoverDao
@@ -35,9 +35,9 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): DatabaseAcerola {
+    fun provideDatabase(@ApplicationContext context: Context): AcerolaDatabase {
         return Room.databaseBuilder(
-            context, DatabaseAcerola::class.java, "acerola_database"
+            context, AcerolaDatabase::class.java, "acerola_database"
         )
         .addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
@@ -54,47 +54,50 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideChapterArchiveDao(db: DatabaseAcerola): ChapterArchiveDao = db.chapterArchiveDao()
+    fun provideChapterArchiveDao(db: AcerolaDatabase): ChapterArchiveDao = db.chapterArchiveDao()
 
     @Provides
-    fun provideMangaDirectoryDao(db: DatabaseAcerola): MangaDirectoryDao = db.mangaDirectoryDao()
+    fun provideMangaDirectoryDao(db: AcerolaDatabase): MangaDirectoryDao = db.mangaDirectoryDao()
 
     @Provides
-    fun provideChapterTemplateDao(db: DatabaseAcerola): ChapterTemplateDao = db.chapterTemplateDao()
+    fun provideChapterTemplateDao(db: AcerolaDatabase): ChapterTemplateDao = db.chapterTemplateDao()
 
     @Provides
-    fun provideMangaRemoteInfoDao(db: DatabaseAcerola): MangaRemoteInfoDao = db.mangaMangaRemoteInfoDao()
+    fun provideMangaRemoteInfoDao(db: AcerolaDatabase): MangaMetadataDao = db.mangaRemoteInfoDao()
 
     @Provides
-    fun provideChapterRemoteInfoDao(db: DatabaseAcerola): ChapterRemoteInfoDao = db.chapterRemoteInfoDao()
+    fun provideChapterRemoteInfoDao(db: AcerolaDatabase): ChapterMetadataDao = db.chapterRemoteInfoDao()
 
     @Provides
-    fun provideChapterDownloadSourceDao(db: DatabaseAcerola): ChapterDownloadSourceDao = db.chapterDownloadSourceDao()
+    fun provideChapterDownloadSourceDao(db: AcerolaDatabase): ChapterDownloadSourceDao = db.chapterDownloadSourceDao()
 
     @Provides
-    fun provideAuthorDao(db: DatabaseAcerola): AuthorDao = db.authorDao()
+    fun provideAuthorDao(db: AcerolaDatabase): AuthorDao = db.authorDao()
 
     @Provides
-    fun provideCoverDao(db: DatabaseAcerola): CoverDao = db.coverDao()
+    fun provideCoverDao(db: AcerolaDatabase): CoverDao = db.coverDao()
 
     @Provides
-    fun provideBannerDao(db: DatabaseAcerola): BannerDao = db.bannerDao()
+    fun provideBannerDao(db: AcerolaDatabase): BannerDao = db.bannerDao()
 
     @Provides
-    fun provideGenreDao(db: DatabaseAcerola): GenreDao = db.genreDao()
+    fun provideGenreDao(db: AcerolaDatabase): GenreDao = db.genreDao()
 
     @Provides
-    fun provideReadingHistoryDao(db: DatabaseAcerola): ReadingHistoryDao = db.readingHistoryDao()
+    fun provideReadingHistoryDao(db: AcerolaDatabase): ReadingHistoryDao = db.readingHistoryDao()
 
     @Provides
-    fun provideMangadexSourceDao(db: DatabaseAcerola): MangadexSourceDao = db.mangadexSourceDao()
+    fun provideMangadexSourceDao(db: AcerolaDatabase): MangadexSourceDao = db.mangadexSourceDao()
 
     @Provides
-    fun provideAnilistSourceDao(db: DatabaseAcerola): AnilistSourceDao = db.anilistSourceDao()
+    fun provideAnilistSourceDao(db: AcerolaDatabase): AnilistSourceDao = db.anilistSourceDao()
 
     @Provides
-    fun provideComicInfoSourceDao(db: DatabaseAcerola): ComicInfoSourceDao = db.comicInfoSourceDao()
+    fun provideComicInfoSourceDao(db: AcerolaDatabase): ComicInfoSourceDao = db.comicInfoSourceDao()
 
     @Provides
-    fun provideCategoryDao(db: DatabaseAcerola): CategoryDao = db.categoryDao()
+    fun provideCategoryDao(db: AcerolaDatabase): CategoryDao = db.categoryDao()
+
+    @Provides
+    fun provideMangaSummaryDao(db: AcerolaDatabase): br.acerola.manga.local.dao.view.MangaSummaryDao = db.mangaSummaryDao()
 }

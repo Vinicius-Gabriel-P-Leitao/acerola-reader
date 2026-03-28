@@ -17,13 +17,13 @@ interface GenreDao : BaseDao<Genre> {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     override suspend fun insertAll(vararg entity: Genre): LongArray
 
-    @Query(value = "SELECT id FROM genre WHERE genre = :genre AND manga_remote_info_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT id FROM genre WHERE genre = :genre AND manga_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
     suspend fun getIdByGenreAndFk(
         genre: String,
         mangaRemoteInfoFk: Long
     ): Long?
 
-    @Query(value = "DELETE FROM genre WHERE manga_remote_info_fk = :mangaRemoteInfoFk")
+    @Query(value = "DELETE FROM genre WHERE manga_metadata_fk = :mangaRemoteInfoFk")
     suspend fun deleteGenresByMangaRemoteInfoFk(mangaRemoteInfoFk: Long)
 
     @Transaction
