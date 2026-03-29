@@ -71,6 +71,7 @@ fun Main.Search.Layout.SearchLayout(
                 },
                 active = searchActive,
                 onActiveChange = { searchActive = it },
+                onBackClick = { searchActive = false },
                 isLoading = uiState.isLoading,
                 items = uiState.searchResults,
                 itemKey = { it.sources?.mangadex?.mangadexId ?: it.title },

@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +41,7 @@ import br.acerola.manga.config.preference.SortDirection
 import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.home.state.FilterSettings
-import br.acerola.manga.pattern.MetadataSource
+import br.acerola.manga.pattern.MetadataSourcePattern
 import br.acerola.manga.ui.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -210,11 +208,11 @@ fun Main.Home.Component.HomeFilterSheet(
                 )
 
                 // Fontes do Enum
-                MetadataSource.entries.forEach { source ->
+                MetadataSourcePattern.entries.forEach { source ->
                     val label = when (source) {
-                        MetadataSource.MANGADEX -> stringResource(id = R.string.label_source_mangadex)
-                        MetadataSource.ANILIST -> stringResource(id = R.string.label_source_anilist)
-                        MetadataSource.COMIC_INFO -> stringResource(id = R.string.label_source_comic_info)
+                        MetadataSourcePattern.MANGADEX -> stringResource(id = R.string.label_source_mangadex)
+                        MetadataSourcePattern.ANILIST -> stringResource(id = R.string.label_source_anilist)
+                        MetadataSourcePattern.COMIC_INFO -> stringResource(id = R.string.label_source_comic_info)
                     }
                     
                     FilterChip(

@@ -21,7 +21,7 @@ import br.acerola.manga.local.translator.persistence.toAnilistSourceEntity
 import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.pattern.MetadataSource
+import br.acerola.manga.pattern.MetadataSourcePattern
 import br.acerola.manga.service.artwork.BannerSaver
 import br.acerola.manga.service.artwork.CoverSaver
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -92,7 +92,7 @@ class AnilistMangaEngine @Inject constructor(
 
                         Either.catch {
                             val mangaToSave = dto.toEntity().copy(
-                                mangaDirectoryFk = mangaId, syncSource = MetadataSource.ANILIST.source
+                                mangaDirectoryFk = mangaId, syncSource = MetadataSourcePattern.ANILIST.source
                             )
 
                             val remoteInfoId = mangaMetadataDao.upsertMangaMetadataTransaction(

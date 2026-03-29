@@ -13,7 +13,7 @@ enum class TemplateMacro(val tag: String) {
     }
 }
 
-object TemplateValidator {
+object TemplateValidatorPattern {
 
     fun validateCustomTemplate(input: String): Either<TemplateError, Unit> {
         var valueCount = 0
@@ -34,12 +34,9 @@ object TemplateValidator {
 
                 val tag = input.substring(cursor + 1, end)
                 val macro = TemplateMacro.fromTag(tag)
-
-                if (macro == null) {
-                    return Either.Left(
+                    ?: return Either.Left(
                         TemplateError.InvalidPattern("Invalid macro: $tag")
                     )
-                }
 
                 when (macro) {
                     TemplateMacro.VALUE -> {

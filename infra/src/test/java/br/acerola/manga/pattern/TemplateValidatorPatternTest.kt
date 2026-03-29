@@ -5,19 +5,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TemplateValidatorTest {
+class TemplateValidatorPatternTest {
 
     @Test
     fun `deve validar com sucesso um padrao perfeito`() {
         val input = "Cap. {value}{sub} - {extension}"
-        val result = TemplateValidator.validateCustomTemplate(input)
+        val result = TemplateValidatorPattern.validateCustomTemplate(input)
         assertTrue(result.isRight())
     }
 
     @Test
     fun `deve falhar se nao houver macro value`() {
         val input = "Cap. {sub} - {extension}"
-        val result = TemplateValidator.validateCustomTemplate(input)
+        val result = TemplateValidatorPattern.validateCustomTemplate(input)
         
         assertTrue(result.isLeft())
         result.onLeft { 
@@ -28,7 +28,7 @@ class TemplateValidatorTest {
     @Test
     fun `deve falhar se houver mais de um sub`() {
         val input = "{value}{sub}{sub}{extension}"
-        val result = TemplateValidator.validateCustomTemplate(input)
+        val result = TemplateValidatorPattern.validateCustomTemplate(input)
         
         assertTrue(result.isLeft())
         result.onLeft { 
@@ -39,7 +39,7 @@ class TemplateValidatorTest {
     @Test
     fun `deve falhar se a extensao nao for a ultima macro ou estiver ausente`() {
         val input = "{value}{sub}"
-        val result1 = TemplateValidator.validateCustomTemplate(input)
+        val result1 = TemplateValidatorPattern.validateCustomTemplate(input)
         
         assertTrue(result1.isLeft())
         result1.onLeft { 
@@ -47,7 +47,7 @@ class TemplateValidatorTest {
         }
 
         val input2 = "{value}{extension} Lixo"
-        val result2 = TemplateValidator.validateCustomTemplate(input2)
+        val result2 = TemplateValidatorPattern.validateCustomTemplate(input2)
         
         assertTrue(result2.isLeft())
         result2.onLeft { 
@@ -58,12 +58,12 @@ class TemplateValidatorTest {
     @Test
     fun `deve falhar se a ordem estiver incorreta`() {
         val wrongSub = "{sub}{value}{extension}"
-        val res1 = TemplateValidator.validateCustomTemplate(wrongSub)
+        val res1 = TemplateValidatorPattern.validateCustomTemplate(wrongSub)
         assertTrue(res1.isLeft())
         res1.onLeft { assertEquals("{value} must come before {sub}", (it as TemplateError.InvalidPattern).reason) }
 
         val wrongExt = "{extension}{value}"
-        val res2 = TemplateValidator.validateCustomTemplate(wrongExt)
+        val res2 = TemplateValidatorPattern.validateCustomTemplate(wrongExt)
         assertTrue(res2.isLeft())
         res2.onLeft { assertEquals("{value} must come before {extension}", (it as TemplateError.InvalidPattern).reason) }
     }
@@ -71,12 +71,12 @@ class TemplateValidatorTest {
     @Test
     fun `deve falhar com macros malformadas ou invalidas`() {
         val malformed = "{value"
-        val res1 = TemplateValidator.validateCustomTemplate(malformed)
+        val res1 = TemplateValidatorPattern.validateCustomTemplate(malformed)
         assertTrue(res1.isLeft())
         res1.onLeft { assertEquals("Malformed macro", (it as TemplateError.InvalidPattern).reason) }
 
         val invalid = "{batata}"
-        val res2 = TemplateValidator.validateCustomTemplate(invalid)
+        val res2 = TemplateValidatorPattern.validateCustomTemplate(invalid)
         assertTrue(res2.isLeft())
         res2.onLeft { assertEquals("Invalid macro: batata", (it as TemplateError.InvalidPattern).reason) }
     }

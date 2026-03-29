@@ -1,6 +1,8 @@
 package br.acerola.manga.common.ux.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,9 +11,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,6 +39,7 @@ fun <T> Acerola.Component.SearchBar(
     onSearch: (String) -> Unit,
     active: Boolean,
     onActiveChange: (Boolean) -> Unit,
+    onBackClick: (() -> Unit)? = null,
     isLoading: Boolean = false,
     items: List<T>,
     placeholder: String,
@@ -42,6 +47,8 @@ fun <T> Acerola.Component.SearchBar(
     modifier: Modifier = Modifier,
     itemContent: @Composable (T) -> Unit
 ) {
+    val internalBackClick = onBackClick ?: { onActiveChange(false) }
+
     SearchBar(
         modifier = modifier,
         inputField = {
@@ -53,17 +60,20 @@ fun <T> Acerola.Component.SearchBar(
                 onExpandedChange = onActiveChange,
                 placeholder = { Text(text = placeholder) },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                    if (active) {
+                        IconButton(onClick = internalBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(id = R.string.label_search_back_to_results)
+                            )
+                        }
+                    } else {
+                        Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                    }
                 },
                 trailingIcon = {
-                    if (active) {
-                        IconButton(onClick = {
-                            if (query.isNotEmpty()) {
-                                onQueryChange("")
-                            } else {
-                                onActiveChange(false)
-                            }
-                        }) {
+                    if (active && query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = stringResource(id = R.string.description_icon_search_close)
@@ -76,36 +86,47 @@ fun <T> Acerola.Component.SearchBar(
         expanded = active,
         onExpandedChange = onActiveChange,
         shape = if (active) RoundedCornerShape(0.dp) else RoundedCornerShape(28.dp),
+        colors = SearchBarDefaults.colors(
+            containerColor = if (active) MaterialTheme.colorScheme.surfaceContainerLowest else MaterialTheme.colorScheme.surfaceContainerHigh
+        )
     ) {
-        if (isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-        if (items.isEmpty() && !isLoading) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(all = 16.dp),
-            ) {
-                Text(
-                    text = stringResource(id = R.string.description_text_search_no_results),
-                    style = MaterialTheme.typography.bodyMedium
+            if (isLoading) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(
-                    items = items,
-                    key = { item -> itemKey(item) }
-                ) { item ->
-                    itemContent(item)
+
+            if (items.isEmpty() && !isLoading) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(all = 16.dp),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.description_text_search_no_results),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(
+                        items = items,
+                        key = { item -> itemKey(item) }
+                    ) { item ->
+                        itemContent(item)
+                    }
                 }
             }
         }
