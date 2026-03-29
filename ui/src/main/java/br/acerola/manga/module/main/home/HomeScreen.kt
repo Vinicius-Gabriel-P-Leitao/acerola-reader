@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.FloatingTool
 import br.acerola.manga.common.ux.component.FloatingToolItem
@@ -65,13 +65,13 @@ fun Main.Home.Layout.Screen(
         }
     }
 
-    val layout by homeViewModel.selectedHomeLayout.collectAsState()
-    val isIndexing by homeViewModel.isIndexing.collectAsState()
-    val progress by homeViewModel.progress.collectAsState()
-    val mangas by homeViewModel.mangas.collectAsState()
-    val allCategories by homeViewModel.allCategories.collectAsState()
-    val sortSettings by homeViewModel.sortSettings.collectAsState()
-    val filterSettings by homeViewModel.filterSettings.collectAsState()
+    val layout by homeViewModel.selectedHomeLayout.collectAsStateWithLifecycle()
+    val isIndexing by homeViewModel.isIndexing.collectAsStateWithLifecycle()
+    val progress by homeViewModel.progress.collectAsStateWithLifecycle()
+    val mangas by homeViewModel.mangas.collectAsStateWithLifecycle()
+    val allCategories by homeViewModel.allCategories.collectAsStateWithLifecycle()
+    val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
+    val filterSettings by homeViewModel.filterSettings.collectAsStateWithLifecycle()
 
     val uiState = HomeUiState(
         layout = layout,
@@ -205,7 +205,6 @@ fun Main.Home.Layout.Screen(
                     },
                 ),
 
-                // NOTE: Criar filtragem por categoria.
                 FloatingToolItem(
                     icon = {
                         Icon(

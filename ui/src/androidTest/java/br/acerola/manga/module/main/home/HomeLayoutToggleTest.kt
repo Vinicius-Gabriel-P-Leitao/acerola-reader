@@ -22,6 +22,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+import br.acerola.manga.config.preference.HomeSortPreference
+import br.acerola.manga.config.preference.MangaSortType
+import br.acerola.manga.config.preference.SortDirection
+import br.acerola.manga.module.main.home.state.FilterSettings
+
 class HomeLayoutToggleTest {
 
     @get:Rule
@@ -37,6 +42,10 @@ class HomeLayoutToggleTest {
         every { viewModel.progress } returns MutableStateFlow(-1)
         every { viewModel.mangas } returns MutableStateFlow(emptyList())
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
+        every { viewModel.allCategories } returns MutableStateFlow(emptyList())
+        
+        every { viewModel.sortSettings } returns MutableStateFlow(HomeSortPreference(MangaSortType.TITLE, SortDirection.ASCENDING))
+        every { viewModel.filterSettings } returns MutableStateFlow(FilterSettings())
     }
 
     @Test

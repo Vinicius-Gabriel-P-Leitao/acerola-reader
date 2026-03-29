@@ -99,7 +99,7 @@ private fun MangadexSection(
 ) {
     Column {
         SyncItem(
-            title = stringResource(id = R.string.title_sync_mangadex_remote_info),
+            title = stringResource(id = R.string.label_mangadex_group),
             subtitle = pluralStringResource(
                 id = R.plurals.description_sync_mangadex_remote_info_supporting,
                 count = 1

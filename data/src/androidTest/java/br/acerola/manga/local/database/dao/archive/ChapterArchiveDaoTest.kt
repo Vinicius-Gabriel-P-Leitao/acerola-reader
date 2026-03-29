@@ -44,7 +44,7 @@ class ChapterArchiveDaoTest {
     @Test
     fun getChaptersByMangaDirectory_deve_ordenar_capitulos_numericamente_e_decimais() = runBlocking {
         // Arrange: Cria diretório e capítulos com ordenação mista
-        val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory())
+        val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L))
         val chapters = listOf(
             ChapterArchive(chapter = "10", path = "p1", chapterSort = "10", folderPathFk = folderId),
             ChapterArchive(chapter = "1", path = "p2", chapterSort = "1", folderPathFk = folderId),
@@ -66,7 +66,7 @@ class ChapterArchiveDaoTest {
     @Test
     fun getChaptersPaged_deve_retornar_apenas_o_tamanho_da_pagina() = runBlocking {
         // Arrange
-        val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory())
+        val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L))
         val chapters = List(10) { 
             ChapterArchive(chapter = it.toString(), path = "p$it", chapterSort = it.toString(), folderPathFk = folderId) 
         }
@@ -82,8 +82,8 @@ class ChapterArchiveDaoTest {
     @Test
     fun deleteChaptersByMangaDirectoryId_deve_remover_apenas_capitulos_daquele_manga() = runBlocking {
         // Arrange
-        val id1 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(name = "Manga 1"))
-        val id2 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(name = "Manga 2"))
+        val id1 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L, name = "Manga 1"))
+        val id2 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L, name = "Manga 2"))
         
         dao.insert(ChapterArchive(chapter = "1", path = "p1", chapterSort = "1", folderPathFk = id1))
         dao.insert(ChapterArchive(chapter = "1", path = "p2", chapterSort = "1", folderPathFk = id2))

@@ -39,6 +39,7 @@ import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.manga.common.viewmodel.library.metadata.MangaMetadataViewModel
 import br.acerola.manga.dto.MangaDto
+import br.acerola.manga.config.preference.ChapterSortPreferenceData
 import br.acerola.manga.module.manga.component.ChapterSortSheet
 import br.acerola.manga.module.manga.layout.ChapterSection
 import br.acerola.manga.module.manga.layout.Header
@@ -52,6 +53,8 @@ import br.acerola.manga.module.manga.state.MangaUiState
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.ui.R
 import kotlinx.coroutines.launch
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun MangaScreen(
@@ -101,19 +104,19 @@ fun MangaScreen(
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
-    val mangaState by mangaViewModel.manga.collectAsState()
-    val chapterDto by mangaViewModel.chapters.collectAsState()
-    val chapterIsIndexing by mangaViewModel.chapterIsIndexing.collectAsState()
-    val chapterProgress by mangaViewModel.chapterProgress.collectAsState()
-    val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsState()
-    val mangaProgress by mangaViewModel.mangaProgress.collectAsState()
-    val mangaRemoteIndexing by mangaMetadataViewModel.isIndexing.collectAsState()
-    val chapterRemoteIndexing by chapterMetadataViewModel.isIndexing.collectAsState()
-    val history by mangaViewModel.history.collectAsState()
-    val readChapters by mangaViewModel.readChapters.collectAsState()
-    val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsState()
-    val chapterSortSettings by mangaViewModel.chapterSortSettings.collectAsState()
-    val allCategories by mangaMetadataViewModel.allCategories.collectAsState()
+    val mangaState by mangaViewModel.manga.collectAsStateWithLifecycle()
+    val chapterDto by mangaViewModel.chapters.collectAsStateWithLifecycle()
+    val chapterIsIndexing by mangaViewModel.chapterIsIndexing.collectAsStateWithLifecycle()
+    val chapterProgress by mangaViewModel.chapterProgress.collectAsStateWithLifecycle()
+    val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsStateWithLifecycle()
+    val mangaProgress by mangaViewModel.mangaProgress.collectAsStateWithLifecycle()
+    val mangaRemoteIndexing by mangaMetadataViewModel.isIndexing.collectAsStateWithLifecycle()
+    val chapterRemoteIndexing by chapterMetadataViewModel.isIndexing.collectAsStateWithLifecycle()
+    val history by mangaViewModel.history.collectAsStateWithLifecycle()
+    val readChapters by mangaViewModel.readChapters.collectAsStateWithLifecycle()
+    val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsStateWithLifecycle()
+    val chapterSortSettings by mangaViewModel.chapterSortSettings.collectAsStateWithLifecycle()
+    val allCategories by mangaMetadataViewModel.allCategories.collectAsStateWithLifecycle()
 
     val currentManga = mangaState ?: manga
     val totalChapters = chapterDto?.archive?.total ?: 0

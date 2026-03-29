@@ -19,6 +19,9 @@ interface MangaDirectoryDao : BaseDao<MangaDirectory>{
     @Query(value = "SELECT * FROM manga_directory WHERE id = :mangaId")
     suspend fun getMangaDirectoryById(mangaId: Long): MangaDirectory?
 
+    @Query(value = "SELECT * FROM manga_directory WHERE name = :name")
+    suspend fun getMangaDirectoryByName(name: String): MangaDirectory?
+
     @Query(value = "UPDATE manga_directory SET hidden = :hidden WHERE id = :mangaId")
     suspend fun setHidden(mangaId: Long, hidden: Boolean)
 

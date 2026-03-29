@@ -42,14 +42,14 @@ class RemainingDaosTest {
         val manga = MangaDirectoryFixtures.createMangaDirectory(name = "Test Manga")
 
         dao.insert(manga)
-        val result = dao.getMangaDirectoryByName("Test Manga")
+        val result = dao.getAllMangaDirectoryIncludingHidden().first().find { it.name == "Test Manga" }
 
         assertNotNull(result)
         assertEquals("Test Manga", result?.name)
     }
 
     @Test
-    fun testChapterRemoteInfoDao() = runBlocking {
+    fun testChapterMetadataDao() = runBlocking {
         val mangaDao = db.mangaRemoteInfoDao()
         val chapterDao = db.chapterRemoteInfoDao()
 
