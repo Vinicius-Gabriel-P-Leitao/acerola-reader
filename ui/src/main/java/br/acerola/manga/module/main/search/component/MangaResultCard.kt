@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,67 +35,71 @@ fun Main.Search.Component.MangaResultCard(
     manga: MangaMetadataDto,
     onClick: () -> Unit,
 ) {
-    Row(
+    ListItem(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val cover = manga.cover
-        if (cover != null) {
-            AsyncImage(
-                model = cover.url,
-                contentDescription = manga.title,
-                modifier = Modifier
-                    .size(width = 50.dp, height = 70.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(width = 50.dp, height = 70.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "?",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            .clickable(onClick = onClick),
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        ),
+        leadingContent = {
+            val cover = manga.cover
+            if (cover != null) {
+                AsyncImage(
+                    model = cover.url,
+                    contentDescription = manga.title,
+                    modifier = Modifier
+                        .size(width = 56.dp, height = 80.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(width = 56.dp, height = 80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "?",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(16.dp))
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
+        },
+        headlineContent = {
             Text(
                 text = manga.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            val authors = manga.authors
-            if (authors != null) {
-                Text(
-                    text = authors.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            if (manga.status.isNotBlank()) {
-                val status = MangaStatusPattern.fromRawValue(manga.status)
-                Spacer(modifier = Modifier.height(4.dp))
-                StatusBadge(status = stringResource(id = status.stringRes))
+        },
+        supportingContent = {
+            Column {
+                val authors = manga.authors
+                if (authors != null) {
+                    Text(
+                        text = authors.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                
+                if (manga.status.isNotBlank()) {
+                    val status = MangaStatusPattern.fromRawValue(manga.status)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    StatusBadge(status = stringResource(id = status.stringRes))
+                }
             }
         }
-    }
+    )
 }
 
 @Composable

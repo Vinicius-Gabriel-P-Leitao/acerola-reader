@@ -47,20 +47,43 @@ fun Main.Search.Layout.SearchLayout(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (!searchActive) {
-                Text(
-                    text = stringResource(R.string.title_search_screen),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.padding(16.dp)
-                )
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (!searchActive) {
+                    Text(
+                        text = stringResource(R.string.title_search_screen),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        ),
+                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
+                    )
+                }
+
+                if (!searchActive) {
+                    DownloadQueueComponent(
+                        queue = uiState.downloadQueue,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
+                if (!searchActive && uiState.searchResults.isEmpty() && !uiState.isLoading) {
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = stringResource(R.string.label_search_empty_state),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 32.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
 
             Acerola.Component.SearchBar(
@@ -77,30 +100,16 @@ fun Main.Search.Layout.SearchLayout(
                 itemKey = { it.sources?.mangadex?.mangadexId ?: it.title },
                 placeholder = stringResource(R.string.placeholder_search_mangadex),
                 modifier = Modifier
+                    .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .padding(horizontal = if (searchActive) 0.dp else 16.dp)
+                    .padding(top = if (searchActive) 0.dp else 72.dp) // Offset for title
             ) { manga ->
                 val context = LocalContext.current
                 Main.Search.Component.MangaResultCard(
                     manga = manga,
                     onClick = { DownloadActivity.start(context, manga) }
                 )
-            }
-
-            if (!searchActive) {
-                DownloadQueueComponent(queue = uiState.downloadQueue)
-            }
-
-            if (!searchActive && uiState.searchResults.isEmpty() && !uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = stringResource(R.string.label_search_empty_state),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                        textAlign = TextAlign.Center
-                    )
-                }
             }
         }
     }

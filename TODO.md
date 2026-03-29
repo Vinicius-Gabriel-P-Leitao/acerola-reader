@@ -121,16 +121,6 @@ metadados de fontes online populares.
 - [x] **Adicionar bookmark** Adicionar uma action de bookmark nos seção de action
 - [x] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar
 
-#### Otimizar visualmente tela de download
-- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos, eles estão quebrados visualmente, mas só depois 
-  da busca.
-- [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
-
-#### Melhorar o Dialog de registar novo pattern e fazer uma forma visual que mostra o máximo de 5
-- [ ] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {value} {sub} e o uso do *
-- [ ] **Visualização da lista de pattern** Deixar uma forma que limita a 5 e para ver os outros ele escrolar, clicar em botão, usar os padrões do 
-  android.
-
 #### Filtros e Ordenação — Home Screen
 - [x] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
 - [x] **Persistência da ordenação** via DataStore.
@@ -147,6 +137,19 @@ metadados de fontes online populares.
 #### Verificar e Baixar Novos Capítulos
 - [x] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
   enfileira no download manager já existente.
+
+#### Otimizar visualmente tela de download
+- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos, eles estão quebrados visualmente, mas só depois
+  da busca.
+- [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
+
+#### Melhorar o Dialog de registar novo pattern e fazer uma forma visual que mostra o máximo de 5
+- [ ] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {value} {sub} e o uso do *
+- [ ] **Visualização da lista de pattern** Deixar uma forma que limita a 5 e para ver os outros ele escrolar, clicar em botão, usar os padrões do
+  android.
+
+#### Verificar erros de quando um mangá não tem métados no Anilist
+- [ ] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
 
 ---
 

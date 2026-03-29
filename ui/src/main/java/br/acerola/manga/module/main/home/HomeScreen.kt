@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -122,26 +124,9 @@ fun Main.Home.Layout.Screen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
-                query = query,
-                onQueryChange = { query = it },
-                onSearch = { searchActive = false },
-                active = searchActive,
-                onActiveChange = { searchActive = it },
-                items = filteredMangas,
-                placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-                itemKey = { (manga, _, _) -> manga.directory.id },
-                modifier = Modifier.padding(all = 6.dp),
-                itemContent = { (manga, history, chapterCount) ->
-                    Main.Common.Component.MangaListItem(
-                        manga = manga,
-                        chapterCount = chapterCount,
-                        onPlayClick = history?.let {
-                            { onAction(HomeAction.ClickContinue(manga, it)) }
-                        },
-                        onClick = { onAction(HomeAction.ClickManga(manga)) }
-                    )
-                })
+            if (!searchActive) {
+                Spacer(modifier = Modifier.height(64.dp))
+            }
 
             if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
                 EmptyState()
@@ -157,7 +142,7 @@ fun Main.Home.Layout.Screen(
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
-                    items(items = uiState.mangas) { (manga, history, chapterCount) ->
+                    items(items = if (searchActive) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
                         when (uiState.layout) {
                             HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
                                 manga = manga,
@@ -181,50 +166,78 @@ fun Main.Home.Layout.Screen(
             }
         }
 
-        Acerola.Component.FloatingTool(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)
-                )
-            }, items = listOf(
-                FloatingToolItem(
-                    onClick = {
-                        onAction(HomeAction.UpdateLayout(
-                            layout = when (uiState.layout) {
-                                HomeLayoutType.LIST -> HomeLayoutType.GRID
-                                HomeLayoutType.GRID -> HomeLayoutType.LIST
-                            }
-                        ))
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = if (uiState.layout == HomeLayoutType.GRID) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
-                            contentDescription = stringResource(id = R.string.description_icon_home_change_layout)
-                        )
-                    },
-                ),
-
-                FloatingToolItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
-                        )
-                    }, onClick = { showFilterSheet = true })
-            )
-        )
-
-        Box(
-            contentAlignment = Alignment.BottomStart,
+        Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
+            query = query,
+            onQueryChange = { query = it },
+            onSearch = { searchActive = false },
+            active = searchActive,
+            onActiveChange = { searchActive = it },
+            items = filteredMangas,
+            placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
+            itemKey = { (manga, _, _) -> manga.directory.id },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 8.dp),
-        ) {
-            Acerola.Layout.ProgressIndicator(
-                isLoading = uiState.isIndexing,
-                progress = uiState.indexingProgress,
+                .align(Alignment.TopCenter)
+                .padding(horizontal = if (searchActive) 0.dp else 16.dp)
+                .padding(top = if (searchActive) 0.dp else 8.dp),
+            itemContent = { (manga, history, chapterCount) ->
+                Main.Common.Component.MangaListItem(
+                    manga = manga,
+                    chapterCount = chapterCount,
+                    onPlayClick = history?.let {
+                        { onAction(HomeAction.ClickContinue(manga, it)) }
+                    },
+                    onClick = { onAction(HomeAction.ClickManga(manga)) }
+                )
+            })
+
+        if (!searchActive) {
+            Acerola.Component.FloatingTool(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)
+                    )
+                }, items = listOf(
+                    FloatingToolItem(
+                        onClick = {
+                            onAction(
+                                HomeAction.UpdateLayout(
+                                    layout = when (uiState.layout) {
+                                        HomeLayoutType.LIST -> HomeLayoutType.GRID
+                                        HomeLayoutType.GRID -> HomeLayoutType.LIST
+                                    }
+                                )
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (uiState.layout == HomeLayoutType.GRID) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
+                                contentDescription = stringResource(id = R.string.description_icon_home_change_layout)
+                            )
+                        },
+                    ),
+
+                    FloatingToolItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                            )
+                        }, onClick = { showFilterSheet = true })
+                )
             )
+
+            Box(
+                contentAlignment = Alignment.BottomStart,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(all = 8.dp),
+            ) {
+                Acerola.Layout.ProgressIndicator(
+                    isLoading = uiState.isIndexing,
+                    progress = uiState.indexingProgress,
+                )
+            }
         }
 
         val activeManga = selectedMangaForActions

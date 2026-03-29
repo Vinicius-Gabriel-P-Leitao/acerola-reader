@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.ui.R
@@ -55,7 +56,9 @@ fun <T> Acerola.Component.SearchBar(
             SearchBarDefaults.InputField(
                 query = query,
                 onQueryChange = onQueryChange,
-                onSearch = onSearch,
+                onSearch = { 
+                    onSearch(it)
+                },
                 expanded = active,
                 onExpandedChange = onActiveChange,
                 placeholder = { Text(text = placeholder) },
@@ -68,7 +71,11 @@ fun <T> Acerola.Component.SearchBar(
                             )
                         }
                     } else {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 trailingIcon = {
@@ -85,36 +92,46 @@ fun <T> Acerola.Component.SearchBar(
         },
         expanded = active,
         onExpandedChange = onActiveChange,
-        shape = if (active) RoundedCornerShape(0.dp) else RoundedCornerShape(28.dp),
+        shape = if (active) RoundedCornerShape(0.dp) else SearchBarDefaults.inputFieldShape,
         colors = SearchBarDefaults.colors(
-            containerColor = if (active) MaterialTheme.colorScheme.surfaceContainerLowest else MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = if (active) {
+                MaterialTheme.colorScheme.surfaceContainerLowest
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
         ) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
             if (isLoading) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                )
+            } else {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
             }
 
-            if (items.isEmpty() && !isLoading) {
+            if (items.isEmpty() && !isLoading && query.isNotEmpty()) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(all = 16.dp),
+                        .padding(all = 32.dp),
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.description_text_search_no_results),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = stringResource(id = R.string.description_text_search_no_results),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
