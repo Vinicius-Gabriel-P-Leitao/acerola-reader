@@ -4,10 +4,10 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.manga.fixtures.MangaDirectoryFixtures
 import br.acerola.manga.local.entity.archive.ChapterArchive
-import br.acerola.manga.local.translator.toDto
-import br.acerola.manga.local.translator.toMangaDirectoryModel
-import br.acerola.manga.local.translator.toModel
-import br.acerola.manga.local.translator.toPageDto
+import br.acerola.manga.local.translator.persistence.toEntity
+import br.acerola.manga.local.translator.persistence.toMangaDirectoryEntity
+import br.acerola.manga.local.translator.ui.toViewDto
+import br.acerola.manga.local.translator.ui.toViewPageDto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -15,7 +15,6 @@ import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -32,7 +31,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `MangaDirectory toDto deve mapear todos os campos corretamente`() {
+    fun `MangaDirectory toViewDto deve mapear todos os campos corretamente`() {
         val entity = MangaDirectoryFixtures.createMangaDirectory(
             cover = "content://cover",
             banner = "content://banner"
@@ -40,7 +39,7 @@ class ArchiveMapperTest {
         val uriMock = mockk<Uri>()
         every { Uri.parse(any()) } returns uriMock
 
-        val dto = entity.toDto()
+        val dto = entity.toViewDto()
 
         assertEquals(entity.id, dto.id)
         assertEquals(entity.name, dto.name)
@@ -49,17 +48,17 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `MangaDirectory toDto deve tratar campos nulos`() {
+    fun `MangaDirectory toViewDto deve tratar campos nulos`() {
         val entity = MangaDirectoryFixtures.createMangaDirectory(cover = null, banner = null)
         
-        val dto = entity.toDto()
+        val dto = entity.toViewDto()
 
         assertNull(dto.coverUri)
         assertNull(dto.bannerUri)
     }
 
     @Test
-    fun `ChapterArchive toDto deve mapear campos corretamente`() {
+    fun `ChapterArchive toViewDto deve mapear campos corretamente`() {
         val entity = ChapterArchive(
             id = 1,
             chapter = "10",
@@ -67,18 +66,20 @@ class ArchiveMapperTest {
             chapterSort = "10",
             checksum = "hash",
             fastHash = "hash",
-            folderPathFk = 1
+            folderPathFk = 1,
+            lastModified = 500L
         )
         
-        val dto = entity.toDto()
+        val dto = entity.toViewDto()
 
         assertEquals(entity.id, dto.id)
         assertEquals(entity.chapter, dto.name)
         assertEquals(entity.chapterSort, dto.chapterSort)
+        assertEquals(500L, dto.lastModified)
     }
 
     @Test
-    fun `MangaDirectoryDto toModel deve mapear para entidade com timestamp atual`() {
+    fun `MangaDirectoryDto toEntity deve mapear para entidade`() {
         val coverUri = mockk<Uri>()
         val bannerUri = mockk<Uri>()
         val dto = MangaDirectoryFixtures.createMangaDirectoryDto(
@@ -88,15 +89,15 @@ class ArchiveMapperTest {
         every { coverUri.toString() } returns "uri_cover"
         every { bannerUri.toString() } returns "uri_banner"
 
-        val model = dto.toModel()
+        val entity = dto.toEntity()
 
-        assertEquals(dto.name, model.name)
-        assertEquals("uri_cover", model.cover)
-        assertEquals("uri_banner", model.banner)
+        assertEquals(dto.name, entity.name)
+        assertEquals("uri_cover", entity.cover)
+        assertEquals("uri_banner", entity.banner)
     }
 
     @Test
-    fun `List ChapterArchive toPageDto deve criar objeto de paginação correto`() {
+    fun `List ChapterArchive toViewPageDto deve criar objeto de paginação correto`() {
         val list = listOf(
             ChapterArchive(
                 id = 1,
@@ -118,7 +119,7 @@ class ArchiveMapperTest {
             )
         )
 
-        val pageDto = list.toPageDto(pageSize = 10, total = 100, page = 1)
+        val pageDto = list.toViewPageDto(pageSize = 10, total = 100, page = 1)
 
         assertEquals(2, pageDto.items.size)
         assertEquals(10, pageDto.pageSize)
@@ -127,23 +128,32 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `DocumentFile toMangaDirectoryModel deve mapear metadados do arquivo`() {
+    fun `DocumentFile toMangaDirectoryEntity deve mapear metadados do arquivo`() {
         val folder = mockk<DocumentFile>()
         val cover = mockk<DocumentFile>()
         val banner = mockk<DocumentFile>()
         
+        val folderUri = mockk<Uri>()
+        val coverUri = mockk<Uri>()
+        val bannerUri = mockk<Uri>()
+
         every { folder.name } returns "One Piece"
-        every { folder.uri.toString() } returns "uri_folder"
+        every { folder.uri } returns folderUri
+        every { folderUri.toString() } returns "uri_folder"
         every { folder.lastModified() } returns 5000L
-        every { cover.uri.toString() } returns "uri_cover"
-        every { banner.uri.toString() } returns "uri_banner"
+        
+        every { cover.uri } returns coverUri
+        every { coverUri.toString() } returns "uri_cover"
+        
+        every { banner.uri } returns bannerUri
+        every { bannerUri.toString() } returns "uri_banner"
 
-        val model = folder.toMangaDirectoryModel(cover, banner, chapterTemplateFk = null)
+        val entity = folder.toMangaDirectoryEntity(cover, banner, chapterTemplateFk = null)
 
-        assertEquals("One Piece", model.name)
-        assertEquals("uri_folder", model.path)
-        assertEquals("uri_cover", model.cover)
-        assertEquals("uri_banner", model.banner)
-        assertEquals(5000L, model.lastModified)
+        assertEquals("One Piece", entity.name)
+        assertEquals("uri_folder", entity.path)
+        assertEquals("uri_cover", entity.cover)
+        assertEquals("uri_banner", entity.banner)
+        assertEquals(5000L, entity.lastModified)
     }
 }

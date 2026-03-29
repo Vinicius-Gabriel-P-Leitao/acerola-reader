@@ -33,7 +33,7 @@ class MangaMetadataViewModelTest {
         every { mangaRepo.isIndexing } returns MutableStateFlow(false)
         every { mangaRepo.progress } returns MutableStateFlow(-1)
 
-        observeLibraryUseCase = ObserveLibraryUseCase(mangaRepo)
+        observeLibraryUseCase = ObserveLibraryUseCase(mangaRepository = mangaRepo)
         viewModel = MangaMetadataViewModel(observeLibraryUseCase, manageCategoriesUseCase, workManager)
     }
 

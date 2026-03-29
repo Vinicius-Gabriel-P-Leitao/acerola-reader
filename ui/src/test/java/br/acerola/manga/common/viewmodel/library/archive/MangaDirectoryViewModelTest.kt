@@ -16,6 +16,9 @@ import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.manga.ExtractCoverFromChapterUseCase
 import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
+import br.acerola.manga.core.usecase.manga.HideMangaUseCase
+import br.acerola.manga.core.usecase.manga.DeleteMangaUseCase
+import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -41,6 +44,9 @@ class MangaDirectoryViewModelTest {
     private val manager = mockk<FileSystemAccessManager>(relaxed = true)
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val extractCoverFromChapterUseCase = mockk<ExtractCoverFromChapterUseCase>(relaxed = true)
+    private val hideMangaUseCase = mockk<HideMangaUseCase>(relaxed = true)
+    private val deleteMangaUseCase = mockk<DeleteMangaUseCase>(relaxed = true)
+    private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
     
     private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
     private val mangaRepo = mockk<MangaGateway<MangaDirectoryDto>>(relaxed = true)
@@ -64,7 +70,7 @@ class MangaDirectoryViewModelTest {
         every { chapterRepo.progress } returns MutableStateFlow(-1)
 
         observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
-        observeLibraryUseCase = ObserveLibraryUseCase(mangaRepo)
+        observeLibraryUseCase = ObserveLibraryUseCase(mangaRepository = mangaRepo)
 
         viewModel = createViewModel()
     }
@@ -74,7 +80,10 @@ class MangaDirectoryViewModelTest {
         manager = manager,
         extractCoverFromChapterUseCase = extractCoverFromChapterUseCase,
         observeLibraryUseCase = observeLibraryUseCase,
-        observeChaptersUseCase = observeChaptersUseCase
+        observeChaptersUseCase = observeChaptersUseCase,
+        hideMangaUseCase = hideMangaUseCase,
+        deleteMangaUseCase = deleteMangaUseCase,
+        manageCategoriesUseCase = manageCategoriesUseCase
     )
 
     @After

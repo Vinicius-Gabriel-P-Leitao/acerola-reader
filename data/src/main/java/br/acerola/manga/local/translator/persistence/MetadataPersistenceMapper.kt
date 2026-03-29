@@ -40,15 +40,18 @@ fun BannerDto.toEntity(mangaId: Long): Banner = Banner(
     fileName = fileName, url = url, mangaRemoteInfoFk = mangaId
 )
 
-fun MangaMetadataDto.toEntity(): MangaMetadata = MangaMetadata(
+fun MangaMetadataDto.toEntity(
+    mangaDirectoryFk: Long? = this.mangaDirectoryFk,
+    syncSource: String? = this.syncSource?.source
+): MangaMetadata = MangaMetadata(
     id = this.id ?: 0L,
     title = this.title,
     description = this.description,
     romanji = this.romanji.orEmpty(),
     status = this.status,
     publication = this.year ?: 0,
-    mangaDirectoryFk = this.mangaDirectoryFk,
-    syncSource = this.syncSource?.source
+    mangaDirectoryFk = mangaDirectoryFk,
+    syncSource = syncSource
 )
 
 fun ChapterMetadataDto.toEntity(mangaRemoteInfoFk: Long): ChapterMetadata = ChapterMetadata(
