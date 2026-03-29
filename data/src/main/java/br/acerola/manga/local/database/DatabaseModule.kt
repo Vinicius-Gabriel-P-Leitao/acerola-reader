@@ -50,6 +50,7 @@ object DatabaseModule {
                 }
             }
         })
+        .fallbackToDestructiveMigration(dropAllTables = false)
         .build()
     }
 

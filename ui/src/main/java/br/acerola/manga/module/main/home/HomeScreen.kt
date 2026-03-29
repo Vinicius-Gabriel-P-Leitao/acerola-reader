@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.FloatingTool
 import br.acerola.manga.common.ux.component.FloatingToolItem
@@ -44,6 +44,7 @@ import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.common.component.MangaActionsSheet
 import br.acerola.manga.module.main.common.component.MangaListItem
+import br.acerola.manga.module.main.home.component.HomeFilterSheet
 import br.acerola.manga.module.main.home.component.MangaGridItem
 import br.acerola.manga.module.main.home.state.HomeAction
 import br.acerola.manga.module.main.home.state.HomeUiState
@@ -64,20 +65,26 @@ fun Main.Home.Layout.Screen(
         }
     }
 
-    val layout by homeViewModel.selectedHomeLayout.collectAsState()
-    val isIndexing by homeViewModel.isIndexing.collectAsState()
-    val progress by homeViewModel.progress.collectAsState()
-    val mangas by homeViewModel.mangas.collectAsState()
-    val allCategories by homeViewModel.allCategories.collectAsState()
+    val layout by homeViewModel.selectedHomeLayout.collectAsStateWithLifecycle()
+    val isIndexing by homeViewModel.isIndexing.collectAsStateWithLifecycle()
+    val progress by homeViewModel.progress.collectAsStateWithLifecycle()
+    val mangas by homeViewModel.mangas.collectAsStateWithLifecycle()
+    val allCategories by homeViewModel.allCategories.collectAsStateWithLifecycle()
+    val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
+    val filterSettings by homeViewModel.filterSettings.collectAsStateWithLifecycle()
 
     val uiState = HomeUiState(
         layout = layout,
         isIndexing = isIndexing,
         indexingProgress = if (progress >= 0) progress / 100f else null,
-        mangas = mangas
+        mangas = mangas,
+        sortType = sortSettings.type,
+        sortDirection = sortSettings.direction,
+        filter = filterSettings
     )
 
     var selectedMangaForActions by remember { mutableStateOf<MangaDto?>(null) }
+    var showFilterSheet by remember { mutableStateOf(false) }
 
     var query by rememberSaveable { mutableStateOf("") }
     var searchActive by rememberSaveable { mutableStateOf(false) }
@@ -87,7 +94,8 @@ fun Main.Home.Layout.Screen(
             uiState.mangas
         } else {
             uiState.mangas.filter { (manga, _, _) ->
-                manga.directory.name.contains(query, ignoreCase = true)
+                manga.directory.name.contains(query, ignoreCase = true) ||
+                        manga.remoteInfo?.title?.contains(query, ignoreCase = true) == true
             }
         }
     }
@@ -197,14 +205,13 @@ fun Main.Home.Layout.Screen(
                     },
                 ),
 
-                // NOTE: Criar filtragem por categoria.
                 FloatingToolItem(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = stringResource(id = R.string.description_icon_home_filter)
                         )
-                    }, onClick = { println("Filtrar") })
+                    }, onClick = { showFilterSheet = true })
             )
         )
 
@@ -229,6 +236,17 @@ fun Main.Home.Layout.Screen(
                 onDelete = { homeViewModel.deleteManga(activeManga.directory.id) },
                 onBookmark = { categoryId -> homeViewModel.setMangaCategory(activeManga.directory.id, categoryId) },
                 onDismiss = { selectedMangaForActions = null },
+            )
+        }
+
+        if (showFilterSheet) {
+            Main.Home.Component.HomeFilterSheet(
+                sortSettings = sortSettings,
+                filterSettings = filterSettings,
+                categories = allCategories,
+                onSortChange = { homeViewModel.updateSortSettings(it) },
+                onFilterChange = { homeViewModel.updateFilterSettings(it) },
+                onDismiss = { showFilterSheet = false }
             )
         }
     }

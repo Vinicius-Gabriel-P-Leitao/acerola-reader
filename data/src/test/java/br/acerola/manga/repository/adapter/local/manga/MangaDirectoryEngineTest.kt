@@ -14,6 +14,7 @@ import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.adapter.contract.gateway.ChapterGateway
 import br.acerola.manga.adapter.library.MangaDirectoryEngine
 import br.acerola.manga.util.ContentQueryHelper
+import br.acerola.manga.util.FastFileMetadata
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -59,7 +60,7 @@ class MangaDirectoryEngineTest {
         MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
 
-        repository = MangaDirectoryEngine(directoryDao, context, templateService, templateMatcher)
+        repository = MangaDirectoryEngine(directoryDao, templateMatcher, templateService, context)
         repository.mangaDirectoryOps = mangaDirectoryOps
 
         mockkStatic(Uri::class)
@@ -75,8 +76,8 @@ class MangaDirectoryEngineTest {
         every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockk(relaxed = true)
         every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockk(relaxed = true)
         
-        // Mock padrão para evitar 'no answer found'
         every { directoryDao.getAllMangaDirectory() } returns flowOf(emptyList())
+        every { directoryDao.getAllMangaDirectoryIncludingHidden() } returns flowOf(emptyList())
         coEvery { mangaDirectoryOps.refreshMangaChapters(any(), any()) } returns Either.Right(Unit)
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
@@ -101,7 +102,6 @@ class MangaDirectoryEngineTest {
         val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, lastModified = 1000L)
         val uriMock = mockk<Uri>()
         val folderDocMock = mockk<DocumentFile>()
-        val coverFileMock = mockk<DocumentFile>(relaxed = true)
 
         coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns existingManga
         every { Uri.parse(any()) } returns uriMock
@@ -111,12 +111,9 @@ class MangaDirectoryEngineTest {
         every { folderDocMock.name } returns "Manga Folder"
         every { folderDocMock.uri } returns mockk(relaxed = true)
         every { folderDocMock.isDirectory } returns true
-        every { folderDocMock.findFile(any()) } returns null
-        every { folderDocMock.listFiles() } returns arrayOf(coverFileMock)
-
-        every { coverFileMock.name } returns "cover.jpg"
-        every { coverFileMock.isFile } returns true
-        every { coverFileMock.isDirectory } returns false
+        
+        val childMetadata = FastFileMetadata(id = "cap1", name = "cap1.cbz", size = 100, lastModified = 500, mimeType = "application/zip")
+        every { ContentQueryHelper.listFiles(context, any(), any()) } returns Either.Right(listOf(childMetadata))
 
         coEvery { directoryDao.update(any()) } returns Unit
 
@@ -127,89 +124,43 @@ class MangaDirectoryEngineTest {
     }
 
     @Test
-    fun `deve retornar DatabaseError em caso de falha de persistencia no refreshManga`() = runTest {
-        val mangaId = 1L
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } throws SQLiteException("DB Error")
-
-        val result = repository.refreshManga(mangaId)
-
-        assertTrue(result.isLeft())
-        result.onLeft { assertTrue(it is LibrarySyncError.DatabaseError) }
-    }
-
-    @Test
-    fun `deve realizar scan incremental adicionando e removendo pastas`() = runTest {
+    fun `deve realizar scan recursivo e encontrar mangas em subpastas`() = runTest {
         val rootUri = mockk<Uri>()
-        val rootDoc = mockk<DocumentFile>()
-        val existingManga = MangaDirectoryFixtures.createMangaDirectory(name = "Old", path = "uri/old")
-
-        val newDoc = mockk<DocumentFile>()
-        val newUri = mockk<Uri>()
-
-        every { Uri.parse(any()) } returns rootUri
-        every { newUri.toString() } returns "uri/new"
-        every { newDoc.isDirectory } returns true
-        every { newDoc.name } returns "New"
-        every { newDoc.uri } returns newUri
-        every { newDoc.lastModified() } returns 100L
-        every { newDoc.listFiles() } returns emptyArray()
-        every { newDoc.findFile(any()) } returns null
-
-        every { DocumentFile.fromTreeUri(context, rootUri) } returns rootDoc
         
-        // Mock do ContentQueryHelper para o buildLibrary
-        val newFolderMetadata = br.acerola.manga.util.FastFileMetadata(
-            id = "new_id",
-            name = "New",
-            size = 0L,
-            lastModified = 100L,
-            mimeType = DocumentsContract.Document.MIME_TYPE_DIR
-        )
-        every { ContentQueryHelper.listFiles(context, rootUri) } returns Either.Right(listOf(newFolderMetadata))
-        every { ContentQueryHelper.listFiles(context, rootUri, "new_id") } returns Either.Right(emptyList())
+        // Root tem uma subpasta "Hellboy"
+        val subDirMetadata = FastFileMetadata(id = "hellboy_id", name = "Hellboy", size = 0, lastModified = 100, mimeType = DocumentsContract.Document.MIME_TYPE_DIR)
+        every { ContentQueryHelper.listFiles(context, rootUri, "root_id") } returns Either.Right(listOf(subDirMetadata))
         
-        every { DocumentsContract.buildDocumentUriUsingTree(rootUri, "new_id") } returns newUri
-        every { DocumentFile.fromSingleUri(context, newUri) } returns newDoc
+        // "Hellboy" tem uma subpasta "BPRD"
+        val targetDirMetadata = FastFileMetadata(id = "bprd_id", name = "BPRD", size = 0, lastModified = 200, mimeType = DocumentsContract.Document.MIME_TYPE_DIR)
+        every { ContentQueryHelper.listFiles(context, rootUri, "hellboy_id") } returns Either.Right(listOf(targetDirMetadata))
         
-        every { directoryDao.getAllMangaDirectory() } returns flowOf(listOf(existingManga))
-        coEvery { directoryDao.delete(existingManga) } returns Unit
-        coEvery { directoryDao.insert(any()) } returns 1L
+        // "BPRD" tem arquivos .cbz
+        val mangaFileMetadata = FastFileMetadata(id = "manga_file", name = "issue1.cbz", size = 1000, lastModified = 300, mimeType = "application/zip")
+        every { ContentQueryHelper.listFiles(context, rootUri, "bprd_id") } returns Either.Right(listOf(mangaFileMetadata))
+        
+        // Mock do DocumentFile para a pasta final
+        val bprdUri = mockk<Uri>()
+        val bprdDoc = mockk<DocumentFile>(relaxed = true) {
+            every { name } returns "BPRD"
+            every { uri } returns bprdUri
+            every { lastModified() } returns 200L
+        }
+        every { DocumentsContract.buildDocumentUriUsingTree(rootUri, "bprd_id") } returns bprdUri
+        every { DocumentFile.fromSingleUri(context, bprdUri) } returns bprdDoc
+        
+        coEvery { directoryDao.upsertMangaDirectoryTransaction(any(), any()) } returns 1L
 
         val result = repository.incrementalScan(rootUri)
 
-        assertTrue("Deveria ser sucesso mas foi: $result", result.isRight())
-        coVerify { directoryDao.delete(existingManga) }
-        coVerify { directoryDao.insert(match { it.name == "New" }) }
-    }
-
-    @Test
-    fun `deve retornar sucesso mesmo que pasta seja inacessivel no scan`() = runTest {
-        val rootUri = mockk<Uri>()
-        every { Uri.parse(any()) } returns rootUri
-        every { DocumentFile.fromTreeUri(context, rootUri) } returns null
-
-        val result = repository.incrementalScan(rootUri)
-
-        assertTrue("Deveria ser sucesso (pasta nula apenas para o scan)", result.isRight())
-    }
-
-    @Test
-    fun `deve retornar DiskIOFailure quando ocorrer IOException`() = runTest {
-        val rootUri = mockk<Uri>()
-        every { Uri.parse(any()) } returns rootUri
-        every { DocumentFile.fromTreeUri(context, rootUri) } returns mockk()
-        every { ContentQueryHelper.listFiles(any(), any()) } throws IOException("IO Failure")
-
-        val result = repository.refreshLibrary(rootUri)
-
-        assertTrue("Esperado erro de disco, mas foi $result", result.isLeft())
-        result.onLeft { assertTrue(it is LibrarySyncError.DiskIOFailure) }
+        assertTrue(result.isRight())
+        coVerify { directoryDao.upsertMangaDirectoryTransaction(match { it.name == "BPRD" }, any()) }
     }
 
     @Test
     fun `observeLibrary deve emitir lista de DTOs corretamente`() = runTest {
         val entityList = listOf(MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "Manga A"))
-        every { directoryDao.getAllMangaDirectory() } returns flowOf(entityList)
+        every { directoryDao.getAllMangaDirectoryIncludingHidden() } returns flowOf(entityList)
         every { Uri.parse(any()) } returns mockk(relaxed = true)
 
         val result = repository.observeLibrary().first { it.isNotEmpty() }

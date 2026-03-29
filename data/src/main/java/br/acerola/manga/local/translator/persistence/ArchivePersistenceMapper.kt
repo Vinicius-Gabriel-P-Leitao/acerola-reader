@@ -49,7 +49,8 @@ fun FastFileMetadata.toChapterArchiveEntity(
         checksum = null,
         fastHash = fastHash,
         chapterSort = chapterSort,
-        folderPathFk = mangaId
+        folderPathFk = mangaId,
+        lastModified = lastModified
     )
 }
 
@@ -78,6 +79,7 @@ fun DocumentFile.toChapterArchiveEntity(
         checksum = checksum,
         fastHash = fastHash,
         chapterSort = chapterSort,
-        folderPathFk = mangaId
+        folderPathFk = mangaId,
+        lastModified = lastModified()
     )
 }

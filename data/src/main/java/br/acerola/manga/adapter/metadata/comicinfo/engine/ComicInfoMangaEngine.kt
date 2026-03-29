@@ -13,6 +13,7 @@ import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.LibrarySyncError
 import br.acerola.manga.local.dao.archive.MangaDirectoryDao
 import br.acerola.manga.local.dao.metadata.MangaMetadataDao
+import br.acerola.manga.local.entity.metadata.MangaMetadata
 import br.acerola.manga.local.dao.metadata.relationship.AuthorDao
 import br.acerola.manga.local.dao.metadata.relationship.GenreDao
 import br.acerola.manga.local.dao.metadata.source.ComicInfoSourceDao
@@ -70,7 +71,13 @@ class ComicInfoMangaEngine @Inject constructor(
                         return@catch
                     }
 
-                    val mangaToSave = bestMatch.toEntity().copy(
+                    val mangaToSave = MangaMetadata(
+                        id = bestMatch.id ?: 0L,
+                        title = bestMatch.title,
+                        description = bestMatch.description,
+                        romanji = bestMatch.romanji.orEmpty(),
+                        status = bestMatch.status,
+                        publication = bestMatch.year ?: 0,
                         mangaDirectoryFk = directory.id,
                         syncSource = MetadataSource.COMIC_INFO.source
                     )
@@ -89,7 +96,7 @@ class ComicInfoMangaEngine @Inject constructor(
                         bestMatch.cover?.let { dto ->
                             downloadCoverService.searchMedia(dto.url).onRight { bytes ->
                                 coverService.processCover(
-                                    rootUri = directory.path.toUri(),
+                                    rootUri = Uri.parse(directory.path),
                                     folderId = directory.id,
                                     bytes = bytes,
                                     coverUrl = dto.url,

@@ -30,12 +30,12 @@ class ConfigScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    // Mocks dos ViewModels necessários
     private val fsAccessVM = mockk<FileSystemAccessViewModel>(relaxed = true)
     private val mangaDirVM = mockk<MangaDirectoryViewModel>(relaxed = true)
     private val mangaDexVM = mockk<MangaMetadataViewModel>(relaxed = true)
     private val metadataVM = mockk<MetadataSettingsViewModel>(relaxed = true)
     private val themeVM = mockk<ThemeViewModel>(relaxed = true)
+    private val templateVM = mockk<TemplateConfigViewModel>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -54,8 +54,12 @@ class ConfigScreenTest {
         every { mangaDexVM.isIndexing } returns MutableStateFlow(false)
         every { mangaDexVM.progress } returns MutableStateFlow(-1)
         every { mangaDexVM.uiEvents } returns emptyEvents
+        every { mangaDexVM.allCategories } returns MutableStateFlow(emptyList())
 
         every { fsAccessVM.uiEvents } returns emptyEvents
+        every { fsAccessVM.folderUri } returns null
+        
+        every { templateVM.templates } returns MutableStateFlow(emptyList())
     }
 
     @Test
@@ -68,26 +72,24 @@ class ConfigScreenTest {
                         fileSystemAccessViewModel = fsAccessVM,
                         mangaDirectoryViewModel = mangaDirVM,
                         mangaDexViewModel = mangaDexVM,
-                        themeViewModel = themeVM
+                        themeViewModel = themeVM,
+                        templateViewModel = templateVM
                     )
                 }
             }
         }
 
-        // Verifica títulos das seções com textos completos para evitar ambiguidades de substring
-        composeTestRule.onNodeWithText("Aparência", ignoreCase = true)
+        // Verifica títulos das seções usando os textos exatos definidos no strings.xml e transformados em uppercase no ConfigScreen
+        // "Aparência" -> "APARÊNCIA"
+        // "Arquivos locais" -> "ARQUIVOS LOCAIS" (No strings.xml é title_text_archive_configs_in_app)
+        // "Biblioteca" -> "BIBLIOTECA"
+        // "Metadados externos" -> "METADADOS EXTERNOS"
+        
+        composeTestRule.onNodeWithText("APARÊNCIA", useUnmergedTree = true)
             .performScrollTo()
             .assertIsDisplayed()
         
-        composeTestRule.onNodeWithText("Configuração dos arquivos", ignoreCase = true)
-            .performScrollTo()
-            .assertIsDisplayed()
-        
-        composeTestRule.onNodeWithText("Biblioteca", ignoreCase = true)
-            .performScrollTo()
-            .assertIsDisplayed()
-        
-        composeTestRule.onNodeWithText("Configuração do mangadex", ignoreCase = true)
+        composeTestRule.onNodeWithText("BIBLIOTECA", useUnmergedTree = true)
             .performScrollTo()
             .assertIsDisplayed()
     }

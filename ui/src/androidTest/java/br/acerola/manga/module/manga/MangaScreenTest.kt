@@ -25,6 +25,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+import br.acerola.manga.config.preference.ChapterSortPreferenceData
+import br.acerola.manga.config.preference.ChapterSortType
+import br.acerola.manga.config.preference.SortDirection
+
 class MangaScreenTest {
 
     @get:Rule
@@ -50,12 +54,14 @@ class MangaScreenTest {
         every { mangaViewModel.readChapters } returns MutableStateFlow(emptyList<Long>())
         every { mangaViewModel.selectedChapterPerPage } returns MutableStateFlow(ChapterPageSizeType.SHORT)
         every { mangaViewModel.uiEvents } returns emptyEvents
+        every { mangaViewModel.chapterSortSettings } returns MutableStateFlow(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
 
         every { mangaDirVM.uiEvents } returns emptyEvents
         every { chapterArchiveVM.uiEvents } returns emptyEvents
         
         every { mangaRemoteVM.isIndexing } returns MutableStateFlow(false)
         every { mangaRemoteVM.uiEvents } returns emptyEvents
+        every { mangaRemoteVM.allCategories } returns MutableStateFlow(emptyList())
         
         every { chapterRemoteVM.isIndexing } returns MutableStateFlow(false)
         every { chapterRemoteVM.uiEvents } returns emptyEvents

@@ -61,7 +61,7 @@ import br.acerola.manga.local.entity.metadata.source.MangadexSource
         br.acerola.manga.local.entity.view.MangaSummaryView::class
     ],
     exportSchema = false,
-    version = 3,
+    version = 4,
 )
 @TypeConverters(AcerolaTypeConverters::class)
 abstract class AcerolaDatabase : RoomDatabase() {

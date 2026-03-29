@@ -42,4 +42,7 @@ data class ChapterArchive(
 
     @ColumnInfo(name = "manga_directory_fk")
     val folderPathFk: Long,
+
+    @ColumnInfo(name = "last_modified", defaultValue = "0")
+    val lastModified: Long = 0,
 )

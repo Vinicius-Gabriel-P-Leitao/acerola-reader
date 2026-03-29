@@ -5,6 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.config.preference.ChapterPageSizeType
 import br.acerola.manga.config.preference.ChapterPerPagePreference
+import br.acerola.manga.config.preference.ChapterSortPreference
+import br.acerola.manga.config.preference.ChapterSortPreferenceData
+import br.acerola.manga.config.preference.ChapterSortType
+import br.acerola.manga.config.preference.SortDirection
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
@@ -56,6 +60,9 @@ class MangaViewModel @Inject constructor(
 
     private val _selectedChapterPerPage = MutableStateFlow(value = ChapterPageSizeType.SHORT)
     val selectedChapterPerPage: StateFlow<ChapterPageSizeType> = _selectedChapterPerPage.asStateFlow()
+
+    private val _chapterSortSettings = MutableStateFlow(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
+    val chapterSortSettings: StateFlow<ChapterSortPreferenceData> = _chapterSortSettings.asStateFlow()
 
     private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
 
@@ -185,12 +192,21 @@ class MangaViewModel @Inject constructor(
             localFlow,
             remoteFlow,
             _currentPage,
-            _selectedChapterPerPage
-        ) { localAll, remoteAll, page, pageSizeType ->
+            _selectedChapterPerPage,
+            _chapterSortSettings
+        ) { localAll, remoteAll, page, pageSizeType, sort ->
             val items = localAll.items
             if (items.isEmpty()) return@combine ChapterDto(localAll, remoteAll)
 
-            val total = items.size
+            // Apply Sorting
+            val sortedItems = when (sort.type) {
+                ChapterSortType.NUMBER -> items.sortedBy { it.chapterSort.toDoubleOrNull() ?: 0.0 }
+                ChapterSortType.LAST_UPDATE -> items.sortedBy { it.lastModified }
+            }
+
+            val finalItems = if (sort.direction == SortDirection.DESCENDING) sortedItems.reversed() else sortedItems
+
+            val total = finalItems.size
             val pageSize = pageSizeType.key.toInt()
             val totalPages = ceil(total.toDouble() / pageSize).toInt()
             val safePage = page.coerceIn(0, max(0, totalPages - 1))
@@ -198,7 +214,7 @@ class MangaViewModel @Inject constructor(
             val start = safePage * pageSize
             val end = (start + pageSize).coerceIn(0, total)
 
-            val pagedLocalItems = if (start < total) items.subList(start, end) else emptyList()
+            val pagedLocalItems = if (start < total) finalItems.subList(start, end) else emptyList()
 
             val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
 
@@ -232,6 +248,12 @@ class MangaViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            ChapterSortPreference.sortFlow(context).collect { sort ->
+                _chapterSortSettings.value = sort
+            }
+        }
+
+        viewModelScope.launch {
             manga.collect { mangaDto ->
                 val newRemoteId = mangaDto?.remoteInfo?.id
                 if (newRemoteId != null && newRemoteId != _selectedMangaId.value) {
@@ -248,6 +270,13 @@ class MangaViewModel @Inject constructor(
         _selectedChapterPerPage.value = size
         viewModelScope.launch {
             ChapterPerPagePreference.saveChapterPerPage(context, size)
+        }
+    }
+
+    fun updateChapterSort(sort: ChapterSortPreferenceData) {
+        _chapterSortSettings.value = sort
+        viewModelScope.launch {
+            ChapterSortPreference.saveSort(context, sort)
         }
     }
 

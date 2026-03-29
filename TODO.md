@@ -122,8 +122,14 @@ metadados de fontes online populares.
 - [x] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar
 
 #### Otimizar visualmente tela de download
-- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos
+- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos, eles estão quebrados visualmente, mas só depois 
+  da busca.
 - [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
+
+#### Melhorar o Dialog de registar novo pattern e fazer uma forma visual que mostra o máximo de 5
+- [ ] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {value} {sub} e o uso do *
+- [ ] **Visualização da lista de pattern** Deixar uma forma que limita a 5 e para ver os outros ele escrolar, clicar em botão, usar os padrões do 
+  android.
 
 #### Filtros e Ordenação — Home Screen
 - [x] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
@@ -139,8 +145,6 @@ metadados de fontes online populares.
 - [x] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
 
 #### Verificar e Baixar Novos Capítulos
-- [ ] **Botão "Verificar updates":** Na tela de detalhes do mangá, um botão que consulta o MangaDex e retorna
-  capítulos mais recentes do que o último registrado no banco local.
 - [x] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
   enfileira no download manager já existente.
 

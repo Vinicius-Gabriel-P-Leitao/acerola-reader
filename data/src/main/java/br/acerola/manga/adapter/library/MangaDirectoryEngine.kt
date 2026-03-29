@@ -49,9 +49,9 @@ import javax.inject.Singleton
 @Singleton
 class MangaDirectoryEngine @Inject constructor(
     private val directoryDao: MangaDirectoryDao,
-    @param:ApplicationContext private val context: Context,
-    private val templateService: ChapterNameProcessor,
     private val templateMatcher: TemplateMatcher,
+    private val templateService: ChapterNameProcessor,
+    @param:ApplicationContext private val context: Context,
 ) : MangaGateway<MangaDirectoryDto>, MangaLibraryWriteGateway {
 
     @Inject
@@ -104,6 +104,7 @@ class MangaDirectoryEngine @Inject constructor(
                     val bannerDoc = bannerMetadata?.let {
                         DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
                     }
+
                     val coverDoc = coverMetadata?.let {
                         DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
                     }
@@ -139,7 +140,7 @@ class MangaDirectoryEngine @Inject constructor(
 
                     val discoveredFolders: List<MangaDirectory> = buildLibrary(context, rootUri = baseUri)
                     val databaseFolders: List<MangaDirectory> =
-                        directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                        directoryDao.getAllMangaDirectoryIncludingHidden().firstOrNull() ?: emptyList()
 
                     if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
                         _progress.value = -1
@@ -172,7 +173,7 @@ class MangaDirectoryEngine @Inject constructor(
                     }
 
                     AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)
-                    processFolderList(foldersToProcess, existingFolders = databaseFolders, baseUri = baseUri)
+                    processFolderList(foldersToProcess, baseUri = baseUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, throwable = exception)
                     when (exception) {
@@ -205,7 +206,7 @@ class MangaDirectoryEngine @Inject constructor(
 
                     val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
                     AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)
-                    processFolderList(foldersToProcess, existingFolders, baseUri = baseUri)
+                    processFolderList(foldersToProcess, baseUri = baseUri)
                 }.mapLeft { exception ->
                     AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, throwable = exception)
                     when (exception) {
@@ -300,7 +301,7 @@ class MangaDirectoryEngine @Inject constructor(
         }
 
     override fun observeLibrary(): Flow<List<MangaDirectoryDto>> {
-        return directoryDao.getAllMangaDirectory().map { folders ->
+        return directoryDao.getAllMangaDirectoryIncludingHidden().map { folders ->
             AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
             folders.map { it.toViewDto() }
         }
@@ -335,7 +336,6 @@ class MangaDirectoryEngine @Inject constructor(
 
     private suspend fun processFolderList(
         foldersToProcess: List<MangaDirectory>,
-        existingFolders: List<MangaDirectory>,
         baseUri: Uri? = null
     ) {
         if (foldersToProcess.isEmpty()) {
@@ -351,7 +351,7 @@ class MangaDirectoryEngine @Inject constructor(
                 coroutineScope {
                     batch.map { folder ->
                         async(context = Dispatchers.IO) {
-                            upsertFolder(folder = folder, existingFolders = existingFolders, baseUri = baseUri)
+                            upsertFolder(folder = folder, baseUri = baseUri)
                         }
                     }.awaitAll()
                 }
@@ -369,7 +369,7 @@ class MangaDirectoryEngine @Inject constructor(
                 batch.map { folder ->
                     async(context = Dispatchers.IO) {
                         try {
-                            upsertFolder(folder = folder, existingFolders = existingFolders, baseUri = baseUri)
+                            upsertFolder(folder = folder, baseUri = baseUri)
                         } finally {
                             val current = processed.incrementAndGet()
                             _progress.value = ((current.toFloat() / total) * 100).toInt()
@@ -387,7 +387,6 @@ class MangaDirectoryEngine @Inject constructor(
     private suspend fun upsertFolder(
         baseUri: Uri? = null,
         folder: MangaDirectory,
-        existingFolders: List<MangaDirectory>,
     ) {
         val finalMangaId = directoryDao.upsertMangaDirectoryTransaction(folder) {
             it.filter { char -> char.isLetterOrDigit() }.lowercase()
@@ -400,36 +399,53 @@ class MangaDirectoryEngine @Inject constructor(
         context: Context,
         rootUri: Uri
     ): List<MangaDirectory> {
-        val allChildren = ContentQueryHelper.listFiles(context, rootUri).getOrElse { return emptyList() }
-        val folders = allChildren.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
-
+        val mangaDirectories = mutableListOf<MangaDirectory>()
         val templates = templateService.getTemplates()
 
-        return folders.map { folderMetadata ->
-            val folderUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, folderMetadata.id)
+        val rootDocId = DocumentsContract.getTreeDocumentId(rootUri)
+        scanRecursive(context, rootUri, rootDocId, templates, mangaDirectories)
 
-            val folderChildren = ContentQueryHelper.listFiles(context, rootUri, folderMetadata.id).getOrElse {
-                return@map null
-            }
+        return mangaDirectories
+    }
 
-            val bannerMetadata = folderChildren.firstOrNull { MediaFilePattern.isBanner(it.name) }
-            val coverMetadata = folderChildren.firstOrNull { MediaFilePattern.isCover(it.name) }
+    private suspend fun scanRecursive(
+        context: Context,
+        rootUri: Uri,
+        currentDocId: String,
+        templates: List<br.acerola.manga.local.entity.archive.ChapterTemplate>,
+        mangaDirectories: MutableList<MangaDirectory>
+    ) {
+        val children = ContentQueryHelper.listFiles(context, rootUri, currentDocId).getOrElse { return }
 
-            val firstChapterName = folderChildren.firstOrNull {
-                ArchiveFormatPattern.isSupported(ext = it.name)
-            }?.name
+        val hasMangaFiles = children.any {
+            it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR &&
+                    ArchiveFormatPattern.isSupported(it.name)
+        }
 
+        if (hasMangaFiles) {
+            val currentUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, currentDocId)
+            val folderDoc = DocumentFile.fromSingleUri(context, currentUri) ?: return
+
+            val coverMetadata = children.firstOrNull { MediaFilePattern.isCover(it.name) }
+            val bannerMetadata = children.firstOrNull { MediaFilePattern.isBanner(it.name) }
+            val firstChapterName = children.firstOrNull { ArchiveFormatPattern.isSupported(it.name) }?.name
+            
             val detectedTemplate = firstChapterName?.let {
                 templateMatcher.detect(it, templates)
             }
 
-            folderMetadata.toMangaDirectoryEntity(
-                folderUri = folderUri.toString(),
-                coverPath = coverMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
-                bannerPath = bannerMetadata?.let { DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id).toString() },
+            val mangaDir = folderDoc.toMangaDirectoryEntity(
+                cover = coverMetadata?.let { DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id)) },
+                banner = bannerMetadata?.let { DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id)) },
                 chapterTemplateFk = detectedTemplate?.id
             )
-        }.filterNotNull()
+
+            mangaDirectories.add(mangaDir)
+        } else {
+            children.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }.forEach { subDir ->
+                scanRecursive(context, rootUri, subDir.id, templates, mangaDirectories)
+            }
+        }
     }
 
     private fun normalizeName(name: String): String {
@@ -438,7 +454,7 @@ class MangaDirectoryEngine @Inject constructor(
 
     companion object {
         private const val TAG = "MangaDirectoryRepository"
-        const val CHUNK_SIZE = 50
         const val PROGRESS_THRESHOLD = 5
+        const val CHUNK_SIZE = 50
     }
 }

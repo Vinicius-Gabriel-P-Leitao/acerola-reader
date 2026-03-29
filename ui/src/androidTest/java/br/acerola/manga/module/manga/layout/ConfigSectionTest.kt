@@ -29,9 +29,11 @@ class ConfigSectionTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Configurações de Exibição", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Configuração dos arquivos", substring = true).assertIsDisplayed()
-        // Usa o texto completo para evitar ambiguidade com o item interno "Sincronizar metadados"
-        composeTestRule.onNodeWithText("Sincronizar metadados com mangadex", substring = true).assertIsDisplayed()
+        // Títulos das seções usam SectionHeader que aplica uppercase
+        composeTestRule.onNodeWithText("Configurações de Exibição", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configuração dos arquivos", ignoreCase = true).assertIsDisplayed()
+        
+        // MangaDex é exibido dentro do componente SyncMetadata
+        composeTestRule.onNodeWithText("MangaDex", ignoreCase = true).assertIsDisplayed()
     }
 }

@@ -92,9 +92,7 @@ class ChapterArchiveEngine @Inject constructor(
 
                 if (activeTemplate == null && allFiles.isNotEmpty()) {
                     val filenames = allFiles.map { it.name }
-                    activeTemplate = findBestTemplate(filenames, allTemplates)
-                        ?: allTemplates.find { it.id == -2L } // Fallback to "Ch."
-                        ?: allTemplates.firstOrNull()
+                    activeTemplate = findBestTemplate(filenames, allTemplates) ?: allTemplates.find { it.id == -2L } ?: allTemplates.firstOrNull()
 
                     if (activeTemplate != null) {
                         directoryDao.update(folder.copy(chapterTemplateFk = activeTemplate.id))
