@@ -252,6 +252,10 @@
     <string name="label_filter_all">Todos</string>
     <string name="label_filter_none">Sem metadados</string>
 
+    <string name="label_source_mangadex">MangaDex</string>
+    <string name="label_source_anilist">AniList</string>
+    <string name="label_source_comic_info">ComicInfo</string>
+
     <!-- Sort Types -->
     <string name="label_sort_title">Título</string>
     <string name="label_sort_chapter_count">Quantidade de capítulos</string>

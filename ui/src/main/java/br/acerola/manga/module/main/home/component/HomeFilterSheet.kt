@@ -43,6 +43,7 @@ import br.acerola.manga.config.preference.SortDirection
 import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.home.state.FilterSettings
+import br.acerola.manga.pattern.MetadataSource
 import br.acerola.manga.ui.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -201,21 +202,34 @@ fun Main.Home.Component.HomeFilterSheet(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val sources = listOf(
-                    null to stringResource(id = R.string.label_filter_all),
-                    "MANGADEX" to "MangaDex",
-                    "ANILIST" to "AniList",
-                    "COMIC_INFO" to "ComicInfo",
-                    "NONE" to stringResource(id = R.string.label_filter_none)
+                // Opção Todos
+                FilterChip(
+                    selected = filterSettings.metadataSource == null,
+                    onClick = { onFilterChange(filterSettings.copy(metadataSource = null)) },
+                    label = { Text(stringResource(id = R.string.label_filter_all)) }
                 )
-                
-                sources.forEach { (sourceKey, label) ->
+
+                // Fontes do Enum
+                MetadataSource.entries.forEach { source ->
+                    val label = when (source) {
+                        MetadataSource.MANGADEX -> stringResource(id = R.string.label_source_mangadex)
+                        MetadataSource.ANILIST -> stringResource(id = R.string.label_source_anilist)
+                        MetadataSource.COMIC_INFO -> stringResource(id = R.string.label_source_comic_info)
+                    }
+                    
                     FilterChip(
-                        selected = filterSettings.metadataSource == sourceKey,
-                        onClick = { onFilterChange(filterSettings.copy(metadataSource = sourceKey)) },
-                        label = { Text(label) }
+                        selected = filterSettings.metadataSource == source.displayName,
+                        onClick = { onFilterChange(filterSettings.copy(metadataSource = source.displayName)) },
+                        label = { Text(text = label) }
                     )
                 }
+
+                // Opção Sem metadados
+                FilterChip(
+                    selected = filterSettings.metadataSource == "NONE",
+                    onClick = { onFilterChange(filterSettings.copy(metadataSource = "NONE")) },
+                    label = { Text(stringResource(id = R.string.label_filter_none)) }
+                )
             }
         }
     }
