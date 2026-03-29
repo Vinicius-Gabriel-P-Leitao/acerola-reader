@@ -76,7 +76,8 @@ fun Main.Search.Component.MangaResultCard(
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = {
@@ -107,13 +108,13 @@ private fun StatusBadge(status: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
             text = status,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            color = MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
 }

@@ -46,6 +46,8 @@ fun <T> Acerola.Component.SearchBar(
     placeholder: String,
     itemKey: (T) -> Any,
     modifier: Modifier = Modifier,
+    activeShape: RoundedCornerShape = RoundedCornerShape(0.dp),
+    contentPadding: PaddingValues = PaddingValues(bottom = 16.dp),
     itemContent: @Composable (T) -> Unit
 ) {
     val internalBackClick = onBackClick ?: { onActiveChange(false) }
@@ -61,13 +63,19 @@ fun <T> Acerola.Component.SearchBar(
                 },
                 expanded = active,
                 onExpandedChange = onActiveChange,
-                placeholder = { Text(text = placeholder) },
+                placeholder = { 
+                    Text(
+                        text = placeholder,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ) 
+                },
                 leadingIcon = {
                     if (active) {
                         IconButton(onClick = internalBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(id = R.string.label_search_back_to_results)
+                                contentDescription = stringResource(id = R.string.label_search_back_to_results),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     } else {
@@ -83,7 +91,8 @@ fun <T> Acerola.Component.SearchBar(
                         IconButton(onClick = { onQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(id = R.string.description_icon_search_close)
+                                contentDescription = stringResource(id = R.string.description_icon_search_close),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -92,7 +101,7 @@ fun <T> Acerola.Component.SearchBar(
         },
         expanded = active,
         onExpandedChange = onActiveChange,
-        shape = if (active) RoundedCornerShape(0.dp) else SearchBarDefaults.inputFieldShape,
+        shape = if (active) activeShape else SearchBarDefaults.inputFieldShape,
         colors = SearchBarDefaults.colors(
             containerColor = if (active) {
                 MaterialTheme.colorScheme.surfaceContainerLowest
@@ -102,8 +111,7 @@ fun <T> Acerola.Component.SearchBar(
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             if (isLoading) {
                 LinearProgressIndicator(
@@ -136,7 +144,7 @@ fun <T> Acerola.Component.SearchBar(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = contentPadding
                 ) {
                     items(
                         items = items,

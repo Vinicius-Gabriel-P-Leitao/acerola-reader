@@ -56,20 +56,9 @@ fun Main.Search.Layout.SearchLayout(
                 modifier = Modifier.fillMaxSize()
             ) {
                 if (!searchActive) {
-                    Text(
-                        text = stringResource(R.string.title_search_screen),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        ),
-                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
-                    )
-                }
-
-                if (!searchActive) {
                     DownloadQueueComponent(
                         queue = uiState.downloadQueue,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(top = 72.dp, bottom = 8.dp)
                     )
                 }
 
@@ -103,7 +92,8 @@ fun Main.Search.Layout.SearchLayout(
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .padding(horizontal = if (searchActive) 0.dp else 16.dp)
-                    .padding(top = if (searchActive) 0.dp else 72.dp) // Offset for title
+                    .padding(top = if (searchActive) 0.dp else 8.dp),
+                contentPadding = innerPadding
             ) { manga ->
                 val context = LocalContext.current
                 Main.Search.Component.MangaResultCard(

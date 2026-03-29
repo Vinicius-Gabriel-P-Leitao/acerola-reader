@@ -179,6 +179,7 @@ fun Main.Home.Layout.Screen(
                 .align(Alignment.TopCenter)
                 .padding(horizontal = if (searchActive) 0.dp else 16.dp)
                 .padding(top = if (searchActive) 0.dp else 8.dp),
+            contentPadding = PaddingValues(bottom = 80.dp),
             itemContent = { (manga, history, chapterCount) ->
                 Main.Common.Component.MangaListItem(
                     manga = manga,

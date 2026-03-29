@@ -141,7 +141,6 @@
     <string name="description_icon_continue_reading">Continuar leitura</string>
 
     <!-- History & Reader Info -->
-    <string name="title_history_screen">Histórico de Leitura</string>
     <string name="description_history_empty_state">Nenhum mangá lido recentemente</string>
     <string name="label_chapter_unknown">Capítulo desconhecido</string>
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
@@ -173,7 +172,6 @@
     <string name="title_dialog_select_theme">Escolha um Tema</string>
 
     <!-- Search & Download Screen -->
-    <string name="title_search_screen">Buscar no MangaDex</string>
     <string name="placeholder_search_mangadex">Nome, ID ou URL do mangá…</string>
     <string name="label_search_results">Resultados</string>
     <string name="label_search_empty_state">Busque por um mangá para baixar capítulos traduzidos</string>

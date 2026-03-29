@@ -78,15 +78,6 @@ fun Main.History.Layout.Screen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            Text(
-                text = stringResource(id = R.string.title_history_screen),
-                modifier = Modifier.padding(vertical = 16.dp),
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                ),
-            )
-
             if (uiState.items.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),

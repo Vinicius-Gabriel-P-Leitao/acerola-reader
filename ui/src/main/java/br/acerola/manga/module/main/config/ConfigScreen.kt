@@ -136,8 +136,6 @@ fun Main.Config.Layout.Screen(
                     .fillMaxSize()
                     .verticalScroll(scrollState),
             ) {
-                ConfigHeader()
-
                 // NOTE: Arquivos Locais
                 SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
 
@@ -222,22 +220,6 @@ fun Main.Config.Layout.Screen(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun ConfigHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
-    ) {
-        Text(
-            text = stringResource(id = R.string.label_config_activity),
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
     }
 }
 
