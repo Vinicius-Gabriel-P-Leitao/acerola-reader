@@ -1,6 +1,7 @@
 package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,33 +43,39 @@ fun <T> Acerola.Component.SearchBar(
     itemContent: @Composable (T) -> Unit
 ) {
     SearchBar(
-        query = query,
-        active = active,
         modifier = modifier,
-        onSearch = onSearch,
-        onQueryChange = onQueryChange,
-        onActiveChange = onActiveChange,
-        shape = RoundedCornerShape(size = 8.dp),
-        placeholder = { Text(text = placeholder) },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Search, contentDescription = null)
-        },
-        trailingIcon = {
-            if (active) {
-                IconButton(onClick = {
-                    if (query.isNotEmpty()) {
-                        onQueryChange("")
-                    } else {
-                        onActiveChange(false)
+        inputField = {
+            SearchBarDefaults.InputField(
+                query = query,
+                onQueryChange = onQueryChange,
+                onSearch = onSearch,
+                expanded = active,
+                onExpandedChange = onActiveChange,
+                placeholder = { Text(text = placeholder) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                },
+                trailingIcon = {
+                    if (active) {
+                        IconButton(onClick = {
+                            if (query.isNotEmpty()) {
+                                onQueryChange("")
+                            } else {
+                                onActiveChange(false)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(id = R.string.description_icon_search_close)
+                            )
+                        }
                     }
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(id = R.string.description_icon_search_close)
-                    )
-                }
-            }
+                },
+            )
         },
+        expanded = active,
+        onExpandedChange = onActiveChange,
+        shape = if (active) RoundedCornerShape(0.dp) else RoundedCornerShape(28.dp),
     ) {
         if (isLoading) {
             LinearProgressIndicator(
@@ -90,7 +98,8 @@ fun <T> Acerola.Component.SearchBar(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(
                     items = items,
