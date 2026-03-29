@@ -139,9 +139,9 @@ metadados de fontes online populares.
   enfileira no download manager já existente.
 
 #### Otimizar visualmente tela de download
-- [ ] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos, eles estão quebrados visualmente, mas só depois
+- [x] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos, eles estão quebrados visualmente, mas só depois
   da busca.
-- [ ] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
+- [x] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
 
 #### Melhorar o Dialog de registar novo pattern e fazer uma forma visual que mostra o máximo de 5
 - [ ] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {value} {sub} e o uso do *

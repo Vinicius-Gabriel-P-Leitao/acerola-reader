@@ -231,14 +231,14 @@ fun Main.Common.Component.MangaListItem(
                     .align(Alignment.CenterVertically)
                     .padding(end = 8.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
                         shape = RoundedCornerShape(12.dp)
                     )
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = stringResource(id = R.string.description_icon_continue_reading),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }
