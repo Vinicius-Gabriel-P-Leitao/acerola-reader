@@ -1,6 +1,7 @@
 package br.acerola.manga.module.main.home
 
 import android.content.Intent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,6 +92,13 @@ fun Main.Home.Layout.Screen(
     var query by rememberSaveable { mutableStateOf("") }
     var searchActive by rememberSaveable { mutableStateOf(false) }
 
+    val searchBarHorizontalPadding by animateDpAsState(
+        targetValue = if (searchActive) 0.dp else 16.dp, label = "search_bar_horizontal_padding"
+    )
+    val searchBarTopPadding by animateDpAsState(
+        targetValue = if (searchActive) 0.dp else 8.dp, label = "search_bar_top_padding"
+    )
+
     val filteredMangas = remember(query, uiState.mangas) {
         if (query.isEmpty()) {
             uiState.mangas
@@ -177,8 +185,8 @@ fun Main.Home.Layout.Screen(
             itemKey = { (manga, _, _) -> manga.directory.id },
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(horizontal = if (searchActive) 0.dp else 16.dp)
-                .padding(top = if (searchActive) 0.dp else 8.dp),
+                .padding(horizontal = searchBarHorizontalPadding)
+                .padding(top = searchBarTopPadding),
             contentPadding = PaddingValues(bottom = 80.dp),
             itemContent = { (manga, history, chapterCount) ->
                 Main.Common.Component.MangaListItem(

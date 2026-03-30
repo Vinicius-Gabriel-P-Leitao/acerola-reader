@@ -78,4 +78,35 @@ class DialogTest {
         composeTestRule.onNodeWithText("Discard").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancel").assertIsDisplayed()
     }
+
+    @Test
+    fun deve_exibir_dialog_de_novo_pattern_com_descricao_correta() {
+        composeTestRule.setContent {
+            Acerola.Component.Dialog(
+                show = true,
+                onDismiss = {},
+                title = "Novo Padrão",
+                confirmButtonContent = {
+                    Acerola.Component.DialogButton(
+                        text = "Adicionar",
+                        onClick = {},
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                dismissButtonContent = {
+                    Acerola.Component.DialogButton(
+                        text = "Cancelar",
+                        onClick = {}
+                    )
+                }
+            ) {
+                Text("{value} é o número do capítulo (obrigatório). {sub} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.")
+            }
+        }
+
+        composeTestRule.onNodeWithText("Novo Padrão").assertIsDisplayed()
+        composeTestRule.onNodeWithText("{value} é o número do capítulo (obrigatório). {sub} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Adicionar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancelar").assertIsDisplayed()
+    }
 }

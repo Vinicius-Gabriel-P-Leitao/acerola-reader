@@ -6,6 +6,7 @@ import br.acerola.manga.config.preference.AppTheme
 data class ConfigUiState(
     val selectedTheme: AppTheme = AppTheme.CATPPUCCIN,
     val folderUri: Uri? = null,
+    val folderName: String? = null,
     val generateComicInfo: Boolean = true,
     val isLibraryIndexing: Boolean = false,
     val libraryProgress: Float? = null,

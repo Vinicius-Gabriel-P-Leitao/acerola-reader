@@ -89,7 +89,7 @@ fun Main.Config.Component.TemplateManager(
             ) {
                 Text(
                     text = if (expanded) 
-                        stringResource(R.string.label_reader_mode_vertical).uppercase() // FIXME: Texto sem sentido
+                        stringResource(R.string.label_settings_see_less_themes).uppercase()
                         else stringResource(R.string.label_settings_see_more_themes)
                 )
             }

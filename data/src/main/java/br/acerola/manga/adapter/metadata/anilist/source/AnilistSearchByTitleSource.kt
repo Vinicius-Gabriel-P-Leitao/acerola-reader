@@ -5,6 +5,8 @@ import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.translator.remote.toViewDto
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.remote.anilist.AnilistApollo
 import br.acerola.manga.remote.anilist.MediaSearchQuery
 import com.apollographql.apollo.ApolloClient
@@ -39,9 +41,24 @@ class AnilistSearchByTitleSource @Inject constructor(
                 )
                 .execute()
 
+            if (response.hasErrors()) {
+                val error = response.errors?.firstOrNull()
+                AcerolaLogger.e("AnilistSearchByTitleSource", "GraphQL error: ${error?.message}")
+                // If we have errors but no data, treat as error
+                if (response.data == null) {
+                    throw Exception(error?.message ?: "GraphQL Error")
+                }
+            }
+
             response.data?.Page?.media.orEmpty()
                 .mapNotNull { it?.toViewDto() }
-        }.mapLeft { NetworkError.UnexpectedError(cause = it) }
+        }.mapLeft { throwable ->
+            when (throwable) {
+                is com.apollographql.apollo.exception.ApolloNetworkException -> NetworkError.ConnectionFailed(cause = throwable)
+                is com.apollographql.apollo.exception.ApolloHttpException -> NetworkError.HttpError(code = throwable.statusCode, cause = throwable)
+                else -> NetworkError.UnexpectedError(cause = throwable)
+            }
+        }
     }
 
     override suspend fun saveInfo(

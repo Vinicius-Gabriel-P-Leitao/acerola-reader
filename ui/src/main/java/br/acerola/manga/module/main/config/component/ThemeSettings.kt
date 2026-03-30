@@ -39,11 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.ColorUtils
 import br.acerola.manga.common.ux.theme.color.Alucard
 import br.acerola.manga.common.ux.theme.color.CatppuccinLatte
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
@@ -146,15 +148,21 @@ private fun getThemeColors(
 ): List<Color> {
     return when (theme) {
         AppTheme.DYNAMIC -> dynamicColorsFromContext(context, isDark)
-        AppTheme.CATPPUCCIN -> if (isDark) listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky) else listOf(
-            CatppuccinLatte.Mauve, CatppuccinLatte.Pink, CatppuccinLatte.Sky
-        )
-        AppTheme.DRACULA -> if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(
-            Alucard.Purple, Alucard.Pink, Alucard.Cyan
-        )
-        AppTheme.NORD -> if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(
-            NordLight.Primary, NordLight.Secondary, NordLight.Tertiary
-        )
+        AppTheme.CATPPUCCIN -> if (isDark) {
+            listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
+        } else {
+            listOf(CatppuccinLatte.Mauve, CatppuccinLatte.Pink, CatppuccinLatte.Sky)
+        }
+        AppTheme.DRACULA -> if (isDark) {
+            listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan)
+        } else {
+            listOf(Color(0xFF6272A4), Color(0xFFFF79C6), Color(0xFF8BE9FD))
+        }
+        AppTheme.NORD -> if (isDark) {
+            listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary)
+        } else {
+            listOf(Color(0xFF88C0D0), Color(0xFF81A1C1), Color(0xFF8FBCBB))
+        }
     }
 }
 
@@ -165,9 +173,13 @@ private fun dynamicColorsFromContext(
 ): List<Color> {
     return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
         val scheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        listOf(scheme.primary, scheme.secondary, scheme.tertiary)
+        
+        // A MELHOR FORMA: Usar as cores de CONTAINER.
+        // Elas são nativamente pastéis/claras no modo Light e escuras no modo Dark.
+        // Isso garante que a bolinha represente fielmente o que o sistema usa para superfícies.
+        listOf(scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer)
     } else {
-        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
+        listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
     }
 }
 
@@ -214,12 +226,13 @@ private fun ThemeCard(
                     horizontalArrangement = Arrangement.spacedBy((-12).dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val dotBorderColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.1f)
                     colors.forEach { color ->
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
                                 .background(color, CircleShape)
-                                .border(1.5.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                                .border(1.5.dp, dotBorderColor, CircleShape)
                         )
                     }
                 }

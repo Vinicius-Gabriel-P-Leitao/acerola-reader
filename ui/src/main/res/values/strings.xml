@@ -173,6 +173,7 @@
     <string name="subtitle_settings_nord_light_theme">Snow Storm</string>
 
     <string name="label_settings_see_more_themes">Ver mais</string>
+    <string name="label_settings_see_less_themes">Ver menos</string>
     <string name="title_dialog_select_theme">Escolha um Tema</string>
 
     <!-- Search & Download Screen -->
@@ -225,7 +226,7 @@
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
     <string name="label_template_pattern">Padrão (ex: Cap. {value})</string>
     <string name="placeholder_template_pattern">{value}, {sub}</string>
-    <string name="description_template_macros">{value} é o número (obrigatório). {sub} é o título ou volume. Use * para qualquer caractere.</string>
+    <string name="description_template_macros">{value} é o número do capítulo (obrigatório). {sub} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.</string>
     <string name="action_add">Adicionar</string>
     <string name="action_cancel">Cancelar</string>
 

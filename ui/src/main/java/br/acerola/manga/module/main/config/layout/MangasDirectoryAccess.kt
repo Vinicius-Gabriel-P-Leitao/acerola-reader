@@ -46,6 +46,7 @@ fun Main.Config.Layout.FolderAccess(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier
                             .size(size = 40.dp)
                             .padding(all = 4.dp),

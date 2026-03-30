@@ -94,6 +94,7 @@ fun Main.Config.Layout.Screen(
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
     val templates by templateViewModel.templates.collectAsState()
+    val folderName by fileSystemAccessViewModel.folderName.collectAsState()
 
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
     val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
@@ -104,6 +105,7 @@ fun Main.Config.Layout.Screen(
     val uiState = ConfigUiState(
         selectedTheme = selectedTheme,
         folderUri = fileSystemAccessViewModel.folderUri,
+        folderName = folderName,
         generateComicInfo = generateComicInfo,
         isLibraryIndexing = libraryIndexing,
         libraryProgress = if (libraryProgress >= 0) libraryProgress / 100f else null,
@@ -140,8 +142,7 @@ fun Main.Config.Layout.Screen(
                 SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
 
                 Main.Config.Component.SelectFolder(
-                    context = context,
-                    folderUri = uiState.folderUri,
+                    folderName = uiState.folderName,
                     onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
                 )
 
