@@ -40,6 +40,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Dialog
+import br.acerola.manga.common.ux.component.DialogButton
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.module.main.Main
@@ -177,49 +180,60 @@ fun Main.Common.Component.MangaActionsSheet(
     }
 
     if (showHideDialog) {
-        AlertDialog(
-            onDismissRequest = { showHideDialog = false },
-            title = { Text(text = stringResource(id = R.string.dialog_hide_title)) },
-            text = { Text(text = stringResource(id = R.string.dialog_hide_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showHideDialog = false
-                    onHide()
-                    onDismiss()
-                }) {
-                    Text(text = stringResource(id = R.string.action_hide))
-                }
+        Acerola.Component.Dialog(
+            show = true,
+            onDismiss = { showHideDialog = false },
+            title = stringResource(id = R.string.dialog_hide_title),
+            confirmButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_hide),
+                    onClick = {
+                        showHideDialog = false
+                        onHide()
+                        onDismiss()
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold
+                )
             },
-            dismissButton = {
-                TextButton(onClick = { showHideDialog = false }) {
-                    Text(text = stringResource(id = R.string.action_cancel))
-                }
+            dismissButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_cancel),
+                    onClick = { showHideDialog = false },
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             },
+            content = { Text(text = stringResource(id = R.string.dialog_hide_message)) },
         )
     }
 
     if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text(text = stringResource(id = R.string.dialog_delete_title)) },
-            text = { Text(text = stringResource(id = R.string.dialog_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    onDelete()
-                    onDismiss()
-                }) {
-                    Text(
-                        text = stringResource(id = R.string.action_delete),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
+        Acerola.Component.Dialog(
+            show = true,
+            onDismiss = { showDeleteDialog = false },
+            title = stringResource(id = R.string.dialog_delete_title),
+            confirmButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_delete),
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                        onDismiss()
+                    },
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    fontWeight = FontWeight.Bold
+                )
             },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(text = stringResource(id = R.string.action_cancel))
-                }
+            dismissButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_cancel),
+                    onClick = { showDeleteDialog = false },
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             },
+            content = { Text(text = stringResource(id = R.string.dialog_delete_message)) },
         )
     }
 }

@@ -34,6 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Dialog
+import br.acerola.manga.common.ux.component.DialogButton
 import br.acerola.manga.local.entity.archive.ChapterTemplate
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
@@ -164,10 +167,27 @@ private fun AddTemplateDialog(
     var label by remember { mutableStateOf("") }
     var pattern by remember { mutableStateOf("") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = R.string.title_dialog_new_template)) },
-        text = {
+    Acerola.Component.Dialog(
+        show = true,
+        onDismiss = onDismiss,
+        title = stringResource(id = R.string.title_dialog_new_template),
+        confirmButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = R.string.action_add),
+                onClick = { if (label.isNotBlank() && pattern.isNotBlank()) onConfirm(label, pattern) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        dismissButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = R.string.action_cancel),
+                onClick = onDismiss,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        content = {
             Column {
                 OutlinedTextField(
                     value = label,
@@ -210,19 +230,6 @@ private fun AddTemplateDialog(
                         )
                     }
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(label, pattern) },
-                enabled = label.isNotBlank() && pattern.isNotBlank()
-            ) {
-                Text(stringResource(id = R.string.action_add))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(id = R.string.action_cancel))
             }
         }
     )

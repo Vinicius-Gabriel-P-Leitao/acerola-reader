@@ -242,6 +242,12 @@
     <string name="dialog_delete_title">Deletar mangá?</string>
     <string name="dialog_delete_message">Esta ação remove o mangá do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
 
+    <!-- Dialog Actions -->
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_discard">Descartar</string>
+    <string name="dialog_discard_changes_title">Descartar alterações</string>
+    <string name="dialog_discard_changes_message">Tem certeza? As alterações serão perdidas.</string>
+
     <!-- Filter & Sort Sheet -->
     <string name="title_home_filter_sheet">Filtrar e Ordenar</string>
     <string name="subtitle_home_sort">Ordenar por</string>

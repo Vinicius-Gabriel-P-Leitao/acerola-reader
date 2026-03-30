@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.Dialog
+import br.acerola.manga.common.ux.component.DialogButton
 import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
@@ -145,11 +148,31 @@ private fun CreateCategoryDialog(
     var name by remember { mutableStateOf("") }
     var selectedColor by remember { mutableStateOf(categoryColors.first()) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(id = R.string.action_add_category)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Acerola.Component.Dialog(
+        show = true,
+        onDismiss = onDismiss,
+        title = stringResource(id = R.string.action_add_category),
+        confirmButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = android.R.string.ok),
+                onClick = { if (name.isNotBlank()) onConfirm(name, selectedColor.toInt()) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        dismissButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = android.R.string.cancel),
+                onClick = onDismiss,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        content = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -184,19 +207,6 @@ private fun CreateCategoryDialog(
                         )
                     }
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { if (name.isNotBlank()) onConfirm(name, selectedColor.toInt()) },
-                enabled = name.isNotBlank()
-            ) {
-                Text(stringResource(id = android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(id = android.R.string.cancel))
             }
         }
     )

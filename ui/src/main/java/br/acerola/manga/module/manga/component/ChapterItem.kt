@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.Dialog
+import br.acerola.manga.common.ux.component.DialogButton
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.manga.module.manga.Manga
@@ -129,12 +130,10 @@ fun Manga.Component.ChapterItem(
             title = mainTitle,
             onDismiss = { showDetails = false },
             confirmButtonContent = {
-                TextButton(onClick = { showDetails = false }) {
-                    Text(
-                        text = stringResource(id = R.string.label_dialog_close),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.label_dialog_close),
+                    onClick = { showDetails = false }
+                )
             },
             content = {
                 Column(modifier = Modifier.fillMaxWidth()) {
