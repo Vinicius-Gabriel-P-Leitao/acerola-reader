@@ -23,7 +23,6 @@ fun Acerola.Component.Dialog(
 ) {
     if (show) {
         AlertDialog(
-            containerColor = MaterialTheme.colorScheme.background,
             onDismissRequest = onDismiss,
             dismissButton = {
                 dismissButtonContent?.invoke()

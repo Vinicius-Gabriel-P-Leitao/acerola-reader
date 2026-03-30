@@ -151,6 +151,22 @@ metadados de fontes online populares.
 #### Verificar erros de quando um mangá não tem métados no Anilist
 - [ ] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
 
+#### Fazer a seleção de temas mudar tanto a cor quando o nome do thema de acordo com Dark e Light
+- [ ] **Adaptável** Mudar a cor das bolinhas de acordo com dark e light
+- [ ] **Catppuccin** Mudar a cor das bolinhas de acordo com dark e light
+- [ ] **Dracula** Mudar a cor das bolinhas de acordo com dark e light
+- [ ] **Norde** Mudar a cor das bolinhas de acordo com dark e light
+
+#### Cor dos Dialog 
+- [ ] **Dialog em modo claro** Os dialogs em modo claro ficam estranho, com cor cinza como se estivesse disabled
+
+#### Resolver animação bugada da SearchBar
+- [ ] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma 
+  animação de esticado para baixo, com um padding
+
+#### Texto na tela de SearchScreen
+- [x] **Texto descentralizado** O texto da tela de SearchScreen está descentralizado 
+
 ---
 
 ## Pilha de Tecnologia

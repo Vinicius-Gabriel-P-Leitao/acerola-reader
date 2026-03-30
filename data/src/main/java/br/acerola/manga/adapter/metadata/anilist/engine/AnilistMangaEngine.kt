@@ -77,7 +77,7 @@ class AnilistMangaEngine @Inject constructor(
 
                 anilistSearchByTitleSource.searchInfo(manga = directory.name, limit = 10)
                     .mapLeft { networkError ->
-                        LibrarySyncError.UnexpectedError(cause = Exception(networkError.toString()))
+                        LibrarySyncError.RemoteNetworkError(error = networkError)
                     }
                     .flatMap { results ->
                         val dto = results.find { candidate ->
@@ -85,8 +85,9 @@ class AnilistMangaEngine @Inject constructor(
                                     normalizeName(candidate.romanji.orEmpty()) == normalizedDirName
                         } ?: results.firstOrNull()
                         ?: return@flatMap Either.Left(
-                            LibrarySyncError.UnexpectedError(
-                                cause = Exception("No AniList results for title: ${directory.name}")
+                            LibrarySyncError.MetadataNotFound(
+                                source = MetadataSourcePattern.ANILIST.source,
+                                identifier = directory.name
                             )
                         )
 

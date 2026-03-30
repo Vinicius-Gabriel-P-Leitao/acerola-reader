@@ -1,5 +1,6 @@
 package br.acerola.manga.module.main.search.layout
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,8 @@ fun Main.Search.Layout.SearchLayout(
     modifier: Modifier = Modifier,
 ) {
     var searchActive by rememberSaveable { mutableStateOf(false) }
+    val horizontalPadding by animateDpAsState(if (searchActive) 0.dp else 16.dp, label = "search_horizontal_padding")
+    val topPadding by animateDpAsState(if (searchActive) 0.dp else 8.dp, label = "search_top_padding")
 
     Scaffold(
         modifier = modifier,
@@ -63,7 +66,7 @@ fun Main.Search.Layout.SearchLayout(
                 }
 
                 if (!searchActive && uiState.searchResults.isEmpty() && !uiState.isLoading) {
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text(
                             text = stringResource(R.string.label_search_empty_state),
                             style = MaterialTheme.typography.bodyLarge,
@@ -91,8 +94,8 @@ fun Main.Search.Layout.SearchLayout(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = if (searchActive) 0.dp else 16.dp)
-                    .padding(top = if (searchActive) 0.dp else 8.dp),
+                    .padding(horizontal = horizontalPadding)
+                    .padding(top = topPadding),
                 contentPadding = innerPadding
             ) { manga ->
                 val context = LocalContext.current

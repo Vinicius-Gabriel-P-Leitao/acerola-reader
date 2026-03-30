@@ -44,6 +44,7 @@
     <string name="error_invalid_metadata_file">Arquivo de metadados inválido ou corrompido.</string>
     <string name="error_metadata_root_missing">O arquivo não contém a tag raiz ComicInfo.</string>
     <string name="error_unrecognized_metadata">Não foi possível reconhecer os metadados em: %1$s</string>
+    <string name="error_metadata_not_found">Nenhum metadado encontrado em %1$s para: %2$s</string>
 
     <!-- Notification Channels -->
     <string name="error_sync_disabled">A sincronização externa está desativada para este mangá.</string>

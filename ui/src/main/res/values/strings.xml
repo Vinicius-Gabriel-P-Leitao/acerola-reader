@@ -163,10 +163,14 @@
     <string name="description_settings_catppuccin_theme">Usa a paleta de cores original do app</string>
 
     <string name="title_settings_nord_theme">Nord</string>
-    <string name="subtitle_settings_nord_theme">Arctic ice</string>
-
     <string name="title_settings_dracula_theme">Dracula</string>
-    <string name="subtitle_settings_dracula_theme">Vampire theme</string>
+    <string name="title_settings_alucard_theme">Alucard</string>
+    <string name="subtitle_settings_latte_theme">Latte</string>
+    <string name="subtitle_settings_mocha_theme">Mocha</string>
+    <string name="subtitle_settings_dracula_theme">Dracula</string>
+    <string name="subtitle_settings_vampire_theme">Vampire</string>
+    <string name="subtitle_settings_nord_dark_theme">Arctic Night</string>
+    <string name="subtitle_settings_nord_light_theme">Snow Storm</string>
 
     <string name="label_settings_see_more_themes">Ver mais</string>
     <string name="title_dialog_select_theme">Escolha um Tema</string>
@@ -221,7 +225,7 @@
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
     <string name="label_template_pattern">Padrão (ex: Cap. {value})</string>
     <string name="placeholder_template_pattern">{value}, {sub}</string>
-    <string name="description_template_macros">{value} é obrigatório. {extension} é adicionado automaticamente ao final.</string>
+    <string name="description_template_macros">{value} é o número (obrigatório). {sub} é o título ou volume. Use * para qualquer caractere.</string>
     <string name="action_add">Adicionar</string>
     <string name="action_cancel">Cancelar</string>
 

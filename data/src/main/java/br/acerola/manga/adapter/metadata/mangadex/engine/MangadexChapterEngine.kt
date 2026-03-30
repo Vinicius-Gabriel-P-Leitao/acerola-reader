@@ -95,7 +95,7 @@ class MangadexChapterEngine @Inject constructor(
                 _progress.value = it
             }).mapLeft {
                 AcerolaLogger.e(TAG, "MangaDex API request failed for mangadexId: $mangadexId", LogSource.REPOSITORY)
-                LibrarySyncError.NetworkError(cause = null)
+                LibrarySyncError.SyncNetworkError(cause = null)
             }.flatMap { remoteChapters ->
                 AcerolaLogger.d(TAG, "Fetched ${remoteChapters.size} chapters from MangaDex", LogSource.REPOSITORY)
                 _progress.value = 90
