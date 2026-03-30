@@ -39,13 +39,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.ColorUtils
 import br.acerola.manga.common.ux.theme.color.Alucard
 import br.acerola.manga.common.ux.theme.color.CatppuccinLatte
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
@@ -174,9 +172,6 @@ private fun dynamicColorsFromContext(
     return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
         val scheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         
-        // A MELHOR FORMA: Usar as cores de CONTAINER.
-        // Elas são nativamente pastéis/claras no modo Light e escuras no modo Dark.
-        // Isso garante que a bolinha represente fielmente o que o sistema usa para superfícies.
         listOf(scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer)
     } else {
         listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
