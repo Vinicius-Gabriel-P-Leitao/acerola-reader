@@ -31,8 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.module.main.Main
-import br.acerola.manga.module.main.config.component.AddTemplateDialog
-import br.acerola.manga.module.main.config.component.TemplateItem
+import br.acerola.manga.module.main.pattern.component.AddTemplateDialog
+import br.acerola.manga.module.main.pattern.component.TemplateItem
 import br.acerola.manga.module.main.pattern.state.FilePatternAction
 import br.acerola.manga.module.main.pattern.state.FilePatternUiState
 import br.acerola.manga.ui.R
@@ -110,7 +110,7 @@ private fun FilePatternLayout(
                     items = uiState.templates,
                     key = { it.id }
                 ) { template ->
-                    TemplateItem(
+                    Main.Pattern.Component.TemplateItem(
                         template = template,
                         onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) }
                     )
@@ -120,7 +120,7 @@ private fun FilePatternLayout(
     }
 
     if (showDialog) {
-        AddTemplateDialog(
+        Main.Pattern.Component.AddTemplateDialog(
             onDismiss = { showDialog = false },
             onConfirm = { label, pattern ->
                 onAction(FilePatternAction.AddTemplate(label, pattern))

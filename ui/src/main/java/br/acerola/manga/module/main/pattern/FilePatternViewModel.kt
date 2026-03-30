@@ -17,9 +17,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FilePatternViewModel @Inject constructor(
-    private val observeTemplates: ObserveTemplatesUseCase,
     private val addTemplate: AddTemplateUseCase,
-    private val removeTemplate: RemoveTemplateUseCase
+    private val removeTemplate: RemoveTemplateUseCase,
+    private val observeTemplates: ObserveTemplatesUseCase,
 ) : ViewModel() {
 
     val uiState: StateFlow<FilePatternUiState> = observeTemplates()
