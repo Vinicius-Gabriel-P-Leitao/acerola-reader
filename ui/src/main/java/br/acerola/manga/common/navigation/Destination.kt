@@ -17,12 +17,6 @@ enum class Destination(
     @param:StringRes val route: Int,
     @param:StringRes val contentDescriptionRes: Int,
 ) {
-    HOME(
-        icon = Icons.Default.Home,
-        label = R.string.label_home_activity,
-        route = R.string.navigation_home_activity,
-        contentDescriptionRes = R.string.description_home_activity,
-    ),
     MANGA(
         icon = Icons.AutoMirrored.Filled.MenuBook,
         label = R.string.label_chapters_activity,
@@ -34,6 +28,12 @@ enum class Destination(
         label = R.string.label_reader_activity,
         route = R.string.navigation_reader_activity,
         contentDescriptionRes = R.string.description_reader_activity,
+    ),
+    HOME(
+        icon = Icons.Default.Home,
+        label = R.string.label_home_activity,
+        route = R.string.navigation_home_activity,
+        contentDescriptionRes = R.string.description_home_activity,
     ),
     HISTORY(
         icon = Icons.Default.History,
@@ -52,5 +52,11 @@ enum class Destination(
         label = R.string.label_config_activity,
         route = R.string.navigation_config_activity,
         contentDescriptionRes = R.string.description_config_activity,
+    ),
+    PATTERN(
+        icon = Icons.Default.Settings,
+        label = R.string.label_template_config_activity,
+        route = R.string.navigation_template_config_activity,
+        contentDescriptionRes = R.string.description_template_config_activity,
     ),
 }

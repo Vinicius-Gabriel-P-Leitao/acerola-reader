@@ -40,13 +40,12 @@ import br.acerola.manga.module.main.config.component.SelectFolder
 import br.acerola.manga.module.main.config.component.SyncAnilistData
 import br.acerola.manga.module.main.config.component.SyncLibraryArchive
 import br.acerola.manga.module.main.config.component.SyncMangadexData
+import br.acerola.manga.module.main.config.component.TemplateManager
 import br.acerola.manga.module.main.config.component.ThemeSettings
 import br.acerola.manga.module.main.config.state.ConfigAction
 import br.acerola.manga.module.main.config.state.ConfigUiState
 import br.acerola.manga.ui.R
 import kotlinx.coroutines.launch
-
-import br.acerola.manga.module.main.config.component.TemplateManager
 
 @Composable
 fun Main.Config.Layout.Screen(
@@ -55,7 +54,7 @@ fun Main.Config.Layout.Screen(
     mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
     mangaDexViewModel: MangaMetadataViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
-    templateViewModel: TemplateConfigViewModel = hiltViewModel()
+    onNavigateToTemplates: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -93,7 +92,6 @@ fun Main.Config.Layout.Screen(
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
-    val templates by templateViewModel.templates.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
 
     val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
@@ -124,6 +122,7 @@ fun Main.Config.Layout.Screen(
             ConfigAction.SyncAnilistMetadata -> mangaDexViewModel.rescanAnilistMangas()
             is ConfigAction.CreateCategory -> mangaDexViewModel.createCategory(action.name, action.color)
             is ConfigAction.DeleteCategory -> mangaDexViewModel.deleteCategory(action.id)
+            ConfigAction.NavigateToTemplateConfig -> onNavigateToTemplates()
         }
     }
 
@@ -152,9 +151,7 @@ fun Main.Config.Layout.Screen(
                 )
 
                 Main.Config.Component.TemplateManager(
-                    templates = templates,
-                    onAddTemplate = { label, pattern -> templateViewModel.onAddTemplate(label, pattern) },
-                    onDeleteTemplate = { id -> templateViewModel.onDeleteTemplate(id) }
+                    onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) }
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))

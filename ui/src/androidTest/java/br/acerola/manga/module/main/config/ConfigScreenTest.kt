@@ -73,7 +73,8 @@ class ConfigScreenTest {
                         mangaDirectoryViewModel = mangaDirVM,
                         mangaDexViewModel = mangaDexVM,
                         themeViewModel = themeVM,
-                        templateViewModel = templateVM
+                        templateViewModel = templateVM,
+                        onNavigateToTemplates = {}
                     )
                 }
             }

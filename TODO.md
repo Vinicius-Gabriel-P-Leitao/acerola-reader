@@ -190,7 +190,7 @@ metadados de fontes online populares.
 - [x] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {value} {sub} e o uso do *,
   e está atualmente errado {value} numero do chapter {sub} se tiver valor decimal e * para qualquer coisa.
 - [x] **Visualização da lista de pattern** Corrigir string, está sem sentido.
-- [ ] **Padronizar botão de pattern** Padronizar, atualemente quando tem Ver menos está em "VER MENOS" e com fonte maior, ou ver forma melhor de 
+- [x] **Padronizar botão de pattern** Padronizar, atualemente quando tem Ver menos está em "VER MENOS" e com fonte maior, ou ver forma melhor de 
   gerenciar isso, já que podem ter diversos patterns de 5 a 20 talvez assim não escale visualmente, criar uma Screen nova seria bom? 
   FilePatternScreen?
 

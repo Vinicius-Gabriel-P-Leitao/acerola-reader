@@ -23,4 +23,7 @@ object Main {
         object Component
         object Layout
     }
+    object Pattern {
+        object Layout
+    }
 }

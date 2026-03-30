@@ -21,6 +21,7 @@ import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.Screen
 import br.acerola.manga.module.main.history.Screen
 import br.acerola.manga.module.main.home.Screen
+import br.acerola.manga.module.main.pattern.FilePatternScreen
 import br.acerola.manga.module.main.search.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -48,7 +49,16 @@ class MainActivity(
             Main.Search.Layout.Screen()
         }
         defaultComposable(context, Destination.CONFIG) {
-            Main.Config.Layout.Screen()
+            Main.Config.Layout.Screen(
+                onNavigateToTemplates = {
+                    navController.navigate(context.getString(Destination.PATTERN.route))
+                }
+            )
+        }
+        defaultComposable(context, Destination.PATTERN) {
+            Main.Pattern.Layout.FilePatternScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 

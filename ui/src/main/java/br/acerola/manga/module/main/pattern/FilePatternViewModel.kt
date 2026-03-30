@@ -1,41 +1,51 @@
-package br.acerola.manga.module.main.config
+package br.acerola.manga.module.main.pattern
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.acerola.manga.core.usecase.template.AddTemplateUseCase
 import br.acerola.manga.core.usecase.template.ObserveTemplatesUseCase
 import br.acerola.manga.core.usecase.template.RemoveTemplateUseCase
-import br.acerola.manga.local.entity.archive.ChapterTemplate
+import br.acerola.manga.module.main.pattern.state.FilePatternAction
+import br.acerola.manga.module.main.pattern.state.FilePatternUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class TemplateConfigViewModel @Inject constructor(
+class FilePatternViewModel @Inject constructor(
     private val observeTemplates: ObserveTemplatesUseCase,
     private val addTemplate: AddTemplateUseCase,
     private val removeTemplate: RemoveTemplateUseCase
 ) : ViewModel() {
 
-    val templates: StateFlow<List<ChapterTemplate>> = observeTemplates()
+    val uiState: StateFlow<FilePatternUiState> = observeTemplates()
+        .map { FilePatternUiState(templates = it) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = FilePatternUiState()
         )
 
-    fun onAddTemplate(label: String, pattern: String) {
-        viewModelScope.launch {
-            addTemplate(label, pattern)
+    fun onAction(action: FilePatternAction) {
+        when (action) {
+            is FilePatternAction.AddTemplate -> addTemplate(action.label, action.pattern)
+            is FilePatternAction.DeleteTemplate -> deleteTemplate(action.id)
         }
     }
 
-    fun onDeleteTemplate(id: Long) {
+    private fun addTemplate(label: String, pattern: String) {
         viewModelScope.launch {
-            removeTemplate(id)
+            addTemplate.invoke(label, pattern)
+        }
+    }
+
+    private fun deleteTemplate(id: Long) {
+        viewModelScope.launch {
+            removeTemplate.invoke(id)
         }
     }
 }
