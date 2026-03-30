@@ -65,7 +65,7 @@ private fun FilePatternLayout(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = R.string.title_chapter_naming_templates),
+                        text = stringResource(id = R.string.label_template_config_activity),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -74,6 +74,7 @@ private fun FilePatternLayout(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             contentDescription = stringResource(id = R.string.description_icon_navigation_back)
                         )
                     }

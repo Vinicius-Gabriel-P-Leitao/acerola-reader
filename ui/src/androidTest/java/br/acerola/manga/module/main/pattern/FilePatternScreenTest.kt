@@ -1,4 +1,4 @@
-package br.acerola.manga.module.main.screen
+package br.acerola.manga.module.main.pattern
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,7 +10,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
-import br.acerola.manga.module.main.screen.state.FilePatternUiState
+import br.acerola.manga.module.main.pattern.state.FilePatternUiState
 
 class FilePatternScreenTest {
     @get:Rule
@@ -27,7 +27,7 @@ class FilePatternScreenTest {
         every { viewModel.uiState } returns MutableStateFlow(FilePatternUiState(templates = templates))
 
         composeTestRule.setContent {
-            Main.Screen.Layout.FilePatternScreen(
+            Main.Pattern.Layout.FilePatternScreen(
                 onBack = {},
                 viewModel = viewModel
             )

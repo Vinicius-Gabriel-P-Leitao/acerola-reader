@@ -8,7 +8,7 @@
     <string name="navigation_chapters_activity">chapters</string>
     <string name="navigation_reader_activity">reader</string>
     <string name="navigation_search_activity">search</string>
-    <string name="navigation_template_config_activity">template_config</string>
+    <string name="navigation_template_config_activity">file_pattern</string>
 
     <!-- Screen label -->
     <string name="label_home_activity">home</string>
@@ -17,7 +17,7 @@
     <string name="label_chapters_activity">Capítulos</string>
     <string name="label_reader_activity">Leitor</string>
     <string name="label_search_activity">Buscar</string>
-    <string name="label_template_config_activity">Patterns</string>
+    <string name="label_template_config_activity">Padrões de arquivos</string>
 
     <!-- Screen content description -->
     <string name="description_home_activity">Tela de início que lista os mangás.</string>
@@ -26,7 +26,7 @@
     <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
     <string name="description_reader_activity">Tela de leitura do capítulo</string>
     <string name="description_search_activity">Tela de busca e download de capítulos do MangaDex</string>
-    <string name="description_template_config_activity">Tela de gerenciamento de patterns de arquivos</string>
+    <string name="description_template_config_activity">Gerencie como o app identifica números de capítulos nos arquivos</string>
 
     <!-- Icons -->
     <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
@@ -221,7 +221,7 @@
     <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
 
         <!-- Chapter Naming Templates -->
-    <string name="title_chapter_naming_templates">Padrões de Nomenclatura de Capítulos</string>
+    <string name="title_chapter_naming_templates">Padrões de arquivos</string>
     <string name="action_add_template">Adicionar Padrão</string>
     <string name="label_system_template">SISTEMA</string>
     <string name="description_icon_delete_template">Excluir Padrão</string>
