@@ -3,7 +3,8 @@
     "allow": [
       "mcp__figma-remote-mcp__get_design_context",
       "mcp__claude_ai_Context7__resolve-library-id",
-      "mcp__claude_ai_Context7__query-docs"
+      "mcp__claude_ai_Context7__query-docs",
+      "WebFetch(domain:cs.android.com)"
     ]
   }
 }

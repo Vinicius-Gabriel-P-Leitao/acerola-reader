@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
+
+// FIXME: Isso não tá frágil de mais? tem que ter um contrato defindo os valores
 @HiltViewModel
 class GlobalProgressViewModel @Inject constructor(
     workManager: WorkManager

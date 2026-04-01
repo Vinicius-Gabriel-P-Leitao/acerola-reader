@@ -1,7 +1,6 @@
 package br.acerola.manga.module.main.home
 
 import android.content.Intent
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,14 +88,7 @@ fun Main.Home.Layout.Screen(
     var showFilterSheet by remember { mutableStateOf(false) }
 
     var query by rememberSaveable { mutableStateOf("") }
-    var searchActive by rememberSaveable { mutableStateOf(false) }
-
-    val searchBarHorizontalPadding by animateDpAsState(
-        targetValue = if (searchActive) 0.dp else 16.dp, label = "search_bar_horizontal_padding"
-    )
-    val searchBarTopPadding by animateDpAsState(
-        targetValue = if (searchActive) 0.dp else 8.dp, label = "search_bar_top_padding"
-    )
+    var searchExpanded by rememberSaveable { mutableStateOf(false) }
 
     val filteredMangas = remember(query, uiState.mangas) {
         if (query.isEmpty()) {
@@ -131,7 +123,7 @@ fun Main.Home.Layout.Screen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            if (!searchActive) {
+            if (!searchExpanded) {
                 Spacer(modifier = Modifier.height(64.dp))
             }
 
@@ -149,7 +141,7 @@ fun Main.Home.Layout.Screen(
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
                 ) {
-                    items(items = if (searchActive) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
+                    items(items = if (searchExpanded) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
                         when (uiState.layout) {
                             HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
                                 manga = manga,
@@ -175,30 +167,28 @@ fun Main.Home.Layout.Screen(
 
         Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
             query = query,
-            onQueryChange = { query = it },
-            onSearch = { searchActive = false },
-            active = searchActive,
-            onActiveChange = { searchActive = it },
             items = filteredMangas,
-            placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
+            expanded = searchExpanded,
+            onQueryChange = { query = it },
+            onSearch = { searchExpanded = false },
+            onExpandedChange = { searchExpanded = it },
+            contentPadding = PaddingValues(bottom = 80.dp),
             itemKey = { (manga, _, _) -> manga.directory.id },
+            placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(horizontal = searchBarHorizontalPadding)
-                .padding(top = searchBarTopPadding),
-            contentPadding = PaddingValues(bottom = 80.dp),
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp),
             itemContent = { (manga, history, chapterCount) ->
                 Main.Common.Component.MangaListItem(
                     manga = manga,
                     chapterCount = chapterCount,
-                    onPlayClick = history?.let {
-                        { onAction(HomeAction.ClickContinue(manga, it)) }
-                    },
+                    onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
                     onClick = { onAction(HomeAction.ClickManga(manga)) }
                 )
             })
 
-        if (!searchActive) {
+        if (!searchExpanded) {
             Acerola.Component.FloatingTool(
                 icon = {
                     Icon(

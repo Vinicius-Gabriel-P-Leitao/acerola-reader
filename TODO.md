@@ -211,9 +211,10 @@ metadados de fontes online populares.
 
 #### Personalizar a Snackbar para ter variações.
 
-- [ ] **Personalizar a snackBar** val snackbarHostState = remember { SnackbarHostState() } em
+- [x] **Personalizar a snackBar** val snackbarHostState = remember { SnackbarHostState() } em
   ui/src/main/java/br/acerola/manga/common/activity/BaseActivity.kt tem que ser personalizado, atualmente temos só uma snackBar branca que
   retorna os erros, temos que ter uma de tons vermelhos de acordo com o tema e uma verde para caso de sucessos
+- [ ] **Fazer uso das variantes** Alguns casos de sucesso poderiam ter success e alguns de warn também, mapear com TODO:
 
 ---
 
