@@ -215,9 +215,13 @@ metadados de fontes online populares.
 
 - [ ] **PatternScreen** Atualmente a tela é funcional, mas não está visualmente agradável, quero mudar a forma com que funciona.
 
+#### Globalizar idioma de metadados 
+
+- [ ] **Adicionar campo no ConfigScreen** Os metadados e busca padrão para download do mangadex devem ser feitos pensando no idioma principal do app
+
 #### Resolver animação bugada da SearchBar
 
-- [ ] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma
+- [x] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma
   animação de esticado para baixo, com um padding
 
 ---

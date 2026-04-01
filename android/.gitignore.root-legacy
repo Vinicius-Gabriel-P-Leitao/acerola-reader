@@ -17,3 +17,4 @@ local.properties
 .claude/package.json
 .claude/gsd-file-manifest.json
 .claude/get-shit-done
+app/release

@@ -25,7 +25,7 @@ import br.acerola.manga.module.main.pattern.FilePatternScreen
 import br.acerola.manga.module.main.search.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
-// TODO: Fazer um fakeLoading só para precarregar os itens antes de aparecer os itens carregando.
+// FIXME: Fazer um fakeLoading só para precarregar os itens antes de aparecer os itens carregando.
 @AndroidEntryPoint
 class MainActivity(
     override val startDestinationRes: Int = Destination.HOME.route
