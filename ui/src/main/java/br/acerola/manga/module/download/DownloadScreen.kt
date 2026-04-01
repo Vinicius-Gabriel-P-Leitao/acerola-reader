@@ -2,7 +2,6 @@ package br.acerola.manga.module.download
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,24 +18,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -56,6 +47,7 @@ import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.component.Pagination
 import br.acerola.manga.common.ux.component.SnackbarVariant
 import br.acerola.manga.common.ux.component.showSnackbar
+import br.acerola.manga.common.ux.layout.LanguageSelector
 import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
@@ -66,7 +58,6 @@ import br.acerola.manga.module.download.state.DownloadUiState
 import br.acerola.manga.module.main.search.component.DownloadQueueComponent
 import br.acerola.manga.ui.R
 import coil.compose.AsyncImage
-
 
 @Composable
 fun Download.Layout.DownloadScreen(
@@ -289,77 +280,54 @@ private fun MangaDownloadHeader(manga: MangaMetadataDto) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChaptersSelectionBar(
     uiState: DownloadUiState,
     onAction: (DownloadAction) -> Unit,
 ) {
-    var showSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
-
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+    Acerola.Layout.LanguageSelector(
+        selectedLanguage = uiState.selectedLanguage,
+        onLanguageSelected = { onAction(DownloadAction.SelectLanguage(it)) },
+        trigger = { onClick ->
             Column {
-                Text(
-                    text = stringResource(R.string.label_search_chapters, uiState.totalChapters),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
+                Row(
                     modifier = Modifier
-                        .width(20.dp)
-                        .height(3.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(2.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.label_search_chapters, uiState.totalChapters),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                )
-            }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(20.dp)
+                                .height(3.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(2.dp)
+                                )
+                        )
+                    }
 
-            TextButton(onClick = { showSheet = true }) {
-                Text(
-                    text = stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-        }
-
-        HorizontalDivider()
-    }
-
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSheet = false },
-            sheetState = sheetState
-        ) {
-            LazyColumn(modifier = Modifier.padding(bottom = 32.dp)) {
-                items(LanguageMapper.getAllCodes()) { code ->
-                    ListItem(
-                        headlineContent = { Text(stringResource(id = LanguageMapper.getLabelRes(code))) },
-                        leadingContent = {
-                            RadioButton(
-                                selected = code == uiState.selectedLanguage,
-                                onClick = null
-                            )
-                        },
-                        modifier = Modifier.clickable {
-                            onAction(DownloadAction.SelectLanguage(code))
-                            showSheet = false
-                        }
-                    )
+                    TextButton(onClick = onClick) {
+                        Text(
+                            text = stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
+                HorizontalDivider()
             }
         }
-    }
+    )
 }
+
 
 
 @Composable
