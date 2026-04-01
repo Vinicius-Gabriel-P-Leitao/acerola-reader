@@ -100,12 +100,12 @@ class DialogTest {
                     )
                 }
             ) {
-                Text("{value} é o número do capítulo (obrigatório). {sub} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.")
+                Text("{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.")
             }
         }
 
         composeTestRule.onNodeWithText("Novo Padrão").assertIsDisplayed()
-        composeTestRule.onNodeWithText("{value} é o número do capítulo (obrigatório). {sub} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Adicionar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancelar").assertIsDisplayed()
     }

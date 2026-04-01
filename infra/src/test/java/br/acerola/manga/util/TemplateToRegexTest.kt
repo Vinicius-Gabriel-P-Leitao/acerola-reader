@@ -9,7 +9,7 @@ class TemplateToRegexTest {
 
     @Test
     fun `deve converter um padrao de template para regex corretamente`() {
-        val template = "Cap. {value}{sub}*{extension}"
+        val template = "Cap. {chapter}{decimal}*{extension}"
         val regex = templateToRegex(template)
 
         assertTrue(regex.matches("Cap. 01 - Titulo.cbz"))
@@ -19,7 +19,7 @@ class TemplateToRegexTest {
 
     @Test
     fun `deve lidar com caracteres especiais escapados na regex`() {
-        val template = "[{value}] * .{extension}"
+        val template = "[{chapter}] * .{extension}"
         val regex = templateToRegex(template)
 
         // Deve aceitar qualquer coisa entre os colchetes e a extensao (devido ao *)
@@ -31,11 +31,11 @@ class TemplateToRegexTest {
     @Test
     fun `deve evitar erros de sintaxe com variacoes de asterisco e ponto`() {
         // Valida que o erro de .*?? nao ocorre mais
-        val template1 = "Ch. {value}.*.{extension}"
+        val template1 = "Ch. {chapter}.*.{extension}"
         val regex1 = templateToRegex(template1)
         assertTrue(regex1.matches("Ch. 10.cbz"))
 
-        val template2 = "Ch. {value}.+.{extension}"
+        val template2 = "Ch. {chapter}.+.{extension}"
         val regex2 = templateToRegex(template2)
         assertTrue(regex2.matches("Ch. 10.cbz"))
     }
@@ -43,15 +43,15 @@ class TemplateToRegexTest {
     @Test
     fun `detectTemplate deve identificar corretamente o melhor preset`() {
         val preset = detectTemplate("Cap. 01 - O Início.cbz")
-        assertEquals("Cap. {value}{sub}.*.{extension}", preset)
+        assertEquals("Cap. {chapter}{decimal}.*.{extension}", preset)
 
         val preset2 = detectTemplate("chapter 10.cbz")
-        assertEquals("chapter {value}{sub}.*.{extension}", preset2)
+        assertEquals("chapter {chapter}{decimal}.*.{extension}", preset2)
 
         val preset3 = detectTemplate("Ch. 5.5 - Fim.cbz")
-        assertEquals("Ch. {value}{sub}.*.{extension}", preset3)
+        assertEquals("Ch. {chapter}{decimal}.*.{extension}", preset3)
         
         val presetFallback = detectTemplate("FormatoDesconhecido_01.rar")
-        assertEquals("Ch. {value}{sub}.*.{extension}", presetFallback)
+        assertEquals("Ch. {chapter}{decimal}.*.{extension}", presetFallback)
     }
 }

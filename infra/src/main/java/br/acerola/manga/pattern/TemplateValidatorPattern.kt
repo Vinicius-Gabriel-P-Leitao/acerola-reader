@@ -3,16 +3,6 @@ package br.acerola.manga.pattern
 import arrow.core.Either
 import br.acerola.manga.error.message.TemplateError
 
-enum class TemplateMacro(val tag: String) {
-    VALUE("value"),
-    SUB("sub"),
-    EXTENSION("extension");
-
-    companion object {
-        fun fromTag(tag: String) = entries.find { it.tag == tag }
-    }
-}
-
 object TemplateValidatorPattern {
 
     fun validateCustomTemplate(input: String): Either<TemplateError, Unit> {
@@ -39,11 +29,11 @@ object TemplateValidatorPattern {
                     )
 
                 when (macro) {
-                    TemplateMacro.VALUE -> {
+                    TemplateMacro.CHAPTER -> {
                         valueCount++
                         if (valueIdx == -1) valueIdx = cursor
                     }
-                    TemplateMacro.SUB -> {
+                    TemplateMacro.DECIMAL -> {
                         subCount++
                         if (subIdx == -1) subIdx = cursor
                     }
@@ -58,12 +48,13 @@ object TemplateValidatorPattern {
             cursor++
         }
 
+        // FIXME: A porra do erro que deveria ter a porra do texto e a porra do texto tem que estar na porra de uma string.xml
         if (valueCount != 1) {
-            return Either.Left(TemplateError.InvalidPattern("Exactly one {value} is required"))
+            return Either.Left(TemplateError.InvalidPattern("Exactly one {chapter} is required"))
         }
 
         if (subCount > 1) {
-            return Either.Left(TemplateError.InvalidPattern("Only one {sub} is allowed"))
+            return Either.Left(TemplateError.InvalidPattern("Only one {decimal} is allowed"))
         }
 
         if (extCount != 1) {
@@ -71,15 +62,15 @@ object TemplateValidatorPattern {
         }
 
         if (subIdx != -1 && subIdx < valueIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{value} must come before {sub}"))
+            return Either.Left(TemplateError.InvalidPattern("{chapter} must come before {decimal}"))
         }
         
         if (extIdx < valueIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{value} must come before {extension}"))
+            return Either.Left(TemplateError.InvalidPattern("{chapter} must come before {extension}"))
         }
 
         if (subIdx != -1 && extIdx < subIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{sub} must come before {extension}"))
+            return Either.Left(TemplateError.InvalidPattern("{decimal} must come before {extension}"))
         }
 
         val trimmed = input.trim()

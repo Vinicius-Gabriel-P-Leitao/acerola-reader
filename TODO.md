@@ -187,21 +187,27 @@ metadados de fontes online populares.
 
 #### Melhorar o Dialog de registar novo pattern e fazer uma forma visual que mostra o máximo de 5
 
-- [x] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {value} {sub} e o uso do *,
-  e está atualmente errado {value} numero do chapter {sub} se tiver valor decimal e * para qualquer coisa.
+- [x] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {chapter} {decimal} e o uso
+  do *,
+  e está atualmente errado {chapter} numero do chapter {decimal} se tiver valor decimal e * para qualquer coisa.
 - [x] **Visualização da lista de pattern** Corrigir string, está sem sentido.
 - [x] **Padronizar botão de pattern** Padronizar, atualemente quando tem Ver menos está em "VER MENOS" e com fonte maior, ou ver forma melhor de 
   gerenciar isso, já que podem ter diversos patterns de 5 a 20 talvez assim não escale visualmente, criar uma Screen nova seria bom? 
   FilePatternScreen?
 
-#### Verificar erros de quando um mangá não tem métados no Anilist
+#### Fazer progressBar ser global na mainActivity
 
-- [ ] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
+- [ ] **Main activity ter a progressBAr** A progressBar fica praticamente só na tela de HOME e CONFIG e as vezes buga, quero que apareça em todas
+  telas.
 
 #### Resolver animação bugada da SearchBar
 
 - [ ] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma
   animação de esticado para baixo, com um padding
+
+#### Verificar erros de quando um mangá não tem métados no Anilist
+
+- [ ] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
 
 #### Personalizar a Snackbar para ter variações.
 

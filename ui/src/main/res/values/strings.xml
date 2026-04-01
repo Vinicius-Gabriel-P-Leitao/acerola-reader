@@ -227,9 +227,9 @@
     <string name="description_icon_delete_template">Excluir Padrão</string>
     <string name="title_dialog_new_template">Novo Padrão</string>
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
-    <string name="label_template_pattern">Padrão (ex: Cap. {value})</string>
-    <string name="placeholder_template_pattern">{value}, {sub}</string>
-    <string name="description_template_macros">{value} é o número do capítulo (obrigatório). {sub} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.</string>
+    <string name="label_template_pattern">Padrão (ex: Cap. {chapter})</string>
+    <string name="placeholder_template_pattern">{chapter}, {decimal}</string>
+    <string name="description_template_macros">{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.</string>
     <string name="action_add">Adicionar</string>
     <string name="action_cancel">Cancelar</string>
 

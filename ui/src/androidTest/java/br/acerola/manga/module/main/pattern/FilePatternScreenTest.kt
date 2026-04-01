@@ -19,8 +19,8 @@ class FilePatternScreenTest {
     @Test
     fun deve_exibir_lista_de_templates_no_layout() {
         val templates = listOf(
-            ChapterTemplate(id = 1, label = "Padrão Teste 1", pattern = "{value}", isDefault = true),
-            ChapterTemplate(id = 2, label = "Padrão Teste 2", pattern = "Cap. {value}", isDefault = false)
+            ChapterTemplate(id = 1, label = "Padrão Teste 1", pattern = "{chapter}", isDefault = true),
+            ChapterTemplate(id = 2, label = "Padrão Teste 2", pattern = "Cap. {chapter}", isDefault = false)
         )
 
         val viewModel = mockk<FilePatternViewModel>(relaxed = true)
