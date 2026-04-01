@@ -68,7 +68,23 @@ fun Main.Config.Component.LanguageSettings(
                 },
                 trailingContent = {
                     Text(
-                        text = stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)),
+                        text = if (selectedLanguage.isNullOrBlank()) stringResource(id = R.string.label_select_language) else stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                modifier = Modifier.clickable { onClick() },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
+        }
+    )
+}
+
+                    }
+                },
+                trailingContent = {
+                    Text(
+                        text = if (selectedLanguage.isNullOrBlank()) stringResource(id = R.string.label_select_language) else stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )

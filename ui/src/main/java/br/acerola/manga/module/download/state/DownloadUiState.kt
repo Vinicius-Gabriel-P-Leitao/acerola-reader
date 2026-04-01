@@ -13,7 +13,7 @@ data class DownloadUiState(
     val currentPage: Int = 0,
     val chaptersPerPage: Int = 100,
     val isLoadingChapters: Boolean = false,
-    val selectedLanguage: String = "pt-br",
+    val selectedLanguage: String? = null,
     val selectedChapterIds: Set<String> = emptySet(),
     val isDownloading: Boolean = false,
     val activeDownload: DownloadProgress? = null,

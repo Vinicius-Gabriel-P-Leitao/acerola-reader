@@ -317,7 +317,7 @@ private fun ChaptersSelectionBar(
 
                     TextButton(onClick = onClick) {
                         Text(
-                            text = stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)),
+                            text = if (uiState.selectedLanguage != null) stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)) else "",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }

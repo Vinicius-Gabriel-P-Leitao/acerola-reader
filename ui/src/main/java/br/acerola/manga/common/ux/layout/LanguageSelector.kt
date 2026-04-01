@@ -24,7 +24,7 @@ import br.acerola.manga.common.ux.Acerola
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Acerola.Layout.LanguageSelector(
-    selectedLanguage: String,
+    selectedLanguage: String?,
     onLanguageSelected: (String) -> Unit,
     trigger: @Composable (onClick: () -> Unit) -> Unit
 ) {

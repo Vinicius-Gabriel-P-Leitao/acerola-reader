@@ -123,7 +123,7 @@ class DownloadViewModel @Inject constructor(
         loadChapters(mangaId, state.selectedLanguage, page = page)
     }
 
-    private fun loadChapters(mangaId: String, language: String, page: Int) {
+    private fun loadChapters(mangaId: String, language: String?, page: Int) {
         val limit = _uiState.value.chaptersPerPage
         viewModelScope.launch {
             searchMangaUseCase.getChaptersByLanguage(mangaId, language, page, limit).fold(
@@ -235,6 +235,7 @@ class DownloadViewModel @Inject constructor(
         baseUri: String,
         chapters: List<ChapterMetadataDto>,
     ) {
+
         if (chapters.isEmpty()) return
         val mangaTitle = state.manga?.title ?: return
         val chapterIds = chapters.map { it.id }.toTypedArray()

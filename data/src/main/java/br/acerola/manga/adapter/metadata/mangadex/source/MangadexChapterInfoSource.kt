@@ -8,6 +8,7 @@ import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -27,13 +28,14 @@ class MangadexChapterInfoSource @Inject constructor(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<ChapterMetadataDto>> = withContext(context = Dispatchers.IO) {
         AcerolaLogger.d(TAG, "GET /manga/$manga/feed initiated (offset: $offset)", LogSource.NETWORK)
+
         val allChapters = mutableListOf<ChapterMetadataDto>()
         val semaphore = Semaphore(permits = 3)
         var currentOffset = offset
 
         var error: NetworkError? = null
 
-        val initialResponseResult = safeApiCall { api.getMangaFeed(mangaId = manga, limit = 1, offset = 0) }
+        val initialResponseResult = safeApiCall { api.getMangaFeed(mangaId = manga, languages = listOf(LanguagePattern.PT_BR.code), limit = 1, offset = 0) }
         val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
 
         while (true) {
@@ -43,7 +45,7 @@ class MangadexChapterInfoSource @Inject constructor(
             }
 
             val responseFeedResult = safeApiCall {
-                api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
+                api.getMangaFeed(mangaId = manga, languages = listOf(LanguagePattern.PT_BR.code), limit = limit, offset = currentOffset)
             }
 
             if (responseFeedResult is Either.Left) {
