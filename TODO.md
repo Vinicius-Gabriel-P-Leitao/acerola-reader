@@ -215,9 +215,14 @@ metadados de fontes online populares.
 
 - [ ] **PatternScreen** Atualmente a tela é funcional, mas não está visualmente agradável, quero mudar a forma com que funciona.
 
+#### Corrigir erro no download de cover e banner
+
+- [ ] **Download de cover e banner de qualquer mangá** Atualmente o código faz profundidade de scaneamento e o problema é que essas funções de
+  gerar cover usa o nome do manga/midia + o path escolhido para salvar e não onde os arquivos .cbz e .cbr estão, ele tem que usar o caminho do mangá.
+
 #### Globalizar idioma de metadados 
 
-- [ ] **Adicionar campo no ConfigScreen** Os metadados e busca padrão para download do mangadex devem ser feitos pensando no idioma principal do 
+- [x] **Adicionar campo no ConfigScreen** Os metadados e busca padrão para download do mangadex devem ser feitos pensando no idioma principal do
   app, atualmente na Download além de hardcoded não está visualmente bonito, tem que ser remodelado.
 
 #### Resolver animação bugada da SearchBar

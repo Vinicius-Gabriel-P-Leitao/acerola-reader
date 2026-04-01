@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.manga.common.mapper.LanguageMapper
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.component.Pagination
@@ -62,30 +63,13 @@ import br.acerola.manga.module.main.search.component.DownloadQueueComponent
 import br.acerola.manga.ui.R
 import coil.compose.AsyncImage
 
-// FIXME: Isso tem que virar um pattern infra/src/main/java/br/acerola/manga/pattern e de preferencia os valores de UI serem string.xml e abilitar
-//  nesse campo que não é pra ser traduzido quando tiver outros strings.xml de idioma
-private val languageNames = mapOf(
-    "pt-br" to "Português (BR)",
-    "en" to "English",
-    "es-la" to "Español (LA)",
-    "es" to "Español",
-    "fr" to "Français",
-    "it" to "Italiano",
-    "de" to "Deutsch",
-    "ru" to "Русский",
-    "ja" to "日本語",
-    "ko" to "한국어",
-    "zh" to "中文",
-    "id" to "Indonesia"
-)
-
-
 @Composable
 fun Download.Layout.DownloadScreen(
-    manga: MangaMetadataDto,
     onBack: () -> Unit,
+    manga: MangaMetadataDto,
     viewModel: DownloadViewModel = hiltViewModel(),
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -306,7 +290,6 @@ private fun ChaptersSelectionBar(
     onAction: (DownloadAction) -> Unit,
 ) {
     var languageMenuExpanded by remember { mutableStateOf(false) }
-    val availableLanguages = languageNames.keys.toList()
 
     Column {
         Row(
@@ -318,6 +301,7 @@ private fun ChaptersSelectionBar(
         ) {
             Column {
                 Text(
+                    // FIXME: Usso errado de string.xml
                     text = stringResource(R.string.label_search_chapters) + " (${uiState.totalChapters})",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground
@@ -337,7 +321,7 @@ private fun ChaptersSelectionBar(
             Box {
                 TextButton(onClick = { languageMenuExpanded = true }) {
                     Text(
-                        text = languageNames[uiState.selectedLanguage] ?: uiState.selectedLanguage,
+                        text = stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)),
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
@@ -345,12 +329,12 @@ private fun ChaptersSelectionBar(
                     expanded = languageMenuExpanded,
                     onDismissRequest = { languageMenuExpanded = false }
                 ) {
-                    availableLanguages.forEach { lang ->
+                    LanguageMapper.getAllCodes().forEach { code ->
                         DropdownMenuItem(
-                            text = { Text(languageNames[lang] ?: lang) },
+                            text = { Text(stringResource(id = LanguageMapper.getLabelRes(code))) },
                             onClick = {
                                 languageMenuExpanded = false
-                                onAction(DownloadAction.SelectLanguage(lang))
+                                onAction(DownloadAction.SelectLanguage(code))
                             }
                         )
                     }

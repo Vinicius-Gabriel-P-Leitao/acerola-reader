@@ -9,6 +9,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.manga.config.preference.MangaDirectoryPreference
+import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.core.usecase.search.SearchMangaUseCase
 import br.acerola.manga.core.worker.ChapterDownloadWorker
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
@@ -50,12 +51,17 @@ class DownloadViewModel @Inject constructor(
 
     fun init(manga: MangaMetadataDto) {
         if (_uiState.value.manga?.sources?.mangadex?.mangadexId == manga.sources?.mangadex?.mangadexId) return
-        _uiState.update { it.copy(manga = manga, isLoadingChapters = true) }
 
-        val mangadexId = manga.sources?.mangadex?.mangadexId ?: return
-        loadChapters(mangadexId, _uiState.value.selectedLanguage, page = 0)
-        observeDownloadProgress(manga.title)
+        viewModelScope.launch {
+            val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: "pt-br"
+            _uiState.update { it.copy(manga = manga, isLoadingChapters = true, selectedLanguage = preferredLanguage) }
+
+            val mangadexId = manga.sources?.mangadex?.mangadexId ?: return@launch
+            loadChapters(mangadexId, preferredLanguage, page = 0)
+            observeDownloadProgress(manga.title)
+        }
     }
+
 
     private fun observeDownloadProgress(mangaTitle: String) {
         viewModelScope.launch {
@@ -67,10 +73,11 @@ class DownloadViewModel @Inject constructor(
                 if (info != null) {
                     val progress = DownloadProgress(
                         mangaTitle = mangaTitle,
+                        // FIXME: Isso está muito frágil
                         progress = info.progress.getInt("progress", 0),
+                        totalChapters = info.progress.getInt("totalChapters", 0),
                         currentChapterId = info.progress.getString("currentChapterId"),
                         currentChapterFileName = info.progress.getString("currentChapterFileName"),
-                        totalChapters = info.progress.getInt("totalChapters", 0),
                         isRunning = info.state == WorkInfo.State.RUNNING
                     )
                     _uiState.update { it.copy(activeDownload = progress) }
@@ -146,11 +153,11 @@ class DownloadViewModel @Inject constructor(
             } else {
                 state.selectedChapterIds + chapterId
             }
+
             state.copy(selectedChapterIds = updated)
         }
     }
 
-    // Accumulates selections across pages — never replaces previous pages' selections
     private fun selectAll() {
         _uiState.update { state ->
             val pageIds = state.chapters.map { it.id }.toSet()
@@ -171,7 +178,7 @@ class DownloadViewModel @Inject constructor(
                 _uiEvents.send(UserMessage.Raw(context.getString(R.string.label_search_no_library_uri)))
                 return@launch
             }
-            // Use allSeenChapters to cover selections from any page already visited
+
             val ordered = state.allSeenChapters
                 .filterKeys { it in state.selectedChapterIds }
                 .values

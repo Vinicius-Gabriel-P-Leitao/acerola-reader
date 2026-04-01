@@ -34,6 +34,7 @@ import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.component.GlobalCategoryManager
+import br.acerola.manga.module.main.config.component.LanguageSettings
 import br.acerola.manga.module.main.config.component.MetadataExportSettings
 import br.acerola.manga.module.main.config.component.SelectFolder
 import br.acerola.manga.module.main.config.component.SyncAnilistData
@@ -90,21 +91,24 @@ fun Main.Config.Layout.Screen(
 
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
+    val metadataLanguage by metadataSettingsViewModel.metadataLanguage.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
-
+ 
     val uiState = ConfigUiState(
         selectedTheme = selectedTheme,
         folderUri = fileSystemAccessViewModel.folderUri,
         folderName = folderName,
         generateComicInfo = generateComicInfo,
+        metadataLanguage = metadataLanguage,
     )
-
+ 
     val onAction: (ConfigAction) -> Unit = { action ->
         when (action) {
             is ConfigAction.UpdateTheme -> themeViewModel.setTheme(action.theme)
             is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
             is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
+            is ConfigAction.UpdateMetadataLanguage -> metadataSettingsViewModel.setMetadataLanguage(action.language)
             ConfigAction.DeepScanLibrary -> mangaDirectoryViewModel.deepScanLibrary()
             ConfigAction.QuickSyncLibrary -> mangaDirectoryViewModel.syncLibrary()
             ConfigAction.SyncMangadexMetadata -> mangaDexViewModel.rescanMangas()
@@ -114,6 +118,7 @@ fun Main.Config.Layout.Screen(
             ConfigAction.NavigateToTemplateConfig -> onNavigateToTemplates()
         }
     }
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -138,10 +143,16 @@ fun Main.Config.Layout.Screen(
                     enabled = uiState.generateComicInfo,
                     onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
                 )
-
+ 
+                Main.Config.Component.LanguageSettings(
+                    selectedLanguage = uiState.metadataLanguage,
+                    onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) }
+                )
+ 
                 Main.Config.Component.TemplateManager(
                     onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) }
                 )
+
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
