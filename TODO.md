@@ -218,7 +218,8 @@ metadados de fontes online populares.
 #### Corrigir erro no download de cover e banner
 
 - [ ] **Download de cover e banner de qualquer mangá** Atualmente o código faz profundidade de scaneamento e o problema é que essas funções de
-  gerar cover usa o nome do manga/midia + o path escolhido para salvar e não onde os arquivos .cbz e .cbr estão, ele tem que usar o caminho do mangá.
+  gerar cover usa o nome do manga/midia + o path escolhido para salvar e não onde os arquivos .cbz e .cbr estão, ele tem que usar o caminho do 
+  mangá. Isso também tá influenciando na função de Usar página do capitulo como cover, ao apagar cover tomo só erro interno.
 
 #### Globalizar idioma de metadados 
 

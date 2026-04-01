@@ -1,19 +1,24 @@
 package br.acerola.manga.module.main.config.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,25 +32,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.manga.common.mapper.LanguageMapper
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.ui.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Main.Config.Component.LanguageSettings(
     selectedLanguage: String?,
     onLanguageSelected: (String) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     ListItem(
         headlineContent = {
             Text(
-                text = "Idioma de Metadados",
+                text = stringResource(id = R.string.title_settings_metadata_language),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
         },
         supportingContent = {
             Text(
-                text = "Idioma padrão para busca e metadados",
+                text = stringResource(id = R.string.description_settings_metadata_language),
                 style = MaterialTheme.typography.bodySmall,
             )
         },
@@ -66,31 +74,39 @@ fun Main.Config.Component.LanguageSettings(
             }
         },
         trailingContent = {
-            Box {
-                TextButton(onClick = { expanded = true }) {
-                    Text(
-                        // FIXME: Tem que virar uma string.xml
-                        text = if (selectedLanguage != null) stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)) else "Selecionar",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    LanguageMapper.getAllCodes().forEach { code ->
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = LanguageMapper.getLabelRes(code))) },
-                            onClick = {
-                                expanded = false
-                                onLanguageSelected(code)
-                            }
-                        )
-                    }
-                }
-            }
+            Text(
+                text = if (selectedLanguage != null) stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)) else stringResource(R.string.label_select_language),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
         },
+        modifier = Modifier.clickable { showSheet = true },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
     )
+
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            LazyColumn(modifier = Modifier.padding(bottom = 32.dp)) {
+                items(LanguageMapper.getAllCodes()) { code ->
+                    ListItem(
+                        headlineContent = { Text(stringResource(id = LanguageMapper.getLabelRes(code))) },
+                        leadingContent = {
+                            RadioButton(
+                                selected = code == selectedLanguage,
+                                onClick = null
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            onLanguageSelected(code)
+                            showSheet = false
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
 

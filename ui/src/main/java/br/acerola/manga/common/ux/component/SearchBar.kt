@@ -117,7 +117,8 @@ fun <T> Acerola.Component.SearchBar(
         onExpandedChange = onExpandedChange,
         shape = animatedShape,
         colors = SearchBarDefaults.colors(
-            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = if (expanded)
+                MaterialTheme.colorScheme.surfaceContainerHigh
             else Color.Transparent,
         ),
         tonalElevation = 0.dp,
@@ -126,9 +127,10 @@ fun <T> Acerola.Component.SearchBar(
         AnimatedVisibility(
             visible = expanded,
             enter = fadeIn(tween(150)) + expandVertically(),
-            exit = fadeOut(tween(200)) + shrinkVertically()
+            exit = fadeOut(tween(220)) + shrinkVertically()
         ) {
             Surface(
+                shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
@@ -179,7 +181,7 @@ fun <T> Acerola.Component.SearchBar(
 private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
     val transition = updateTransition(
         targetState = expanded,
-        // FIXME: Fazer string.xml
+        // FIXME: Transformar em string.xml
         label = "SearchBarTransition"
     )
 
@@ -197,10 +199,11 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
                 )
             }
         },
-        // FIXME: Fazer string.xml
+        // FIXME: Transformar em string.xml
         label = "BottomCornerRadius"
     ) { isExpanded ->
-        if (isExpanded) 0.dp else 28.dp
+        // 🔥 Aqui está a correção real
+        if (isExpanded) 12.dp else 28.dp
     }
 
     return remember(bottomCornerRadius) {

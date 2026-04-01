@@ -2,6 +2,7 @@ package br.acerola.manga.module.download
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +19,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,6 +66,7 @@ import br.acerola.manga.module.download.state.DownloadUiState
 import br.acerola.manga.module.main.search.component.DownloadQueueComponent
 import br.acerola.manga.ui.R
 import coil.compose.AsyncImage
+
 
 @Composable
 fun Download.Layout.DownloadScreen(
@@ -284,12 +289,14 @@ private fun MangaDownloadHeader(manga: MangaMetadataDto) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChaptersSelectionBar(
     uiState: DownloadUiState,
     onAction: (DownloadAction) -> Unit,
 ) {
-    var languageMenuExpanded by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     Column {
         Row(
@@ -301,8 +308,7 @@ private fun ChaptersSelectionBar(
         ) {
             Column {
                 Text(
-                    // FIXME: Usso errado de string.xml
-                    text = stringResource(R.string.label_search_chapters) + " (${uiState.totalChapters})",
+                    text = stringResource(R.string.label_search_chapters, uiState.totalChapters),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -318,33 +324,43 @@ private fun ChaptersSelectionBar(
                 )
             }
 
-            Box {
-                TextButton(onClick = { languageMenuExpanded = true }) {
-                    Text(
-                        text = stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-                DropdownMenu(
-                    expanded = languageMenuExpanded,
-                    onDismissRequest = { languageMenuExpanded = false }
-                ) {
-                    LanguageMapper.getAllCodes().forEach { code ->
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = LanguageMapper.getLabelRes(code))) },
-                            onClick = {
-                                languageMenuExpanded = false
-                                onAction(DownloadAction.SelectLanguage(code))
-                            }
-                        )
-                    }
-                }
+            TextButton(onClick = { showSheet = true }) {
+                Text(
+                    text = stringResource(id = LanguageMapper.getLabelRes(uiState.selectedLanguage)),
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
         }
 
         HorizontalDivider()
     }
+
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            LazyColumn(modifier = Modifier.padding(bottom = 32.dp)) {
+                items(LanguageMapper.getAllCodes()) { code ->
+                    ListItem(
+                        headlineContent = { Text(stringResource(id = LanguageMapper.getLabelRes(code))) },
+                        leadingContent = {
+                            RadioButton(
+                                selected = code == uiState.selectedLanguage,
+                                onClick = null
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            onAction(DownloadAction.SelectLanguage(code))
+                            showSheet = false
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
+
 
 @Composable
 private fun StatusBadge(status: String) {
