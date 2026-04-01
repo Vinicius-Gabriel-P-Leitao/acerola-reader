@@ -40,16 +40,27 @@ class CoverSaver @Inject constructor(
             val rootDir = DocumentFile.fromTreeUri(context, rootUri)
                 ?: return@withContext IoError.FileNotFound("Root directory not accessible").left()
 
-            val mangaDir = rootDir.findFile(mangaFolderName) 
-                ?: rootDir.createDirectory(mangaFolderName)
-                ?: return@withContext IoError.FileWriteError(mangaFolderName, Exception("Could not create manga directory")).left()
+            val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
+                ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
+            val mangaFile = DocumentFile.fromSingleUri(context, Uri.parse(directory.path))
+            val mangaDir = mangaFile?.parentFile
+                ?: return@withContext IoError.FileNotFound("Manga directory not accessible").left()
+            
+            // Delete existing covers
+            mangaDir.listFiles().forEach { file ->
+                if (MediaFilePattern.isCover(file.name)) {
+                    file.delete()
+                }
+            }
+ 
             val fileName = MediaFilePattern.COVER.defaultFileName
+
             
             fileStorageHandler.saveFile(
                 folder = mangaDir,
                 fileName = fileName,
-                mimeType = "image/png",
+                mimeType = "image/jpeg",
                 bytes = bytes
             ).flatMap {
                 val savedUriString = mangaDir.findFile(fileName)?.uri?.toString()

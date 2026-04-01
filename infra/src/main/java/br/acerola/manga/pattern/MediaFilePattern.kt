@@ -4,7 +4,7 @@ enum class MediaFilePattern(val baseName: String) {
     COVER(baseName = "cover"),
     BANNER(baseName = "banner");
 
-    val defaultFileName: String get() = "$baseName.png"
+    val defaultFileName: String get() = "$baseName.jpg"
 
     fun matches(fileName: String): Boolean {
         if (fileName.isBlank()) return false

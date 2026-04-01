@@ -299,7 +299,7 @@ private fun ChaptersSelectionBar(
                 ) {
                     Column {
                         Text(
-                            text = stringResource(R.string.label_search_chapters, uiState.totalChapters),
+                            text = stringResource(R.string.label_search_chapters),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onBackground
                         )
