@@ -4,14 +4,17 @@ import android.content.Context
 import arrow.core.Either
 import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.config.network.safeApiCall
+import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.remote.mangadex.api.MangadexMangaMetadataClient
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,15 +29,19 @@ class MangadexMangaInfoSource @Inject constructor(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<MangaMetadataDto>> = safeApiCall {
         withContext(context = Dispatchers.IO) {
+            val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
+            val languages = listOf(preferredLanguage)
+            AcerolaLogger.d(TAG, "Fetching manga: $manga, languages: $languages", LogSource.NETWORK)
+            
             if (UUID_REGEX.matches(manga)) {
                 AcerolaLogger.d(TAG, "Detected UUID — fetching manga by ID: $manga", LogSource.NETWORK)
 
-                val response = api.getMangaById(mangaId = manga)
-                listOf(response.data.toViewDto(context))
+                val response = api.getMangaById(mangaId = manga, languages = languages)
+                listOf(response.data.toViewDto(context, preferredLanguage))
             } else {
                 AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)
-                val response = api.searchMangaByName(title = manga, limit = limit, offset = offset)
-                val list = response.data.map { it.toViewDto(context) }
+                val response = api.searchMangaByName(title = manga, limit = limit, offset = offset, languages = languages)
+                val list = response.data.map { it.toViewDto(context, preferredLanguage) }
 
                 AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)
                 list

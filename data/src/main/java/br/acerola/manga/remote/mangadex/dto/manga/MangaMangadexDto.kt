@@ -2,6 +2,7 @@ package br.acerola.manga.remote.mangadex.dto.manga
 
 import br.acerola.manga.data.BuildConfig
 import br.acerola.manga.local.entity.metadata.relationship.TypeAuthor
+import br.acerola.manga.pattern.LanguagePattern
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -50,9 +51,15 @@ data class MangaAttributes(
     val tags: List<Tag> = emptyList(),
     val latestUploadedChapter: String? = null
 ) {
-    val title: String? get() = titleMap["pt-br"] ?: titleMap["en"] ?: titleMap["ja-ro"]
-    val description: String?
-        get() = descriptionMap["pt-br"] ?: descriptionMap["en"] ?: descriptionMap["ja"]
+    fun getTitle(preferredLanguage: String): String? {
+        val pattern = LanguagePattern.from(preferredLanguage)?.code
+        return titleMap[pattern] ?: titleMap["en"] ?: titleMap["ja-ro"]
+    }
+
+    fun getDescription(preferredLanguage: String): String? {
+        val pattern = LanguagePattern.from(preferredLanguage)?.code
+        return descriptionMap[pattern] ?: descriptionMap["en"] ?: descriptionMap["ja"]
+    }
 }
 
 @JsonClass(generateAdapter = true)
@@ -74,15 +81,19 @@ data class Tag(
     val type: String,
     val attributes: TagAttributes
 )
-
+ 
 @JsonClass(generateAdapter = true)
 data class TagAttributes(
     @param:Json(name = "name") val nameMap: Map<String, String>,
     val group: String,
     val version: Int
 ) {
-    val name: String? get() = nameMap["pt-br"] ?: nameMap["en"] ?: nameMap["ja-ro"]
+    fun getName(preferredLanguage: String): String? {
+        val pattern = LanguagePattern.from(preferredLanguage)?.code
+        return nameMap[pattern] ?: nameMap["en"] ?: nameMap["ja-ro"]
+    }
 }
+
 
 @JsonClass(generateAdapter = true)
 data class Relationship(

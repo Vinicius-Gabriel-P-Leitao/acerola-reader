@@ -289,7 +289,7 @@
     <string name="lang_id">Indonesia</string>
 
     <string name="title_settings_metadata_language">Idioma de Metadados</string>
-    <string name="description_settings_metadata_language">Idioma padrão para busca e metadados</string>
+    <string name="description_settings_metadata_language">Idioma padrão para busca e metadados (Apenas MangaDex)</string>
     <string name="label_select_language">Selecionar</string>
 
 </resources>

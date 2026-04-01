@@ -21,6 +21,7 @@ import br.acerola.manga.module.download.state.DownloadAction
 import br.acerola.manga.module.download.state.DownloadUiState
 import br.acerola.manga.module.main.search.state.DownloadProgress
 import br.acerola.manga.pattern.ArchiveFormatPattern
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.ui.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -53,7 +54,7 @@ class DownloadViewModel @Inject constructor(
         if (_uiState.value.manga?.sources?.mangadex?.mangadexId == manga.sources?.mangadex?.mangadexId) return
 
         viewModelScope.launch {
-            val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: "pt-br"
+            val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
             _uiState.update { it.copy(manga = manga, isLoadingChapters = true, selectedLanguage = preferredLanguage) }
 
             val mangadexId = manga.sources?.mangadex?.mangadexId ?: return@launch
@@ -73,7 +74,7 @@ class DownloadViewModel @Inject constructor(
                 if (info != null) {
                     val progress = DownloadProgress(
                         mangaTitle = mangaTitle,
-                        // FIXME: Isso está muito frágil
+                        // TODO: Refatorar esse componente de progresso para não depender de strings internas do worker
                         progress = info.progress.getInt("progress", 0),
                         totalChapters = info.progress.getInt("totalChapters", 0),
                         currentChapterId = info.progress.getString("currentChapterId"),

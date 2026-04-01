@@ -13,12 +13,14 @@ interface MangadexMangaMetadataClient {
         @Query(value = "title") title: String,
         @Query(value = "limit") limit: Int = 10,
         @Query(value = "offset") offset: Int = 0,
-        @Query(value = "includes[]") includes: List<String> = listOf("author", "artist", "cover_art")
+        @Query(value = "includes[]") includes: List<String> = listOf("author", "artist", "cover_art"),
+        @Query(value = "availableTranslatedLanguage[]") languages: List<String>
     ): MangaDexResponse<MangaMangadexDto>
 
     @GET(value = "manga/{id}")
     suspend fun getMangaById(
         @Path(value = "id") mangaId: String,
-        @Query(value = "includes[]") includes: List<String> = listOf("author", "artist", "cover_art")
+        @Query(value = "includes[]") includes: List<String> = listOf("author", "artist", "cover_art"),
+        @Query(value = "availableTranslatedLanguage[]") languages: List<String>? = null
     ): MangaDexEntityResponseDto<MangaMangadexDto>
 }
