@@ -1,7 +1,9 @@
 package br.acerola.manga.common.ux.component
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -101,36 +104,43 @@ fun <T> Acerola.Component.SearchBar(
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
-        if (isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-            )
-        } else {
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-            )
-        }
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Column {
+                if (isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                    )
+                } else {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    )
+                }
 
-        if (items.isEmpty() && !isLoading && query.isNotEmpty()) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 32.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.description_text_search_no_results),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        } else {
-            LazyColumn(contentPadding = contentPadding) {
-                items(items = items, key = { item -> itemKey(item) }) { item ->
-                    itemContent(item)
+                if (items.isEmpty() && !isLoading && query.isNotEmpty()) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(all = 32.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.description_text_search_no_results),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else {
+                    LazyColumn(contentPadding = contentPadding) {
+                        items(items = items, key = { item -> itemKey(item) }) { item ->
+                            itemContent(item)
+                        }
+                    }
                 }
             }
         }
