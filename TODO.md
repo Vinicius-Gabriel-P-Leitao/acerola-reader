@@ -217,7 +217,8 @@ metadados de fontes online populares.
 
 #### Globalizar idioma de metadados 
 
-- [ ] **Adicionar campo no ConfigScreen** Os metadados e busca padrão para download do mangadex devem ser feitos pensando no idioma principal do app
+- [ ] **Adicionar campo no ConfigScreen** Os metadados e busca padrão para download do mangadex devem ser feitos pensando no idioma principal do 
+  app, atualmente na Download
 
 #### Resolver animação bugada da SearchBar
 

@@ -1,4 +1,4 @@
-package br.acerola.manga.module.download.layout
+package br.acerola.manga.module.download
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,8 +54,6 @@ import br.acerola.manga.common.ux.component.SnackbarVariant
 import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.module.download.Download
-import br.acerola.manga.module.download.DownloadViewModel
 import br.acerola.manga.module.download.component.ChapterDownloadItem
 import br.acerola.manga.module.download.component.DownloadSelectionBar
 import br.acerola.manga.module.download.state.DownloadAction
