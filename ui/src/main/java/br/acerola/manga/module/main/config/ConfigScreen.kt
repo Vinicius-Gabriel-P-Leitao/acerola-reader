@@ -143,16 +143,10 @@ fun Main.Config.Layout.Screen(
                     enabled = uiState.generateComicInfo,
                     onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
                 )
- 
-                Main.Config.Component.LanguageSettings(
-                    selectedLanguage = uiState.metadataLanguage,
-                    onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) }
-                )
- 
+
                 Main.Config.Component.TemplateManager(
                     onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) }
                 )
-
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
@@ -189,7 +183,12 @@ fun Main.Config.Layout.Screen(
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Metadados
-                SectionHeader(stringResource(id = R.string.title_sync_external_metadata))
+                SectionHeader(stringResource(id = R.string.label_sync_group))
+
+                Main.Config.Component.LanguageSettings(
+                    selectedLanguage = uiState.metadataLanguage,
+                    onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) }
+                )
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) }

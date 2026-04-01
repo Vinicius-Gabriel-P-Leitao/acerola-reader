@@ -19,10 +19,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import br.acerola.manga.common.mapper.LanguageMapper
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.layout.LanguageSelector
 import br.acerola.manga.module.main.Main
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.ui.R
 
 @Composable
@@ -30,10 +32,8 @@ fun Main.Config.Component.LanguageSettings(
     selectedLanguage: String?,
     onLanguageSelected: (String) -> Unit
 ) {
-    if (selectedLanguage == null) return
-
     Acerola.Layout.LanguageSelector(
-        selectedLanguage = selectedLanguage,
+        selectedLanguage = selectedLanguage ?: LanguagePattern.PT_BR.code,
         onLanguageSelected = onLanguageSelected,
         trigger = { onClick ->
             ListItem(
@@ -68,9 +68,12 @@ fun Main.Config.Component.LanguageSettings(
                 },
                 trailingContent = {
                     Text(
-                        text = if (selectedLanguage.isBlank()) stringResource(id = R.string.label_select_language) else stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        text = if (selectedLanguage.isNullOrBlank()) stringResource(id = R.string.label_select_language) 
+                               else stringResource(id = LanguageMapper.getLabelRes(selectedLanguage)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 modifier = Modifier.clickable { onClick() },
