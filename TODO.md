@@ -191,19 +191,14 @@ metadados de fontes online populares.
   do *,
   e está atualmente errado {chapter} numero do chapter {decimal} se tiver valor decimal e * para qualquer coisa.
 - [x] **Visualização da lista de pattern** Corrigir string, está sem sentido.
-- [x] **Padronizar botão de pattern** Padronizar, atualemente quando tem Ver menos está em "VER MENOS" e com fonte maior, ou ver forma melhor de 
-  gerenciar isso, já que podem ter diversos patterns de 5 a 20 talvez assim não escale visualmente, criar uma Screen nova seria bom? 
+- [x] **Padronizar botão de pattern** Padronizar, atualemente quando tem Ver menos está em "VER MENOS" e com fonte maior, ou ver forma melhor de
+  gerenciar isso, já que podem ter diversos patterns de 5 a 20 talvez assim não escale visualmente, criar uma Screen nova seria bom?
   FilePatternScreen?
 
 #### Fazer progressBar ser global na mainActivity
 
 - [x] **Main activity ter a progressBAr** A progressBar fica praticamente só na tela de HOME e CONFIG e as vezes buga, quero que apareça em todas
   telas.
-
-#### Resolver animação bugada da SearchBar
-
-- [ ] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma
-  animação de esticado para baixo, com um padding
 
 #### Verificar erros de quando um mangá não tem métados no Anilist
 
@@ -219,6 +214,11 @@ metadados de fontes online populares.
 #### Refatorar para um design melhor a tela de pattern
 
 - [ ] **PatternScreen** Atualmente a tela é funcional, mas não está visualmente agradável, quero mudar a forma com que funciona.
+
+#### Resolver animação bugada da SearchBar
+
+- [ ] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma
+  animação de esticado para baixo, com um padding
 
 ---
 

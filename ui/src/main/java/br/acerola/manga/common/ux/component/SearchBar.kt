@@ -1,5 +1,16 @@
 package br.acerola.manga.common.ux.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -20,9 +32,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,10 +66,12 @@ fun <T> Acerola.Component.SearchBar(
 ) {
     val internalBackClick = onBackClick ?: { onExpandedChange(false) }
 
+    val animatedShape = rememberSearchBarShape(expanded)
+
     DockedSearchBar(
-        modifier = modifier,
+        modifier = modifier.animateContentSize(),
         inputField = {
-            SearchBarDefaults.InputField(
+            InputField(
                 query = query,
                 onQueryChange = onQueryChange,
                 onSearch = onSearch,
@@ -98,51 +115,100 @@ fun <T> Acerola.Component.SearchBar(
         },
         expanded = expanded,
         onExpandedChange = onExpandedChange,
+        shape = animatedShape,
         colors = SearchBarDefaults.colors(
-            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent,
+            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceContainerHigh
+            else Color.Transparent,
         ),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn(tween(150)) + expandVertically(),
+            exit = fadeOut(tween(200)) + shrinkVertically()
         ) {
-            Column {
-                if (isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-                    )
-                } else {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    )
-                }
-
-                if (items.isEmpty() && !isLoading && query.isNotEmpty()) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(all = 32.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.description_text_search_no_results),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
+                Column {
+                    if (isLoading) {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                        )
+                    } else {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                         )
                     }
-                } else {
-                    LazyColumn(contentPadding = contentPadding) {
-                        items(items = items, key = { item -> itemKey(item) }) { item ->
-                            itemContent(item)
+
+                    if (items.isEmpty() && !isLoading && query.isNotEmpty()) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.description_text_search_no_results),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    } else {
+                        LazyColumn(contentPadding = contentPadding) {
+                            items(
+                                items = items,
+                                key = { item -> itemKey(item) }
+                            ) { item ->
+                                itemContent(item)
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
+    val transition = updateTransition(
+        targetState = expanded,
+        // FIXME: Fazer string.xml
+        label = "SearchBarTransition"
+    )
+
+    val bottomCornerRadius by transition.animateDp(
+        transitionSpec = {
+            if (targetState) {
+                tween(
+                    durationMillis = 200,
+                    easing = FastOutSlowInEasing
+                )
+            } else {
+                tween(
+                    durationMillis = 300,
+                    easing = LinearOutSlowInEasing
+                )
+            }
+        },
+        // FIXME: Fazer string.xml
+        label = "BottomCornerRadius"
+    ) { isExpanded ->
+        if (isExpanded) 0.dp else 28.dp
+    }
+
+    return remember(bottomCornerRadius) {
+        RoundedCornerShape(
+            topStart = 28.dp,
+            topEnd = 28.dp,
+            bottomStart = bottomCornerRadius,
+            bottomEnd = bottomCornerRadius
+        )
     }
 }
