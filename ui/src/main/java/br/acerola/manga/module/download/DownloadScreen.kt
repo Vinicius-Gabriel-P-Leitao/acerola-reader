@@ -49,9 +49,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.component.Pagination
-import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.ux.component.SnackbarVariant
 import br.acerola.manga.common.ux.component.showSnackbar
+import br.acerola.manga.common.ux.layout.TopBar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.download.component.ChapterDownloadItem
@@ -62,6 +62,8 @@ import br.acerola.manga.module.main.search.component.DownloadQueueComponent
 import br.acerola.manga.ui.R
 import coil.compose.AsyncImage
 
+// FIXME: Isso tem que virar um pattern infra/src/main/java/br/acerola/manga/pattern e de preferencia os valores de UI serem string.xml e abilitar
+//  nesse campo que não é pra ser traduzido quando tiver outros strings.xml de idioma
 private val languageNames = mapOf(
     "pt-br" to "Português (BR)",
     "en" to "English",
