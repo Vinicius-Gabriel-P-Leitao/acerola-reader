@@ -216,6 +216,10 @@ metadados de fontes online populares.
   retorna os erros, temos que ter uma de tons vermelhos de acordo com o tema e uma verde para caso de sucessos
 - [ ] **Fazer uso das variantes** Alguns casos de sucesso poderiam ter success e alguns de warn também, mapear com TODO:
 
+#### Refatorar para um design melhor a tela de pattern
+
+- [ ] **PatternScreen** Atualmente a tela é funcional, mas não está visualmente agradável, quero mudar a forma com que funciona.
+
 ---
 
 ## Pilha de Tecnologia

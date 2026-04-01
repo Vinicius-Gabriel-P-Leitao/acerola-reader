@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -122,44 +120,38 @@ fun Main.Home.Layout.Screen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            if (!searchExpanded) {
-                Spacer(modifier = Modifier.height(64.dp))
+        if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
+            EmptyState()
+        } else {
+            val gridCells = when (uiState.layout) {
+                HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
+                HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
             }
 
-            if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
-                EmptyState()
-            } else {
-                val gridCells = when (uiState.layout) {
-                    HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
-                    HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
-                }
+            LazyVerticalGrid(
+                columns = gridCells,
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+                contentPadding = PaddingValues(start = 8.dp, top = 72.dp, end = 8.dp, bottom = 80.dp),
+            ) {
+                items(items = if (searchExpanded) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
+                    when (uiState.layout) {
+                        HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
+                            manga = manga,
+                            history = history,
+                            chapterCount = chapterCount,
+                            onShowActions = { selectedMangaForActions = manga },
+                            onClick = { onAction(HomeAction.ClickManga(manga)) }
+                        )
 
-                LazyVerticalGrid(
-                    columns = gridCells,
-                    contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
-                ) {
-                    items(items = if (searchExpanded) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
-                        when (uiState.layout) {
-                            HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
-                                manga = manga,
-                                history = history,
-                                chapterCount = chapterCount,
-                                onShowActions = { selectedMangaForActions = manga },
-                                onClick = { onAction(HomeAction.ClickManga(manga)) }
-                            )
-
-                            HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
-                                manga = manga,
-                                chapterCount = chapterCount,
-                                subtitle = manga.remoteInfo?.authors?.name,
-                                onClick = { onAction(HomeAction.ClickManga(manga)) },
-                                onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
-                                onShowActions = { selectedMangaForActions = manga },
-                            )
-                        }
+                        HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
+                            manga = manga,
+                            chapterCount = chapterCount,
+                            subtitle = manga.remoteInfo?.authors?.name,
+                            onClick = { onAction(HomeAction.ClickManga(manga)) },
+                            onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
+                            onShowActions = { selectedMangaForActions = manga },
+                        )
                     }
                 }
             }
@@ -172,7 +164,7 @@ fun Main.Home.Layout.Screen(
             onQueryChange = { query = it },
             onSearch = { searchExpanded = false },
             onExpandedChange = { searchExpanded = it },
-            contentPadding = PaddingValues(bottom = 80.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
             itemKey = { (manga, _, _) -> manga.directory.id },
             placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
             modifier = Modifier
