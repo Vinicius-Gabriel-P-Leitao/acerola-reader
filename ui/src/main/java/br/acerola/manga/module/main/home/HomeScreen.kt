@@ -39,7 +39,8 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.FloatingTool
 import br.acerola.manga.common.ux.component.FloatingToolItem
 import br.acerola.manga.common.ux.component.SearchBar
-import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
@@ -64,13 +65,12 @@ fun Main.Home.Layout.Screen(
 
     LaunchedEffect(Unit) {
         homeViewModel.uiEvents.collect { message ->
-            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
         }
     }
 
     val layout by homeViewModel.selectedHomeLayout.collectAsStateWithLifecycle()
     val isIndexing by homeViewModel.isIndexing.collectAsStateWithLifecycle()
-    val progress by homeViewModel.progress.collectAsStateWithLifecycle()
     val mangas by homeViewModel.mangas.collectAsStateWithLifecycle()
     val allCategories by homeViewModel.allCategories.collectAsStateWithLifecycle()
     val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
@@ -79,7 +79,6 @@ fun Main.Home.Layout.Screen(
     val uiState = HomeUiState(
         layout = layout,
         isIndexing = isIndexing,
-        indexingProgress = if (progress >= 0) progress / 100f else null,
         mangas = mangas,
         sortType = sortSettings.type,
         sortDirection = sortSettings.direction,
@@ -236,17 +235,6 @@ fun Main.Home.Layout.Screen(
                 )
             )
 
-            Box(
-                contentAlignment = Alignment.BottomStart,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(all = 8.dp),
-            ) {
-                Acerola.Layout.ProgressIndicator(
-                    isLoading = uiState.isIndexing,
-                    progress = uiState.indexingProgress,
-                )
-            }
         }
 
         val activeManga = selectedMangaForActions

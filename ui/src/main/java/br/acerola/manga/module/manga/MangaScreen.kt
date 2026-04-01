@@ -31,8 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
-import br.acerola.manga.common.ux.layout.ProgressIndicator
 import br.acerola.manga.common.ux.layout.TopBar
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -77,27 +78,27 @@ fun MangaScreen(
     LaunchedEffect(Unit) {
         launch {
             mangaViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             mangaDirectoryViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             chapterArchiveViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             mangaMetadataViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             chapterMetadataViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
     }
@@ -106,12 +107,6 @@ fun MangaScreen(
 
     val mangaState by mangaViewModel.manga.collectAsStateWithLifecycle()
     val chapterDto by mangaViewModel.chapters.collectAsStateWithLifecycle()
-    val chapterIsIndexing by mangaViewModel.chapterIsIndexing.collectAsStateWithLifecycle()
-    val chapterProgress by mangaViewModel.chapterProgress.collectAsStateWithLifecycle()
-    val mangaIsIndexing by mangaViewModel.mangaIsIndexing.collectAsStateWithLifecycle()
-    val mangaProgress by mangaViewModel.mangaProgress.collectAsStateWithLifecycle()
-    val mangaRemoteIndexing by mangaMetadataViewModel.isIndexing.collectAsStateWithLifecycle()
-    val chapterRemoteIndexing by chapterMetadataViewModel.isIndexing.collectAsStateWithLifecycle()
     val history by mangaViewModel.history.collectAsStateWithLifecycle()
     val readChapters by mangaViewModel.readChapters.collectAsStateWithLifecycle()
     val selectedChapterPerPage by mangaViewModel.selectedChapterPerPage.collectAsStateWithLifecycle()
@@ -132,12 +127,6 @@ fun MangaScreen(
         manga = currentManga,
         chapters = chapterDto,
         selectedTab = selectedTab,
-        isIndexing = mangaIsIndexing || chapterIsIndexing || mangaRemoteIndexing || chapterRemoteIndexing,
-        indexingProgress = when {
-            chapterIsIndexing && chapterProgress >= 0 -> chapterProgress / 100f
-            mangaIsIndexing && mangaProgress >= 0 -> mangaProgress / 100f
-            else -> null
-        },
         history = history,
         readChapters = readChapters.toSet(),
         totalChapters = totalChapters,
@@ -311,18 +300,6 @@ fun MangaScreen(
                 )
             }
         )
-
-        Box(
-            contentAlignment = Alignment.BottomStart,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 18.dp),
-        ) {
-            Acerola.Layout.ProgressIndicator(
-                isLoading = uiState.isIndexing,
-                progress = uiState.indexingProgress,
-            )
-        }
 
         if (showSortSheet) {
             Manga.Component.ChapterSortSheet(

@@ -13,7 +13,6 @@ enum class TemplateMacro(val tag: String) {
 
 object ChapterTemplatePattern {
     val presets: Map<String, String> = mapOf(
-        // FIXME: Esse {chapter} e {decimal} e o {extension} tem que virar um pattern e ser usado em todo o código.
         "01.*." to "{${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",
         "Ch. 01.*." to "Ch. {${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",
         "Cap. 01.*." to "Cap. {${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",

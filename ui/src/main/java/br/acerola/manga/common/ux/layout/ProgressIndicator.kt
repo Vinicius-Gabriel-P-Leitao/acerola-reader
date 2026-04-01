@@ -38,10 +38,10 @@ fun Acerola.Layout.ProgressIndicator(
             showIndicator = true
         } else {
             if (showIndicator) {
-                delay(2000)
                 isFinished = true
-                isFinished = false
+                delay(2000)
                 showIndicator = false
+                isFinished = false
             }
         }
     }

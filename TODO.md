@@ -197,7 +197,7 @@ metadados de fontes online populares.
 
 #### Fazer progressBar ser global na mainActivity
 
-- [ ] **Main activity ter a progressBAr** A progressBar fica praticamente só na tela de HOME e CONFIG e as vezes buga, quero que apareça em todas
+- [x] **Main activity ter a progressBAr** A progressBar fica praticamente só na tela de HOME e CONFIG e as vezes buga, quero que apareça em todas
   telas.
 
 #### Resolver animação bugada da SearchBar
@@ -207,7 +207,7 @@ metadados de fontes online populares.
 
 #### Verificar erros de quando um mangá não tem métados no Anilist
 
-- [ ] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
+- [x] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
 
 #### Personalizar a Snackbar para ter variações.
 

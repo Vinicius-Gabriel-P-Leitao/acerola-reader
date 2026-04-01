@@ -50,6 +50,8 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.GlassButton
 import br.acerola.manga.common.ux.component.Pagination
 import br.acerola.manga.common.ux.layout.TopBar
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.module.download.Download
@@ -94,7 +96,7 @@ fun Download.Layout.DownloadScreen(
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { message ->
-            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
         }
     }
 

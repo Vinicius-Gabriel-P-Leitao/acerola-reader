@@ -8,8 +8,4 @@ data class ConfigUiState(
     val folderUri: Uri? = null,
     val folderName: String? = null,
     val generateComicInfo: Boolean = true,
-    val isLibraryIndexing: Boolean = false,
-    val libraryProgress: Float? = null,
-    val isMetadataIndexing: Boolean = false,
-    val metadataProgress: Float? = null
 )

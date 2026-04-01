@@ -48,7 +48,8 @@ object TemplateValidatorPattern {
             cursor++
         }
 
-        // FIXME: A porra do erro que deveria ter a porra do texto e a porra do texto tem que estar na porra de uma string.xml
+        // FIXME: A porra do erro que deveria ter a porra do texto e a porra do texto tem que estar na porra de uma string.xml InvalidPattern o
+        //  erro deve estar aqui dentro
         if (valueCount != 1) {
             return Either.Left(TemplateError.InvalidPattern("Exactly one {chapter} is required"))
         }

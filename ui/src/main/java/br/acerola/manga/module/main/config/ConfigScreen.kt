@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -25,8 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -64,27 +63,27 @@ fun Main.Config.Layout.Screen(
     LaunchedEffect(Unit) {
         launch {
             fileSystemAccessViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             mangaDirectoryViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             mangaDexViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             metadataSettingsViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             themeViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
     }
@@ -94,21 +93,11 @@ fun Main.Config.Layout.Screen(
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
 
-    val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
-    val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
-
-    val metadataIndexing by mangaDexViewModel.isIndexing.collectAsState()
-    val metadataProgress by mangaDexViewModel.progress.collectAsState()
-
     val uiState = ConfigUiState(
         selectedTheme = selectedTheme,
         folderUri = fileSystemAccessViewModel.folderUri,
         folderName = folderName,
         generateComicInfo = generateComicInfo,
-        isLibraryIndexing = libraryIndexing,
-        libraryProgress = if (libraryProgress >= 0) libraryProgress / 100f else null,
-        isMetadataIndexing = metadataIndexing,
-        metadataProgress = if (metadataProgress >= 0) metadataProgress / 100f else null
     )
 
     val onAction: (ConfigAction) -> Unit = { action ->
@@ -202,21 +191,6 @@ fun Main.Config.Layout.Screen(
                 Spacer(modifier = Modifier.height(48.dp))
             }
 
-            Box(
-                contentAlignment = Alignment.BottomStart,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(all = 18.dp),
-            ) {
-                Acerola.Layout.ProgressIndicator(
-                    isLoading = uiState.isLibraryIndexing || uiState.isMetadataIndexing,
-                    progress = when {
-                        uiState.isMetadataIndexing -> uiState.metadataProgress
-                        uiState.isLibraryIndexing -> uiState.libraryProgress
-                        else -> null
-                    },
-                )
-            }
         }
     }
 }

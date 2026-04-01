@@ -24,6 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.common.component.MangaListItem
@@ -44,7 +46,7 @@ fun Main.History.Layout.Screen(
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { message ->
-            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
         }
     }
 

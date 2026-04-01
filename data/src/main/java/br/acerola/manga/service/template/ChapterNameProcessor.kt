@@ -19,8 +19,6 @@ class ChapterNameProcessor @Inject constructor(
 
     suspend fun getTemplates(): List<ChapterTemplate> = dao.getAll()
 
-    suspend fun getTemplateById(id: Long): ChapterTemplate? = dao.getById(id)
-
     suspend fun addTemplate(label: String, pattern: String): Either<TemplateError, Unit> {
         val trimmed = pattern.trim()
         val extensionTag = "{${TemplateMacro.EXTENSION.tag}}"
