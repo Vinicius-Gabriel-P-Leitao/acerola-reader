@@ -89,10 +89,11 @@ fun Main.Home.Layout.Screen(
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
 
     val filteredMangas = remember(query, uiState.mangas) {
+        val list = uiState.mangas ?: return@remember emptyList()
         if (query.isEmpty()) {
-            uiState.mangas
+            list
         } else {
-            uiState.mangas.filter { (manga, _, _) ->
+            list.filter { (manga, _, _) ->
                 manga.directory.name.contains(query, ignoreCase = true) ||
                         manga.remoteInfo?.title?.contains(query, ignoreCase = true) == true
             }
@@ -120,9 +121,11 @@ fun Main.Home.Layout.Screen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
-            EmptyState()
-        } else {
+        val mangaList = uiState.mangas
+        when {
+            mangaList == null -> Unit
+            mangaList.isEmpty() && !uiState.isIndexing -> EmptyState()
+            else -> {
             val gridCells = when (uiState.layout) {
                 HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
                 HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
@@ -134,7 +137,7 @@ fun Main.Home.Layout.Screen(
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
                 contentPadding = PaddingValues(start = 8.dp, top = 72.dp, end = 8.dp, bottom = 80.dp),
             ) {
-                items(items = if (searchExpanded) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
+                items(items = if (searchExpanded) filteredMangas else mangaList) { (manga, history, chapterCount) ->
                     when (uiState.layout) {
                         HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
                             manga = manga,
@@ -154,6 +157,7 @@ fun Main.Home.Layout.Screen(
                         )
                     }
                 }
+            }
             }
         }
 

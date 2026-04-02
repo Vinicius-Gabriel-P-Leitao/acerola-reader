@@ -145,6 +145,11 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 
 ### 🔲 Pendente
 
+#### Erro ao listar mangás com decimal
+
+- [x] **Busca de mangás com chapter decimal:** Novamente problema com chapters 0.01 e logo em seguida vim o 0.10 ao invez de 0.02
+
+
 #### Snackbar — Uso das variantes
 
 - [ ] **Mapear casos de sucesso e aviso** no código com `TODO:` e aplicar variantes da Snackbar (success/warn).
@@ -157,6 +162,12 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 
 - [ ] **Tutorial introdutório:** Ensinar como selecionar a pasta de mangás e usar o botão de sync profundo.
 
+### Testes
+
+- [x] **Escrever testes**
+    - [MetadataSyncWorker.kt](core/src/main/java/br/acerola/manga/core/worker/MetadataSyncWorker.kt)
+    - [ChapterDownloadWorker.kt](core/src/main/java/br/acerola/manga/core/worker/ChapterDownloadWorker.kt)
+
 ---
 
 ### 🛠️ TODOs e FIXMEs no Código
@@ -165,19 +176,19 @@ Encontrados 10 itens em 9 arquivos.
 
 #### FIXME
 
-- [ ] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
-- [ ] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`.
-- [ ] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
-- [ ] `TemplateValidatorPattern.kt:51` — Mover texto de `InvalidPattern` para `strings.xml`.
-- [ ] `MainActivity.kt:28` — Implementar `fakeLoading` para pré-carregar itens antes de exibi-los.
+- [x] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
+- [x] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`
+- [x] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
+- [x] `TemplateValidatorPattern.kt:51` — Mover texto de `InvalidPattern` para `strings.xml`.
+- [x] `MainActivity.kt:28` — Implementar `fakeLoading` para pré-carregar itens antes de exibi-los, foi feito diferente e tratado na homescreen.
 
 #### TODO
 
-- [ ] `LocalSnackbarHostState.kt:6` — Tratar melhor o erro de estado do Snackbar.
-- [ ] `FileSystemAccessManager.kt:20` — Tratar erros de forma mais personalizada.
-- [ ] `DownloadViewModel.kt:77` — Refatorar componente de progresso para não depender de strings internas do worker.
-- [ ] `TemplateValidatorPattern.kt:51` — Texto de erro `InvalidPattern` deve estar em `strings.xml`.
-- [ ] `ChapterSourceFactory.kt:14` — Usar erro traduzido respeitando o tratamento de erro do app.
+- [x] `LocalSnackbarHostState.kt:6` — Tratar melhor o erro de estado do Snackbar.
+- [x] `FileSystemAccessManager.kt:20` — Tratar erros de forma mais personalizada.
+- [x] `DownloadViewModel.kt:77` — Refatorar componente de progresso para não depender de strings internas do worker.
+- [x] `TemplateValidatorPattern.kt:51` — Texto de erro `InvalidPattern` deve estar em `strings.xml`.
+- [x] `ChapterSourceFactory.kt:14` — Usar erro traduzido respeitando o tratamento de erro do app.
 
 ---
 

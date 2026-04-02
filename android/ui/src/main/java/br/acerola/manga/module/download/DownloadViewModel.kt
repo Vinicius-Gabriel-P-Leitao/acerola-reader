@@ -12,6 +12,7 @@ import br.acerola.manga.config.preference.MangaDirectoryPreference
 import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.core.usecase.search.SearchMangaUseCase
 import br.acerola.manga.core.worker.ChapterDownloadWorker
+import br.acerola.manga.core.worker.WorkerContract
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.UserMessage
@@ -74,11 +75,10 @@ class DownloadViewModel @Inject constructor(
                 if (info != null) {
                     val progress = DownloadProgress(
                         mangaTitle = mangaTitle,
-                        // TODO: Refatorar esse componente de progresso para não depender de strings internas do worker
-                        progress = info.progress.getInt("progress", 0),
-                        totalChapters = info.progress.getInt("totalChapters", 0),
-                        currentChapterId = info.progress.getString("currentChapterId"),
-                        currentChapterFileName = info.progress.getString("currentChapterFileName"),
+                        progress = info.progress.getInt(WorkerContract.KEY_PROGRESS, 0),
+                        totalChapters = info.progress.getInt(ChapterDownloadWorker.KEY_TOTAL_CHAPTERS, 0),
+                        currentChapterId = info.progress.getString(ChapterDownloadWorker.KEY_CURRENT_CHAPTER_ID),
+                        currentChapterFileName = info.progress.getString(ChapterDownloadWorker.KEY_CURRENT_CHAPTER_FILE_NAME),
                         isRunning = info.state == WorkInfo.State.RUNNING
                     )
                     _uiState.update { it.copy(activeDownload = progress) }

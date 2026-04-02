@@ -1,6 +1,7 @@
 package br.acerola.manga.service.template
 
 import br.acerola.manga.error.message.TemplateError
+import br.acerola.manga.infra.R
 import br.acerola.manga.local.dao.archive.ChapterTemplateDao
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -53,7 +54,7 @@ class ChapterNameProcessorTest {
         assertTrue(result.isLeft())
         result.onLeft { 
             assertTrue(it is TemplateError.InvalidPattern)
-            assertEquals("Exactly one {chapter} is required", (it as TemplateError.InvalidPattern).reason)
+            assertEquals(R.string.error_template_chapter_required, (it as TemplateError.InvalidPattern).uiMessage.resId)
         }
     }
 }

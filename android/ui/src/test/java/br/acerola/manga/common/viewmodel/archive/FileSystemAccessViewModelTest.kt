@@ -3,9 +3,11 @@ package br.acerola.manga.common.viewmodel.archive
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
 import br.acerola.manga.MainDispatcherRule
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import br.acerola.manga.logging.AcerolaLogger
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -37,6 +39,7 @@ class FileSystemAccessViewModelTest {
         every { AcerolaLogger.d(any(), any(), any()) } returns Unit
         every { AcerolaLogger.audit(any(), any(), any(), any()) } returns Unit
         every { DocumentFile.fromTreeUri(any(), any()) } returns null
+        coEvery { manager.saveFolderUri(any()) } returns Either.Right(Unit)
 
         viewModel = FileSystemAccessViewModel(manager, context)
     }

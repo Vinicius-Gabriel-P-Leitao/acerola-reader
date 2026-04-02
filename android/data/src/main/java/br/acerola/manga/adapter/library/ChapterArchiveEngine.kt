@@ -20,6 +20,7 @@ import br.acerola.manga.local.translator.ui.toViewPageDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
 import br.acerola.manga.pattern.ArchiveFormatPattern
+import br.acerola.manga.pattern.ChapterTemplatePattern
 import br.acerola.manga.service.compact.PdfToCbzConverter
 import br.acerola.manga.service.template.ChapterNameProcessor
 import br.acerola.manga.util.ContentQueryHelper
@@ -43,6 +44,10 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.collections.associateWith
+import kotlin.collections.filter
+import kotlin.collections.isNotEmpty
+import kotlin.collections.map
 
 @Singleton
 class ChapterArchiveEngine @Inject constructor(
@@ -99,8 +104,8 @@ class ChapterArchiveEngine @Inject constructor(
                     }
                 }
 
-                // FIXME: Dever usar o ChapterTemplatePattern para pegar o primeiro como default
-                val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: "Chapter {chapter}{decimal}.*.{extension}")
+                val defaultPattern = ChapterTemplatePattern.presets.values.first()
+                val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: defaultPattern)
 
                 val existingChapters = chapterArchiveDao.getChaptersByMangaDirectoryList(folderId = mangaId)
                 val existingChaptersMap = existingChapters.associateBy { it.path }

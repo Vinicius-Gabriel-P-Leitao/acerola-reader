@@ -18,6 +18,7 @@ import br.acerola.manga.core.usecase.manga.ObserveLibraryUseCase
 import br.acerola.manga.core.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.core.worker.LibrarySyncWorker
+import br.acerola.manga.core.worker.WorkerContract
 import br.acerola.manga.dto.archive.ChapterArchivePageDto
 import br.acerola.manga.dto.archive.ChapterFileDto
 import br.acerola.manga.dto.archive.MangaDirectoryDto
@@ -168,10 +169,10 @@ class MangaDirectoryViewModel @Inject constructor(
                         LibrarySyncWorker.KEY_MANGA_ID to (mangaId ?: -1L)
                     )
                 )
-                .addTag("library_sync")
+                .addTag(WorkerContract.TAG_LIBRARY_SYNC)
                 .build()
 
-            val workName = if (mangaId != null) "library_sync_$mangaId" else "library_sync_unique"
+            val workName = if (mangaId != null) "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId" else "${WorkerContract.TAG_LIBRARY_SYNC}_unique"
 
             workManager.enqueueUniqueWork(
                 workName,
@@ -189,7 +190,7 @@ class MangaDirectoryViewModel @Inject constructor(
                 if (workInfo != null) {
                     val wasIndexing = _isIndexing.value
                     _isIndexing.value = !workInfo.state.isFinished
-                    _progress.value = workInfo.progress.getInt("progress", -1)
+                    _progress.value = workInfo.progress.getInt(WorkerContract.KEY_PROGRESS, -1)
 
                     if (wasIndexing && workInfo.state.isFinished) {
                         AcerolaLogger.i(
@@ -197,7 +198,7 @@ class MangaDirectoryViewModel @Inject constructor(
                         )
 
                         if (workInfo.state == WorkInfo.State.FAILED) {
-                            val errorMessage = workInfo.outputData.getString("error")
+                            val errorMessage = workInfo.outputData.getString(WorkerContract.KEY_ERROR)
                             if (errorMessage != null) {
                                 _uiEvents.send(UserMessage.Raw(errorMessage))
                             }

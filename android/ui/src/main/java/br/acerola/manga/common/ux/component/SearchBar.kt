@@ -181,8 +181,7 @@ fun <T> Acerola.Component.SearchBar(
 private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
     val transition = updateTransition(
         targetState = expanded,
-        // FIXME: Transformar em string.xml
-        label = "SearchBarTransition"
+        label = stringResource(R.string.label_search_bar_transition)
     )
 
     val bottomCornerRadius by transition.animateDp(
@@ -199,8 +198,7 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
                 )
             }
         },
-        // FIXME: Transformar em string.xml
-        label = "BottomCornerRadius"
+        label = stringResource(R.string.label_search_bar_corner_radius)
     ) { isExpanded ->
         // 🔥 Aqui está a correção real
         if (isExpanded) 12.dp else 28.dp
