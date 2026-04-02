@@ -53,13 +53,15 @@ class CoverSaverTest {
         val bytes = byteArrayOf(0, 1, 2)
         val mangaDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
 
-        val rootDoc = mockk<DocumentFile>()
         val mangaDoc = mockk<DocumentFile>()
         val savedFileDoc = mockk<DocumentFile>()
         val fileUri = mockk<Uri>()
+        val dirUri = mockk<Uri>()
 
-        every { DocumentFile.fromTreeUri(context, rootUri) } returns rootDoc
-        every { rootDoc.findFile("One Piece") } returns mangaDoc
+        every { DocumentFile.fromTreeUri(context, any()) } returns mangaDoc
+        every { mangaDoc.isDirectory } returns true
+        every { mangaDoc.uri } returns dirUri
+        every { mangaDoc.listFiles() } returns emptyArray()
         every { mangaDoc.findFile(any()) } returns savedFileDoc
         every { savedFileDoc.uri } returns fileUri
         every { fileUri.toString() } returns "content://cover/1"
@@ -75,7 +77,7 @@ class CoverSaverTest {
         // Assert
         assertTrue(result.isRight())
         result.onRight { assertEquals(10L, it) }
-        coVerify { fileStorageHandler.saveFile(mangaDoc, "cover.png", "image/png", bytes) }
+        coVerify { fileStorageHandler.saveFile(mangaDoc, "cover.jpg", "image/jpeg", bytes) }
         coVerify { directoryDao.update(match { it.cover == "content://cover/1" }) }
     }
 
@@ -85,8 +87,10 @@ class CoverSaverTest {
         val rootUri = mockk<Uri>()
         val bytes = byteArrayOf(0, 1, 2)
         val coverUrl = "https://mangadex.org/covers/1/a.jpg"
+        val mangaDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
 
-        every { DocumentFile.fromTreeUri(context, rootUri) } returns null
+        coEvery { directoryDao.getMangaDirectoryById(1) } returns mangaDir
+        every { DocumentFile.fromTreeUri(context, any()) } returns null
 
         // Act
         val result = service.processCover(rootUri, 1, bytes, coverUrl, "One Piece", 100)
