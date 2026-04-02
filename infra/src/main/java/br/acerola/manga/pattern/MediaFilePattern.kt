@@ -8,8 +8,8 @@ enum class MediaFilePattern(val baseName: String) {
 
     fun matches(fileName: String): Boolean {
         if (fileName.isBlank()) return false
-        val lower = fileName.lowercase()
-        return lower.substringBeforeLast(".").contains(baseName) && isImage(lower)
+        val nameWithoutExtension = fileName.substringBeforeLast(".")
+        return nameWithoutExtension.equals(baseName, ignoreCase = true) && isImage(fileName)
     }
 
     companion object {

@@ -47,10 +47,12 @@ class MangadexMangaEngine @Inject constructor(
     private val coverService: CoverSaver,
     private val mangadexSourceDao: MangadexSourceDao,
     private val mangaMetadataDao: MangaMetadataDao,
-    @param:ApplicationContext private val context: Context,
     private val metadataExportService: MetadataExporter,
+    @param:ApplicationContext private val context: Context,
     @param:MangadexSource private val downloadCoverService: ImageProvider<String>
 ) : MangaGateway<MangaMetadataDto> {
+
+
 
     @Inject
     @MangadexSource
@@ -196,6 +198,7 @@ class MangadexMangaEngine @Inject constructor(
 
                     if (mangaId != -1L) {
                         bestMatch.cover?.let { dto ->
+                            AcerolaLogger.d(TAG, "Syncing cover for ${current.name}", LogSource.REPOSITORY)
                             downloadCoverService.searchMedia(dto.url).onRight { bytes ->
                                 coverService.processCover(
                                     rootUri = rootUri,
@@ -205,6 +208,8 @@ class MangadexMangaEngine @Inject constructor(
                                     mangaFolderName = current.name,
                                     mangaRemoteInfoFk = mangaId
                                 )
+                            }.onLeft {
+                                AcerolaLogger.e(TAG, "Failed to download cover for ${current.name}", LogSource.REPOSITORY)
                             }
                         }
 

@@ -1,7 +1,9 @@
 package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 
+import android.content.Context
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.manga.error.message.NetworkError
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.chapter.ChapterAttributes
@@ -23,13 +25,16 @@ class MangadexSourceChapterInfoRepositoryTest {
 
     @MockK
     lateinit var api: MangadexChapterMetadataClient
+    
+    @MockK
+    lateinit var context: Context
 
     private lateinit var repository: MangadexChapterInfoSource
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = MangadexChapterInfoSource(api)
+        repository = MangadexChapterInfoSource(api, context)
     }
 
     @Test
@@ -41,16 +46,18 @@ class MangadexSourceChapterInfoRepositoryTest {
 
         val respA = createResponse(listA, total = 150, offset = 0)
         val respB = createResponse(listB, total = 150, offset = 100)
+        
+        val languages = listOf(LanguagePattern.PT_BR.code)
 
         // Mock inicial
-        coEvery { api.getMangaFeed(mangaId, limit = 1, offset = 0) } returns createResponse(
+        coEvery { api.getMangaFeed(mangaId, languages = languages, limit = 1, offset = 0) } returns createResponse(
             listOf(listA[0]),
             total = 150
         )
 
         // Mock paginação
-        coEvery { api.getMangaFeed(mangaId, limit = 100, offset = 0) } returns respA
-        coEvery { api.getMangaFeed(mangaId, limit = 100, offset = 100) } returns respB
+        coEvery { api.getMangaFeed(mangaId, languages = languages, limit = 100, offset = 0) } returns respA
+        coEvery { api.getMangaFeed(mangaId, languages = languages, limit = 100, offset = 100) } returns respB
 
         // Mock imagem do manga
         coEvery { api.getChapterImages(any()) } returns ChapterSourceMangadexDto(
@@ -67,15 +74,16 @@ class MangadexSourceChapterInfoRepositoryTest {
             assertEquals(150, list.size)
         }
 
-        coVerify { api.getMangaFeed(mangaId, limit = 100, offset = 0) }
-        coVerify { api.getMangaFeed(mangaId, limit = 100, offset = 100) }
+        coVerify { api.getMangaFeed(mangaId, languages = languages, limit = 100, offset = 0) }
+        coVerify { api.getMangaFeed(mangaId, languages = languages, limit = 100, offset = 100) }
     }
 
     @Test
     fun `searchInfo deve retornar ConnectionFailed quando ocorrer erro de IO`() = runTest {
         val mangaId = "manga-1"
+        val languages = listOf(LanguagePattern.PT_BR.code)
         // Simula erro de conexão (IOException)
-        coEvery { api.getMangaFeed(any(), limit = 1, offset = 0) } throws IOException("Network Failure")
+        coEvery { api.getMangaFeed(any(), languages = languages, limit = 1, offset = 0) } throws IOException("Network Failure")
 
         val result = repository.searchInfo(mangaId, limit = 100)
 

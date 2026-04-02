@@ -37,25 +37,27 @@ class CoverSaver @Inject constructor(
         mangaRemoteInfoFk: Long
     ): Either<IoError, Long> = withContext(Dispatchers.IO) {
         try {
-            val rootDir = DocumentFile.fromTreeUri(context, rootUri)
-                ?: return@withContext IoError.FileNotFound("Root directory not accessible").left()
-
             val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
                 ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
-            val mangaFile = DocumentFile.fromSingleUri(context, Uri.parse(directory.path))
-            val mangaDir = mangaFile?.parentFile
-                ?: return@withContext IoError.FileNotFound("Manga directory not accessible").left()
+            val mangaDir = DocumentFile.fromTreeUri(context, Uri.parse(directory.path))
+
+            if (mangaDir == null || !mangaDir.isDirectory) {
+                AcerolaLogger.e(TAG, "Manga directory not accessible for ${directory.path}", LogSource.REPOSITORY)
+                return@withContext IoError.FileNotFound("Manga directory not accessible").left()
+            }
+            
+            AcerolaLogger.d(TAG, "Saving cover to directory: ${mangaDir.uri}", LogSource.REPOSITORY)
             
             // Delete existing covers
             mangaDir.listFiles().forEach { file ->
-                if (MediaFilePattern.isCover(file.name)) {
+                val fileName = file.name ?: return@forEach
+                if (MediaFilePattern.isCover(fileName)) {
                     file.delete()
                 }
             }
  
             val fileName = MediaFilePattern.COVER.defaultFileName
-
             
             fileStorageHandler.saveFile(
                 folder = mangaDir,
@@ -63,13 +65,11 @@ class CoverSaver @Inject constructor(
                 mimeType = "image/jpeg",
                 bytes = bytes
             ).flatMap {
-                val savedUriString = mangaDir.findFile(fileName)?.uri?.toString()
+                val savedFile = mangaDir.findFile(fileName)
+                val savedUriString = savedFile?.uri?.toString()
                 
                 if (savedUriString != null) {
-                    val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
-                    if (directory != null) {
-                        directoryDao.update(entity = directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
-                    }
+                    directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
                 }
 
                 val coverEntity = Cover(
@@ -85,9 +85,9 @@ class CoverSaver @Inject constructor(
                     val existing = coverDao.getCoverByFileNameAndFk(
                         fileName = fileName,
                         mangaRemoteInfoFk = mangaRemoteInfoFk
-                    ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency: Cover not found for update")).left()
+                    ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
 
-                    coverDao.update(entity = existing.copy(url = coverUrl, fileName = fileName))
+                    coverDao.update(existing.copy(url = coverUrl, fileName = fileName))
                     existing.id
                 }
                 finalId.right()
