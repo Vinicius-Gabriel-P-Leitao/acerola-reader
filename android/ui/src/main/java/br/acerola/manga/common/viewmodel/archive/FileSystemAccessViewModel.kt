@@ -36,9 +36,9 @@ class FileSystemAccessViewModel @Inject constructor(
     val folderUri get() = manager.folderUri
 
     fun saveFolderUri(uri: Uri?) {
-        AcerolaLogger.audit(TAG, "User selected new library folder", LogSource.VIEWMODEL)  
+        AcerolaLogger.audit(TAG, "User selected new library folder", LogSource.VIEWMODEL)
         viewModelScope.launch {
-            manager.saveFolderUri(uri)
+            manager.saveFolderUri(uri).onLeft { error -> _uiEvents.send(error) }
             updateFolderName(uri)
         }
     }

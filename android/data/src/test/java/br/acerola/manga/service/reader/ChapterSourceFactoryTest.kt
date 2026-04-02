@@ -57,6 +57,6 @@ class ChapterSourceFactoryTest {
         val result = factory.create(chapter)
 
         assertTrue(result.isLeft())
-        result.onLeft { assertTrue(it is ChapterError.InvalidChapterData) }
+        result.onLeft { assertTrue(it is ChapterError.UnsupportedFormat) }
     }
 }

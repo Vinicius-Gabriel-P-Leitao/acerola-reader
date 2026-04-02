@@ -38,6 +38,10 @@ class ChapterDownloadWorker @AssistedInject constructor(
         const val KEY_COVER_URL = "cover_url"
         const val KEY_COVER_FILE_NAME = "cover_file_name"
         const val DOWNLOAD_TAG = "chapter_download"
+
+        const val KEY_TOTAL_CHAPTERS = "totalChapters"
+        const val KEY_CURRENT_CHAPTER_ID = "currentChapterId"
+        const val KEY_CURRENT_CHAPTER_FILE_NAME = "currentChapterFileName"
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -89,10 +93,10 @@ class ChapterDownloadWorker @AssistedInject constructor(
             onProgress = { progress, currentChapter ->
                 setProgress(
                     workDataOf(
-                        "progress" to progress,
-                        "currentChapterId" to currentChapter?.id,
-                        "currentChapterFileName" to currentChapter?.fileName,
-                        "totalChapters" to chapters.size,
+                        WorkerContract.KEY_PROGRESS to progress,
+                        KEY_CURRENT_CHAPTER_ID to currentChapter?.id,
+                        KEY_CURRENT_CHAPTER_FILE_NAME to currentChapter?.fileName,
+                        KEY_TOTAL_CHAPTERS to chapters.size,
                         KEY_MANGA_TITLE to mangaTitle
                     )
                 )

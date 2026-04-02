@@ -147,7 +147,7 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 
 #### Erro ao listar mangás com decimal
 
-- [ ] **Busca de mangás com chapter decimal:** Novamente problema com chapters 0.01 e logo em seguida vim o 0.10 ao invez de 0.02
+- [x] **Busca de mangás com chapter decimal:** Novamente problema com chapters 0.01 e logo em seguida vim o 0.10 ao invez de 0.02
 
 
 #### Snackbar — Uso das variantes
@@ -161,6 +161,12 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 #### Tutorial
 
 - [ ] **Tutorial introdutório:** Ensinar como selecionar a pasta de mangás e usar o botão de sync profundo.
+
+### Testes
+
+- [x] **Escrever testes**
+    - [MetadataSyncWorker.kt](core/src/main/java/br/acerola/manga/core/worker/MetadataSyncWorker.kt)
+    - [ChapterDownloadWorker.kt](core/src/main/java/br/acerola/manga/core/worker/ChapterDownloadWorker.kt)
 
 ---
 
@@ -178,11 +184,11 @@ Encontrados 10 itens em 9 arquivos.
 
 #### TODO
 
-- [ ] `LocalSnackbarHostState.kt:6` — Tratar melhor o erro de estado do Snackbar.
-- [ ] `FileSystemAccessManager.kt:20` — Tratar erros de forma mais personalizada.
-- [ ] `DownloadViewModel.kt:77` — Refatorar componente de progresso para não depender de strings internas do worker.
-- [ ] `TemplateValidatorPattern.kt:51` — Texto de erro `InvalidPattern` deve estar em `strings.xml`.
-- [ ] `ChapterSourceFactory.kt:14` — Usar erro traduzido respeitando o tratamento de erro do app.
+- [x] `LocalSnackbarHostState.kt:6` — Tratar melhor o erro de estado do Snackbar.
+- [x] `FileSystemAccessManager.kt:20` — Tratar erros de forma mais personalizada.
+- [x] `DownloadViewModel.kt:77` — Refatorar componente de progresso para não depender de strings internas do worker.
+- [x] `TemplateValidatorPattern.kt:51` — Texto de erro `InvalidPattern` deve estar em `strings.xml`.
+- [x] `ChapterSourceFactory.kt:14` — Usar erro traduzido respeitando o tratamento de erro do app.
 
 ---
 
