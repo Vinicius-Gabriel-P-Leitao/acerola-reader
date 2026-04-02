@@ -56,9 +56,9 @@
     <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
     <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
     <string name="description_text_home_deep_sync">Sincronização profunda</string>
-    <string name="description_text_home_deep_sync_supporting">Verifica todos os arquivos. Pode demorar.</string>
+    <string name="description_text_home_deep_sync_supporting">Verifica todos as pastas. Pode demorar.</string>
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
-    <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos.</string>
+    <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos e pastas.</string>
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
 
