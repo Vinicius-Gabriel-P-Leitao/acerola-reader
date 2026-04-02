@@ -1,1 +1,0 @@
--keepnames class br.acerola.manga.**

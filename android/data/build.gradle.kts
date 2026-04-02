@@ -1,0 +1,110 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.apollo)
+}
+
+android {
+    namespace = "br.acerola.manga.data"
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        
+
+        buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
+        buildConfigField("String", "MANGADEX_UPLOAD_URL", "\"https://uploads.mangadex.org\"")
+        buildConfigField("String", "MANGADEX_BASE_URL", "\"https://api.mangadex.org\"")
+        buildConfigField("String", "ANILIST_BASE_URL", "\"https://graphql.anilist.co\""
+        )
+    }
+    
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+}
+
+room {
+    schemaDirectory(path = "$projectDir/schema")
+}
+
+apollo {
+    service("anilist") {
+        packageName.set("br.acerola.manga.remote.anilist")
+        schemaFile.set(file("src/main/graphql/anilist/schema.graphqls"))
+        srcDir("src/main/graphql/anilist")
+    }
+}
+
+dependencies {
+    implementation(project(":infra"))
+
+    // --- Core ---
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // --- Compose Runtime (Only for @Immutable) ---
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime)
+
+    // --- DI ---
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+
+    // --- Database (Room) ---
+    implementation(libs.bundles.room)
+    ksp(libs.androidx.room.compiler)
+
+    // --- Networking (Retrofit + OkHttp + GraphQL) ---
+    ksp(libs.moshi.codegen)
+    implementation(libs.apollo.runtime)
+    implementation(libs.bundles.retrofit)
+    implementation(libs.apollo.normalized.cache)
+
+    // --- File & Utilities ---
+    implementation(libs.junrar)
+    implementation(libs.androidx.documentfile)
+
+    // --- Quality code ---
+    implementation(libs.arrow.core)
+    implementation(libs.arrow.fx.coroutines)
+
+    // --- Testing ---
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockwebserver)
+    testImplementation(libs.truth)
+    testImplementation(libs.robolectric)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+}

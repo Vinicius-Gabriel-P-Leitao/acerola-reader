@@ -1,0 +1,109 @@
+schema {
+  query: Query
+}
+
+type Query {
+  Media(id: Int, type: MediaType): Media
+  Page(page: Int, perPage: Int): Page
+}
+
+type Page {
+  pageInfo: PageInfo
+  media(search: String, type: MediaType, sort: [MediaSort]): [Media]
+}
+
+type PageInfo {
+  total: Int
+  currentPage: Int
+  lastPage: Int
+  hasNextPage: Boolean
+  perPage: Int
+}
+
+enum MediaSort {
+  ID
+  POPULARITY
+  POPULARITY_DESC
+  SCORE
+  SCORE_DESC
+  TRENDING
+  TRENDING_DESC
+  SEARCH_MATCH
+}
+
+enum MediaType {
+  ANIME
+  MANGA
+}
+
+enum MediaStatus {
+  FINISHED
+  RELEASING
+  NOT_YET_RELEASED
+  CANCELLED
+  HIATUS
+}
+
+enum StaffSort {
+  ID
+  ID_DESC
+  ROLE
+  ROLE_DESC
+  RELEVANCE
+  FAVOURITES
+  FAVOURITES_DESC
+}
+
+type Media {
+  id: Int!
+  title: MediaTitle
+  status: MediaStatus
+  description(asHtml: Boolean): String
+  genres: [String]
+  averageScore: Int
+  popularity: Int
+  trending: Int
+  startDate: FuzzyDate
+  staff(sort: [StaffSort]): StaffConnection
+  coverImage: MediaCoverImage
+  bannerImage: String
+}
+
+type MediaTitle {
+  romaji: String
+  english: String
+  native: String
+  userPreferred: String
+}
+
+type FuzzyDate {
+  year: Int
+  month: Int
+  day: Int
+}
+
+type StaffConnection {
+  edges: [StaffEdge]
+}
+
+type StaffEdge {
+  role: String
+  node: Staff
+}
+
+type Staff {
+  id: Int!
+  name: StaffName
+}
+
+type StaffName {
+  full: String
+  native: String
+}
+
+type MediaCoverImage {
+  extraLarge: String
+  large: String
+  medium: String
+  color: String
+}
