@@ -15,6 +15,7 @@ import br.acerola.manga.logging.LogSource
 import br.acerola.manga.core.worker.LibrarySyncWorker
 import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.DirectoryCase
+import br.acerola.manga.core.worker.WorkerContract
 import br.acerola.manga.util.normalizeChapter
 import br.acerola.manga.config.permission.FileSystemAccessManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -109,11 +110,11 @@ class ChapterArchiveViewModel @Inject constructor(
                         LibrarySyncWorker.KEY_MANGA_ID to mangaId
                     )
                 )
-                .addTag("library_sync")
+                .addTag(WorkerContract.TAG_LIBRARY_SYNC)
                 .build()
 
             workManager.enqueueUniqueWork(
-                "library_sync_$mangaId",
+                "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId",
                 ExistingWorkPolicy.KEEP,
                 syncRequest
             )

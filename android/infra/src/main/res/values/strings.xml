@@ -52,6 +52,17 @@
     <string name="sync_notification_channel_description">Notificações de progresso de sincronização
         de mangás</string>
 
+    <!-- Template Validation Errors -->
+    <string name="error_template_malformed_macro">Macro malformada: chave de fechamento ausente.</string>
+    <string name="error_template_invalid_macro">Macro inválida: %1$s</string>
+    <string name="error_template_chapter_required">Exatamente um {chapter} é obrigatório.</string>
+    <string name="error_template_decimal_duplicate">Apenas um {decimal} é permitido.</string>
+    <string name="error_template_extension_required">Exatamente um {extension} é obrigatório.</string>
+    <string name="error_template_chapter_before_decimal">{chapter} deve vir antes de {decimal}.</string>
+    <string name="error_template_chapter_before_extension">{chapter} deve vir antes de {extension}.</string>
+    <string name="error_template_decimal_before_extension">{decimal} deve vir antes de {extension}.</string>
+    <string name="error_template_extension_at_end">{extension} deve ser o último elemento do padrão.</string>
+
     <!-- Manga Status -->
     <string name="manga_status_ongoing">Em lançamento</string>
     <string name="manga_status_completed">Finalizado</string>

@@ -19,19 +19,18 @@ android {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        
-
         buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
         buildConfigField("String", "MANGADEX_UPLOAD_URL", "\"https://uploads.mangadex.org\"")
         buildConfigField("String", "MANGADEX_BASE_URL", "\"https://api.mangadex.org\"")
         buildConfigField("String", "ANILIST_BASE_URL", "\"https://graphql.anilist.co\""
         )
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -39,6 +38,10 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
     }
 
     kotlin {
@@ -51,7 +54,6 @@ android {
 room {
     schemaDirectory(path = "$projectDir/schema")
 }
-
 
 dependencies {
     implementation(project(":infra"))
@@ -89,6 +91,8 @@ dependencies {
     testImplementation(libs.mockwebserver)
     testImplementation(libs.truth)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.androidx.test.core.ktx)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

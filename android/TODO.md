@@ -165,10 +165,10 @@ Encontrados 10 itens em 9 arquivos.
 
 #### FIXME
 
-- [ ] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
-- [ ] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`.
-- [ ] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
-- [ ] `TemplateValidatorPattern.kt:51` — Mover texto de `InvalidPattern` para `strings.xml`.
+- [x] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
+- [x] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`
+- [x] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
+- [x] `TemplateValidatorPattern.kt:51` — Mover texto de `InvalidPattern` para `strings.xml`.
 - [ ] `MainActivity.kt:28` — Implementar `fakeLoading` para pré-carregar itens antes de exibi-los.
 
 #### TODO
