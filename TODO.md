@@ -1,15 +1,15 @@
+Tem razão, desculpa. Aqui está o README reorganizado em markdown:
+
+---
+
 # Acerola Leitor de Mangás
 
-Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que gerenciam sua própria biblioteca local de
-arquivos de mangás. Ele oferece uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriquecida com
-metadados de fontes online populares.
+Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que gerenciam sua própria biblioteca local de arquivos de mangás. Ele oferece uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriquecida com metadados de fontes online populares.
 
 ## Funcionalidades Principais
 
-* **Gerenciamento da Biblioteca Local:** Escaneia automaticamente suas pastas e arquivos de mangás (`.cbz`, `.cbr`) no
-  dispositivo e os organiza em uma biblioteca navegável.
-* **Metadados Automáticos:** Busca e exibe metadados ricos para seus mangás, como capas, descrições, informações do
-  autor e muito mais.
+* **Gerenciamento da Biblioteca Local:** Escaneia automaticamente suas pastas e arquivos de mangás (`.cbz`, `.cbr`) no dispositivo e os organiza em uma biblioteca navegável.
+* **Metadados Automáticos:** Busca e exibe metadados ricos para seus mangás, como capas, descrições, informações do autor e muito mais.
 * **Interface Personalizável:** Adapte a aparência da sua biblioteca à sua preferência.
 * **Leitor Integrado:** Leia seus mangás diretamente no aplicativo com um leitor projetado para uma experiência fluida.
 
@@ -21,18 +21,11 @@ metadados de fontes online populares.
 
 #### Biblioteca
 
-- [x] **Escaneamento da Biblioteca:** Escaneia as pastas especificadas para detectar mangás e capítulos, persistindo a estrutura em um banco de dados
-  local.
-- [x] **Sincronização da Biblioteca:** Mantém o banco de dados local sincronizado com o sistema de arquivos, detectando novas adições, renomeações e
-  exclusões.
+- [x] **Escaneamento da Biblioteca:** Escaneia as pastas especificadas para detectar mangás e capítulos, persistindo a estrutura em um banco de dados local.
+- [x] **Sincronização da Biblioteca:** Mantém o banco de dados local sincronizado com o sistema de arquivos, detectando novas adições, renomeações e exclusões.
 - [x] **Integração com MangaDex:** Busca automaticamente metadados de mangás do MangaDex com base nos nomes das pastas.
 - [x] **Tela Inicial (Home Screen):** Exibe todos os mangás da sua biblioteca com dois layouts: Lista e Grade.
 - [x] **Tela de Capítulos:** Mostra uma lista de todos os capítulos de um mangá selecionado com metadados detalhados.
-
-#### Correções (FIXME)
-
-- [x] **Bug no Primeiro Scan:** Corrigido o mapeamento de capítulos no primeiro scan.
-- [x] **Performance:** Reformulado o `loadPage` da seção de capítulos na tela de detalhes.
 
 #### Leitor e Configuração do Mangá
 
@@ -48,23 +41,41 @@ metadados de fontes online populares.
 
 - [x] **Gerenciamento de Metadados (ComicInfo.xml vs DB):** Gerar/ler `ComicInfo.xml`, resolver conflitos e persistir escolha.
 - [x] **Metadados de Capítulos (MangaDex):** Busca em background, desativada por padrão.
-- [x] **Redesign Flat (Material 3):** Reformulação total das telas de configuração para um visual plano e moderno, seguindo os padrões do Material
-  You.
-- [x] **Padronização de Fontes de Metadados:** Implementação do Enum `MetadataSource` de ponta a ponta (Banco -> Engine -> UI).
+- [x] **Redesign Flat (Material 3):** Reformulação total das telas de configuração.
+- [x] **Padronização de Fontes de Metadados:** Implementação do Enum `MetadataSource` de ponta a ponta (Banco → Engine → UI).
 - [x] **Feedback de Fonte Ativa:** Identificação visual (Badge/Check) da fonte que provê os metadados atuais.
 - [x] **Sincronização Contextual:** Botões de sincronizar capítulos aparecem apenas quando a fonte correspondente está ativa.
+- [x] **Globalizar idioma de metadados do MangaDex:** Metadados e busca padrão respeitam o idioma selecionado nas configurações.
+
+#### Fontes de Metadados
+
+- [x] **AniList como fonte alternativa:** Opção para escolher AniList como provedor de metadados.
+- [x] **Painel de configuração de provedor:** Seleção e configuração de MangaDex / AniList / ComicInfo com feedback de fonte ativa.
+- [x] **Correção de bug na troca de source:** Troca de source agora ocorre livremente, incluindo via `ConfigScreen`.
+- [x] **Refatoração RemoteInfo → Metadata:** Tabela de metadados agnóstica de origem, com tabelas auxiliares por source (MangaDex, AniList, ComicInfo).
+- [x] **Correção de erro 500 do AniList:** Erro quando mangá não tem metadados no AniList tratado corretamente na UI.
+
+#### Refatorações Estruturais
+
+- [x] **Renomeação RemoteInfo → Metadata:** Sem conflito de domínio, tabelas e colunas atualizadas.
+- [x] **Reorganização do módulo data:** Source e engine em harmonia.
 
 #### UI/UX
 
 - [x] **ChapterItem:** Visual reformulado.
 - [x] **Busca de Capítulos:** Por número (`chapterSort`), nome e nome do arquivo.
 - [x] **Redesenho da Barra Superior:** Visual mais clean (apple liquid glass) com tema dark.
-- [x] **Home Screen:** Ajuste de padding inferior para evitar sobreposição do FAB (FloatingTool) com os itens da lista.
+- [x] **Home Screen:** Ajuste de padding inferior para evitar sobreposição do FAB com os itens da lista.
+- [x] **Snackbar personalizada:** Variantes com tons vermelhos para erros e verdes para sucesso, de acordo com o tema.
+- [x] **Texto da SearchScreen centralizado.**
+- [x] **Cor dos dialogs em modo claro corrigida.**
+- [x] **Animação bugada da SearchBar corrigida** (ao sair de foco).
 
 #### Background e Performance
 
 - [x] **Notificações:** Syncs demorados rodam em background com progresso e notificação.
-- [x] **Correção de notificações:** Sync geral do MangaDex e outras funções corrigidos para notificar corretamente.
+- [x] **Correção de notificações:** Sync geral do MangaDex e outras funções corrigidos.
+- [x] **ProgressBar global na MainActivity:** Aparece em todas as telas.
 
 #### Rastreamento de Leitura
 
@@ -82,6 +93,34 @@ metadados de fontes online populares.
 - [x] **Integração com biblioteca:** Sync automático após download.
 - [x] **Correção:** Geração correta de `.cbz`/`.cbr` (sem extensão dupla `.cbz.zip`).
 - [x] **Metadados antes dos capítulos:** Baixa cover, gênero etc. antes de iniciar os capítulos.
+- [x] **Visualização melhorada:** Indicação visual de download ativo e fila de capítulos.
+- [x] **Paginação no download:** Mangás com 300+ capítulos exibidos de forma paginada com opção de baixar tudo em sequência.
+- [x] **Activity de download melhorada:** Botão "baixar tudo", seleção multi-página e bottom sheet reorganizados.
+- [x] **Patterns de regex configuráveis:** Patterns de nome de arquivo visíveis e selecionáveis pelo usuário.
+- [x] **Correção no download de cover e banner:** Usa corretamente o caminho do mangá em vez do path de salvamento.
+- [x] **SearchBar da tela de download corrigida** visualmente após busca.
+- [x] **Progresso de download** com visualização melhorada.
+- [x] **Verificação e download sob demanda de novos capítulos.**
+
+#### Filtros e Ordenação — Home Screen
+
+- [x] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
+- [x] **Persistência da ordenação** via DataStore.
+- [x] **UI do filtro:** Apenas ícone, sem label.
+- [x] **Mostrar ocultos** apenas quando filtrados.
+- [x] **Filtros sem DataStore:** Por bookmark, source de metadados ou sem metadados.
+
+#### Filtros e Ordenação — Tela de Capítulos
+
+- [x] **Removido autoscroll** ao trocar de página.
+- [x] **Ordenação Asc/Desc** por número do capítulo e última atualização.
+- [x] **Persistência da ordenação** por mangá via DataStore.
+- [x] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
+
+#### Ações por Mangá
+
+- [x] **Bookmark** no menu de ações do card do mangá.
+- [x] **Deletar ou ocultar mangá** no menu de ações.
 
 #### Temas
 
@@ -89,6 +128,13 @@ metadados de fontes online populares.
 - [x] **Catppuccin** como tema padrão com melhorias para o tema claro.
 - [x] **Dracula** (dark) e **Alucard** (claro).
 - [x] **Nord** em versões claro e escuro.
+- [x] **Bolinhas dos temas** adaptam cor e nome conforme dark/light em todos os temas.
+
+#### Patterns
+
+- [x] **Dialog de registrar pattern** mais descritivo: explica `{chapter}`, `{decimal}` e `*` corretamente.
+- [x] **Visualização da lista de patterns** corrigida.
+- [x] **Padronização do botão de pattern** ("Ver menos"/"Ver mais" consistente).
 
 #### Logs e Limpeza
 
@@ -99,137 +145,39 @@ metadados de fontes online populares.
 
 ### 🔲 Pendente
 
-#### ❗ Principal Mudar todos arquivos que usam RemoteInfo para Metadata:
+#### Snackbar — Uso das variantes
 
-- [x]  necessário para não ter conflito de dominio, vai ser tudo virado para Metadata de RemoteInfo, já que agora os
-  sources tem tabelas para eles mesmos, será mudado também nome de tabela e colunas.
+- [ ] **Mapear casos de sucesso e aviso** no código com `TODO:` e aplicar variantes da Snackbar (success/warn).
+  
+#### PatternScreen
 
-#### ❗ Corrigir bug com troca de source:
+- [ ] **Refatorar design da PatternScreen:** Atualmente funcional, mas visualmente não agradável. Repensar a forma como funciona.
 
-- [x] Problema com troca de qual source é o atual se eu coloco o Mangadex como source ele empreguina e não troca de
-  forma algum o source, o resto troca, mas o source que aparece em Manga.Layout.Header fica só Mangadex, já quando
-  via anilist eu consigo trocar, alguma coisa no Sync de métadados está quebrado principalmente quando faço o Sync
-  via ConfigScreen, a troca de source deve poder ocorrer de foram livre.
+#### Tutorial
 
-#### ❗ Principal refatoração e organização do modulo data:
+- [ ] **Tutorial introdutório:** Ensinar como selecionar a pasta de mangás e usar o botão de sync profundo.
 
-- [x] Organizar o modulo data de forma que o source e o engine consigam ficar armoniosos.
+---
 
-#### Fontes de Metadados Expandidas
+### 🛠️ TODOs e FIXMEs no Código
 
-- [x] Opção para escolher **AniList** como fonte alternativa de metadados.
-- [x] Painel de configurações para selecionar e configurar o provedor (MangaDex / AniList / ComicInfo) com feedback de fonte ativa.
+Encontrados 10 itens em 9 arquivos.
 
-#### Download via MangaDex
+#### FIXME
 
-- [x] **Melhorar visualização:** Indicar visualmente que o mangá está sendo baixado e exibir fila de capítulos.
-- [x] **Paginação no download:** Mangás com 300+ capítulos mostram apenas 0/100 — exibir de forma paginada e
-  permitir baixar tudo em sequência.
-- [x] **Melhorar activity de download** A activity tem três problemas não funciona o botão baixar tudo, não dá pra
-  selecionar tudo, trocar pagina e clicar no selecionar tudo e ele considerar a as duas paginas e o bottom sheet a
-  seção está bem desorganizada.
-- [x] **Patterns de regex configuráveis:** Tornar os patterns de nome de arquivo visíveis e permitir ao usuário
-  escolher qual usar no download.
-- [x] **Reorganziar a tabela de métadados:** Essa refatoração vai ter como intuito tranformar a tabela de métadados
-  agnóstica de origem dos dados e teremos tabelas pequenas auxiliares para poder atender essa relação, quero uma de
-  mangadex, anilist e outra de comicInfo, por que dissso o mangadex trás dados validos para armazenar como ID do
-  anilist e link para o produto original.
+- [ ] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
+- [ ] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`.
+- [ ] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
+- [ ] `TemplateValidatorPattern.kt:51` — Mover texto de `InvalidPattern` para `strings.xml`.
+- [ ] `MainActivity.kt:28` — Implementar `fakeLoading` para pré-carregar itens antes de exibi-los.
 
-#### Adicionar action no botão de ... de cada mangá
+#### TODO
 
-- [x] **Adicionar bookmark** Adicionar uma action de bookmark nos seção de action
-- [x] **Deletar ou ocutar manga** Adicionar action de deletar ou ocultar
-
-#### Filtros e Ordenação — Home Screen
-
-- [x] **Ordenação Asc/Desc** por: título, quantidade de capítulos e última atualização.
-- [x] **Persistência da ordenação** via DataStore.
-- [x] **UI do filtro:** Usar apenas ícone, sem label.
-- [x] **Mostrar os ocultos** Deixar os ocultos aparecerem só quando filtrados
-- [x] **Filtros sem salvar em dataStore:** Filtro por bookmark que o usuário criou, source de metadados ou sem metadados.
-
-#### Filtros e Ordenação — Tela de Capítulos
-
-- [x] **Remover autoscroll** ao trocar de página na tela de manga onde listam os chapters.
-- [x] **Ordenação Asc/Desc** por: número do capítulo e última atualização.
-- [x] **Persistência da ordenação** por mangá (ou global) via DataStore.
-- [x] **UI do filtro:** Ícone na barra superior abrindo bottom sheet.
-
-#### Verificar e Baixar Novos Capítulos
-
-- [x] **Download sob demanda:** O usuário seleciona quais capítulos quer baixar e confirma — só então
-  enfileira no download manager já existente.
-
-#### Otimizar visualmente tela de download
-
-- [x] **Melhorar searchbar** Melhorar a tela, atualmente os cards da searchbar não estão bonitos, eles estão quebrados visualmente, mas só depois
-  da busca.
-- [x] **Melhorar progresso de download** Listagem de downloads em progresso muito seco e ruim de visualizar.
-
-#### Fazer a seleção de temas mudar tanto a cor quando o nome do thema de acordo com Dark e Light
-
-- [x] **Adaptável** Mudar a cor das bolinhas de acordo com dark e light
-- [x] **Catppuccin** Mudar a cor das bolinhas de acordo com dark e light
-- [x] **Dracula** Mudar a cor das bolinhas de acordo com dark e light
-- [x] **Norde** Mudar a cor das bolinhas de acordo com dark e light
-
-#### Cor dos Dialog
-
-- [x] **Dialog em modo claro** Os dialogs em modo claro ficam estranho, com cor cinza como se estivesse disabled
-
-#### Globalizar seleção de idioma do mangádex, mas manter na tela de download a opção de busca
-
-- [x] **Troca de idioma de metadados do mangadex** Métadados devem ser baixados com o idioma selecionado, não deixar isso muito engessado no mangádex
-
-#### Texto na tela de SearchScreen
-
-- [x] **Texto descentralizado** O texto da tela de SearchScreen está descentralizado
-
-#### Melhorar o Dialog de registar novo pattern e fazer uma forma visual que mostra o máximo de 5
-
-- [x] **Dialog de registrar pattern** O dialog de registrar pattern deve ser mais descritivo e explicar melhor sobre o {chapter} {decimal} e o uso
-  do *,
-  e está atualmente errado {chapter} numero do chapter {decimal} se tiver valor decimal e * para qualquer coisa.
-- [x] **Visualização da lista de pattern** Corrigir string, está sem sentido.
-- [x] **Padronizar botão de pattern** Padronizar, atualemente quando tem Ver menos está em "VER MENOS" e com fonte maior, ou ver forma melhor de
-  gerenciar isso, já que podem ter diversos patterns de 5 a 20 talvez assim não escale visualmente, criar uma Screen nova seria bom?
-  FilePatternScreen?
-
-#### Fazer progressBar ser global na mainActivity
-
-- [x] **Main activity ter a progressBAr** A progressBar fica praticamente só na tela de HOME e CONFIG e as vezes buga, quero que apareça em todas
-  telas.
-
-#### Verificar erros de quando um mangá não tem métados no Anilist
-
-- [x] **Recebo só um erro 500** O código tá pegando erro de não ter metadados no ANilist e me retornando um erro interno na UI.
-
-#### Personalizar a Snackbar para ter variações.
-
-- [x] **Personalizar a snackBar** val snackbarHostState = remember { SnackbarHostState() } em
-  ui/src/main/java/br/acerola/manga/common/activity/BaseActivity.kt tem que ser personalizado, atualmente temos só uma snackBar branca que
-  retorna os erros, temos que ter uma de tons vermelhos de acordo com o tema e uma verde para caso de sucessos
-- [ ] **Fazer uso das variantes** Alguns casos de sucesso poderiam ter success e alguns de warn também, mapear com TODO:
-
-#### Refatorar para um design melhor a tela de pattern
-
-- [ ] **PatternScreen** Atualmente a tela é funcional, mas não está visualmente agradável, quero mudar a forma com que funciona.
-
-#### Corrigir erro no download de cover e banner
-
-- [x] **Download de cover e banner de qualquer mangá** Atualmente o código faz profundidade de scaneamento e o problema é que essas funções de
-  gerar cover usa o nome do manga/midia + o path escolhido para salvar e não onde os arquivos .cbz e .cbr estão, ele tem que usar o caminho do 
-  mangá. Isso também tá influenciando na função de Usar página do capitulo como cover, ao apagar cover tomo só erro interno.
-
-#### Globalizar idioma de metadados 
-
-- [x] **Adicionar campo no ConfigScreen** Os metadados e busca padrão para download do mangadex devem ser feitos pensando no idioma principal do
-  app, atualmente na Download além de hardcoded não está visualmente bonito, tem que ser remodelado.
-
-#### Resolver animação bugada da SearchBar
-
-- [x] **SearchBar** A animação bugada acontece quando ela sai de Focus, ou seja Entra na cobertura de tela e na hora de sair ela meio que cria uma
-  animação de esticado para baixo, com um padding
+- [ ] `LocalSnackbarHostState.kt:6` — Tratar melhor o erro de estado do Snackbar.
+- [ ] `FileSystemAccessManager.kt:20` — Tratar erros de forma mais personalizada.
+- [ ] `DownloadViewModel.kt:77` — Refatorar componente de progresso para não depender de strings internas do worker.
+- [ ] `TemplateValidatorPattern.kt:51` — Texto de erro `InvalidPattern` deve estar em `strings.xml`.
+- [ ] `ChapterSourceFactory.kt:14` — Usar erro traduzido respeitando o tratamento de erro do app.
 
 ---
 
@@ -237,8 +185,8 @@ metadados de fontes online populares.
 
 * **Linguagem:** [Kotlin](https://kotlinlang.org/)
 * **UI:** [Jetpack Compose](https://developer.android.com/jetpack/compose)
-* **Arquitetura:** MVVM (Model-View-ViewModel)
-* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) e [Flow](https://kotlinlang.org/docs/flow.html)
 * **Banco de Dados:** [Room](https://developer.android.com/training/data-storage/room)
 * **Carregamento de Imagens:** [Coil](https://coil-kt.github.io/coil/)
+* **Arquitetura:** MVVM (Model-View-ViewModel)
 * **Injeção de Dependências:** Manual (via ViewModelFactories)
+* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) e [Flow](https://kotlinlang.org/docs/flow.html)

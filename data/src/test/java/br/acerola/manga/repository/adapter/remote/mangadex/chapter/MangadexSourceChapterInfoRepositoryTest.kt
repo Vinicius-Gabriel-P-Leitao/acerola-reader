@@ -2,6 +2,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.chapter
 
 import android.content.Context
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexChapterInfoSource
+import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
@@ -13,8 +14,13 @@ import br.acerola.manga.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -34,8 +40,13 @@ class MangadexSourceChapterInfoRepositoryTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
+        mockkObject(MetadataPreference)
+        every { MetadataPreference.metadataLanguageFlow(context) } returns flowOf(LanguagePattern.PT_BR.code)
         repository = MangadexChapterInfoSource(api, context)
     }
+
+    @After
+    fun tearDown() = unmockkObject(MetadataPreference)
 
     @Test
     fun `searchInfo deve paginar corretamente ate buscar todos os capitulos`() = runTest {
