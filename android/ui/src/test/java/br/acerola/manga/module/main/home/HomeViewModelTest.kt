@@ -180,7 +180,7 @@ class HomeViewModelTest {
 
         viewModel.mangas.test {
             var items = awaitItem()
-            if (items.size == 2 && items[0].first.directory.name == "B Manga") items = awaitItem()
+            while (items == null || (items.size == 2 && items[0].first.directory.name == "B Manga")) items = awaitItem()
             assertThat(items[0].first.directory.name).isEqualTo("A Manga")
             assertThat(items[1].first.directory.name).isEqualTo("B Manga")
         }
@@ -204,7 +204,7 @@ class HomeViewModelTest {
 
         viewModel.mangas.test {
             var items = awaitItem()
-            if (items.size == 2 && items[0].first.directory.name == "A Manga") items = awaitItem()
+            while (items == null || (items.size == 2 && items[0].first.directory.name == "A Manga")) items = awaitItem()
             assertThat(items[0].first.directory.name).isEqualTo("B Manga")
             assertThat(items[1].first.directory.name).isEqualTo("A Manga")
         }
@@ -224,7 +224,7 @@ class HomeViewModelTest {
 
         viewModel.mangas.test {
             var items = awaitItem()
-            if (items.size == 2) items = awaitItem()
+            while (items == null || items.size == 2) items = awaitItem()
             assertThat(items).hasSize(1)
             assertThat(items[0].first.directory.id).isEqualTo(1L)
         }
