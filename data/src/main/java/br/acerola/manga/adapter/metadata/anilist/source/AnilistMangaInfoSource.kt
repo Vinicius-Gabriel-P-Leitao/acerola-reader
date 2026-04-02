@@ -5,6 +5,8 @@ import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.translator.remote.toViewDto
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.remote.anilist.AnilistApollo
 import br.acerola.manga.remote.anilist.MediaDetailsQuery
 import com.apollographql.apollo.ApolloClient
@@ -36,11 +38,25 @@ class AnilistMangaInfoSource @Inject constructor(
                 .query(MediaDetailsQuery(id = Optional.present(anilistId)))
                 .execute()
 
+            if (response.hasErrors()) {
+                val error = response.errors?.firstOrNull()
+                AcerolaLogger.e("AnilistMangaInfoSource", "GraphQL error: ${error?.message}")
+                if (response.data == null) {
+                    throw Exception(error?.message ?: "GraphQL Error")
+                }
+            }
+
             val media = response.data?.Media
                 ?: return@catch emptyList<MangaMetadataDto>()
 
             listOf(media.toViewDto())
-        }.mapLeft { NetworkError.UnexpectedError(cause = it) }
+        }.mapLeft { throwable ->
+            when (throwable) {
+                is com.apollographql.apollo.exception.ApolloNetworkException -> NetworkError.ConnectionFailed(cause = throwable)
+                is com.apollographql.apollo.exception.ApolloHttpException -> NetworkError.HttpError(code = throwable.statusCode, cause = throwable)
+                else -> NetworkError.UnexpectedError(cause = throwable)
+            }
+        }
     }
 
     override suspend fun saveInfo(

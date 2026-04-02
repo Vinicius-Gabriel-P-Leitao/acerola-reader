@@ -46,25 +46,32 @@ class CoverExtractor @Inject constructor(
 
         val chapterDto = firstChapter.toViewDto()
 
-        chapterSourceFactory.create(chapterDto).mapLeft { 
-            IoError.FileReadError(chapterDto.path, Exception(it.toString())) 
+        chapterSourceFactory.create(chapterDto).mapLeft {
+            IoError.FileReadError(chapterDto.path, Exception(it.toString()))
         }.flatMap { source ->
             try {
-                source.openPage(0).mapLeft { 
-                    IoError.FileReadError(chapterDto.path, Exception(it.toString())) 
+                source.openPage(0).mapLeft {
+                    IoError.FileReadError(chapterDto.path, Exception(it.toString()))
                 }.flatMap { inputStream ->
                     val bitmap = BitmapFactory.decodeStream(inputStream)
                         ?: return@flatMap IoError.FileReadError(chapterDto.path, Exception("Failed to decode bitmap")).left()
-                    
+
                     val outputStream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
                     val bytes = outputStream.toByteArray()
                     bitmap.recycle()
+
+                    folderDoc.listFiles().forEach { file ->
+                        val fileName = file.name ?: return@forEach
+                        if (MediaFilePattern.isCover(fileName)) {
+                            file.delete()
+                        }
+                    }
 
                     fileStorageHandler.saveFile(
                         folder = folderDoc,
                         fileName = MediaFilePattern.COVER.defaultFileName,
-                        mimeType = "image/png",
+                        mimeType = "image/jpeg",
                         bytes = bytes
                     ).also { result ->
                         if (result.isRight()) {

@@ -40,11 +40,12 @@ class MangadexSearchDownloadSource @Inject constructor(
 
     override suspend fun getChaptersByLanguage(
         mangaId: String,
-        language: String,
+        language: String?,
         limit: Int,
         offset: Int
     ): Either<NetworkError, Pair<List<ChapterMetadataDto>, Int>> {
-        AcerolaLogger.d(TAG, "Fetching chapters for manga $mangaId in $language (offset: $offset)", LogSource.NETWORK)
+        AcerolaLogger.d(TAG, "Fetching chapters for manga $mangaId in ${language ?: "all"} (offset: $offset)", LogSource.NETWORK)
+
         return downloadManager.listChaptersByLanguage(mangaId, language, limit, offset).also { result ->
             result.onRight { (chapters, total) ->
                 AcerolaLogger.i(TAG, "Got ${chapters.size} chapters (total: $total)", LogSource.NETWORK)

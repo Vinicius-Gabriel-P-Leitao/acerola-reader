@@ -36,7 +36,8 @@ import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.FloatingTool
 import br.acerola.manga.common.ux.component.FloatingToolItem
 import br.acerola.manga.common.ux.component.SearchBar
-import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.config.preference.HomeLayoutType
 import br.acerola.manga.dto.MangaDto
@@ -61,13 +62,12 @@ fun Main.Home.Layout.Screen(
 
     LaunchedEffect(Unit) {
         homeViewModel.uiEvents.collect { message ->
-            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
         }
     }
 
     val layout by homeViewModel.selectedHomeLayout.collectAsStateWithLifecycle()
     val isIndexing by homeViewModel.isIndexing.collectAsStateWithLifecycle()
-    val progress by homeViewModel.progress.collectAsStateWithLifecycle()
     val mangas by homeViewModel.mangas.collectAsStateWithLifecycle()
     val allCategories by homeViewModel.allCategories.collectAsStateWithLifecycle()
     val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
@@ -76,7 +76,6 @@ fun Main.Home.Layout.Screen(
     val uiState = HomeUiState(
         layout = layout,
         isIndexing = isIndexing,
-        indexingProgress = if (progress >= 0) progress / 100f else null,
         mangas = mangas,
         sortType = sortSettings.type,
         sortDirection = sortSettings.direction,
@@ -87,7 +86,7 @@ fun Main.Home.Layout.Screen(
     var showFilterSheet by remember { mutableStateOf(false) }
 
     var query by rememberSaveable { mutableStateOf("") }
-    var searchActive by rememberSaveable { mutableStateOf(false) }
+    var searchExpanded by rememberSaveable { mutableStateOf(false) }
 
     val filteredMangas = remember(query, uiState.mangas) {
         if (query.isEmpty()) {
@@ -121,110 +120,103 @@ fun Main.Home.Layout.Screen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
-                query = query,
-                onQueryChange = { query = it },
-                onSearch = { searchActive = false },
-                active = searchActive,
-                onActiveChange = { searchActive = it },
-                items = filteredMangas,
-                placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-                itemKey = { (manga, _, _) -> manga.directory.id },
-                modifier = Modifier.padding(all = 6.dp),
-                itemContent = { (manga, history, chapterCount) ->
-                    Main.Common.Component.MangaListItem(
-                        manga = manga,
-                        chapterCount = chapterCount,
-                        onPlayClick = history?.let {
-                            { onAction(HomeAction.ClickContinue(manga, it)) }
-                        },
-                        onClick = { onAction(HomeAction.ClickManga(manga)) }
-                    )
-                })
+        if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
+            EmptyState()
+        } else {
+            val gridCells = when (uiState.layout) {
+                HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
+                HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
+            }
 
-            if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
-                EmptyState()
-            } else {
-                val gridCells = when (uiState.layout) {
-                    HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
-                    HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
-                }
+            LazyVerticalGrid(
+                columns = gridCells,
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+                contentPadding = PaddingValues(start = 8.dp, top = 72.dp, end = 8.dp, bottom = 80.dp),
+            ) {
+                items(items = if (searchExpanded) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
+                    when (uiState.layout) {
+                        HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
+                            manga = manga,
+                            history = history,
+                            chapterCount = chapterCount,
+                            onShowActions = { selectedMangaForActions = manga },
+                            onClick = { onAction(HomeAction.ClickManga(manga)) }
+                        )
 
-                LazyVerticalGrid(
-                    columns = gridCells,
-                    contentPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp)
-                ) {
-                    items(items = uiState.mangas) { (manga, history, chapterCount) ->
-                        when (uiState.layout) {
-                            HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
-                                manga = manga,
-                                history = history,
-                                chapterCount = chapterCount,
-                                onShowActions = { selectedMangaForActions = manga },
-                                onClick = { onAction(HomeAction.ClickManga(manga)) }
-                            )
-
-                            HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
-                                manga = manga,
-                                chapterCount = chapterCount,
-                                subtitle = manga.remoteInfo?.authors?.name,
-                                onClick = { onAction(HomeAction.ClickManga(manga)) },
-                                onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
-                                onShowActions = { selectedMangaForActions = manga },
-                            )
-                        }
+                        HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
+                            manga = manga,
+                            chapterCount = chapterCount,
+                            subtitle = manga.remoteInfo?.authors?.name,
+                            onClick = { onAction(HomeAction.ClickManga(manga)) },
+                            onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
+                            onShowActions = { selectedMangaForActions = manga },
+                        )
                     }
                 }
             }
         }
 
-        Acerola.Component.FloatingTool(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)
-                )
-            }, items = listOf(
-                FloatingToolItem(
-                    onClick = {
-                        onAction(HomeAction.UpdateLayout(
-                            layout = when (uiState.layout) {
-                                HomeLayoutType.LIST -> HomeLayoutType.GRID
-                                HomeLayoutType.GRID -> HomeLayoutType.LIST
-                            }
-                        ))
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = if (uiState.layout == HomeLayoutType.GRID) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
-                            contentDescription = stringResource(id = R.string.description_icon_home_change_layout)
-                        )
-                    },
-                ),
-
-                FloatingToolItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
-                        )
-                    }, onClick = { showFilterSheet = true })
-            )
-        )
-
-        Box(
-            contentAlignment = Alignment.BottomStart,
+        Acerola.Component.SearchBar<Triple<MangaDto, ReadingHistoryDto?, Int>>(
+            query = query,
+            items = filteredMangas,
+            expanded = searchExpanded,
+            onQueryChange = { query = it },
+            onSearch = { searchExpanded = false },
+            onExpandedChange = { searchExpanded = it },
+            contentPadding = PaddingValues(bottom = 16.dp),
+            itemKey = { (manga, _, _) -> manga.directory.id },
+            placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 8.dp),
-        ) {
-            Acerola.Layout.ProgressIndicator(
-                isLoading = uiState.isIndexing,
-                progress = uiState.indexingProgress,
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp),
+            itemContent = { (manga, history, chapterCount) ->
+                Main.Common.Component.MangaListItem(
+                    manga = manga,
+                    chapterCount = chapterCount,
+                    onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
+                    onClick = { onAction(HomeAction.ClickManga(manga)) }
+                )
+            })
+
+        if (!searchExpanded) {
+            Acerola.Component.FloatingTool(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)
+                    )
+                }, items = listOf(
+                    FloatingToolItem(
+                        onClick = {
+                            onAction(
+                                HomeAction.UpdateLayout(
+                                    layout = when (uiState.layout) {
+                                        HomeLayoutType.LIST -> HomeLayoutType.GRID
+                                        HomeLayoutType.GRID -> HomeLayoutType.LIST
+                                    }
+                                )
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (uiState.layout == HomeLayoutType.GRID) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
+                                contentDescription = stringResource(id = R.string.description_icon_home_change_layout)
+                            )
+                        },
+                    ),
+
+                    FloatingToolItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                            )
+                        }, onClick = { showFilterSheet = true })
+                )
             )
+
         }
 
         val activeManga = selectedMangaForActions

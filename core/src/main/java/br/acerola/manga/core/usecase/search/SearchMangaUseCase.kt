@@ -1,12 +1,12 @@
 package br.acerola.manga.core.usecase.search
 
 import arrow.core.Either
-import br.acerola.manga.pattern.MangadexPattern
+import br.acerola.manga.adapter.contract.provider.DownloadProvider
+import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.error.message.NetworkError
-import br.acerola.manga.adapter.contract.provider.DownloadProvider
-import br.acerola.manga.adapter.metadata.mangadex.MangadexSource
+import br.acerola.manga.pattern.MangadexPattern
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,16 +17,14 @@ class SearchMangaUseCase @Inject constructor(
     suspend fun search(query: String): Either<NetworkError, List<MangaMetadataDto>> {
         val mangadexId = extractMangadexId(query)
 
-        return if (mangadexId != null) {
-            downloadProvider.getMangaById(mangadexId).map { listOf(it) }
-        } else {
-            downloadProvider.searchMangaByTitle(query)
-        }
+        return if (mangadexId != null) downloadProvider.getMangaById(mangadexId).map { listOf(it) }
+        else downloadProvider.searchMangaByTitle(query)
+
     }
 
     suspend fun getChaptersByLanguage(
         mangaId: String,
-        language: String,
+        language: String?,
         page: Int = 0,
         limit: Int = 100,
     ): Either<NetworkError, Pair<List<ChapterMetadataDto>, Int>> =

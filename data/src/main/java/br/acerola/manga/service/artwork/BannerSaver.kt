@@ -2,6 +2,7 @@ package br.acerola.manga.service.artwork
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.flatMap
@@ -37,30 +38,38 @@ class BannerSaver @Inject constructor(
         mangaRemoteInfoFk: Long
     ): Either<IoError, Long> = withContext(Dispatchers.IO) {
         try {
-            val rootDir = DocumentFile.fromTreeUri(context, rootUri)
-                ?: return@withContext IoError.FileNotFound("Root directory not accessible").left()
+            val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
+                ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
-            val mangaDir = rootDir.findFile(mangaFolderName)
-                ?: rootDir.createDirectory(mangaFolderName)
-                ?: return@withContext IoError.FileWriteError(
-                    mangaFolderName, Exception("Could not create manga directory")
-                ).left()
+            val mangaDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
+
+            if (mangaDir == null || !mangaDir.isDirectory) {
+                AcerolaLogger.e(TAG, "Manga directory not accessible for ${directory.path}", LogSource.REPOSITORY)
+                return@withContext IoError.FileNotFound("Manga directory not accessible").left()
+            }
+
+            AcerolaLogger.d(TAG, "Saving banner to directory: ${mangaDir.uri}", LogSource.REPOSITORY)
+
+            mangaDir.listFiles().forEach { file ->
+                val fileName = file.name ?: return@forEach
+                if (MediaFilePattern.isBanner(fileName)) {
+                    file.delete()
+                }
+            }
 
             val fileName = MediaFilePattern.BANNER.defaultFileName
 
             fileStorageHandler.saveFile(
                 folder = mangaDir,
                 fileName = fileName,
-                mimeType = "image/png",
+                mimeType = "image/jpeg",
                 bytes = bytes
             ).flatMap {
-                val savedUriString = mangaDir.findFile(fileName)?.uri?.toString()
+                val savedFile = mangaDir.findFile(fileName)
+                val savedUriString = savedFile?.uri?.toString()
 
                 if (savedUriString != null) {
-                    val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
-                    if (directory != null) {
-                        directoryDao.update(entity = directory.copy(banner = savedUriString))
-                    }
+                    directoryDao.update(directory.copy(banner = savedUriString))
                 }
 
                 val bannerEntity = Banner(
@@ -76,11 +85,9 @@ class BannerSaver @Inject constructor(
                     val existing = bannerDao.getBannerByFileNameAndFk(
                         fileName = fileName,
                         mangaRemoteInfoFk = mangaRemoteInfoFk
-                    ) ?: return@flatMap IoError.FileWriteError(
-                        fileName, Exception("Database inconsistency: Banner not found for update")
-                    ).left()
+                    ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
 
-                    bannerDao.update(entity = existing.copy(url = bannerUrl, fileName = fileName))
+                    bannerDao.update(existing.copy(url = bannerUrl, fileName = fileName))
                     existing.id
                 }
                 finalId.right()
@@ -94,7 +101,6 @@ class BannerSaver @Inject constructor(
     }
 
     companion object {
-
         private const val TAG = "MangaSaveBannerService"
     }
 }

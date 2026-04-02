@@ -14,6 +14,6 @@ interface DownloadProvider {
     ): Either<NetworkError, List<MangaMetadataDto>>
 
     suspend fun getChaptersByLanguage(
-        mangaId: String, language: String, limit: Int = 100, offset: Int = 0
+        mangaId: String, language: String? = null, limit: Int = 100, offset: Int = 0
     ): Either<NetworkError, Pair<List<ChapterMetadataDto>, Int>>
 }

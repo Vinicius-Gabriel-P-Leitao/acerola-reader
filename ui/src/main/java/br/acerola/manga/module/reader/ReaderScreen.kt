@@ -22,6 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.dto.archive.ChapterFileDto
@@ -58,7 +60,7 @@ fun ReaderScreen(
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { message ->
-            snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
         }
     }
 

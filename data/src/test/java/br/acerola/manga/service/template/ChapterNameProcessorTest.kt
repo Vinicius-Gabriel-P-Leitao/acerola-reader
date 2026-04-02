@@ -30,17 +30,17 @@ class ChapterNameProcessorTest {
 
     @Test
     fun `deve anexar a extensao automaticamente se o usuario nao a prover`() = runTest {
-        val result = service.addTemplate("Meu Template", "Cap. {value}")
+        val result = service.addTemplate("Meu Template", "Cap. {chapter}")
         
         assertTrue(result.isRight())
         // O mock insere qualquer coisa, mas podemos testar a validacao embutida.
         // Se a validacao falhar, ele retorna um Either.Left. Como retornou Right,
-        // significa que a transformacao "Cap. {value}*{extension}" foi valida.
+        // significa que a transformacao "Cap. {chapter}*{extension}" foi valida.
     }
 
     @Test
     fun `deve remover lixo apos a extensao caso o usuario forneca`() = runTest {
-        val result = service.addTemplate("Template com Lixo", "Ch. {value}{extension} LixoAqui")
+        val result = service.addTemplate("Template com Lixo", "Ch. {chapter}{extension} LixoAqui")
         
         assertTrue(result.isRight())
         // Como validou, o "LixoAqui" foi removido corretamente, tornando o padrao valido.
@@ -53,7 +53,7 @@ class ChapterNameProcessorTest {
         assertTrue(result.isLeft())
         result.onLeft { 
             assertTrue(it is TemplateError.InvalidPattern)
-            assertEquals("Exactly one {value} is required", (it as TemplateError.InvalidPattern).reason)
+            assertEquals("Exactly one {chapter} is required", (it as TemplateError.InvalidPattern).reason)
         }
     }
 }

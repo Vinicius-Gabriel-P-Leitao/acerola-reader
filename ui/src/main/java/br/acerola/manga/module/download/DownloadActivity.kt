@@ -9,7 +9,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.module.download.layout.DownloadScreen
 import br.acerola.manga.ui.R
 import dagger.hilt.android.AndroidEntryPoint
 

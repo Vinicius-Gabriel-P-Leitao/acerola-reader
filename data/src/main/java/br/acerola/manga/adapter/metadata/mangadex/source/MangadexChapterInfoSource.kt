@@ -1,17 +1,22 @@
 package br.acerola.manga.adapter.metadata.mangadex.source
 
+import android.content.Context
 import arrow.core.Either
 import br.acerola.manga.adapter.contract.provider.MetadataProvider
 import br.acerola.manga.config.network.safeApiCall
+import br.acerola.manga.config.preference.MetadataPreference
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.error.message.NetworkError
 import br.acerola.manga.local.translator.remote.toViewDto
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.remote.mangadex.api.MangadexChapterMetadataClient
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -20,20 +25,24 @@ import javax.inject.Singleton
 
 @Singleton
 class MangadexChapterInfoSource @Inject constructor(
-    private val api: MangadexChapterMetadataClient
+    private val api: MangadexChapterMetadataClient,
+    @ApplicationContext private val context: Context
 ) : MetadataProvider<ChapterMetadataDto, String> {
 
     override suspend fun searchInfo(
         manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
     ): Either<NetworkError, List<ChapterMetadataDto>> = withContext(context = Dispatchers.IO) {
-        AcerolaLogger.d(TAG, "GET /manga/$manga/feed initiated (offset: $offset)", LogSource.NETWORK)
+        val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
+        val languagesList = listOf(preferredLanguage)
+        
+        AcerolaLogger.d(TAG, "GET /manga/$manga/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
+        
         val allChapters = mutableListOf<ChapterMetadataDto>()
         val semaphore = Semaphore(permits = 3)
         var currentOffset = offset
-
         var error: NetworkError? = null
 
-        val initialResponseResult = safeApiCall { api.getMangaFeed(mangaId = manga, limit = 1, offset = 0) }
+        val initialResponseResult = safeApiCall { api.getMangaFeed(mangaId = manga, languages = languagesList, limit = 1, offset = 0) }
         val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
 
         while (true) {
@@ -43,7 +52,7 @@ class MangadexChapterInfoSource @Inject constructor(
             }
 
             val responseFeedResult = safeApiCall {
-                api.getMangaFeed(mangaId = manga, limit = limit, offset = currentOffset)
+                api.getMangaFeed(mangaId = manga, languages = languagesList, limit = limit, offset = currentOffset)
             }
 
             if (responseFeedResult is Either.Left) {

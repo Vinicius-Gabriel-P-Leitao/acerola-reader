@@ -5,7 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +40,7 @@ import br.acerola.manga.common.ux.component.Button
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.manga.Manga
+import br.acerola.manga.pattern.MangaStatusPattern
 import br.acerola.manga.ui.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -140,16 +149,14 @@ fun Manga.Layout.Header(
                         Text(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge,
-                            text = manga.remoteInfo?.authors?.name
-                                ?: stringResource(id = R.string.manga_header_unknown),
+                            text = manga.remoteInfo?.authors?.name ?: stringResource(id = R.string.manga_header_unknown),
                         )
 
                         Spacer(modifier = Modifier.height(height = 8.dp))
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            StatusBadge(
-                                status = manga.remoteInfo?.status ?: stringResource(id = R.string.manga_header_unknown)
-                            )
+                            val status = MangaStatusPattern.fromRawValue(manga.remoteInfo?.status)
+                            StatusBadge(status = stringResource(id = status.stringRes))
                             manga.remoteInfo?.syncSource?.let { source ->
                                 SourceBadge(source = source.displayName)
                             }

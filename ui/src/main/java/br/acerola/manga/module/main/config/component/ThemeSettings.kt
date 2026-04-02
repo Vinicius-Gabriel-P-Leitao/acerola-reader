@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.manga.common.ux.theme.color.Alucard
+import br.acerola.manga.common.ux.theme.color.CatppuccinLatte
 import br.acerola.manga.common.ux.theme.color.CatppuccinMocha
 import br.acerola.manga.common.ux.theme.color.Dracula
 import br.acerola.manga.common.ux.theme.color.NordDark
@@ -106,8 +107,8 @@ fun Main.Config.Component.ThemeSettings(
             items(themes) { theme ->
                 ThemeCard(
                     modifier = Modifier.width(150.dp),
-                    title = getThemeTitle(theme),
-                    subtitle = getThemeSubtitle(theme),
+                    title = getThemeTitle(theme, isDark),
+                    subtitle = getThemeSubtitle(theme, isDark),
                     selected = currentTheme == theme,
                     colors = getThemeColors(theme, isDark, context),
                     onClick = { onThemeChange(theme) }
@@ -118,21 +119,21 @@ fun Main.Config.Component.ThemeSettings(
 }
 
 @Composable
-private fun getThemeTitle(theme: AppTheme): String {
+private fun getThemeTitle(theme: AppTheme, isDark: Boolean): String {
     return when (theme) {
         AppTheme.CATPPUCCIN -> stringResource(R.string.title_settings_catppuccin_theme)
         AppTheme.NORD -> stringResource(R.string.title_settings_nord_theme)
-        AppTheme.DRACULA -> stringResource(R.string.title_settings_dracula_theme)
+        AppTheme.DRACULA -> if (isDark) stringResource(R.string.title_settings_dracula_theme) else stringResource(R.string.title_settings_alucard_theme)
         AppTheme.DYNAMIC -> stringResource(R.string.title_settings_dynamic_color)
     }
 }
 
 @Composable
-private fun getThemeSubtitle(theme: AppTheme): String {
+private fun getThemeSubtitle(theme: AppTheme, isDark: Boolean): String {
     return when (theme) {
-        AppTheme.CATPPUCCIN -> stringResource(R.string.subtitle_settings_catppuccin_theme)
-        AppTheme.NORD -> stringResource(R.string.subtitle_settings_nord_theme)
-        AppTheme.DRACULA -> stringResource(R.string.subtitle_settings_dracula_theme)
+        AppTheme.CATPPUCCIN -> if (isDark) stringResource(R.string.subtitle_settings_mocha_theme) else stringResource(R.string.subtitle_settings_latte_theme)
+        AppTheme.NORD -> if (isDark) stringResource(R.string.subtitle_settings_nord_dark_theme) else stringResource(R.string.subtitle_settings_nord_light_theme)
+        AppTheme.DRACULA -> if (isDark) stringResource(R.string.subtitle_settings_vampire_theme) else stringResource(R.string.subtitle_settings_dracula_theme)
         AppTheme.DYNAMIC -> stringResource(R.string.subtitle_settings_dynamic_color)
     }
 }
@@ -145,13 +146,21 @@ private fun getThemeColors(
 ): List<Color> {
     return when (theme) {
         AppTheme.DYNAMIC -> dynamicColorsFromContext(context, isDark)
-        AppTheme.CATPPUCCIN -> listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
-        AppTheme.DRACULA -> if (isDark) listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan) else listOf(
-            Alucard.Purple, Alucard.Pink, Alucard.Cyan
-        )
-        AppTheme.NORD -> if (isDark) listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary) else listOf(
-            NordLight.Primary, NordLight.Secondary, NordLight.Tertiary
-        )
+        AppTheme.CATPPUCCIN -> if (isDark) {
+            listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
+        } else {
+            listOf(CatppuccinLatte.Mauve, CatppuccinLatte.Pink, CatppuccinLatte.Sky)
+        }
+        AppTheme.DRACULA -> if (isDark) {
+            listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan)
+        } else {
+            listOf(Color(0xFF6272A4), Color(0xFFFF79C6), Color(0xFF8BE9FD))
+        }
+        AppTheme.NORD -> if (isDark) {
+            listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary)
+        } else {
+            listOf(Color(0xFF88C0D0), Color(0xFF81A1C1), Color(0xFF8FBCBB))
+        }
     }
 }
 
@@ -162,9 +171,10 @@ private fun dynamicColorsFromContext(
 ): List<Color> {
     return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
         val scheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        listOf(scheme.primary, scheme.secondary, scheme.tertiary)
+        
+        listOf(scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer)
     } else {
-        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
+        listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
     }
 }
 
@@ -211,12 +221,13 @@ private fun ThemeCard(
                     horizontalArrangement = Arrangement.spacedBy((-12).dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val dotBorderColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.1f)
                     colors.forEach { color ->
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
                                 .background(color, CircleShape)
-                                .border(1.5.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                                .border(1.5.dp, dotBorderColor, CircleShape)
                         )
                     }
                 }

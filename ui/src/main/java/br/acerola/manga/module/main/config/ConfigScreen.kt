@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -25,8 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import br.acerola.manga.common.ux.Acerola
-import br.acerola.manga.common.ux.layout.ProgressIndicator
+import br.acerola.manga.common.ux.component.SnackbarVariant
+import br.acerola.manga.common.ux.component.showSnackbar
 import br.acerola.manga.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.manga.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.manga.common.viewmodel.library.archive.MangaDirectoryViewModel
@@ -35,18 +34,18 @@ import br.acerola.manga.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.manga.common.viewmodel.theme.ThemeViewModel
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.component.GlobalCategoryManager
+import br.acerola.manga.module.main.config.component.LanguageSettings
 import br.acerola.manga.module.main.config.component.MetadataExportSettings
 import br.acerola.manga.module.main.config.component.SelectFolder
 import br.acerola.manga.module.main.config.component.SyncAnilistData
 import br.acerola.manga.module.main.config.component.SyncLibraryArchive
 import br.acerola.manga.module.main.config.component.SyncMangadexData
+import br.acerola.manga.module.main.config.component.TemplateManager
 import br.acerola.manga.module.main.config.component.ThemeSettings
 import br.acerola.manga.module.main.config.state.ConfigAction
 import br.acerola.manga.module.main.config.state.ConfigUiState
 import br.acerola.manga.ui.R
 import kotlinx.coroutines.launch
-
-import br.acerola.manga.module.main.config.component.TemplateManager
 
 @Composable
 fun Main.Config.Layout.Screen(
@@ -55,7 +54,7 @@ fun Main.Config.Layout.Screen(
     mangaDirectoryViewModel: MangaDirectoryViewModel = hiltViewModel(),
     mangaDexViewModel: MangaMetadataViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
-    templateViewModel: TemplateConfigViewModel = hiltViewModel()
+    onNavigateToTemplates: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -65,65 +64,61 @@ fun Main.Config.Layout.Screen(
     LaunchedEffect(Unit) {
         launch {
             fileSystemAccessViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             mangaDirectoryViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             mangaDexViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             metadataSettingsViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
         launch {
             themeViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context))
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
     }
 
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
+    val metadataLanguage by metadataSettingsViewModel.metadataLanguage.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
-    val templates by templateViewModel.templates.collectAsState()
-
-    val libraryIndexing by mangaDirectoryViewModel.isIndexing.collectAsState()
-    val libraryProgress by mangaDirectoryViewModel.progress.collectAsState()
-
-    val metadataIndexing by mangaDexViewModel.isIndexing.collectAsState()
-    val metadataProgress by mangaDexViewModel.progress.collectAsState()
-
+    val folderName by fileSystemAccessViewModel.folderName.collectAsState()
+ 
     val uiState = ConfigUiState(
         selectedTheme = selectedTheme,
         folderUri = fileSystemAccessViewModel.folderUri,
+        folderName = folderName,
         generateComicInfo = generateComicInfo,
-        isLibraryIndexing = libraryIndexing,
-        libraryProgress = if (libraryProgress >= 0) libraryProgress / 100f else null,
-        isMetadataIndexing = metadataIndexing,
-        metadataProgress = if (metadataProgress >= 0) metadataProgress / 100f else null
+        metadataLanguage = metadataLanguage,
     )
-
+ 
     val onAction: (ConfigAction) -> Unit = { action ->
         when (action) {
             is ConfigAction.UpdateTheme -> themeViewModel.setTheme(action.theme)
             is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
             is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
+            is ConfigAction.UpdateMetadataLanguage -> metadataSettingsViewModel.setMetadataLanguage(action.language)
             ConfigAction.DeepScanLibrary -> mangaDirectoryViewModel.deepScanLibrary()
             ConfigAction.QuickSyncLibrary -> mangaDirectoryViewModel.syncLibrary()
             ConfigAction.SyncMangadexMetadata -> mangaDexViewModel.rescanMangas()
             ConfigAction.SyncAnilistMetadata -> mangaDexViewModel.rescanAnilistMangas()
             is ConfigAction.CreateCategory -> mangaDexViewModel.createCategory(action.name, action.color)
             is ConfigAction.DeleteCategory -> mangaDexViewModel.deleteCategory(action.id)
+            ConfigAction.NavigateToTemplateConfig -> onNavigateToTemplates()
         }
     }
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -136,14 +131,11 @@ fun Main.Config.Layout.Screen(
                     .fillMaxSize()
                     .verticalScroll(scrollState),
             ) {
-                ConfigHeader()
-
                 // NOTE: Arquivos Locais
                 SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
 
                 Main.Config.Component.SelectFolder(
-                    context = context,
-                    folderUri = uiState.folderUri,
+                    folderName = uiState.folderName,
                     onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
                 )
 
@@ -153,9 +145,7 @@ fun Main.Config.Layout.Screen(
                 )
 
                 Main.Config.Component.TemplateManager(
-                    templates = templates,
-                    onAddTemplate = { label, pattern -> templateViewModel.onAddTemplate(label, pattern) },
-                    onDeleteTemplate = { id -> templateViewModel.onDeleteTemplate(id) }
+                    onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) }
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -193,7 +183,12 @@ fun Main.Config.Layout.Screen(
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Metadados
-                SectionHeader(stringResource(id = R.string.title_sync_external_metadata))
+                SectionHeader(stringResource(id = R.string.label_sync_group))
+
+                Main.Config.Component.LanguageSettings(
+                    selectedLanguage = uiState.metadataLanguage,
+                    onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) }
+                )
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) }
@@ -206,38 +201,7 @@ fun Main.Config.Layout.Screen(
                 Spacer(modifier = Modifier.height(48.dp))
             }
 
-            Box(
-                contentAlignment = Alignment.BottomStart,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(all = 18.dp),
-            ) {
-                Acerola.Layout.ProgressIndicator(
-                    isLoading = uiState.isLibraryIndexing || uiState.isMetadataIndexing,
-                    progress = when {
-                        uiState.isMetadataIndexing -> uiState.metadataProgress
-                        uiState.isLibraryIndexing -> uiState.libraryProgress
-                        else -> null
-                    },
-                )
-            }
         }
-    }
-}
-
-@Composable
-private fun ConfigHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
-    ) {
-        Text(
-            text = stringResource(id = R.string.label_config_activity),
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
     }
 }
 

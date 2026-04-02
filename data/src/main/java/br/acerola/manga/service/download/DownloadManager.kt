@@ -8,7 +8,7 @@ interface DownloadManager {
 
     suspend fun listChaptersByLanguage(
         mangaId: String,
-        language: String,
+        language: String? = null,
         limit: Int = 500,
         offset: Int = 0
     ): Either<NetworkError, Pair<List<ChapterMetadataDto>, Int>>

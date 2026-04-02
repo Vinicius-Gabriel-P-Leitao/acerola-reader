@@ -6,7 +6,7 @@ import br.acerola.manga.error.message.TemplateError
 import br.acerola.manga.local.dao.archive.ChapterTemplateDao
 import br.acerola.manga.local.entity.archive.ChapterTemplate
 import br.acerola.manga.pattern.TemplateMacro
-import br.acerola.manga.pattern.TemplateValidator
+import br.acerola.manga.pattern.TemplateValidatorPattern
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,8 +18,6 @@ class ChapterNameProcessor @Inject constructor(
     fun observeTemplates(): Flow<List<ChapterTemplate>> = dao.observeAll()
 
     suspend fun getTemplates(): List<ChapterTemplate> = dao.getAll()
-
-    suspend fun getTemplateById(id: Long): ChapterTemplate? = dao.getById(id)
 
     suspend fun addTemplate(label: String, pattern: String): Either<TemplateError, Unit> {
         val trimmed = pattern.trim()
@@ -33,7 +31,7 @@ class ChapterNameProcessor @Inject constructor(
             else -> trimmed.substring(0, trimmed.indexOf(extensionTag) + extensionTag.length)
         }
 
-        return TemplateValidator.validateCustomTemplate(transformedPattern)
+        return TemplateValidatorPattern.validateCustomTemplate(transformedPattern)
             .flatMap {
                 val entity = createCustomTemplate(label.trim(), transformedPattern)
                 val insertedId = dao.insert(entity)

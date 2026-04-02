@@ -24,7 +24,7 @@ sealed interface LibrarySyncError : UserMessage {
         override val uiMessage = UiText.StringResource(resId = R.string.description_dao_error)
     }
 
-    data class NetworkError(
+    data class SyncNetworkError(
         val cause: Throwable? = null
     ) : LibrarySyncError {
         override val uiMessage = UiText.StringResource(resId = R.string.description_network_error)
@@ -46,6 +46,19 @@ sealed interface LibrarySyncError : UserMessage {
         val cause: Throwable
     ) : LibrarySyncError {
         override val uiMessage = UiText.StringResource(resId = R.string.description_generic_internal_error)
+    }
+
+    data class MetadataNotFound(
+        val source: String,
+        val identifier: String
+    ) : LibrarySyncError {
+        override val uiMessage = UiText.StringResource(resId = R.string.error_metadata_not_found, args = listOf(source, identifier))
+    }
+
+    data class RemoteNetworkError(
+        val error: NetworkError
+    ) : LibrarySyncError {
+        override val uiMessage = error.uiMessage
     }
 
     data object ExternalSyncDisabled : LibrarySyncError {

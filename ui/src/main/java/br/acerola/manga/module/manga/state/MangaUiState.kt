@@ -22,8 +22,6 @@ data class MangaUiState(
     val manga: MangaDto,
     val chapters: ChapterDto?,
     val selectedTab: MainTab,
-    val isIndexing: Boolean,
-    val indexingProgress: Float?,
     val history: ReadingHistoryDto?,
     val readChapters: Set<Long>,
     val totalChapters: Int,

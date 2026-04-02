@@ -20,7 +20,7 @@ object Dracula {
 object Alucard {
     val Background = Color(0xFFF8F8F2)
     val CurrentLine = Color(0xFFE6E6E6)
-    val Selection = Color(0xFF919191)
+    val Selection = Color(0xFFD0D0D0)
     val Foreground = Color(0xFF282A36)
     val Comment = Color(0xFF6272A4)
     val Cyan = Color(0xFF005A5F)
@@ -30,4 +30,6 @@ object Alucard {
     val Purple = Color(0xFF2D005F)
     val Red = Color(0xFF5F0000)
     val Yellow = Color(0xFF5F5F00)
+    val SurfaceHigh = Color(0xFFDDDDDD)
+    val SurfaceHighest = Color(0xFFD0D0D0)
 }

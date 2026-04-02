@@ -99,8 +99,8 @@ class ChapterArchiveEngine @Inject constructor(
                     }
                 }
 
-                val chapterRegex =
-                    templateToRegex(template = activeTemplate?.pattern ?: "Chapter {value}{sub}.*.{extension}")
+                // FIXME: Dever usar o ChapterTemplatePattern para pegar o primeiro como default
+                val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: "Chapter {chapter}{decimal}.*.{extension}")
 
                 val existingChapters = chapterArchiveDao.getChaptersByMangaDirectoryList(folderId = mangaId)
                 val existingChaptersMap = existingChapters.associateBy { it.path }

@@ -27,7 +27,7 @@ import br.acerola.manga.common.ux.component.BookmarkRibbon
 import br.acerola.manga.common.ux.component.ImageCard
 import br.acerola.manga.dto.MangaDto
 import br.acerola.manga.module.main.Main
-import br.acerola.manga.pattern.MetadataSource
+import br.acerola.manga.pattern.MetadataSourcePattern
 import br.acerola.manga.ui.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -117,8 +117,8 @@ fun Main.Common.Component.MangaListItem(
                 contentAlignment = Alignment.BottomEnd
             ) {
                 val sourceIcon = when (manga.remoteInfo?.syncSource) {
-                    MetadataSource.MANGADEX -> R.drawable.mangadex_v2
-                    MetadataSource.ANILIST -> R.drawable.anilist
+                    MetadataSourcePattern.MANGADEX -> R.drawable.mangadex_v2
+                    MetadataSourcePattern.ANILIST -> R.drawable.anilist
                     else -> null
                 }
                 if (sourceIcon != null) {
@@ -231,14 +231,14 @@ fun Main.Common.Component.MangaListItem(
                     .align(Alignment.CenterVertically)
                     .padding(end = 8.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
                         shape = RoundedCornerShape(12.dp)
                     )
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = stringResource(id = R.string.description_icon_continue_reading),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }

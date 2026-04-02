@@ -21,7 +21,7 @@ import br.acerola.manga.local.translator.persistence.toAnilistSourceEntity
 import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.pattern.MetadataSource
+import br.acerola.manga.pattern.MetadataSourcePattern
 import br.acerola.manga.service.artwork.BannerSaver
 import br.acerola.manga.service.artwork.CoverSaver
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -77,7 +77,7 @@ class AnilistMangaEngine @Inject constructor(
 
                 anilistSearchByTitleSource.searchInfo(manga = directory.name, limit = 10)
                     .mapLeft { networkError ->
-                        LibrarySyncError.UnexpectedError(cause = Exception(networkError.toString()))
+                        LibrarySyncError.RemoteNetworkError(error = networkError)
                     }
                     .flatMap { results ->
                         val dto = results.find { candidate ->
@@ -85,14 +85,15 @@ class AnilistMangaEngine @Inject constructor(
                                     normalizeName(candidate.romanji.orEmpty()) == normalizedDirName
                         } ?: results.firstOrNull()
                         ?: return@flatMap Either.Left(
-                            LibrarySyncError.UnexpectedError(
-                                cause = Exception("No AniList results for title: ${directory.name}")
+                            LibrarySyncError.MetadataNotFound(
+                                source = MetadataSourcePattern.ANILIST.source,
+                                identifier = directory.name
                             )
                         )
 
                         Either.catch {
                             val mangaToSave = dto.toEntity().copy(
-                                mangaDirectoryFk = mangaId, syncSource = MetadataSource.ANILIST.source
+                                mangaDirectoryFk = mangaId, syncSource = MetadataSourcePattern.ANILIST.source
                             )
 
                             val remoteInfoId = mangaMetadataDao.upsertMangaMetadataTransaction(

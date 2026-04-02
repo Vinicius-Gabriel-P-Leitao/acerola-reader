@@ -8,6 +8,7 @@
     <string name="navigation_chapters_activity">chapters</string>
     <string name="navigation_reader_activity">reader</string>
     <string name="navigation_search_activity">search</string>
+    <string name="navigation_template_config_activity">file_pattern</string>
 
     <!-- Screen label -->
     <string name="label_home_activity">home</string>
@@ -16,6 +17,7 @@
     <string name="label_chapters_activity">Capítulos</string>
     <string name="label_reader_activity">Leitor</string>
     <string name="label_search_activity">Buscar</string>
+    <string name="label_template_config_activity">Padrões de arquivos</string>
 
     <!-- Screen content description -->
     <string name="description_home_activity">Tela de início que lista os mangás.</string>
@@ -24,6 +26,7 @@
     <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
     <string name="description_reader_activity">Tela de leitura do capítulo</string>
     <string name="description_search_activity">Tela de busca e download de capítulos do MangaDex</string>
+    <string name="description_template_config_activity">Gerencie como o app identifica números de capítulos nos arquivos</string>
 
     <!-- Icons -->
     <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
@@ -141,7 +144,6 @@
     <string name="description_icon_continue_reading">Continuar leitura</string>
 
     <!-- History & Reader Info -->
-    <string name="title_history_screen">Histórico de Leitura</string>
     <string name="description_history_empty_state">Nenhum mangá lido recentemente</string>
     <string name="label_chapter_unknown">Capítulo desconhecido</string>
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
@@ -164,16 +166,20 @@
     <string name="description_settings_catppuccin_theme">Usa a paleta de cores original do app</string>
 
     <string name="title_settings_nord_theme">Nord</string>
-    <string name="subtitle_settings_nord_theme">Arctic ice</string>
-
     <string name="title_settings_dracula_theme">Dracula</string>
-    <string name="subtitle_settings_dracula_theme">Vampire theme</string>
+    <string name="title_settings_alucard_theme">Alucard</string>
+    <string name="subtitle_settings_latte_theme">Latte</string>
+    <string name="subtitle_settings_mocha_theme">Mocha</string>
+    <string name="subtitle_settings_dracula_theme">Dracula</string>
+    <string name="subtitle_settings_vampire_theme">Vampire</string>
+    <string name="subtitle_settings_nord_dark_theme">Arctic Night</string>
+    <string name="subtitle_settings_nord_light_theme">Snow Storm</string>
 
     <string name="label_settings_see_more_themes">Ver mais</string>
+    <string name="label_settings_see_less_themes">Ver menos</string>
     <string name="title_dialog_select_theme">Escolha um Tema</string>
 
     <!-- Search & Download Screen -->
-    <string name="title_search_screen">Buscar no MangaDex</string>
     <string name="placeholder_search_mangadex">Nome, ID ou URL do mangá…</string>
     <string name="label_search_results">Resultados</string>
     <string name="label_search_empty_state">Busque por um mangá para baixar capítulos traduzidos</string>
@@ -215,15 +221,15 @@
     <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
 
         <!-- Chapter Naming Templates -->
-    <string name="title_chapter_naming_templates">Padrões de Nomenclatura de Capítulos</string>
+    <string name="title_chapter_naming_templates">Padrões de arquivos</string>
     <string name="action_add_template">Adicionar Padrão</string>
     <string name="label_system_template">SISTEMA</string>
     <string name="description_icon_delete_template">Excluir Padrão</string>
     <string name="title_dialog_new_template">Novo Padrão</string>
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
-    <string name="label_template_pattern">Padrão (ex: Cap. {value})</string>
-    <string name="placeholder_template_pattern">{value}, {sub}</string>
-    <string name="description_template_macros">{value} é obrigatório. {extension} é adicionado automaticamente ao final.</string>
+    <string name="label_template_pattern">Padrão (ex: Cap. {chapter})</string>
+    <string name="placeholder_template_pattern">{chapter}, {decimal}</string>
+    <string name="description_template_macros">{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.</string>
     <string name="action_add">Adicionar</string>
     <string name="action_cancel">Cancelar</string>
 
@@ -239,6 +245,12 @@
     <string name="dialog_hide_message">Este mangá será ocultado da biblioteca. Você pode usar o filtro para ver mangás ocultos.</string>
     <string name="dialog_delete_title">Deletar mangá?</string>
     <string name="dialog_delete_message">Esta ação remove o mangá do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
+
+    <!-- Dialog Actions -->
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_discard">Descartar</string>
+    <string name="dialog_discard_changes_title">Descartar alterações</string>
+    <string name="dialog_discard_changes_message">Tem certeza? As alterações serão perdidas.</string>
 
     <!-- Filter & Sort Sheet -->
     <string name="title_home_filter_sheet">Filtrar e Ordenar</string>
@@ -261,5 +273,23 @@
     <string name="label_sort_chapter_count">Quantidade de capítulos</string>
     <string name="label_sort_last_update">Última atualização</string>
     <string name="label_sort_number">Número</string>
+
+    <!-- Language names for metadata -->
+    <string name="lang_pt_br">Português (BR)</string>
+    <string name="lang_en">English</string>
+    <string name="lang_es_la">Español (LA)</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_de">Deutsch</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_zh">中文</string>
+    <string name="lang_id">Indonesia</string>
+
+    <string name="title_settings_metadata_language">Idioma de Metadados</string>
+    <string name="description_settings_metadata_language">Idioma padrão para busca e metadados (Apenas MangaDex)</string>
+    <string name="label_select_language">Selecionar</string>
 
 </resources>

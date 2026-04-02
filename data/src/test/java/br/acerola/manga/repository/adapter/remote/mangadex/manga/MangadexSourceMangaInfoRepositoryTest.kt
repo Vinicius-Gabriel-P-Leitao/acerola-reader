@@ -3,6 +3,7 @@ package br.acerola.manga.repository.adapter.remote.mangadex.manga
 import android.content.Context
 import br.acerola.manga.data.R
 import br.acerola.manga.error.message.NetworkError
+import br.acerola.manga.pattern.LanguagePattern
 import br.acerola.manga.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.manga.remote.mangadex.dto.MangaDexResponse
 import br.acerola.manga.remote.mangadex.dto.manga.MangaAttributes
@@ -18,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.io.File
 
 class MangadexSourceMangaInfoRepositoryTest {
 
@@ -34,14 +36,17 @@ class MangadexSourceMangaInfoRepositoryTest {
         MockKAnnotations.init(this)
         repository = MangadexMangaInfoSource(context, api)
         every { context.getString(R.string.description_manga_untitled) } returns "Sem título"
+        every { context.applicationContext } returns context
+        every { context.filesDir } returns File(System.getProperty("java.io.tmpdir"))
     }
 
     @Test
     fun `searchInfo deve buscar manga e mapear DTO corretamente`() = runTest {
         val title = "Naruto"
+        val languages = listOf(LanguagePattern.PT_BR.code)
 
         val attr = MangaAttributes(
-            titleMap = mapOf("en" to "Naruto"),
+            titleMap = mapOf("pt-br" to "Naruto"),
             altTitlesList = emptyList(),
             descriptionMap = emptyMap(),
             isLocked = false,
@@ -65,7 +70,7 @@ class MangadexSourceMangaInfoRepositoryTest {
             total = 1
         )
 
-        coEvery { api.searchMangaByName(title, limit = 10, offset = 0, includes = any()) } returns response
+        coEvery { api.searchMangaByName(title, 10, 0, any(), languages) } returns response
 
         val result = repository.searchInfo(manga = title, limit = 10, offset = 0, onProgress = null)
 
@@ -79,15 +84,15 @@ class MangadexSourceMangaInfoRepositoryTest {
 
     @Test
     fun `searchInfo deve retornar ConnectionFailed em caso de erro de IO`() = runTest {
-        // Simula erro de conexão (IOException)
-        coEvery { api.searchMangaByName(any(), any(), any(), any()) } throws IOException("Connection Reset")
+        val languages = listOf(LanguagePattern.PT_BR.code)
+        coEvery { api.searchMangaByName(any(), any(), any(), any(), languages) } throws IOException("Connection Reset")
 
         val result = repository.searchInfo("Naruto")
 
         assertTrue(result.isLeft())
         // Valida se o erro mapeado é ConnectionFailed e não Unknown
         result.onLeft { error ->
-            assertTrue("Erro deve ser do tipo NetworkError, recebido: $error", error is NetworkError)
+            assertTrue(error is NetworkError)
         }
     }
 }

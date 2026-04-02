@@ -35,10 +35,24 @@ class MetadataSettingsViewModel @Inject constructor(
             initialValue = true
         )
 
+    val metadataLanguage: StateFlow<String?> = MetadataPreference.metadataLanguageFlow(context)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
     fun setGenerateComicInfo(value: Boolean) {
         AcerolaLogger.audit(TAG, "User setting Generate ComicInfo preference: $value", LogSource.VIEWMODEL)  
         viewModelScope.launch {
             MetadataPreference.saveGenerateComicInfo(context, value)
+        }
+    }
+
+    fun setMetadataLanguage(language: String) {
+        AcerolaLogger.audit(TAG, "User setting Metadata Language preference: $language", LogSource.VIEWMODEL)
+        viewModelScope.launch {
+            MetadataPreference.saveMetadataLanguage(context, language)
         }
     }
 

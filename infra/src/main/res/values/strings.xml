@@ -44,10 +44,19 @@
     <string name="error_invalid_metadata_file">Arquivo de metadados inválido ou corrompido.</string>
     <string name="error_metadata_root_missing">O arquivo não contém a tag raiz ComicInfo.</string>
     <string name="error_unrecognized_metadata">Não foi possível reconhecer os metadados em: %1$s</string>
+    <string name="error_metadata_not_found">Nenhum metadado encontrado em %1$s para: %2$s</string>
 
     <!-- Notification Channels -->
     <string name="error_sync_disabled">A sincronização externa está desativada para este mangá.</string>
     <string name="sync_notification_channel_name">Sincronização de Biblioteca</string>
     <string name="sync_notification_channel_description">Notificações de progresso de sincronização
         de mangás</string>
+
+    <!-- Manga Status -->
+    <string name="manga_status_ongoing">Em lançamento</string>
+    <string name="manga_status_completed">Finalizado</string>
+    <string name="manga_status_hiatus">Em hiato</string>
+    <string name="manga_status_cancelled">Cancelado</string>
+    <string name="manga_status_not_yet_released">Em breve</string>
+    <string name="manga_status_unknown">Desconhecido</string>
 </resources>

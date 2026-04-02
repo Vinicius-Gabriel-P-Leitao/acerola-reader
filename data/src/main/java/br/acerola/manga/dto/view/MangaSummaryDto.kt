@@ -2,7 +2,7 @@ package br.acerola.manga.dto.view
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
-import br.acerola.manga.pattern.MetadataSource
+import br.acerola.manga.pattern.MetadataSourcePattern
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -14,6 +14,6 @@ data class MangaSummaryDto(
     val folderBanner: String?,
     val externalSync: Boolean,
     val metadataTitle: String?,
-    val activeSource: MetadataSource?,
+    val activeSource: MetadataSourcePattern?,
     val metadataId: Long?
 ) : Parcelable

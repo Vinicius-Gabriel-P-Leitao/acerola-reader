@@ -67,7 +67,7 @@ class MangadexSourceMangaEngineTest {
 
         repository = MangadexMangaEngine(
             genreDao, authorDao, directoryDao, coverService, mangadexSourceDao,
-            mangaMetadataDao, context, metadataExportService, downloadCoverService
+            mangaMetadataDao, metadataExportService, context, downloadCoverService
         )
         repository.mangadexSourceMangaInfoService = mangadexMangaInfoService
         repository.mangadexSourceChapterInfoService = mangadexChapterInfoService

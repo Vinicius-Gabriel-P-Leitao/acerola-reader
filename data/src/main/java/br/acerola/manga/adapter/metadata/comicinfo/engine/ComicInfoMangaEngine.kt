@@ -2,7 +2,6 @@ package br.acerola.manga.adapter.metadata.comicinfo.engine
 
 import android.database.sqlite.SQLiteException
 import android.net.Uri
-import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.manga.adapter.contract.gateway.MangaSyncGateway
 import br.acerola.manga.adapter.contract.provider.ImageProvider
@@ -21,7 +20,7 @@ import br.acerola.manga.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.manga.local.translator.persistence.toEntity
 import br.acerola.manga.logging.AcerolaLogger
 import br.acerola.manga.logging.LogSource
-import br.acerola.manga.pattern.MetadataSource
+import br.acerola.manga.pattern.MetadataSourcePattern
 import br.acerola.manga.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,7 +78,7 @@ class ComicInfoMangaEngine @Inject constructor(
                         status = bestMatch.status,
                         publication = bestMatch.year ?: 0,
                         mangaDirectoryFk = directory.id,
-                        syncSource = MetadataSource.COMIC_INFO.source
+                        syncSource = MetadataSourcePattern.COMIC_INFO.source
                     )
 
                     val remoteId = mangaMetadataDao.upsertMangaMetadataTransaction(

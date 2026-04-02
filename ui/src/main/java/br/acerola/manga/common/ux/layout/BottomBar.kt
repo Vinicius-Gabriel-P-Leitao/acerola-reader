@@ -1,13 +1,10 @@
 package br.acerola.manga.common.ux.layout
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import br.acerola.manga.common.navigation.Destination
@@ -19,9 +16,9 @@ fun Acerola.Layout.BottomBar(navController: NavHostController) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
-        modifier = Modifier.clip(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+        modifier = Modifier,
         windowInsets = NavigationBarDefaults.windowInsets,
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = NavigationBarDefaults.containerColor
     ) {
         Destination.entries.forEachIndexed { _, destination ->
             if (destination === Destination.HOME || destination === Destination.HISTORY || destination === Destination.SEARCH || destination === Destination.CONFIG) {

@@ -13,8 +13,8 @@ local.properties
 # ai
 .claude/commands
 .claude/agents
-.claude/hooks
 .claude/settings.json
 .claude/package.json
 .claude/gsd-file-manifest.json
 .claude/get-shit-done
+app/release
