@@ -134,7 +134,8 @@ class HomeViewModelTest {
         directoryFlow.value = listOf(manga1, manga2)
 
         viewModel.mangas.test {
-            val items = awaitItem()
+            var items = awaitItem()
+            while (items == null) items = awaitItem()
             assertThat(items).hasSize(1)
             assertThat(items[0].first.directory.id).isEqualTo(1L)
         }
@@ -156,7 +157,7 @@ class HomeViewModelTest {
 
         viewModel.mangas.test {
             var items = awaitItem()
-            if (items.size == 1) items = awaitItem()
+            while (items == null || items.size == 1) items = awaitItem()
             assertThat(items).hasSize(2)
         }
     }

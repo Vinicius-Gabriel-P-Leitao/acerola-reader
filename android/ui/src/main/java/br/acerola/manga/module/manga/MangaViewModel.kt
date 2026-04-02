@@ -200,7 +200,12 @@ class MangaViewModel @Inject constructor(
 
             // Apply Sorting
             val sortedItems = when (sort.type) {
-                ChapterSortType.NUMBER -> items.sortedBy { it.chapterSort.toDoubleOrNull() ?: 0.0 }
+                ChapterSortType.NUMBER -> items.sortedWith(
+                    compareBy(
+                        { it.chapterSort.substringBefore('.').toIntOrNull() ?: 0 },
+                        { it.chapterSort.substringAfter('.', "0").toIntOrNull() ?: 0 }
+                    )
+                )
                 ChapterSortType.LAST_UPDATE -> items.sortedBy { it.lastModified }
             }
 

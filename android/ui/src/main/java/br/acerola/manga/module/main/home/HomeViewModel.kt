@@ -96,7 +96,7 @@ class HomeViewModel @Inject constructor(
             viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = -1
         )
 
-    val mangas: StateFlow<List<Triple<MangaDto, ReadingHistoryDto?, Int>>> = combine(
+    val mangas: StateFlow<List<Triple<MangaDto, ReadingHistoryDto?, Int>>?> = combine(
         combine(
             directoryObserve(),
             mangadexObserve(),
@@ -149,7 +149,7 @@ class HomeViewModel @Inject constructor(
         AcerolaLogger.d(TAG, "Library loaded: ${finalList.size} mangas found", LogSource.VIEWMODEL)
         finalList
     }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = null
     )
 
     init {

@@ -145,6 +145,11 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 
 ### 🔲 Pendente
 
+#### Erro ao listar mangás com decimal
+
+- [ ] **Busca de mangás com chapter decimal:** Novamente problema com chapters 0.01 e logo em seguida vim o 0.10 ao invez de 0.02
+
+
 #### Snackbar — Uso das variantes
 
 - [ ] **Mapear casos de sucesso e aviso** no código com `TODO:` e aplicar variantes da Snackbar (success/warn).
@@ -169,7 +174,7 @@ Encontrados 10 itens em 9 arquivos.
 - [x] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`
 - [x] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
 - [x] `TemplateValidatorPattern.kt:51` — Mover texto de `InvalidPattern` para `strings.xml`.
-- [ ] `MainActivity.kt:28` — Implementar `fakeLoading` para pré-carregar itens antes de exibi-los.
+- [x] `MainActivity.kt:28` — Implementar `fakeLoading` para pré-carregar itens antes de exibi-los, foi feito diferente e tratado na homescreen.
 
 #### TODO
 
