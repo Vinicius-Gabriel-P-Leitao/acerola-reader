@@ -29,9 +29,11 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+        working-directory: acerola
 
       - name: Run unit tests
         run: ./gradlew test
+        working-directory: acerola
 
       - name: Upload test reports
         if: always()
