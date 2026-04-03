@@ -14,11 +14,14 @@
   "license": "MIT",
   "dependencies": {
     "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-store": "^2.4.2"
   },
   "devDependencies": {
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource-variable/noto-serif": "^5.2.9",
+    "@inlang/paraglide-js": "^2.10.0",
     "@lucide/svelte": "^1.7.0",
     "@sveltejs/adapter-static": "^3.0.6",
     "@sveltejs/kit": "^2.9.0",
