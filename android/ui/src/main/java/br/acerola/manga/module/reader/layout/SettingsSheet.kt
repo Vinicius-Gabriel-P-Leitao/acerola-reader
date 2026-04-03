@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,12 +18,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.VerticalAlignBottom
 import androidx.compose.material.icons.filled.ViewHeadline
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import br.acerola.manga.common.ux.Acerola
+import br.acerola.manga.common.ux.component.AdaptiveSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,25 +32,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.common.ux.modifier.glass
 import br.acerola.manga.config.preference.ReadingMode
 import br.acerola.manga.module.reader.Reader
 import br.acerola.manga.ui.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Reader.Layout.SettingsSheet(
     onDismissRequest: () -> Unit,
     currentMode: ReadingMode,
     onModeSelected: (ReadingMode) -> Unit
 ) {
-    ModalBottomSheet(
-        containerColor = MaterialTheme.colorScheme.surface,
+    Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismissRequest,
-        contentWindowInsets = { WindowInsets.navigationBars },
-        scrimColor = Color.Black.copy(alpha = 0.4f),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
             modifier = Modifier

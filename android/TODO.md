@@ -4,11 +4,13 @@ Tem razão, desculpa. Aqui está o README reorganizado em markdown:
 
 # Acerola Leitor de Mangás
 
-Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que gerenciam sua própria biblioteca local de arquivos de mangás. Ele oferece uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriquecida com metadados de fontes online populares.
+Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que gerenciam sua própria biblioteca local de arquivos de mangás. Ele oferece
+uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriquecida com metadados de fontes online populares.
 
 ## Funcionalidades Principais
 
-* **Gerenciamento da Biblioteca Local:** Escaneia automaticamente suas pastas e arquivos de mangás (`.cbz`, `.cbr`) no dispositivo e os organiza em uma biblioteca navegável.
+* **Gerenciamento da Biblioteca Local:** Escaneia automaticamente suas pastas e arquivos de mangás (`.cbz`, `.cbr`) no dispositivo e os organiza em
+  uma biblioteca navegável.
 * **Metadados Automáticos:** Busca e exibe metadados ricos para seus mangás, como capas, descrições, informações do autor e muito mais.
 * **Interface Personalizável:** Adapte a aparência da sua biblioteca à sua preferência.
 * **Leitor Integrado:** Leia seus mangás diretamente no aplicativo com um leitor projetado para uma experiência fluida.
@@ -21,8 +23,10 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 
 #### Biblioteca
 
-- [x] **Escaneamento da Biblioteca:** Escaneia as pastas especificadas para detectar mangás e capítulos, persistindo a estrutura em um banco de dados local.
-- [x] **Sincronização da Biblioteca:** Mantém o banco de dados local sincronizado com o sistema de arquivos, detectando novas adições, renomeações e exclusões.
+- [x] **Escaneamento da Biblioteca:** Escaneia as pastas especificadas para detectar mangás e capítulos, persistindo a estrutura em um banco de dados
+  local.
+- [x] **Sincronização da Biblioteca:** Mantém o banco de dados local sincronizado com o sistema de arquivos, detectando novas adições, renomeações e
+  exclusões.
 - [x] **Integração com MangaDex:** Busca automaticamente metadados de mangás do MangaDex com base nos nomes das pastas.
 - [x] **Tela Inicial (Home Screen):** Exibe todos os mangás da sua biblioteca com dois layouts: Lista e Grade.
 - [x] **Tela de Capítulos:** Mostra uma lista de todos os capítulos de um mangá selecionado com metadados detalhados.
@@ -52,7 +56,8 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 - [x] **AniList como fonte alternativa:** Opção para escolher AniList como provedor de metadados.
 - [x] **Painel de configuração de provedor:** Seleção e configuração de MangaDex / AniList / ComicInfo com feedback de fonte ativa.
 - [x] **Correção de bug na troca de source:** Troca de source agora ocorre livremente, incluindo via `ConfigScreen`.
-- [x] **Refatoração RemoteInfo → Metadata:** Tabela de metadados agnóstica de origem, com tabelas auxiliares por source (MangaDex, AniList, ComicInfo).
+- [x] **Refatoração RemoteInfo → Metadata:** Tabela de metadados agnóstica de origem, com tabelas auxiliares por source (MangaDex, AniList,
+  ComicInfo).
 - [x] **Correção de erro 500 do AniList:** Erro quando mangá não tem metadados no AniList tratado corretamente na UI.
 
 #### Refatorações Estruturais
@@ -149,11 +154,21 @@ Acerola é um aplicativo Android desenvolvido para entusiastas de mangás que ge
 
 - [x] **Busca de mangás com chapter decimal:** Novamente problema com chapters 0.01 e logo em seguida vim o 0.10 ao invez de 0.02
 
+#### ‼️ UX para modo deitado
+
+- [x] **Fazer UX para deitado** Quando deitado a BottomBar tem que virar uma SideBar e ao lado o conteudo das paginas.
+- [ ] **Melhorar UX deitado** Quando deitado a BottomBar tem que virar uma SideBar e ao lado o conteudo das paginas trabalhar os BottomSheet como 
+  SideSheet, deixar cor da sidebar de cor diferente igual a BottomSheet, centralizar itens verticalmente.
+
+#### Corrigir SearchLayout
+
+- [ ] **SearchBar ux ruim** A SearchBar da tela de SearchLayout está com ux descentralizado, mais especificamente a SearchBar o input, ele está a 
+  esquerda da tela, principalmente no modo deitado, deveria estar no centro.
 
 #### Snackbar — Uso das variantes
 
-- [ ] **Mapear casos de sucesso e aviso** no código com `TODO:` e aplicar variantes da Snackbar (success/warn).
-  
+- [ ] **Mapear casos de sucesso e aviso** No código com `TODO:` e aplicar variantes da Snackbar (success/warn).
+
 #### PatternScreen
 
 - [ ] **Refatorar design da PatternScreen:** Atualmente funcional, mas visualmente não agradável. Repensar a forma como funciona.
@@ -200,4 +215,5 @@ Encontrados 10 itens em 9 arquivos.
 * **Carregamento de Imagens:** [Coil](https://coil-kt.github.io/coil/)
 * **Arquitetura:** MVVM (Model-View-ViewModel)
 * **Injeção de Dependências:** Manual (via ViewModelFactories)
-* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) e [Flow](https://kotlinlang.org/docs/flow.html)
+* **Programação Assíncrona:** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+  e [Flow](https://kotlinlang.org/docs/flow.html)

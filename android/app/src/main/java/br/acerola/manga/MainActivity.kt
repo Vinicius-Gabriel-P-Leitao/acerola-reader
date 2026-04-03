@@ -17,6 +17,7 @@ import br.acerola.manga.common.activity.BaseActivity
 import br.acerola.manga.common.navigation.Destination
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.layout.BottomBar
+import br.acerola.manga.common.ux.layout.SideBar
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.Screen
 import br.acerola.manga.module.main.history.Screen
@@ -69,6 +70,11 @@ class MainActivity(
     @Composable
     override fun BottomBar(navController: NavHostController) {
         Acerola.Layout.BottomBar(navController)
+    }
+
+    @Composable
+    override fun SideBar(navController: NavHostController) {
+        Acerola.Layout.SideBar(navController)
     }
 
     private fun NavGraphBuilder.defaultComposable(

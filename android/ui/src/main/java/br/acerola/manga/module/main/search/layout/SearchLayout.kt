@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,63 +37,57 @@ fun Main.Search.Layout.SearchLayout(
 ) {
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (!searchExpanded) {
-                    DownloadQueueComponent(
-                        queue = uiState.downloadQueue,
-                        modifier = Modifier.padding(top = 72.dp, bottom = 8.dp)
-                    )
-                }
-
-                if (!searchExpanded && uiState.searchResults.isEmpty() && !uiState.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(), contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_search_empty_state),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 32.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-
-            Acerola.Component.SearchBar(
-                query = uiState.query,
-                onQueryChange = { onAction(SearchAction.QueryChanged(it)) }, onSearch = { onAction(SearchAction.Search) }, expanded = searchExpanded,
-                onExpandedChange = { searchExpanded = it }, onBackClick = { searchExpanded = false },
-                isLoading = uiState.isLoading,
-                items = uiState.searchResults,
-                itemKey = { it.sources?.mangadex?.mangadexId ?: it.title },
-                placeholder = stringResource(R.string.placeholder_search_mangadex),
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 8.dp),
-                contentPadding = innerPadding
-            ) { manga ->
-                val context = LocalContext.current
-                Main.Search.Component.MangaResultCard(
-                    manga = manga,
-                    onClick = { DownloadActivity.start(context, manga) }
+            if (!searchExpanded) {
+                DownloadQueueComponent(
+                    queue = uiState.downloadQueue,
+                    modifier = Modifier.padding(top = 72.dp, bottom = 8.dp)
                 )
             }
+
+            if (!searchExpanded && uiState.searchResults.isEmpty() && !uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_search_empty_state),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        Acerola.Component.SearchBar(
+            query = uiState.query,
+            onQueryChange = { onAction(SearchAction.QueryChanged(it)) },
+            onSearch = { onAction(SearchAction.Search) },
+            expanded = searchExpanded,
+            onExpandedChange = { searchExpanded = it },
+            onBackClick = { searchExpanded = false },
+            isLoading = uiState.isLoading,
+            items = uiState.searchResults,
+            itemKey = { it.sources?.mangadex?.mangadexId ?: it.title },
+            placeholder = stringResource(R.string.placeholder_search_mangadex),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .widthIn(max = 600.dp)
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp),
+        ) { manga ->
+            val context = LocalContext.current
+            Main.Search.Component.MangaResultCard(
+                manga = manga,
+                onClick = { DownloadActivity.start(context, manga) }
+            )
         }
     }
 }
