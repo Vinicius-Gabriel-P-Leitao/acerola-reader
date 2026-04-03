@@ -35,7 +35,6 @@ class ConfigScreenTest {
     private val mangaDexVM = mockk<MangaMetadataViewModel>(relaxed = true)
     private val metadataVM = mockk<MetadataSettingsViewModel>(relaxed = true)
     private val themeVM = mockk<ThemeViewModel>(relaxed = true)
-    private val templateVM = mockk<TemplateConfigViewModel>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -45,6 +44,7 @@ class ConfigScreenTest {
         every { themeVM.uiEvents } returns emptyEvents
         
         every { metadataVM.generateComicInfo } returns MutableStateFlow(true)
+        every { metadataVM.metadataLanguage } returns MutableStateFlow(null)
         every { metadataVM.uiEvents } returns emptyEvents
         
         every { mangaDirVM.isIndexing } returns MutableStateFlow(false)
@@ -58,8 +58,8 @@ class ConfigScreenTest {
 
         every { fsAccessVM.uiEvents } returns emptyEvents
         every { fsAccessVM.folderUri } returns null
+        every { fsAccessVM.folderName } returns MutableStateFlow("Mock Folder")
         
-        every { templateVM.templates } returns MutableStateFlow(emptyList())
     }
 
     @Test
@@ -73,7 +73,6 @@ class ConfigScreenTest {
                         mangaDirectoryViewModel = mangaDirVM,
                         mangaDexViewModel = mangaDexVM,
                         themeViewModel = themeVM,
-                        templateViewModel = templateVM,
                         onNavigateToTemplates = {}
                     )
                 }
