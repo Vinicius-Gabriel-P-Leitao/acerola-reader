@@ -157,21 +157,21 @@ uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriq
 #### ‼️ UX para modo deitado
 
 - [x] **Fazer UX para deitado** Quando deitado a BottomBar tem que virar uma SideBar e ao lado o conteudo das paginas.
-- [ ] **Melhorar UX deitado** Quando deitado a BottomBar tem que virar uma SideBar e ao lado o conteudo das paginas trabalhar os BottomSheet como 
+- [x] **Melhorar UX deitado** Quando deitado a BottomBar tem que virar uma SideBar e ao lado o conteudo das paginas trabalhar os BottomSheet como 
   SideSheet, deixar cor da sidebar de cor diferente igual a BottomSheet, centralizar itens verticalmente.
 
 #### Corrigir SearchLayout
 
-- [ ] **SearchBar ux ruim** A SearchBar da tela de SearchLayout está com ux descentralizado, mais especificamente a SearchBar o input, ele está a 
+- [x] **SearchBar ux ruim** A SearchBar da tela de SearchLayout está com ux descentralizado, mais especificamente a SearchBar o input, ele está a 
   esquerda da tela, principalmente no modo deitado, deveria estar no centro.
 
 #### Snackbar — Uso das variantes
 
-- [ ] **Mapear casos de sucesso e aviso** No código com `TODO:` e aplicar variantes da Snackbar (success/warn).
+- [x] **Mapear casos de sucesso e aviso** No código com `TODO:` e aplicar variantes da Snackbar (success/warn).
 
 #### PatternScreen
 
-- [ ] **Refatorar design da PatternScreen:** Atualmente funcional, mas visualmente não agradável. Repensar a forma como funciona.
+- [x] **Refatorar design da PatternScreen:** Atualmente funcional, mas visualmente não agradável. Repensar a forma como funciona.
 
 #### Tutorial
 

@@ -1,6 +1,8 @@
 package br.acerola.manga.module.main.pattern
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -24,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -102,18 +105,34 @@ private fun FilePatternLayout(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                items(
-                    items = uiState.templates,
-                    key = { it.id }
-                ) { template ->
-                    Main.Pattern.Component.TemplateItem(
-                        template = template,
-                        onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) }
+            if (uiState.templates.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.label_template_empty_state),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    items(
+                        items = uiState.templates,
+                        key = { it.id }
+                    ) { template ->
+                        Main.Pattern.Component.TemplateItem(
+                            template = template,
+                            onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) }
+                        )
+                    }
                 }
             }
         }

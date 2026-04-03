@@ -31,17 +31,19 @@ fun Main.Pattern.Component.TemplateItem(
 ) {
     Card(
         modifier = Modifier
+            .fillMaxWidth()
             .padding(vertical = 4.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         )
     ) {
         ListItem(
             headlineContent = {
                 Text(
                     text = template.label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
             },
             supportingContent = {
@@ -63,9 +65,9 @@ fun Main.Pattern.Component.TemplateItem(
                 } else {
                     Text(
                         text = stringResource(id = R.string.label_system_template),
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
             },
