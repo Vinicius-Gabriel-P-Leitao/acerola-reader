@@ -10,38 +10,33 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import br.acerola.manga.common.ux.component.AdaptiveSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.config.preference.ChapterSortPreferenceData
 import br.acerola.manga.config.preference.ChapterSortType
 import br.acerola.manga.config.preference.SortDirection
 import br.acerola.manga.module.manga.Manga
 import br.acerola.manga.ui.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Manga.Component.ChapterSortSheet(
     sortSettings: ChapterSortPreferenceData,
     onSortChange: (ChapterSortPreferenceData) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
-
-    ModalBottomSheet(
+    Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
             modifier = Modifier

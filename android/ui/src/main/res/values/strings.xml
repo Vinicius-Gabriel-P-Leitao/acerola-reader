@@ -221,6 +221,7 @@
     <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
 
         <!-- Chapter Naming Templates -->
+    <string name="label_template_empty_state">Nenhum padrão de arquivo criado</string>
     <string name="title_chapter_naming_templates">Padrões de arquivos</string>
     <string name="action_add_template">Adicionar Padrão</string>
     <string name="label_system_template">SISTEMA</string>

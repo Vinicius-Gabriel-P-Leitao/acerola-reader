@@ -27,6 +27,12 @@ class FileSystemAccessViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    init {
+        viewModelScope.launch {
+            loadSavedFolder()
+        }
+    }
+
     private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
     val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 

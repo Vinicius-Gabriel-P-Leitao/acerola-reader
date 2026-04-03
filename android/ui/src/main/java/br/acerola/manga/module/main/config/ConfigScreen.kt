@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -36,7 +35,7 @@ import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.component.GlobalCategoryManager
 import br.acerola.manga.module.main.config.component.LanguageSettings
 import br.acerola.manga.module.main.config.component.MetadataExportSettings
-import br.acerola.manga.module.main.config.component.SelectFolder
+import br.acerola.manga.module.main.config.component.SelectMangasDirectory
 import br.acerola.manga.module.main.config.component.SyncAnilistData
 import br.acerola.manga.module.main.config.component.SyncLibraryArchive
 import br.acerola.manga.module.main.config.component.SyncMangadexData
@@ -134,7 +133,7 @@ fun Main.Config.Layout.Screen(
                 // NOTE: Arquivos Locais
                 SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
 
-                Main.Config.Component.SelectFolder(
+                Main.Config.Component.SelectMangasDirectory(
                     folderName = uiState.folderName,
                     onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
                 )

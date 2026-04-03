@@ -14,7 +14,7 @@ class SelectFolderTest {
     @Test
     fun deve_exibir_pasta_da_biblioteca_e_botao_acesso() {
         composeTestRule.setContent {
-            Main.Config.Component.SelectFolder(
+            Main.Config.Component.SelectMangasDirectory(
                 folderName = null,
                 onFolderSelected = {}
             )
