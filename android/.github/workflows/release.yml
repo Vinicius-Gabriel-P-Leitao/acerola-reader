@@ -23,7 +23,7 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > acerola/acerola
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > acerola/app/acerola
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew assembleRelease
         working-directory: acerola
         env:
-          KEYSTORE_PATH: acerola
+          KEYSTORE_PATH: ${{ github.workspace }}/acerola/app/acerola
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
