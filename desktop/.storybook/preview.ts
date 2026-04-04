@@ -1,20 +1,22 @@
-import type { Preview } from "@storybook/sveltekit";
-import "../src/theme/layout.css";
+/// <reference types="vite/client" />
+import type { Preview } from '@storybook/sveltekit';
+import '$theme/layout.css';
+import '$theme/colors/catppuccin.css';
+import '$theme/colors/nord.css';
+import '$theme/colors/dracula.css';
 
-// Mock Tauri APIs globalmente no Storybook
-// Componentes que usam useTheme/LazyStore não vão quebrar
-const mockIPC = (window as any).__TAURI_IPC__;
-if (!mockIPC) {
-  (window as any).__TAURI__ = { ipc: () => {} };
-}
+document.documentElement.setAttribute('data-theme', 'catppuccin-mocha');
 
 const preview: Preview = {
   parameters: {
     controls: {
       matchers: {
         color: /(background|color)$/i,
-        date: /date$/i,
+        date: /Date$/i,
       },
+    },
+    a11y: {
+      test: 'todo',
     },
   },
 };

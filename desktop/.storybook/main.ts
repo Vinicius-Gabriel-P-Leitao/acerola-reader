@@ -1,17 +1,28 @@
-import type { StorybookConfig } from "@storybook/sveltekit";
+import type { StorybookConfig } from '@storybook/sveltekit';
+import path from 'path';
+import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
-  framework: "@storybook/sveltekit",
-
-  stories: ["../src/**/*.stories.svelte"],
-
-  addons: [
-    "@storybook/addon-essentials",
-    "@storybook/addon-svelte-csf",
+  stories: [
+    "../svelte/src/**/*.mdx",
+    "../svelte/src/**/*.stories.@(js|ts|svelte)",
   ],
-
-  docs: {
-    autodocs: "tag",
+  addons: [
+    "@storybook/addon-svelte-csf",
+    "@chromatic-com/storybook",
+    "@storybook/addon-vitest",
+    "@storybook/addon-a11y",
+    "@storybook/addon-docs",
+  ],
+  framework: "@storybook/sveltekit",
+  viteFinal(config) {
+    return mergeConfig(config, {
+      server: {
+        fs: {
+          allow: [path.resolve("svelte/src/theme")],
+        },
+      },
+    });
   },
 };
 

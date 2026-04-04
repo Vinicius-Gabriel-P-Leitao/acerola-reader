@@ -1,23 +1,62 @@
-import { defineConfig } from "vitest/config";
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { svelteTesting } from "@testing-library/svelte/vite";
+import { playwright } from "@vitest/browser-playwright";
+import { fileURLToPath } from "node:url";
 import path from "path";
+import { defineConfig } from "vitest/config";
+
+const dirname =
+  typeof __dirname !== "undefined"
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [svelte({ hot: false }), svelteTesting()],
-
-  test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["tests/setup.ts"],
-    include: ["src/**/*.test.ts"],
-  },
-
+  plugins: [
+    svelte({
+      hot: false,
+    }),
+    svelteTesting(),
+  ],
   resolve: {
     alias: {
-      $lib:      path.resolve("./src/lib"),
-      $theme:    path.resolve("./src/theme"),
-      $services: path.resolve("./src/services"),
+      $lib: path.resolve("./svelte/src/lib"),
+      $theme: path.resolve("./svelte/src/theme"),
+      $services: path.resolve("./svelte/src/services"),
     },
+  },
+  test: {
+    projects: [
+      {
+        extends: true,
+        test: {
+          globals: true,
+          environment: "jsdom",
+          include: ["svelte/src/**/*.test.ts"],
+          setupFiles: ["svelte/tests/setup.ts"],
+        },
+      },
+      {
+        extends: true,
+        plugins: [
+          storybookTest({
+            configDir: path.join(dirname, "svelte/.storybook"),
+          }),
+        ],
+        test: {
+          name: "storybook",
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [
+              {
+                browser: "chromium",
+              },
+            ],
+          },
+        },
+      },
+    ],
   },
 });
