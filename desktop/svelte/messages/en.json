@@ -14,5 +14,10 @@
       "name": "Dracula",
       "desc": "Vibrant colors on dark or light backgrounds"
     }
+  },
+  "components": {
+    "select": {
+      "placeholder": "Select an option"
+    }
   }
 }
