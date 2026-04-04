@@ -56,9 +56,9 @@
     <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
     <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
     <string name="description_text_home_deep_sync">Sincronização profunda</string>
-    <string name="description_text_home_deep_sync_supporting">Verifica todos os arquivos. Pode demorar.</string>
+    <string name="description_text_home_deep_sync_supporting">Verifica todos as pastas. Pode demorar.</string>
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
-    <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos.</string>
+    <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos e pastas.</string>
     <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
     <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
 
@@ -221,6 +221,7 @@
     <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
 
         <!-- Chapter Naming Templates -->
+    <string name="label_template_empty_state">Nenhum padrão de arquivo criado</string>
     <string name="title_chapter_naming_templates">Padrões de arquivos</string>
     <string name="action_add_template">Adicionar Padrão</string>
     <string name="label_system_template">SISTEMA</string>
@@ -291,5 +292,17 @@
     <string name="title_settings_metadata_language">Idioma de Metadados</string>
     <string name="description_settings_metadata_language">Idioma padrão para busca e metadados (Apenas MangaDex)</string>
     <string name="label_select_language">Selecionar</string>
+
+    <!-- SearchBar -->
+    <string name="label_search_bar_transition">SearchBarTransition</string>
+    <string name="label_search_bar_corner_radius">BottomCornerRadius</string>
+
+    <!-- Tutorial/Onboarding Strings -->
+    <string name="title_tutorial_setup">Bem-vindo ao Acerola!</string>
+    <string name="description_tutorial_setup">Para começar, precisamos configurar sua biblioteca de mangás.</string>
+    <string name="action_configure_library">Configurar Biblioteca</string>
+
+    <string name="description_tutorial_folder_select">Clique aqui para selecionar a pasta onde seus mangás estão armazenados.</string>
+    <string name="description_tutorial_sync_deep">Use a Sincronização Profunda se for a primeira vez ou se precisar verificar arquivos renomeados.</string>
 
 </resources>

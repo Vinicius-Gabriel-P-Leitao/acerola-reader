@@ -2,6 +2,8 @@ package br.acerola.manga.pattern
 
 import arrow.core.Either
 import br.acerola.manga.error.message.TemplateError
+import br.acerola.manga.infra.R
+import br.acerola.manga.type.UiText
 
 object TemplateValidatorPattern {
 
@@ -19,13 +21,13 @@ object TemplateValidatorPattern {
             if (input[cursor] == '{') {
                 val end = input.indexOf('}', cursor)
                 if (end == -1) {
-                    return Either.Left(TemplateError.InvalidPattern("Malformed macro"))
+                    return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_malformed_macro)))
                 }
 
                 val tag = input.substring(cursor + 1, end)
                 val macro = TemplateMacro.fromTag(tag)
                     ?: return Either.Left(
-                        TemplateError.InvalidPattern("Invalid macro: $tag")
+                        TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_invalid_macro, args = listOf(tag)))
                     )
 
                 when (macro) {
@@ -48,35 +50,33 @@ object TemplateValidatorPattern {
             cursor++
         }
 
-        // FIXME: A porra do erro que deveria ter a porra do texto e a porra do texto tem que estar na porra de uma string.xml InvalidPattern o
-        //  erro deve estar aqui dentro
         if (valueCount != 1) {
-            return Either.Left(TemplateError.InvalidPattern("Exactly one {chapter} is required"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_required)))
         }
 
         if (subCount > 1) {
-            return Either.Left(TemplateError.InvalidPattern("Only one {decimal} is allowed"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_decimal_duplicate)))
         }
 
         if (extCount != 1) {
-            return Either.Left(TemplateError.InvalidPattern("Exactly one {extension} is required"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_extension_required)))
         }
 
         if (subIdx != -1 && subIdx < valueIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{chapter} must come before {decimal}"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_before_decimal)))
         }
-        
+
         if (extIdx < valueIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{chapter} must come before {extension}"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_before_extension)))
         }
 
         if (subIdx != -1 && extIdx < subIdx) {
-            return Either.Left(TemplateError.InvalidPattern("{decimal} must come before {extension}"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_decimal_before_extension)))
         }
 
         val trimmed = input.trim()
         if (!trimmed.endsWith("{${TemplateMacro.EXTENSION.tag}}")) {
-            return Either.Left(TemplateError.InvalidPattern("{extension} must be at the end of the pattern"))
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_extension_at_end)))
         }
 
         return Either.Right(Unit)

@@ -5,5 +5,6 @@ enum class LogSource {
     VIEWMODEL,
     USECASE,
     NETWORK,
-    UI
+    UI,
+    WORKER
 }

@@ -34,7 +34,7 @@ class HistoryScreenTest {
     }
 
     @Test
-    fun `HistoryScreen_deve_exibir_o_titulo_da_tela`() {
+    fun `HistoryScreen_deve_exibir_estado_vazio_quando_sem_historico`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
@@ -43,7 +43,6 @@ class HistoryScreenTest {
             }
         }
 
-        // Verifica o título exato para evitar problemas de substring
-        composeTestRule.onNodeWithText("Histórico de Leitura").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nenhum mangá lido recentemente").assertIsDisplayed()
     }
 }

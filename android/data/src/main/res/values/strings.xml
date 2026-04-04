@@ -47,4 +47,11 @@
     <string name="download_chapter_success_title">Download Concluído</string>
     <string name="download_chapter_success_message">%1$d de %2$d capítulos baixados com sucesso.</string>
     <string name="download_chapter_error_title">Erro no Download</string>
+    <string name="download_chapter_error_no_ids">IDs dos capítulos não fornecidos</string>
+    <string name="download_chapter_error_no_title">Título do mangá não fornecido</string>
+    <string name="download_chapter_error_no_uri">URI da biblioteca não fornecida</string>
+    <string name="download_chapter_error_access_folder">Não foi possível acessar a pasta da biblioteca</string>
+    <string name="download_chapter_error_create_folder">Não foi possível criar a pasta do mangá: %1$s</string>
+    <string name="download_chapter_error_all_failed">Todos os %1$d downloads falharam</string>
+    <string name="download_chapter_error_fatal">Erro fatal durante o download</string>
 </resources>

@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
+import arrow.core.Either
 import br.acerola.manga.config.preference.MangaDirectoryPreference
+import br.acerola.manga.error.message.LibrarySyncError
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -17,22 +19,23 @@ class FileSystemAccessManager @Inject constructor(
     var folderUri: Uri? = null
         private set
 
-    // TODO: Tratar erros de forma melhor e personalizada.
-    suspend fun saveFolderUri(uri: Uri?) {
-        if (uri != null) {
-            try {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-                folderUri = uri
-                MangaDirectoryPreference.saveFolderUri(context, uri.toString())
-            } catch (securityException: SecurityException) {
-                securityException.printStackTrace()
-                folderUri = null
-            }
-        } else {
+    suspend fun saveFolderUri(uri: Uri?): Either<LibrarySyncError, Unit> {
+        if (uri == null) {
             folderUri = null
             MangaDirectoryPreference.clearFolderUri(context)
+            return Either.Right(Unit)
+        }
+
+        return try {
+            context.contentResolver.takePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            folderUri = uri
+            MangaDirectoryPreference.saveFolderUri(context, uri.toString())
+            Either.Right(Unit)
+        } catch (securityException: SecurityException) {
+            folderUri = null
+            Either.Left(LibrarySyncError.FolderAccessDenied(cause = securityException))
         }
     }
 

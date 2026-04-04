@@ -3,6 +3,7 @@ package br.acerola.manga.module.main.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import br.acerola.manga.config.preference.HomeFilterPreference
 import br.acerola.manga.config.preference.HomeLayoutPreference
@@ -13,6 +14,7 @@ import br.acerola.manga.config.preference.MangaSortType
 import br.acerola.manga.config.preference.SortDirection
 import br.acerola.manga.core.usecase.DirectoryCase
 import br.acerola.manga.core.usecase.MangadexCase
+import br.acerola.manga.core.worker.WorkerContract
 import br.acerola.manga.core.usecase.chapter.GetChapterCountUseCase
 import br.acerola.manga.core.usecase.history.ObserveHistoryUseCase
 import br.acerola.manga.core.usecase.manga.DeleteMangaUseCase
@@ -79,22 +81,22 @@ class HomeViewModel @Inject constructor(
     val allCategories: StateFlow<List<CategoryDto>> = manageCategoriesUseCase.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), emptyList())
 
-    val isIndexing: StateFlow<Boolean> = workManager.getWorkInfosByTagFlow("library_sync")
+    val isIndexing: StateFlow<Boolean> = workManager.getWorkInfosByTagFlow(WorkerContract.TAG_LIBRARY_SYNC)
         .map { workInfos ->
             workInfos.any { !it.state.isFinished }
         }.stateIn(
             viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = false
         )
 
-    val progress: StateFlow<Int> = workManager.getWorkInfosByTagFlow("library_sync")
+    val progress: StateFlow<Int> = workManager.getWorkInfosByTagFlow(WorkerContract.TAG_LIBRARY_SYNC)
         .map { workInfos ->
-            val activeWorker = workInfos.firstOrNull { !it.state.isFinished }
-            activeWorker?.progress?.getInt("progress", -1) ?: -1
+            val activeWorker = workInfos.firstOrNull { it.state == WorkInfo.State.RUNNING }
+            activeWorker?.progress?.getInt(WorkerContract.KEY_PROGRESS, -1) ?: -1
         }.stateIn(
             viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = -1
         )
 
-    val mangas: StateFlow<List<Triple<MangaDto, ReadingHistoryDto?, Int>>> = combine(
+    val mangas: StateFlow<List<Triple<MangaDto, ReadingHistoryDto?, Int>>?> = combine(
         combine(
             directoryObserve(),
             mangadexObserve(),
@@ -147,7 +149,7 @@ class HomeViewModel @Inject constructor(
         AcerolaLogger.d(TAG, "Library loaded: ${finalList.size} mangas found", LogSource.VIEWMODEL)
         finalList
     }.stateIn(
-        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = emptyList()
+        viewModelScope, started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000), initialValue = null
     )
 
     init {

@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -22,13 +26,8 @@ import br.acerola.manga.module.main.Main
 import br.acerola.manga.module.main.config.layout.FolderAccess
 import br.acerola.manga.ui.R
 
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.ui.graphics.Color
-
 @Composable
-fun Main.Config.Component.SelectFolder(
+fun Main.Config.Component.SelectMangasDirectory(
     folderName: String?,
     onFolderSelected: (Uri?) -> Unit
 ) {

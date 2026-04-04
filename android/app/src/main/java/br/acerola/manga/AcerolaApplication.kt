@@ -3,6 +3,8 @@ package br.acerola.manga
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import br.acerola.manga.module.reader.coil.PageFetcherFactory
+import br.acerola.manga.service.reader.ReaderProcessor
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
@@ -13,6 +15,9 @@ import javax.inject.Inject
 class AcerolaApplication : Application(), Configuration.Provider, ImageLoaderFactory {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+    
+    @Inject
+    lateinit var readerProcessor: ReaderProcessor
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -23,6 +28,7 @@ class AcerolaApplication : Application(), Configuration.Provider, ImageLoaderFac
         return ImageLoader.Builder(this)
             .components {
                 add(SvgDecoder.Factory())
+                add(PageFetcherFactory(readerProcessor))
             }
             .build()
     }

@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.manga.common.ux.Acerola
 import br.acerola.manga.common.ux.component.FloatingTool
@@ -55,7 +55,8 @@ import br.acerola.manga.ui.R
 
 @Composable
 fun Main.Home.Layout.Screen(
-    homeViewModel: HomeViewModel = hiltViewModel()
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToConfig: () -> Unit
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -89,10 +90,11 @@ fun Main.Home.Layout.Screen(
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
 
     val filteredMangas = remember(query, uiState.mangas) {
+        val list = uiState.mangas ?: return@remember emptyList()
         if (query.isEmpty()) {
-            uiState.mangas
+            list
         } else {
-            uiState.mangas.filter { (manga, _, _) ->
+            list.filter { (manga, _, _) ->
                 manga.directory.name.contains(query, ignoreCase = true) ||
                         manga.remoteInfo?.title?.contains(query, ignoreCase = true) == true
             }
@@ -120,38 +122,41 @@ fun Main.Home.Layout.Screen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (uiState.mangas.isEmpty() && !uiState.isIndexing) {
-            EmptyState()
-        } else {
-            val gridCells = when (uiState.layout) {
-                HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
-                HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
-            }
+        val mangaList = uiState.mangas
+        when {
+            mangaList == null -> Unit
+            mangaList.isEmpty() && !uiState.isIndexing -> EmptyState()
+            else -> {
+                val gridCells = when (uiState.layout) {
+                    HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
+                    HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
+                }
 
-            LazyVerticalGrid(
-                columns = gridCells,
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
-                contentPadding = PaddingValues(start = 8.dp, top = 72.dp, end = 8.dp, bottom = 80.dp),
-            ) {
-                items(items = if (searchExpanded) filteredMangas else uiState.mangas) { (manga, history, chapterCount) ->
-                    when (uiState.layout) {
-                        HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
-                            manga = manga,
-                            history = history,
-                            chapterCount = chapterCount,
-                            onShowActions = { selectedMangaForActions = manga },
-                            onClick = { onAction(HomeAction.ClickManga(manga)) }
-                        )
+                LazyVerticalGrid(
+                    columns = gridCells,
+                    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+                    contentPadding = PaddingValues(start = 8.dp, top = 72.dp, end = 8.dp, bottom = 80.dp),
+                ) {
+                    items(items = if (searchExpanded) filteredMangas else mangaList) { (manga, history, chapterCount) ->
+                        when (uiState.layout) {
+                            HomeLayoutType.GRID -> Main.Home.Component.MangaGridItem(
+                                manga = manga,
+                                history = history,
+                                chapterCount = chapterCount,
+                                onShowActions = { selectedMangaForActions = manga },
+                                onClick = { onAction(HomeAction.ClickManga(manga)) }
+                            )
 
-                        HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
-                            manga = manga,
-                            chapterCount = chapterCount,
-                            subtitle = manga.remoteInfo?.authors?.name,
-                            onClick = { onAction(HomeAction.ClickManga(manga)) },
-                            onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
-                            onShowActions = { selectedMangaForActions = manga },
-                        )
+                            HomeLayoutType.LIST -> Main.Common.Component.MangaListItem(
+                                manga = manga,
+                                chapterCount = chapterCount,
+                                subtitle = manga.remoteInfo?.authors?.name,
+                                onClick = { onAction(HomeAction.ClickManga(manga)) },
+                                onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
+                                onShowActions = { selectedMangaForActions = manga },
+                            )
+                        }
                     }
                 }
             }
@@ -236,9 +241,9 @@ fun Main.Home.Layout.Screen(
                 sortSettings = sortSettings,
                 filterSettings = filterSettings,
                 categories = allCategories,
+                onDismiss = { showFilterSheet = false },
                 onSortChange = { homeViewModel.updateSortSettings(it) },
                 onFilterChange = { homeViewModel.updateFilterSettings(it) },
-                onDismiss = { showFilterSheet = false }
             )
         }
     }
@@ -254,7 +259,6 @@ private fun EmptyState() {
                 text = stringResource(id = R.string.description_text_home_empty_state),
                 style = MaterialTheme.typography.headlineSmall
             )
-
         }
     }
 }

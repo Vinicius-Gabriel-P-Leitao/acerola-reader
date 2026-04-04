@@ -9,6 +9,10 @@ import br.acerola.manga.dto.archive.MangaDirectoryDto
 import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.module.manga.state.MainTab
 import br.acerola.manga.module.manga.state.MangaUiState
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 
 /**
  * Fixtures reutilizáveis para testes de Mangá na camada de apresentação.
@@ -18,26 +22,24 @@ object MangaFixtures {
         manga: MangaDto = MangaDto(directory = createMangaDirectoryDto(), remoteInfo = null),
         chapters: ChapterDto? = null,
         selectedTab: MainTab = MainTab.CHAPTERS,
-        isIndexing: Boolean = false,
-        indexingProgress: Float? = null,
         history: ReadingHistoryDto? = null,
-        readChapters: Set<Long> = emptySet(),
+        readChapters: PersistentSet<Long> = persistentSetOf(),
         totalChapters: Int = 0,
         currentPage: Int = 0,
         totalPages: Int = 0,
-        selectedChapterPerPage: ChapterPageSizeType = ChapterPageSizeType.SHORT
+        selectedChapterPerPage: ChapterPageSizeType = ChapterPageSizeType.SHORT,
+        allCategories: PersistentList<CategoryDto> = persistentListOf()
     ) = MangaUiState(
         manga = manga,
         chapters = chapters,
         selectedTab = selectedTab,
-        isIndexing = isIndexing,
-        indexingProgress = indexingProgress,
         history = history,
         readChapters = readChapters,
         totalChapters = totalChapters,
         currentPage = currentPage,
         totalPages = totalPages,
-        selectedChapterPerPage = selectedChapterPerPage
+        selectedChapterPerPage = selectedChapterPerPage,
+        allCategories = allCategories
     )
 
     fun createChapterArchivePageDto(

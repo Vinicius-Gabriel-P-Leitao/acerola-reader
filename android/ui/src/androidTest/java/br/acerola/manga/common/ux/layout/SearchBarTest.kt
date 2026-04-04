@@ -28,8 +28,8 @@ class SearchBarTest {
                     query = query,
                     onQueryChange = { query = it },
                     onSearch = {},
-                    active = active,
-                    onActiveChange = { active = it },
+                    expanded = active,
+                    onExpandedChange = { active = it },
                     items = items.filter { it.contains(query, ignoreCase = true) },
                     placeholder = "Buscar...",
                     itemKey = { it }
@@ -56,7 +56,7 @@ class SearchBarTest {
     @Test
     fun `SearchBar_deve_exibir_mensagem_de_vazio_quando_não_houver_resultados`() {
         composeTestRule.setContent {
-            var query by remember { mutableStateOf("") }
+            var query by remember { mutableStateOf("xyznotfound") }
             var active by remember { mutableStateOf(true) }
 
             AcerolaTheme {
@@ -64,8 +64,8 @@ class SearchBarTest {
                     query = query,
                     onQueryChange = { query = it },
                     onSearch = {},
-                    active = active,
-                    onActiveChange = { active = it },
+                    expanded = active,
+                    onExpandedChange = { active = it },
                     items = emptyList(),
                     placeholder = "Buscar...",
                     itemKey = { it }

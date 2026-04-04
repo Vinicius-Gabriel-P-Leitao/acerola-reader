@@ -35,6 +35,10 @@ sealed interface ChapterError : UserMessage {
         override val uiMessage = UiText.StringResource(resId = R.string.error_invalid_chapter, args = listOf(reason))
     }
 
+    data class UnsupportedFormat(val path: String) : ChapterError {
+        override val uiMessage = UiText.StringResource(resId = R.string.error_unsupported_format, args = listOf(path))
+    }
+
     data class UnexpectedError(
         val cause: Throwable
     ) : ChapterError {

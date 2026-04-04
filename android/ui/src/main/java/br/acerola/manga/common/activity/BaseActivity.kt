@@ -1,6 +1,7 @@
 package br.acerola.manga.common.activity
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -19,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -63,6 +66,8 @@ abstract class BaseActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val startDestination = getString(startDestinationRes)
                 val snackbarHostState = remember { SnackbarHostState() }
+                val configuration = LocalConfiguration.current
+                val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                 CompositionLocalProvider(
                     value = LocalSnackbarHostState provides snackbarHostState
@@ -80,21 +85,25 @@ abstract class BaseActivity : ComponentActivity() {
                                     }
                                 }
                             },
-                            bottomBar = { BottomBar(navController) }) { padding ->
+                            bottomBar = { if (!isLandscape) BottomBar(navController) },
+                        ) { padding ->
 
                             val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
                             val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
 
                             val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
-                            Box(modifier = Modifier.padding(paddingValues = contentPadding)) {
-                                NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
-                                Acerola.Layout.ProgressIndicator(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomStart)
-                                        .padding(all = 8.dp),
-                                    isLoading = isIndexing,
-                                    progress = progress,
-                                )
+                            Row(modifier = Modifier.padding(paddingValues = contentPadding)) {
+                                if (isLandscape) SideBar(navController)
+                                Box(modifier = Modifier.weight(1f)) {
+                                    NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
+                                    Acerola.Layout.ProgressIndicator(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomStart)
+                                            .padding(all = 8.dp),
+                                        isLoading = isIndexing,
+                                        progress = progress,
+                                    )
+                                }
                             }
                         }
                     }
@@ -109,5 +118,9 @@ abstract class BaseActivity : ComponentActivity() {
 
     @Composable
     open fun BottomBar(navController: NavHostController) {
+    }
+
+    @Composable
+    open fun SideBar(navController: NavHostController) {
     }
 }
