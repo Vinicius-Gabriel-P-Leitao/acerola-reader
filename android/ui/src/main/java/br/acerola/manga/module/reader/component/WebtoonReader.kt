@@ -1,7 +1,5 @@
 package br.acerola.manga.module.reader.component
 
-import android.graphics.Bitmap
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
@@ -10,32 +8,25 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import br.acerola.manga.module.reader.Reader
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @Composable
 fun Reader.Component.WebtoonReader(
     pageCount: Int,
+    mangaId: Long,
+    chapterId: Long,
     onUiToggle: () -> Unit,
     listState: LazyListState,
-    pages: Map<Int, Bitmap>,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit
 ) {
@@ -105,45 +96,31 @@ fun Reader.Component.WebtoonReader(
                     onPageRequest(index)
                 }
 
-                val pageBitmap = pages[index]
-                val bitmap = remember(key1 = pageBitmap) {
-                    pageBitmap?.asImageBitmap()
-                }
-
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .pointerInput(key1 = Unit) {
-                                detectTapGestures(
-                                    onTap = {
-                                        onUiToggle()
-                                    },
-                                    onDoubleTap = {
-                                        if (scale > 1f) {
-                                            scale = 1f
-                                            offset = Offset.Zero
-                                        } else {
-                                            scale = 2f
-                                        }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data("acerola://page/$mangaId/$chapterId/$index")
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .pointerInput(key1 = Unit) {
+                            detectTapGestures(
+                                onTap = {
+                                    onUiToggle()
+                                },
+                                onDoubleTap = {
+                                    if (scale > 1f) {
+                                        scale = 1f
+                                        offset = Offset.Zero
+                                    } else {
+                                        scale = 2f
                                     }
-                                )
-                            },
-                        contentScale = ContentScale.FillWidth
-                    )
-                } else {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(height = 300.dp),
-                    ) {
-                        CircularProgressIndicator(strokeCap = StrokeCap.Round)
-                    }
-                }
+                                }
+                            )
+                        },
+                    contentScale = ContentScale.FillWidth
+                )
             }
         }
     }
