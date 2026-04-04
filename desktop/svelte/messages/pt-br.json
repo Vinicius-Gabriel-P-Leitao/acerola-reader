@@ -26,6 +26,8 @@
   },
   "pages": {
     "config": {
+      "title": "Configurações",
+      "desc": "Personalize sua experiência de leitura.",
       "components": {
         "theme_piker": "Aparência"
       }
