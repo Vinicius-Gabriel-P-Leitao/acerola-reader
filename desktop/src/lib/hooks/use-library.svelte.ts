@@ -1,8 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { load } from "@tauri-apps/plugin-store";
-
-const STORE_FILE = "settings.json";
-const LIBRARY_KEY = "library_path";
+import { STORE_FILE, STORE_KEYS } from "$lib/constants/store";
 
 export function useLibrary() {
   let folderPath = $state<string | undefined>(undefined);
@@ -12,8 +10,7 @@ export function useLibrary() {
 
     if (path) {
       const store = await load(STORE_FILE);
-      await store.set(LIBRARY_KEY, path);
-
+      await store.set(STORE_KEYS.libraryPath, path);
       await store.save();
 
       folderPath = path;
@@ -22,7 +19,7 @@ export function useLibrary() {
 
   async function loadSavedPath() {
     const store = await load(STORE_FILE);
-    folderPath = (await store.get<string>(LIBRARY_KEY)) ?? undefined;
+    folderPath = (await store.get<string>(STORE_KEYS.libraryPath)) ?? undefined;
   }
 
   return {

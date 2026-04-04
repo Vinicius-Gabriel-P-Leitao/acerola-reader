@@ -11,9 +11,9 @@
   const { children } = $props();
 
   const sidebarItems: SidebarItem[] = [
-    { label: "Home", href: "/", icon: HouseIcon },
-    { label: "Histórico", href: "/historico", icon: HistoryIcon },
-    { label: "Configurações", href: "/configuracoes", icon: SettingsIcon },	
+    { label: "Home", href: "/home", icon: HouseIcon },
+    { label: "Histórico", href: "/history", icon: HistoryIcon },
+    { label: "Configurações", href: "/config", icon: SettingsIcon },	
   ];
 </script>
 

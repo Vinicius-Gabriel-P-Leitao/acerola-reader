@@ -1,42 +1,62 @@
 import { browser } from "$app/environment";
 import { LazyStore } from "@tauri-apps/plugin-store";
+import { STORE_FILE, STORE_KEYS } from "$lib/constants/store";
+import { THEMES } from "$lib/constants/themes";
 
-const DARK_THEMES = new Set(["catppuccin-mocha", "nord-dark", "dracula"]);
-const DEFAULT_THEME = "catppuccin-mocha";
-const STORE_KEY = "theme";
+export type ThemeColor = keyof typeof THEMES;
+export type ThemeMode = keyof (typeof THEMES)[ThemeColor];
 
-const store = new LazyStore("settings.json");
+const store = new LazyStore(STORE_FILE);
 
-function applyTheme(name: string) {
+// Estado no nível do módulo — compartilhado entre todos os componentes
+let theme = $state<ThemeColor>("catppuccin");
+let mode = $state<ThemeMode>("dark");
+let initialized = false;
+
+function applyTheme(name: ThemeColor, it: ThemeMode) {
   if (!browser) return;
 
   const root = document.documentElement;
-  root.setAttribute("data-theme", name);
-  root.classList.toggle("dark", DARK_THEMES.has(name));
+  root.setAttribute("data-theme", THEMES[name][it]);
+  root.classList.toggle("dark", it === "dark");
 }
 
 export function useTheme() {
-  let theme = $state(DEFAULT_THEME);
-
   $effect(() => {
-    if (!browser) return;
+    if (!browser || initialized) return;
+    initialized = true;
 
-    store.get<string>(STORE_KEY).then((saved) => {
-      if (saved) theme = saved;
-      applyTheme(theme);
+    Promise.all([
+      store.get<ThemeColor>(STORE_KEYS.theme),
+      store.get<ThemeMode>(STORE_KEYS.mode),
+    ]).then(([savedTheme, savedMode]) => {
+      if (savedTheme) theme = savedTheme;
+      if (savedMode) mode = savedMode;
+      
+      applyTheme(theme, mode);
     });
   });
 
-  async function setTheme(name: string) {
+  async function setTheme(name: ThemeColor) {
     theme = name;
-    applyTheme(name);
-    await store.set(STORE_KEY, name);
+    applyTheme(theme, mode);
+    await store.set(STORE_KEYS.theme, name);
+  }
+
+  async function setMode(m: ThemeMode) {
+    mode = m;
+    applyTheme(theme, mode);
+    await store.set(STORE_KEYS.mode, m);
   }
 
   return {
     get theme() {
       return theme;
     },
+    get mode() {
+      return mode;
+    },
     setTheme,
+    setMode,
   };
 }

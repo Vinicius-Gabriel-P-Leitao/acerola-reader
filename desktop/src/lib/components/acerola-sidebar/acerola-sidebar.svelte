@@ -33,11 +33,7 @@
               <Sidebar.MenuButton
                 isActive={page.url.pathname === item.href}
                 tooltipContent={item.label}
-                class="h-12 rounded-xl px-3 [&_svg]:size-6
-									data-[active=true]:bg-primary
-									data-[active=true]:text-primary-foreground
-									data-[active=true]:shadow-lg
-									hover:bg-surface"
+                class="h-12 rounded-xl px-3 [&_svg]:size-6 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-lg hover:bg-surface"
               >
                 {#snippet child({ props })}
                   <a href={item.href} {...props}>
