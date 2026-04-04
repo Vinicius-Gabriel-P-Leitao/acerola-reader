@@ -12,8 +12,7 @@ describe("AcerolaButtonIcon", () => {
   it("tem dimensões quadradas via classe", () => {
     render(AcerolaButtonIcon);
     const button = screen.getByRole("button");
-    expect(button.className).toContain("w-10");
-    expect(button.className).toContain("h-10");
+    expect(button.className).toContain("size-10");
   });
 
   it("chama onclick ao ser clicado", async () => {

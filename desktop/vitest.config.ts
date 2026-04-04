@@ -47,6 +47,7 @@ export default defineConfig({
         ],
         test: {
           name: "storybook",
+          setupFiles: ["svelte/tests/setup.browser.ts"],
           browser: {
             enabled: true,
             headless: true,

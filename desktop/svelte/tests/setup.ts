@@ -11,10 +11,12 @@ vi.mock("$app/environment", () => ({
 
 // Mock Tauri store — comportamento padrão: retorna null (sem valor salvo)
 vi.mock("@tauri-apps/plugin-store", () => ({
-  LazyStore: vi.fn().mockImplementation(() => ({
-    get: vi.fn().mockResolvedValue(null),
-    set: vi.fn().mockResolvedValue(undefined),
-  })),
+  LazyStore: vi.fn().mockImplementation(function () {
+    return {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+    };
+  }),
 }));
 
 vi.mock("$app/state", () => ({
