@@ -1,0 +1,7 @@
+export const STORE_FILE = "settings.json";
+
+export const STORE_KEYS = {
+  mode:        "mode",
+  theme:       "theme",
+  libraryPath: "library_path",
+} as const;

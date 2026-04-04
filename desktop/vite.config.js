@@ -1,13 +1,25 @@
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import path from "path";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: [
+    sveltekit(),
+    tailwindcss(),
+    paraglideVitePlugin({
+      project: "./project.inlang",
+      outdir: "./src/lib/paraglide",
+    }),
+  ],
+  resolve: {
+    alias: {
+      $theme: path.resolve("./src/theme"),
+    },
+  },
   clearScreen: false,
   // NOTE: O tauri espera uma porta fixa
   server: {

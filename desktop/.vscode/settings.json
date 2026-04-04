@@ -2,5 +2,25 @@
   "svelte.enable-ts-plugin": true,
   "files.associations": {
     "*.css": "tailwindcss"
+  },
+  "files.readonlyInclude": {
+    "**/.cargo/registry/src/**/*.rs": true,
+    "**/.cargo/git/checkouts/**/*.rs": true,
+    "**/lib/rustlib/src/rust/library/**/*.rs": true
+  },
+  "files.watcherExclude": {
+    "**/target/**": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.svelte-kit": true,
+    "**/paraglide": true,
+    "**/gen": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.svelte-kit": true,
+    "**/paraglide": true,
+    "**/gen": true
   }
 }
