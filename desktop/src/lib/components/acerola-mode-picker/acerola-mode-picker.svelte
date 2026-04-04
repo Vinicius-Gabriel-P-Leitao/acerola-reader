@@ -1,20 +1,14 @@
 <script lang="ts">
-  import { type ThemeMode } from "$lib/hooks/use-theme.svelte";
+  import { useTheme } from "$lib/hooks/use-theme.svelte";
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
   import SunIcon from "@lucide/svelte/icons/sun";
   import MoonIcon from "@lucide/svelte/icons/moon";
 
-  let {
-    mode,
-    onselect,
-  }: {
-    mode: ThemeMode;
-    onselect: (mode: ThemeMode) => void;
-  } = $props();
+  const ctx = useTheme();
 </script>
 
-<AcerolaButtonIcon onclick={() => onselect(mode === "light" ? "dark" : "light")}>
-  {#if mode === "light"}
+<AcerolaButtonIcon onclick={() => ctx.setMode(ctx.mode === "light" ? "dark" : "light")}>
+  {#if ctx.mode === "light"}
     <SunIcon size={16} />
   {:else}
     <MoonIcon size={16} />
