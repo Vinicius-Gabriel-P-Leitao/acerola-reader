@@ -16,7 +16,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "0.0.1 beta " // NOTE: Lembrar de trocar de acordo com a release
+        versionName = "0.0.1 beta" // NOTE: Lembrar de trocar de acordo com a release
         applicationId = "br.acerola.manga"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
