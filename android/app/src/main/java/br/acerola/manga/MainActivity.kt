@@ -41,7 +41,11 @@ class MainActivity(
 
     override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
         defaultComposable(context, Destination.HOME) {
-            Main.Home.Layout.Screen()
+            Main.Home.Layout.Screen(
+                onNavigateToConfig = {
+                    navController.navigate(context.getString(Destination.CONFIG.route))
+                }
+            )
         }
         defaultComposable(context, Destination.HISTORY) {
             Main.History.Layout.Screen()

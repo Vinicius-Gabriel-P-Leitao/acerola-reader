@@ -17,9 +17,11 @@ import javax.inject.Inject
 import androidx.documentfile.provider.DocumentFile
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import br.acerola.manga.config.preference.MangaDirectoryPreference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class FileSystemAccessViewModel @Inject constructor(
@@ -39,13 +41,25 @@ class FileSystemAccessViewModel @Inject constructor(
     private val _folderName = MutableStateFlow<String?>(null)
     val folderName: StateFlow<String?> = _folderName.asStateFlow()
 
+    private val _tutorialShown = MutableStateFlow(false)
+    val tutorialShown: StateFlow<Boolean> = _tutorialShown.asStateFlow()
+
     val folderUri get() = manager.folderUri
+
+    fun setTutorialShown(shown: Boolean) {
+        viewModelScope.launch {
+            MangaDirectoryPreference.setTutorialShown(context, shown)
+            _tutorialShown.value = shown
+        }
+    }
 
     fun saveFolderUri(uri: Uri?) {
         AcerolaLogger.audit(TAG, "User selected new library folder", LogSource.VIEWMODEL)
         viewModelScope.launch {
             manager.saveFolderUri(uri).onLeft { error -> _uiEvents.send(error) }
             updateFolderName(uri)
+            // Se o usuário selecionou uma pasta, marca como tutorial visto
+            if (uri != null) setTutorialShown(true)
         }
     }
 
@@ -53,6 +67,7 @@ class FileSystemAccessViewModel @Inject constructor(
         AcerolaLogger.d(TAG, "Loading saved library folder", LogSource.VIEWMODEL)  
         manager.loadFolderUri()
         updateFolderName(manager.folderUri)
+        _tutorialShown.value = MangaDirectoryPreference.tutorialShownFlow(context).first()
     }
 
     private fun updateFolderName(uri: Uri?) {
