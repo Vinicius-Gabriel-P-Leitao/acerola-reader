@@ -6,6 +6,10 @@
     title: "Components/AcerolaButton",
     component: AcerolaButton,
     tags: ["autodocs"],
+    argTypes: {
+      variant: { description: "Variação visual do botão", control: "select", options: ["default", "outline", "ghost", "destructive"] },
+      disabled: { description: "Desabilita o botão", control: "boolean" }
+    }
   });
 </script>
 

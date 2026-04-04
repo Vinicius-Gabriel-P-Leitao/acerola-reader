@@ -12,6 +12,13 @@
       title: "Título Padrão",
       description: "Descrição padrão do componente",
     },
+    argTypes: {
+      title: { description: "Título principal do botão", control: "text" },
+      description: { description: "Texto descritivo abaixo do título", control: "text" },
+      icon: { description: "Snippet para renderizar um ícone à esquerda", control: "object" },
+      action: { description: "Snippet para renderizar um componente de ação à direita", control: "object" },
+      onclick: { description: "Função de clique", action: "clicked" }
+    },
   });
 </script>
 

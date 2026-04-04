@@ -26,6 +26,10 @@
         },
       },
     },
+    argTypes: {
+      items: { description: "Lista de itens de navegação", control: "object" },
+      footer: { description: "Snippet opcional para o rodapé da sidebar", control: "object" }
+    },
   });
 </script>
 
