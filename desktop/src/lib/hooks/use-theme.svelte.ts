@@ -1,17 +1,29 @@
 import { browser } from "$app/environment";
-import { LazyStore } from "@tauri-apps/plugin-store";
 import { STORE_FILE, STORE_KEYS } from "$lib/constants/store";
 import { THEMES } from "$lib/constants/themes";
+import { LazyStore } from "@tauri-apps/plugin-store";
 
 export type ThemeColor = keyof typeof THEMES;
 export type ThemeMode = keyof (typeof THEMES)[ThemeColor];
 
 const store = new LazyStore(STORE_FILE);
 
-// Estado no nível do módulo — compartilhado entre todos os componentes
 let theme = $state<ThemeColor>("catppuccin");
 let mode = $state<ThemeMode>("dark");
-let initialized = false;
+
+// IIFE para carregar o tema do store e colocar na DOM
+// prettier-ignore
+browser && (async () => {
+  const [savedTheme, savedMode] = await Promise.all([
+    store.get<ThemeColor>(STORE_KEYS.theme),
+    store.get<ThemeMode>(STORE_KEYS.mode),
+  ]);
+
+  if (savedTheme) theme = savedTheme;
+  if (savedMode)  mode  = savedMode;
+
+  applyTheme(theme, mode);
+})();
 
 function applyTheme(name: ThemeColor, it: ThemeMode) {
   if (!browser) return;
@@ -22,31 +34,16 @@ function applyTheme(name: ThemeColor, it: ThemeMode) {
 }
 
 export function useTheme() {
-  $effect(() => {
-    if (!browser || initialized) return;
-    initialized = true;
-
-    Promise.all([
-      store.get<ThemeColor>(STORE_KEYS.theme),
-      store.get<ThemeMode>(STORE_KEYS.mode),
-    ]).then(([savedTheme, savedMode]) => {
-      if (savedTheme) theme = savedTheme;
-      if (savedMode) mode = savedMode;
-      
-      applyTheme(theme, mode);
-    });
-  });
-
   async function setTheme(name: ThemeColor) {
     theme = name;
     applyTheme(theme, mode);
     await store.set(STORE_KEYS.theme, name);
   }
 
-  async function setMode(m: ThemeMode) {
-    mode = m;
+  async function setMode(it: ThemeMode) {
+    mode = it;
     applyTheme(theme, mode);
-    await store.set(STORE_KEYS.mode, m);
+    await store.set(STORE_KEYS.mode, it);
   }
 
   return {
