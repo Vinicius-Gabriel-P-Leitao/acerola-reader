@@ -10,5 +10,17 @@
   },
   "files.watcherExclude": {
     "**/target/**": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.svelte-kit": true,
+    "**/paraglide": true,
+    "**/gen": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.svelte-kit": true,
+    "**/paraglide": true,
+    "**/gen": true
   }
 }
