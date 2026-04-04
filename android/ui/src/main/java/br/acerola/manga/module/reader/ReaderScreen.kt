@@ -118,7 +118,8 @@ fun ReaderScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Reader.Layout.PageContent(
-            pages = state.pages,
+            mangaId = mangaId,
+            chapterId = state.currentChapter?.id ?: chapterId,
             listState = listState,
             pagerState = pagerState,
             pageCount = state.pageCount,

@@ -20,13 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.manga.local.entity.archive.ChapterTemplate
+import br.acerola.manga.dto.archive.ChapterTemplateDto
 import br.acerola.manga.module.main.Main
 import br.acerola.manga.ui.R
 
 @Composable
 fun Main.Pattern.Component.TemplateItem(
-    template: ChapterTemplate,
+    template: ChapterTemplateDto,
     onDelete: () -> Unit
 ) {
     Card(

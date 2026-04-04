@@ -53,6 +53,8 @@ import br.acerola.manga.module.manga.state.MangaSyncAction
 import br.acerola.manga.module.manga.state.MangaUiState
 import br.acerola.manga.module.reader.ReaderActivity
 import br.acerola.manga.ui.R
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.launch
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -128,13 +130,13 @@ fun MangaScreen(
         chapters = chapterDto,
         selectedTab = selectedTab,
         history = history,
-        readChapters = readChapters.toSet(),
+        readChapters = readChapters.toPersistentSet(),
         totalChapters = totalChapters,
         currentPage = currentPage,
         totalPages = totalPages,
         selectedChapterPerPage = selectedChapterPerPage,
         chapterSortSettings = chapterSortSettings,
-        allCategories = allCategories
+        allCategories = allCategories.toPersistentList()
     )
 
     val coroutineScope = rememberCoroutineScope()

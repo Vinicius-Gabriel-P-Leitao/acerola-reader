@@ -1,7 +1,7 @@
 package br.acerola.manga.module.main.pattern.state
 
-import br.acerola.manga.local.entity.archive.ChapterTemplate
+import br.acerola.manga.dto.archive.ChapterTemplateDto
 
 data class FilePatternUiState(
-    val templates: List<ChapterTemplate> = emptyList()
+    val templates: List<ChapterTemplateDto> = emptyList()
 )

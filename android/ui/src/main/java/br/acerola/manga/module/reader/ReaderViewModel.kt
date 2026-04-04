@@ -77,7 +77,6 @@ class ReaderViewModel @Inject constructor(
             it.copy(
                 currentChapter = chapter,
                 currentPage = initialPage,
-                pages = emptyMap(),
                 isLoading = true,
                 isChapterRead = false,
                 previousChapterId = null,
@@ -85,7 +84,7 @@ class ReaderViewModel @Inject constructor(
             )
         }
         seenPages.clear()
-
+        
         viewModelScope.launch {
             observeChaptersUseCase.observeByManga(mangaId)
                 .filter { it.items.isNotEmpty() }
@@ -98,12 +97,6 @@ class ReaderViewModel @Inject constructor(
                         val prevChapter = if (currentIndex > 0) chapters[currentIndex - 1] else null
                         val nextChapter = if (currentIndex < chapters.size - 1) chapters[currentIndex + 1] else null
 
-                        AcerolaLogger.d(
-                            TAG,
-                            "Navigation calculated: prev=${prevChapter?.id ?: "none"}, next=${nextChapter?.id ?: "none"}",
-                            LogSource.VIEWMODEL
-                        )
-
                         _state.update {
                             it.copy(
                                 previousChapterId = prevChapter?.id,
@@ -113,7 +106,7 @@ class ReaderViewModel @Inject constructor(
                     }
                 }
         }
-
+        
         viewModelScope.launch {
             repository.openChapter(chapter)
                 .map {
@@ -121,13 +114,9 @@ class ReaderViewModel @Inject constructor(
                         it.copy(
                             pageCount = repository.pageCount(),
                             currentPage = initialPage,
-                            pages = emptyMap(),
                             isLoading = false
                         )
                     }
-                    AcerolaLogger.d(
-                        TAG, "Repository opened. Total pages: ${repository.pageCount()}", LogSource.VIEWMODEL
-                    )
                 }
                 .handleResult()
         }
@@ -176,17 +165,7 @@ class ReaderViewModel @Inject constructor(
         chapterId: Long,
         index: Int
     ) {
-        if (state.value.pages.containsKey(index)) {
-            markPageAsSeen(mangaId, chapterId, index)
-            return
-        }
-
-        viewModelScope.launch {
-            repository.loadPage(index).onRight { bitmap ->
-                markPageAsSeen(mangaId, chapterId, index)
-                _state.update { it.copy(pages = it.pages + (index to bitmap)) }
-            }.handleResult()
-        }
+        markPageAsSeen(mangaId, chapterId, index)
     }
 
     private fun markPageAsSeen(

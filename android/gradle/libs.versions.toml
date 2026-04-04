@@ -30,6 +30,7 @@ apollo = "4.1.0"
 # -- Utils --
 junrar = "7.5.7"
 kotlinxCoroutines = "1.10.2"
+kotlinxCollectionsImmutable = "0.4.0"
 
 # -- Testing --
 junit = "4.13.2"
@@ -97,6 +98,7 @@ apollo-normalized-cache = { group = "com.apollographql.apollo", name = "apollo-n
 
 # --- Utils ---
 junrar = { group = "com.github.junrar", name = "junrar", version.ref = "junrar" }
+kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 

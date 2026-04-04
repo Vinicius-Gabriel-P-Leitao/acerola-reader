@@ -148,7 +148,32 @@ uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriq
 
 ---
 
-### 🔲 Pendente
+### 🔲 Pendente - Refatorações Planejadas (Auditoria)
+
+#### Fase 1 - Arquitetura (Remoção de Layer Leak)
+
+- [x] Refatorar `FilePatternUiState` e `TemplateItem` para usar `ChapterTemplateDto`
+- [x] Extrair `ChapterTemplateDto` e remover acoplamento do Room na UI
+
+#### Fase 2 - Performance (Recomposições)
+
+- [x] Migrar `MangaUiState` e `ReaderUiState` para usar `kotlinx-collections-immutable`
+
+#### Fase 3 - Performance (Reader)
+
+- [x] Refatorar `ReaderUiState` para remover `Map<Int, Bitmap>` (delegar para Coil)
+
+#### Fase 4 - Regra de Negócio (Ordenação)
+
+- [x] Implementar `ChapterSortNormalizer` e atualizar persistência (migration)
+
+#### Fase 5 - Robustez
+
+- [x] Envolver `ChapterDownloadWorker` e `MetadataSyncWorker` com tratamento robusto de exceções
+
+#### Fase 6 - Verificação
+
+- [x] Executar testes e build após cada fase
 
 #### Erro ao listar mangás com decimal
 
@@ -175,7 +200,7 @@ uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriq
 
 #### Tutorial
 
-- [ ] **Tutorial introdutório:** Ensinar como selecionar a pasta de mangás e usar o botão de sync profundo.
+- [x] **Tutorial introdutório:** Ensinar como selecionar a pasta de mangás e usar o botão de sync profundo.
 
 ### Testes
 
