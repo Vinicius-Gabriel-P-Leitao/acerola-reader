@@ -1,6 +1,5 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "config_appearance": "Aparência",
   "theme": {
     "catppuccin": {
       "name": "Catppuccin",
@@ -18,6 +17,18 @@
   "components": {
     "select": {
       "placeholder": "Selecione uma opção"
+    }
+  },
+  "routes": {
+    "home": "Início",
+    "history": "Histórico",
+    "config": "Configurações"
+  },
+  "pages": {
+    "config": {
+      "components": {
+        "theme_piker": "Aparência"
+      }
     }
   }
 }
