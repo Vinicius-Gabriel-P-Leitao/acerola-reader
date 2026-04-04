@@ -12,6 +12,8 @@ import br.acerola.manga.dto.history.ReadingHistoryDto
 import br.acerola.manga.dto.metadata.category.CategoryDto
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
 import br.acerola.manga.ui.R
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
 
 enum class MainTab(@param:StringRes val titleRes: Int) {
     CHAPTERS(R.string.title_chapter_tabs_chapters),
@@ -23,13 +25,13 @@ data class MangaUiState(
     val chapters: ChapterDto?,
     val selectedTab: MainTab,
     val history: ReadingHistoryDto?,
-    val readChapters: Set<Long>,
+    val readChapters: PersistentSet<Long>,
     val totalChapters: Int,
     val currentPage: Int,
     val totalPages: Int,
     val selectedChapterPerPage: ChapterPageSizeType,
     val chapterSortSettings: ChapterSortPreferenceData = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING),
-    val allCategories: List<CategoryDto> = emptyList()
+    val allCategories: PersistentList<CategoryDto> = kotlinx.collections.immutable.persistentListOf()
 )
 
 data class MangaConfigUiState(

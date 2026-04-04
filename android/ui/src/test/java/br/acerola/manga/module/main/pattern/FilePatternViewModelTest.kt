@@ -5,7 +5,7 @@ import br.acerola.manga.MainDispatcherRule
 import br.acerola.manga.core.usecase.template.AddTemplateUseCase
 import br.acerola.manga.core.usecase.template.ObserveTemplatesUseCase
 import br.acerola.manga.core.usecase.template.RemoveTemplateUseCase
-import br.acerola.manga.local.entity.archive.ChapterTemplate
+import br.acerola.manga.dto.archive.ChapterTemplateDto
 import br.acerola.manga.module.main.pattern.state.FilePatternAction
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coVerify
@@ -28,7 +28,7 @@ class FilePatternViewModelTest {
     private val removeTemplate = mockk<RemoveTemplateUseCase>(relaxed = true)
     private val observeTemplates = mockk<ObserveTemplatesUseCase>()
 
-    private val templatesFlow = MutableStateFlow<List<ChapterTemplate>>(emptyList())
+    private val templatesFlow = MutableStateFlow<List<ChapterTemplateDto>>(emptyList())
 
     private lateinit var viewModel: FilePatternViewModel
 
@@ -48,7 +48,7 @@ class FilePatternViewModelTest {
 
     @Test
     fun `estado e atualizado quando use case emite novos templates`() = runTest {
-        val template = ChapterTemplate(id = 1L, label = "Vol. Cap.", pattern = "{chapter}")
+        val template = ChapterTemplateDto(id = 1L, label = "Vol. Cap.", pattern = "{chapter}")
 
         viewModel.uiState.test {
             awaitItem() // estado inicial vazio

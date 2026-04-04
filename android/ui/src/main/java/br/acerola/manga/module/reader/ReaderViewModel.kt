@@ -20,6 +20,7 @@ import br.acerola.manga.core.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.manga.core.usecase.history.TrackReadingProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +78,7 @@ class ReaderViewModel @Inject constructor(
             it.copy(
                 currentChapter = chapter,
                 currentPage = initialPage,
-                pages = emptyMap(),
+                pages = persistentMapOf(),
                 isLoading = true,
                 isChapterRead = false,
                 previousChapterId = null,
@@ -121,7 +122,7 @@ class ReaderViewModel @Inject constructor(
                         it.copy(
                             pageCount = repository.pageCount(),
                             currentPage = initialPage,
-                            pages = emptyMap(),
+                            pages = persistentMapOf(),
                             isLoading = false
                         )
                     }
@@ -184,7 +185,7 @@ class ReaderViewModel @Inject constructor(
         viewModelScope.launch {
             repository.loadPage(index).onRight { bitmap ->
                 markPageAsSeen(mangaId, chapterId, index)
-                _state.update { it.copy(pages = it.pages + (index to bitmap)) }
+                _state.update { it.copy(pages = it.pages.put(index, bitmap)) }
             }.handleResult()
         }
     }
