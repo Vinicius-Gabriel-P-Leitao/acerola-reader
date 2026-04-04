@@ -173,7 +173,7 @@ uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriq
 
 #### Fase 6 - Verificação
 
-- [ ] Executar testes e build após cada fase
+- [x] Executar testes e build após cada fase
 
 #### Erro ao listar mangás com decimal
 
