@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { locales, localizeHref } from "$lib/paraglide/runtime";
-  import { page } from "$app/state";
+  import AcerolaSidebar from "$lib/components/acerola-sidebar/acerola-sidebar.svelte";
+  import SidebarProvider from "$lib/components/ui/sidebar/sidebar-provider.svelte";
   import "$theme/layout.css";
 
   const { children } = $props();
 </script>
 
-{@render children()}
+<div class="flex h-screen">
+  <SidebarProvider>
+    <AcerolaSidebar />
 
-<div style="display:none">
-  {#each locales as locale}
-    <a href={localizeHref(page.url.pathname, { locale })}>{locale}</a>
-  {/each}
+    <main>
+      {@render children()}
+    </main>
+  </SidebarProvider>
 </div>
