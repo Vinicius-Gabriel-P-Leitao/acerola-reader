@@ -161,15 +161,15 @@ uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriq
 
 #### Fase 3 - Performance (Reader)
 
-- [ ] Refatorar `ReaderUiState` para remover `Map<Int, Bitmap>` (delegar para Coil)
+- [x] Refatorar `ReaderUiState` para remover `Map<Int, Bitmap>` (delegar para Coil)
 
 #### Fase 4 - Regra de Negócio (Ordenação)
 
-- [ ] Implementar `ChapterSortNormalizer` e atualizar persistência (migration)
+- [x] Implementar `ChapterSortNormalizer` e atualizar persistência (migration)
 
 #### Fase 5 - Robustez
 
-- [ ] Envolver `ChapterDownloadWorker` e `MetadataSyncWorker` com tratamento robusto de exceções
+- [x] Envolver `ChapterDownloadWorker` e `MetadataSyncWorker` com tratamento robusto de exceções
 
 #### Fase 6 - Verificação
 

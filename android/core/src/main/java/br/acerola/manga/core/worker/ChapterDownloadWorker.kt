@@ -15,6 +15,8 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.manga.core.usecase.download.DownloadChaptersUseCase
 import br.acerola.manga.data.R
+import br.acerola.manga.logging.AcerolaLogger
+import br.acerola.manga.logging.LogSource
 import br.acerola.manga.util.NotificationHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -46,78 +48,92 @@ class ChapterDownloadWorker @AssistedInject constructor(
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override suspend fun doWork(): Result {
-        val chapterIds = inputData.getStringArray(KEY_CHAPTER_IDS) ?: return Result.failure(
-            workDataOf("error" to "No chapter IDs provided")
-        )
-        val chapterNumbers = inputData.getStringArray(KEY_CHAPTER_NUMBERS) ?: Array(chapterIds.size) { "" }
-        val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure(
-            workDataOf("error" to "No manga title provided")
-        )
-        val fileExtension = inputData.getString(KEY_FILE_EXTENSION) ?: ".cbz"
-        val baseUriString = inputData.getString(KEY_BASE_URI) ?: return Result.failure(
-            workDataOf("error" to "No base URI provided")
-        )
-        val coverUrl = inputData.getString(KEY_COVER_URL)
-        val coverFileName = inputData.getString(KEY_COVER_FILE_NAME)
-
-        val builder = notificationHelper.createBaseNotification(
-            context.getString(R.string.download_chapter_title),
-            context.getString(R.string.download_chapter_description, mangaTitle)
-        )
-
-        setForeground(
-            ForegroundInfo(
-                NotificationHelper.DOWNLOAD_NOTIFICATION_ID,
-                builder.build(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        return try {
+            val chapterIds = inputData.getStringArray(KEY_CHAPTER_IDS) ?: return Result.failure(
+                workDataOf("error" to context.getString(R.string.download_chapter_error_no_ids))
             )
-        )
 
-        val libraryRoot = DocumentFile.fromTreeUri(context, baseUriString.toUri())
-            ?: return Result.failure(workDataOf("error" to "Cannot access library folder"))
+            val chapterNumbers = inputData.getStringArray(KEY_CHAPTER_NUMBERS) ?: Array(chapterIds.size) { "" }
+            val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure(
+                workDataOf("error" to context.getString(R.string.download_chapter_error_no_title))
+            )
 
-        val mangaFolder = libraryRoot.findFile(mangaTitle)
-            ?: libraryRoot.createDirectory(mangaTitle)
-            ?: return Result.failure(workDataOf("error" to "Cannot create manga folder: $mangaTitle"))
+            val fileExtension = inputData.getString(KEY_FILE_EXTENSION) ?: ".cbz"
+            val baseUriString = inputData.getString(KEY_BASE_URI) ?: return Result.failure(
+                workDataOf("error" to context.getString(R.string.download_chapter_error_no_uri))
+            )
 
-        val chapters = chapterIds.mapIndexed { index, id ->
-            val number = chapterNumbers.getOrNull(index)?.takeIf { it.isNotBlank() } ?: id
-            DownloadChaptersUseCase.ChapterEntry(id = id, fileName = "$number$fileExtension")
-        }
+            val coverUrl = inputData.getString(KEY_COVER_URL)
+            val coverFileName = inputData.getString(KEY_COVER_FILE_NAME)
 
-        val result = downloadChaptersUseCase(
-            mangaFolder = mangaFolder,
-            chapters = chapters,
-            coverUrl = coverUrl,
-            coverFileName = coverFileName,
-            onProgress = { progress, currentChapter ->
-                setProgress(
-                    workDataOf(
-                        WorkerContract.KEY_PROGRESS to progress,
-                        KEY_CURRENT_CHAPTER_ID to currentChapter?.id,
-                        KEY_CURRENT_CHAPTER_FILE_NAME to currentChapter?.fileName,
-                        KEY_TOTAL_CHAPTERS to chapters.size,
-                        KEY_MANGA_TITLE to mangaTitle
-                    )
+            val builder = notificationHelper.createBaseNotification(
+                context.getString(R.string.download_chapter_title),
+                context.getString(R.string.download_chapter_description, mangaTitle)
+            )
+
+            setForeground(
+                ForegroundInfo(
+                    NotificationHelper.DOWNLOAD_NOTIFICATION_ID,
+                    builder.build(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
                 )
-                notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
+            )
+
+            val libraryRoot = DocumentFile.fromTreeUri(context, baseUriString.toUri())
+                ?: return Result.failure(workDataOf("error" to context.getString(R.string.download_chapter_error_access_folder)))
+
+            val mangaFolder = libraryRoot.findFile(mangaTitle)
+                ?: libraryRoot.createDirectory(mangaTitle)
+                ?: return Result.failure(workDataOf("error" to context.getString(R.string.download_chapter_error_create_folder, mangaTitle)))
+
+            val chapters = chapterIds.mapIndexed { index, id ->
+                val number = chapterNumbers.getOrNull(index)?.takeIf { it.isNotBlank() } ?: id
+                DownloadChaptersUseCase.ChapterEntry(id = id, fileName = "$number$fileExtension")
             }
-        )
 
-        triggerPostDownloadSync(baseUriString)
+            val result = downloadChaptersUseCase(
+                mangaFolder = mangaFolder,
+                chapters = chapters,
+                coverUrl = coverUrl,
+                coverFileName = coverFileName,
+                onProgress = { progress, currentChapter ->
+                    setProgress(
+                        workDataOf(
+                            WorkerContract.KEY_PROGRESS to progress,
+                            KEY_CURRENT_CHAPTER_ID to currentChapter?.id,
+                            KEY_CURRENT_CHAPTER_FILE_NAME to currentChapter?.fileName,
+                            KEY_TOTAL_CHAPTERS to chapters.size,
+                            KEY_MANGA_TITLE to mangaTitle
+                        )
+                    )
+                    notificationHelper.updateProgress(builder, progress, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
+                }
+            )
 
-        val resultTitle = context.getString(R.string.download_chapter_success_title)
-        val resultMessage = context.getString(
-            R.string.download_chapter_success_message,
-            result.downloadedCount,
-            chapterIds.size
-        )
-        notificationHelper.showFinishedNotification(resultTitle, resultMessage, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
+            triggerPostDownloadSync(baseUriString)
 
-        return if (result.errorCount > 0 && result.downloadedCount == 0) {
-            Result.failure(workDataOf("error" to "All ${result.errorCount} downloads failed"))
-        } else {
-            Result.success()
+            val resultTitle = context.getString(R.string.download_chapter_success_title)
+            val resultMessage = context.getString(
+                R.string.download_chapter_success_message,
+                result.downloadedCount,
+                chapterIds.size
+            )
+            notificationHelper.showFinishedNotification(resultTitle, resultMessage, NotificationHelper.DOWNLOAD_NOTIFICATION_ID)
+
+            if (result.errorCount > 0 && result.downloadedCount == 0) {
+                Result.failure(workDataOf("error" to context.getString(R.string.download_chapter_error_all_failed, result.errorCount)))
+            } else {
+                Result.success()
+            }
+        } catch (e: Exception) {
+            AcerolaLogger.e("ChapterDownloadWorker", "Fatal download error", LogSource.WORKER, e)
+            val errorMsg = e.message ?: context.getString(R.string.download_chapter_error_fatal)
+            notificationHelper.showFinishedNotification(
+                context.getString(R.string.download_chapter_error_title),
+                errorMsg,
+                NotificationHelper.DOWNLOAD_NOTIFICATION_ID
+            )
+            Result.failure(workDataOf("error" to errorMsg))
         }
     }
 

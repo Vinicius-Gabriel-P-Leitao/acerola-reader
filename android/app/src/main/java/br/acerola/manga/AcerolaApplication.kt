@@ -3,8 +3,8 @@ package br.acerola.manga
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import br.acerola.manga.module.reader.coil.PageFetcherFactory
 import br.acerola.manga.service.reader.ReaderProcessor
-import br.acerola.manga.service.reader.coil.PageFetcherFactory
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
