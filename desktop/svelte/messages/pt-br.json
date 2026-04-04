@@ -1,5 +1,18 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "hello_world": "Hello, {name} from pt-br!",
-  "select_path": "Pasta selecionada: {path}"
+  "config_appearance": "Aparência",
+  "theme": {
+    "catppuccin": {
+      "name": "Catppuccin",
+      "desc": "Paleta pastel suave com tons roxos e rosados"
+    },
+    "nord": {
+      "name": "Nord",
+      "desc": "Paleta ártica inspirada no norte escandinavo"
+    },
+    "dracula": {
+      "name": "Dracula",
+      "desc": "Cores vibrantes sobre fundo escuro ou claro"
+    }
+  }
 }

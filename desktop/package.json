@@ -6,17 +6,18 @@
   "license": "GPL-3.0-only",
   "scripts": {
     "tauri": "tauri",
-    "dev": "vite dev",
-    "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test": "npm run test:unit -- --run && vitest run",
+    "dev": "npm run paraglide:compile && vite dev",
+    "build": "npm run paraglide:compile && vite build",
+    "check": "npm run paraglide:compile && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "npm run paraglide:compile && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test:unit": "vitest",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:unit": "vitest",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "test": "npm run test:unit -- --run && vitest run",
+    "storybook": "npm run paraglide:compile && storybook dev -p 6006",
+    "build-storybook": "npm run paraglide:compile && storybook build",
+    "paraglide:compile": "paraglide-js compile --project ./svelte/project.inlang --outdir ./svelte/src/lib/paraglide"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
