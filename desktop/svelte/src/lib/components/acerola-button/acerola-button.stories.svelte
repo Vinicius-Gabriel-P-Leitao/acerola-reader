@@ -9,10 +9,22 @@
   });
 </script>
 
-<Story name="Default">
+<Story name="Default" asChild>
   <AcerolaButton>Clique aqui</AcerolaButton>
 </Story>
 
-<Story name="Disabled">
+<Story name="Outline" asChild>
+  <AcerolaButton variant="outline">Outline</AcerolaButton>
+</Story>
+
+<Story name="Ghost" asChild>
+  <AcerolaButton variant="ghost">Ghost</AcerolaButton>
+</Story>
+
+<Story name="Destructive" asChild>
+  <AcerolaButton variant="destructive">Deletar</AcerolaButton>
+</Story>
+
+<Story name="Disabled" asChild>
   <AcerolaButton disabled>Desabilitado</AcerolaButton>
 </Story>

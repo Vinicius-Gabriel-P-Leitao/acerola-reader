@@ -1,11 +1,15 @@
 import { render, screen } from "@testing-library/svelte";
 import { userEvent } from "@testing-library/user-event";
+import { createRawSnippet } from "svelte";
 import { describe, expect, it, vi } from "vitest";
 import AcerolaButton from "./acerola-button.svelte";
 
 describe("AcerolaButton", () => {
   it("renderiza o conteúdo passado via slot", () => {
-    render(AcerolaButton, { props: { children: () => "Clique aqui" } });
+    const children = createRawSnippet(() => ({
+      render: () => `<span>Clique aqui</span>`,
+    }));
+    render(AcerolaButton, { children });
     expect(screen.getByText("Clique aqui")).toBeInTheDocument();
   });
 
@@ -13,7 +17,7 @@ describe("AcerolaButton", () => {
     const user = userEvent.setup();
     const onclick = vi.fn();
 
-    render(AcerolaButton, { props: { onclick } });
+    render(AcerolaButton, { onclick });
     await user.click(screen.getByRole("button"));
 
     expect(onclick).toHaveBeenCalledOnce();
@@ -23,7 +27,7 @@ describe("AcerolaButton", () => {
     const user = userEvent.setup();
     const onclick = vi.fn();
 
-    render(AcerolaButton, { props: { onclick, disabled: true } });
+    render(AcerolaButton, { onclick, disabled: true });
     await user.click(screen.getByRole("button"));
 
     expect(onclick).not.toHaveBeenCalled();

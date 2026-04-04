@@ -23,6 +23,8 @@ export default defineConfig({
       $lib: path.resolve("./svelte/src/lib"),
       $theme: path.resolve("./svelte/src/theme"),
       $services: path.resolve("./svelte/src/services"),
+      "$app/state": path.resolve("./svelte/tests/mocks/app-state.ts"),
+      "$app/environment": path.resolve("./svelte/tests/mocks/app-environment.ts"),
     },
   },
   test: {
@@ -40,7 +42,7 @@ export default defineConfig({
         extends: true,
         plugins: [
           storybookTest({
-            configDir: path.join(dirname, "svelte/.storybook"),
+            configDir: path.join(dirname, ".storybook"),
           }),
         ],
         test: {

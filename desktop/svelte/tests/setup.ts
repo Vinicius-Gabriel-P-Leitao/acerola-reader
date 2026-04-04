@@ -17,6 +17,19 @@ vi.mock("@tauri-apps/plugin-store", () => ({
   })),
 }));
 
+vi.mock("$app/state", () => ({
+  page: {
+    url: new URL("http://localhost/"),
+    params: {},
+    route: { id: null },
+    status: 200,
+    error: null,
+    data: {},
+    form: null,
+    state: {},
+  },
+}));
+
 afterEach(() => {
   vi.clearAllMocks();
 });

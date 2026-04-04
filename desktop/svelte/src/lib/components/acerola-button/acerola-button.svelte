@@ -1,9 +1,10 @@
 <script lang="ts">
   import { Button, type ButtonProps } from "$lib/components/ui/button";
+  import { cn } from "$lib/utils/cn.utils";
 
-  let { children, ...props }: ButtonProps = $props();
+  let { children, class: className, ...props }: ButtonProps = $props();
 </script>
 
-<Button class="flex-1 px-3 py-2 rounded-lg font-dm-sans cursor-pointer {props.class}" {...props}>
+<Button class={cn("font-dm-sans cursor-pointer", className)} {...props}>
   {@render children?.()}
 </Button>
