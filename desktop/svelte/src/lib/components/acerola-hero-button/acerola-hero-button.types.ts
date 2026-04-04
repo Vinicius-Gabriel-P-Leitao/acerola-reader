@@ -1,9 +1,11 @@
 import type { Snippet } from "svelte";
-import type { HTMLAttributes } from "svelte/elements";
 
-export type AcerolaHeroButtonProps = HTMLAttributes<HTMLDivElement> & {
-  title: string;
+export type AcerolaHeroButtonProps = {
+  title?: string;
+  class?: string;
   description?: string;
   icon?: Snippet;
   action?: Snippet;
+  children?: Snippet;
+  onclick?: (event: MouseEvent) => void;
 };

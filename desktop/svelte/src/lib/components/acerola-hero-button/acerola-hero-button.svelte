@@ -1,24 +1,26 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { cn } from "$lib/utils/cn.utils";
-  import type { AcerolaHeroButtonProps as Props } from "./acerola-hero-button.types";
+  import type { AcerolaHeroButtonProps } from "./acerola-hero-button.types";
 
   let {
     title,
     description,
+    class: className,
     icon,
     action,
-    class: className,
+    onclick,
     ...rest
-  }: Props = $props();
+  }: AcerolaHeroButtonProps = $props();
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class={cn(
     "p-6 rounded-3xl border border-border bg-card flex items-center justify-between group transition-colors",
-    rest.onclick ? "cursor-pointer hover:border-primary/50" : "",
+    onclick ? "cursor-pointer hover:border-primary/50" : "",
     className,
   )}
+  {onclick}
   {...rest}
 >
   <div class="flex items-center gap-4">
@@ -31,7 +33,9 @@
     {/if}
 
     <div class="text-left">
-      <h3 class="font-bold text-foreground text-lg">{title}</h3>
+      <h3 class="font-bold text-foreground text-lg">
+        {title ?? m["components.hero_button.default_title"]()}
+      </h3>
       {#if description}
         <p class="text-sm text-muted-foreground">{description}</p>
       {/if}

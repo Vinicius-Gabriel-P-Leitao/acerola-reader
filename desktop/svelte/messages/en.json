@@ -15,6 +15,9 @@
     }
   },
   "components": {
+    "hero_button": {
+      "default_title": "Untitled"
+    },
     "select": {
       "placeholder": "Select an option"
     }
