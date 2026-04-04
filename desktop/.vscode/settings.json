@@ -12,12 +12,14 @@
     "**/target/**": true
   },
   "files.exclude": {
+    "**/project.inlang": true,
     "**/node_modules": true,
     "**/.svelte-kit": true,
     "**/paraglide": true,
     "**/gen": true
   },
   "search.exclude": {
+    "**/project.inlang": true,
     "**/node_modules": true,
     "**/.svelte-kit": true,
     "**/paraglide": true,
