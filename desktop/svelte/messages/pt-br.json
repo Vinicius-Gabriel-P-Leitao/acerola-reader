@@ -35,7 +35,7 @@
         "title": "Configuração dos Arquivos",
         "manga_path": {
           "title": "Pasta dos mangás",
-          "desc": "Pasta onde será buscado e salvo."
+          "desc": "Pasta onde será buscado e salvo: {path}"
         }
       },
       "components": {

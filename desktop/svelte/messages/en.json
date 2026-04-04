@@ -35,7 +35,7 @@
         "title": "File Configuration",
         "manga_path": {
           "title": "Manga folder",
-          "desc": "Folder where mangas will be searched and saved."
+          "desc": "Folder where mangas will be searched and saved: {path}"
         }
       },
       "components": {
