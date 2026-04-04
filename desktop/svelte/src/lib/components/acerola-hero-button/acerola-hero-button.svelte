@@ -1,14 +1,6 @@
 <script lang="ts">
   import { cn } from "$lib/utils/cn.utils";
-  import type { Snippet } from "svelte";
-  import type { HTMLAttributes } from "svelte/elements";
-
-  type Props = HTMLAttributes<HTMLDivElement> & {
-    title: string;
-    description?: string;
-    icon?: Snippet;
-    action?: Snippet;
-  };
+  import type { AcerolaHeroButtonProps as Props } from "./acerola-hero-button.types";
 
   let {
     title,
@@ -25,16 +17,19 @@
   class={cn(
     "p-6 rounded-3xl border border-border bg-card flex items-center justify-between group transition-colors",
     rest.onclick ? "cursor-pointer hover:border-primary/50" : "",
-    className
+    className,
   )}
   {...rest}
 >
   <div class="flex items-center gap-4">
     {#if icon}
-      <div class="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-foreground group-hover:text-primary transition-colors">
+      <div
+        class="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-foreground group-hover:text-primary transition-colors"
+      >
         {@render icon()}
       </div>
     {/if}
+
     <div class="text-left">
       <h3 class="font-bold text-foreground text-lg">{title}</h3>
       {#if description}
@@ -42,6 +37,7 @@
       {/if}
     </div>
   </div>
+
   {#if action}
     <div class="shrink-0 ml-4">
       {@render action()}
