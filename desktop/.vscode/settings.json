@@ -10,8 +10,8 @@
     "**/lib/rustlib/src/rust/library/**/*.rs": true
   },
   "explorer.fileNesting.patterns": {
+    "svelte.config.js": "vite.config.ts, vitest.config.ts, components.json, tsconfig.json",
     "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
-    "svelte.config.js": "vite.config.ts, vitest.config.ts, components.json"
   },
   "files.watcherExclude": {
     "**/target/**": true

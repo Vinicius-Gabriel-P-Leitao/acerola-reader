@@ -1,11 +1,40 @@
 /// <reference types="vite/client" />
-import type { Preview } from '@storybook/sveltekit';
-import './storybook.css';
+import type { Preview } from "@storybook/sveltekit";
+import "./storybook.css";
 
-document.documentElement.setAttribute('data-theme', 'catppuccin-mocha');
-document.documentElement.classList.add('dark');
+const DARK_THEMES = ["catppuccin-mocha", "nord-dark", "dracula"];
+
+export const globalTypes = {
+  theme: {
+    name: "Theme",
+    defaultValue: "catppuccin-mocha",
+    toolbar: {
+      icon: "paintbrush",
+      items: [
+        { value: "catppuccin-mocha", title: "Catppuccin Mocha (Dark)" },
+        { value: "catppuccin-latte", title: "Catppuccin Latte (Light)" },
+        { value: "nord-dark", title: "Nord Dark" },
+        { value: "nord-light", title: "Nord Light" },
+        { value: "dracula", title: "Dracula (Dark)" },
+        { value: "alucard", title: "Alucard (Light)" },
+      ],
+      dynamicTitle: true,
+    },
+  },
+};
 
 const preview: Preview = {
+  decorators: [
+    (Story, context) => {
+      const theme = (context.globals.theme as string) ?? "catppuccin-mocha";
+      const isDark = DARK_THEMES.includes(theme);
+
+      document.documentElement.setAttribute("data-theme", theme);
+      document.documentElement.classList.toggle("dark", isDark);
+
+      return Story();
+    },
+  ],
   parameters: {
     controls: {
       matchers: {
@@ -14,7 +43,7 @@ const preview: Preview = {
       },
     },
     a11y: {
-      test: 'todo',
+      test: "todo",
     },
   },
 };

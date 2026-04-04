@@ -15,6 +15,7 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
   ],
   framework: "@storybook/sveltekit",
+  staticDirs: ["../svelte/static"],
   viteFinal(config) {
     return mergeConfig(config, {
       server: {
