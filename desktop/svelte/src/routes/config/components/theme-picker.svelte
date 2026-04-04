@@ -1,16 +1,17 @@
 <script lang="ts" module>
   import { type ThemeColor, type ThemeMode } from "$lib/hooks/use-theme.svelte";
+  import { m } from "$lib/paraglide/messages";
 
   const themes: {
-    name: string;
+    name: () => string;
     id: ThemeColor;
-    description: string;
+    description: () => string;
     colors: Record<ThemeMode, string[]>;
   }[] = [
     {
       id: "catppuccin",
-      name: "Catppuccin",
-      description: "Paleta pastel suave com tons roxos e rosados",
+      name: m["theme.catppuccin.name"],
+      description: m["theme.catppuccin.desc"],
       colors: {
         light: ["#8839EF", "#EA76CB", "#1E66F5", "#EFF1F5"],
         dark: ["#CBA6F7", "#F5C2E7", "#89B4FA", "#1E1E2E"],
@@ -18,8 +19,8 @@
     },
     {
       id: "nord",
-      name: "Nord",
-      description: "Paleta ártica inspirada no norte escandinavo",
+      name: m["theme.nord.name"],
+      description: m["theme.nord.desc"],
       colors: {
         light: ["#5E81AC", "#81A1C1", "#88C0D0", "#ECEFF4"],
         dark: ["#88C0D0", "#81A1C1", "#5E81AC", "#2E3440"],
@@ -27,8 +28,8 @@
     },
     {
       id: "dracula",
-      name: "Dracula",
-      description: "Cores vibrantes sobre fundo escuro ou claro",
+      name: m["theme.dracula.name"],
+      description: m["theme.dracula.desc"],
       colors: {
         light: ["#2D005F", "#6272A4", "#005A5F", "#F8F8F2"],
         dark: ["#BD93F9", "#FF79C6", "#8BE9FD", "#282A36"],
@@ -46,8 +47,8 @@
     mode,
     onselect,
   }: {
-    theme: ThemeColor;
     mode: ThemeMode;
+    theme: ThemeColor;
     onselect: (name: ThemeColor) => void;
   } = $props();
 </script>
@@ -57,7 +58,7 @@
     class="flex items-center gap-3 text-muted-foreground uppercase text-xs font-bold tracking-widest"
   >
     <PaletteIcon size={16} />
-    Aparência
+    {m.config_appearance()}
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -80,8 +81,8 @@
           </div>
         </div>
 
-        <h3 class="font-bold text-foreground">{it.name}</h3>
-        <p class="text-xs text-muted-foreground mt-1">{it.description}</p>
+        <h3 class="font-bold text-foreground">{it.name()}</h3>
+        <p class="text-xs text-muted-foreground mt-1">{it.description()}</p>
 
         {#if theme === it.id}
           <div

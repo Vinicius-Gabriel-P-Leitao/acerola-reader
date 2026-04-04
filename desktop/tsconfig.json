@@ -1,6 +1,7 @@
 {
   "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
+    "types": ["@testing-library/jest-dom"],
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
@@ -11,10 +12,10 @@
     "strict": true,
     "moduleResolution": "bundler",
     "paths": {
-      "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"],
-      "$theme/*": ["./src/theme/*"],
-      "$services/*": ["./src/services/*"]
+      "$lib": ["./svelte/src/lib"],
+      "$lib/*": ["./svelte/src/lib/*"],
+      "$theme/*": ["./svelte/src/theme/*"],
+      "$services/*": ["./svelte/src/services/*"]
     }
   }
 }

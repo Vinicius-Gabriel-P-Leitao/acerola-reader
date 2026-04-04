@@ -1,35 +1,30 @@
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
-import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { defineConfig } from "vite";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
+  clearScreen: false,
   plugins: [
     sveltekit(),
     tailwindcss(),
     paraglideVitePlugin({
-      project: "./project.inlang",
-      outdir: "./src/lib/paraglide",
+      project: "./svelte/project.inlang",
+      outdir: "./svelte/src/lib/paraglide",
     }),
   ],
-  resolve: {
-    alias: {
-      $theme: path.resolve("./src/theme"),
-    },
-  },
-  clearScreen: false,
-  // NOTE: O tauri espera uma porta fixa
+  resolve: { alias: { $theme: path.resolve("./svelte/src/theme") } },
   server: {
     port: 1420,
     strictPort: true,
     host: host || "127.0.0.1",
     hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
-    watch: {
-      // NOTE: Vite ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+    watch: { ignored: ["**/src-tauri/**"] },
+    fs: {
+      allow: ["svelte/src", "svelte/static", ".svelte-kit", "node_modules"],
     },
   },
 }));

@@ -1,5 +1,6 @@
 {
   "svelte.enable-ts-plugin": true,
+  "explorer.fileNesting.enabled": true,
   "files.associations": {
     "*.css": "tailwindcss"
   },
@@ -8,19 +9,27 @@
     "**/.cargo/git/checkouts/**/*.rs": true,
     "**/lib/rustlib/src/rust/library/**/*.rs": true
   },
+  "explorer.fileNesting.patterns": {
+    "svelte.config.js": "vite.config.ts, vitest.config.ts, components.json, tsconfig.json",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
+  },
   "files.watcherExclude": {
     "**/target/**": true
   },
   "files.exclude": {
+    "**/project.inlang": true,
     "**/node_modules": true,
     "**/.svelte-kit": true,
     "**/paraglide": true,
+    "**/target": true,
     "**/gen": true
   },
   "search.exclude": {
+    "**/project.inlang": true,
     "**/node_modules": true,
     "**/.svelte-kit": true,
     "**/paraglide": true,
+    "**/target": true,
     "**/gen": true
   }
 }

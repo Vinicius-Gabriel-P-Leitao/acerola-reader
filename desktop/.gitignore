@@ -9,5 +9,8 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 # Paraglide
-src/lib/paraglide
-project.inlang/cache/
+svelte/src/lib/paraglide
+svelte/project.inlang/cache/
+
+*storybook.log
+storybook-static

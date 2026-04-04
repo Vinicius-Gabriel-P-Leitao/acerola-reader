@@ -11,6 +11,6 @@
 
 <Input
   bind:value
-  class={cn("flex-1 px-3 py-2 rounded-lg", className)}
+  class={cn("text-foreground", className)}
   {...props}
 />
