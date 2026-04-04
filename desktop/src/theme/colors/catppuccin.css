@@ -1,0 +1,79 @@
+/* Default: Catppuccin Mocha (dark) */
+:root,
+[data-theme='catppuccin-mocha'] {
+	--crust:   #11111B;
+	--mantle:  #181825;
+	--base:    #1E1E2E;
+	--surface: #313244;
+
+	--background:          #1E1E2E;
+	--foreground:          #CDD6F4;
+	--card:                #313244;
+	--card-foreground:     #CDD6F4;
+	--popover:             #313244;
+	--popover-foreground:  #CDD6F4;
+	--primary:             #CBA6F7;
+	--primary-foreground:  #1E1E2E;
+	--secondary:           #45475A;
+	--secondary-foreground:#CDD6F4;
+	--muted:               #45475A;
+	--muted-foreground:    #A6ADC8;
+	--accent:              #45475A;
+	--accent-foreground:   #CDD6F4;
+	--destructive:         #F38BA8;
+	--border:              #585B70;
+	--input:               #45475A;
+	--ring:                #CBA6F7;
+	--chart-1:             #F38BA8;
+	--chart-2:             #FAB387;
+	--chart-3:             #F9E2AF;
+	--chart-4:             #A6E3A1;
+	--chart-5:             #74C7EC;
+	--sidebar:             #181825;
+	--sidebar-foreground:  #CDD6F4;
+	--sidebar-primary:             #CBA6F7;
+	--sidebar-primary-foreground:  #1E1E2E;
+	--sidebar-accent:              #313244;
+	--sidebar-accent-foreground:   #CDD6F4;
+	--sidebar-border:      #585B70;
+	--sidebar-ring:        #CBA6F7;
+}
+
+[data-theme='catppuccin-latte'] {
+	--crust:   #DCE0E8;
+	--mantle:  #E6E9EF;
+	--base:    #EFF1F5;
+	--surface: #CCD0DA;
+
+	--background:          #EFF1F5;
+	--foreground:          #4C4F69;
+	--card:                #CCD0DA;
+	--card-foreground:     #4C4F69;
+	--popover:             #E6E9EF;
+	--popover-foreground:  #4C4F69;
+	--primary:             #8839EF;
+	--primary-foreground:  #EFF1F5;
+	--secondary:           #BCC0CC;
+	--secondary-foreground:#4C4F69;
+	--muted:               #BCC0CC;
+	--muted-foreground:    #6C6F85;
+	--accent:              #BCC0CC;
+	--accent-foreground:   #4C4F69;
+	--destructive:         #D20F39;
+	--border:              #ACB0BE;
+	--input:               #ACB0BE;
+	--ring:                #8839EF;
+	--chart-1:             #D20F39;
+	--chart-2:             #FE640B;
+	--chart-3:             #DF8E1D;
+	--chart-4:             #40A02B;
+	--chart-5:             #209FB5;
+	--sidebar:             #E6E9EF;
+	--sidebar-foreground:  #4C4F69;
+	--sidebar-primary:             #8839EF;
+	--sidebar-primary-foreground:  #EFF1F5;
+	--sidebar-accent:              #CCD0DA;
+	--sidebar-accent-foreground:   #4C4F69;
+	--sidebar-border:      #ACB0BE;
+	--sidebar-ring:        #8839EF;
+}

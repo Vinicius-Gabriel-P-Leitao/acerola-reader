@@ -1,25 +1,21 @@
 <script lang="ts">
-  import AcerolaButton from "$lib/components/acerola-button/acerola-button.svelte";
-  import { useLibrary } from "$lib/hooks/use-library.svelte";
-  import { setLocale } from "$lib/paraglide/runtime";
-  import { m } from "$lib/paraglide/messages";
+	import AcerolaButton from "$lib/components/acerola-button/acerola-button.svelte";
+	import { useTheme } from "$lib/hooks/use-theme.svelte";
 
-  const library = useLibrary();
+	const { setTheme } = useTheme();
 
-  $effect(() => {
-    library.loadSavedPath();
-  });
+	const themes = [
+		{ label: "Catppuccin Latte", value: "catppuccin-latte" },
+		{ label: "Catppuccin Mocha", value: "catppuccin-mocha" },
+		{ label: "Nord Light", value: "nord-light" },
+		{ label: "Nord Dark", value: "nord-dark" },
+		{ label: "Alucard", value: "alucard" },
+		{ label: "Dracula", value: "dracula" },
+	];
 </script>
 
-<AcerolaButton onclick={() => setLocale("en")}>en</AcerolaButton>
-<AcerolaButton onclick={() => setLocale("pt-br")}>pt-br</AcerolaButton>
-
-<AcerolaButton onclick={library.selectFolder}>
-  Selecionar biblioteca
-</AcerolaButton>
-
-{#if library.folderPath}
-  <p class="text-white">
-    {m.select_path({ path: library.folderPath })}
-  </p>
-{/if}
+{#each themes as theme}
+	<AcerolaButton onclick={() => setTheme(theme.value)}>
+		{theme.label}
+	</AcerolaButton>
+{/each}
