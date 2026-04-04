@@ -4,11 +4,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -56,7 +63,6 @@ fun Main.Config.Layout.Screen(
     onNavigateToTemplates: () -> Unit
 ) {
     val context = LocalContext.current
-
     val snackbarHostState = LocalSnackbarHostState.current
     val scrollState = rememberScrollState()
 
@@ -93,6 +99,7 @@ fun Main.Config.Layout.Screen(
     val metadataLanguage by metadataSettingsViewModel.metadataLanguage.collectAsState()
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
+    val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
  
     val uiState = ConfigUiState(
         selectedTheme = selectedTheme,
@@ -118,7 +125,6 @@ fun Main.Config.Layout.Screen(
         }
     }
 
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
@@ -130,6 +136,10 @@ fun Main.Config.Layout.Screen(
                     .fillMaxSize()
                     .verticalScroll(scrollState),
             ) {
+                if (!tutorialShown) {
+                    OnboardingGuideCard()
+                }
+
                 // NOTE: Arquivos Locais
                 SectionHeader(stringResource(id = R.string.title_text_archive_configs_in_app))
 
@@ -149,6 +159,15 @@ fun Main.Config.Layout.Screen(
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
+                // NOTE: Biblioteca
+                SectionHeader(stringResource(id = R.string.label_library_context))
+
+                Main.Config.Component.SyncLibraryArchive(
+                    onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
+                    onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
                 // NOTE: Aparência
                 SectionHeader(stringResource(id = R.string.title_settings_appearance))
@@ -171,16 +190,6 @@ fun Main.Config.Layout.Screen(
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
-                // NOTE: Biblioteca
-                SectionHeader(stringResource(id = R.string.label_library_context))
-
-                Main.Config.Component.SyncLibraryArchive(
-                    onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
-                    onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
-                )
-
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
-
                 // NOTE: Metadados
                 SectionHeader(stringResource(id = R.string.label_sync_group))
 
@@ -199,7 +208,37 @@ fun Main.Config.Layout.Screen(
 
                 Spacer(modifier = Modifier.height(48.dp))
             }
+        }
+    }
+}
 
+@Composable
+private fun OnboardingGuideCard() {
+    Card(
+        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(id = R.string.title_tutorial_setup),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "1. " + stringResource(id = R.string.description_tutorial_folder_select),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "2. " + stringResource(id = R.string.description_tutorial_sync_deep),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }
