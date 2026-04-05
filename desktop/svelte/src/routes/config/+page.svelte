@@ -1,17 +1,21 @@
 <script lang="ts">
-  import { useTheme } from "$lib/hooks/use-theme.svelte";
-  import ThemePicker from "./components/theme-picker.svelte";
-  import { m } from "$lib/paraglide/messages";
-  import AcerolaHeroButton from "$lib/components/acerola-hero-button/acerola-hero-button.svelte";
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
+  import AcerolaHeroButton from "$lib/components/acerola-hero-button/acerola-hero-button.svelte";
+  import ThemePicker from "./components/theme-picker.svelte";
 
+  import { m } from "$lib/paraglide/messages";
+
+  import { useComicInfoPreference } from "$lib/hooks/use-comic-info-preference.svelte";
+  import { useLibrary } from "$lib/hooks/use-library.svelte";
+  import { useTheme } from "$lib/hooks/use-theme.svelte";
+
+  import AcerolaPopover from "$lib/components/acerola-popover/acerola-popover.svelte";
+  import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import FolderIcon from "@lucide/svelte/icons/folder";
+  import Languages from "@lucide/svelte/icons/languages";
   import PlayIcon from "@lucide/svelte/icons/play";
-  import { useLibrary } from "$lib/hooks/use-library.svelte";
-  import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
-  import { useComicInfoPreference } from "$lib/hooks/use-comic-info-preference.svelte";
-  import AcerolaInput from "$lib/components/acerola-input/acerola-input.svelte";
+  import Plus from "@lucide/svelte/icons/plus";
 
   const ctx = useTheme();
   const library = useLibrary();
@@ -114,15 +118,23 @@
         onclick={() => console.log("teste")}
       >
         {#snippet icon()}
-          <FolderIcon class="text-chart-5" size={24} />
+          <Languages class="text-chart-4" size={24} />
         {/snippet}
 
         {#snippet action()}
-          <AcerolaButtonIcon
-            class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-          >
-            <PlayIcon />
-          </AcerolaButtonIcon>
+          <AcerolaPopover>
+            {#snippet trigger()}
+              <AcerolaButtonIcon
+                class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+              >
+                <Plus />
+              </AcerolaButtonIcon>
+            {/snippet}
+
+            {#snippet content()}
+              <div>teste</div>
+            {/snippet}
+          </AcerolaPopover>
         {/snippet}
       </AcerolaHeroButton>
     </div>

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { load } from "@tauri-apps/plugin-store";
 import { STORE_FILE, STORE_KEYS } from "$lib/constants/store";
+import { toast } from "svelte-sonner";
 
 export function useLibrary() {
   let folderPath = $state<string | undefined>(undefined);
@@ -13,6 +14,8 @@ export function useLibrary() {
       await store.set(STORE_KEYS.libraryPath, path);
       await store.save();
 
+      // FIXME: Traduzir
+      toast.success("Pasta salva com sucesso.");
       folderPath = path;
     }
   }

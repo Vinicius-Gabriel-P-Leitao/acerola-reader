@@ -20,6 +20,12 @@
     },
     "select": {
       "placeholder": "Selecione uma opção"
+    },
+    "popover": {
+      "close": "Fechar"
+    },
+    "command": {
+      "placeholder": "Pesquisar..."
     }
   },
   "routes": {

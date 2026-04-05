@@ -31,6 +31,7 @@
   import AcerolaSidebar from "$lib/components/acerola-sidebar/acerola-sidebar.svelte";
   import AcerolaSelect from "$lib/components/acerola-select/acerola-select.svelte";
   import AcerolaModePicker from "$lib/components/acerola-mode-picker/acerola-mode-picker.svelte";
+  import AcerolaSonner from "$lib/components/acerola-sonner/acerola-sonner.svelte";
   import SidebarProvider from "$lib/components/ui/sidebar/sidebar-provider.svelte";
   import { getLocale, setLocale } from "$lib/paraglide/runtime.js";
 
@@ -47,6 +48,8 @@
 
 <div class="flex h-screen">
   <SidebarProvider>
+    <AcerolaSonner />
+    
     <AcerolaSidebar items={sidebarItems}>
       {#snippet footer()}
         <div class="flex items-center gap-2 px-2 pb-2 w-full overflow-hidden">
