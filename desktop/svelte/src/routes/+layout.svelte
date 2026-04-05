@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { SidebarItem } from "$lib/components/acerola-sidebar/sidebar.types";
+  import type { SidebarItem } from "$lib/components/acerola-sidebar/acerola-sidebar.types";
   import type { AcerolaSelectOption } from "$lib/components/acerola-select/acerola-select.types";
   import type { Locale } from "$lib/paraglide/runtime.js";
 

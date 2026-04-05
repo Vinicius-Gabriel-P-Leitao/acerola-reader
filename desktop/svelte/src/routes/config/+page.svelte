@@ -134,11 +134,17 @@
             {#snippet content()}
               <div class="w-64">
                 <AcerolaCommand>
-                  <Command.Input placeholder={m["components.command.placeholder"]()} />
-                  
+                  <Command.Input
+                    placeholder={m["components.command.placeholder"]()}
+                  />
+
                   <Command.List>
                     {#each LANGUAGES as lang}
-                      <Command.Item value={lang.code}>
+                      <!-- FIXME: Criar hook que salva isso no sistema. -->
+                      <Command.Item
+                        value={lang.code}
+                        onSelect={() => console.log(lang.code)}
+                      >
                         {lang.label}
                       </Command.Item>
                     {/each}

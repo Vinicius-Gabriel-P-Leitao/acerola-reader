@@ -9,14 +9,13 @@
     tags: ["autodocs"],
     argTypes: {
       value: { description: "Valor selecionado atualmente", control: "text" },
-      placeholder: { description: "Texto exibido quando nada está selecionado", control: "text" },
-      options: { description: "Array de opções ({ value, label })", control: "object" },
-      disabled: { description: "Desabilita o componente", control: "boolean" }
+      placeholder: { description: "Texto exibido quando nada esta selecionado", control: "text" },
+      options: { description: "Array de opcoes ({ value, label })", control: "object" },
     },
   });
 
   const defaultOptions: AcerolaSelectOption[] = [
-    { value: "manga", label: "Mangá" },
+    { value: "manga", label: "Manga" },
     { value: "comic", label: "Comic Book" },
     { value: "webtoon", label: "Webtoon" },
   ];
@@ -39,10 +38,9 @@
 />
 
 <Story
-  name="Desabilitado"
+  name="Placeholder customizado"
   args={{
     options: defaultOptions,
-    disabled: true,
-    placeholder: "Não disponível",
+    placeholder: "Escolha um formato",
   }}
 />

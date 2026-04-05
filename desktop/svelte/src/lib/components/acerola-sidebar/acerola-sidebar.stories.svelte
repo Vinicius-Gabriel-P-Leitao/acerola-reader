@@ -6,7 +6,7 @@
   import LibraryIcon from "@lucide/svelte/icons/library";
   import SettingsIcon from "@lucide/svelte/icons/settings";
   import HistoryIcon from "@lucide/svelte/icons/history";
-  import type { SidebarItem } from "./sidebar.types";
+  import type { SidebarItem } from "./acerola-sidebar.types";
 
   const items: SidebarItem[] = [
     { href: "/home", label: "Biblioteca", icon: LibraryIcon },
