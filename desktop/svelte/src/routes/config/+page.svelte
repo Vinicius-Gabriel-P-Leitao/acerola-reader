@@ -143,6 +143,7 @@
                       <!-- FIXME: Criar hook que salva isso no sistema. -->
                       <Command.Item
                         value={lang.code}
+                        class="cursor-pointer"
                         onSelect={() => console.log(lang.code)}
                       >
                         {lang.label}
