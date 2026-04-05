@@ -23,7 +23,6 @@ import br.acerola.manga.module.main.config.Screen
 import br.acerola.manga.module.main.history.Screen
 import br.acerola.manga.module.main.home.Screen
 import br.acerola.manga.module.main.pattern.FilePatternScreen
-import br.acerola.manga.module.main.search.Screen
 import dagger.hilt.android.AndroidEntryPoint
 
 // FIXME: Fazer um fakeLoading só para precarregar os itens antes de aparecer os itens carregando.
@@ -49,9 +48,6 @@ class MainActivity(
         }
         defaultComposable(context, Destination.HISTORY) {
             Main.History.Layout.Screen()
-        }
-        defaultComposable(context, Destination.SEARCH) {
-            Main.Search.Layout.Screen()
         }
         defaultComposable(context, Destination.CONFIG) {
             Main.Config.Layout.Screen(

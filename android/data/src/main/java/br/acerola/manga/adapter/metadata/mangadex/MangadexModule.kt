@@ -1,7 +1,6 @@
 package br.acerola.manga.adapter.metadata.mangadex
 
 import br.acerola.manga.adapter.contract.gateway.ChapterGateway
-import br.acerola.manga.adapter.contract.provider.DownloadProvider
 import br.acerola.manga.adapter.contract.provider.ImageProvider
 import br.acerola.manga.adapter.contract.gateway.MangaGateway
 import br.acerola.manga.adapter.contract.provider.MetadataProvider
@@ -10,12 +9,9 @@ import br.acerola.manga.adapter.metadata.mangadex.engine.MangadexMangaEngine
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexFetchCoverSource
 import br.acerola.manga.adapter.metadata.mangadex.source.MangadexMangaInfoSource
-import br.acerola.manga.adapter.metadata.mangadex.source.MangadexSearchDownloadSource
 import br.acerola.manga.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.manga.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.manga.dto.metadata.manga.MangaMetadataDto
-import br.acerola.manga.service.download.DownloadManager
-import br.acerola.manga.service.download.MangadexDownloadManager
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -67,21 +63,7 @@ abstract class MangadexModule {
     @Binds
     @Singleton
     @MangadexSource
-    abstract fun bindChapterDownloadService(
-        impl: MangadexDownloadManager
-    ): DownloadManager
-
-    @Binds
-    @Singleton
-    @MangadexSource
     abstract fun bindMangadexChapterInfoService(
         impl: MangadexChapterInfoSource
     ): MetadataProvider<ChapterMetadataDto, String>
-
-    @Binds
-    @Singleton
-    @MangadexSource
-    abstract fun bindMangadexDownloadPort(
-        impl: MangadexSearchDownloadSource
-    ): DownloadProvider
 }

@@ -4,9 +4,15 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Você a
 
 ---
 
-## O que o app faz
+## Galeria
 
-Você tem arquivos `.cbz`, `.cbr` ou `.pdf` no seu celular. O Acerola escaneia a pasta que você escolher, organiza tudo em uma biblioteca e busca as informações do mangá (capa, autor, gênero, sinopse) automaticamente na internet.
+Aqui estão alguns exemplos de como o Acerola funciona:
+
+| Home | Configuração Manga | Configuração Geral | Histórico | Modos de leitura | Webtom |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/home-screen.png" width="100"> | <img src="docs/config-manga-screen.png" width="100"> | <img src="docs/config-screen.png" width="100"> | <img src="docs/history-screen.png" width="100"> | <img src="docs/reader-screen-modes.png" width="100"> | <img src="docs/webtom-reader-mode.png" width="100"> |
+
+---
 
 ```mermaid
 flowchart LR
@@ -20,30 +26,11 @@ flowchart LR
 
 ## Funcionalidades
 
-**Biblioteca**
-- Escaneia pastas do dispositivo e detecta novos arquivos automaticamente
-- Exibe os mangás em grade ou lista
-- Busca por título
-- Organização por categorias
-- Esconde mangás que você não quer ver na biblioteca
-
-**Metadados**
-- Busca capa, sinopse, autor e gênero automaticamente
-- Fontes disponíveis: MangaDex, AniList ou ComicInfo (metadado embutido no próprio arquivo)
-- Você pode trocar a fonte de metadados por mangá
-- Troca capa e banner manualmente se quiser
-
-**Leitura**
-- Abre capítulos diretamente dos arquivos `.cbz` e `.cbr`
-- Arquivos `.pdf` são convertidos automaticamente para `.cbz` antes da leitura
-- Paginação configurável
-- Salva o progresso de leitura automaticamente
-
-**Histórico**
-- Mostra os mangás que você leu recentemente com o capítulo em que parou
-
-**Temas**
-- Catppuccin (claro e escuro), Dracula, Alucard, Nord (claro e escuro)
+- **Biblioteca**: Escaneia pastas do dispositivo, detecta novos arquivos automaticamente, exibe em grade/lista, permite busca e organização por categorias.
+- **Metadados**: Busca capa, sinopse, autor e gênero automaticamente (MangaDex, AniList, ComicInfo). Permite trocar fontes e editar manualmente.
+- **Leitura**: Abre `.cbz` e `.cbr` diretamente. Converte `.pdf` para `.cbz`. Possui paginação configurável e salva o progresso automaticamente.
+- **Histórico**: Mostra mangás lidos recentemente.
+- **Temas**: Várias opções (Catppuccin, Dracula, Alucard, Nord).
 
 ---
 

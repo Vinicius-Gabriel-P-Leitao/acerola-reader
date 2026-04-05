@@ -77,17 +77,13 @@ class MangaDirectoryEngine @Inject constructor(
 
                     if (folderDoc == null || !folderDoc.isDirectory) return@catch
 
-                    if (existingManga.lastModified >= folderDoc.lastModified()) {
-                        mangaDirectoryOps.refreshMangaChapters(mangaId = mangaId, baseUri = baseUri)
-                        return@catch
-                    }
-
                     val rootUri = baseUri ?: MangaDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
                         ?: return@catch
 
                     val folderId = DocumentsContract.getDocumentId(folderUri)
                     val folderChildren =
                         ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
+
 
                     val bannerMetadata = folderChildren.firstOrNull { MediaFilePattern.isBanner(it.name) }
                     val coverMetadata = folderChildren.firstOrNull { MediaFilePattern.isCover(it.name) }
@@ -110,7 +106,9 @@ class MangaDirectoryEngine @Inject constructor(
                     }
 
                     val updatedManga = folderDoc.toMangaDirectoryEntity(
-                        coverDoc, bannerDoc, chapterTemplateFk = detectedTemplate?.id
+                        cover = coverDoc, 
+                        banner = bannerDoc, 
+                        chapterTemplateFk = detectedTemplate?.id
                     ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
 
                     directoryDao.update(entity = updatedManga)
