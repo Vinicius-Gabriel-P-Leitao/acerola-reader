@@ -1,5 +1,6 @@
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { resolve } from "path";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -9,9 +10,9 @@ const config = {
       fallback: "index.html",
     }),
     files: {
-      assets:      "svelte/static",
-      lib:         "svelte/src/lib",
-      routes:      "svelte/src/routes",
+      lib: "svelte/src/lib",
+      assets: "svelte/static",
+      routes: "svelte/src/routes",
       appTemplate: "svelte/src/app.html",
     },
   },

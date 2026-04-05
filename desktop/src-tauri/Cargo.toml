@@ -28,7 +28,7 @@ axum = "0.8.8"
 tokio = { version = "1.51.0", features = ["full"] }
 
 # NOTE: Plugin de abrir o dialog de arquivos
-tauri-plugin-dialog = "2"
+tauri-plugin-dialog = "2.7.0"
 
 # NOTE: Plugin equivalente ao DataStore
 tauri-plugin-store = "2"
