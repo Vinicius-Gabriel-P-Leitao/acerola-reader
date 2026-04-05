@@ -36,6 +36,10 @@
         "manga_path": {
           "title": "Manga folder",
           "desc": "Folder where mangas will be searched and saved: {path}"
+        },
+        "comic_info": {
+          "title": "Generate ComicInfo.xml",
+          "desc": "Create a metadata file in the folder during synchronization."
         }
       },
       "components": {

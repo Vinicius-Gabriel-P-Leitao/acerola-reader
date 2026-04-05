@@ -90,7 +90,7 @@
           >
             <RefreshCwIcon
               size={12}
-              class="animate-spin-slow text-primary-foreground"
+              class="animate-spin text-primary-foreground"
             />
           </div>
         {/if}

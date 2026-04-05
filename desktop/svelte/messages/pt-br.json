@@ -36,6 +36,10 @@
         "manga_path": {
           "title": "Pasta dos mangás",
           "desc": "Pasta onde será buscado e salvo: {path}"
+        },
+        "comic_info": {
+          "title": "Gerar ComicInfo.xml",
+          "desc": "Criar arquivo de metadados na pasta ao sincronizar."
         }
       },
       "components": {

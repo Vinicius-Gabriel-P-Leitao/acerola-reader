@@ -9,6 +9,7 @@
   import FolderIcon from "@lucide/svelte/icons/folder";
   import PlayIcon from "@lucide/svelte/icons/play";
   import { useLibrary } from "$lib/hooks/use-library.svelte";
+  import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
 
   const ctx = useTheme();
 
@@ -50,7 +51,7 @@
         onclick={library.selectFolder}
       >
         {#snippet icon()}
-          <FolderIcon size={24} />
+          <FolderIcon class="text-chart-5" size={24} />
         {/snippet}
 
         {#snippet action()}
@@ -59,6 +60,21 @@
           >
             <PlayIcon />
           </AcerolaButtonIcon>
+        {/snippet}
+      </AcerolaHeroButton>
+
+      <!-- Item: Gerar ComicInfo.xml para os mangás -->
+      <AcerolaHeroButton
+        title={m["pages.config.file_system.comic_info.title"]()}
+        description={m["pages.config.file_system.comic_info.desc"]()}
+        onclick={() => console.log("")}
+      >
+        {#snippet icon()}
+          <FileTextIcon class="text-chart-2" size={24} />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaSwitch />
         {/snippet}
       </AcerolaHeroButton>
     </div>
