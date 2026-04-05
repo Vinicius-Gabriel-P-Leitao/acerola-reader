@@ -4,11 +4,15 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Você a
 
 ---
 
-## O que o app faz
+## Galeria
 
-<img src="docs/Screenshot%20(1).png" width="40%"> <img src="docs/Screenshot%20(2).png" width="40%">
+Aqui estão alguns exemplos de como o Acerola funciona:
 
-Você tem arquivos `.cbz`, `.cbr` ou `.pdf` no seu celular. O Acerola escaneia a pasta que você escolher, organiza tudo em uma biblioteca e busca as informações do mangá (capa, autor, gênero, sinopse) automaticamente na internet.
+| Biblioteca | Metadados | Leitura | Temas | Configuração |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/Screenshot%20(3).png" width="100"> | <img src="docs/Screenshot%20(4).png" width="100"> | <img src="docs/Screenshot%20(5).png" width="100"> | <img src="docs/Screenshot%20(7).png" width="100"> | <img src="docs/Screenshot%20(6).png" width="100"> |
+
+---
 
 ```mermaid
 flowchart LR
@@ -22,44 +26,15 @@ flowchart LR
 
 ## Funcionalidades
 
-### Biblioteca
-<img src="docs/Screenshot%20(3).png" width="40%">
-
-- Escaneia pastas do dispositivo e detecta novos arquivos automaticamente
-- Exibe os mangás em grade ou lista
-- Busca por título
-- Organização por categorias
-- Esconde mangás que você não quer ver na biblioteca
-
-### Metadados
-<img src="docs/Screenshot%20(4).png" width="40%">
-
-- Busca capa, sinopse, autor e gênero automaticamente
-- Fontes disponíveis: MangaDex, AniList ou ComicInfo (metadado embutido no próprio arquivo)
-- Você pode trocar a fonte de metadados por mangá
-- Troca capa e banner manualmente se quiser
-
-### Leitura
-<img src="docs/Screenshot%20(5).png" width="40%">
-
-- Abre capítulos diretamente dos arquivos `.cbz` e `.cbr`
-- Arquivos `.pdf` são convertidos automaticamente para `.cbz` antes da leitura
-- Paginação configurável
-- Salva o progresso de leitura automaticamente
-
-**Histórico**
-- Mostra os mangás que você leu recentemente com o capítulo em que parou
-
-### Temas
-<img src="docs/Screenshot%20(7).png" width="40%">
-
-- Catppuccin (claro e escuro), Dracula, Alucard, Nord (claro e escuro)
+- **Biblioteca**: Escaneia pastas do dispositivo, detecta novos arquivos automaticamente, exibe em grade/lista, permite busca e organização por categorias.
+- **Metadados**: Busca capa, sinopse, autor e gênero automaticamente (MangaDex, AniList, ComicInfo). Permite trocar fontes e editar manualmente.
+- **Leitura**: Abre `.cbz` e `.cbr` diretamente. Converte `.pdf` para `.cbz`. Possui paginação configurável e salva o progresso automaticamente.
+- **Histórico**: Mostra mangás lidos recentemente.
+- **Temas**: Várias opções (Catppuccin, Dracula, Alucard, Nord).
 
 ---
 
 ## Como usar
-
-<img src="docs/Screenshot%20(6).png" width="40%">
 
 ```mermaid
 flowchart TD
