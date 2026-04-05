@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Switch as SwitchPrimitive } from "bits-ui";
-  import { cn, type WithoutChildrenOrChild } from "$lib/utils/cn.utils.js";
+  import { cn } from "$lib/utils/cn.utils.js";
+  import type { AcerolaSwitchProps } from "./acerola-switch.types.js";
 
   let {
     class: className,
@@ -8,9 +9,7 @@
     ref = $bindable(null),
     checked = $bindable(false),
     ...restProps
-  }: WithoutChildrenOrChild<SwitchPrimitive.RootProps> & {
-    size?: "sm" | "default";
-  } = $props();
+  }: AcerolaSwitchProps = $props();
 </script>
 
 <SwitchPrimitive.Root

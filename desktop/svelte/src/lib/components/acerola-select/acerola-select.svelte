@@ -1,13 +1,16 @@
 <script lang="ts">
-  import { type AcerolaSelectOption } from "./acerola-select.types";
   import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
   } from "$lib/components/ui/select";
-  import { cn } from "$lib/utils/cn.utils";
   import { m } from "$lib/paraglide/messages";
+  import { cn } from "$lib/utils/cn.utils";
+  import {
+    type AcerolaSelectOption,
+    type AcerolaSelectProps,
+  } from "./acerola-select.types";
 
   let {
     options = [],
@@ -15,16 +18,11 @@
     value = $bindable(""),
     placeholder = m["components.select.placeholder"](),
     ...props
-  }: {
-    value?: string;
-    options: AcerolaSelectOption[];
-    placeholder?: string;
-    class?: string;
-    [key: string]: any;
-  } = $props();
+  }: AcerolaSelectProps = $props();
 
   let selectedLabel = $derived(
-    options.find((it) => it.value === value)?.label ?? placeholder,
+    options.find((it: AcerolaSelectOption) => it.value === value)?.label ??
+      placeholder,
   );
 </script>
 
