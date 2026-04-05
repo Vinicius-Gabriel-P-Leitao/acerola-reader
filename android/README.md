@@ -6,8 +6,8 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Você a
 
 ## O que o app faz
 
-![Screenshot 1](docs/Screenshot%20(1).png)
-![Screenshot 2](docs/Screenshot%20(2).png)
+<img src="docs/Screenshot%20(1).png" width="60%">
+<img src="docs/Screenshot%20(2).png" width="60%">
 
 Você tem arquivos `.cbz`, `.cbr` ou `.pdf` no seu celular. O Acerola escaneia a pasta que você escolher, organiza tudo em uma biblioteca e busca as informações do mangá (capa, autor, gênero, sinopse) automaticamente na internet.
 
@@ -24,7 +24,7 @@ flowchart LR
 ## Funcionalidades
 
 **Biblioteca**
-![Screenshot 3](docs/Screenshot%20(3).png)
+<img src="docs/Screenshot%20(3).png" width="60%">
 - Escaneia pastas do dispositivo e detecta novos arquivos automaticamente
 - Exibe os mangás em grade ou lista
 - Busca por título
@@ -32,14 +32,14 @@ flowchart LR
 - Esconde mangás que você não quer ver na biblioteca
 
 **Metadados**
-![Screenshot 4](docs/Screenshot%20(4).png)
+<img src="docs/Screenshot%20(4).png" width="60%">
 - Busca capa, sinopse, autor e gênero automaticamente
 - Fontes disponíveis: MangaDex, AniList ou ComicInfo (metadado embutido no próprio arquivo)
 - Você pode trocar a fonte de metadados por mangá
 - Troca capa e banner manualmente se quiser
 
 **Leitura**
-![Screenshot 5](docs/Screenshot%20(5).png)
+<img src="docs/Screenshot%20(5).png" width="60%">
 - Abre capítulos diretamente dos arquivos `.cbz` e `.cbr`
 - Arquivos `.pdf` são convertidos automaticamente para `.cbz` antes da leitura
 - Paginação configurável
@@ -48,15 +48,15 @@ flowchart LR
 **Histórico**
 - Mostra os mangás que você leu recentemente com o capítulo em que parou
 
-**Temas**
-![Screenshot 7](docs/Screenshot (7).png)
+## Temas
+<img src="docs/Screenshot%20(7).png" width="60%">
 - Catppuccin (claro e escuro), Dracula, Alucard, Nord (claro e escuro)
 
 ---
 
 ## Como usar
 
-![Screenshot 6](docs/Screenshot%20(6).png)
+<img src="docs/Screenshot%20(6).png" width="60%">
 
 ```mermaid
 flowchart TD
