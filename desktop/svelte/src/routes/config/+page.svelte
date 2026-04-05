@@ -10,10 +10,13 @@
   import { useTheme } from "$lib/hooks/use-theme.svelte";
 
   import AcerolaPopover from "$lib/components/acerola-popover/acerola-popover.svelte";
+  import AcerolaCommand from "$lib/components/acerola-command/acerola-command.svelte";
+  import * as Command from "$lib/components/ui/command/index.js";
   import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
+  import { LANGUAGES } from "$lib/constants/languages";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import FolderIcon from "@lucide/svelte/icons/folder";
-  import Languages from "@lucide/svelte/icons/languages";
+  import LanguagesIcon from "@lucide/svelte/icons/languages";
   import PlayIcon from "@lucide/svelte/icons/play";
   import Plus from "@lucide/svelte/icons/plus";
 
@@ -110,15 +113,12 @@
 
     <div class="grid gap-4">
       <AcerolaHeroButton
-        /* FIXME: Traduzir isso também, *config.metadata.lang.title e .desc */
-        title={m["pages.config.file_system.manga_path.title"]()}
-        description={m["pages.config.file_system.manga_path.desc"]({
-          path: library.folderPath ?? "",
-        })}
+        title={m["pages.config.metadata.lang.title"]()}
+        description={m["pages.config.metadata.lang.desc"]()}
         onclick={() => console.log("teste")}
       >
         {#snippet icon()}
-          <Languages class="text-chart-4" size={24} />
+          <LanguagesIcon class="text-chart-4" size={24} />
         {/snippet}
 
         {#snippet action()}
@@ -132,7 +132,19 @@
             {/snippet}
 
             {#snippet content()}
-              <div>teste</div>
+              <div class="w-64">
+                <AcerolaCommand>
+                  <Command.Input placeholder={m["components.command.placeholder"]()} />
+                  
+                  <Command.List>
+                    {#each LANGUAGES as lang}
+                      <Command.Item value={lang.code}>
+                        {lang.label}
+                      </Command.Item>
+                    {/each}
+                  </Command.List>
+                </AcerolaCommand>
+              </div>
             {/snippet}
           </AcerolaPopover>
         {/snippet}

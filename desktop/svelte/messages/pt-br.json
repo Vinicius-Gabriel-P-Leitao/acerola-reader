@@ -48,6 +48,12 @@
           "desc": "Criar arquivo de metadados na pasta ao sincronizar."
         }
       },
+      "metadata": {
+        "lang": {
+          "title": "Idioma",
+          "desc": "Selecione o idioma padrão para os metadados."
+        }
+      },
       "components": {
         "theme_piker": "Aparência"
       }

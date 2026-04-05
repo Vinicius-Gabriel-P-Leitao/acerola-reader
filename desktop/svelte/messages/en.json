@@ -48,6 +48,12 @@
           "desc": "Create a metadata file in the folder during synchronization."
         }
       },
+      "metadata": {
+        "lang": {
+          "title": "Language",
+          "desc": "Select the default language for metadata."
+        }
+      },
       "components": {
         "theme_piker": "Appearance"
       }
