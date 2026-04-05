@@ -10,13 +10,18 @@
   import PlayIcon from "@lucide/svelte/icons/play";
   import { useLibrary } from "$lib/hooks/use-library.svelte";
   import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
+  import { useComicInfoPreference } from "$lib/hooks/use-comic-info-preference.svelte";
 
   const ctx = useTheme();
-
   const library = useLibrary();
+  const comicInfoPreference = useComicInfoPreference();
 
   $effect(() => {
     library.loadSavedPath();
+  });
+
+  $effect(() => {
+    comicInfoPreference.loadSavedComicInfoPreference();
   });
 </script>
 
@@ -67,14 +72,18 @@
       <AcerolaHeroButton
         title={m["pages.config.file_system.comic_info.title"]()}
         description={m["pages.config.file_system.comic_info.desc"]()}
-        onclick={() => console.log("")}
       >
         {#snippet icon()}
           <FileTextIcon class="text-chart-2" size={24} />
         {/snippet}
 
         {#snippet action()}
-          <AcerolaSwitch />
+          <AcerolaSwitch
+            checked={comicInfoPreference.comicInfoPreference ?? false}
+            onCheckedChange={async () => {
+              await comicInfoPreference.selectComicInfoPreference();
+            }}
+          />
         {/snippet}
       </AcerolaHeroButton>
     </div>
