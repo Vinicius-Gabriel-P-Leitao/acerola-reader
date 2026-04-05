@@ -216,6 +216,7 @@ Encontrados 10 itens em 9 arquivos.
 
 #### FIXME
 
+- [ ] Problema de sync bugado após alguma operação (provavelmente ao definir a primeira imagem como cover ou adicionar novos mangás). Corrigir botão de sincronizar cover/banner, que atualmente não funciona e pode estar relacionado.
 - [x] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
 - [x] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`
 - [x] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.

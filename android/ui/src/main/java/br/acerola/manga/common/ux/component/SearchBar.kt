@@ -88,7 +88,7 @@ fun <T> Acerola.Component.SearchBar(
                         IconButton(onClick = internalBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.label_search_back_to_results),
+                                contentDescription = stringResource(R.string.common_back),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
@@ -105,7 +105,7 @@ fun <T> Acerola.Component.SearchBar(
                         IconButton(onClick = { onQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.description_icon_search_close),
+                                contentDescription = stringResource(R.string.common_clear),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
@@ -155,7 +155,7 @@ fun <T> Acerola.Component.SearchBar(
                                 .padding(32.dp),
                         ) {
                             Text(
-                                text = stringResource(R.string.description_text_search_no_results),
+                                text = stringResource(R.string.common_no_results),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -181,7 +181,7 @@ fun <T> Acerola.Component.SearchBar(
 private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
     val transition = updateTransition(
         targetState = expanded,
-        label = stringResource(R.string.label_search_bar_transition)
+        label = stringResource(R.string.common_search_transition)
     )
 
     val bottomCornerRadius by transition.animateDp(
@@ -198,7 +198,7 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
                 )
             }
         },
-        label = stringResource(R.string.label_search_bar_corner_radius)
+        label = stringResource(R.string.common_search_corner_radius)
     ) { isExpanded ->
         // 🔥 Aqui está a correção real
         if (isExpanded) 12.dp else 28.dp
