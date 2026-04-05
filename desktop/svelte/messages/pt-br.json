@@ -46,12 +46,31 @@
         "comic_info": {
           "title": "Gerar ComicInfo.xml",
           "desc": "Criar arquivo de metadados na pasta ao sincronizar."
+        },
+        "sync": {
+          "fast": {
+            "title": "Sincronização rápida",
+            "desc": "Atualiza apenas arquivos alterados."
+          },
+          "deep": {
+            "title": "Sincronização profunda",
+            "desc": "Reescreve todos os arquivos do banco de dados."
+          }
         }
       },
       "metadata": {
+        "title": "Configuração de metadados",
         "lang": {
           "title": "Idioma",
           "desc": "Selecione o idioma padrão para os metadados."
+        },
+        "mangadex": {
+          "title": "Sincronização com MangaDex",
+          "desc": "Sincroniza metadados com o MangaDex."
+        },
+        "anilist": {
+          "title": "Sincronização com AniList",
+          "desc": "Sincroniza metadados com o AniList."
         }
       },
       "components": {

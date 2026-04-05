@@ -1,7 +1,14 @@
 <script lang="ts">
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
+  import AcerolaCommand from "$lib/components/acerola-command/acerola-command.svelte";
   import AcerolaHeroButton from "$lib/components/acerola-hero-button/acerola-hero-button.svelte";
+  import AcerolaPopover from "$lib/components/acerola-popover/acerola-popover.svelte";
+  import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
   import ThemePicker from "./components/theme-picker.svelte";
+
+  import * as Command from "$lib/components/ui/command/index.js";
+
+  import { LANGUAGES } from "$lib/constants/languages";
 
   import { m } from "$lib/paraglide/messages";
 
@@ -9,16 +16,16 @@
   import { useLibrary } from "$lib/hooks/use-library.svelte";
   import { useTheme } from "$lib/hooks/use-theme.svelte";
 
-  import AcerolaPopover from "$lib/components/acerola-popover/acerola-popover.svelte";
-  import AcerolaCommand from "$lib/components/acerola-command/acerola-command.svelte";
-  import * as Command from "$lib/components/ui/command/index.js";
-  import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
-  import { LANGUAGES } from "$lib/constants/languages";
+  import MangaDexIcon from "$lib/assets/icons/mangadex.svg?component";
+  import AniListIcon from "$lib/assets/icons/anilist.svg?component";
+  import CloudSync from "@lucide/svelte/icons/cloud-sync";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import FolderIcon from "@lucide/svelte/icons/folder";
+  import FolderSync from "@lucide/svelte/icons/folder-sync";
   import LanguagesIcon from "@lucide/svelte/icons/languages";
   import PlayIcon from "@lucide/svelte/icons/play";
   import Plus from "@lucide/svelte/icons/plus";
+  import RefreshCw from "@lucide/svelte/icons/refresh-cw";
 
   const ctx = useTheme();
   const library = useLibrary();
@@ -76,6 +83,44 @@
         {/snippet}
       </AcerolaHeroButton>
 
+      <!-- Item: Iniciar sincronização rápida -->
+      <AcerolaHeroButton
+        title={m["pages.config.file_system.sync.fast.title"]()}
+        description={m["pages.config.file_system.sync.fast.desc"]()}
+        onclick={() => console.log("sync")}
+      >
+        {#snippet icon()}
+          <FolderSync class="text-chart-3" size={24} />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaButtonIcon
+            class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+          >
+            <RefreshCw />
+          </AcerolaButtonIcon>
+        {/snippet}
+      </AcerolaHeroButton>
+
+      <!-- Item: Sincronização profunda, reescreve tudo do banco de dados -->
+      <AcerolaHeroButton
+        title={m["pages.config.file_system.sync.deep.title"]()}
+        description={m["pages.config.file_system.sync.deep.desc"]()}
+        onclick={() => console.log("sync")}
+      >
+        {#snippet icon()}
+          <FolderSync class="text-chart-1" size={24} />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaButtonIcon
+            class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+          >
+            <RefreshCw />
+          </AcerolaButtonIcon>
+        {/snippet}
+      </AcerolaHeroButton>
+
       <!-- Item: Gerar ComicInfo.xml para os mangás -->
       <AcerolaHeroButton
         title={m["pages.config.file_system.comic_info.title"]()}
@@ -106,12 +151,12 @@
     <div
       class="flex items-center gap-3 text-muted-foreground uppercase text-xs font-bold tracking-widest"
     >
-      <FileTextIcon size={16} />
-      <!-- FIXME: Traduzir para *.config.metadata.title com Configuração de metadados -->
-      {m["pages.config.file_system.title"]()}
+      <CloudSync size={16} />
+      {m["pages.config.metadata.title"]()}
     </div>
 
     <div class="grid gap-4">
+      <!-- Item: Seleção do idioma dos metadados -->
       <AcerolaHeroButton
         title={m["pages.config.metadata.lang.title"]()}
         description={m["pages.config.metadata.lang.desc"]()}
@@ -154,6 +199,44 @@
               </div>
             {/snippet}
           </AcerolaPopover>
+        {/snippet}
+      </AcerolaHeroButton>
+
+      <!-- Item: Sync com o mangadex -->
+      <AcerolaHeroButton
+        title={m["pages.config.metadata.mangadex.title"]()}
+        description={m["pages.config.metadata.mangadex.desc"]()}
+        onclick={() => console.log("sync")}
+      >
+        {#snippet icon()}
+          <MangaDexIcon class="w-6 h-6 rounded-lg" />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaButtonIcon
+            class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+          >
+            <RefreshCw />
+          </AcerolaButtonIcon>
+        {/snippet}
+      </AcerolaHeroButton>
+
+      <!-- Item: Sync com o anilist -->
+      <AcerolaHeroButton
+        title={m["pages.config.metadata.anilist.title"]()}
+        description={m["pages.config.metadata.anilist.desc"]()}
+        onclick={() => console.log("sync")}
+      >
+        {#snippet icon()}
+          <AniListIcon class="w-6 h-6 rounded-lg" />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaButtonIcon
+            class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+          >
+            <RefreshCw />
+          </AcerolaButtonIcon>
         {/snippet}
       </AcerolaHeroButton>
     </div>

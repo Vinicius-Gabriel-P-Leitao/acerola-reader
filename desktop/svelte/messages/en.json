@@ -46,12 +46,31 @@
         "comic_info": {
           "title": "Generate ComicInfo.xml",
           "desc": "Create a metadata file in the folder during synchronization."
+        },
+        "sync": {
+          "fast": {
+            "title": "Fast synchronization",
+            "desc": "Updates only changed archive."
+          },
+          "deep": {
+            "title": "Deep synchronization",
+            "desc": "Rewrites all archive from the database."
+          }
         }
       },
       "metadata": {
+        "title": "Metadata configuration",
         "lang": {
           "title": "Language",
           "desc": "Select the default language for metadata."
+        },
+        "mangadex": {
+          "title": "MangaDex Synchronization",
+          "desc": "Synchronize metadata with MangaDex."
+        },
+        "anilist": {
+          "title": "AniList Synchronization",
+          "desc": "Synchronize metadata with AniList."
         }
       },
       "components": {
