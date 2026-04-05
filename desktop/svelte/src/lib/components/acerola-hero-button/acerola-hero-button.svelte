@@ -1,5 +1,6 @@
 <script lang="ts">
   import { m } from "$lib/paraglide/messages";
+  import * as Item from "$lib/components/ui/item/index.js";
   import { cn } from "$lib/utils/cn.utils";
   import type { AcerolaHeroButtonProps } from "./acerola-hero-button.types";
 
@@ -14,7 +15,7 @@
   }: AcerolaHeroButtonProps = $props();
 </script>
 
-<div
+<Item.Root
   class={cn(
     "p-6 rounded-3xl border border-border bg-card flex items-center justify-between group transition-colors",
     onclick ? "cursor-pointer hover:border-primary/50" : "",
@@ -25,26 +26,29 @@
 >
   <div class="flex items-center gap-4">
     {#if icon}
-      <div
+      <Item.Media
         class="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-foreground group-hover:text-primary transition-colors"
       >
         {@render icon()}
-      </div>
+      </Item.Media>
     {/if}
 
-    <div class="text-left">
-      <h3 class="font-bold text-foreground text-lg">
+    <Item.Content class="text-left">
+      <Item.Title class="font-bold text-foreground text-lg">
         {title ?? m["components.hero_button.default_title"]()}
-      </h3>
+      </Item.Title>
+
       {#if description}
-        <p class="text-sm text-muted-foreground">{description}</p>
+        <Item.Description class="text-sm text-muted-foreground"
+          >{description}</Item.Description
+        >
       {/if}
-    </div>
+    </Item.Content>
   </div>
 
   {#if action}
-    <div class="shrink-0 ml-4">
+    <Item.Actions class="shrink-0 ml-4">
       {@render action()}
-    </div>
+    </Item.Actions>
   {/if}
-</div>
+</Item.Root>

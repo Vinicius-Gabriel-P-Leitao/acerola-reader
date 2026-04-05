@@ -11,6 +11,7 @@
   import { useLibrary } from "$lib/hooks/use-library.svelte";
   import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
   import { useComicInfoPreference } from "$lib/hooks/use-comic-info-preference.svelte";
+  import AcerolaInput from "$lib/components/acerola-input/acerola-input.svelte";
 
   const ctx = useTheme();
   const library = useLibrary();
@@ -91,4 +92,39 @@
 
   <!-- Aparência (Componente Existente) -->
   <ThemePicker theme={ctx.theme} mode={ctx.mode} onselect={ctx.setTheme} />
+
+  <!-- Metadados -->
+
+  <section class="space-y-4">
+    <div
+      class="flex items-center gap-3 text-muted-foreground uppercase text-xs font-bold tracking-widest"
+    >
+      <FileTextIcon size={16} />
+      <!-- FIXME: Traduzir para *.config.metadata.title com Configuração de metadados -->
+      {m["pages.config.file_system.title"]()}
+    </div>
+
+    <div class="grid gap-4">
+      <AcerolaHeroButton
+        /* FIXME: Traduzir isso também, *config.metadata.lang.title e .desc */
+        title={m["pages.config.file_system.manga_path.title"]()}
+        description={m["pages.config.file_system.manga_path.desc"]({
+          path: library.folderPath ?? "",
+        })}
+        onclick={() => console.log("teste")}
+      >
+        {#snippet icon()}
+          <FolderIcon class="text-chart-5" size={24} />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaButtonIcon
+            class="rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+          >
+            <PlayIcon />
+          </AcerolaButtonIcon>
+        {/snippet}
+      </AcerolaHeroButton>
+    </div>
+  </section>
 </div>

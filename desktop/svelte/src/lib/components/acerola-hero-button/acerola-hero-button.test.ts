@@ -16,26 +16,27 @@ describe("AcerolaHeroButton", () => {
 
   it("aplica a classe cursor-pointer e hover state se onclick for passado", async () => {
     const handleClick = vi.fn();
-    const { container } = render(AcerolaHeroButton, {
+    render(AcerolaHeroButton, {
       title: "Item clicável",
       onclick: handleClick,
     });
 
-    const wrapper = container.firstElementChild as HTMLElement;
+    const wrapper = screen.getByText("Item clicável").closest('[data-slot="item"]');
+    
     expect(wrapper).toHaveClass("cursor-pointer");
     expect(wrapper).toHaveClass("hover:border-primary/50");
 
     const user = userEvent.setup();
-    await user.click(wrapper);
+    await user.click(wrapper as HTMLElement);
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
   it("não aplica cursor-pointer se não for clicável", () => {
-    const { container } = render(AcerolaHeroButton, {
+    render(AcerolaHeroButton, {
       title: "Apenas leitura",
     });
 
-    const wrapper = container.firstElementChild as HTMLElement;
+    const wrapper = screen.getByText("Apenas leitura").closest('[data-slot="item"]');
     expect(wrapper).not.toHaveClass("cursor-pointer");
     expect(wrapper).not.toHaveClass("hover:border-primary/50");
   });
