@@ -21,7 +21,6 @@ import br.acerola.manga.common.ux.Acerola
 private val navDestinations = listOf(
     Destination.HOME,
     Destination.HISTORY,
-    Destination.SEARCH,
     Destination.CONFIG,
 )
 

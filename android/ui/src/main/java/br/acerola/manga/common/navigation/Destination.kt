@@ -41,12 +41,6 @@ enum class Destination(
         route = R.string.navigation_history_activity,
         contentDescriptionRes = R.string.description_history_activity,
     ),
-    SEARCH(
-        icon = Icons.Default.Search,
-        label = R.string.label_search_activity,
-        route = R.string.navigation_search_activity,
-        contentDescriptionRes = R.string.description_search_activity,
-    ),
     CONFIG(
         icon = Icons.Default.Settings,
         label = R.string.label_config_activity,
