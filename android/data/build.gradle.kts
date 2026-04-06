@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "br.acerola.manga.data"
+    namespace = "br.acerola.comic.data"
     compileSdk = 36
 
     defaultConfig {
@@ -54,7 +54,7 @@ room {
 
 apollo {
     service("anilist") {
-        packageName.set("br.acerola.manga.remote.anilist")
+        packageName.set("br.acerola.comic.remote.anilist")
         schemaFile.set(file("src/main/graphql/anilist/schema.graphqls"))
         srcDir("src/main/graphql/anilist")
     }
