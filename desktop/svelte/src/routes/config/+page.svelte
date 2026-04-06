@@ -87,6 +87,7 @@
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.fast.title"]()}
         description={m["pages.config.file_system.sync.fast.desc"]()}
+        /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
         onclick={() => console.log("sync")}
       >
         {#snippet icon()}
@@ -106,6 +107,7 @@
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.deep.title"]()}
         description={m["pages.config.file_system.sync.deep.desc"]()}
+        /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
         onclick={() => console.log("sync")}
       >
         {#snippet icon()}
@@ -206,6 +208,7 @@
       <AcerolaHeroButton
         title={m["pages.config.metadata.mangadex.title"]()}
         description={m["pages.config.metadata.mangadex.desc"]()}
+        /* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
         onclick={() => console.log("sync")}
       >
         {#snippet icon()}
@@ -225,6 +228,7 @@
       <AcerolaHeroButton
         title={m["pages.config.metadata.anilist.title"]()}
         description={m["pages.config.metadata.anilist.desc"]()}
+        /* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
         onclick={() => console.log("sync")}
       >
         {#snippet icon()}
