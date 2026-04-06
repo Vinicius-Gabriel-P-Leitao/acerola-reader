@@ -58,7 +58,7 @@
     class="flex items-center gap-3 text-muted-foreground uppercase text-xs font-bold tracking-widest"
   >
     <PaletteIcon size={16} />
-    {m.config_appearance()}
+    {m["pages.config.components.theme_piker"]()}
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -90,7 +90,7 @@
           >
             <RefreshCwIcon
               size={12}
-              class="animate-spin-slow text-primary-foreground"
+              class="animate-spin text-primary-foreground"
             />
           </div>
         {/if}

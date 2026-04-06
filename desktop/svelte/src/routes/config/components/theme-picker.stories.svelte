@@ -13,6 +13,11 @@
         },
       },
     },
+    argTypes: {
+      theme: { description: "ID do tema selecionado", control: "text" },
+      mode: { description: "Modo de cor (light ou dark)", control: "inline-radio", options: ["light", "dark"] },
+      onselect: { description: "Callback quando um tema é selecionado", action: "selected" }
+    },
   });
 </script>
 

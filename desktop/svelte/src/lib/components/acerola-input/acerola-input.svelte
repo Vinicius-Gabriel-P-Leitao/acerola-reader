@@ -11,6 +11,6 @@
 
 <Input
   bind:value
-  class={cn("text-foreground", className)}
+  class={cn("text-foreground disabled:pointer-events-auto w-auto min-w-48", className)}
   {...props}
 />

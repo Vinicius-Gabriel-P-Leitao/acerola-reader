@@ -9,6 +9,9 @@
     title: "Components/AcerolaButtonIcon",
     component: AcerolaButtonIcon,
     tags: ["autodocs"],
+    argTypes: {
+      disabled: { description: "Desabilita o botão", control: "boolean" }
+    }
   });
 </script>
 

@@ -13,6 +13,12 @@
         },
       },
     },
+    argTypes: {
+      value: { description: "Valor do campo de texto", control: "text" },
+      placeholder: { description: "Placeholder do input", control: "text" },
+      disabled: { description: "Desabilita o input", control: "boolean" },
+      type: { description: "Tipo do input (text, search, etc)", control: "text" }
+    },
   });
 </script>
 

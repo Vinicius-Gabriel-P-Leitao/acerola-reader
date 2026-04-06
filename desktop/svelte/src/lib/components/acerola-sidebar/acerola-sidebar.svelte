@@ -2,10 +2,9 @@
   import { page } from "$app/state";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import BookOpenIcon from "@lucide/svelte/icons/book-open";
-  import type { Snippet } from "svelte";
-  import type { SidebarItem } from "./sidebar.types";
+  import type { AcerolaSidebarProps } from "./acerola-sidebar.types";
 
-  let { items, footer }: { items: SidebarItem[]; footer?: Snippet } = $props();
+  let { items, footer }: AcerolaSidebarProps = $props();
 </script>
 
 <Sidebar.Root collapsible="icon">

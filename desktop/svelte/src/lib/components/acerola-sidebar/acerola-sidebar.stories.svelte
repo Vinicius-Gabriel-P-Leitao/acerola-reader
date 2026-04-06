@@ -6,7 +6,7 @@
   import LibraryIcon from "@lucide/svelte/icons/library";
   import SettingsIcon from "@lucide/svelte/icons/settings";
   import HistoryIcon from "@lucide/svelte/icons/history";
-  import type { SidebarItem } from "./sidebar.types";
+  import type { SidebarItem } from "./acerola-sidebar.types";
 
   const items: SidebarItem[] = [
     { href: "/home", label: "Biblioteca", icon: LibraryIcon },
@@ -25,6 +25,10 @@
           component: "Sidebar de navegação principal da aplicação.",
         },
       },
+    },
+    argTypes: {
+      items: { description: "Lista de itens de navegação", control: "object" },
+      footer: { description: "Snippet opcional para o rodapé da sidebar", control: "object" }
     },
   });
 </script>

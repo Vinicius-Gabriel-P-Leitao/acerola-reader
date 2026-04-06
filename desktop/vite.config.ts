@@ -2,6 +2,7 @@ import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import svg from "@poppanator/sveltekit-svg";
 import { defineConfig } from "vite";
 
 const host = process.env.TAURI_DEV_HOST;
@@ -11,6 +12,13 @@ export default defineConfig(async () => ({
   plugins: [
     sveltekit(),
     tailwindcss(),
+    svg({
+      includePaths: ["./svelte/src/lib/assets/icons/"],
+      svgoOptions: {
+        multipass: true,
+        plugins: ["preset-default"],
+      },
+    }),
     paraglideVitePlugin({
       project: "./svelte/project.inlang",
       outdir: "./svelte/src/lib/paraglide",
