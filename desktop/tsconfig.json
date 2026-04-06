@@ -11,5 +11,6 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "bundler"
-  }
+  },
+  "include": ["svelte/src/**/*.d.ts", "svelte/src/**/*.ts", "svelte/src/**/*.js", "svelte/src/**/*.svelte"]
 }
