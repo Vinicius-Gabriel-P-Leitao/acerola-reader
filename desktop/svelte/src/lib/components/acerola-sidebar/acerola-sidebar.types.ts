@@ -9,5 +9,8 @@ export type SidebarItem = {
 
 export type AcerolaSidebarProps = {
   items: SidebarItem[];
+  header?: Snippet;
   footer?: Snippet;
+  class?: string;
 };
+

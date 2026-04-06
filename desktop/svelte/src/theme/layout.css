@@ -1,1 +1,10 @@
 @import './tailwind.css';
+
+*[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  shape-margin: drag;
+}
+
+button, a, input, select, textarea {
+  -webkit-app-region: no-drag;
+}

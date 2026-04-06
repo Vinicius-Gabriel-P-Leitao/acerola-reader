@@ -1,28 +1,17 @@
 <script lang="ts">
   import { page } from "$app/state";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-  import BookOpenIcon from "@lucide/svelte/icons/book-open";
   import type { AcerolaSidebarProps } from "./acerola-sidebar.types";
 
-  let { items, footer }: AcerolaSidebarProps = $props();
+  let { items, header, footer, class: className }: AcerolaSidebarProps = $props();
 </script>
 
-<Sidebar.Root collapsible="icon">
-  <Sidebar.Header class="p-6">
-    <div class="flex items-center gap-3">
-      <div
-        class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"
-      >
-        <BookOpenIcon size={24} />
-      </div>
-
-      <span
-        class="text-xl font-bold tracking-tight group-data-[collapsible=icon]:hidden"
-      >
-        Acerola
-      </span>
-    </div>
-  </Sidebar.Header>
+<Sidebar.Root collapsible="icon" class={className}>
+  {#if header}
+    <Sidebar.Header class="p-6">
+      {@render header()}
+    </Sidebar.Header>
+  {/if}
 
   <Sidebar.Content>
     <Sidebar.Group class="mt-4 px-3">
