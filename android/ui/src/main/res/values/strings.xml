@@ -28,8 +28,8 @@
     <!-- Icons -->
     <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
     <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
-    <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o manga.</string>
-    <string name="description_icon_sync_manga_directory">Sincronização somente das pastas ou dos mangás completos.</string>
+    <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o quadrinho.</string>
+    <string name="description_icon_sync_comic_directory">Sincronização somente das pastas ou dos mangás completos.</string>
     <string name="description_icon_sync_mangadex">Sincronização de dados do mangadex.</string>
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
@@ -49,7 +49,7 @@
 
     <!-- Text other types -->
     <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
-    <string name="description_text_selected_manga_directory">Pasta selecionada: %1$s</string>
+    <string name="description_text_selected_comic_directory">Pasta selecionada: %1$s</string>
     <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
     <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
     <string name="description_text_home_deep_sync">Sincronização profunda</string>

@@ -9,15 +9,15 @@ plugins {
 }
 
 android {
-    namespace = "br.acerola.manga"
+    namespace = "br.acerola.comic"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "0.0.2 beta" // NOTE: Lembrar de trocar de acordo com a release
-        applicationId = "br.acerola.manga"
+        versionName = "0.0.3 beta" // NOTE: Lembrar de trocar de acordo com a release
+        applicationId = "br.acerola.comic"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {

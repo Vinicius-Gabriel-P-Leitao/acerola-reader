@@ -1,0 +1,63 @@
+package br.acerola.comic.module.main.home
+
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.config.preference.HomeLayoutType
+import br.acerola.comic.error.UserMessage
+import br.acerola.comic.module.main.Main
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+import br.acerola.comic.config.preference.HomeSortPreference
+import br.acerola.comic.config.preference.ComicSortType
+import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.module.main.home.state.FilterSettings
+
+class HomeScreenTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private val viewModel = mockk<HomeViewModel>(relaxed = true)
+
+    @Before
+    fun setUp() {
+        every { viewModel.selectedHomeLayout } returns MutableStateFlow(HomeLayoutType.LIST)
+        every { viewModel.isIndexing } returns MutableStateFlow(false)
+        every { viewModel.progress } returns MutableStateFlow(-1)
+        every { viewModel.mangas } returns MutableStateFlow(emptyList())
+        every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
+        every { viewModel.allCategories } returns MutableStateFlow(emptyList())
+        
+        // Mock com objetos reais, não proxies
+        every { viewModel.sortSettings } returns MutableStateFlow(HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING))
+        every { viewModel.filterSettings } returns MutableStateFlow(FilterSettings())
+    }
+
+    @Test
+    fun `HomeScreen_deve_exibir_SearchBar_quando_carregada`() {
+        composeTestRule.setContent {
+            AcerolaTheme {
+                CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
+                     Main.Home.Layout.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
+                }
+            }
+        }
+
+        // Verifica se o placeholder da busca aparece
+        composeTestRule.onNodeWithText("Buscar mangá...", substring = true).assertIsDisplayed()
+
+        // Verifica se o FloatingTool (HUB) está presente
+        composeTestRule.onNodeWithContentDescription("hub", substring = true).assertIsDisplayed()
+    }
+}

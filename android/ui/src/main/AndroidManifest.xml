@@ -3,13 +3,13 @@
 
     <application>
         <activity
-            android:name="br.acerola.manga.module.manga.MangaActivity"
+            android:name="br.acerola.comic.module.comic.ComicActivity"
             android:exported="false"
             android:label="@string/label_chapters_activity"
             android:theme="@style/Theme.Acerola" />
 
         <activity
-            android:name="br.acerola.manga.module.reader.ReaderActivity"
+            android:name="br.acerola.comic.module.reader.ReaderActivity"
             android:exported="false"
             android:label="@string/label_reader_activity"
             android:theme="@style/Theme.Acerola" />

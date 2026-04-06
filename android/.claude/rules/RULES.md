@@ -39,7 +39,7 @@ Para organizar componentes e layouts, utilizamos uma estrutura de `objects` anin
 Todo componente ou layout de UI deve ser colocado dentro de seu respectivo escopo seguindo o padrão abaixo:
 
 ```kotlin
-package br.acerola.manga.module.main
+package comic.module.main
 
 /**
  * Namespace para componentes e layouts específicos do módulo de Início (Home).
@@ -87,7 +87,7 @@ fun Main.Home.Component.UserAvatar() {
 // ✅ Correto: Imports específicos
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import br.acerola.manga.module.main.Main
+import comic.module.main.Main
 
 // ✅ Correto: Extension Function para Presenter
 fun String.toTitleCase(): String = this.lowercase().replaceFirstChar { it.uppercase() }

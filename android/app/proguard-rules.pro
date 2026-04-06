@@ -27,8 +27,8 @@
     <methods>;
 }
 # Permite otimizações internas mas preserva a estrutura de serialização dos DTOs.
--keepclassmembers,allowoptimization class br.acerola.manga.dto.** { *; }
--keepclassmembers,allowoptimization class br.acerola.manga.data.remote.dto.** { *; }
+-keepclassmembers,allowoptimization class br.acerola.comic.dto.** { *; }
+-keepclassmembers,allowoptimization class br.acerola.comic.data.remote.dto.** { *; }
 
 # 4. Hilt (Injeção de Dependência)
 -keepclassmembers class * {

@@ -1,0 +1,128 @@
+package br.acerola.comic.module.reader.component
+import br.acerola.comic.ui.R
+
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import br.acerola.comic.module.reader.Reader
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+
+@Composable
+fun Reader.Component.WebtoonReader(
+    pageCount: Int,
+    mangaId: Long,
+    chapterId: Long,
+    onUiToggle: () -> Unit,
+    listState: LazyListState,
+    onPageRequest: (Int) -> Unit,
+    onZoomChange: (Boolean) -> Unit
+) {
+    var scale by remember { mutableFloatStateOf(value = 1f) }
+    var offset by remember { mutableStateOf(value = Offset.Zero) }
+
+    LaunchedEffect(key1 = scale) {
+        onZoomChange(scale > 1.0f)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(key1 = Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val isZoomed = scale > 1f
+                        val event = awaitPointerEvent()
+                        val isMultiTouch = event.changes.size > 1
+
+                        if (isMultiTouch || isZoomed) {
+                            val zoom = event.calculateZoom()
+                            val pan = event.calculatePan()
+
+                            if (zoom != 1f || pan != Offset.Zero) {
+                                val newScale = (scale * zoom).coerceIn(1f, 3f)
+
+                                val maxTranslateX = (newScale - 1) * size.width / 2
+                                val maxTranslateY = (newScale - 1) * size.height / 2
+
+                                val newOffset = if (newScale > 1f) {
+                                    Offset(
+                                        x = (offset.x + pan.x * newScale).coerceIn(-maxTranslateX, maxTranslateX),
+                                        y = (offset.y + pan.y * newScale).coerceIn(-maxTranslateY, maxTranslateY)
+                                    )
+                                } else {
+                                    Offset.Zero
+                                }
+
+                                scale = newScale
+                                offset = newOffset
+
+                                event.changes.forEach {
+                                    if (it.positionChanged()) it.consume()
+                                }
+                            }
+                        }
+                    } while (event.changes.any { it.pressed })
+                }
+            }
+    ) {
+        LazyColumn(
+            state = listState,
+            userScrollEnabled = scale == 1f,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offset.x,
+                    translationY = offset.y
+                )
+        ) {
+            items(pageCount) { index ->
+                LaunchedEffect(key1 = index) {
+                    onPageRequest(index)
+                }
+
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data("acerola://page/$mangaId/$chapterId/$index")
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .pointerInput(key1 = Unit) {
+                            detectTapGestures(
+                                onTap = {
+                                    onUiToggle()
+                                },
+                                onDoubleTap = {
+                                    if (scale > 1f) {
+                                        scale = 1f
+                                        offset = Offset.Zero
+                                    } else {
+                                        scale = 2f
+                                    }
+                                }
+                            )
+                        },
+                    contentScale = ContentScale.FillWidth
+                )
+            }
+        }
+    }
+}

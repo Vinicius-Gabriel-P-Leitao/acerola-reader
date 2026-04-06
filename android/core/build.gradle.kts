@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "br.acerola.manga.core"
+    namespace = "br.acerola.comic.core"
     compileSdk = 36
 
     defaultConfig {

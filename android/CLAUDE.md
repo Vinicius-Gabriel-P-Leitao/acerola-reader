@@ -53,7 +53,7 @@ Four Gradle modules with a strict dependency hierarchy:
 
 ## Room Database (v6)
 
-Tables: `manga_directory`, `manga_remote_info`, `chapter_archive`, `chapter_remote_info`, `chapter_download_source`, `author`, `genre`, `cover`, `reading_history`, `chapter_read`.
+Tables: `comic_directory`, `manga_remote_info`, `chapter_archive`, `chapter_remote_info`, `chapter_download_source`, `author`, `genre`, `cover`, `reading_history`, `chapter_read`.
 
 Remote APIs: `https://api.mangadex.org` (REST via Retrofit/Moshi) and Apollo GraphQL client.
 

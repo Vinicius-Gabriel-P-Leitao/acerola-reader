@@ -205,8 +205,8 @@ uma maneira bonita e eficiente de escanear, organizar e ler sua coleção, enriq
 ### Testes
 
 - [x] **Escrever testes**
-    - [MetadataSyncWorker.kt](core/src/main/java/br/acerola/manga/core/worker/MetadataSyncWorker.kt)
-    - [ChapterDownloadWorker.kt](core/src/main/java/br/acerola/manga/core/worker/ChapterDownloadWorker.kt)
+    - [MetadataSyncWorker.kt](core/src/main/java/br/acerola/comic/core/worker/MetadataSyncWorker.kt)
+    - [ChapterDownloadWorker.kt](core/src/main/java/br/acerola/comic/core/worker/ChapterDownloadWorker.kt)
 
 ---
 
