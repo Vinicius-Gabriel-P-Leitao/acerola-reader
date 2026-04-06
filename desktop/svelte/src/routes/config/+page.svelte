@@ -145,7 +145,7 @@
   </section>
 
   <!-- Aparência (Componente Existente) -->
-  <ThemePicker theme={ctx.theme} mode={ctx.mode} onselect={ctx.setTheme} />
+  <ThemePicker theme={ctx.theme} mode={ctx.resolved} onselect={ctx.setTheme} />
 
   <!-- Metadados -->
 
