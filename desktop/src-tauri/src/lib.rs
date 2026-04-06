@@ -1,0 +1,55 @@
+mod data;
+mod infra;
+mod commands;
+
+#[cfg(test)]
+pub mod tests;
+
+fn setup_opener(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder.plugin(tauri_plugin_opener::init())
+}
+
+fn setup_dialog(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder.plugin(tauri_plugin_dialog::init())
+}
+
+fn setup_store(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder.plugin(tauri_plugin_store::Builder::new().build())
+}
+
+fn setup_fs(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder.plugin(tauri_plugin_fs::init())
+}
+
+fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder.plugin(
+        // prettier-ignore
+        tauri_plugin_sql::Builder::new()
+            .add_migrations("sqlite:acerola.db", crate::infra::db::migrations::get_migrations())
+            .build()
+    )
+}
+
+fn configure_all_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    let builder = setup_opener(builder);
+    let builder = setup_dialog(builder);
+    let builder = setup_store(builder);
+    let builder = setup_fs(builder);
+    setup_sql(builder)
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let builder = tauri::Builder::default();
+    let builder = configure_all_plugins(builder);
+
+    builder
+        .invoke_handler(
+            tauri::generate_handler![
+                commands::library::select_folder_cmd::select_folder,
+                commands::library::comic_scanner_cmd::comic_scanner
+            ]
+        )
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

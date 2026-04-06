@@ -1,0 +1,81 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "theme": {
+    "catppuccin": {
+      "name": "Catppuccin",
+      "desc": "Paleta pastel suave com tons roxos e rosados"
+    },
+    "nord": {
+      "name": "Nord",
+      "desc": "Paleta ártica inspirada no norte escandinavo"
+    },
+    "dracula": {
+      "name": "Dracula",
+      "desc": "Cores vibrantes sobre fundo escuro ou claro"
+    }
+  },
+  "components": {
+    "hero_button": {
+      "default_title": "Sem título"
+    },
+    "select": {
+      "placeholder": "Selecione uma opção"
+    },
+    "popover": {
+      "close": "Fechar"
+    },
+    "command": {
+      "placeholder": "Pesquisar..."
+    }
+  },
+  "routes": {
+    "home": "Início",
+    "history": "Histórico",
+    "config": "Configurações"
+  },
+  "pages": {
+    "config": {
+      "title": "Configurações",
+      "desc": "Personalize sua experiência de leitura.",
+      "file_system": {
+        "title": "Configuração dos Arquivos",
+        "comic_path": {
+          "title": "Pasta dos quadrinhos",
+          "desc": "Pasta onde será buscado e salvo: {path}"
+        },
+        "comic_info": {
+          "title": "Gerar ComicInfo.xml",
+          "desc": "Criar arquivo de metadados na pasta ao sincronizar."
+        },
+        "sync": {
+          "fast": {
+            "title": "Sincronização rápida",
+            "desc": "Atualiza apenas arquivos alterados."
+          },
+          "deep": {
+            "title": "Sincronização profunda",
+            "desc": "Reescreve todos os arquivos do banco de dados."
+          }
+        }
+      },
+      "metadata": {
+        "title": "Configuração de metadados",
+        "lang": {
+          "title": "Idioma",
+          "desc": "Selecione o idioma padrão para os metadados."
+        },
+        "mangadex": {
+          "title": "Sincronização com MangaDex",
+          "desc": "Sincroniza metadados com o MangaDex."
+        },
+        "anilist": {
+          "title": "Sincronização com AniList",
+          "desc": "Sincroniza metadados com o AniList."
+        }
+      },
+      "components": {
+        "theme_piker": "Aparência"
+      }
+    }
+  }
+}

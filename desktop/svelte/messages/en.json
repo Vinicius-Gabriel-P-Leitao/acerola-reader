@@ -1,0 +1,81 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "theme": {
+    "catppuccin": {
+      "name": "Catppuccin",
+      "desc": "Soft pastel palette with purple and pink tones"
+    },
+    "nord": {
+      "name": "Nord",
+      "desc": "Arctic palette inspired by Scandinavia"
+    },
+    "dracula": {
+      "name": "Dracula",
+      "desc": "Vibrant colors on dark or light backgrounds"
+    }
+  },
+  "components": {
+    "hero_button": {
+      "default_title": "Untitled"
+    },
+    "select": {
+      "placeholder": "Select an option"
+    },
+    "popover": {
+      "close": "Close"
+    },
+    "command": {
+      "placeholder": "Search..."
+    }
+  },
+  "routes": {
+    "home": "Home",
+    "history": "History",
+    "config": "Settings"
+  },
+  "pages": {
+    "config": {
+      "title": "Settings",
+      "desc": "Customize your reading experience.",
+      "file_system": {
+        "title": "File Configuration",
+        "comic_path": {
+          "title": "Comic folder",
+          "desc": "Folder where comics will be searched and saved: {path}"
+        },
+        "comic_info": {
+          "title": "Generate ComicInfo.xml",
+          "desc": "Create a metadata file in the folder during synchronization."
+        },
+        "sync": {
+          "fast": {
+            "title": "Fast synchronization",
+            "desc": "Updates only changed archive."
+          },
+          "deep": {
+            "title": "Deep synchronization",
+            "desc": "Rewrites all archive from the database."
+          }
+        }
+      },
+      "metadata": {
+        "title": "Metadata configuration",
+        "lang": {
+          "title": "Language",
+          "desc": "Select the default language for metadata."
+        },
+        "mangadex": {
+          "title": "MangaDex Synchronization",
+          "desc": "Synchronize metadata with MangaDex."
+        },
+        "anilist": {
+          "title": "AniList Synchronization",
+          "desc": "Synchronize metadata with AniList."
+        }
+      },
+      "components": {
+        "theme_piker": "Appearance"
+      }
+    }
+  }
+}

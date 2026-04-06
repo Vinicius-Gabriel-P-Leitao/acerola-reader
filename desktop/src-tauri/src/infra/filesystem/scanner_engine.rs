@@ -1,0 +1,1 @@
+// TODO: Fazer o código que escaneia pastas ou arquivos e retorna os dados, abstração funcional do tokio:fs

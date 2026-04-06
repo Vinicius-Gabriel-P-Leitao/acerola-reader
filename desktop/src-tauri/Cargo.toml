@@ -1,0 +1,42 @@
+[package]
+name = "acerola"
+edition = "2021"
+version = "0.0.1-beta"
+license = "GPL-3.0-only"
+authors = ["Vinícius Gabriel Pereira Leitão"]
+description = "Um app de organização, leitura de quadrinhos em cbz e cbr"
+
+# NOTE: Em rust para baixar libs cargo build
+[lib]
+# WARN: Sufixo _lib é para não dar conflito de binário
+name = "acerola_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# NOTE: Resolução de dispositivos locais
+mdns-sd = "0.18.2"
+
+# NOTE: Libs de sync 
+axum = "0.8.8"
+tokio = { version = "1.51.0", features = ["full"] }
+
+# NOTE: Plugin de abrir o dialog de arquivos
+tauri-plugin-dialog = "2.7.0"
+
+# NOTE: Plugin equivalente ao DataStore
+tauri-plugin-store = "2"
+
+# NOTE: Plugin de fileSystem
+tauri-plugin-fs = "2"
+
+# NOTE: Plugin para o sqlite
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+sqlx = "0.8.6"
