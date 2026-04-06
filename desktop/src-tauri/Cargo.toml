@@ -1,7 +1,8 @@
 [package]
 name = "acerola"
 edition = "2021"
-version = "0.1.0"
+version = "0.0.1-beta"
+license = "GPL-3.0-only"
 authors = ["Vinícius Gabriel Pereira Leitão"]
 description = "Um app de organização, leitura de quadrinhos em cbz e cbr"
 
@@ -32,3 +33,10 @@ tauri-plugin-dialog = "2.7.0"
 
 # NOTE: Plugin equivalente ao DataStore
 tauri-plugin-store = "2"
+
+# NOTE: Plugin de fileSystem
+tauri-plugin-fs = "2"
+
+# NOTE: Plugin para o sqlite
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+sqlx = "0.8.6"
