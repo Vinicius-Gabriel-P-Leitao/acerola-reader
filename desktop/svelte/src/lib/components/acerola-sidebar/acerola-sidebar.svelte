@@ -3,7 +3,12 @@
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import type { AcerolaSidebarProps } from "./acerola-sidebar.types";
 
-  let { items, header, footer, class: className }: AcerolaSidebarProps = $props();
+  let {
+    items,
+    header,
+    footer,
+    class: className,
+  }: AcerolaSidebarProps = $props();
 </script>
 
 <Sidebar.Root collapsible="icon" class={className}>

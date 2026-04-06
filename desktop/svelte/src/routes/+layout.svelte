@@ -48,7 +48,7 @@
   let appWindow = $state<any>(null);
 
   onMount(async () => {
-    // Importação dinâmica para evitar que quebre durante o SSR (Server-Side Rendering)
+    // WARN: Importação dinâmica para evitar que quebre durante o SSR (Server-Side Rendering)
     const { getCurrentWindow } = await import("@tauri-apps/api/window");
     appWindow = getCurrentWindow();
   });
@@ -85,23 +85,26 @@
       Acerola
     </div>
 
+    <!-- FIXME: Traduzir valores -->
     <div class="flex h-full text-foreground">
       <button
-        class="h-full w-11.5 inline-flex justify-center items-center hover:bg-muted transition-colors"
+        class="h-full w-11.5 inline-flex justify-center items-center hover:bg-muted transition-colors cursor-pointer"
         aria-label="Minimizar"
         onclick={minimize}
       >
         <MinusIcon size={16} strokeWidth={1.5} />
       </button>
+
       <button
-        class="h-full w-11.5 inline-flex justify-center items-center hover:bg-muted transition-colors"
+        class="h-full w-11.5 inline-flex justify-center items-center hover:bg-muted transition-colors cursor-pointer"
         aria-label="Maximizar"
         onclick={toggleMaximize}
       >
         <SquareIcon size={14} strokeWidth={1.5} />
       </button>
+      
       <button
-        class="h-full w-11.5 inline-flex justify-center items-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+        class="h-full w-11.5 inline-flex justify-center items-center hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
         aria-label="Fechar"
         onclick={closeWindow}
       >
@@ -111,11 +114,11 @@
   </div>
 
   <!-- Conteúdo Principal da Aplicação -->
-  <div class="flex flex-1 relative overflow-hidden transform-[translateZ(0)]">
-    <SidebarProvider>
+  <div class="flex flex-1 relative overflow-hidden">
+    <SidebarProvider class="h-full min-h-0">
       <AcerolaSonner />
 
-      <AcerolaSidebar items={sidebarItems} class="h-full!">
+      <AcerolaSidebar items={sidebarItems} class="absolute h-full">
         {#snippet header()}
           <div class="flex items-center gap-3">
             <div
