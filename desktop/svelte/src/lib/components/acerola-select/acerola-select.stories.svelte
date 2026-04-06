@@ -16,8 +16,8 @@
 
   const defaultOptions: AcerolaSelectOption[] = [
     { value: "manga", label: "Manga" },
-    { value: "comic", label: "Comic Book" },
     { value: "webtoon", label: "Webtoon" },
+    { value: "comic", label: "Comic Book" },
   ];
 </script>
 

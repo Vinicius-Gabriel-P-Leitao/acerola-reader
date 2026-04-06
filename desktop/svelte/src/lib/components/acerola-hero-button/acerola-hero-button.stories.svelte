@@ -38,7 +38,7 @@
   name="Completo"
   args={{
     title: "Pasta dos Mangás",
-    description: "C:/Users/acerola/mangas",
+    description: "C:/Users/acerola/comics",
     icon: folderIcon,
     action: actionButton,
     onclick: () => console.log("Clicou!"),

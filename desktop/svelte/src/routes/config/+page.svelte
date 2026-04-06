@@ -64,8 +64,8 @@
     <div class="grid gap-4">
       <!-- Item: Pasta dos mangás -->
       <AcerolaHeroButton
-        title={m["pages.config.file_system.manga_path.title"]()}
-        description={m["pages.config.file_system.manga_path.desc"]({
+        title={m["pages.config.file_system.comic_path.title"]()}
+        description={m["pages.config.file_system.comic_path.desc"]({
           path: library.folderPath ?? "",
         })}
         onclick={library.selectFolder}

@@ -39,9 +39,9 @@
       "desc": "Customize your reading experience.",
       "file_system": {
         "title": "File Configuration",
-        "manga_path": {
-          "title": "Manga folder",
-          "desc": "Folder where mangas will be searched and saved: {path}"
+        "comic_path": {
+          "title": "Comic folder",
+          "desc": "Folder where comics will be searched and saved: {path}"
         },
         "comic_info": {
           "title": "Generate ComicInfo.xml",

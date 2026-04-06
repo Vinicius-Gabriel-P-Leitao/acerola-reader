@@ -39,8 +39,8 @@
       "desc": "Personalize sua experiência de leitura.",
       "file_system": {
         "title": "Configuração dos Arquivos",
-        "manga_path": {
-          "title": "Pasta dos mangás",
+        "comic_path": {
+          "title": "Pasta dos quadrinhos",
           "desc": "Pasta onde será buscado e salvo: {path}"
         },
         "comic_info": {
