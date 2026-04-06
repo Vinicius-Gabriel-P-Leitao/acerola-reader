@@ -1,9 +1,13 @@
 {
   "name": "acerola",
   "type": "module",
-  "version": "0.0.1 beta",
-  "description": "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.",
+  "version": "0.0.1-beta",
   "license": "GPL-3.0-only",
+  "author": {
+    "name": "Vinícius Gabriel Pereira Leitão",
+    "email": "vinicius.gabriel.p.leitao@gmail.com"
+  },
+  "description": "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.",
   "scripts": {
     "tauri": "tauri",
     "preview": "vite preview",
@@ -22,7 +26,9 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-fs": "^2.5.0",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-sql": "^2.4.0",
     "@tauri-apps/plugin-store": "^2.4.2"
   },
   "devDependencies": {
