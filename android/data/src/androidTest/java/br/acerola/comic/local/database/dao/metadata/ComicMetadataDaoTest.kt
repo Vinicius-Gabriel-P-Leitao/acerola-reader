@@ -63,7 +63,7 @@ class ComicMetadataDaoTest {
         coverDao.insert(cover)
 
         // Act
-        val result = mangaDao.getAllComicsWithRelations().first()
+        val result = mangaDao.observeAllComicsWithRelations().first()
 
         // Assert
         assertTrue(result.isNotEmpty())
@@ -97,7 +97,7 @@ class ComicMetadataDaoTest {
         mangaDao.delete(manga.copy(id = mangaId))
 
         // Assert
-        val result = mangaDao.getAllComicsWithRelations().first()
+        val result = mangaDao.observeAllComicsWithRelations().first()
         assertTrue(result.isEmpty())
     }
 }

@@ -70,7 +70,7 @@ class ComicDirectoryEngine @Inject constructor(
             _isIndexing.value = true
             try {
                 Either.catch {
-                    val existingManga = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
+                    val existingManga = directoryDao.getDirectoryById(mangaId) ?: return@catch
 
                     val folderUri = existingManga.path.toUri()
                     val folderDoc = DocumentFile.fromSingleUri(context, folderUri)
@@ -138,7 +138,7 @@ class ComicDirectoryEngine @Inject constructor(
 
                     val discoveredFolders: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
                     val databaseFolders: List<ComicDirectory> =
-                        directoryDao.getAllMangaDirectoryIncludingHidden().firstOrNull() ?: emptyList()
+                        directoryDao.getAllDirectories().firstOrNull() ?: emptyList()
 
                     if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
                         _progress.value = -1
@@ -202,7 +202,7 @@ class ComicDirectoryEngine @Inject constructor(
                         return@catch
                     }
 
-                    val existingFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                    val existingFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
                     AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)
                     processFolderList(foldersToProcess, baseUri = baseUri)
                 }.mapLeft { exception ->
@@ -228,7 +228,7 @@ class ComicDirectoryEngine @Inject constructor(
             return withContext(context = Dispatchers.IO) {
                 refreshLibrary(baseUri).flatMap {
                     Either.catch {
-                        val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
+                        val allFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
 
                         if (allFolders.isEmpty()) {
                             _progress.value = -1
@@ -283,7 +283,7 @@ class ComicDirectoryEngine @Inject constructor(
             AcerolaLogger.i(TAG, "Updating comic settings: $mangaId (externalSyncEnabled=$externalSyncEnabled)", LogSource.REPOSITORY)
             try {
                 Either.catch {
-                    val existingManga = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
+                    val existingManga = directoryDao.getDirectoryById(mangaId) ?: return@catch
                     val updatedManga = existingManga.copy(externalSyncEnabled = externalSyncEnabled)
                     directoryDao.update(entity = updatedManga)
                 }.mapLeft { exception ->
@@ -299,7 +299,7 @@ class ComicDirectoryEngine @Inject constructor(
         }
 
     override fun observeLibrary(): Flow<List<ComicDirectoryDto>> {
-        return directoryDao.getAllMangaDirectoryIncludingHidden().map { folders ->
+        return directoryDao.getAllDirectories().map { folders ->
             AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
             folders.map { it.toViewDto() }
         }
@@ -309,7 +309,7 @@ class ComicDirectoryEngine @Inject constructor(
         withContext(context = Dispatchers.IO) {
             AcerolaLogger.i(TAG, "Hiding comic: $mangaId", LogSource.REPOSITORY)
             Either.catch {
-                directoryDao.setHidden(mangaId, hidden = true)
+                directoryDao.setDirectoryHidden(mangaId, hidden = true)
             }.mapLeft { exception ->
                 AcerolaLogger.e(TAG, "Failed to hide comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
                 LibrarySyncError.UnexpectedError(cause = exception)
@@ -320,7 +320,7 @@ class ComicDirectoryEngine @Inject constructor(
         withContext(context = Dispatchers.IO) {
             AcerolaLogger.i(TAG, "Deleting comic: $mangaId", LogSource.REPOSITORY)
             Either.catch {
-                val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
+                val directory = directoryDao.getDirectoryById(mangaId) ?: return@catch
                 // Delete folder from FS before DB (if FS deletion fails, DB record is preserved)
                 val folderUri = directory.path.toUri()
                 DocumentFile.fromSingleUri(context, folderUri)?.delete()
@@ -386,7 +386,7 @@ class ComicDirectoryEngine @Inject constructor(
         baseUri: Uri? = null,
         folder: ComicDirectory,
     ) {
-        val finalMangaId = directoryDao.upsertMangaDirectoryTransaction(folder) {
+        val finalMangaId = directoryDao.upsertDirectoryTransaction(folder) {
             it.filter { char -> char.isLetterOrDigit() }.lowercase()
         }
 

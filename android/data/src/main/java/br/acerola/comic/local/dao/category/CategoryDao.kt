@@ -14,27 +14,27 @@ import kotlinx.coroutines.flow.Flow
 interface CategoryDao : BaseDao<Category> {
 
     @Query("SELECT * FROM category ORDER BY name ASC")
-    fun getAllCategories(): Flow<List<Category>>
+    fun observeAllCategories(): Flow<List<Category>>
 
     @Query("SELECT * FROM category WHERE id = :id")
     suspend fun getCategoryById(id: Long): Category?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMangaCategory(comicCategory: ComicCategory)
+    suspend fun insertComicCategory(comicCategory: ComicCategory)
 
     @Query("DELETE FROM manga_category WHERE comic_directory_fk = :mangaId")
-    suspend fun deleteMangaCategory(mangaId: Long)
+    suspend fun deleteComicCategoryByDirectoryId(mangaId: Long)
 
     @Query("""
         SELECT category.* FROM category
         INNER JOIN manga_category ON category.id = manga_category.category_id
         WHERE manga_category.comic_directory_fk = :mangaId
     """)
-    fun getCategoryByMangaId(mangaId: Long): Flow<Category?>
+    fun observeCategoryByDirectoryId(mangaId: Long): Flow<Category?>
 
     @Query("""
         SELECT manga_category.comic_directory_fk, category.* FROM category
         INNER JOIN manga_category ON category.id = manga_category.category_id
     """)
-    fun getAllMangaCategoriesJoined(): Flow<List<ComicCategoryJoinResult>>
+    fun observeAllComicCategoriesJoined(): Flow<List<ComicCategoryJoinResult>>
 }

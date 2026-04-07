@@ -12,13 +12,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ReadingHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(history: ReadingHistory)
+    suspend fun upsertHistory(history: ReadingHistory)
 
     @Query("SELECT * FROM reading_history WHERE comic_directory_id = :mangaId")
-    fun getByMangaId(mangaId: Long): Flow<ReadingHistory?>
+    fun observeHistoryByDirectoryId(mangaId: Long): Flow<ReadingHistory?>
 
     @Query("SELECT * FROM reading_history ORDER BY updated_at DESC")
-    fun getAllRecent(): Flow<List<ReadingHistory>>
+    fun observeAllRecentHistories(): Flow<List<ReadingHistory>>
 
     @Query("""
         SELECT rh.comic_directory_id as mangaDirectoryId, rh.chapter_archive_id as chapterArchiveId, rh.last_page as lastPage, rh.updated_at as updatedAt, ca.chapter as chapterName, rh.is_completed as isCompleted
@@ -26,18 +26,18 @@ interface ReadingHistoryDao {
         LEFT JOIN chapter_archive ca ON rh.chapter_archive_id = ca.id
         ORDER BY rh.updated_at DESC
     """)
-    fun getAllRecentWithChapterName(): Flow<List<ReadingHistoryWithChapter>>
+    fun observeAllRecentHistoriesWithChapter(): Flow<List<ReadingHistoryWithChapter>>
 
     @Query("DELETE FROM reading_history WHERE comic_directory_id = :mangaId")
-    suspend fun deleteByMangaId(mangaId: Long)
+    suspend fun deleteHistoryByDirectoryId(mangaId: Long)
 
     // Chapter Read
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun markChapterAsRead(chapterRead: ChapterRead)
+    suspend fun upsertChapterRead(chapterRead: ChapterRead)
 
     @Query("SELECT chapter_archive_id FROM chapter_read WHERE comic_directory_id = :mangaId")
-    fun getReadChaptersByMangaId(mangaId: Long): Flow<List<Long>>
+    fun observeReadChaptersByDirectoryId(mangaId: Long): Flow<List<Long>>
 
     @Query("DELETE FROM chapter_read WHERE chapter_archive_id = :chapterId")
-    suspend fun unmarkChapterAsRead(chapterId: Long)
+    suspend fun deleteChapterRead(chapterId: Long)
 }

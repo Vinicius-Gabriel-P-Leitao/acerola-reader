@@ -73,8 +73,8 @@ class ComicDirectoryEngineTest {
         every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockk(relaxed = true)
         every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockk(relaxed = true)
         
-        every { directoryDao.getAllMangaDirectory() } returns flowOf(emptyList())
-        every { directoryDao.getAllMangaDirectoryIncludingHidden() } returns flowOf(emptyList())
+        every { directoryDao.getVisibleDirectories() } returns flowOf(emptyList())
+        every { directoryDao.getAllDirectories() } returns flowOf(emptyList())
         coEvery { mangaDirectoryOps.refreshComicChapters(any(), any()) } returns Either.Right(Unit)
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
@@ -100,7 +100,7 @@ class ComicDirectoryEngineTest {
         val uriMock = mockk<Uri>()
         val folderDocMock = mockk<DocumentFile>()
 
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns existingManga
+        coEvery { directoryDao.getDirectoryById(mangaId) } returns existingManga
         every { Uri.parse(any()) } returns uriMock
         every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
 
@@ -146,18 +146,18 @@ class ComicDirectoryEngineTest {
         every { DocumentsContract.buildDocumentUriUsingTree(rootUri, "bprd_id") } returns bprdUri
         every { DocumentFile.fromSingleUri(context, bprdUri) } returns bprdDoc
         
-        coEvery { directoryDao.upsertMangaDirectoryTransaction(any(), any()) } returns 1L
+        coEvery { directoryDao.upsertDirectoryTransaction(any(), any()) } returns 1L
 
         val result = repository.incrementalScan(rootUri)
 
         assertTrue(result.isRight())
-        coVerify { directoryDao.upsertMangaDirectoryTransaction(match { it.name == "BPRD" }, any()) }
+        coVerify { directoryDao.upsertDirectoryTransaction(match { it.name == "BPRD" }, any()) }
     }
 
     @Test
     fun `observeLibrary deve emitir lista de DTOs corretamente`() = runTest {
         val entityList = listOf(MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "Manga A"))
-        every { directoryDao.getAllMangaDirectoryIncludingHidden() } returns flowOf(entityList)
+        every { directoryDao.getAllDirectories() } returns flowOf(entityList)
         every { Uri.parse(any()) } returns mockk(relaxed = true)
 
         val result = repository.observeLibrary().first { it.isNotEmpty() }

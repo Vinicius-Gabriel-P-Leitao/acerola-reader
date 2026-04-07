@@ -19,14 +19,14 @@ import javax.inject.Singleton
 class ChapterNameProcessor @Inject constructor(
     private val dao: ChapterTemplateDao
 ) {
-    fun observeTemplates(): Flow<List<ChapterTemplate>> = dao.observeAll()
+    fun observeTemplates(): Flow<List<ChapterTemplate>> = dao.observeAllTemplates()
 
-    fun observeTemplatesAsDto(): Flow<List<ChapterTemplateDto>> = dao.observeAll()
+    fun observeTemplatesAsDto(): Flow<List<ChapterTemplateDto>> = dao.observeAllTemplates()
         .map { list -> list.map { it.toDto() } }
 
-    suspend fun getTemplates(): List<ChapterTemplate> = dao.getAll()
+    suspend fun getTemplates(): List<ChapterTemplate> = dao.getAllTemplates()
 
-    suspend fun getTemplatesAsDto(): List<ChapterTemplateDto> = dao.getAll().map { it.toDto() }
+    suspend fun getTemplatesAsDto(): List<ChapterTemplateDto> = dao.getAllTemplates().map { it.toDto() }
 
     suspend fun addTemplate(label: String, pattern: String): Either<TemplateError, Unit> {
         val trimmed = pattern.trim()
@@ -59,7 +59,7 @@ class ChapterNameProcessor @Inject constructor(
     }
 
     suspend fun removeTemplate(id: Long): Either<TemplateError, Unit> {
-        val deleted = dao.deleteCustom(id)
+        val deleted = dao.deleteNonDefaultTemplate(id)
         return if (deleted > 0) Either.Right(Unit)
         else Either.Left(TemplateError.SystemProtected)
     }

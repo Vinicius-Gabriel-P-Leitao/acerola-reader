@@ -40,15 +40,15 @@ class AuthorDaoTest {
     }
 
     @Test
-    fun insertOrGetId_com_unique_constraint_retorna_mesmo_id() = runBlocking {
+    fun upsertAndGetId_com_unique_constraint_retorna_mesmo_id() = runBlocking {
         // Arrange
         val manga = MetadataFixtures.createMangaRemoteInfo()
         val mangaId = mangaDao.insert(manga)
         val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Kishimoto")
 
         // Act — inserting same author twice should return the same ID
-        val id1 = authorDao.insertOrGetId(author)
-        val id2 = authorDao.insertOrGetId(author)
+        val id1 = authorDao.upsertAndGetId(author)
+        val id2 = authorDao.upsertAndGetId(author)
 
         // Assert — with UNIQUE(name, manga_remote_info_fk), same author returns same ID
         assertEquals(id1, id2)

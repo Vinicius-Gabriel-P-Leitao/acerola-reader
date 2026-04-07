@@ -69,7 +69,7 @@ class ChapterArchiveEngine @Inject constructor(
             _progress.value = 0
 
             val result = Either.catch {
-                val folder = directoryDao.getMangaDirectoryById(mangaId = mangaId) ?: return@catch
+                val folder = directoryDao.getDirectoryById(mangaId = mangaId) ?: return@catch
                 val folderUri = folder.path.toUri()
 
                 var allFiles: List<FastFileMetadata>
@@ -103,7 +103,7 @@ class ChapterArchiveEngine @Inject constructor(
                 val defaultPattern = ChapterTemplatePattern.presets.values.first()
                 val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: defaultPattern)
 
-                val existingChapters = chapterArchiveDao.getChaptersByComicDirectoryList(folderId = mangaId)
+                val existingChapters = chapterArchiveDao.getChaptersListByDirectoryId(folderId = mangaId)
                 val existingChaptersMap = existingChapters.associateBy { it.path }
                 val folderLastModified = if (baseUri == null) folderDoc.lastModified() else 0
 
@@ -263,7 +263,7 @@ class ChapterArchiveEngine @Inject constructor(
     }
 
     override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
-        return chapterArchiveDao.getChaptersByComicDirectory(folderId = mangaId).map { list: List<ChapterArchive> ->
+        return chapterArchiveDao.getChaptersByDirectoryId(folderId = mangaId).map { list: List<ChapterArchive> ->
             AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
             list.toViewPageDto()
         }.stateIn(
@@ -278,9 +278,9 @@ class ChapterArchiveEngine @Inject constructor(
         AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)
 
         val realTotal = if (total > 0) total
-        else chapterArchiveDao.countChaptersByComicDirectory(folderId = mangaId)
+        else chapterArchiveDao.countByDirectoryId(folderId = mangaId)
 
-        val items = chapterArchiveDao.getChaptersPaged(
+        val items = chapterArchiveDao.getChaptersByDirectoryPaged(
             pageSize = pageSize, folderId = mangaId, offset = offset
         )
 
@@ -291,15 +291,15 @@ class ChapterArchiveEngine @Inject constructor(
         mangaId: Long,
         chapters: List<String>
     ): Flow<ChapterArchivePageDto> {
-        return chapterArchiveDao.getChaptersByComicAndSorts(folderId = mangaId, chapters = chapters)
+        return chapterArchiveDao.getChaptersByDirectoryAndSorts(folderId = mangaId, chapters = chapters)
             .map { list ->
                 list.toViewPageDto()
             }
     }
 
     fun observeAllChapterCounts(): Flow<Map<Long, Int>> {
-        return chapterArchiveDao.getAllChapterCounts().map { list ->
-            list.associate { it.comic_directory_fk to it.count }
+        return chapterArchiveDao.getChapterCountsByDirectory().map { list ->
+            list.associate { it.comicDirectoryFk to it.count }
         }
     }
 

@@ -73,7 +73,7 @@ class MangadexComicEngine @Inject constructor(
             AcerolaLogger.i(TAG, "Initiating MangaDex sync for comic: $mangaId", LogSource.REPOSITORY)
             _isIndexing.value = true
             try {
-                val directory = directoryDao.getMangaDirectoryById(mangaId)
+                val directory = directoryDao.getDirectoryById(mangaId)
                     ?: return@withContext Either.Left(LibrarySyncError.UnexpectedError(Exception("Directory not found")))
 
                 if (!directory.externalSyncEnabled) {
@@ -99,8 +99,8 @@ class MangadexComicEngine @Inject constructor(
         _isIndexing.value = true
         return withContext(context = Dispatchers.IO) {
             try {
-                val allFolders = directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList()
-                val existingRemote = comicMetadataDao.getAllComicRemoteInfo().firstOrNull() ?: emptyList()
+                val allFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
+                val existingRemote = comicMetadataDao.observeAllComics().firstOrNull() ?: emptyList()
                 val existingDirectoryIds = existingRemote.mapNotNull { it.mangaDirectoryFk }.toSet()
 
                 val foldersToSync = allFolders.filter { folder ->
@@ -127,7 +127,7 @@ class MangadexComicEngine @Inject constructor(
         return try {
             withContext(context = Dispatchers.IO) {
                 Either.catch {
-                    val allFolders = (directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList())
+                    val allFolders = (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
                         .filter { it.externalSyncEnabled }
                     executeSync(folders = allFolders, baseUri = baseUri)
                 }.mapLeft { exception ->
@@ -148,7 +148,7 @@ class MangadexComicEngine @Inject constructor(
     }
 
     override fun observeLibrary(): Flow<List<ComicMetadataDto>> {
-        return comicMetadataDao.getAllComicsWithRelations().map { remoteInfoRelations ->
+        return comicMetadataDao.observeAllComicsWithRelations().map { remoteInfoRelations ->
             AcerolaLogger.d(TAG, "Observed MangaDex metadata update: ${remoteInfoRelations.size} entries", LogSource.REPOSITORY)
             remoteInfoRelations.map { it.toViewDto() }
         }
@@ -186,7 +186,7 @@ class MangadexComicEngine @Inject constructor(
                         syncSource = MetadataSourcePattern.MANGADEX.source
                     )
 
-                    val mangaId = comicMetadataDao.upsertComicMetadataTransaction(
+                    val mangaId = comicMetadataDao.upsertComicWithRelationsTransaction(
                         metadata = mangaToSave,
                         authors = bestMatch.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
                         genres = bestMatch.genre.map { it.toEntity(mangaId = 0L) },

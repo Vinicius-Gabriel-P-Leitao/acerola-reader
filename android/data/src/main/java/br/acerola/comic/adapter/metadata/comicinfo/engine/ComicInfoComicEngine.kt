@@ -58,7 +58,7 @@ class ComicInfoComicEngine @Inject constructor(
             _isIndexing.value = true
             try {
                 Either.catch {
-                    val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return@catch
+                    val directory = directoryDao.getDirectoryById(mangaId) ?: return@catch
 
                     val fetchedListResult = comicInfoSourceService.searchInfo(
                         manga = directory.name,
@@ -81,7 +81,7 @@ class ComicInfoComicEngine @Inject constructor(
                         syncSource = MetadataSourcePattern.COMIC_INFO.source
                     )
 
-                    val remoteId = comicMetadataDao.upsertComicMetadataTransaction(
+                    val remoteId = comicMetadataDao.upsertComicWithRelationsTransaction(
                         metadata = mangaToSave,
                         authors = bestMatch.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
                         genres = bestMatch.genre.map { it.toEntity(mangaId = 0L) },

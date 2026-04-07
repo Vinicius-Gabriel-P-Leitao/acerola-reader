@@ -60,7 +60,7 @@ class MetadataExporterTest {
         val mockOutputStream = mockk<OutputStream>(relaxed = true)
         val mockResolver = mockk<ContentResolver>()
 
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns directory
+        coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
         every { Uri.parse(any()) } returns mockUri
         every { DocumentFile.fromTreeUri(context, any()) } returns mockFolder
         every { mockFolder.exists() } returns true
@@ -73,7 +73,7 @@ class MetadataExporterTest {
         every { context.contentResolver } returns mockResolver
         every { mockResolver.openOutputStream(any()) } returns mockOutputStream
         
-        every { remoteInfoDao.getComicByDirectoryId(mangaId) } returns flowOf(remoteInfoEntity)
+        every { remoteInfoDao.observeComicByDirectoryId(mangaId) } returns flowOf(remoteInfoEntity)
         coEvery { remoteInfoDao.update(any()) } returns Unit
 
         val result = service.exportMangaMetadata(mangaId, remoteInfo)
@@ -89,7 +89,7 @@ class MetadataExporterTest {
         val remoteInfo = MetadataFixtures.createMangaRemoteInfoDto()
         val mockFolder = mockk<DocumentFile>()
         
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns directory
+        coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
         every { Uri.parse(any()) } returns mockk()
         every { DocumentFile.fromTreeUri(context, any()) } returns mockFolder
         every { mockFolder.exists() } returns true

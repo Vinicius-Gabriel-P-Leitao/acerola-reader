@@ -71,7 +71,7 @@ class MangadexChapterEngine @Inject constructor(
             _progress.value = 0
 
             val remoteMangaRelations = try {
-                comicMetadataDao.getComicWithRelationsByDirectoryId(mangaId).first()
+                comicMetadataDao.observeComicWithRelationsByDirectoryId(mangaId).first()
             } catch (exception: Exception) {
                 AcerolaLogger.e(TAG, "Database error while fetching comic relations", LogSource.REPOSITORY, throwable = exception)
                 _isIndexing.value = false
@@ -100,10 +100,10 @@ class MangadexChapterEngine @Inject constructor(
                 AcerolaLogger.d(TAG, "Fetched ${remoteChapters.size} chapters from MangaDex", LogSource.REPOSITORY)
                 _progress.value = 90
                 Either.catch {
-                    val localDirectory = directoryDao.getMangaDirectoryById(mangaId)
+                    val localDirectory = directoryDao.getDirectoryById(mangaId)
                         ?: throw Exception("Local directory not found for ID: $mangaId")
 
-                    val localChapters = chapterArchiveDao.getChaptersByComicDirectory(localDirectory.id).first()
+                    val localChapters = chapterArchiveDao.getChaptersByDirectoryId(localDirectory.id).first()
 
                     val chapterPairs = matchRemoteWithArchive(remote = remoteChapters, local = localChapters)
                     AcerolaLogger.d(TAG, "Matched ${chapterPairs.size} chapters out of ${localChapters.size} local files", LogSource.REPOSITORY)
@@ -145,12 +145,12 @@ class MangadexChapterEngine @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeChapters(mangaId: Long): StateFlow<ChapterRemoteInfoPageDto> {
-        return chapterMetadataDao.getChaptersByMangaRemoteInfo(mangaId).flatMapLatest { chapters ->
+        return chapterMetadataDao.observeChaptersByMetadataId(mangaId).flatMapLatest { chapters ->
             val chapterIds = chapters.map { it.id }
 
             flow {
                 val sources = chapterIds.takeIf { it.isNotEmpty() }?.let {
-                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
+                    chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
                 }.orEmpty()
 
                 emit(value = chapters.toViewPageDto(sources = sources))
@@ -168,12 +168,12 @@ class MangadexChapterEngine @Inject constructor(
         val offset = page * pageSize
 
         val realTotal = if (total != 0) total
-        else chapterMetadataDao.countChaptersByMangaRemoteInfo(mangaId)
+        else chapterMetadataDao.countChaptersByMetadataId(mangaId)
 
-        val chapters = chapterMetadataDao.getChaptersPaged(mangaId, pageSize, offset)
+        val chapters = chapterMetadataDao.getChaptersByMetadataPaged(mangaId, pageSize, offset)
 
         val sources = chapters.takeIf { it.isNotEmpty() }?.map { it.id }?.let {
-            chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
+            chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
         }.orEmpty()
 
         return chapters.toViewPageDto(
@@ -183,12 +183,12 @@ class MangadexChapterEngine @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<ChapterRemoteInfoPageDto> {
-        return chapterMetadataDao.getChaptersByMangaAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
+        return chapterMetadataDao.observeChaptersByMetadataAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
             val chapterIds = chapterList.map { it.id }
 
             flow {
                 val sources: List<ChapterDownloadSource> = chapterIds.takeIf { it.isNotEmpty() }?.let {
-                    chapterDownloadSourceDao.getChapterDownloadSourceByRemoteInfoId(it).first()
+                    chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
                 } ?: emptyList()
 
                 emit(value = chapterList.toViewPageDto(sources = sources))

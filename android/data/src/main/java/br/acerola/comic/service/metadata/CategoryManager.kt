@@ -14,7 +14,7 @@ import javax.inject.Singleton
 class CategoryManager @Inject constructor(
     private val categoryDao: CategoryDao
 ) {
-    fun getAllCategories(): Flow<List<CategoryDto>> = categoryDao.getAllCategories().map { list ->
+    fun getAllCategories(): Flow<List<CategoryDto>> = categoryDao.observeAllCategories().map { list ->
         list.map { it.toViewDto() }
     }
 
@@ -27,9 +27,9 @@ class CategoryManager @Inject constructor(
     }
 
     suspend fun updateMangaCategory(directoryId: Long, categoryId: Long?) {
-        categoryDao.deleteMangaCategory(directoryId)
+        categoryDao.deleteComicCategoryByDirectoryId(directoryId)
         if (categoryId != null) {
-            categoryDao.insertMangaCategory(
+            categoryDao.insertComicCategory(
                 ComicCategory(
                     mangaDirectoryFk = directoryId, categoryId = categoryId
                 )
@@ -38,10 +38,10 @@ class CategoryManager @Inject constructor(
     }
 
     fun getCategoryByMangaId(directoryId: Long): Flow<CategoryDto?> = 
-        categoryDao.getCategoryByMangaId(directoryId).map { it?.toViewDto() }
+        categoryDao.observeCategoryByDirectoryId(directoryId).map { it?.toViewDto() }
 
     fun getAllMangaCategories(): Flow<Map<Long, CategoryDto>> = 
-        categoryDao.getAllMangaCategoriesJoined().map { list ->
+        categoryDao.observeAllComicCategoriesJoined().map { list ->
             list.associate { result ->
                 result.mangaDirectoryId to CategoryDto(
                     id = result.categoryId, 

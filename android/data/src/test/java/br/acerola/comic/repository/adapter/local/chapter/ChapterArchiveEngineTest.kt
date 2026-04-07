@@ -109,13 +109,13 @@ class ChapterArchiveEngineTest {
         val uri = mockk<Uri>()
         val folderDoc = mockk<DocumentFile>()
         
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns directory
+        coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
         every { Uri.parse(any()) } returns uri
         every { DocumentFile.fromSingleUri(context, uri) } returns folderDoc
         
         // Simula que FS é mais novo que DB
         val oldChapter = ChapterArchive(id = 2, chapter = "Old", path = "old/uri", folderPathFk = mangaId, chapterSort = "0")
-        coEvery { chapterArchiveDao.getChaptersByComicDirectoryList(mangaId) } returns listOf(oldChapter)
+        coEvery { chapterArchiveDao.getChaptersListByDirectoryId(mangaId) } returns listOf(oldChapter)
         every { folderDoc.lastModified() } returns 2000L 
         
         // Simula arquivos
@@ -163,7 +163,7 @@ class ChapterArchiveEngineTest {
     @Test
     fun `refreshMangaChapters deve retornar DiskIOFailure em erro de IO`() = runTest {
         val mangaId = 1L
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } throws IOException("Disk error")
+        coEvery { directoryDao.getDirectoryById(mangaId) } throws IOException("Disk error")
 
         val result = repository.refreshComicChapters(mangaId)
 
@@ -178,7 +178,7 @@ class ChapterArchiveEngineTest {
             ChapterArchive(id = 1, chapter = "1", path = "path", chapterSort = "1", folderPathFk = mangaId)
         )
         // Simula a emissão da lista de capítulos pelo DAO
-        every { chapterArchiveDao.getChaptersByComicDirectory(mangaId) } returns flowOf(chapters)
+        every { chapterArchiveDao.getChaptersByDirectoryId(mangaId) } returns flowOf(chapters)
 
         // Coleta o primeiro valor que tenha itens (ignorando o valor inicial vazio do stateIn)
         val result = repository.observeChapters(mangaId).first { it.items.isNotEmpty() }
@@ -190,8 +190,8 @@ class ChapterArchiveEngineTest {
     @Test
     fun `getChapterPage deve calcular total e offset corretamente`() = runTest {
         val mangaId = 1L
-        coEvery { chapterArchiveDao.countChaptersByComicDirectory(mangaId) } returns 10
-        coEvery { chapterArchiveDao.getChaptersPaged(mangaId, 5, 5) } returns listOf(
+        coEvery { chapterArchiveDao.countByDirectoryId(mangaId) } returns 10
+        coEvery { chapterArchiveDao.getChaptersByDirectoryPaged(mangaId, 5, 5) } returns listOf(
             ChapterArchive(id = 2, chapter = "2", path = "path", chapterSort = "2", folderPathFk = mangaId)
         )
 

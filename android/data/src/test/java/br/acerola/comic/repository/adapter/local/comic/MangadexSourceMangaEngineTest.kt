@@ -93,9 +93,9 @@ class MangadexSourceMangaEngineTest {
         val dir = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, name = "Berserk")
         val fetchResult = listOf(MetadataFixtures.createMangaRemoteInfoDto(title = "Berserk"))
 
-        coEvery { directoryDao.getMangaDirectoryById(mangaId) } returns dir
+        coEvery { directoryDao.getDirectoryById(mangaId) } returns dir
         coEvery { mangadexMangaInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) } returns Either.Right(fetchResult)
-        every { comicMetadataDao.getComicByDirectoryId(mangaId) } returns flowOf(null)
+        every { comicMetadataDao.observeComicByDirectoryId(mangaId) } returns flowOf(null)
 
         coEvery { comicMetadataDao.insert(any()) } returns 2L
         coEvery { mangadexSourceDao.insert(any()) } returns 1L
