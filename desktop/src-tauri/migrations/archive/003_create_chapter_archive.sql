@@ -1,7 +1,7 @@
 CREATE TABLE chapter_archive (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chapter TEXT NOT NULL,
-  chapter_path TEXT NOT NULL,
+  path TEXT NOT NULL,
   chapter_sort TEXT NOT NULL,
   checksum TEXT,
   fast_hash TEXT,
