@@ -1,6 +1,9 @@
 mod data;
+mod core;
 mod infra;
 mod commands;
+
+use tauri::Manager;
 
 #[cfg(test)]
 pub mod tests;
@@ -44,6 +47,19 @@ pub fn run() {
     let builder = configure_all_plugins(builder);
 
     builder
+        .setup(|app| {
+            let handle = app.handle().clone();
+            // prettier-ignore
+            let db_path = app.path().app_data_dir().expect("Falha ao resolver app_data_dir").join("acerola.db");
+
+            tauri::async_runtime::block_on(async move {
+                let pool = sqlx::SqlitePool
+                    ::connect(&format!("sqlite:{}?mode=rwc", db_path.to_string_lossy())).await
+                    .expect("Falha ao conectar no banco de dados");
+                handle.manage(pool);
+            });
+            Ok(())
+        })
         .invoke_handler(
             tauri::generate_handler![
                 commands::library::select_folder_cmd::select_folder,

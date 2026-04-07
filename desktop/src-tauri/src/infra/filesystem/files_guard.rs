@@ -23,7 +23,7 @@ pub struct ComicFileGuard;
 pub struct MetadataFileGuard;
 pub struct ArtworkFileGuard;
 
-pub trait FileGuard {
+pub trait FileGuard: Send + Sync {
     fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError>;
 }
 
@@ -121,7 +121,7 @@ mod tests {
     fn teste_comic_extensao_invalida() {
         let guard = ComicFileGuard;
         let result = guard.is_allowed(Path::new("berserk.exe"));
-        
+
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains(".exe"));
     }
@@ -143,6 +143,7 @@ mod tests {
     fn teste_metadata_nome_invalido() {
         let guard = MetadataFileGuard;
         let result = guard.is_allowed(Path::new("info.xml"));
+
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("info.xml"));
     }
@@ -163,6 +164,7 @@ mod tests {
     fn teste_artwork_nome_invalido() {
         let guard = ArtworkFileGuard;
         let result = guard.is_allowed(Path::new("thumbnail.png"));
+
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("thumbnail.png"));
     }

@@ -74,7 +74,6 @@ mod tests {
             chapter: format!("Capítulo {}", id),
             path: format!("/quadrinhos/berserk/cap{}", id),
             chapter_sort: chapter_sort.to_string(),
-            checksum: None,
             fast_hash: None,
             comic_directory_fk: 1,
             last_modified: 123456789,

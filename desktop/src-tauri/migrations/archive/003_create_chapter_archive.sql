@@ -3,7 +3,6 @@ CREATE TABLE chapter_archive (
   chapter TEXT NOT NULL,
   path TEXT NOT NULL,
   chapter_sort TEXT NOT NULL,
-  checksum TEXT,
   fast_hash TEXT,
   comic_directory_fk INTEGER NOT NULL,
   last_modified INTEGER NOT NULL DEFAULT 0,

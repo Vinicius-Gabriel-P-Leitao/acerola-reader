@@ -10,7 +10,6 @@ impl Entity for ChapterArchive {
             "chapter",
             "path",
             "chapter_sort",
-            "checksum",
             "fast_hash",
             "comic_directory_fk",
             "last_modified",
@@ -35,7 +34,6 @@ impl Bindable for ChapterArchive {
             .bind(&self.chapter)
             .bind(&self.path)
             .bind(&self.chapter_sort)
-            .bind(&self.checksum)
             .bind(&self.fast_hash)
             .bind(self.comic_directory_fk)
             .bind(self.last_modified)
@@ -49,7 +47,6 @@ impl Bindable for ChapterArchive {
             .bind(&self.chapter)
             .bind(&self.path)
             .bind(&self.chapter_sort)
-            .bind(&self.checksum)
             .bind(&self.fast_hash)
             .bind(self.comic_directory_fk)
             .bind(self.last_modified)
@@ -64,7 +61,6 @@ pub struct ChapterArchive {
     pub chapter: String,
     pub path: String,
     pub chapter_sort: String,
-    pub checksum: Option<String>,
     pub fast_hash: Option<String>,
     pub comic_directory_fk: i64,
     pub last_modified: i64,
