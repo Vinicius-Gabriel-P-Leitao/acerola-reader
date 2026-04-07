@@ -57,13 +57,6 @@ pub fn run() {
                     ::connect(&format!("sqlite:{}?mode=rwc", db_path.to_string_lossy())).await
                     .expect("Falha ao conectar no banco de dados");
 
-                sqlx::query(include_str!("../migrations/archive/001_create_chapter_template.sql"))
-                    .execute(&pool).await.expect("Migration 001 falhou");
-                sqlx::query(include_str!("../migrations/archive/002_create_comic_directory.sql"))
-                    .execute(&pool).await.expect("Migration 002 falhou");
-                sqlx::query(include_str!("../migrations/archive/003_create_chapter_archive.sql"))
-                    .execute(&pool).await.expect("Migration 003 falhou");
-
                 handle.manage(pool);
             });
             Ok(())
