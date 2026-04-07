@@ -1,4 +1,4 @@
-CREATE TABLE chapter_archive (
+CREATE TABLE IF NOT EXISTS chapter_archive (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chapter TEXT NOT NULL,
   path TEXT NOT NULL,

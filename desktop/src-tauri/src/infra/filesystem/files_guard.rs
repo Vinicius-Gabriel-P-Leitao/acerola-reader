@@ -20,6 +20,7 @@ impl std::fmt::Display for FileGuardError {
 }
 
 pub struct ComicFileGuard;
+pub struct ArchiveFileGuard;
 pub struct MetadataFileGuard;
 pub struct ArtworkFileGuard;
 
@@ -36,6 +37,20 @@ impl FileGuard for ComicFileGuard {
 
         match ext {
             "cbz" | "cbr" | "pdf" => Ok(()),
+            _ => Err(FileGuardError::ExtensionNotAllowed(ext.to_string())),
+        }
+    }
+}
+
+impl FileGuard for ArchiveFileGuard {
+    fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError> {
+        let ext = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .ok_or(FileGuardError::MissingExtension)?;
+
+        match ext {
+            "cbz" | "cbr" => Ok(()),
             _ => Err(FileGuardError::ExtensionNotAllowed(ext.to_string())),
         }
     }

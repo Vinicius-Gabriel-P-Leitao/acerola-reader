@@ -10,7 +10,12 @@ use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
 use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
 use crate::infra::filesystem::path_guard::PathGuard;
 use crate::infra::filesystem::scanner_engine::ScannerEngine;
-use crate::infra::filesystem::files_guard::ScannerGuard;
+use crate::infra::filesystem::files_guard::{
+    ScannerGuard,
+    ArchiveFileGuard,
+    ArtworkFileGuard,
+    FileGuard,
+};
 
 pub struct ComicScannerService {
     path_guard: PathGuard,
@@ -49,14 +54,40 @@ impl ComicScannerService {
     async fn process_entry(
         &self,
         entry: crate::infra::filesystem::scanner_engine::DirectoryEntry,
-        file_guard: &ScannerGuard
+        _file_guard: &ScannerGuard
     ) -> Result<(), String> {
-        // NOTE: Filtra só arquivos de quadrinhos — descarta o resto
-        let comic_files: Vec<PathBuf> = entry.files
-            .into_iter()
-            .filter(|file| file_guard.is_allowed(file).is_ok())
-            .collect();
+        let archive_guard = ArchiveFileGuard;
+        let artwork_guard = ArtworkFileGuard;
 
+        let mut comic_files: Vec<PathBuf> = vec![];
+        let mut cover: Option<String> = None;
+        let mut banner: Option<String> = None;
+
+        for file in entry.files {
+            let name = file
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("");
+
+            if archive_guard.is_allowed(&file).is_ok() {
+                comic_files.push(file);
+                continue;
+            }
+
+            if artwork_guard.is_allowed(&file).is_ok() && name.starts_with("cover.") {
+                cover = Some(file.to_string_lossy().to_string());
+                continue;
+            }
+
+            if artwork_guard.is_allowed(&file).is_ok() && name.starts_with("banner.") {
+                banner = Some(file.to_string_lossy().to_string());
+                continue;
+            }
+
+            // TODO: ComicInfo.xml, .pdf e outros ignorados por ora
+        }
+
+        // NOTE: Só persiste se tiver arquivos de quadrinhos
         if comic_files.is_empty() {
             return Ok(());
         }
@@ -71,18 +102,16 @@ impl ComicScannerService {
             .unwrap_or("unknown")
             .to_string();
 
-        let dir_last_modified = modified_secs(&dir_meta);
-
         // TODO: Criar pattern de padrão de nomes de arquivos .cbz .cbr e .pdf
         //       para preencher o chapter_template_fk automaticamente
-        // TODO: Fazer o last_modified ter as duas engine de busca rapida e profunda.=
+        // TODO: Fazer o last_modified abrir porta para o Deep sync e fast sync
         let comic = ComicDirectory {
             id: path_hash(&entry.directory),
             name: dir_name,
             path: entry.directory.to_string_lossy().to_string(),
-            cover: None,
-            banner: None,
-            last_modified: dir_last_modified,
+            cover,
+            banner,
+            last_modified: modified_secs(&dir_meta),
             chapter_template_fk: None,
             external_sync_enabled: false,
             hidden: false,
@@ -117,6 +146,7 @@ impl ComicScannerService {
             .unwrap_or("unknown")
             .to_string();
 
+        // TODO: Implementar o pattern para poder fazer o chapter_sort funcionar corretamente
         let chapter = ChapterArchive {
             id: path_hash(file),
             chapter: chapter_name.clone(),
