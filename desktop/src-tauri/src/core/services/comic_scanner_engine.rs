@@ -1,21 +1,17 @@
+use std::collections::hash_map::DefaultHasher;
 use std::path::{ Path, PathBuf };
 use std::hash::{ Hash, Hasher };
-use std::collections::hash_map::DefaultHasher;
-use tokio::fs;
 use tokio::sync::mpsc;
+use tokio::fs;
 
+use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
+use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
+use crate::infra::filesystem::files_guard::{ ScannerGuard, ArchiveFileGuard };
+use crate::infra::filesystem::files_guard::{ ArtworkFileGuard, FileGuard };
 use crate::data::models::archive::comic_directory::ComicDirectory;
 use crate::data::models::archive::chapter_archive::ChapterArchive;
-use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
-use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-use crate::infra::filesystem::path_guard::PathGuard;
 use crate::infra::filesystem::scanner_engine::ScannerEngine;
-use crate::infra::filesystem::files_guard::{
-    ScannerGuard,
-    ArchiveFileGuard,
-    ArtworkFileGuard,
-    FileGuard,
-};
+use crate::infra::filesystem::path_guard::PathGuard;
 
 pub struct ComicScannerService {
     path_guard: PathGuard,
@@ -172,8 +168,9 @@ fn path_hash(path: &Path) -> i64 {
 }
 
 /// Retorna o `last_modified` em segundos desde Unix epoch.
+/// TODO: Verificar se a forma de ver o last_modified é igual em linux e windows, ver também se é possivel fazer app funcionar no flatpak
 fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     meta.modified()
-        .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64)
+        .map(|time: std::time::SystemTime| time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64)
         .unwrap_or(0)
 }

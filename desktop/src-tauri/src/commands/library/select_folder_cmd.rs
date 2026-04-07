@@ -19,7 +19,7 @@ pub async fn select_folder(
 
     let path = match rx.recv().unwrap() {
         Some(path) => PathBuf::from(path.to_string()),
-        None => return Err("Nenhuma pasta selecionada".to_string()),
+        None => return Err("No folder selected".to_string()),
     };
 
     let service = ComicScannerService::new(path.clone(), pool.inner().clone());

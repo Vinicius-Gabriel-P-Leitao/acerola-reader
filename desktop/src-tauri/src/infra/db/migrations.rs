@@ -1,5 +1,6 @@
 use tauri_plugin_sql::{ Migration, MigrationKind };
 
+/// O projeto tem a propria ddl em rust com sqlx, mas ainda é usável pela config para registrar e versionar as migrations.
 pub fn get_migrations() -> Vec<Migration> {
     vec![
         Migration {
