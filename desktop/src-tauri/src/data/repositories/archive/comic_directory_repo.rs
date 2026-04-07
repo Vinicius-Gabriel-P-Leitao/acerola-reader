@@ -3,7 +3,7 @@ use crate::data::repositories::base::{ Repository, Entity };
 use sqlx::SqlitePool;
 
 pub struct ComicRepository {
-    base: Repository<ComicDirectory>,
+    pub base: Repository<ComicDirectory>,
     pool: SqlitePool,
 }
 
@@ -15,17 +15,85 @@ impl ComicRepository {
         }
     }
 
-    pub async fn find_all(&self) -> Result<Vec<ComicDirectory>, sqlx::Error> {
-        self.base.find_all().await
-    }
-
     pub async fn find_by_name(&self, name: &str) -> Result<Option<ComicDirectory>, String> {
-      let table = ComicDirectory::table_name();
+        let table = ComicDirectory::table_name();
         let cols = ComicDirectory::columns().join(", ");
 
         // prettier-ignore
         sqlx::query_as::<_, ComicDirectory>(
             &format!("SELECT {} FROM {} WHERE name = ?", cols, table)
         ).bind(name).fetch_optional(&self.pool).await.map_err(|error: sqlx::Error| error.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::data::models::archive::comic_directory::ComicDirectory;
+    use crate::tests::utils::setup_test_db::setup_test_db;
+    use super::ComicRepository;
+
+    fn berserk() -> ComicDirectory {
+        ComicDirectory {
+            id: 1,
+            name: "Berserk".to_string(),
+            path: "/quadrinhos/berserk".to_string(),
+            cover: None,
+            banner: None,
+            last_modified: 1700000000,
+            chapter_template_fk: None,
+            external_sync_enabled: true,
+            hidden: false,
+        }
+    }
+
+    async fn setup() -> ComicRepository {
+        ComicRepository::new(setup_test_db().await)
+    }
+
+    #[tokio::test]
+    async fn teste_inserir_e_buscar_todos() {
+        let repo = setup().await;
+
+        let inserted = repo.base.insert(&berserk()).await.unwrap();
+
+        assert_eq!(inserted.id, 1);
+        assert_eq!(inserted.name, "Berserk");
+
+        let all = repo.base.find_all().await.unwrap();
+        assert_eq!(all.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn teste_buscar_por_nome() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+
+        let result = repo.find_by_name("Berserk").await.unwrap();
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().name, "Berserk");
+    }
+
+    #[tokio::test]
+    async fn teste_atualizar() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+
+        let updated = ComicDirectory { name: "Berserk Deluxe".to_string(), ..berserk() };
+        let result = repo.base.update(&updated).await.unwrap();
+
+        assert_eq!(result.name, "Berserk Deluxe");
+    }
+
+    #[tokio::test]
+    async fn teste_deletar() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+        repo.base.delete(1).await.unwrap();
+
+        let all = repo.base.find_all().await.unwrap();
+        assert_eq!(all.len(), 0);
     }
 }

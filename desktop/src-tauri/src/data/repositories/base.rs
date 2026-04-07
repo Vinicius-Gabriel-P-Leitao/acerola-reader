@@ -7,21 +7,21 @@ pub trait Entity {
     fn id(&self) -> i64;
 }
 
-pub struct Repository<T: Entity> {
-    pool: Pool<Sqlite>,
-    _marker: PhantomData<T>,
-}
-
 pub trait Bindable {
     fn bind_insert<'query>(
         &'query self,
-        query: sqlx::query::Query<'query, Sqlite, SqliteArguments<'query>>
-    ) -> sqlx::query::Query<'query, Sqlite, SqliteArguments<'query>>;
+        query: query::Query<'query, Sqlite, SqliteArguments<'query>>
+    ) -> query::Query<'query, Sqlite, SqliteArguments<'query>>;
 
     fn bind_update<'q>(
         &'q self,
-        query: sqlx::query::Query<'q, Sqlite, SqliteArguments<'q>>
-    ) -> sqlx::query::Query<'q, Sqlite, SqliteArguments<'q>>;
+        query: query::Query<'q, Sqlite, SqliteArguments<'q>>
+    ) -> query::Query<'q, Sqlite, SqliteArguments<'q>>;
+}
+
+pub struct Repository<T: Entity> {
+    pool: Pool<Sqlite>,
+    _marker: PhantomData<T>,
 }
 
 impl<T: Entity> Repository<T> {
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_find_all_returns_all_rows() {
+    async fn teste_buscar_todos() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk'), (2, 'Vinland')")
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_insert_returns_inserted_entity() {
+    async fn teste_inserir() {
         let (_, repo) = setup().await;
 
         let entity = FakeEntity { id: 1, name: "Berserk".to_string() };
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_update_returns_updated_entity() {
+    async fn teste_atualizar() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
@@ -167,7 +167,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_delete_removes_entity() {
+    async fn teste_deletar() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
