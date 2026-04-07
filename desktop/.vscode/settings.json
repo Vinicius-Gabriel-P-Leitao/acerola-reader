@@ -31,5 +31,5 @@
     "**/build": true,
     "**/gen": true
   },
-  "cSpell.words": ["tauri"]
+  "cSpell.words": ["sqlite", "Sqlite", "tauri"]
 }
