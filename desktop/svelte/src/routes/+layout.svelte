@@ -43,6 +43,7 @@
   import { getLocale, setLocale } from "$lib/paraglide/runtime.js";
 
   import "$theme/layout.css";
+  import AcerolaNotification from "$lib/components/acerola-notification/acerola-notification.svelte";
 
   let currentLocale = $state(getLocale());
   let appWindow = $state<any>(null);
@@ -102,7 +103,7 @@
       >
         <SquareIcon size={14} strokeWidth={1.5} />
       </button>
-      
+
       <button
         class="h-full w-11.5 inline-flex justify-center items-center hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
         aria-label="Fechar"
@@ -149,6 +150,8 @@
       </AcerolaSidebar>
 
       <main class="flex-1 overflow-y-auto">
+        <AcerolaNotification />
+
         {@render children()}
       </main>
     </SidebarProvider>

@@ -11,7 +11,7 @@ type Notification<V extends string> = {
 } & NotificationOptions;
 
 type NotifyMethods<V extends string> = {
-  [K in V]: (message: string, options?: NotificationOptions) => void;
+  [K in V]: (message: string, options?: NotificationOptions) => number;
 };
 
 export function createNotifications<V extends string>(variants: readonly V[]) {
@@ -21,7 +21,7 @@ export function createNotifications<V extends string>(variants: readonly V[]) {
   function add(
     message: string,
     options?: NotificationOptions & { variant: V },
-  ) {
+  ): number {
     const id = _id++;
 
     const notify = {
@@ -33,17 +33,14 @@ export function createNotifications<V extends string>(variants: readonly V[]) {
     };
 
     notifications.push(notify);
+    if (notify.duration > 0) setTimeout(() => pop(id), notify.duration);
 
-    if (notify.duration > 0) {
-      setTimeout(
-        () => pop(notifications.findIndex((it) => it.id === id)),
-        notify.duration,
-      );
-    }
+    return id;
   }
 
-  function pop(index: number) {
-    notifications.splice(index, 1);
+  function pop(id: number) {
+    const index = notifications.findIndex((it) => it.id === id);
+    if (index !== -1) notifications.splice(index, 1);
   }
 
   function clearAll() {

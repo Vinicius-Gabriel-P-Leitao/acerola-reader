@@ -13,6 +13,7 @@
   <Popover.Trigger>
     {@render trigger()}
   </Popover.Trigger>
+
   <Popover.Content>
     {@render content()}
   </Popover.Content>

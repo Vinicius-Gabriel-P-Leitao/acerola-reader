@@ -97,7 +97,7 @@
         title={m["pages.config.file_system.sync.fast.title"]()}
         description={m["pages.config.file_system.sync.fast.desc"]()}
         /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
-        onclick={() => console.log("sync")}
+        onclick={() => comicScanner.startSpeedScanner()}
       >
         {#snippet icon()}
           <FolderSync class="text-chart-3" size={24} />
