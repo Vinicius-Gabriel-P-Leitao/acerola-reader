@@ -1,4 +1,5 @@
 use std::collections::hash_map::DefaultHasher;
+use tauri::{ AppHandle, Emitter };
 use std::path::{ Path, PathBuf };
 use std::hash::{ Hash, Hasher };
 use tokio::sync::mpsc;
@@ -28,7 +29,7 @@ impl ComicScannerService {
         }
     }
 
-    pub async fn scan(&self, path: PathBuf) -> Result<(), String> {
+    pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), String> {
         // NOTE: Valida se o path está dentro do root permitido
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
@@ -41,7 +42,11 @@ impl ComicScannerService {
         });
 
         while let Some(entry) = rx.recv().await {
+            let directory = entry.directory.to_string_lossy().to_string();
+
+            // Emite o progresso e qual pasta está sendo escaneada
             self.process_entry(entry, &file_guard).await?;
+            let _ = app.emit("scan:progress", directory);
         }
 
         Ok(())

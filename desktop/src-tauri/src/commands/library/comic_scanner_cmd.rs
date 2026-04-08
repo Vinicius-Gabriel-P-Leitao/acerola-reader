@@ -19,7 +19,8 @@ pub async fn comic_scanner(
 
     tokio::spawn(async move {
         let service = ComicScannerService::new(root.clone(), pool);
-        match service.scan(root).await {
+
+        match service.scan(root, &app).await {
             Ok(_) => {
                 app.emit("scan:complete", ()).unwrap();
             }
