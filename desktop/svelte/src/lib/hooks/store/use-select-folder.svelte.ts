@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { load } from "@tauri-apps/plugin-store";
-import { STORE_FILE, STORE_KEYS } from "$lib/constants/store";
+import { STORE_FILE, STORE_KEYS } from "$lib/constants/store-plugin";
 import { toast } from "svelte-sonner";
 import { COMMANDS } from "$lib/constants/commands";
 

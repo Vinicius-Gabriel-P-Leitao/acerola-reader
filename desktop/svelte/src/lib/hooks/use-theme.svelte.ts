@@ -67,8 +67,6 @@ export function useTheme() {
   }
 
   return {
-    setMode,
-    setTheme,
     get resolved() {
       return resolved;
     },
@@ -78,5 +76,7 @@ export function useTheme() {
     get mode() {
       return mode;
     },
+    setTheme,
+    setMode,
   };
 }
