@@ -44,7 +44,7 @@ export function createNotifications<V extends string>(variants: readonly V[]) {
   }
 
   function clearAll() {
-    notifications = [];
+    notifications.splice(0, notifications.length);
   }
 
   // deriva notify.* das chaves passadas no bootstrap

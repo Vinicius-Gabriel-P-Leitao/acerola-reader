@@ -40,6 +40,9 @@
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
   import AcerolaPopover from "$lib/components/acerola-popover/acerola-popover.svelte";
   import { Button } from "$lib/components/ui/button";
+  import { fly, fade } from "svelte/transition";
+  import { flip } from "svelte/animate";
+  import { cubicOut } from "svelte/easing";
 
   const { notifications, pop, clearAll } = notificationStore;
 </script>
@@ -63,10 +66,13 @@
           Nenhuma notificação
         </p>
       {:else}
-        {#each notifications as notify}
+        {#each notifications as notify (notify.id)}
           {@const Icon = variantIcon[notify.variant]}
 
           <div
+            animate:flip={{ duration: 200 }}
+            in:fly={{ x: 16, duration: 250, easing: cubicOut }}
+            out:fade={{ duration: 150 }}
             class="flex items-center gap-3 p-2 rounded-lg border border-border bg-card"
           >
             <Icon
