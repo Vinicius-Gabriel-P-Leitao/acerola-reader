@@ -1,6 +1,7 @@
+use tauri::{ AppHandle, Emitter };
 use std::path::PathBuf;
-use tauri::State;
 use sqlx::SqlitePool;
+use tauri::State;
 
 use crate::core::services::comic_scanner_engine::ComicScannerService;
 
@@ -10,10 +11,23 @@ use crate::core::services::comic_scanner_engine::ComicScannerService;
 #[tauri::command]
 pub async fn comic_scanner(
     path: String,
-    pool: State<'_, SqlitePool>,
+    app: AppHandle,
+    pool: State<'_, SqlitePool>
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
+    let pool = pool.inner().clone();
 
-    let service = ComicScannerService::new(root.clone(), pool.inner().clone());
-    service.scan(root).await
+    tokio::spawn(async move {
+        let service = ComicScannerService::new(root.clone(), pool);
+        match service.scan(root).await {
+            Ok(_) => {
+                app.emit("scan:complete", ()).unwrap();
+            }
+            Err(err) => {
+                app.emit("scan:error", err).unwrap();
+            }
+        }
+    });
+
+    Ok(())
 }

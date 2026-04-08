@@ -171,6 +171,9 @@ fn path_hash(path: &Path) -> i64 {
 /// TODO: Verificar se a forma de ver o last_modified é igual em linux e windows, ver também se é possivel fazer app funcionar no flatpak
 fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     meta.modified()
-        .map(|time: std::time::SystemTime| time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64)
+        .map(
+            |time: std::time::SystemTime|
+                time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64
+        )
         .unwrap_or(0)
 }

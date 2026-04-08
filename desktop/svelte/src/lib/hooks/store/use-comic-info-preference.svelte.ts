@@ -24,10 +24,10 @@ export function useComicInfoPreference() {
   }
 
   return {
+    selectComicInfoPreference,
+    loadSavedComicInfoPreference,
     get comicInfoPreference() {
       return comicInfoPreference;
     },
-    selectComicInfoPreference,
-    loadSavedComicInfoPreference,
   };
 }

@@ -31,5 +31,16 @@
     "**/build": true,
     "**/gen": true
   },
-  "cSpell.words": ["sqlite", "Sqlite", "tauri"]
+  "cSpell.words": [
+    "anilist",
+    "inlang",
+    "mangadex",
+    "outdir",
+    "paraglide",
+    "poppanator",
+    "sqlite",
+    "Sqlite",
+    "tauri",
+    "unlisten"
+  ]
 }

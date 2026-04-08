@@ -6,15 +6,15 @@
   import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
   import ThemePicker from "./components/theme-picker.svelte";
 
-  import * as Command from "$lib/components/ui/command/index.js";
-
+  import * as Command from "$lib/components/ui/command";
   import { LANGUAGES } from "$lib/constants/languages";
-
   import { m } from "$lib/paraglide/messages";
 
   import { useComicInfoPreference } from "$lib/hooks/store/use-comic-info-preference.svelte";
-  import { useLibrary } from "$lib/hooks/store/use-library.svelte";
+  import { useComicScanner } from "$lib/hooks/store/use-comic-scanner.svelte";
+  import { useSelectFolder } from "$lib/hooks/store/use-select-folder.svelte";
   import { useTheme } from "$lib/hooks/theme/use-theme.svelte";
+  import { onMount } from "svelte";
 
   import AniListIcon from "$lib/assets/icons/anilist.svg?component";
   import MangaDexIcon from "$lib/assets/icons/mangadex.svg?component";
@@ -28,11 +28,20 @@
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
 
   const ctx = useTheme();
-  const library = useLibrary();
+  const folder = useSelectFolder();
+  const comicScanner = useComicScanner();
   const comicInfoPreference = useComicInfoPreference();
 
+  onMount(async () => {
+    await folder.loadSavedPath();
+     
+    if (folder.folderPath) {
+      comicScanner.init(folder.folderPath);
+    }
+  });
+
   $effect(() => {
-    library.loadSavedPath();
+    folder.loadSavedPath();
   });
 
   $effect(() => {
@@ -66,9 +75,9 @@
       <AcerolaHeroButton
         title={m["pages.config.file_system.comic_path.title"]()}
         description={m["pages.config.file_system.comic_path.desc"]({
-          path: library.folderPath ?? "",
+          path: folder.folderPath ?? "",
         })}
-        onclick={library.selectFolder}
+        onclick={folder.selectFolder}
       >
         {#snippet icon()}
           <FolderIcon class="text-chart-5" size={24} />
