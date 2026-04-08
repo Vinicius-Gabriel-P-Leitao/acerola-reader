@@ -12,12 +12,12 @@
 
   import { m } from "$lib/paraglide/messages";
 
-  import { useComicInfoPreference } from "$lib/hooks/use-comic-info-preference.svelte";
-  import { useLibrary } from "$lib/hooks/use-library.svelte";
-  import { useTheme } from "$lib/hooks/use-theme.svelte";
+  import { useComicInfoPreference } from "$lib/hooks/store/use-comic-info-preference.svelte";
+  import { useLibrary } from "$lib/hooks/store/use-library.svelte";
+  import { useTheme } from "$lib/hooks/theme/use-theme.svelte";
 
-  import MangaDexIcon from "$lib/assets/icons/mangadex.svg?component";
   import AniListIcon from "$lib/assets/icons/anilist.svg?component";
+  import MangaDexIcon from "$lib/assets/icons/mangadex.svg?component";
   import CloudSync from "@lucide/svelte/icons/cloud-sync";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import FolderIcon from "@lucide/svelte/icons/folder";

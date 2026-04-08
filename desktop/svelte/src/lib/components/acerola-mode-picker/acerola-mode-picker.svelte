@@ -12,7 +12,7 @@
 
 <script lang="ts">
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
-  import { useTheme, type ThemeModeOption } from "$lib/hooks/use-theme.svelte";
+  import { useTheme, type ThemeModeOption } from "$lib/hooks/theme/use-theme.svelte";
   import type { ModePickerProps } from "./acerola-mode-picker.types";
 
   const themeCtx = useTheme();

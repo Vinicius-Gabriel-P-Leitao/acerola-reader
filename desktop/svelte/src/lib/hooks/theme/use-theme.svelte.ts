@@ -33,8 +33,8 @@ async function applyTheme(color: ThemeColor, modeOption: ThemeModeOption) {
   await window.setTheme(resolved);
 }
 
-browser &&
-  (async () => {
+// prettier-ignore
+browser && (async () => {
     const [savedTheme, savedMode] = await Promise.all([
       store.get<ThemeColor>(STORE_KEYS.theme),
       store.get<ThemeModeOption>(STORE_KEYS.mode),

@@ -1,4 +1,4 @@
-import type { ThemeColor, ThemeMode } from "$lib/hooks/use-theme.svelte";
+import type { ThemeColor, ThemeMode } from "$lib/hooks/theme/use-theme.svelte";
 
 export type ThemePickerProps = {
   id: ThemeColor;
