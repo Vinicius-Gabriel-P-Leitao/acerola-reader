@@ -1,19 +1,20 @@
 use std::collections::hash_map::DefaultHasher;
-use std::hash::{ Hash, Hasher };
-use std::path::{ Path, PathBuf };
 use tauri::{ AppHandle, Emitter };
-use tokio::fs;
+use std::path::{ Path, PathBuf };
+use std::hash::{ Hash, Hasher };
 use tokio::sync::mpsc;
+use tokio::fs;
 
-use crate::data::models::archive::chapter_archive::ChapterArchive;
-use crate::data::models::archive::comic_directory::ComicDirectory;
 use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
 use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
-use crate::infra::error::translations::comic_error::ComicError;
 use crate::infra::filesystem::files_guard::{ ArchiveFileGuard, ScannerGuard };
 use crate::infra::filesystem::files_guard::{ ArtworkFileGuard, FileGuard };
-use crate::infra::filesystem::path_guard::PathGuard;
+use crate::data::models::archive::chapter_archive::ChapterArchive;
+use crate::data::models::archive::comic_directory::ComicDirectory;
+use crate::infra::error::translations::comic_error::ComicError;
 use crate::infra::filesystem::scanner_engine::ScannerEngine;
+use crate::infra::error::translations::db_error::DbError;
+use crate::infra::filesystem::path_guard::PathGuard;
 
 pub struct ComicScannerService {
     path_guard: PathGuard,
@@ -59,9 +60,7 @@ impl ComicScannerService {
         entry: crate::infra::filesystem::scanner_engine::DirectoryEntry,
         _file_guard: &ScannerGuard
     ) -> Result<(), ComicError> {
-        // FIXME: Colocar tratamento de erros
         let archive_guard = ArchiveFileGuard;
-        // FIXME: Colocar tratamento de erros
         let artwork_guard = ArtworkFileGuard;
 
         let mut comic_files: Vec<PathBuf> = vec![];
@@ -120,7 +119,16 @@ impl ComicScannerService {
             hidden: false,
         };
 
-        let saved = self.comic_repo.base.insert(&comic).await?;
+        let saved = match self.comic_repo.base.insert(&comic).await {
+            Ok(saved) => saved,
+            Err(DbError::UniqueViolation) => {
+                log::debug!("[Scanner] Comic '{}' already indexed, skipping.", comic.name);
+                return Ok(());
+            }
+            Err(err) => {
+                return Err(err.into());
+            }
+        };
 
         for file in comic_files {
             self.process_chapter(&file, saved.id).await?;
@@ -158,7 +166,16 @@ impl ComicScannerService {
             last_modified: file_modified,
         };
 
-        self.chapter_repo.base.insert(&chapter).await?;
+        match self.chapter_repo.base.insert(&chapter).await {
+            Ok(_) => {}
+            Err(DbError::UniqueViolation) => {
+                log::debug!("[Scanner] Chapter '{}' already indexed, skipping.", chapter.chapter);
+            }
+            Err(err) => {
+                return Err(err.into());
+            }
+        }
+
         Ok(())
     }
 }
