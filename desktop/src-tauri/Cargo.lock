@@ -7,6 +7,7 @@ name = "acerola"
 version = "0.0.1-beta"
 dependencies = [
  "axum",
+ "log",
  "mdns-sd",
  "serde",
  "serde_json",

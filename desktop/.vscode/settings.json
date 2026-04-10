@@ -33,14 +33,20 @@
   },
   "cSpell.words": [
     "anilist",
+    "axum",
     "inlang",
     "mangadex",
+    "mdns",
     "outdir",
     "paraglide",
     "poppanator",
+    "serde",
     "sqlite",
     "Sqlite",
+    "sqlx",
     "tauri",
+    "thiserror",
+    "tokio",
     "unlisten"
   ]
 }
