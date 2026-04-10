@@ -32,6 +32,7 @@ impl ComicRepository {
 #[cfg(test)]
 mod tests {
     use crate::data::models::archive::comic_directory::ComicDirectory;
+    use crate::infra::error::translations::db_error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
     use super::ComicRepository;
 
@@ -98,5 +99,41 @@ mod tests {
 
         let all = repo.base.find_all().await.unwrap();
         assert_eq!(all.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn teste_buscar_por_nome_inexistente() {
+        let repo = setup().await;
+
+        let result = repo.find_by_name("Inexistente").await.unwrap();
+
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn teste_erro_ao_inserir_duplicado() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+        let result = repo.base.insert(&berserk()).await;
+
+        assert!(
+            matches!(result, Err(DbError::UniqueViolation)),
+            "Deveria ter retornado UniqueViolation, mas veio: {:?}",
+            result
+        );
+    }
+
+    #[tokio::test]
+    async fn teste_erro_ao_atualizar_inexistente() {
+        let repo = setup().await;
+
+        let result = repo.base.update(&berserk()).await;
+
+        assert!(
+            matches!(result, Err(DbError::Internal(_))),
+            "Deveria ter retornado Internal(RowNotFound), mas veio: {:?}",
+            result
+        );
     }
 }

@@ -24,14 +24,18 @@ export default defineConfig({
       $theme: path.resolve("./svelte/src/theme"),
       $services: path.resolve("./svelte/src/services"),
       "$app/state": path.resolve("./svelte/tests/mocks/app-state.ts"),
-      "$app/environment": path.resolve("./svelte/tests/mocks/app-environment.ts"),
+      "$app/environment": path.resolve(
+        "./svelte/tests/mocks/app-environment.ts",
+      ),
     },
   },
+  // INFO: Não usar paraglide nos testes.
   test: {
     projects: [
       {
         extends: true,
         test: {
+          name: "unit",
           globals: true,
           environment: "jsdom",
           include: ["svelte/src/**/*.test.ts"],

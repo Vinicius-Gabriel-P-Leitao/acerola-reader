@@ -53,6 +53,7 @@ impl ChapterRepository {
 #[cfg(test)]
 mod tests {
     use crate::data::models::archive::comic_directory::ComicDirectory;
+    use crate::infra::error::translations::db_error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
     use crate::data::repositories::base::Repository;
     use super::{ ChapterRepository, ChapterArchive };
@@ -161,5 +162,41 @@ mod tests {
         assert_eq!(page1.len(), 2);
         assert_eq!(page2.len(), 1);
         assert_eq!(page2[0].chapter_sort, "0.3");
+    }
+
+    #[tokio::test]
+    async fn teste_buscar_capitulos_pasta_sem_registros() {
+        let repo = setup().await;
+
+        let result = repo.get_chapters_paged(1, 10, 0).await.unwrap();
+
+        assert!(result.is_empty());
+    }
+
+    #[tokio::test]
+    async fn teste_erro_ao_inserir_duplicado() {
+        let repo = setup().await;
+
+        repo.base.insert(&chapter(1, "001")).await.unwrap();
+        let result = repo.base.insert(&chapter(1, "001")).await;
+
+        assert!(
+            matches!(result, Err(DbError::UniqueViolation)),
+            "Deveria ter retornado UniqueViolation, mas veio: {:?}",
+            result
+        );
+    }
+
+    #[tokio::test]
+    async fn teste_erro_ao_atualizar_inexistente() {
+        let repo = setup().await;
+
+        let result = repo.base.update(&chapter(999, "001")).await;
+
+        assert!(
+            matches!(result, Err(DbError::Internal(_))),
+            "Deveria ter retornado Internal(RowNotFound), mas veio: {:?}",
+            result
+        );
     }
 }
