@@ -58,21 +58,28 @@ pub enum DbError {
 impl From<sqlx::Error> for DbError {
     fn from(err: sqlx::Error) -> Self {
         if let sqlx::Error::RowNotFound = err {
+            log::debug!("[DbError] RowNotFound → NotFound.");
             return DbError::NotFound;
         }
 
         if let sqlx::Error::Database(ref db) = err {
             if db.is_unique_violation() {
+                log::debug!("[DbError] Constraint UNIQUE violada → UniqueViolation.");
                 return DbError::UniqueViolation;
             }
+
             if db.is_foreign_key_violation() {
+                log::warn!("[DbError] Constraint FOREIGN KEY violada → ForeignKeyViolation.");
                 return DbError::ForeignKeyViolation;
             }
+
             if db.is_check_violation() {
+                log::warn!("[DbError] Constraint CHECK violada → CheckViolation.");
                 return DbError::CheckViolation;
             }
         }
 
+        log::error!("[DbError] Erro não mapeado → Internal: {:?}", err);
         DbError::Internal(err)
     }
 }
