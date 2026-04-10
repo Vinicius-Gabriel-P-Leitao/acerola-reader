@@ -1,9 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "svelte-sonner";
+import * as m from "$lib/paraglide/messages";
 import { LIBRARY_COMMANDS } from "$lib/contracts/library/library.commands";
 import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
 import type { ErrorPayload } from "$lib/contracts/shared/shared.payloads";
+import { resolveErrorMessage } from "$lib/contracts/errors/errors.payloads";
 import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
 
 const { notify, pop } = notificationStore;
@@ -19,8 +21,7 @@ export function useComicScanner() {
 
   async function startSpeedScanner() {
     if (!path) {
-      // FIXME: Traduzir
-      toast.error("Sem pasta selecionada.");
+      toast.error(m["hooks.comic_scanner.no_folder"]());
       return;
     }
 
@@ -28,9 +29,9 @@ export function useComicScanner() {
 
     const unlistenProgress = await listen(LIBRARY_EVENTS.scanProgress, () => {
       if (progressId === undefined) {
-        // FIXME: Traduzir
-        toast.info("Scan em andamento...");
-        progressId = notify.info("Scan em andamento...", { duration: 0 });
+        const msg = m["hooks.comic_scanner.in_progress"]();
+        toast.info(msg);
+        progressId = notify.info(msg, { duration: 0 });
       }
     });
 
@@ -40,9 +41,9 @@ export function useComicScanner() {
         progressId = undefined;
       }
 
-      // FIXME: Traduzir
-      notify.success("Scan concluído!", { duration: 0 });
-      toast.success("Scan concluído!");
+      const msg = m["hooks.comic_scanner.success"]();
+      notify.success(msg, { duration: 0 });
+      toast.success(msg);
 
       scanning = false;
 
@@ -59,13 +60,13 @@ export function useComicScanner() {
           progressId = undefined;
         }
 
-        // FIXME: Traduzir
-        notify.error("Falha no scan", {
-          description: event.payload.message,
+        const description = resolveErrorMessage(event.payload);
+        notify.error(m["hooks.comic_scanner.error_title"](), {
+          description,
           duration: 0,
         });
 
-        toast.error(event.payload.message);
+        toast.error(description);
 
         scanning = false;
 
