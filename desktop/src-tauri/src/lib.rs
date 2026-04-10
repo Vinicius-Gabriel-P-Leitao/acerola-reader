@@ -61,12 +61,30 @@ mod app_bootstrap {
 
         app.handle().plugin(
             // prettier-ignore
-            tauri_plugin_log::Builder::new().target(
-                tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
-                    path: log_dir,
-                    file_name: None,
+            tauri_plugin_log::Builder
+                ::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
+                        path: log_dir,
+                        file_name: None,
+                    }),
+
+                    #[cfg(debug_assertions)] tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::Stdout
+                    ),
+                ])
+                .level({
+                    #[cfg(debug_assertions)]
+                    {
+                        tauri_plugin_log::log::LevelFilter::Debug
+                    }
+
+                    #[cfg(not(debug_assertions))]
+                    {
+                        tauri_plugin_log::log::LevelFilter::Info
+                    }
                 })
-            ).level(tauri_plugin_log::log::LevelFilter::Info).build()
+                .build()
         )?;
 
         tauri::async_runtime::block_on(async move {
