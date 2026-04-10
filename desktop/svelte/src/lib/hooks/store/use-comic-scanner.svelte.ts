@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "svelte-sonner";
-import { COMMANDS } from "$lib/constants/commands";
+import { LIBRARY_COMMANDS } from "$lib/contracts/library/library.commands";
+import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
+import type { ErrorPayload } from "$lib/contracts/shared/shared.payloads";
 import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
 
 const { notify, pop } = notificationStore;
@@ -24,8 +26,7 @@ export function useComicScanner() {
 
     scanning = true;
 
-    // FIXME: Criar contrato
-    const unlistenProgress = await listen("scan:progress", () => {
+    const unlistenProgress = await listen(LIBRARY_EVENTS.scanProgress, () => {
       if (progressId === undefined) {
         // FIXME: Traduzir
         toast.info("Scan em andamento...");
@@ -33,8 +34,7 @@ export function useComicScanner() {
       }
     });
 
-    // FIXME: Criar contrato
-    const unlisten = await listen("scan:complete", () => {
+    const unlisten = await listen(LIBRARY_EVENTS.scanComplete, () => {
       if (progressId !== undefined) {
         pop(progressId);
         progressId = undefined;
@@ -51,29 +51,31 @@ export function useComicScanner() {
       unlistenProgress();
     });
 
-    // FIXME: Criar contrato
-    const unlistenErr = await listen<string>("scan:error", (event) => {
-      if (progressId !== undefined) {
-        pop(progressId);
-        progressId = undefined;
-      }
+    const unlistenErr = await listen<ErrorPayload>(
+      LIBRARY_EVENTS.scanError,
+      (event) => {
+        if (progressId !== undefined) {
+          pop(progressId);
+          progressId = undefined;
+        }
 
-      // FIXME: Traduzir
-      notify.error("Falha no scan", {
-        description: event.payload,
-        duration: 0,
-      });
+        // FIXME: Traduzir
+        notify.error("Falha no scan", {
+          description: event.payload.message,
+          duration: 0,
+        });
 
-      toast.error(event.payload);
+        toast.error(event.payload.message);
 
-      scanning = false;
+        scanning = false;
 
-      unlisten();
-      unlistenErr();
-      unlistenProgress();
-    });
+        unlisten();
+        unlistenErr();
+        unlistenProgress();
+      },
+    );
 
-    await invoke(COMMANDS.comicScanner, { path });
+    await invoke(LIBRARY_COMMANDS.comicScanner, { path });
   }
 
   return {

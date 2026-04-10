@@ -11,6 +11,7 @@ use crate::infra::filesystem::files_guard::{ ScannerGuard, ArchiveFileGuard };
 use crate::infra::filesystem::files_guard::{ ArtworkFileGuard, FileGuard };
 use crate::data::models::archive::comic_directory::ComicDirectory;
 use crate::data::models::archive::chapter_archive::ChapterArchive;
+use crate::infra::error::translations::comic_error::ComicError;
 use crate::infra::filesystem::scanner_engine::ScannerEngine;
 use crate::infra::filesystem::path_guard::PathGuard;
 
@@ -29,15 +30,19 @@ impl ComicScannerService {
         }
     }
 
-    pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), String> {
-        // NOTE: Valida se o path está dentro do root permitido
-        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+    pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), ComicError> {
+        // INFO: Valida se o path está dentro do root permitido
+        // FIXME: Colocar tratamento de erros
+        self.path_guard
+            .execute(&path, |_| -> Result<(), String> { Ok(()) })
+            .map_err(|error: String| ComicError::SystemFailure(error))?;
 
         let (tx, mut rx) = mpsc::channel(32);
         let file_guard = ScannerGuard::new();
         let scanner = ScannerEngine::new();
 
         tokio::spawn(async move {
+            // FIXME: Colocar tratamento de erros
             scanner.scan(path, tx).await.unwrap();
         });
 
@@ -56,8 +61,10 @@ impl ComicScannerService {
         &self,
         entry: crate::infra::filesystem::scanner_engine::DirectoryEntry,
         _file_guard: &ScannerGuard
-    ) -> Result<(), String> {
+    ) -> Result<(), ComicError> {
+        // FIXME: Colocar tratamento de erros
         let archive_guard = ArchiveFileGuard;
+        // FIXME: Colocar tratamento de erros
         let artwork_guard = ArtworkFileGuard;
 
         let mut comic_files: Vec<PathBuf> = vec![];
@@ -93,9 +100,7 @@ impl ComicScannerService {
             return Ok(());
         }
 
-        let dir_meta = fs
-            ::metadata(&entry.directory).await
-            .map_err(|error: std::io::Error| error.to_string())?;
+        let dir_meta = fs::metadata(&entry.directory).await?;
 
         let dir_name = entry.directory
             .file_name()
@@ -118,7 +123,7 @@ impl ComicScannerService {
             hidden: false,
         };
 
-        let saved = self.comic_repo.base.insert(&comic).await.map_err(|error| error.to_string())?;
+        let saved = self.comic_repo.base.insert(&comic).await?;
 
         for file in comic_files {
             self.process_chapter(&file, saved.id).await?;
@@ -127,27 +132,25 @@ impl ComicScannerService {
         Ok(())
     }
 
-    async fn process_chapter(&self, file: &Path, comic_id: i64) -> Result<(), String> {
-        let meta = fs::metadata(file).await.map_err(|e| e.to_string())?;
+    async fn process_chapter(&self, file: &Path, comic_id: i64) -> Result<(), ComicError> {
+        let meta = fs::metadata(file).await?;
 
         let file_name = file
             .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown");
+            .and_then(|it| it.to_str())
+            .ok_or_else(|| ComicError::SystemFailure("Nome de arquivo inválido".into()))?;
 
         let file_size = meta.len();
         let file_modified = modified_secs(&meta);
 
-        // NOTE: fast_hash = "filename|size|last_modified"
         let fast_hash = format!("{}|{}|{}", file_name, file_size, file_modified);
 
         let chapter_name = file
             .file_stem()
-            .and_then(|n| n.to_str())
+            .and_then(|it| it.to_str())
             .unwrap_or("unknown")
             .to_string();
 
-        // TODO: Implementar o pattern para poder fazer o chapter_sort funcionar corretamente
         let chapter = ChapterArchive {
             id: path_hash(file),
             chapter: chapter_name.clone(),
@@ -158,8 +161,7 @@ impl ComicScannerService {
             last_modified: file_modified,
         };
 
-        self.chapter_repo.base.insert(&chapter).await.map_err(|error| error.to_string())?;
-
+        self.chapter_repo.base.insert(&chapter).await?;
         Ok(())
     }
 }
@@ -169,12 +171,14 @@ impl ComicScannerService {
 fn path_hash(path: &Path) -> i64 {
     let mut hasher = DefaultHasher::new();
     path.hash(&mut hasher);
+
     (hasher.finish() & 0x7fff_ffff_ffff_ffff) as i64
 }
 
 /// Retorna o `last_modified` em segundos desde Unix epoch.
 /// TODO: Verificar se a forma de ver o last_modified é igual em linux e windows, ver também se é possivel fazer app funcionar no flatpak
 fn modified_secs(meta: &std::fs::Metadata) -> i64 {
+    // FIXME: Colocar tratamento de erros
     meta.modified()
         .map(
             |time: std::time::SystemTime|

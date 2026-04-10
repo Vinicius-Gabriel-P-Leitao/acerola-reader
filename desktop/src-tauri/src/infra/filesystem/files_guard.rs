@@ -1,5 +1,7 @@
 use std::path::Path;
 
+// FIXME: Colocar tratamento de erros no código todo.
+
 #[derive(Debug)]
 pub enum FileGuardError {
     ExtensionNotAllowed(String),

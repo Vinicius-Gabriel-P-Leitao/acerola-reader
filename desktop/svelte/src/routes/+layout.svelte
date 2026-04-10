@@ -44,6 +44,7 @@
 
   import "$theme/layout.css";
   import AcerolaNotification from "$lib/components/acerola-notification/acerola-notification.svelte";
+  import Search from "@lucide/svelte/icons/search";
 
   let currentLocale = $state(getLocale());
   let appWindow = $state<any>(null);
@@ -150,7 +151,28 @@
       </AcerolaSidebar>
 
       <main class="flex-1 overflow-y-auto">
-        <AcerolaNotification />
+        <header
+          class="h-20 px-8 flex items-center justify-between bg-base/80 backdrop-blur-xl sticky top-0 z-10 border-b border-surface/50"
+        >
+          <!-- FIXME: Fazer o search ser um componente -->
+          <div class="flex-1 max-w-xl">
+            <div class="relative group">
+              <Search
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-overlay group-focus-within:text-primary transition-colors"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Buscar mangá..."
+                class="w-full bg-mantle border border-surface rounded-2xl py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-overlay/50"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 mx-8a">
+            <AcerolaNotification />
+          </div>
+        </header>
 
         {@render children()}
       </main>

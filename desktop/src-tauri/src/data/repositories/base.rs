@@ -1,5 +1,6 @@
 use sqlx::{ query, query_as, FromRow, Pool, Sqlite, sqlite::{ SqliteArguments, SqliteRow } };
-use std::marker::PhantomData;
+use crate::infra::error::translations::db_error::DbError;
+use std::{ marker::PhantomData };
 
 pub trait Entity {
     fn columns() -> &'static [&'static str];
@@ -30,18 +31,20 @@ impl<T: Entity> Repository<T> {
     }
 
     // prettier-ignore
-    pub async fn find_all(&self) -> Result<Vec<T>, sqlx::Error>
+    pub async fn find_all(&self) -> Result<Vec<T>, DbError>
         where T: Entity + for<'row> FromRow<'row, SqliteRow> + Send + Unpin
     {
         let cols = T::columns().join(", ");
         let table = T::table_name();
 
         // prettier-ignore
-        query_as::<_, T>(&format!("SELECT {} FROM {}", cols, table)).fetch_all(&self.pool).await
+        let result= query_as::<_, T>(&format!("SELECT {} FROM {}", cols, table)).fetch_all(&self.pool).await?;
+
+        Ok(result)
     }
 
     // prettier-ignore
-    pub async fn insert(&self, entity: &T) -> Result<T, sqlx::Error>
+    pub async fn insert(&self, entity: &T) -> Result<T, DbError>
       where T: Entity + Bindable + for<'row> FromRow<'row, SqliteRow> + Send + Unpin
     {
         let table = T::table_name();
@@ -51,11 +54,11 @@ impl<T: Entity> Repository<T> {
         let sql = format!("INSERT INTO {} ({}) VALUES ({}) RETURNING *", table, cols, placeholders);
         let row = entity.bind_insert(query(&sql)).fetch_one(&self.pool).await?;
 
-        T::from_row(&row)
+        Ok(T::from_row(&row)?) 
     }
 
     // prettier-ignore
-    pub async fn update(&self, entity: &T) -> Result<T, sqlx::Error>
+    pub async fn update(&self, entity: &T) -> Result<T, DbError>
         where T: Entity + Bindable + for<'r> FromRow<'r, SqliteRow> + Send + Unpin
     {
         let table = T::table_name();
@@ -65,11 +68,11 @@ impl<T: Entity> Repository<T> {
         let sql = format!("UPDATE {} SET {} WHERE id = ? RETURNING *", table, set_clause);
         let row = entity.bind_update(query(&sql)).fetch_one(&self.pool).await?;
 
-        T::from_row(&row)
+        Ok(T::from_row(&row)?)
     }
 
     // prettier-ignore
-    pub async fn delete(&self, id: i64) -> Result<(), sqlx::Error> {
+    pub async fn delete(&self, id: i64) -> Result<(), DbError> {
         let table = T::table_name();
         query(&format!("DELETE FROM {} WHERE id = ?", table)).bind(id).execute(&self.pool).await?;
         Ok(())
@@ -78,9 +81,12 @@ impl<T: Entity> Repository<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::data::repositories::base::{ Entity, Bindable, Repository };
     use sqlx::{ FromRow, sqlite::SqliteArguments, query::Query, Sqlite };
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::{
+        data::repositories::base::{ Bindable, Entity, Repository },
+        infra::error::translations::db_error::DbError,
+        tests::utils::setup_test_db::setup_test_db,
+    };
 
     #[derive(Debug, FromRow, PartialEq)]
     struct FakeEntity {
@@ -127,6 +133,7 @@ mod tests {
         (pool, repo)
     }
 
+    /// INFO: Casos de sucesso, testes perfeitos
     #[tokio::test]
     async fn teste_buscar_todos() {
         let (pool, repo) = setup().await;
@@ -176,5 +183,36 @@ mod tests {
 
         let result = repo.find_all().await.unwrap();
         assert_eq!(result.len(), 0);
+    }
+
+    /// INFO: Casos de erros
+    #[tokio::test]
+    async fn teste_erro_ao_inserir_duplicado() {
+        let (_, repo) = setup().await;
+
+        let entity = FakeEntity { id: 1, name: "Berserk".to_string() };
+        repo.insert(&entity).await.unwrap();
+
+        let result = repo.insert(&entity).await;
+
+        assert!(
+            matches!(result, Err(DbError::UniqueViolation)),
+            "Deveria ter retornado UniqueViolation, mas veio: {:?}",
+            result
+        );
+    }
+
+    #[tokio::test]
+    async fn teste_erro_ao_atualizar_inexistente() {
+        let (_, repo) = setup().await;
+
+        let entity = FakeEntity { id: 999, name: "Inexistente".to_string() };
+        let result = repo.update(&entity).await;
+
+        // Se o seu fetch_one retornar erro quando não encontrar (ou se você quiser testar
+        // falhas de banco de dados genéricas), você pode testar o Internal.
+        // Nota: O SQLx fetch_one retorna RowNotFound se a query não retornar linhas.
+        // Verifique se o seu DbError trata o RowNotFound!
+        assert!(matches!(result, Err(DbError::Internal(_))));
     }
 }

@@ -1,5 +1,6 @@
 use crate::data::models::archive::chapter_archive::ChapterArchive;
 use crate::data::repositories::base::{ Repository, Entity };
+use crate::infra::error::translations::db_error::DbError;
 use sqlx::SqlitePool;
 
 pub struct ChapterRepository {
@@ -21,10 +22,10 @@ impl ChapterRepository {
     /// `0.9` venha antes de `0.10` — ordenação numérica, não lexicográfica.
     // prettier-ignore
     pub async fn get_chapters_paged(&self,folder_id: i64,page_size: i64,offset: i64,
-    ) -> Result<Vec<ChapterArchive>, sqlx::Error> {
+    ) -> Result<Vec<ChapterArchive>, DbError> {
         let cols = ChapterArchive::columns().iter().map(|col| format!("ca.{}", col)).collect::<Vec<_>>().join(", ");
 
-        sqlx::query_as::<_, ChapterArchive>(&format!(
+        let result =  sqlx::query_as::<_, ChapterArchive>(&format!(
             "SELECT {cols}
              FROM chapter_archive ca
              WHERE ca.comic_directory_fk = ?
@@ -43,7 +44,9 @@ impl ChapterRepository {
         .bind(page_size)
         .bind(offset)
         .fetch_all(&self.pool)
-        .await
+        .await?;
+
+        Ok(result)
     }
 }
 
@@ -138,10 +141,10 @@ mod tests {
         let result = repo.get_chapters_paged(1, 10, 0).await.unwrap();
 
         assert_eq!(result.len(), 4);
-        assert_eq!(result[0].chapter_sort, "0.1");  // 0 inteiro, 1 decimal
-        assert_eq!(result[1].chapter_sort, "0.9");  // 0 inteiro, 9 decimal
+        assert_eq!(result[0].chapter_sort, "0.1"); // 0 inteiro, 1 decimal
+        assert_eq!(result[1].chapter_sort, "0.9"); // 0 inteiro, 9 decimal
         assert_eq!(result[2].chapter_sort, "0.10"); // 0 inteiro, 10 decimal
-        assert_eq!(result[3].chapter_sort, "1.0");  // 1 inteiro
+        assert_eq!(result[3].chapter_sort, "1.0"); // 1 inteiro
     }
 
     #[tokio::test]

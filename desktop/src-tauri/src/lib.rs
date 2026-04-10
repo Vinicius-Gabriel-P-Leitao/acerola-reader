@@ -4,6 +4,7 @@ mod infra;
 mod commands;
 
 use tauri::Manager;
+use commands::features::library::{ select_folder_cmd, comic_scanner_cmd };
 
 #[cfg(test)]
 pub mod tests;
@@ -63,8 +64,8 @@ pub fn run() {
         })
         .invoke_handler(
             tauri::generate_handler![
-                commands::library::select_folder_cmd::select_folder,
-                commands::library::comic_scanner_cmd::comic_scanner
+                select_folder_cmd::select_folder,
+                comic_scanner_cmd::comic_scanner
             ]
         )
         .run(tauri::generate_context!())

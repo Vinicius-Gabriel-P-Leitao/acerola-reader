@@ -1,5 +1,5 @@
 import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
-import { COMMANDS } from "$lib/constants/commands";
+import { LIBRARY_COMMANDS } from "$lib/contracts/library/library.commands";
 import { STORE_FILE, STORE_KEYS } from "$lib/constants/store-plugin";
 import { invoke } from "@tauri-apps/api/core";
 import { load } from "@tauri-apps/plugin-store";
@@ -11,7 +11,7 @@ export function useSelectFolder() {
   let folderPath = $state<string | undefined>(undefined);
 
   async function selectFolder() {
-    const path = await invoke<string>(COMMANDS.selectFolder);
+    const path = await invoke<string>(LIBRARY_COMMANDS.selectFolder);
 
     if (path) {
       const store = await load(STORE_FILE);

@@ -4,6 +4,7 @@ pub struct PathGuard {
     allowed_root: PathBuf,
 }
 
+// FIXME: Colocar tratamento de erros
 impl PathGuard {
     pub fn new(root: PathBuf) -> Self {
         Self { allowed_root: root.canonicalize().unwrap_or(root) }

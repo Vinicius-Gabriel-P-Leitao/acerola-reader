@@ -47,7 +47,7 @@
   const { notifications, pop, clearAll } = notificationStore;
 </script>
 
-<AcerolaPopover>
+<AcerolaPopover contentClass="overflow-hidden">
   {#snippet trigger()}
     <AcerolaButtonIcon class="relative">
       <BellIcon size={20} />
@@ -60,7 +60,7 @@
   {/snippet}
 
   {#snippet content()}
-    <div class="overflow-y-auto flex flex-col gap-2">
+    <div class="max-h-96 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col gap-2">
       {#if notifications.length === 0}
         <p class="py-6 text-center text-sm text-muted-foreground">
           Nenhuma notificação
