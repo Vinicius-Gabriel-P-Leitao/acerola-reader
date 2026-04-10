@@ -98,7 +98,7 @@ impl ScannerGuard {
             let name = path
                 .file_name()
                 .and_then(|name| name.to_str())
-                .unwrap_or("desconhecido");
+                .unwrap_or("Unknown");
 
             return Err(FileError::not_allowed(name));
         }

@@ -14,22 +14,21 @@ pub enum ComicError {
     ///
     /// Mapeado a partir de [`DbError::UniqueViolation`] — indica que uma inserção
     /// violou a restrição de unicidade da tabela `comic_directory`.
-    #[error("Este quadrinho já existe na sua biblioteca.")]
+    #[error("Comic already exists in the library.")]
     AlreadyExists,
 
     /// O quadrinho solicitado não foi encontrado.
     ///
     /// Mapeado a partir de [`DbError::NotFound`] — ocorre quando uma operação
     /// usa `fetch_one` e nenhuma linha corresponde ao critério da query.
-    #[error("Quadrinho não encontrado.")]
+    #[error("Comic not found.")]
     NotFound,
 
     /// Os dados enviados violam uma regra de validação do banco.
     ///
     /// Mapeado a partir de [`DbError::CheckViolation`] — indica que um valor
     /// inserido ou atualizado não satisfaz uma restrição `CHECK` da tabela.
-    /// Geralmente representa um dado inválido enviado pela camada superior.
-    #[error("Dado inválido: {0}")]
+    #[error("Invalid data: {0}")]
     InvalidRequest(String),
 
     /// Referência a um registro relacionado que não existe.
@@ -37,7 +36,7 @@ pub enum ComicError {
     /// Mapeado a partir de [`DbError::ForeignKeyViolation`] — indica uma violação
     /// de integridade referencial. Geralmente significa que o dado pai foi removido
     /// ou nunca existiu, o que aponta para um problema de sincronização ou lógica.
-    #[error("Referência a um registro relacionado inválida ou inexistente.")]
+    #[error("Invalid or missing reference to a related record.")]
     IntegrityViolation,
 
     /// Falha genérica de sistema sem representação de negócio definida.
@@ -45,13 +44,13 @@ pub enum ComicError {
     /// Carrega uma mensagem descritiva do erro original. O erro técnico completo
     /// é logado antes desta variante ser construída, preservando o diagnóstico
     /// nos logs mesmo que o frontend receba apenas a mensagem genérica.
-    #[error("Falha no sistema ao tentar salvar o quadrinho.")]
+    #[error("System failure while processing the comic.")]
     SystemFailure(String),
 
     /// Erro de acesso ao sistema de arquivos.
     ///
     /// Propagado diretamente de [`std::io::Error`] via [`From`].
-    #[error("Erro de acesso a arquivos: {0}")]
+    #[error("Filesystem access error: {0}")]
     Io(std::io::Error),
 }
 
@@ -60,27 +59,27 @@ impl From<DbError> for ComicError {
     fn from(db_err: DbError) -> Self {
         match db_err {
             DbError::UniqueViolation => {
-                log::debug!("[ComicError] Quadrinho duplicado bloqueado pela constraint UNIQUE.");
+                log::debug!("[ComicError] Duplicate comic blocked by UNIQUE constraint.");
                 ComicError::AlreadyExists
             }
-            
+
             DbError::NotFound => {
-                log::warn!("[ComicError] Registro não encontrado — possível race condition ou id inválido.");
+                log::warn!("[ComicError] Record not found — possible race condition or invalid id.");
                 ComicError::NotFound
             }
-            
+
             DbError::CheckViolation => {
-                log::warn!("[ComicError] Dado inválido rejeitado pela constraint CHECK.");
+                log::warn!("[ComicError] Invalid data rejected by CHECK constraint.");
                 ComicError::InvalidRequest(DbError::CheckViolation.to_string())
             }
 
             DbError::ForeignKeyViolation => {
-                log::error!("[ComicError] Violação de integridade referencial — registro pai ausente ou removido.");
+                log::error!("[ComicError] Referential integrity violation — parent record missing or removed.");
                 ComicError::IntegrityViolation
             }
-            
+
             DbError::Internal(ref err) => {
-                log::error!("[ComicError] Erro interno de banco não mapeado: {:?}", err);
+                log::error!("[ComicError] Unmapped internal database error: {:?}", err);
                 ComicError::SystemFailure(db_err.to_string())
             }
         }
@@ -97,15 +96,17 @@ impl From<PathError> for ComicError {
     fn from(err: PathError) -> Self {
         match err {
             PathError::AccessDenied => {
-                log::warn!("[ComicError] Acesso negado pelo PathGuard — path fora do root permitido.");
+                log::warn!("[ComicError] Access denied by PathGuard — path outside allowed root.");
                 ComicError::InvalidRequest(err.to_string())
             }
+
             PathError::NotFound(_) => {
-                log::warn!("[ComicError] Path não encontrado: {}", err);
+                log::warn!("[ComicError] Path not found: {}", err);
                 ComicError::NotFound
             }
+
             PathError::ActionFailed(_) => {
-                log::error!("[ComicError] Falha na operação de arquivo: {}", err);
+                log::error!("[ComicError] Filesystem operation failed: {}", err);
                 ComicError::SystemFailure(err.to_string())
             }
         }

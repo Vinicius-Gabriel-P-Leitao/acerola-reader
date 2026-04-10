@@ -1,9 +1,5 @@
 use crate::infra::error::translations::db_error::DbError;
-use sqlx::{
-    query, query_as,
-    sqlite::{SqliteArguments, SqliteRow},
-    FromRow, Pool, Sqlite,
-};
+use sqlx::{ query, query_as, sqlite::{ SqliteArguments, SqliteRow }, FromRow, Pool, Sqlite };
 use std::marker::PhantomData;
 
 pub trait Entity {
@@ -15,12 +11,12 @@ pub trait Entity {
 pub trait Bindable {
     fn bind_insert<'query>(
         &'query self,
-        query: query::Query<'query, Sqlite, SqliteArguments<'query>>,
+        query: query::Query<'query, Sqlite, SqliteArguments<'query>>
     ) -> query::Query<'query, Sqlite, SqliteArguments<'query>>;
 
     fn bind_update<'q>(
         &'q self,
-        query: query::Query<'q, Sqlite, SqliteArguments<'q>>,
+        query: query::Query<'q, Sqlite, SqliteArguments<'q>>
     ) -> query::Query<'q, Sqlite, SqliteArguments<'q>>;
 }
 
@@ -70,10 +66,8 @@ impl<T: Entity> Repository<T> {
             "INSERT INTO {} ({}) VALUES ({}) RETURNING *",
             table, cols, placeholders
         );
-        let row = entity
-            .bind_insert(query(&sql))
-            .fetch_one(&self.pool)
-            .await?;
+        
+        let row = entity.bind_insert(query(&sql)).fetch_one(&self.pool).await?;
 
         Ok(T::from_row(&row)?)
     }
@@ -95,10 +89,8 @@ impl<T: Entity> Repository<T> {
             "UPDATE {} SET {} WHERE id = ? RETURNING *",
             table, set_clause
         );
-        let row = entity
-            .bind_update(query(&sql))
-            .fetch_one(&self.pool)
-            .await?;
+        
+        let row = entity.bind_update(query(&sql)).fetch_one(&self.pool).await?;
 
         Ok(T::from_row(&row)?)
     }
@@ -106,10 +98,7 @@ impl<T: Entity> Repository<T> {
     // prettier-ignore
     pub async fn delete(&self, id: i64) -> Result<(), DbError> {
         let table = T::table_name();
-        query(&format!("DELETE FROM {} WHERE id = ?", table))
-            .bind(id)
-            .execute(&self.pool)
-            .await?;
+        query(&format!("DELETE FROM {} WHERE id = ?", table)).bind(id).execute(&self.pool).await?;    
         Ok(())
     }
 }
@@ -117,11 +106,11 @@ impl<T: Entity> Repository<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        data::repositories::base::{Bindable, Entity, Repository},
+        data::repositories::base::{ Bindable, Entity, Repository },
         infra::error::translations::db_error::DbError,
         tests::utils::setup_test_db::setup_test_db,
     };
-    use sqlx::{query::Query, sqlite::SqliteArguments, FromRow, Sqlite};
+    use sqlx::{ query::Query, sqlite::SqliteArguments, FromRow, Sqlite };
 
     #[derive(Debug, FromRow, PartialEq)]
     struct FakeEntity {
@@ -144,14 +133,14 @@ mod tests {
     impl Bindable for FakeEntity {
         fn bind_insert<'query>(
             &'query self,
-            query: Query<'query, Sqlite, SqliteArguments<'query>>,
+            query: Query<'query, Sqlite, SqliteArguments<'query>>
         ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
             query.bind(self.id).bind(&self.name)
         }
 
         fn bind_update<'query>(
             &'query self,
-            query: Query<'query, Sqlite, SqliteArguments<'query>>,
+            query: Query<'query, Sqlite, SqliteArguments<'query>>
         ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
             query.bind(&self.name).bind(self.id) // name no SET, id no WHERE
         }
@@ -161,8 +150,7 @@ mod tests {
         let pool = setup_test_db().await;
 
         sqlx::query("CREATE TABLE fake_entity (id INTEGER PRIMARY KEY, name TEXT NOT NULL)")
-            .execute(&pool)
-            .await
+            .execute(&pool).await
             .unwrap();
 
         let repo = Repository::<FakeEntity>::new(pool.clone());
@@ -175,8 +163,7 @@ mod tests {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk'), (2, 'Vinland')")
-            .execute(&pool)
-            .await
+            .execute(&pool).await
             .unwrap();
 
         let result = repo.find_all().await.unwrap();
@@ -204,10 +191,7 @@ mod tests {
     async fn teste_atualizar() {
         let (pool, repo) = setup().await;
 
-        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')")
-            .execute(&pool)
-            .await
-            .unwrap();
+        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
 
         let updated = FakeEntity {
             id: 1,
@@ -223,10 +207,7 @@ mod tests {
     async fn teste_deletar() {
         let (pool, repo) = setup().await;
 
-        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')")
-            .execute(&pool)
-            .await
-            .unwrap();
+        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
 
         repo.delete(1).await.unwrap();
 

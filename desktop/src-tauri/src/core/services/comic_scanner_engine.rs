@@ -1,7 +1,7 @@
 use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::path::{Path, PathBuf};
-use tauri::{AppHandle, Emitter};
+use std::hash::{ Hash, Hasher };
+use std::path::{ Path, PathBuf };
+use tauri::{ AppHandle, Emitter };
 use tokio::fs;
 use tokio::sync::mpsc;
 
@@ -10,8 +10,8 @@ use crate::data::models::archive::comic_directory::ComicDirectory;
 use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
 use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
 use crate::infra::error::translations::comic_error::ComicError;
-use crate::infra::filesystem::files_guard::{ArchiveFileGuard, ScannerGuard};
-use crate::infra::filesystem::files_guard::{ArtworkFileGuard, FileGuard};
+use crate::infra::filesystem::files_guard::{ ArchiveFileGuard, ScannerGuard };
+use crate::infra::filesystem::files_guard::{ ArtworkFileGuard, FileGuard };
 use crate::infra::filesystem::path_guard::PathGuard;
 use crate::infra::filesystem::scanner_engine::ScannerEngine;
 
@@ -31,8 +31,7 @@ impl ComicScannerService {
     }
 
     pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let (tx, mut rx) = mpsc::channel(32);
         let file_guard = ScannerGuard::new();
@@ -48,6 +47,7 @@ impl ComicScannerService {
 
             // Emite o progresso e qual pasta está sendo escaneada
             self.process_entry(entry, &file_guard).await?;
+            // FIXME: Verificar se dá pra fazer um contrato no command que eu consiga usar
             let _ = app.emit("scan:progress", directory);
         }
 
@@ -57,7 +57,7 @@ impl ComicScannerService {
     async fn process_entry(
         &self,
         entry: crate::infra::filesystem::scanner_engine::DirectoryEntry,
-        _file_guard: &ScannerGuard,
+        _file_guard: &ScannerGuard
     ) -> Result<(), ComicError> {
         // FIXME: Colocar tratamento de erros
         let archive_guard = ArchiveFileGuard;
@@ -69,7 +69,10 @@ impl ComicScannerService {
         let mut banner: Option<String> = None;
 
         for file in entry.files {
-            let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            let name = file
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("");
 
             if archive_guard.is_allowed(&file).is_ok() {
                 comic_files.push(file);
@@ -96,11 +99,10 @@ impl ComicScannerService {
 
         let dir_meta = fs::metadata(&entry.directory).await?;
 
-        let dir_name = entry
-            .directory
+        let dir_name = entry.directory
             .file_name()
             .and_then(|name: &std::ffi::OsStr| name.to_str())
-            .unwrap_or("unknown")
+            .unwrap_or("Unknown")
             .to_string();
 
         // TODO: Criar pattern de padrão de nomes de arquivos .cbz .cbr e .pdf
@@ -133,7 +135,7 @@ impl ComicScannerService {
         let file_name = file
             .file_name()
             .and_then(|it| it.to_str())
-            .ok_or_else(|| ComicError::SystemFailure("Nome de arquivo inválido".into()))?;
+            .ok_or_else(|| ComicError::SystemFailure("File name is invalid".into()))?;
 
         let file_size = meta.len();
         let file_modified = modified_secs(&meta);
@@ -176,9 +178,7 @@ fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     // FIXME: Colocar tratamento de erros
     meta.modified()
         .map(|time: std::time::SystemTime| {
-            time.duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs() as i64
+            time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64
         })
         .unwrap_or(0)
 }

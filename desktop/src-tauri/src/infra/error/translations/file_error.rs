@@ -4,32 +4,32 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum FileError {
     /// A extensão do arquivo não é permitida por este guard.
-    #[error("Extensão não permitida: .{0}")]
+    #[error("Extension not allowed: .{0}")]
     ExtensionNotAllowed(String),
 
     /// O nome do arquivo não é permitido por este guard.
-    #[error("Arquivo não permitido: {0}")]
+    #[error("File not allowed: {0}")]
     FileNameNotAllowed(String),
 
     /// O arquivo não possui extensão.
-    #[error("Arquivo sem extensão.")]
+    #[error("File has no extension.")]
     MissingExtension,
 
     /// O caminho não contém nome de arquivo.
-    #[error("Caminho sem nome de arquivo.")]
+    #[error("Path has no file name.")]
     MissingFileName,
 
     /// Nenhum guard aceitou o arquivo — será ignorado pelo scanner.
     ///
     /// Ocorre no [`ScannerGuard`] quando todos os guards individuais rejeitam
     /// o arquivo. É um caso esperado durante o scan — não indica falha.
-    #[error("Arquivo não reconhecido pelo scanner: {0}")]
+    #[error("File not recognized by any guard: {0}")]
     NotAllowed(String),
 }
 
 impl FileError {
     pub fn not_allowed(name: &str) -> Self {
-        log::debug!("[FileError] Arquivo ignorado pelo scanner: {}", name);
+        log::debug!("[FileError] File skipped by scanner: {}", name);
         FileError::NotAllowed(name.to_string())
     }
 }

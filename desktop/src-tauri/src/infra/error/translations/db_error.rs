@@ -15,7 +15,7 @@ pub enum DbError {
     /// Mapeado a partir de [`sqlx::Error::RowNotFound`], que é retornado pelo sqlx
     /// quando `fetch_one` não encontra nenhuma linha. Operações com `fetch_all` e
     /// `fetch_optional` **não** disparam este erro — retornam vazio ou `None`.
-    #[error("Registro não encontrado.")]
+    #[error("Record not found.")]
     NotFound,
 
     /// Violação de restrição de unicidade (`UNIQUE` ou `PRIMARY KEY`).
@@ -23,7 +23,7 @@ pub enum DbError {
     /// Ocorre quando uma inserção ou atualização tenta criar um valor duplicado
     /// em uma coluna com restrição `UNIQUE`. No SQLite, cobre tanto `UNIQUE`
     /// quanto `PRIMARY KEY`, pois ambos compartilham o mesmo código de erro interno.
-    #[error("Violação de restrição de unicidade (Unique Constraint)")]
+    #[error("Unique constraint violation.")]
     UniqueViolation,
 
     /// Violação de chave estrangeira (`FOREIGN KEY`).
@@ -31,14 +31,14 @@ pub enum DbError {
     /// Ocorre quando uma inserção ou atualização referencia um id inexistente
     /// em outra tabela. No SQLite, **requer** `PRAGMA foreign_keys = ON` para ser
     /// ativado — sem ele, a restrição é ignorada silenciosamente.
-    #[error("Violação de chave estrangeira (Foreign Key Constraint)")]
+    #[error("Foreign key constraint violation.")]
     ForeignKeyViolation,
 
     /// Violação de restrição de verificação (`CHECK`).
     ///
     /// Ocorre quando um valor inserido ou atualizado não satisfaz a condição
     /// definida por uma cláusula `CHECK` na definição da tabela.
-    #[error("Violação de restrição de verificação (Check Constraint)")]
+    #[error("Check constraint violation.")]
     CheckViolation,
 
     /// Erro interno do banco de dados não mapeado explicitamente.
@@ -46,7 +46,7 @@ pub enum DbError {
     /// Captura qualquer erro do [`sqlx`] que não se encaixe nas variantes acima.
     /// O erro original é preservado para fins de diagnóstico — use `.to_string()`
     /// ou `{:?}` para inspecioná-lo em logs.
-    #[error("Erro interno do banco de dados: {0}")]
+    #[error("Internal database error: {0}")]
     Internal(sqlx::Error),
 }
 
@@ -64,22 +64,22 @@ impl From<sqlx::Error> for DbError {
 
         if let sqlx::Error::Database(ref db) = err {
             if db.is_unique_violation() {
-                log::debug!("[DbError] Constraint UNIQUE violada → UniqueViolation.");
+                log::debug!("[DbError] UNIQUE constraint violated → UniqueViolation.");
                 return DbError::UniqueViolation;
             }
 
             if db.is_foreign_key_violation() {
-                log::warn!("[DbError] Constraint FOREIGN KEY violada → ForeignKeyViolation.");
+                log::warn!("[DbError] FOREIGN KEY constraint violated → ForeignKeyViolation.");
                 return DbError::ForeignKeyViolation;
             }
 
             if db.is_check_violation() {
-                log::warn!("[DbError] Constraint CHECK violada → CheckViolation.");
+                log::warn!("[DbError] CHECK constraint violated → CheckViolation.");
                 return DbError::CheckViolation;
             }
         }
 
-        log::error!("[DbError] Erro não mapeado → Internal: {:?}", err);
+        log::error!("[DbError] Unmapped error → Internal: {:?}", err);
         DbError::Internal(err)
     }
 }
