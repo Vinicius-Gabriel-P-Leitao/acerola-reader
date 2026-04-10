@@ -1,25 +1,5 @@
 use std::path::Path;
-
-// FIXME: Colocar tratamento de erros no código todo.
-
-#[derive(Debug)]
-pub enum FileGuardError {
-    ExtensionNotAllowed(String),
-    FileNameNotAllowed(String),
-    MissingExtension,
-    MissingFileName,
-}
-
-impl std::fmt::Display for FileGuardError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Self::ExtensionNotAllowed(ext) => write!(f, "Extension not allowed: .{}", ext),
-            Self::FileNameNotAllowed(name) => write!(f, "File not allowed: {}", name),
-            Self::MissingExtension => write!(f, "File has no extension"),
-            Self::MissingFileName => write!(f, "Path has no file name"),
-        }
-    }
-}
+use crate::infra::error::translations::file_error::FileError;
 
 pub struct ComicFileGuard;
 pub struct ArchiveFileGuard;
@@ -27,62 +7,66 @@ pub struct MetadataFileGuard;
 pub struct ArtworkFileGuard;
 
 pub trait FileGuard: Send + Sync {
-    fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError>;
+    fn is_allowed(&self, path: &Path) -> Result<(), FileError>;
 }
 
 impl FileGuard for ComicFileGuard {
-    fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError> {
+    fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let ext = path
             .extension()
             .and_then(|ext| ext.to_str())
-            .ok_or(FileGuardError::MissingExtension)?;
+            .ok_or(FileError::MissingExtension)?;
 
         match ext {
             "cbz" | "cbr" | "pdf" => Ok(()),
-            _ => Err(FileGuardError::ExtensionNotAllowed(ext.to_string())),
+            _ => Err(FileError::ExtensionNotAllowed(ext.to_string())),
         }
     }
 }
 
 impl FileGuard for ArchiveFileGuard {
-    fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError> {
+    fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let ext = path
             .extension()
             .and_then(|ext| ext.to_str())
-            .ok_or(FileGuardError::MissingExtension)?;
+            .ok_or(FileError::MissingExtension)?;
 
         match ext {
             "cbz" | "cbr" => Ok(()),
-            _ => Err(FileGuardError::ExtensionNotAllowed(ext.to_string())),
+            _ => Err(FileError::ExtensionNotAllowed(ext.to_string())),
         }
     }
 }
 
 impl FileGuard for MetadataFileGuard {
-    fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError> {
+    fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let name = path
             .file_name()
             .and_then(|name| name.to_str())
-            .ok_or(FileGuardError::MissingFileName)?;
+            .ok_or(FileError::MissingFileName)?;
 
         match name {
             "ComicInfo.xml" => Ok(()),
-            _ => Err(FileGuardError::FileNameNotAllowed(name.to_string())),
+            _ => Err(FileError::FileNameNotAllowed(name.to_string())),
         }
     }
 }
 
 impl FileGuard for ArtworkFileGuard {
-    fn is_allowed(&self, path: &Path) -> Result<(), FileGuardError> {
+    fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let name = path
             .file_name()
             .and_then(|name| name.to_str())
-            .ok_or(FileGuardError::MissingFileName)?;
+            .ok_or(FileError::MissingFileName)?;
 
         match name {
-            "cover.png" | "cover.jpg" | "cover.jpeg" | "banner.png" | "banner.jpg"
+            | "cover.png"
+            | "cover.jpg"
+            | "cover.jpeg"
+            | "banner.png"
+            | "banner.jpg"
             | "banner.jpeg" => Ok(()),
-            _ => Err(FileGuardError::FileNameNotAllowed(name.to_string())),
+            _ => Err(FileError::FileNameNotAllowed(name.to_string())),
         }
     }
 }
@@ -97,29 +81,36 @@ impl ScannerGuard {
             guards: vec![
                 Box::new(ComicFileGuard),
                 Box::new(MetadataFileGuard),
-                Box::new(ArtworkFileGuard),
+                Box::new(ArtworkFileGuard)
             ],
         }
     }
 
-    pub fn is_allowed(&self, path: &Path) -> Result<(), Vec<FileGuardError>> {
-        let errors: Vec<FileGuardError> = self
-            .guards
-            .iter()
-            .filter_map(|guard| guard.is_allowed(path).err())
-            .collect();
+    /// Retorna `Ok` se ao menos um guard aceitar o arquivo.
+    ///
+    /// O scanner usa lógica de OR — um arquivo é válido se qualquer guard
+    /// o reconhecer. Retorna [`FileError::NotAllowed`] se nenhum aceitar,
+    /// o que é esperado para arquivos irrelevantes (`.db`, `.txt`, etc.).
+    pub fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
+        let all_rejected = self.guards.iter().all(|guard| guard.is_allowed(path).is_err());
 
-        if errors.len() == self.guards.len() {
-            Err(errors)
-        } else {
-            Ok(())
+        if all_rejected {
+            let name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("desconhecido");
+
+            return Err(FileError::not_allowed(name));
         }
+
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ArtworkFileGuard, ComicFileGuard, FileGuard, MetadataFileGuard, ScannerGuard};
+    use super::{ ArtworkFileGuard, ComicFileGuard, FileGuard, MetadataFileGuard, ScannerGuard };
+    use crate::infra::error::translations::file_error::FileError;
     use std::path::Path;
 
     // NOTE: ComicFileGuard
@@ -136,14 +127,13 @@ mod tests {
         let guard = ComicFileGuard;
         let result = guard.is_allowed(Path::new("berserk.exe"));
 
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains(".exe"));
+        assert!(matches!(result, Err(FileError::ExtensionNotAllowed(ext)) if ext == "exe"));
     }
 
     #[test]
     fn teste_comic_sem_extensao() {
         let guard = ComicFileGuard;
-        assert!(guard.is_allowed(Path::new("berserk")).is_err());
+        assert!(matches!(guard.is_allowed(Path::new("berserk")), Err(FileError::MissingExtension)));
     }
 
     // NOTE: MetadataFileGuard
@@ -158,8 +148,7 @@ mod tests {
         let guard = MetadataFileGuard;
         let result = guard.is_allowed(Path::new("info.xml"));
 
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("info.xml"));
+        assert!(matches!(result, Err(FileError::FileNameNotAllowed(name)) if name == "info.xml"));
     }
 
     // NOTE: ArtworkFileGuard
@@ -179,8 +168,9 @@ mod tests {
         let guard = ArtworkFileGuard;
         let result = guard.is_allowed(Path::new("thumbnail.png"));
 
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("thumbnail.png"));
+        assert!(
+            matches!(result, Err(FileError::FileNameNotAllowed(name)) if name == "thumbnail.png")
+        );
     }
 
     // NOTE: ScannerGuard
@@ -206,7 +196,7 @@ mod tests {
     fn teste_scanner_rejeita_arquivo_desconhecido() {
         let guard = ScannerGuard::new();
         let result = guard.is_allowed(Path::new("script.sh"));
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err().len(), 3); // todos os guards rejeitaram
+
+        assert!(matches!(result, Err(FileError::NotAllowed(_))));
     }
 }

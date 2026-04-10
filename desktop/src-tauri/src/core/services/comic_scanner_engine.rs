@@ -31,11 +31,8 @@ impl ComicScannerService {
     }
 
     pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), ComicError> {
-        // INFO: Valida se o path está dentro do root permitido
-        // FIXME: Colocar tratamento de erros
         self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })
-            .map_err(|error: String| ComicError::SystemFailure(error))?;
+            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let (tx, mut rx) = mpsc::channel(32);
         let file_guard = ScannerGuard::new();

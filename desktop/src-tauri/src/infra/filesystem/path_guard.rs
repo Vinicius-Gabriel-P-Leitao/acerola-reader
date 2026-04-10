@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::{ Path, PathBuf };
+use crate::infra::error::translations::path_error::PathError;
 
 pub struct PathGuard {
     allowed_root: PathBuf,
 }
 
-// FIXME: Colocar tratamento de erros
 impl PathGuard {
     pub fn new(root: PathBuf) -> Self {
         Self {
@@ -12,29 +12,28 @@ impl PathGuard {
         }
     }
 
-    fn is_valid(&self, path: &Path) -> bool {
-        match path.canonicalize() {
-            Ok(p) => p.starts_with(&self.allowed_root),
-            Err(_) => false,
+    fn validate(&self, path: &Path) -> Result<(), PathError> {
+        let canonical = path.canonicalize().map_err(|_| PathError::not_found(path))?;
+
+        if !canonical.starts_with(&self.allowed_root) {
+            return Err(PathError::access_denied(&canonical, &self.allowed_root));
         }
+
+        Ok(())
     }
 
-    pub fn execute<F, R, E>(&self, path: &Path, action: F) -> Result<R, String>
-    where
-        F: FnOnce(&Path) -> Result<R, E>,
-        E: std::fmt::Display,
+    pub fn execute<F, R, E>(&self, path: &Path, action: F) -> Result<R, PathError>
+        where F: FnOnce(&Path) -> Result<R, E>, E: std::fmt::Display
     {
-        if !self.is_valid(path) {
-            return Err("Access denied: path outside the allowed directory.".into());
-        }
-
-        action(path).map_err(|error: E| error.to_string())
+        self.validate(path)?;
+        action(path).map_err(|err: E| PathError::action_failed(path, err))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::PathGuard;
+    use crate::infra::error::translations::path_error::PathError;
     use std::fs;
     use tempfile::tempdir;
 
@@ -54,7 +53,7 @@ mod tests {
     #[test]
     fn teste_caminho_fora_do_root_e_negado() {
         let root = tempdir().unwrap();
-        let outside = tempdir().unwrap(); // diretório diferente do root
+        let outside = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
 
         let file = outside.path().join("arquivo.cbz");
@@ -62,8 +61,7 @@ mod tests {
 
         let result = guard.execute(&file, |_| -> Result<(), String> { Ok(()) });
 
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Access denied"));
+        assert!(matches!(result, Err(PathError::AccessDenied)));
     }
 
     #[test]
@@ -71,11 +69,11 @@ mod tests {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
 
-        let fake = root.path().join("nao_existe.cbz"); // não cria o arquivo
+        let fake = root.path().join("nao_existe.cbz");
 
         let result = guard.execute(&fake, |_| -> Result<(), String> { Ok(()) });
 
-        assert!(result.is_err());
+        assert!(matches!(result, Err(PathError::NotFound(_))));
     }
 
     #[test]
@@ -83,11 +81,26 @@ mod tests {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
 
-        // tentativa de sair do root via ../
         let traversal = root.path().join("../arquivo_malicioso.cbz");
 
         let result = guard.execute(&traversal, |_| -> Result<(), String> { Ok(()) });
 
-        assert!(result.is_err());
+        assert!(matches!(result, Err(PathError::AccessDenied) | Err(PathError::NotFound(_))));
+    }
+
+    #[test]
+    fn teste_action_failure_e_propagado() {
+        let root = tempdir().unwrap();
+        let guard = PathGuard::new(root.path().to_path_buf());
+
+        let file = root.path().join("arquivo.cbz");
+        fs::write(&file, b"").unwrap();
+
+        let result = guard.execute(
+            &file,
+            |_| -> Result<(), String> { Err("falha simulada".to_string()) }
+        );
+
+        assert!(matches!(result, Err(PathError::ActionFailed(_))));
     }
 }

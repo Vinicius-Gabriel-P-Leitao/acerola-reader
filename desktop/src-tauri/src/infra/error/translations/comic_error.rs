@@ -1,4 +1,5 @@
 use crate::infra::error::translations::db_error::DbError;
+use crate::infra::error::translations::path_error::PathError;
 use thiserror::Error;
 
 /// Representa os erros de negócio relacionados a quadrinhos.
@@ -89,5 +90,24 @@ impl From<DbError> for ComicError {
 impl From<std::io::Error> for ComicError {
     fn from(io_err: std::io::Error) -> Self {
         ComicError::Io(io_err)
+    }
+}
+
+impl From<PathError> for ComicError {
+    fn from(err: PathError) -> Self {
+        match err {
+            PathError::AccessDenied => {
+                log::warn!("[ComicError] Acesso negado pelo PathGuard — path fora do root permitido.");
+                ComicError::InvalidRequest(err.to_string())
+            }
+            PathError::NotFound(_) => {
+                log::warn!("[ComicError] Path não encontrado: {}", err);
+                ComicError::NotFound
+            }
+            PathError::ActionFailed(_) => {
+                log::error!("[ComicError] Falha na operação de arquivo: {}", err);
+                ComicError::SystemFailure(err.to_string())
+            }
+        }
     }
 }

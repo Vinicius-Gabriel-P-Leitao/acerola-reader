@@ -1,4 +1,6 @@
 pub mod translations {
     pub mod comic_error;
     pub mod db_error;
+    pub mod file_error;
+    pub mod path_error;
 }
