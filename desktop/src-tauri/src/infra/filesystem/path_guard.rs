@@ -1,4 +1,4 @@
-use std::path::{ Path, PathBuf };
+use std::path::{Path, PathBuf};
 
 pub struct PathGuard {
     allowed_root: PathBuf,
@@ -7,7 +7,9 @@ pub struct PathGuard {
 // FIXME: Colocar tratamento de erros
 impl PathGuard {
     pub fn new(root: PathBuf) -> Self {
-        Self { allowed_root: root.canonicalize().unwrap_or(root) }
+        Self {
+            allowed_root: root.canonicalize().unwrap_or(root),
+        }
     }
 
     fn is_valid(&self, path: &Path) -> bool {
@@ -18,7 +20,9 @@ impl PathGuard {
     }
 
     pub fn execute<F, R, E>(&self, path: &Path, action: F) -> Result<R, String>
-        where F: FnOnce(&Path) -> Result<R, E>, E: std::fmt::Display
+    where
+        F: FnOnce(&Path) -> Result<R, E>,
+        E: std::fmt::Display,
     {
         if !self.is_valid(path) {
             return Err("Access denied: path outside the allowed directory.".into());
@@ -30,9 +34,9 @@ impl PathGuard {
 
 #[cfg(test)]
 mod tests {
-    use tempfile::tempdir;
     use super::PathGuard;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn teste_caminho_valido_dentro_do_root() {

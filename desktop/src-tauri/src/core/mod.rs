@@ -1,3 +1,3 @@
 pub mod services {
-  pub mod comic_scanner_engine;
+    pub mod comic_scanner_engine;
 }

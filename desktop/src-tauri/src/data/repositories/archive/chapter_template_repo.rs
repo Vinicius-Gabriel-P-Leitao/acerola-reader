@@ -16,10 +16,10 @@ impl ChapterTemplateRepository {
 
 #[cfg(test)]
 mod tests {
+    use super::ChapterTemplateRepository;
     use crate::data::models::archive::chapter_template::ChapterTemplate;
     use crate::infra::error::translations::db_error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
-    use super::ChapterTemplateRepository;
 
     fn template() -> ChapterTemplate {
         ChapterTemplate {
@@ -54,7 +54,10 @@ mod tests {
 
         repo.base.insert(&template()).await.unwrap();
 
-        let updated = ChapterTemplate { label: "Preset Deluxe".to_string(), ..template() };
+        let updated = ChapterTemplate {
+            label: "Preset Deluxe".to_string(),
+            ..template()
+        };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.label, "Preset Deluxe");
@@ -92,8 +95,8 @@ mod tests {
         let result = repo.base.update(&template()).await;
 
         assert!(
-            matches!(result, Err(DbError::Internal(_))),
-            "Deveria ter retornado Internal(RowNotFound), mas veio: {:?}",
+            matches!(result, Err(DbError::NotFound)),
+            "Deveria ter retornado NotFound, mas veio: {:?}",
             result
         );
     }

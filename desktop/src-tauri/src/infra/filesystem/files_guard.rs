@@ -80,11 +80,7 @@ impl FileGuard for ArtworkFileGuard {
             .ok_or(FileGuardError::MissingFileName)?;
 
         match name {
-            | "cover.png"
-            | "cover.jpg"
-            | "cover.jpeg"
-            | "banner.png"
-            | "banner.jpg"
+            "cover.png" | "cover.jpg" | "cover.jpeg" | "banner.png" | "banner.jpg"
             | "banner.jpeg" => Ok(()),
             _ => Err(FileGuardError::FileNameNotAllowed(name.to_string())),
         }
@@ -101,13 +97,14 @@ impl ScannerGuard {
             guards: vec![
                 Box::new(ComicFileGuard),
                 Box::new(MetadataFileGuard),
-                Box::new(ArtworkFileGuard)
+                Box::new(ArtworkFileGuard),
             ],
         }
     }
 
     pub fn is_allowed(&self, path: &Path) -> Result<(), Vec<FileGuardError>> {
-        let errors: Vec<FileGuardError> = self.guards
+        let errors: Vec<FileGuardError> = self
+            .guards
             .iter()
             .filter_map(|guard| guard.is_allowed(path).err())
             .collect();
@@ -122,7 +119,7 @@ impl ScannerGuard {
 
 #[cfg(test)]
 mod tests {
-    use super::{ ComicFileGuard, MetadataFileGuard, ArtworkFileGuard, ScannerGuard, FileGuard };
+    use super::{ArtworkFileGuard, ComicFileGuard, FileGuard, MetadataFileGuard, ScannerGuard};
     use std::path::Path;
 
     // NOTE: ComicFileGuard

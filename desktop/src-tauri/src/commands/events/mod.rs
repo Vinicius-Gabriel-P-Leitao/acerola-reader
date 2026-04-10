@@ -1,3 +1,3 @@
 pub mod shared {
-  pub mod scanner_event;
+    pub mod scanner_event;
 }

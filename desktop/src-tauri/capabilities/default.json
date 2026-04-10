@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "description": "Capability for the main window",
   "identifier": "default",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:window:allow-start-dragging",
     "core:window:allow-toggle-maximize",
@@ -15,6 +17,7 @@
     "store:default",
     "core:default",
     "fs:default",
-    "sql:default"
+    "sql:default",
+    "log:default"
   ]
 }

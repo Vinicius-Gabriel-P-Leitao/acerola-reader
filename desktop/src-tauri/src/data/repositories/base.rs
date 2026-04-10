@@ -1,6 +1,10 @@
-use sqlx::{ query, query_as, FromRow, Pool, Sqlite, sqlite::{ SqliteArguments, SqliteRow } };
 use crate::infra::error::translations::db_error::DbError;
-use std::{ marker::PhantomData };
+use sqlx::{
+    query, query_as,
+    sqlite::{SqliteArguments, SqliteRow},
+    FromRow, Pool, Sqlite,
+};
+use std::marker::PhantomData;
 
 pub trait Entity {
     fn columns() -> &'static [&'static str];
@@ -11,12 +15,12 @@ pub trait Entity {
 pub trait Bindable {
     fn bind_insert<'query>(
         &'query self,
-        query: query::Query<'query, Sqlite, SqliteArguments<'query>>
+        query: query::Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> query::Query<'query, Sqlite, SqliteArguments<'query>>;
 
     fn bind_update<'q>(
         &'q self,
-        query: query::Query<'q, Sqlite, SqliteArguments<'q>>
+        query: query::Query<'q, Sqlite, SqliteArguments<'q>>,
     ) -> query::Query<'q, Sqlite, SqliteArguments<'q>>;
 }
 
@@ -27,46 +31,74 @@ pub struct Repository<T: Entity> {
 
 impl<T: Entity> Repository<T> {
     pub fn new(pool: Pool<Sqlite>) -> Self {
-        Self { pool, _marker: PhantomData }
+        Self {
+            pool,
+            _marker: PhantomData,
+        }
     }
 
     // prettier-ignore
     pub async fn find_all(&self) -> Result<Vec<T>, DbError>
-        where T: Entity + for<'row> FromRow<'row, SqliteRow> + Send + Unpin
+    where
+        T: Entity + for<'row> FromRow<'row, SqliteRow> + Send + Unpin,
     {
         let cols = T::columns().join(", ");
         let table = T::table_name();
 
         // prettier-ignore
-        let result= query_as::<_, T>(&format!("SELECT {} FROM {}", cols, table)).fetch_all(&self.pool).await?;
+        let result = query_as::<_, T>(&format!("SELECT {} FROM {}", cols, table))
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(result)
     }
 
     // prettier-ignore
     pub async fn insert(&self, entity: &T) -> Result<T, DbError>
-      where T: Entity + Bindable + for<'row> FromRow<'row, SqliteRow> + Send + Unpin
+    where
+        T: Entity + Bindable + for<'row> FromRow<'row, SqliteRow> + Send + Unpin,
     {
         let table = T::table_name();
         let cols = T::columns().join(", ");
-        let placeholders = T::columns().iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let placeholders = T::columns()
+            .iter()
+            .map(|_| "?")
+            .collect::<Vec<_>>()
+            .join(", ");
 
-        let sql = format!("INSERT INTO {} ({}) VALUES ({}) RETURNING *", table, cols, placeholders);
-        let row = entity.bind_insert(query(&sql)).fetch_one(&self.pool).await?;
+        let sql = format!(
+            "INSERT INTO {} ({}) VALUES ({}) RETURNING *",
+            table, cols, placeholders
+        );
+        let row = entity
+            .bind_insert(query(&sql))
+            .fetch_one(&self.pool)
+            .await?;
 
-        Ok(T::from_row(&row)?) 
+        Ok(T::from_row(&row)?)
     }
 
     // prettier-ignore
     pub async fn update(&self, entity: &T) -> Result<T, DbError>
-        where T: Entity + Bindable + for<'r> FromRow<'r, SqliteRow> + Send + Unpin
+    where
+        T: Entity + Bindable + for<'r> FromRow<'r, SqliteRow> + Send + Unpin,
     {
         let table = T::table_name();
-        let set_clause = T::columns().iter().filter(|col| **col != "id")
-            .map(|col| format!("{} = ?", col)).collect::<Vec<_>>().join(", ");
+        let set_clause = T::columns()
+            .iter()
+            .filter(|col| **col != "id")
+            .map(|col| format!("{} = ?", col))
+            .collect::<Vec<_>>()
+            .join(", ");
 
-        let sql = format!("UPDATE {} SET {} WHERE id = ? RETURNING *", table, set_clause);
-        let row = entity.bind_update(query(&sql)).fetch_one(&self.pool).await?;
+        let sql = format!(
+            "UPDATE {} SET {} WHERE id = ? RETURNING *",
+            table, set_clause
+        );
+        let row = entity
+            .bind_update(query(&sql))
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(T::from_row(&row)?)
     }
@@ -74,19 +106,22 @@ impl<T: Entity> Repository<T> {
     // prettier-ignore
     pub async fn delete(&self, id: i64) -> Result<(), DbError> {
         let table = T::table_name();
-        query(&format!("DELETE FROM {} WHERE id = ?", table)).bind(id).execute(&self.pool).await?;
+        query(&format!("DELETE FROM {} WHERE id = ?", table))
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use sqlx::{ FromRow, sqlite::SqliteArguments, query::Query, Sqlite };
     use crate::{
-        data::repositories::base::{ Bindable, Entity, Repository },
+        data::repositories::base::{Bindable, Entity, Repository},
         infra::error::translations::db_error::DbError,
         tests::utils::setup_test_db::setup_test_db,
     };
+    use sqlx::{query::Query, sqlite::SqliteArguments, FromRow, Sqlite};
 
     #[derive(Debug, FromRow, PartialEq)]
     struct FakeEntity {
@@ -109,14 +144,14 @@ mod tests {
     impl Bindable for FakeEntity {
         fn bind_insert<'query>(
             &'query self,
-            query: Query<'query, Sqlite, SqliteArguments<'query>>
+            query: Query<'query, Sqlite, SqliteArguments<'query>>,
         ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
             query.bind(self.id).bind(&self.name)
         }
 
         fn bind_update<'query>(
             &'query self,
-            query: Query<'query, Sqlite, SqliteArguments<'query>>
+            query: Query<'query, Sqlite, SqliteArguments<'query>>,
         ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
             query.bind(&self.name).bind(self.id) // name no SET, id no WHERE
         }
@@ -126,7 +161,8 @@ mod tests {
         let pool = setup_test_db().await;
 
         sqlx::query("CREATE TABLE fake_entity (id INTEGER PRIMARY KEY, name TEXT NOT NULL)")
-            .execute(&pool).await
+            .execute(&pool)
+            .await
             .unwrap();
 
         let repo = Repository::<FakeEntity>::new(pool.clone());
@@ -139,7 +175,8 @@ mod tests {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk'), (2, 'Vinland')")
-            .execute(&pool).await
+            .execute(&pool)
+            .await
             .unwrap();
 
         let result = repo.find_all().await.unwrap();
@@ -153,7 +190,10 @@ mod tests {
     async fn teste_inserir() {
         let (_, repo) = setup().await;
 
-        let entity = FakeEntity { id: 1, name: "Berserk".to_string() };
+        let entity = FakeEntity {
+            id: 1,
+            name: "Berserk".to_string(),
+        };
         let result = repo.insert(&entity).await.unwrap();
 
         assert_eq!(result.id, 1);
@@ -164,9 +204,15 @@ mod tests {
     async fn teste_atualizar() {
         let (pool, repo) = setup().await;
 
-        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
+        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')")
+            .execute(&pool)
+            .await
+            .unwrap();
 
-        let updated = FakeEntity { id: 1, name: "Vinland".to_string() };
+        let updated = FakeEntity {
+            id: 1,
+            name: "Vinland".to_string(),
+        };
         let result = repo.update(&updated).await.unwrap();
 
         assert_eq!(result.id, 1);
@@ -177,7 +223,10 @@ mod tests {
     async fn teste_deletar() {
         let (pool, repo) = setup().await;
 
-        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
+        sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')")
+            .execute(&pool)
+            .await
+            .unwrap();
 
         repo.delete(1).await.unwrap();
 
@@ -190,7 +239,10 @@ mod tests {
     async fn teste_erro_ao_inserir_duplicado() {
         let (_, repo) = setup().await;
 
-        let entity = FakeEntity { id: 1, name: "Berserk".to_string() };
+        let entity = FakeEntity {
+            id: 1,
+            name: "Berserk".to_string(),
+        };
         repo.insert(&entity).await.unwrap();
 
         let result = repo.insert(&entity).await;
@@ -206,13 +258,16 @@ mod tests {
     async fn teste_erro_ao_atualizar_inexistente() {
         let (_, repo) = setup().await;
 
-        let entity = FakeEntity { id: 999, name: "Inexistente".to_string() };
+        let entity = FakeEntity {
+            id: 999,
+            name: "Inexistente".to_string(),
+        };
         let result = repo.update(&entity).await;
 
-        // Se o seu fetch_one retornar erro quando não encontrar (ou se você quiser testar
-        // falhas de banco de dados genéricas), você pode testar o Internal.
-        // Nota: O SQLx fetch_one retorna RowNotFound se a query não retornar linhas.
-        // Verifique se o seu DbError trata o RowNotFound!
-        assert!(matches!(result, Err(DbError::Internal(_))));
+        assert!(
+            matches!(result, Err(DbError::NotFound)),
+            "Deveria ter retornado NotFound, mas veio: {:?}",
+            result
+        );
     }
 }

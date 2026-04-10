@@ -1,2 +1,2 @@
-pub mod features;
 pub mod events;
+pub mod features;

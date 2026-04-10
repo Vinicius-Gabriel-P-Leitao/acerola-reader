@@ -1,5 +1,5 @@
 use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::base::{ Repository, Entity };
+use crate::data::repositories::base::{Entity, Repository};
 use crate::infra::error::translations::db_error::DbError;
 use sqlx::SqlitePool;
 
@@ -21,9 +21,13 @@ impl ComicRepository {
         let cols = ComicDirectory::columns().join(", ");
 
         // prettier-ignore
-        let result =  sqlx::query_as::<_, ComicDirectory>(
-            &format!("SELECT {} FROM {} WHERE name = ?", cols, table)
-        ).bind(name).fetch_optional(&self.pool).await?;
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "SELECT {} FROM {} WHERE name = ?",
+            cols, table
+        ))
+        .bind(name)
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(result)
     }
@@ -31,10 +35,10 @@ impl ComicRepository {
 
 #[cfg(test)]
 mod tests {
+    use super::ComicRepository;
     use crate::data::models::archive::comic_directory::ComicDirectory;
     use crate::infra::error::translations::db_error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
-    use super::ComicRepository;
 
     fn berserk() -> ComicDirectory {
         ComicDirectory {
@@ -84,7 +88,10 @@ mod tests {
 
         repo.base.insert(&berserk()).await.unwrap();
 
-        let updated = ComicDirectory { name: "Berserk Deluxe".to_string(), ..berserk() };
+        let updated = ComicDirectory {
+            name: "Berserk Deluxe".to_string(),
+            ..berserk()
+        };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.name, "Berserk Deluxe");
@@ -131,8 +138,8 @@ mod tests {
         let result = repo.base.update(&berserk()).await;
 
         assert!(
-            matches!(result, Err(DbError::Internal(_))),
-            "Deveria ter retornado Internal(RowNotFound), mas veio: {:?}",
+            matches!(result, Err(DbError::NotFound)),
+            "Deveria ter retornado NotFound, mas veio: {:?}",
             result
         );
     }

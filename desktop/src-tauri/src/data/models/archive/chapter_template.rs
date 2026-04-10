@@ -1,6 +1,6 @@
-use sqlx::{ Sqlite, sqlite::SqliteArguments, query::Query };
-use crate::data::repositories::base::{ Entity, Bindable };
-use serde::{ Deserialize, Serialize };
+use crate::data::repositories::base::{Bindable, Entity};
+use serde::{Deserialize, Serialize};
+use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
 /// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
 impl Entity for ChapterTemplate {
@@ -19,7 +19,7 @@ impl Entity for ChapterTemplate {
 impl Bindable for ChapterTemplate {
     fn bind_insert<'query>(
         &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>
+        query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(self.id)
@@ -31,7 +31,7 @@ impl Bindable for ChapterTemplate {
 
     fn bind_update<'query>(
         &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>
+        query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(&self.label)

@@ -1,10 +1,10 @@
-mod data;
-mod core;
-mod infra;
 mod commands;
+mod core;
+mod data;
+mod infra;
 
+use commands::features::library::{comic_scanner_cmd, select_folder_cmd};
 use tauri::Manager;
-use commands::features::library::{ select_folder_cmd, comic_scanner_cmd };
 
 #[cfg(test)]
 pub mod tests;
@@ -29,8 +29,11 @@ fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> 
     builder.plugin(
         // prettier-ignore
         tauri_plugin_sql::Builder::new()
-            .add_migrations("sqlite:acerola.db", crate::infra::db::migrations::get_migrations())
-            .build()
+            .add_migrations(
+                "sqlite:acerola.db",
+                crate::infra::db::migrations::get_migrations(),
+            )
+            .build(),
     )
 }
 
@@ -44,30 +47,39 @@ fn configure_all_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default().plugin(
+        tauri_plugin_log::Builder::new()
+            .level(tauri_plugin_log::log::LevelFilter::Info)
+            .build(),
+    );
     let builder = configure_all_plugins(builder);
 
     builder
         .setup(|app| {
             let handle = app.handle().clone();
             // prettier-ignore
-            let db_path = app.path().app_data_dir().expect("Failed to resolve app_data_dir").join("acerola.db");
+            let db_path = app
+                .path()
+                .app_data_dir()
+                .expect("Failed to resolve app_data_dir")
+                .join("acerola.db");
 
             tauri::async_runtime::block_on(async move {
-                let pool = sqlx::SqlitePool
-                    ::connect(&format!("sqlite:{}?mode=rwc", db_path.to_string_lossy())).await
-                    .expect("Failed to connect to the database.");
+                let pool = sqlx::SqlitePool::connect(&format!(
+                    "sqlite:{}?mode=rwc",
+                    db_path.to_string_lossy()
+                ))
+                .await
+                .expect("Failed to connect to the database.");
 
                 handle.manage(pool);
             });
             Ok(())
         })
-        .invoke_handler(
-            tauri::generate_handler![
-                select_folder_cmd::select_folder,
-                comic_scanner_cmd::comic_scanner
-            ]
-        )
+        .invoke_handler(tauri::generate_handler![
+            select_folder_cmd::select_folder,
+            comic_scanner_cmd::comic_scanner
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

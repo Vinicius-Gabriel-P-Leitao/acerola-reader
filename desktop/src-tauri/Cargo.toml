@@ -41,6 +41,7 @@ tauri-plugin-fs = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 sqlx = "0.8.6"
 thiserror = "2.0.18"
+tauri-plugin-log = "2"
 
 [dev-dependencies]
 tempfile = "3"
