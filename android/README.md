@@ -8,9 +8,13 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Você a
 
 Aqui estão alguns exemplos de como o Acerola funciona:
 
-| Home | Configuração Manga | Configuração Geral | Histórico | Modos de leitura | Webtom |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| <img src="docs/home-screen.png" width="100"> | <img src="docs/config-manga-screen.png" width="100"> | <img src="docs/config-screen.png" width="100"> | <img src="docs/history-screen.png" width="100"> | <img src="docs/reader-screen-modes.png" width="100"> | <img src="docs/webtom-reader-mode.png" width="100"> |
+| Home | Configuração Manga | Configuração Geral |
+| :---: | :---: | :---: |
+| <img src="docs/home-screen.png" width="120"> | <img src="docs/config-manga-screen.png" width="120"> | <img src="docs/config-screen.png" width="120"> |
+
+| Histórico | Modos de leitura | Webtoon |
+| :---: | :---: | :---: |
+| <img src="docs/history-screen.png" width="120"> | <img src="docs/reader-screen-modes.png" width="120"> | <img src="docs/webtom-reader-mode.png" width="120"> |
 
 ---
 
