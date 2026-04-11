@@ -24,6 +24,8 @@ import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
 import br.acerola.comic.ui.R
 
+private val itemModifier = Modifier.padding(horizontal = 16.dp)
+
 @Composable
 private fun SectionHeader(title: String) {
     Text(
@@ -51,7 +53,8 @@ fun Comic.Layout.ConfigSection(
     scope.item {
         Comic.Component.PaginationPreference(
             selected = uiState.selectedChapterPerPage,
-            onSelect = { onAction(ComicAction.UpdatePageSize(it)) }
+            onSelect = { onAction(ComicAction.UpdatePageSize(it)) },
+            modifier = itemModifier
         )
     }
 
@@ -68,7 +71,8 @@ fun Comic.Layout.ConfigSection(
         Comic.Component.ComicCategorySelector(
             selectedCategory = uiState.manga.category,
             allCategories = uiState.allCategories,
-            onUpdateMangaCategory = { id -> onAction(ComicAction.UpdateCategory(id)) }
+            onUpdateMangaCategory = { id -> onAction(ComicAction.UpdateCategory(id)) },
+            modifier = itemModifier
         )
     }
 
@@ -85,7 +89,8 @@ fun Comic.Layout.ConfigSection(
         Comic.Component.SyncMangaArchive(
             onSyncChapters = { onSyncAction(ComicSyncAction.SyncChaptersLocal) },
             onRescanCover = { onSyncAction(ComicSyncAction.RescanComic) },
-            onExtractFirstPageAsCover = { onSyncAction(ComicSyncAction.ExtractFirstPageAsCover) }
+            onExtractFirstPageAsCover = { onSyncAction(ComicSyncAction.ExtractFirstPageAsCover) },
+            modifier = itemModifier
         )
     }
 
@@ -101,9 +106,12 @@ fun Comic.Layout.ConfigSection(
     scope.item {
         Comic.Component.ComicExternalSyncToggle(
             enabled = uiState.manga.directory.externalSyncEnabled,
-            onToggle = { onAction(ComicAction.ToggleExternalSync(it)) }
+            onToggle = { onAction(ComicAction.ToggleExternalSync(it)) },
+            modifier = itemModifier
         )
     }
+
+    scope.item { Spacer(modifier = Modifier.height(8.dp)) }
 
     scope.item {
         Comic.Component.SyncMetadata(
@@ -114,6 +122,7 @@ fun Comic.Layout.ConfigSection(
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },
             onSyncComicInfoChapters = { onSyncAction(ComicSyncAction.SyncComicInfoChapters) },
             onSyncAnilistInfo = { onSyncAction(ComicSyncAction.SyncAnilistInfo) },
+            modifier = itemModifier
         )
     }
 

@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,10 +30,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.comic.common.ux.component.SnackbarVariant
+import br.acerola.comic.common.ux.component.showSnackbar
+import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.dto.archive.ChapterTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.pattern.component.AddTemplateDialog
 import br.acerola.comic.module.main.pattern.component.TemplateItem
@@ -45,7 +51,15 @@ fun Main.Pattern.Layout.FilePatternScreen(
     viewModel: FilePatternViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { message ->
+            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
+        }
+    }
 
     FilePatternLayout(
         uiState = uiState,
@@ -61,7 +75,8 @@ private fun FilePatternLayout(
     onAction: (FilePatternAction) -> Unit,
     onBack: () -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var editingTemplate by remember { mutableStateOf<ChapterTemplateDto?>(null) }
 
     Scaffold(
         topBar = {
@@ -89,7 +104,7 @@ private fun FilePatternLayout(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showDialog = true },
+                onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -130,6 +145,7 @@ private fun FilePatternLayout(
                     ) { template ->
                         Main.Pattern.Component.TemplateItem(
                             template = template,
+                            onEdit = { editingTemplate = template },
                             onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) }
                         )
                     }
@@ -138,12 +154,25 @@ private fun FilePatternLayout(
         }
     }
 
-    if (showDialog) {
+    if (showAddDialog) {
         Main.Pattern.Component.AddTemplateDialog(
-            onDismiss = { showDialog = false },
+            onDismiss = { showAddDialog = false },
             onConfirm = { label, pattern ->
                 onAction(FilePatternAction.AddTemplate(label, pattern))
-                showDialog = false
+                showAddDialog = false
+            }
+        )
+    }
+
+    editingTemplate?.let { template ->
+        Main.Pattern.Component.AddTemplateDialog(
+            isEditMode = true,
+            initialLabel = template.label,
+            initialPattern = template.pattern,
+            onDismiss = { editingTemplate = null },
+            onConfirm = { label, pattern ->
+                onAction(FilePatternAction.EditTemplate(template.id, label, pattern))
+                editingTemplate = null
             }
         )
     }
