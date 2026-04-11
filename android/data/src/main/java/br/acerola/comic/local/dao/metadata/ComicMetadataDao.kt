@@ -23,31 +23,31 @@ import kotlinx.coroutines.flow.firstOrNull
 interface ComicMetadataDao : BaseDao<ComicMetadata> {
 
     @Query(value = "SELECT * FROM comic_metadata ORDER BY id ASC")
-    fun getAllComicRemoteInfo(): Flow<List<ComicMetadata>>
+    fun observeAllComics(): Flow<List<ComicMetadata>>
 
     @Query(value = "SELECT * FROM comic_metadata WHERE title = :title")
-    fun getComicRemoteInfoByName(title: String): Flow<ComicMetadata?>
+    fun observeComicByTitle(title: String): Flow<ComicMetadata?>
 
     @Query(value = "SELECT * FROM comic_metadata WHERE id = :mangaId")
-    fun getComicById(mangaId: Long): Flow<ComicMetadata?>
+    fun observeComicById(mangaId: Long): Flow<ComicMetadata?>
 
     @Query(value = "SELECT * FROM comic_metadata WHERE comic_directory_fk = :directoryId")
-    fun getComicByDirectoryId(directoryId: Long): Flow<ComicMetadata?>
+    fun observeComicByDirectoryId(directoryId: Long): Flow<ComicMetadata?>
 
     @Transaction
     @Query(value = "SELECT * FROM comic_metadata WHERE id = :mangaId")
-    fun getComicWithRelationsById(mangaId: Long): Flow<MetadataRelations?>
+    fun observeComicWithRelationsById(mangaId: Long): Flow<MetadataRelations?>
 
     @Transaction
     @Query(value = "SELECT * FROM comic_metadata WHERE comic_directory_fk = :directoryId")
-    fun getComicWithRelationsByDirectoryId(directoryId: Long): Flow<MetadataRelations?>
+    fun observeComicWithRelationsByDirectoryId(directoryId: Long): Flow<MetadataRelations?>
 
     @Transaction
     @Query(value = "SELECT * FROM comic_metadata ORDER BY title ASC")
-    fun getAllComicsWithRelations(): Flow<List<MetadataRelations>>
+    fun observeAllComicsWithRelations(): Flow<List<MetadataRelations>>
 
     @Transaction
-    suspend fun upsertComicMetadataTransaction(
+    suspend fun upsertComicWithRelationsTransaction(
         metadata: ComicMetadata,
         authors: List<Author>,
         genres: List<Genre>,
@@ -60,7 +60,7 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
         anilistDao: AnilistSourceDao? = null,
         comicInfoDao: ComicInfoSourceDao? = null
     ): Long {
-        val existing = getComicByDirectoryId(metadata.mangaDirectoryFk!!).firstOrNull()
+        val existing = observeComicByDirectoryId(metadata.mangaDirectoryFk!!).firstOrNull()
 
         val mangaId = if (existing != null) {
             update(metadata.copy(id = existing.id))
@@ -70,8 +70,8 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
         }
 
         if (mangaId != -1L) {
-            authorDao.deleteAuthorsByMangaRemoteInfoFk(mangaId)
-            genreDao.deleteGenresByMangaRemoteInfoFk(mangaId)
+            authorDao.deleteByMetadataId(mangaId)
+            genreDao.deleteByMetadataId(mangaId)
 
             authors.forEach { authorDao.insert(it.copy(mangaRemoteInfoFk = mangaId)) }
             genres.forEach { genreDao.insert(it.copy(mangaRemoteInfoFk = mangaId)) }

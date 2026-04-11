@@ -11,26 +11,26 @@ import kotlinx.coroutines.flow.firstOrNull
 @Dao
 interface ComicDirectoryDao : BaseDao<ComicDirectory>{
     @Query(value = "SELECT * FROM comic_directory WHERE hidden = 0 ORDER BY id ASC")
-    fun getAllMangaDirectory(): Flow<List<ComicDirectory>>
+    fun getVisibleDirectories(): Flow<List<ComicDirectory>>
 
     @Query(value = "SELECT * FROM comic_directory ORDER BY id ASC")
-    fun getAllMangaDirectoryIncludingHidden(): Flow<List<ComicDirectory>>
+    fun getAllDirectories(): Flow<List<ComicDirectory>>
 
     @Query(value = "SELECT * FROM comic_directory WHERE id = :mangaId")
-    suspend fun getMangaDirectoryById(mangaId: Long): ComicDirectory?
+    suspend fun getDirectoryById(mangaId: Long): ComicDirectory?
 
     @Query(value = "SELECT * FROM comic_directory WHERE name = :name")
-    suspend fun getMangaDirectoryByName(name: String): ComicDirectory?
+    suspend fun getDirectoryByName(name: String): ComicDirectory?
 
     @Query(value = "UPDATE comic_directory SET hidden = :hidden WHERE id = :mangaId")
-    suspend fun setHidden(mangaId: Long, hidden: Boolean)
+    suspend fun setDirectoryHidden(mangaId: Long, hidden: Boolean)
 
     @Transaction
-    suspend fun upsertMangaDirectoryTransaction(
+    suspend fun upsertDirectoryTransaction(
         directory: ComicDirectory,
         normalizeName: (String) -> String
     ): Long {
-        val allFolders = getAllMangaDirectoryIncludingHidden().firstOrNull() ?: emptyList()
+        val allFolders = getAllDirectories().firstOrNull() ?: emptyList()
 
         val normalizedTarget = normalizeName(directory.name)
         val existing = allFolders.find { normalizeName(it.name) == normalizedTarget }

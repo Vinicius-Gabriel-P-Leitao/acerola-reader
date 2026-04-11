@@ -1,66 +1,84 @@
 package br.acerola.comic.module.comic.component
-import br.acerola.comic.ui.R
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.HeroItem
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.comic.Comic
+import br.acerola.comic.ui.R
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Comic.Component.ComicCategorySelector(
     selectedCategory: CategoryDto?,
     allCategories: List<CategoryDto>,
-    onUpdateMangaCategory: (Long?) -> Unit
+    onUpdateMangaCategory: (Long?) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        if (allCategories.isEmpty()) {
-            Text(
-                text = stringResource(id = R.string.label_category_empty),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-            )
+    Acerola.Component.HeroItem(
+        title = stringResource(id = R.string.title_manga_category),
+        description = selectedCategory?.name ?: stringResource(id = R.string.label_category_none_selected),
+        icon = if (selectedCategory != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
+        iconTint = if (selectedCategory != null) {
+            Color(selectedCategory.color)
         } else {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(allCategories) { category ->
-                    val isSelected = selectedCategory?.id == category.id
-                    
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (isSelected) {
-                                onUpdateMangaCategory(null)
-                            } else {
-                                onUpdateMangaCategory(category.id)
-                            }
-                        },
-                        label = {
-                            Text(text = category.name)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Bookmark,
-                                contentDescription = null,
-                                tint = Color(category.color),
-                                modifier = Modifier.size(18.dp)
+            MaterialTheme.colorScheme.onPrimaryContainer
+        },
+        iconBackground = MaterialTheme.colorScheme.primaryContainer,
+        modifier = modifier,
+        bottomContent = if (allCategories.isNotEmpty()) {
+            {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    allCategories.forEach { category ->
+                        val isSelected = selectedCategory?.id == category.id
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                if (isSelected) onUpdateMangaCategory(null)
+                                else onUpdateMangaCategory(category.id)
+                            },
+                            label = { Text(text = category.name) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Bookmark,
+                                    contentDescription = null,
+                                    tint = Color(category.color),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedLeadingIconColor = Color(category.color)
                             )
-                        }
-                    )
+                        )
+                    }
                 }
             }
-        }
-    }
+        } else null
+    )
 }

@@ -42,8 +42,8 @@ class ComicInfoSourceChapterEngineTest {
 
     @Test
     fun `refreshMangaChapters deve retornar erro se nao houver registro remoto`() = runTest {
-        coEvery { directoryDao.getMangaDirectoryById(any()) } returns mockk(relaxed = true)
-        every { comicMetadataDao.getComicByDirectoryId(any()) } returns flowOf(null)
+        coEvery { directoryDao.getDirectoryById(any()) } returns mockk(relaxed = true)
+        every { comicMetadataDao.observeComicByDirectoryId(any()) } returns flowOf(null)
 
         val result = repository.refreshComicChapters(1L)
 

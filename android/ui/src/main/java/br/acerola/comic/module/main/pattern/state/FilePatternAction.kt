@@ -3,5 +3,6 @@ import br.acerola.comic.ui.R
 
 sealed interface FilePatternAction {
     data class AddTemplate(val label: String, val pattern: String) : FilePatternAction
+    data class EditTemplate(val id: Long, val label: String, val pattern: String) : FilePatternAction
     data class DeleteTemplate(val id: Long) : FilePatternAction
 }

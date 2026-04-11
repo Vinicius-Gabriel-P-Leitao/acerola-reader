@@ -63,6 +63,8 @@
     <string name="error_template_chapter_before_extension">{chapter} deve vir antes de {extension}.</string>
     <string name="error_template_decimal_before_extension">{decimal} deve vir antes de {extension}.</string>
     <string name="error_template_extension_at_end">{extension} deve ser o último elemento do padrão.</string>
+    <string name="error_template_duplicate">Já existe um padrão com esse nome.</string>
+    <string name="error_template_system_protected">Padrões do sistema não podem ser removidos ou alterados.</string>
 
     <!-- Manga Status -->
     <string name="manga_status_ongoing">Em lançamento</string>

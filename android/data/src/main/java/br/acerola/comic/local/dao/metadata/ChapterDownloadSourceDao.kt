@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChapterDownloadSourceDao : BaseDao<ChapterDownloadSource> {
     @Query(value = "SELECT * FROM chapter_page ORDER BY id ASC")
-    fun getAllChapterDownloadSource(): Flow<List<ChapterDownloadSource>>
+    fun observeAllChapterDownloadSources(): Flow<List<ChapterDownloadSource>>
 
     @Query(value = "SELECT * FROM chapter_page WHERE id = :chapterId")
-    fun getChapterDownloadSourceById(chapterId: Long): Flow<ChapterDownloadSource?>
+    fun observeChapterDownloadSourceById(chapterId: Long): Flow<ChapterDownloadSource?>
 
     @Query(value = "SELECT * FROM chapter_page WHERE chapter_fk IN (:chapterId)")
-    fun getChapterDownloadSourceByRemoteInfoId(chapterId: List<Long>): Flow<List<ChapterDownloadSource>>
+    fun observeChapterDownloadSourcesByChapterIds(chapterId: List<Long>): Flow<List<ChapterDownloadSource>>
 }

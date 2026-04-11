@@ -64,7 +64,7 @@ class AnilistComicEngine @Inject constructor(
             AcerolaLogger.audit(TAG, "Initiating AniList sync for comic: $mangaId", LogSource.REPOSITORY)
             _isIndexing.value = true
             try {
-                val directory = directoryDao.getMangaDirectoryById(mangaId)
+                val directory = directoryDao.getDirectoryById(mangaId)
                     ?: return@withContext Either.Left(
                         LibrarySyncError.UnexpectedError(cause = Exception("Directory not found"))
                     )
@@ -96,7 +96,7 @@ class AnilistComicEngine @Inject constructor(
                                 mangaDirectoryFk = mangaId, syncSource = MetadataSourcePattern.ANILIST.source
                             )
 
-                            val remoteInfoId = comicMetadataDao.upsertComicMetadataTransaction(
+                            val remoteInfoId = comicMetadataDao.upsertComicWithRelationsTransaction(
                                 metadata = mangaToSave, authors = dto.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
                                 genres = dto.genre.map { it.toEntity(mangaId = 0L) },
                                 anilistSource = dto.toAnilistSourceEntity(mangaRemoteInfoFk = 0L), authorDao = authorDao, genreDao = genreDao,
@@ -130,7 +130,7 @@ class AnilistComicEngine @Inject constructor(
         withContext(Dispatchers.IO) {
             AcerolaLogger.audit(TAG, "Starting full library AniList refresh", LogSource.REPOSITORY)
             try {
-                val directories = (directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList())
+                val directories = (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
                     .filter { it.externalSyncEnabled }
                 directories.forEachIndexed { index, directory ->
                     refreshManga(directory.id, baseUri)
@@ -148,13 +148,13 @@ class AnilistComicEngine @Inject constructor(
         withContext(Dispatchers.IO) {
             AcerolaLogger.audit(TAG, "Starting incremental AniList sync", LogSource.REPOSITORY)
             try {
-                val directories = (directoryDao.getAllMangaDirectory().firstOrNull() ?: emptyList())
+                val directories = (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
                     .filter { it.externalSyncEnabled }
                 val toSync = directories.filter { directory ->
                     val remoteInfo =
-                        comicMetadataDao.getComicByDirectoryId(directory.id).firstOrNull() ?: return@filter true
+                        comicMetadataDao.observeComicByDirectoryId(directory.id).firstOrNull() ?: return@filter true
 
-                    val anilistSource = anilistSourceDao.getByMangaRemoteInfoFk(remoteInfo.id)
+                    val anilistSource = anilistSourceDao.getByMetadataId(remoteInfo.id)
                     anilistSource == null
                 }
                 toSync.forEachIndexed { index, directory ->
@@ -177,7 +177,7 @@ class AnilistComicEngine @Inject constructor(
         dto: ComicMetadataDto,
         baseUri: Uri?
     ) {
-        val directory = directoryDao.getMangaDirectoryById(mangaId) ?: return
+        val directory = directoryDao.getDirectoryById(mangaId) ?: return
 
         val rootPath = baseUri?.toString()
             ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()

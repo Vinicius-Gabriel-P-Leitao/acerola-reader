@@ -42,7 +42,7 @@ class MetadataExporter @Inject constructor(
         remoteInfo: ComicMetadataDto
     ): Either<LibrarySyncError, Unit> = withContext(Dispatchers.IO) {
         Either.catch {
-            val directory = directoryDao.getMangaDirectoryById(directoryId)
+            val directory = directoryDao.getDirectoryById(directoryId)
                 ?: throw NoSuchElementException("Directory not found")
 
             val folderDoc = DocumentFile.fromTreeUri(context, directory.path.toUri())
@@ -52,7 +52,7 @@ class MetadataExporter @Inject constructor(
                 val xmlContent = parserService.serialize(remoteInfo)
                 writeXmlToFolder(folderDoc, "ComicInfo.xml", xmlContent)
 
-                val remoteInfoEntity = remoteInfoDao.getComicByDirectoryId(directoryId).firstOrNull()
+                val remoteInfoEntity = remoteInfoDao.observeComicByDirectoryId(directoryId).firstOrNull()
                 if (remoteInfoEntity != null && !remoteInfoEntity.hasComicInfo) {
                     remoteInfoDao.update(remoteInfoEntity.copy(hasComicInfo = true))
                 }

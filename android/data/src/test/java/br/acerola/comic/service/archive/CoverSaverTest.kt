@@ -67,7 +67,7 @@ class CoverSaverTest {
         every { fileUri.toString() } returns "content://cover/1"
 
         coEvery { fileStorageHandler.saveFile(any(), any(), any(), any()) } returns Unit.right()
-        coEvery { directoryDao.getMangaDirectoryById(1) } returns mangaDir
+        coEvery { directoryDao.getDirectoryById(1) } returns mangaDir
         coEvery { directoryDao.update(any()) } returns Unit
         coEvery { coverDao.insert(any()) } returns 10L
 
@@ -89,7 +89,7 @@ class CoverSaverTest {
         val coverUrl = "https://mangadex.org/covers/1/a.jpg"
         val mangaDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
 
-        coEvery { directoryDao.getMangaDirectoryById(1) } returns mangaDir
+        coEvery { directoryDao.getDirectoryById(1) } returns mangaDir
         every { DocumentFile.fromTreeUri(context, any()) } returns null
 
         // Act

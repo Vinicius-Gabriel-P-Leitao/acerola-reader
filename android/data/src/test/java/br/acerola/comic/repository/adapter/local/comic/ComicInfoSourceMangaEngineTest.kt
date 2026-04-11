@@ -70,13 +70,13 @@ class ComicInfoSourceMangaEngineTest {
         val directory = MangaDirectoryFixtures.createMangaDirectory(id = 1L, name = "Local Manga")
         val infoFound = MetadataFixtures.createMangaRemoteInfoDto(title = "Local Manga")
         
-        coEvery { directoryDao.getMangaDirectoryById(1L) } returns directory
+        coEvery { directoryDao.getDirectoryById(1L) } returns directory
         coEvery {
             comicInfoSourceService.searchInfo(any(), any(), any(), any(), *anyVararg())
         } returns Either.Right(listOf(infoFound))
 
         coEvery {
-            comicMetadataDao.upsertComicMetadataTransaction(
+            comicMetadataDao.upsertComicWithRelationsTransaction(
                 any(), any(), any(), any(), any(), any(),
                 any(), any(), any(), any(), any()
             )

@@ -56,13 +56,13 @@ class ComicInfoChapterEngine @Inject constructor(
             _progress.value = 0
 
             Either.catch {
-                val directory = directoryDao.getMangaDirectoryById(mangaId)
+                val directory = directoryDao.getDirectoryById(mangaId)
                     ?: throw Exception("Directory not found for ID: $mangaId")
 
-                val remoteManga = comicMetadataDao.getComicByDirectoryId(directory.id).first()
+                val remoteManga = comicMetadataDao.observeComicByDirectoryId(directory.id).first()
                     ?: throw Exception("Remote info not found for comic directory: ${directory.name}")
 
-                val localChapters = chapterArchiveDao.getChaptersByComicDirectory(directory.id).first()
+                val localChapters = chapterArchiveDao.getChaptersByDirectoryId(directory.id).first()
 
                 val total = localChapters.size
                 if (total == 0) {

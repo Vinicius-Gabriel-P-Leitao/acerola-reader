@@ -2,6 +2,7 @@ package br.acerola.comic.module.comic.component
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import br.acerola.comic.config.preference.ChapterPageSizeType
@@ -24,7 +25,8 @@ class PaginationPreferenceTest {
         }
 
         composeTestRule.onNodeWithText("Capítulos por página", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("25", ignoreCase = true).assertIsDisplayed()
+        // "25" aparece duas vezes: na descrição do HeroItem (selecionado) e no RadioGroup
+        composeTestRule.onAllNodesWithText("25", ignoreCase = true)[0].assertIsDisplayed()
         composeTestRule.onNodeWithText("50", ignoreCase = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("100", ignoreCase = true).assertIsDisplayed()
     }

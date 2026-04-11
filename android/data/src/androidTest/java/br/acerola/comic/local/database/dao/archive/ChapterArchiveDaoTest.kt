@@ -42,7 +42,7 @@ class ChapterArchiveDaoTest {
     }
 
     @Test
-    fun getChaptersByComicDirectory_deve_ordenar_capitulos_numericamente_e_decimais() = runBlocking {
+    fun getChaptersByDirectory_Id_deve_ordenar_capitulos_numericamente_e_decimais() = runBlocking {
         // Arrange: Cria diretório e capítulos com ordenação mista
         val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L))
         val chapters = listOf(
@@ -54,7 +54,7 @@ class ChapterArchiveDaoTest {
         dao.insertAll(*chapters.toTypedArray())
 
         // Act
-        val result = dao.getChaptersByComicDirectory(folderId).first()
+        val result = dao.getChaptersByDirectoryId(folderId).first()
 
         // Assert: Ordem esperada: 1, 1.5, 2, 10
         assertEquals("1", result[0].chapterSort)
@@ -64,7 +64,7 @@ class ChapterArchiveDaoTest {
     }
 
     @Test
-    fun getChaptersPaged_deve_retornar_apenas_o_tamanho_da_pagina() = runBlocking {
+    fun getChaptersByDirectoryPaged_deve_retornar_apenas_o_tamanho_da_pagina() = runBlocking {
         // Arrange
         val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L))
         val chapters = List(10) { 
@@ -73,7 +73,7 @@ class ChapterArchiveDaoTest {
         dao.insertAll(*chapters.toTypedArray())
 
         // Act: Página 1 (offset 5), tamanho 5
-        val result = dao.getChaptersPaged(folderId, pageSize = 5, offset = 5)
+        val result = dao.getChaptersByDirectoryPaged(folderId, pageSize = 5, offset = 5)
 
         // Assert
         assertEquals(5, result.size)
@@ -89,10 +89,10 @@ class ChapterArchiveDaoTest {
         dao.insert(ChapterArchive(chapter = "1", path = "p2", chapterSort = "1", folderPathFk = id2))
 
         // Act
-        dao.deleteChaptersByComicDirectoryId(id1)
+        dao.deleteByDirectoryId(id1)
 
         // Assert
-        assertEquals(0, dao.countChaptersByComicDirectory(id1))
-        assertEquals(1, dao.countChaptersByComicDirectory(id2))
+        assertEquals(0, dao.countByDirectoryId(id1))
+        assertEquals(1, dao.countByDirectoryId(id2))
     }
 }

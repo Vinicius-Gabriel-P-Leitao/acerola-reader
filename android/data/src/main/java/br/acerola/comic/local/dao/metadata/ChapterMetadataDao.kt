@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
     @Query(value = "SELECT * FROM chapter_metadata ORDER BY chapter ASC")
-    fun getAllChaptersRemoteInfo(): Flow<List<ChapterMetadata>>
+    fun observeAllChapters(): Flow<List<ChapterMetadata>>
 
     @Query(value = "SELECT * FROM chapter_metadata WHERE id = :chapterId")
-    fun getChapterRemoteInfoById(chapterId: Long): Flow<ChapterMetadata?>
+    fun observeChapterById(chapterId: Long): Flow<ChapterMetadata?>
 
     @Query(value = "SELECT COUNT(id) FROM chapter_metadata WHERE comic_metadata_fk = :mangaId")
-    suspend fun countChaptersByMangaRemoteInfo(mangaId: Long): Int
+    suspend fun countChaptersByMetadataId(mangaId: Long): Int
 
     @Query(
         value = """
@@ -24,7 +24,7 @@ interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
         ORDER BY chapter ASC
     """
     )
-    fun getChaptersByMangaRemoteInfo(mangaId: Long): Flow<List<ChapterMetadata>>
+    fun observeChaptersByMetadataId(mangaId: Long): Flow<List<ChapterMetadata>>
 
     @Query(
         value = """
@@ -34,8 +34,8 @@ interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
         LIMIT :pageSize OFFSET :offset
     """
     )
-    suspend fun getChaptersPaged(mangaId: Long, pageSize: Int, offset: Int): List<ChapterMetadata>
+    suspend fun getChaptersByMetadataPaged(mangaId: Long, pageSize: Int, offset: Int): List<ChapterMetadata>
 
     @Query("SELECT * FROM chapter_metadata WHERE comic_metadata_fk = :mangaId AND chapter IN (:chapters)")
-    fun getChaptersByMangaAndNumbers(mangaId: Long, chapters: List<String>): Flow<List<ChapterMetadata>>
+    fun observeChaptersByMetadataAndNumbers(mangaId: Long, chapters: List<String>): Flow<List<ChapterMetadata>>
 }

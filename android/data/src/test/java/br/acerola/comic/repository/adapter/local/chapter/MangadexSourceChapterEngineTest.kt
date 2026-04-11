@@ -57,7 +57,7 @@ class MangadexSourceChapterEngineTest {
 
     @Test
     fun `refreshMangaChapters deve retornar sucesso se não houver mangadexId`() = runTest {
-        every { comicMetadataDao.getComicWithRelationsByDirectoryId(any()) } returns flowOf(null)
+        every { comicMetadataDao.observeComicWithRelationsByDirectoryId(any()) } returns flowOf(null)
 
         val result = repository.refreshComicChapters(1L)
 

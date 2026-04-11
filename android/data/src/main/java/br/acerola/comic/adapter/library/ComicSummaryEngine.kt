@@ -15,7 +15,7 @@ class ComicSummaryEngine @Inject constructor(
 ) : ComicReadOnlyGateway<ComicSummaryDto> {
 
     override fun observeLibrary(): Flow<List<ComicSummaryDto>> {
-        return summaryDao.getAllMangaSummaries()
+        return summaryDao.observeAllComicSummaries()
             .map { list -> list.map { it.toViewDto() } }
     }
 }

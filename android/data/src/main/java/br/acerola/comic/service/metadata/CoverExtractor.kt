@@ -33,10 +33,10 @@ class CoverExtractor @Inject constructor(
 ) {
 
     suspend fun extractFirstPageAsCover(mangaId: Long): Either<IoError, Unit> = withContext(Dispatchers.IO) {
-        val directory = directoryDao.getMangaDirectoryById(mangaId)
+        val directory = directoryDao.getDirectoryById(mangaId)
             ?: return@withContext IoError.FileNotFound("Comic directory not found in DB").left()
 
-        val chapters = chapterArchiveDao.getChaptersByComicDirectory(mangaId).first()
+        val chapters = chapterArchiveDao.getChaptersByDirectoryId(mangaId).first()
         val firstChapter = chapters.minByOrNull { it.chapterSort.toDoubleOrNull() ?: Double.MAX_VALUE }
             ?: return@withContext IoError.FileNotFound("No chapters found for this comic").left()
 

@@ -38,7 +38,7 @@ class CoverSaver @Inject constructor(
         mangaRemoteInfoFk: Long
     ): Either<IoError, Long> = withContext(Dispatchers.IO) {
         try {
-            val directory = directoryDao.getMangaDirectoryById(mangaId = folderId)
+            val directory = directoryDao.getDirectoryById(mangaId = folderId)
                 ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
             val mangaDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
@@ -83,7 +83,7 @@ class CoverSaver @Inject constructor(
                 val finalId = if (insertedId != -1L) {
                     insertedId
                 } else {
-                    val existing = coverDao.getCoverByFileNameAndFk(
+                    val existing = coverDao.getByFileNameAndMetadataId(
                         fileName = fileName,
                         mangaRemoteInfoFk = mangaRemoteInfoFk
                     ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
