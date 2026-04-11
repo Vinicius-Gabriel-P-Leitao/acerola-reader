@@ -145,16 +145,23 @@ fun Main.Config.Layout.Screen(
 
                 Main.Config.Component.SelectComicDirectory(
                     folderName = uiState.folderName,
-                    onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) }
+                    onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Main.Config.Component.MetadataExportSettings(
                     enabled = uiState.generateComicInfo,
-                    onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) }
+                    onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Main.Config.Component.TemplateManager(
-                    onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) }
+                    onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -164,7 +171,8 @@ fun Main.Config.Layout.Screen(
 
                 Main.Config.Component.SyncLibraryArchive(
                     onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
-                    onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) }
+                    onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -185,7 +193,8 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.GlobalCategoryManager(
                     categories = allCategories,
                     onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
-                    onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) }
+                    onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -195,15 +204,22 @@ fun Main.Config.Layout.Screen(
 
                 Main.Config.Component.LanguageSettings(
                     selectedLanguage = uiState.metadataLanguage,
-                    onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) }
+                    onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Main.Config.Component.SyncMangadexData(
-                    onRescan = { onAction(ConfigAction.SyncMangadexMetadata) }
+                    onRescan = { onAction(ConfigAction.SyncMangadexMetadata) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Main.Config.Component.SyncAnilistData(
-                    onRescan = { onAction(ConfigAction.SyncAnilistMetadata) }
+                    onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))

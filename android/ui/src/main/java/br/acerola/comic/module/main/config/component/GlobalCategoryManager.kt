@@ -6,33 +6,27 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -42,110 +36,92 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
+import br.acerola.comic.common.ux.component.HeroItem
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
+// FIXME: Verificar como isso tá chegando no banco de dados, provavelmente o frotend é a verdade e só manda isso para o banco de dados
 val categoryColors = listOf(
-    0xFFF44336, // Red
-    0xFFE91E63, // Pink
-    0xFF9C27B0, // Purple
-    0xFF673AB7, // Deep Purple
-    0xFF3F51B5, // Indigo
-    0xFF2196F3, // Blue
-    0xFF03A9F4, // Light Blue
-    0xFF00BCD4, // Cyan
-    0xFF009688, // Teal
-    0xFF4CAF50, // Green
-    0xFF8BC34A, // Light Green
-    0xFFCDDC39, // Lime
-    0xFFFFEB3B, // Yellow
-    0xFFFFC107, // Amber
-    0xFFFF9800, // Orange
-    0xFFFF5722, // Deep Orange
-    0xFF795548, // Brown
-    0xFF9E9E9E, // Grey
-    0xFF607D8B  // Blue Grey
+    0xFFF44336, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7, 0xFF3F51B5,
+    0xFF2196F3, 0xFF03A9F4, 0xFF00BCD4, 0xFF009688, 0xFF4CAF50,
+    0xFF8BC34A, 0xFFCDDC39, 0xFFFFEB3B, 0xFFFFC107, 0xFFFF9800,
+    0xFFFF5722, 0xFF795548, 0xFF9E9E9E, 0xFF607D8B
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Main.Config.Component.GlobalCategoryManager(
     categories: List<CategoryDto>,
     onCreateCategory: (String, Int) -> Unit,
-    onDeleteCategory: (Long) -> Unit
+    onDeleteCategory: (Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        ListItem(
-            modifier = Modifier.clickable { showCreateDialog = true },
-            headlineContent = {
+    Acerola.Component.HeroItem(
+        title = stringResource(id = R.string.action_add_category),
+        description = if (categories.isEmpty()) {
+            stringResource(id = R.string.description_config_categories)
+        } else {
+            null
+        },
+        icon = Icons.Rounded.Add,
+        iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+        iconBackground = MaterialTheme.colorScheme.primaryContainer,
+        onClick = { showCreateDialog = true },
+        modifier = modifier,
+        action = {
+            if (categories.isNotEmpty()) {
                 Text(
-                    text = stringResource(id = R.string.action_add_category),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "${categories.size}",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(id = R.string.description_config_categories),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            },
-            leadingContent = {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    modifier = Modifier.size(40.dp)
+            }
+        },
+        bottomContent = if (categories.isNotEmpty()) {
+            {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.Add,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                            contentDescription = null
+                    categories.forEach { category ->
+                        InputChip(
+                            onClick = { },
+                            label = { Text(text = category.name) },
+                            selected = true,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Bookmark,
+                                    contentDescription = null,
+                                    tint = Color(category.color),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = stringResource(id = R.string.action_delete_category),
+                                    modifier = Modifier
+                                        .size(14.dp)
+                                        .clickable { onDeleteCategory(category.id) }
+                                )
+                            },
+                            colors = InputChipDefaults.inputChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                selectedLabelColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                     }
                 }
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-        )
-
-        if (categories.isNotEmpty()) {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(categories) { category ->
-                    InputChip(
-                        onClick = { },
-                        label = { Text(text = category.name) },
-                        selected = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Bookmark,
-                                contentDescription = null,
-                                tint = Color(category.color),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Delete,
-                                contentDescription = stringResource(id = R.string.action_delete_category),
-                                modifier = Modifier.size(16.dp).clickable { onDeleteCategory(category.id) }
-                            )
-                        },
-                        colors = InputChipDefaults.inputChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            selectedLabelColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-                }
             }
-        }
-    }
+        } else null
+    )
 
     if (showCreateDialog) {
         CreateCategoryDialog(
@@ -158,6 +134,7 @@ fun Main.Config.Component.GlobalCategoryManager(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CreateCategoryDialog(
     onDismiss: () -> Unit,

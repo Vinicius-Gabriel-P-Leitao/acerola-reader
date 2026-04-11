@@ -20,11 +20,12 @@ import br.acerola.comic.common.ux.Acerola
 fun Acerola.Component.RadioGroup(
     selectedIndex: Int,
     options: List<String>,
-    onSelect: (Int) -> Unit
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         options.forEachIndexed { index, label ->
             Row(
