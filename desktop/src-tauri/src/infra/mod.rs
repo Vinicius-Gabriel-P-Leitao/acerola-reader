@@ -9,3 +9,9 @@ pub mod filesystem {
     pub mod path_guard;
     pub mod scanner_engine;
 }
+
+pub mod pattern {
+    pub mod archive_format;
+    pub mod chapter_template;
+    pub mod template_validator;
+}

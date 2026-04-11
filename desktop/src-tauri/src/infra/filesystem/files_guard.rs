@@ -1,7 +1,11 @@
 use std::path::Path;
-use crate::infra::error::translations::file_error::FileError;
 
-pub struct ComicFileGuard;
+use crate::infra::{
+    error::translations::file_error::FileError,
+    pattern::archive_format::ArchiveFormat,
+};
+
+pub struct SupportedFileGuard;
 pub struct ArchiveFileGuard;
 pub struct MetadataFileGuard;
 pub struct ArtworkFileGuard;
@@ -10,16 +14,16 @@ pub trait FileGuard: Send + Sync {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError>;
 }
 
-impl FileGuard for ComicFileGuard {
+impl FileGuard for SupportedFileGuard {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let ext = path
             .extension()
             .and_then(|ext| ext.to_str())
             .ok_or(FileError::MissingExtension)?;
 
-        match ext {
-            "cbz" | "cbr" | "pdf" => Ok(()),
-            _ => Err(FileError::ExtensionNotAllowed(ext.to_string())),
+        match ArchiveFormat::from_extension(ext) {
+            Some(_) => Ok(()),
+            None => Err(FileError::ExtensionNotAllowed(ext.to_string())),
         }
     }
 }
@@ -31,9 +35,9 @@ impl FileGuard for ArchiveFileGuard {
             .and_then(|ext| ext.to_str())
             .ok_or(FileError::MissingExtension)?;
 
-        match ext {
-            "cbz" | "cbr" => Ok(()),
-            _ => Err(FileError::ExtensionNotAllowed(ext.to_string())),
+        match ArchiveFormat::from_extension(ext) {
+            Some(ArchiveFormat::Pdf) | None => Err(FileError::ExtensionNotAllowed(ext.to_string())),
+            Some(_) => Ok(()),
         }
     }
 }
@@ -79,7 +83,7 @@ impl ScannerGuard {
     pub fn new() -> Self {
         Self {
             guards: vec![
-                Box::new(ComicFileGuard),
+                Box::new(SupportedFileGuard),
                 Box::new(MetadataFileGuard),
                 Box::new(ArtworkFileGuard)
             ],
@@ -109,14 +113,14 @@ impl ScannerGuard {
 
 #[cfg(test)]
 mod tests {
-    use super::{ ArtworkFileGuard, ComicFileGuard, FileGuard, MetadataFileGuard, ScannerGuard };
+    use super::{ ArtworkFileGuard, SupportedFileGuard, FileGuard, MetadataFileGuard, ScannerGuard };
     use crate::infra::error::translations::file_error::FileError;
     use std::path::Path;
 
     // NOTE: ComicFileGuard
     #[test]
     fn teste_comic_extensao_valida() {
-        let guard = ComicFileGuard;
+        let guard = SupportedFileGuard;
         assert!(guard.is_allowed(Path::new("berserk.cbz")).is_ok());
         assert!(guard.is_allowed(Path::new("berserk.cbr")).is_ok());
         assert!(guard.is_allowed(Path::new("berserk.pdf")).is_ok());
@@ -124,7 +128,7 @@ mod tests {
 
     #[test]
     fn teste_comic_extensao_invalida() {
-        let guard = ComicFileGuard;
+        let guard = SupportedFileGuard;
         let result = guard.is_allowed(Path::new("berserk.exe"));
 
         assert!(matches!(result, Err(FileError::ExtensionNotAllowed(ext)) if ext == "exe"));
@@ -132,7 +136,7 @@ mod tests {
 
     #[test]
     fn teste_comic_sem_extensao() {
-        let guard = ComicFileGuard;
+        let guard = SupportedFileGuard;
         assert!(matches!(guard.is_allowed(Path::new("berserk")), Err(FileError::MissingExtension)));
     }
 
