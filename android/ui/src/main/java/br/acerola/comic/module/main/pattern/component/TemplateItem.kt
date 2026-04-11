@@ -1,9 +1,11 @@
 package br.acerola.comic.module.main.pattern.component
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +27,7 @@ import br.acerola.comic.ui.R
 @Composable
 fun Main.Pattern.Component.TemplateItem(
     template: ChapterTemplateDto,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -53,12 +56,21 @@ fun Main.Pattern.Component.TemplateItem(
             },
             trailingContent = {
                 if (!template.isDefault) {
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = stringResource(id = R.string.description_icon_delete_template),
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                    Row {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = stringResource(id = R.string.description_icon_edit_template),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(id = R.string.description_icon_delete_template),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 } else {
                     Text(

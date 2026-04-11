@@ -188,6 +188,8 @@
     <string name="action_manage_categories">Gerenciar Categorias</string>
     <string name="action_delete_category">Excluir Categoria</string>
     <string name="label_category_empty">Nenhuma categoria cadastrada</string>
+    <string name="label_category_none_selected">Sem categoria</string>
+    <string name="title_manga_category">Categoria do mangá</string>
     <string name="placeholder_category_name">Ex: Light Novel, HQ, Manga…</string>
 
     <string name="label_config_external_sync">Sincronização Externa</string>
@@ -199,12 +201,15 @@
     <string name="action_add_template">Adicionar Padrão</string>
     <string name="label_system_template">SISTEMA</string>
     <string name="description_icon_delete_template">Excluir Padrão</string>
+    <string name="description_icon_edit_template">Editar Padrão</string>
     <string name="title_dialog_new_template">Novo Padrão</string>
+    <string name="title_dialog_edit_template">Editar Padrão</string>
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
     <string name="label_template_pattern">Padrão (ex: Cap. {chapter})</string>
     <string name="placeholder_template_pattern">{chapter}, {decimal}</string>
     <string name="description_template_macros">{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.</string>
     <string name="action_add">Adicionar</string>
+    <string name="action_save">Salvar</string>
     <string name="action_cancel">Cancelar</string>
 
     <!-- Manga Card Actions -->
