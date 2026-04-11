@@ -216,7 +216,8 @@ Encontrados 10 itens em 9 arquivos.
 
 #### FIXME
 
-- [ ] Problema de sync bugado após alguma operação (provavelmente ao definir a primeira imagem como cover ou adicionar novos mangás). Corrigir botão de sincronizar cover/banner, que atualmente não funciona e pode estar relacionado.
+- [x] Problema de sync bugado após alguma operação (provavelmente ao definir a primeira imagem como cover ou adicionar novos mangás). Corrigir
+  botão de sincronizar cover/banner, que atualmente não funciona e pode estar relacionado.
 - [x] `ChapterArchiveEngine.kt:102` — Usar `ChapterTemplatePattern` para pegar o primeiro pattern como default.
 - [x] `SearchBar.kt:184,202` — Transformar strings hardcoded em `strings.xml`
 - [x] `GlobalProgressViewModel.kt:12` — Contrato frágil para valores do progresso; definir um contrato explícito.
@@ -230,6 +231,68 @@ Encontrados 10 itens em 9 arquivos.
 - [x] `DownloadViewModel.kt:77` — Refatorar componente de progresso para não depender de strings internas do worker.
 - [x] `TemplateValidatorPattern.kt:51` — Texto de erro `InvalidPattern` deve estar em `strings.xml`.
 - [x] `ChapterSourceFactory.kt:14` — Usar erro traduzido respeitando o tratamento de erro do app.
+- [x] Adicionar forma de editar um pattern de ordenação de arquivo.
+- [x] Tratar erro quando um pattern de arquivo for inserido e não passar.
+- [x] Tela de pattern talvez trocar o Dialog pelo adaptive sheet, acho que fica melhor para poder criar um novo pattern
+- [x] Melhorar o componente de troca de idioma de metadados, para poder ter um icone de + e mostrar o idioma de forma diferente
+- [x] Fazer configscreen e configsection ser organizada não só por lista, mas por uma lista de HeroButton/Item o componente tem que ser parecido
+  com esse em esvelte, será o Acerola.**.HeroItem acredito fazer mais sentido no contexto mobile.
+ ```
+<script lang="ts">
+  import { m } from "$lib/paraglide/messages";
+  import * as Item from "$lib/components/ui/item/index.js";
+  import { cn } from "$lib/utils/cn.utils";
+  import type { AcerolaHeroButtonProps } from "./acerola-hero-button.types";
+
+  let {
+    title,
+    description,
+    class: className,
+    icon,
+    action,
+    onclick,
+    ...rest
+  }: AcerolaHeroButtonProps = $props();
+</script>
+
+<Item.Root
+  class={cn(
+    "p-6 rounded-3xl border border-border bg-card flex items-center justify-between group transition-colors",
+    onclick ? "cursor-pointer hover:border-primary/50" : "",
+    className,
+  )}
+  {onclick}
+  {...rest}
+>
+  <div class="flex items-center gap-4">
+    {#if icon}
+      <Item.Media
+        class="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-foreground group-hover:text-primary transition-colors"
+      >
+        {@render icon()}
+      </Item.Media>
+    {/if}
+
+    <Item.Content class="text-left">
+      <Item.Title class="font-bold text-foreground text-lg">
+        {title ?? m["components.hero_button.default_title"]()}
+      </Item.Title>
+
+      {#if description}
+        <Item.Description class="text-sm text-muted-foreground"
+          >{description}</Item.Description
+        >
+      {/if}
+    </Item.Content>
+  </div>
+
+  {#if action}
+    <Item.Actions class="shrink-0 ml-4">
+      {@render action()}
+    </Item.Actions>
+  {/if}
+</Item.Root>
+ ```
 
 ---
 
