@@ -25,7 +25,7 @@ impl ScannerEngine {
     pub async fn scan(
         &self,
         root: PathBuf,
-        tx: mpsc::Sender<DirectoryEntry>
+        tx: mpsc::Sender<DirectoryEntry>,
     ) -> Result<(), std::io::Error> {
         self.walk(&root, &tx, 0).await
     }
@@ -34,7 +34,7 @@ impl ScannerEngine {
         &'a self,
         path: &'a PathBuf,
         tx: &'a mpsc::Sender<DirectoryEntry>,
-        depth: usize
+        depth: usize,
     ) -> Pin<Box<dyn Future<Output = Result<(), std::io::Error>> + Send + 'a>> {
         Box::pin(async move {
             if let Some(max) = self.max_depth {
@@ -63,10 +63,12 @@ impl ScannerEngine {
 
             // Emite esse diretório se tiver arquivos — sem guardar tudo na heap
             if !files.is_empty() {
-                let _ = tx.send(DirectoryEntry {
-                    directory: path.clone(),
-                    files,
-                }).await;
+                let _ = tx
+                    .send(DirectoryEntry {
+                        directory: path.clone(),
+                        files,
+                    })
+                    .await;
             }
 
             // Desce nos subdiretórios depois de emitir — libera a heap do atual
@@ -81,7 +83,7 @@ impl ScannerEngine {
 
 #[cfg(test)]
 mod tests {
-    use super::{ DirectoryEntry, ScannerEngine };
+    use super::{DirectoryEntry, ScannerEngine};
     use std::fs;
     use tempfile::tempdir;
     use tokio::sync::mpsc;

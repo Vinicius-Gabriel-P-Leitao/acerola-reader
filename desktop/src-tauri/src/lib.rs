@@ -3,7 +3,7 @@ mod core;
 mod data;
 mod infra;
 
-use commands::features::library::{ comic_scanner_cmd, select_folder_cmd };
+use commands::features::library::{comic_scanner_cmd, select_folder_cmd};
 use tauri::Manager;
 
 #[cfg(test)]
@@ -22,13 +22,13 @@ mod app_bootstrap {
         let builder = setup_fs(builder);
 
         // INFO: Commands que serão chamados via invoke
-        // prettier-ignore
-        builder.setup(setup_runtime).invoke_handler(
-                tauri::generate_handler![
-                    select_folder_cmd::select_folder,
-                    comic_scanner_cmd::comic_scanner
-                ]
-        )
+
+        builder
+            .setup(setup_runtime)
+            .invoke_handler(tauri::generate_handler![
+                select_folder_cmd::select_folder,
+                comic_scanner_cmd::comic_scanner
+            ])
     }
 
     fn setup_opener(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
@@ -49,9 +49,12 @@ mod app_bootstrap {
 
     fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         builder.plugin(
-            // prettier-ignore
             tauri_plugin_sql::Builder::new()
-                .add_migrations("sqlite:acerola.db", crate::infra::db::migrations::get_migrations()).build()
+                .add_migrations(
+                    "sqlite:acerola.db",
+                    crate::infra::db::migrations::get_migrations(),
+                )
+                .build(),
         )
     }
 
@@ -60,18 +63,14 @@ mod app_bootstrap {
         let (db_path, log_dir) = resolve_paths(app);
 
         app.handle().plugin(
-            // prettier-ignore
-            tauri_plugin_log::Builder
-                ::new()
+            tauri_plugin_log::Builder::new()
                 .targets([
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
                         path: log_dir,
                         file_name: None,
                     }),
-
-                    #[cfg(debug_assertions)] tauri_plugin_log::Target::new(
-                        tauri_plugin_log::TargetKind::Stdout
-                    ),
+                    #[cfg(debug_assertions)]
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
                 ])
                 .level({
                     #[cfg(debug_assertions)]
@@ -84,12 +83,16 @@ mod app_bootstrap {
                         tauri_plugin_log::log::LevelFilter::Info
                     }
                 })
-                .build()
+                .build(),
         )?;
 
         tauri::async_runtime::block_on(async move {
-            // prettier-ignore
-            let pool = sqlx::SqlitePool::connect(&format!("sqlite:{}?mode=rwc", db_path.to_string_lossy())).await.unwrap();
+            let pool = sqlx::SqlitePool::connect(&format!(
+                "sqlite:{}?mode=rwc",
+                db_path.to_string_lossy()
+            ))
+            .await
+            .unwrap();
             handle.manage(pool);
         });
 
@@ -107,6 +110,7 @@ mod app_bootstrap {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // prettier-ignore
-    app_bootstrap::build().run(tauri::generate_context!()).expect("Error while running tauri application");
+    app_bootstrap::build()
+        .run(tauri::generate_context!())
+        .expect("Error while running tauri application");
 }

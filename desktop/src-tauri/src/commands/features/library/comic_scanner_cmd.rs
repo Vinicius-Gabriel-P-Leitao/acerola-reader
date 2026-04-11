@@ -6,7 +6,7 @@ use crate::{
 use sqlx::SqlitePool;
 use std::path::PathBuf;
 use tauri::State;
-use tauri::{ AppHandle, Emitter };
+use tauri::{AppHandle, Emitter};
 
 /// Inicia o scan de uma pasta de quadrinhos e persiste os dados encontrados.
 /// Recebido pelo webview via `invoke("comic_scanner", { path })`.
@@ -14,7 +14,7 @@ use tauri::{ AppHandle, Emitter };
 pub async fn comic_scanner(
     path: String,
     app: AppHandle,
-    pool: State<'_, SqlitePool>
+    pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();
@@ -29,7 +29,8 @@ pub async fn comic_scanner(
             }
             Err(err) => {
                 // FIXME: Verificar se dá pra fazer um contrato no command que eu consiga usar
-                app.emit("scan:error", ScanErrorPayload::from(&err)).unwrap();
+                app.emit("scan:error", ScanErrorPayload::from(&err))
+                    .unwrap();
             }
         }
     });

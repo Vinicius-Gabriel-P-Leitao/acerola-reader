@@ -1,5 +1,5 @@
 use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::base::{ Entity, Repository };
+use crate::data::repositories::base::{Entity, Repository};
 use crate::infra::error::translations::db_error::DbError;
 use sqlx::SqlitePool;
 
@@ -20,11 +20,14 @@ impl ComicRepository {
         let table = ComicDirectory::table_name();
         let cols = ComicDirectory::columns().join(", ");
 
-        // prettier-ignore
+        
         let result = sqlx::query_as::<_, ComicDirectory>(&format!(
             "SELECT {} FROM {} WHERE name = ?",
             cols, table
-        )).bind(name).fetch_optional(&self.pool).await?;
+        ))
+        .bind(name)
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(result)
     }

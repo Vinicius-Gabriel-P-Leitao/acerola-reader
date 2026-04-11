@@ -1,3 +1,7 @@
+use std::sync::OnceLock;
+
+static EXTENSIONS: OnceLock<String> = OnceLock::new();
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum ArchiveFormat {
     Cbz,
@@ -14,6 +18,10 @@ impl ArchiveFormat {
         }
     }
 
+    pub fn all() -> &'static [ArchiveFormat] {
+        &[Self::Cbz, Self::Cbr, Self::Pdf]
+    }
+
     pub fn from_extension(ext: &str) -> Option<Self> {
         match ext {
             "cbz" => Some(Self::Cbz),
@@ -23,7 +31,13 @@ impl ArchiveFormat {
         }
     }
 
-    pub fn all() -> &'static [ArchiveFormat] {
-        &[Self::Cbz, Self::Cbr, Self::Pdf]
+    pub fn extensions_pattern() -> &'static str {
+        EXTENSIONS.get_or_init(|| {
+            Self::all()
+                .iter()
+                .map(|it| it.extension())
+                .collect::<Vec<_>>()
+                .join("|")
+        })
     }
 }

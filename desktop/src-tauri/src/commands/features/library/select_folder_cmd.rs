@@ -8,7 +8,7 @@ pub async fn select_folder(app: AppHandle) -> Result<String, String> {
     let (tx, rx) = mpsc::channel();
 
     // FIXME: Tratar melhor com ok e is_err
-    // prettier-ignore
+    
     app.dialog().file().pick_folder(move |folder| {
         tx.send(folder).unwrap();
     });

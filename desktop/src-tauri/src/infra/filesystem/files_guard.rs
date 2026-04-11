@@ -1,8 +1,7 @@
 use std::path::Path;
 
 use crate::infra::{
-    error::translations::file_error::FileError,
-    pattern::archive_format::ArchiveFormat,
+    error::translations::file_error::FileError, pattern::archive_format::ArchiveFormat,
 };
 
 pub struct SupportedFileGuard;
@@ -64,11 +63,7 @@ impl FileGuard for ArtworkFileGuard {
             .ok_or(FileError::MissingFileName)?;
 
         match name {
-            | "cover.png"
-            | "cover.jpg"
-            | "cover.jpeg"
-            | "banner.png"
-            | "banner.jpg"
+            "cover.png" | "cover.jpg" | "cover.jpeg" | "banner.png" | "banner.jpg"
             | "banner.jpeg" => Ok(()),
             _ => Err(FileError::FileNameNotAllowed(name.to_string())),
         }
@@ -85,7 +80,7 @@ impl ScannerGuard {
             guards: vec![
                 Box::new(SupportedFileGuard),
                 Box::new(MetadataFileGuard),
-                Box::new(ArtworkFileGuard)
+                Box::new(ArtworkFileGuard),
             ],
         }
     }
@@ -96,7 +91,10 @@ impl ScannerGuard {
     /// o reconhecer. Retorna [`FileError::NotAllowed`] se nenhum aceitar,
     /// o que é esperado para arquivos irrelevantes (`.db`, `.txt`, etc.).
     pub fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
-        let all_rejected = self.guards.iter().all(|guard| guard.is_allowed(path).is_err());
+        let all_rejected = self
+            .guards
+            .iter()
+            .all(|guard| guard.is_allowed(path).is_err());
 
         if all_rejected {
             let name = path
@@ -113,7 +111,7 @@ impl ScannerGuard {
 
 #[cfg(test)]
 mod tests {
-    use super::{ ArtworkFileGuard, SupportedFileGuard, FileGuard, MetadataFileGuard, ScannerGuard };
+    use super::{ArtworkFileGuard, FileGuard, MetadataFileGuard, ScannerGuard, SupportedFileGuard};
     use crate::infra::error::translations::file_error::FileError;
     use std::path::Path;
 
@@ -137,7 +135,10 @@ mod tests {
     #[test]
     fn teste_comic_sem_extensao() {
         let guard = SupportedFileGuard;
-        assert!(matches!(guard.is_allowed(Path::new("berserk")), Err(FileError::MissingExtension)));
+        assert!(matches!(
+            guard.is_allowed(Path::new("berserk")),
+            Err(FileError::MissingExtension)
+        ));
     }
 
     // NOTE: MetadataFileGuard

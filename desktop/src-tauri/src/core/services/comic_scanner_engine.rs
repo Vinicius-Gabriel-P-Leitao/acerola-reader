@@ -1,20 +1,20 @@
 use std::collections::hash_map::DefaultHasher;
-use tauri::{ AppHandle, Emitter };
-use std::path::{ Path, PathBuf };
-use std::hash::{ Hash, Hasher };
-use tokio::sync::mpsc;
+use std::hash::{Hash, Hasher};
+use std::path::{Path, PathBuf};
+use tauri::{AppHandle, Emitter};
 use tokio::fs;
+use tokio::sync::mpsc;
 
-use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
-use crate::infra::filesystem::files_guard::{ ArchiveFileGuard, ScannerGuard };
-use crate::infra::filesystem::files_guard::{ ArtworkFileGuard, FileGuard };
 use crate::data::models::archive::chapter_archive::ChapterArchive;
 use crate::data::models::archive::comic_directory::ComicDirectory;
+use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
+use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
 use crate::infra::error::translations::comic_error::ComicError;
-use crate::infra::filesystem::scanner_engine::ScannerEngine;
 use crate::infra::error::translations::db_error::DbError;
+use crate::infra::filesystem::files_guard::{ArchiveFileGuard, ScannerGuard};
+use crate::infra::filesystem::files_guard::{ArtworkFileGuard, FileGuard};
 use crate::infra::filesystem::path_guard::PathGuard;
+use crate::infra::filesystem::scanner_engine::ScannerEngine;
 
 pub struct ComicScannerService {
     path_guard: PathGuard,
@@ -32,7 +32,8 @@ impl ComicScannerService {
     }
 
     pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), ComicError> {
-        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard
+            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let (tx, mut rx) = mpsc::channel(32);
         let file_guard = ScannerGuard::new();
@@ -58,7 +59,7 @@ impl ComicScannerService {
     async fn process_entry(
         &self,
         entry: crate::infra::filesystem::scanner_engine::DirectoryEntry,
-        _file_guard: &ScannerGuard
+        _file_guard: &ScannerGuard,
     ) -> Result<(), ComicError> {
         let archive_guard = ArchiveFileGuard;
         let artwork_guard = ArtworkFileGuard;
@@ -98,7 +99,8 @@ impl ComicScannerService {
 
         let dir_meta = fs::metadata(&entry.directory).await?;
 
-        let dir_name = entry.directory
+        let dir_name = entry
+            .directory
             .file_name()
             .and_then(|name: &std::ffi::OsStr| name.to_str())
             .unwrap_or("Unknown")
@@ -122,7 +124,10 @@ impl ComicScannerService {
         let saved = match self.comic_repo.base.insert(&comic).await {
             Ok(saved) => saved,
             Err(DbError::UniqueViolation) => {
-                log::debug!("[Scanner] Comic '{}' already indexed, skipping.", comic.name);
+                log::debug!(
+                    "[Scanner] Comic '{}' already indexed, skipping.",
+                    comic.name
+                );
                 return Ok(());
             }
             Err(err) => {
@@ -169,7 +174,10 @@ impl ComicScannerService {
         match self.chapter_repo.base.insert(&chapter).await {
             Ok(_) => {}
             Err(DbError::UniqueViolation) => {
-                log::debug!("[Scanner] Chapter '{}' already indexed, skipping.", chapter.chapter);
+                log::debug!(
+                    "[Scanner] Chapter '{}' already indexed, skipping.",
+                    chapter.chapter
+                );
             }
             Err(err) => {
                 return Err(err.into());
@@ -195,7 +203,9 @@ fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     // FIXME: Colocar tratamento de erros
     meta.modified()
         .map(|time: std::time::SystemTime| {
-            time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64
+            time.duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs() as i64
         })
         .unwrap_or(0)
 }

@@ -54,7 +54,7 @@ pub enum ComicError {
     Io(std::io::Error),
 }
 
-// prettier-ignore
+
 impl From<DbError> for ComicError {
     fn from(db_err: DbError) -> Self {
         match db_err {
@@ -64,7 +64,9 @@ impl From<DbError> for ComicError {
             }
 
             DbError::NotFound => {
-                log::warn!("[ComicError] Record not found — possible race condition or invalid id.");
+                log::warn!(
+                    "[ComicError] Record not found — possible race condition or invalid id."
+                );
                 ComicError::NotFound
             }
 

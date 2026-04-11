@@ -1,5 +1,5 @@
 use crate::data::models::archive::chapter_archive::ChapterArchive;
-use crate::data::repositories::base::{ Entity, Repository };
+use crate::data::repositories::base::{Entity, Repository};
 use crate::infra::error::translations::db_error::DbError;
 use sqlx::SqlitePool;
 
@@ -20,14 +20,18 @@ impl ChapterRepository {
     ///
     /// A ordenação separa a parte inteira e decimal do campo para garantir que
     /// `0.9` venha antes de `0.10` — ordenação numérica, não lexicográfica.
-    // prettier-ignore
+    
     pub async fn get_chapters_paged(
         &self,
         folder_id: i64,
         page_size: i64,
         offset: i64,
     ) -> Result<Vec<ChapterArchive>, DbError> {
-        let cols = ChapterArchive::columns().iter().map(|col| format!("ca.{}", col)).collect::<Vec<_>>().join(", ");
+        let cols = ChapterArchive::columns()
+            .iter()
+            .map(|col| format!("ca.{}", col))
+            .collect::<Vec<_>>()
+            .join(", ");
 
         let result = sqlx::query_as::<_, ChapterArchive>(&format!(
             "SELECT {cols}
@@ -43,7 +47,12 @@ impl ChapterRepository {
                      END AS INTEGER
                  ) ASC
              LIMIT ? OFFSET ?"
-        )).bind(folder_id).bind(page_size).bind(offset).fetch_all(&self.pool).await?;
+        ))
+        .bind(folder_id)
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(result)
     }
@@ -51,7 +60,7 @@ impl ChapterRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::{ ChapterArchive, ChapterRepository };
+    use super::{ChapterArchive, ChapterRepository};
     use crate::data::models::archive::comic_directory::ComicDirectory;
     use crate::data::repositories::base::Repository;
     use crate::infra::error::translations::db_error::DbError;
@@ -85,7 +94,10 @@ mod tests {
 
     async fn setup() -> ChapterRepository {
         let pool = setup_test_db().await;
-        Repository::<ComicDirectory>::new(pool.clone()).insert(&berserk()).await.unwrap();
+        Repository::<ComicDirectory>::new(pool.clone())
+            .insert(&berserk())
+            .await
+            .unwrap();
         ChapterRepository::new(pool)
     }
 
@@ -202,7 +214,10 @@ mod tests {
     #[tokio::test]
     async fn teste_erro_fk_invalida_ao_inserir() {
         let pool = setup_test_db().await;
-        sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await.unwrap();
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .unwrap();
         let repo = ChapterRepository::new(pool);
 
         let invalid = ChapterArchive {

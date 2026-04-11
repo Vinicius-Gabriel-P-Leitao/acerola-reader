@@ -1,4 +1,4 @@
-use std::path::{ Path, PathBuf };
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 /// Erros que podem ocorrer durante a validação ou execução de operações com paths.
@@ -32,7 +32,11 @@ impl PathError {
     }
 
     pub fn access_denied(canonical: &Path, root: &Path) -> Self {
-        log::warn!("[PathError] Access denied: {:?} is outside {:?}", canonical, root);
+        log::warn!(
+            "[PathError] Access denied: {:?} is outside {:?}",
+            canonical,
+            root
+        );
         PathError::AccessDenied
     }
 

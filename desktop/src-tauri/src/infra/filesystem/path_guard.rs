@@ -1,5 +1,5 @@
-use std::path::{ Path, PathBuf };
 use crate::infra::error::translations::path_error::PathError;
+use std::path::{Path, PathBuf};
 
 pub struct PathGuard {
     allowed_root: PathBuf,
@@ -13,7 +13,9 @@ impl PathGuard {
     }
 
     fn validate(&self, path: &Path) -> Result<(), PathError> {
-        let canonical = path.canonicalize().map_err(|_| PathError::not_found(path))?;
+        let canonical = path
+            .canonicalize()
+            .map_err(|_| PathError::not_found(path))?;
 
         if !canonical.starts_with(&self.allowed_root) {
             return Err(PathError::access_denied(&canonical, &self.allowed_root));
@@ -23,7 +25,9 @@ impl PathGuard {
     }
 
     pub fn execute<F, R, E>(&self, path: &Path, action: F) -> Result<R, PathError>
-        where F: FnOnce(&Path) -> Result<R, E>, E: std::fmt::Display
+    where
+        F: FnOnce(&Path) -> Result<R, E>,
+        E: std::fmt::Display,
     {
         self.validate(path)?;
         action(path).map_err(|err: E| PathError::action_failed(path, err))
@@ -85,7 +89,10 @@ mod tests {
 
         let result = guard.execute(&traversal, |_| -> Result<(), String> { Ok(()) });
 
-        assert!(matches!(result, Err(PathError::AccessDenied) | Err(PathError::NotFound(_))));
+        assert!(matches!(
+            result,
+            Err(PathError::AccessDenied) | Err(PathError::NotFound(_))
+        ));
     }
 
     #[test]
@@ -96,10 +103,9 @@ mod tests {
         let file = root.path().join("arquivo.cbz");
         fs::write(&file, b"").unwrap();
 
-        let result = guard.execute(
-            &file,
-            |_| -> Result<(), String> { Err("falha simulada".to_string()) }
-        );
+        let result = guard.execute(&file, |_| -> Result<(), String> {
+            Err("falha simulada".to_string())
+        });
 
         assert!(matches!(result, Err(PathError::ActionFailed(_))));
     }
