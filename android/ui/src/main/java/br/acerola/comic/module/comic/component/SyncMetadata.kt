@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -22,7 +21,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.GroupedHeroItem
 import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroNestedItem
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.pattern.MetadataSourcePattern
@@ -78,29 +79,42 @@ private fun MangadexSection(
     onSyncInfo: () -> Unit,
     onSyncChapters: () -> Unit
 ) {
-    Column {
-        SyncItem(
-            title = stringResource(id = R.string.label_mangadex_group),
-            subtitle = pluralStringResource(
-                id = R.plurals.description_sync_mangadex_remote_info_supporting,
-                count = 1
-            ),
-            iconPainter = painterResource(id = R.drawable.mangadex_v2),
-            iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
-            isActive = isActive,
-            onClick = onSyncInfo
-        )
-
-        if (hasChapters && isActive) {
-            Spacer(modifier = Modifier.height(8.dp))
-            SyncItem(
-                title = stringResource(id = R.string.title_sync_chapters),
-                subtitle = stringResource(id = R.string.description_sync_chapters_remote),
-                iconVector = Icons.Rounded.AutoAwesome,
-                onClick = onSyncChapters
+    Acerola.Component.GroupedHeroItem(
+        title = stringResource(id = R.string.label_mangadex_group),
+        description = pluralStringResource(
+            id = R.plurals.description_sync_mangadex_remote_info_supporting,
+            count = 1
+        ),
+        iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
+        onClick = onSyncInfo,
+        action = if (isActive) {
+            {
+                Icon(
+                    imageVector = Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        } else null,
+        nestedItem = if (hasChapters && isActive) {
+            {
+                Acerola.Component.HeroNestedItem(
+                    title = stringResource(id = R.string.title_sync_chapters),
+                    description = stringResource(id = R.string.description_sync_chapters_remote),
+                    icon = Icons.Rounded.AutoAwesome,
+                    onClick = onSyncChapters
+                )
+            }
+        } else null,
+        icon = {
+            Image(
+                painter = painterResource(id = R.drawable.mangadex_v2),
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
             )
         }
-    }
+    )
 }
 
 @Composable
@@ -125,25 +139,32 @@ private fun ComicInfoSection(
     onSyncInfo: () -> Unit,
     onSyncChapters: () -> Unit
 ) {
-    Column {
-        SyncItem(
-            title = stringResource(id = R.string.title_sync_comic_info),
-            subtitle = stringResource(id = R.string.description_sync_comic_info),
-            iconVector = Icons.Rounded.Description,
-            isActive = isActive,
-            onClick = onSyncInfo
-        )
-
-        if (hasChapters && isActive) {
-            Spacer(modifier = Modifier.height(8.dp))
-            SyncItem(
-                title = stringResource(id = R.string.title_sync_chapters),
-                subtitle = stringResource(id = R.string.description_sync_chapters_internal),
-                iconVector = Icons.Rounded.AutoStories,
-                onClick = onSyncChapters
-            )
-        }
-    }
+    Acerola.Component.GroupedHeroItem(
+        title = stringResource(id = R.string.title_sync_comic_info),
+        description = stringResource(id = R.string.description_sync_comic_info),
+        icon = Icons.Rounded.Description,
+        onClick = onSyncInfo,
+        action = if (isActive) {
+            {
+                Icon(
+                    imageVector = Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        } else null,
+        nestedItem = if (hasChapters && isActive) {
+            {
+                Acerola.Component.HeroNestedItem(
+                    title = stringResource(id = R.string.title_sync_chapters),
+                    description = stringResource(id = R.string.description_sync_chapters_internal),
+                    icon = Icons.Rounded.AutoStories,
+                    onClick = onSyncChapters
+                )
+            }
+        } else null,
+    )
 }
 
 @Composable

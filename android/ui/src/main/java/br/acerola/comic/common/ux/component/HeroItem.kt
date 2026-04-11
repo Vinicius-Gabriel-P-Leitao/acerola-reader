@@ -93,6 +93,128 @@ fun Acerola.Component.HeroItem(
 }
 
 @Composable
+fun Acerola.Component.HeroNestedItem(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        color = Color.Transparent,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = iconBackground,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    icon()
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (description != null) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Acerola.Component.HeroNestedItem(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
+    onClick: () -> Unit,
+) {
+    Acerola.Component.HeroNestedItem(
+        title = title,
+        description = description,
+        modifier = modifier,
+        iconBackground = iconBackground,
+        onClick = onClick,
+        icon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    )
+}
+
+@Composable
+fun Acerola.Component.GroupedHeroItem(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
+    onClick: (() -> Unit)? = null,
+    action: @Composable (() -> Unit)? = null,
+    nestedItem: @Composable (() -> Unit)? = null,
+    icon: @Composable () -> Unit,
+) {
+    Acerola.Component.HeroItem(
+        title = title,
+        modifier = modifier,
+        description = description,
+        iconBackground = iconBackground,
+        onClick = onClick,
+        action = action,
+        bottomContent = nestedItem,
+        icon = icon,
+    )
+}
+
+@Composable
+fun Acerola.Component.GroupedHeroItem(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
+    onClick: (() -> Unit)? = null,
+    action: @Composable (() -> Unit)? = null,
+    nestedItem: @Composable (() -> Unit)? = null,
+) {
+    Acerola.Component.HeroItem(
+        title = title,
+        icon = icon,
+        modifier = modifier,
+        description = description,
+        iconTint = iconTint,
+        iconBackground = iconBackground,
+        onClick = onClick,
+        action = action,
+        bottomContent = nestedItem,
+    )
+}
+
+@Composable
 private fun HeroItemContent(
     title: String,
     description: String?,
