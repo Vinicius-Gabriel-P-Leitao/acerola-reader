@@ -48,6 +48,7 @@
     "sqlite",
     "Sqlite",
     "sqlx",
+    "strs",
     "subdirs",
     "tauri",
     "thiserror",

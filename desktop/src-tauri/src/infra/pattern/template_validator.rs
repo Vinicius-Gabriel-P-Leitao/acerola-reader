@@ -76,7 +76,7 @@ pub fn validate_template(
     Ok(())
 }
 
-fn extract_tags(input: &str) -> Result<Vec<String>, PatternError> {
+pub fn extract_tags(input: &str) -> Result<Vec<String>, PatternError> {
     let mut inside = false;
     let mut buffer = String::new();
     let mut result = Vec::new();
