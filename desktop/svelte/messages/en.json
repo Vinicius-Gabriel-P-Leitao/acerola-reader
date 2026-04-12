@@ -28,6 +28,24 @@
       "placeholder": "Search..."
     }
   },
+  "hooks": {
+    "comic_scanner": {
+      "no_folder": "No folder selected.",
+      "in_progress": "Scan in progress...",
+      "success": "Scan completed!",
+      "error_title": "Scan failed"
+    }
+  },
+  "tauri_errors": {
+    "comic": {
+      "already_exists": { "label": "This comic already exists in your library." },
+      "not_found": { "label": "Comic not found." },
+      "invalid_request": { "label": "Invalid data submitted." },
+      "integrity_violation": { "label": "Integrity error: invalid or missing reference." },
+      "system_failure": { "label": "System failure while processing the comic." },
+      "io_error": { "label": "Filesystem access error." }
+    }
+  },
   "routes": {
     "home": "Home",
     "history": "History",
