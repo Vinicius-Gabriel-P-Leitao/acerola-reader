@@ -20,7 +20,6 @@ impl ChapterRepository {
     ///
     /// A ordenação separa a parte inteira e decimal do campo para garantir que
     /// `0.9` venha antes de `0.10` — ordenação numérica, não lexicográfica.
-    
     pub async fn get_chapters_paged(
         &self,
         folder_id: i64,

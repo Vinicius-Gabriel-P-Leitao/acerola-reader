@@ -47,7 +47,6 @@ impl ComicScannerService {
         let scanner = ScannerEngine::new();
 
         tokio::spawn(async move {
-            // FIXME: Colocar tratamento de erros
             scanner.scan(path, tx).await.unwrap();
         });
 
@@ -99,7 +98,7 @@ impl ComicScannerService {
                 continue;
             }
 
-            // TODO: ComicInfo.xml, .pdf e outros ignorados por ora
+            // INFO: ComicInfo.xml, .pdf e outros ignorados por ora
         }
 
         // NOTE: Só persiste se tiver arquivos de quadrinhos
