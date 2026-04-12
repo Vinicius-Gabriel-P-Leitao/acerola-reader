@@ -5,7 +5,7 @@ import * as m from "$lib/paraglide/messages";
 import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
 import { type DirectoryScanCommand } from "$lib/contracts/library/library.commands";
 import type { ErrorPayload } from "$lib/contracts/shared/shared.payloads";
-import { resolveErrorMessage } from "$lib/contracts/errors/errors.payloads";
+import { resolveErrorMessage } from "$lib/contracts/errors/errors.i18n";
 import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
 
 const { notify, pop } = notificationStore;

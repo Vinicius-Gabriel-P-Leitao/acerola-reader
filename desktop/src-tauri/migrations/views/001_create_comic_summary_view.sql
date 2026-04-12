@@ -10,3 +10,5 @@ SELECT
   mm.id AS metadata_id
 FROM comic_directory md
 LEFT JOIN comic_metadata mm ON md.id = mm.comic_directory_fk;
+
+
