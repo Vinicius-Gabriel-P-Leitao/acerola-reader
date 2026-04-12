@@ -11,7 +11,8 @@
   import { m } from "$lib/paraglide/messages";
 
   import { useComicInfoPreference } from "$lib/hooks/store/use-comic-info-preference.svelte";
-  import { useComicScanner } from "$lib/hooks/store/use-comic-scanner.svelte";
+  import { useLibraryScanner } from "$lib/hooks/store/use-comic-scanner.svelte";
+  import { DIRECTORY_SCAN_COMMANDS } from "$lib/contracts/library/library.commands";
   import { useSelectFolder } from "$lib/hooks/store/use-select-folder.svelte";
   import { useTheme } from "$lib/hooks/theme/use-theme.svelte";
   import { onMount } from "svelte";
@@ -29,14 +30,22 @@
 
   const ctx = useTheme();
   const folder = useSelectFolder();
-  const comicScanner = useComicScanner();
   const comicInfoPreference = useComicInfoPreference();
+
+  const refreshScanner = useLibraryScanner(
+    DIRECTORY_SCAN_COMMANDS.refreshLibrary,
+  );
+
+  const rebuildScanner = useLibraryScanner(
+    DIRECTORY_SCAN_COMMANDS.rebuildLibrary,
+  );
 
   onMount(async () => {
     await folder.loadSavedPath();
-     
+
     if (folder.folderPath) {
-      comicScanner.init(folder.folderPath);
+      refreshScanner.init(folder.folderPath);
+      rebuildScanner.init(folder.folderPath);
     }
   });
 
@@ -92,12 +101,11 @@
         {/snippet}
       </AcerolaHeroButton>
 
-      <!-- Item: Iniciar sincronização rápida -->
+      <!-- Item: Iniciar sincronização rápida, aqui sera usado o refresh_library rapido -->
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.fast.title"]()}
         description={m["pages.config.file_system.sync.fast.desc"]()}
-        /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
-        onclick={() => comicScanner.startSpeedScanner()}
+        onclick={() => refreshScanner.start()}
       >
         {#snippet icon()}
           <FolderSync class="text-chart-3" size={24} />
@@ -112,12 +120,11 @@
         {/snippet}
       </AcerolaHeroButton>
 
-      <!-- Item: Sincronização profunda, reescreve tudo do banco de dados -->
+      <!-- Item: Sincronização profunda, reescreve tudo do banco de dados, aqui sera usado o rebuild_library -->
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.deep.title"]()}
         description={m["pages.config.file_system.sync.deep.desc"]()}
-        /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
-        onclick={() => console.log("sync")}
+        onclick={() => rebuildScanner.start()}
       >
         {#snippet icon()}
           <FolderSync class="text-chart-1" size={24} />

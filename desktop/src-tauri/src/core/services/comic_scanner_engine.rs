@@ -1,29 +1,41 @@
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use tauri::{AppHandle, Emitter};
 use tokio::fs;
 use tokio::sync::mpsc;
 
-use crate::data::models::archive::chapter_archive::ChapterArchive;
+use crate::core::services::chapter_scanner_engine::ChapterScannerService;
 use crate::data::models::archive::chapter_template::ChapterTemplate;
 use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
 use crate::data::repositories::archive::chapter_template_repo::ChapterTemplateRepository;
 use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
 use crate::infra::error::translations::comic_error::ComicError;
 use crate::infra::error::translations::db_error::DbError;
-use crate::infra::filesystem::files_guard::{ArchiveFileGuard, ScannerGuard};
-use crate::infra::filesystem::files_guard::{ArtworkFileGuard, FileGuard};
-use crate::infra::filesystem::path_guard::PathGuard;
+use crate::infra::filesystem::files_guard::{
+    ArchiveFileGuard, ArtworkFileGuard, FileGuard, ScannerGuard,
+};
+use crate::infra::filesystem::path_guard::{path_hash, PathGuard};
 use crate::infra::filesystem::scanner_engine::{DirectoryEntry, ScannerEngine};
-use crate::infra::pattern::chapter_template::{detect_template, extract_chapter_parts};
+use crate::infra::pattern::chapter_template::detect_template;
 use crate::infra::pattern::template_validator::{extract_tags, validate_template};
 
+/// Orquestra o scan de uma biblioteca de quadrinhos no sistema de arquivos.
+///
+/// Expõe três estratégias de sincronização com o banco de dados:
+///
+/// - [`refresh_library`]: processa todas as pastas encontradas no disco (upsert bruto).
+/// - [`incremental_scan`]: processa apenas pastas novas ou modificadas, remove deletadas.
+/// - [`rebuild_library`]: faz o refresh completo e re-escaneia os capítulos de cada comic.
+///
+/// O progresso é reportado via callback `on_progress: impl FnMut(String)`, permitindo
+/// que o command layer emita eventos para o frontend sem acoplamento direto ao `AppHandle`.
+///
+/// [`refresh_library`]: ComicScannerService::refresh_library
+/// [`incremental_scan`]: ComicScannerService::incremental_scan
+/// [`rebuild_library`]: ComicScannerService::rebuild_library
 pub struct ComicScannerService {
     path_guard: PathGuard,
     comic_repo: ComicRepository,
-    chapter_repo: ChapterRepository,
+    chapter_scanner: ChapterScannerService,
     template_repo: ChapterTemplateRepository,
 }
 
@@ -32,42 +44,129 @@ impl ComicScannerService {
         Self {
             path_guard: PathGuard::new(root),
             comic_repo: ComicRepository::new(pool.clone()),
-            chapter_repo: ChapterRepository::new(pool.clone()),
+            chapter_scanner: ChapterScannerService::new(pool.clone()),
             template_repo: ChapterTemplateRepository::new(pool.clone()),
         }
     }
 
-    pub async fn scan(&self, path: PathBuf, app: &AppHandle) -> Result<(), ComicError> {
+    /// Processa todas as pastas encontradas no disco, sem comparar com o banco.
+    /// Usa INSERT OR IGNORE — se a pasta já existe, pula.
+    pub async fn refresh_library(
+        &self,
+        path: PathBuf,
+        mut on_progress: impl FnMut(String),
+    ) -> Result<(), ComicError> {
         self.path_guard
             .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
-        let (tx, mut rx) = mpsc::channel(32);
-
-        let file_guard = ScannerGuard::new();
-        let scanner = ScannerEngine::new();
-
-        tokio::spawn(async move {
-            scanner.scan(path, tx).await.unwrap();
-        });
-
         let templates = self.template_repo.base.find_all().await?;
+        let entries = self.collect_entries(path).await?;
 
-        while let Some(entry) = rx.recv().await {
+        for entry in entries {
             let directory = entry.directory.to_string_lossy().to_string();
-
-            // Emite o progresso e qual pasta está sendo escaneada
-            self.process_entry(entry, &file_guard, &templates).await?;
-            // FIXME: Verificar se dá pra fazer um contrato no command que eu consiga usar
-            let _ = app.emit("scan:progress", directory);
+            self.process_entry(entry, &templates).await?;
+            on_progress(directory);
         }
 
         Ok(())
     }
 
+    /// Compara o disco com o banco e processa apenas pastas novas ou modificadas.
+    /// Remove do banco as pastas que não existem mais no disco.
+    pub async fn incremental_scan(
+        &self,
+        path: PathBuf,
+        mut on_progress: impl FnMut(String),
+    ) -> Result<(), ComicError> {
+        self.path_guard
+            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+
+        let templates = self.template_repo.base.find_all().await?;
+        let discovered = self.collect_entries(path).await?;
+        let indexed: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
+
+        let indexed_map: HashMap<String, &ComicDirectory> = indexed
+            .iter()
+            .map(|comic: &ComicDirectory| (comic.path.clone(), comic))
+            .collect();
+
+        let discovered_paths: HashSet<String> = discovered
+            .iter()
+            .map(|entry: &DirectoryEntry| entry.directory.to_string_lossy().to_string())
+            .collect();
+
+        // Remove do banco pastas que sumiram do disco
+        for comic in &indexed {
+            if !discovered_paths.contains(&comic.path) {
+                self.comic_repo.base.delete(comic.id).await?;
+            }
+        }
+
+        for entry in discovered {
+            let dir_path = entry.directory.to_string_lossy().to_string();
+            let dir_meta = fs::metadata(&entry.directory).await?;
+            let disk_modified = modified_secs(&dir_meta);
+
+            let needs_processing = match indexed_map.get(&dir_path) {
+                None => true,
+                Some(existing) => existing.last_modified < disk_modified,
+            };
+
+            if needs_processing {
+                on_progress(dir_path);
+                self.process_entry(entry, &templates).await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Faz o refresh completo de todas as pastas e re-escaneia os capítulos de cada comic já indexado.
+    pub async fn rebuild_library(
+        &self,
+        path: PathBuf,
+        mut on_progress: impl FnMut(String),
+    ) -> Result<(), ComicError> {
+        self.refresh_library(path, &mut on_progress).await?;
+
+        let all_comics: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
+        let templates = self.template_repo.base.find_all().await?;
+
+        for comic in all_comics {
+            on_progress(comic.path.clone());
+            self.rescan_chapters_for(&comic, &templates).await?;
+        }
+
+        Ok(())
+    }
+
+    /// Dispara o [`ScannerEngine`] e coleta todas as [`DirectoryEntry`] encontradas.
+    async fn collect_entries(&self, path: PathBuf) -> Result<Vec<DirectoryEntry>, ComicError> {
+        let (tx, mut rx) = mpsc::channel(32);
+        let scanner = ScannerEngine::new();
+        let _guard = ScannerGuard::new();
+
+        tokio::spawn(async move {
+            // FIXME: Colocar tratamento de erros
+            scanner.scan(path, tx).await.unwrap();
+        });
+
+        let mut entries = Vec::new();
+        while let Some(entry) = rx.recv().await {
+            entries.push(entry);
+        }
+
+        Ok(entries)
+    }
+
+    /// Processa uma entrada de diretório: classifica os arquivos, persiste o comic e
+    /// delega cada capítulo para [`ChapterScannerService::scan_chapter`].
+    ///
+    /// Pastas sem arquivos de quadrinhos são silenciosamente ignoradas.
+    #[rustfmt::skip]
     async fn process_entry(
         &self,
         entry: DirectoryEntry,
-        _file_guard: &ScannerGuard,
         templates: &[ChapterTemplate],
     ) -> Result<(), ComicError> {
         let archive_guard = ArchiveFileGuard;
@@ -78,10 +177,7 @@ impl ComicScannerService {
         let mut cover: Option<String> = None;
 
         for file in entry.files {
-            let name = file
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or("");
+            let name = file.file_name().and_then(|name| name.to_str()).unwrap_or("");
 
             if archive_guard.is_allowed(&file).is_ok() {
                 comic_files.push(file);
@@ -101,33 +197,13 @@ impl ComicScannerService {
             // INFO: ComicInfo.xml, .pdf e outros ignorados por ora
         }
 
-        // NOTE: Só persiste se tiver arquivos de quadrinhos
         if comic_files.is_empty() {
             return Ok(());
         }
 
-        let detected: Option<&ChapterTemplate> = comic_files
-            .first()
-            .and_then(|file| file.file_name())
-            .and_then(|name| name.to_str())
-            .and_then(|file_str| {
-                let template_strs: Vec<&str> = templates
-                    .iter()
-                    .map(|template| template.pattern.as_str())
-                    .collect();
-
-                detect_template(file_str, &template_strs, |template| {
-                    validate_template(template, extract_tags)
-                })
-            })
-            .and_then(|pattern| {
-                templates
-                    .iter()
-                    .find(|template| template.pattern == pattern)
-            });
-
-        let template_fk = detected.map(|template| template.id);
-        let template_pattern = detected.map(|template| template.pattern.as_str());
+        let detected = self.detect_template_for(&comic_files, templates);
+        let template_fk = detected.map(|t| t.id);
+        let template_pattern = detected.map(|t| t.pattern.as_str());
 
         let dir_meta = fs::metadata(&entry.directory).await?;
         let dir_name = entry
@@ -137,7 +213,6 @@ impl ComicScannerService {
             .unwrap_or("Unknown")
             .to_string();
 
-        // TODO: Fazer o last_modified abrir porta para o Deep sync e fast sync
         let comic = ComicDirectory {
             id: path_hash(&entry.directory),
             name: dir_name,
@@ -159,92 +234,280 @@ impl ComicScannerService {
                 );
                 return Ok(());
             }
-            Err(err) => {
-                return Err(err.into());
-            }
+            Err(err) => return Err(err.into()),
         };
 
         for (index, file) in comic_files.iter().enumerate() {
-            self.process_chapter(&file, index, saved.id, template_pattern)
-                .await?;
+            self.chapter_scanner.scan_chapter(file, index, saved.id, template_pattern).await?;
         }
 
         Ok(())
     }
 
-    async fn process_chapter(
+    /// Re-escaneia todos os arquivos de capítulo de um comic já indexado.
+    ///
+    /// Usado pelo [`rebuild_library`] para garantir que capítulos existentes estejam
+    /// atualizados sem duplicar registros (INSERT OR IGNORE).
+    ///
+    /// [`rebuild_library`]: ComicScannerService::rebuild_library
+    #[rustfmt::skip]
+    async fn rescan_chapters_for(
         &self,
-        file: &Path,
-        index: usize,
-        comic_id: i64,
-        template: Option<&str>,
+        comic: &ComicDirectory,
+        templates: &[ChapterTemplate],
     ) -> Result<(), ComicError> {
-        let meta = fs::metadata(file).await?;
+        let comic_path = Path::new(&comic.path);
 
-        let file_name = file
-            .file_name()
-            .and_then(|it| it.to_str())
-            .ok_or_else(|| ComicError::SystemFailure("File name is invalid".into()))?;
+        if !comic_path.exists() {
+            return Ok(());
+        }
 
-        let file_size = meta.len();
-        let file_modified = modified_secs(&meta);
+        let archive_guard = ArchiveFileGuard;
+        let mut files: Vec<PathBuf> = vec![];
 
-        let fast_hash = format!("{}|{}|{}", file_name, file_size, file_modified);
+        let mut read_dir = fs::read_dir(comic_path).await?;
+        while let Some(entry) = read_dir.next_entry().await? {
+            let path = entry.path();
 
-        let chapter_name = file
-            .file_stem()
-            .and_then(|it| it.to_str())
-            .unwrap_or("unknown")
-            .to_string();
-
-        let chapter_sort = template
-            .and_then(|template| {
-                extract_chapter_parts(file_name, template, |template| validate_template(template, extract_tags))
-            })
-            .map(|(chapter, decimal)| ChapterArchive::format_sort(chapter, decimal))
-            .unwrap_or_else(|| ChapterArchive::fallback_sort(&chapter_name, index));
-
-        let chapter = ChapterArchive {
-            id: path_hash(file),
-            chapter: chapter_name.clone(),
-            path: file.to_string_lossy().to_string(),
-            chapter_sort: chapter_sort,
-            fast_hash: Some(fast_hash),
-            comic_directory_fk: comic_id,
-            last_modified: file_modified,
-        };
-
-        match self.chapter_repo.base.insert(&chapter).await {
-            Ok(_) => {}
-            Err(DbError::UniqueViolation) => {
-                log::debug!(
-                    "[Scanner] Chapter '{}' already indexed, skipping.",
-                    chapter.chapter
-                );
+            if archive_guard.is_allowed(&path).is_ok() {
+                files.push(path);
             }
-            Err(err) => {
-                return Err(err.into());
-            }
+        }
+
+        files.sort();
+
+        let template_pattern = comic
+            .chapter_template_fk
+            .and_then(|fk| templates.iter().find(|t| t.id == fk))
+            .map(|it| it.pattern.as_str());
+
+        for (index, file) in files.iter().enumerate() {
+            self.chapter_scanner.scan_chapter(file, index, comic.id, template_pattern).await?;
         }
 
         Ok(())
     }
-}
 
-/// Gera um id determinístico baseado no path — mesmo path sempre gera o mesmo id.
-/// Garante que re-escanear o mesmo diretório não crie duplicatas.
-fn path_hash(path: &Path) -> i64 {
-    let mut hasher = DefaultHasher::new();
-    path.hash(&mut hasher);
-    (hasher.finish() & 0x7fff_ffff_ffff_ffff) as i64
+    /// Detecta o template de nomenclatura a partir do primeiro arquivo da lista.
+    ///
+    /// Retorna `None` se nenhum template registrado corresponder ao nome do arquivo.
+    fn detect_template_for<'a>(
+        &self,
+        files: &[PathBuf],
+        templates: &'a [ChapterTemplate],
+    ) -> Option<&'a ChapterTemplate> {
+        files
+            .first()
+            .and_then(|file| file.file_name())
+            .and_then(|name| name.to_str())
+            .and_then(|file_str| {
+                let template_strs: Vec<&str> =
+                    templates.iter().map(|t| t.pattern.as_str()).collect();
+
+                detect_template(file_str, &template_strs, |t| {
+                    validate_template(t, extract_tags)
+                })
+            })
+            .and_then(|pattern| templates.iter().find(|t| t.pattern == pattern))
+    }
 }
 
 /// Retorna o `last_modified` em segundos desde Unix epoch.
-/// TODO: Verificar se a forma de ver o last_modified é igual em linux e windows, ver também se é possivel fazer app funcionar no flatpak
+/// TODO: Verificar se a forma de ver o last_modified é igual em linux e windows
 #[rustfmt::skip]
 fn modified_secs(meta: &std::fs::Metadata) -> i64 {
-    // FIXME: Colocar tratamento de erros
-    meta.modified().map(|time: std::time::SystemTime| {
-            time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64
-        }).unwrap_or(0)
+    meta.modified().map(|time| time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64).unwrap_or(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ComicScannerService;
+    use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
+    use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
+    use crate::tests::utils::setup_test_db::setup_test_db;
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+    use tokio::fs;
+
+    async fn setup(root: &TempDir) -> (ComicScannerService, sqlx::SqlitePool) {
+        let pool = setup_test_db().await;
+        let service = ComicScannerService::new(root.path().to_path_buf(), pool.clone());
+        (service, pool)
+    }
+
+    async fn create_manga_dir(root: &TempDir, name: &str, chapters: &[&str]) -> PathBuf {
+        let dir = root.path().join(name);
+        fs::create_dir_all(&dir).await.unwrap();
+        for chapter in chapters {
+            fs::write(dir.join(chapter), b"fake cbz").await.unwrap();
+        }
+        dir
+    }
+
+    async fn count_comics(pool: &sqlx::SqlitePool) -> i64 {
+        ComicRepository::new(pool.clone())
+            .base
+            .count()
+            .await
+            .unwrap()
+    }
+
+    async fn count_chapters(pool: &sqlx::SqlitePool) -> i64 {
+        ChapterRepository::new(pool.clone())
+            .base
+            .count()
+            .await
+            .unwrap()
+    }
+
+    // NOTE: refresh_library
+
+    #[tokio::test]
+    async fn refresh_library_indexa_todos_comics() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
+        create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        assert_eq!(count_comics(&pool).await, 2);
+    }
+
+    #[tokio::test]
+    async fn refresh_library_indexa_chapters_de_cada_comic() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz", "Ch. 3.cbz"]).await;
+
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        assert_eq!(count_chapters(&pool).await, 3);
+    }
+
+    #[tokio::test]
+    async fn refresh_library_ignora_pasta_sem_cbz() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        let empty = root.path().join("SemArquivos");
+        fs::create_dir_all(&empty).await.unwrap();
+        fs::write(empty.join("cover.jpg"), b"img").await.unwrap();
+
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        assert_eq!(count_comics(&pool).await, 0);
+    }
+
+    // NOTE: incremental_scan
+
+    #[tokio::test]
+    async fn incremental_scan_nao_processa_comic_sem_mudanca() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, _) = setup(&root).await;
+
+        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        let mut progress_count = 0usize;
+        service
+            .incremental_scan(root.path().to_path_buf(), |_| {
+                progress_count += 1;
+            })
+            .await
+            .unwrap();
+
+        assert_eq!(progress_count, 0, "Nenhuma pasta deveria ser reprocessada");
+    }
+
+    #[tokio::test]
+    async fn incremental_scan_processa_pasta_nova() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+
+        service
+            .incremental_scan(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        assert_eq!(count_comics(&pool).await, 2);
+    }
+
+    #[tokio::test]
+    async fn incremental_scan_remove_pasta_deletada() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        fs::remove_dir_all(root.path().join("Vinland Saga"))
+            .await
+            .unwrap();
+
+        service
+            .incremental_scan(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        let comics = ComicRepository::new(pool.clone())
+            .base
+            .find_all()
+            .await
+            .unwrap();
+        assert_eq!(comics.len(), 1);
+        assert_eq!(comics[0].name, "Berserk");
+    }
+
+    // NOTE: rebuild_library
+
+    #[tokio::test]
+    async fn rebuild_library_nao_duplica_chapters() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
+
+        service
+            .refresh_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        let before = count_chapters(&pool).await;
+
+        service
+            .rebuild_library(root.path().to_path_buf(), |_| {})
+            .await
+            .unwrap();
+
+        assert_eq!(count_chapters(&pool).await, before);
+    }
 }

@@ -38,6 +38,14 @@ impl<T: Entity> Repository<T> {
     }
 
     
+    pub async fn count(&self) -> Result<i64, DbError> {
+        let table = T::table_name();
+        let result = query_as::<_, (i64,)>(&format!("SELECT COUNT(*) FROM {}", table))
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(result.0)
+    }
+
     pub async fn find_all(&self) -> Result<Vec<T>, DbError>
     where
         T: Entity + for<'row> FromRow<'row, SqliteRow> + Send + Unpin,

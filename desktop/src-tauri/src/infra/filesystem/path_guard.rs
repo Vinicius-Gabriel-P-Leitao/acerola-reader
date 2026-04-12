@@ -1,5 +1,15 @@
 use crate::infra::error::translations::path_error::PathError;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
+
+/// Gera um id determinístico baseado no path — mesmo path sempre gera o mesmo id.
+/// Garante que re-escanear o mesmo diretório não crie duplicatas.
+pub fn path_hash(path: &Path) -> i64 {
+    let mut hasher = DefaultHasher::new();
+    path.hash(&mut hasher);
+    (hasher.finish() & 0x7fff_ffff_ffff_ffff) as i64
+}
 
 pub struct PathGuard {
     allowed_root: PathBuf,

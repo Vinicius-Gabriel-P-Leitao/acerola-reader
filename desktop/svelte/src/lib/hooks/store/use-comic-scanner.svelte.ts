@@ -2,24 +2,24 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "svelte-sonner";
 import * as m from "$lib/paraglide/messages";
-import { LIBRARY_COMMANDS } from "$lib/contracts/library/library.commands";
 import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
+import { type DirectoryScanCommand } from "$lib/contracts/library/library.commands";
 import type { ErrorPayload } from "$lib/contracts/shared/shared.payloads";
 import { resolveErrorMessage } from "$lib/contracts/errors/errors.payloads";
 import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
 
 const { notify, pop } = notificationStore;
 
-export function useComicScanner() {
-  let scanning = $state(false);
-  let progressId: number | undefined;
+export function useLibraryScanner(command: DirectoryScanCommand) {
   let path = $state<string | undefined>(undefined);
+  let progressId: number | undefined;
+  let scanning = $state(false);
 
   function init(folderPath: string) {
     path = folderPath;
   }
 
-  async function startSpeedScanner() {
+  async function start() {
     if (!path) {
       toast.error(m["hooks.comic_scanner.no_folder"]());
       return;
@@ -54,13 +54,13 @@ export function useComicScanner() {
 
     const unlistenErr = await listen<ErrorPayload>(
       LIBRARY_EVENTS.scanError,
-      (event) => {
+      (it) => {
         if (progressId !== undefined) {
           pop(progressId);
           progressId = undefined;
         }
 
-        const description = resolveErrorMessage(event.payload);
+        const description = resolveErrorMessage(it.payload);
         notify.error(m["hooks.comic_scanner.error_title"](), {
           description,
           duration: 0,
@@ -76,12 +76,12 @@ export function useComicScanner() {
       },
     );
 
-    await invoke(LIBRARY_COMMANDS.comicScanner, { path });
+    await invoke(command, { path });
   }
 
   return {
     init,
-    startSpeedScanner,
+    start,
     get scanning() {
       return scanning;
     },
