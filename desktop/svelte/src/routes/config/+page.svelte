@@ -6,18 +6,19 @@
   import AcerolaSwitch from "$lib/components/acerola-switch/acerola-switch.svelte";
   import ThemePicker from "./components/theme-picker.svelte";
 
-  import * as Command from "$lib/components/ui/command/index.js";
-
+  import * as Command from "$lib/components/ui/command";
   import { LANGUAGES } from "$lib/constants/languages";
-
   import { m } from "$lib/paraglide/messages";
 
-  import { useComicInfoPreference } from "$lib/hooks/use-comic-info-preference.svelte";
-  import { useLibrary } from "$lib/hooks/use-library.svelte";
-  import { useTheme } from "$lib/hooks/use-theme.svelte";
+  import { useComicInfoPreference } from "$lib/hooks/store/use-comic-info-preference.svelte";
+  import { useLibraryScanner } from "$lib/hooks/store/use-comic-scanner.svelte";
+  import { DIRECTORY_SCAN_COMMANDS } from "$lib/contracts/library/library.commands";
+  import { useSelectFolder } from "$lib/hooks/store/use-select-folder.svelte";
+  import { useTheme } from "$lib/hooks/theme/use-theme.svelte";
+  import { onMount } from "svelte";
 
-  import MangaDexIcon from "$lib/assets/icons/mangadex.svg?component";
   import AniListIcon from "$lib/assets/icons/anilist.svg?component";
+  import MangaDexIcon from "$lib/assets/icons/mangadex.svg?component";
   import CloudSync from "@lucide/svelte/icons/cloud-sync";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import FolderIcon from "@lucide/svelte/icons/folder";
@@ -28,11 +29,28 @@
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
 
   const ctx = useTheme();
-  const library = useLibrary();
+  const folder = useSelectFolder();
   const comicInfoPreference = useComicInfoPreference();
 
+  const refreshScanner = useLibraryScanner(
+    DIRECTORY_SCAN_COMMANDS.refreshLibrary,
+  );
+
+  const rebuildScanner = useLibraryScanner(
+    DIRECTORY_SCAN_COMMANDS.rebuildLibrary,
+  );
+
+  onMount(async () => {
+    await folder.loadSavedPath();
+
+    if (folder.folderPath) {
+      refreshScanner.init(folder.folderPath);
+      rebuildScanner.init(folder.folderPath);
+    }
+  });
+
   $effect(() => {
-    library.loadSavedPath();
+    folder.loadSavedPath();
   });
 
   $effect(() => {
@@ -66,9 +84,9 @@
       <AcerolaHeroButton
         title={m["pages.config.file_system.comic_path.title"]()}
         description={m["pages.config.file_system.comic_path.desc"]({
-          path: library.folderPath ?? "",
+          path: folder.folderPath ?? "",
         })}
-        onclick={library.selectFolder}
+        onclick={folder.selectFolder}
       >
         {#snippet icon()}
           <FolderIcon class="text-chart-5" size={24} />
@@ -83,12 +101,11 @@
         {/snippet}
       </AcerolaHeroButton>
 
-      <!-- Item: Iniciar sincronização rápida -->
+      <!-- Item: Iniciar sincronização rápida, aqui sera usado o refresh_library rapido -->
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.fast.title"]()}
         description={m["pages.config.file_system.sync.fast.desc"]()}
-        /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
-        onclick={() => console.log("sync")}
+        onclick={() => refreshScanner.start()}
       >
         {#snippet icon()}
           <FolderSync class="text-chart-3" size={24} />
@@ -103,12 +120,11 @@
         {/snippet}
       </AcerolaHeroButton>
 
-      <!-- Item: Sincronização profunda, reescreve tudo do banco de dados -->
+      <!-- Item: Sincronização profunda, reescreve tudo do banco de dados, aqui sera usado o rebuild_library -->
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.deep.title"]()}
         description={m["pages.config.file_system.sync.deep.desc"]()}
-        /* FIXME: Criar hook que vai chamar invoke do tauri e buscar os dados */
-        onclick={() => console.log("sync")}
+        onclick={() => rebuildScanner.start()}
       >
         {#snippet icon()}
           <FolderSync class="text-chart-1" size={24} />
@@ -145,7 +161,7 @@
   </section>
 
   <!-- Aparência (Componente Existente) -->
-  <ThemePicker theme={ctx.theme} mode={ctx.mode} onselect={ctx.setTheme} />
+  <ThemePicker theme={ctx.theme} mode={ctx.resolved} onselect={ctx.setTheme} />
 
   <!-- Metadados -->
 

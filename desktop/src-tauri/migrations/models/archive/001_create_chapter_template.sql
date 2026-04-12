@@ -1,4 +1,4 @@
-CREATE TABLE chapter_template (
+CREATE TABLE IF NOT EXISTS chapter_template (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   label TEXT NOT NULL UNIQUE,
   pattern TEXT NOT NULL,

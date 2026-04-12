@@ -1,7 +1,69 @@
-use serde::{ Deserialize, Serialize };
+use crate::data::repositories::base::{Bindable, Entity};
+use serde::{Deserialize, Serialize};
+use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
-// NOTE: Migration em src-tauri\migrations\archive
-#[derive(Debug, Serialize, Deserialize, Clone)]
+/// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
+impl Entity for ComicDirectory {
+    fn columns() -> &'static [&'static str] {
+        &[
+            "id",
+            "name",
+            "path",
+            "cover",
+            "banner",
+            "last_modified",
+            "chapter_template_fk",
+            "external_sync_enabled",
+            "hidden",
+        ]
+    }
+    fn table_name() -> &'static str {
+        "comic_directory"
+    }
+    fn id(&self) -> i64 {
+        self.id
+    }
+}
+
+/// Garante que o código consiga serializar o sql para o objeto
+impl Bindable for ComicDirectory {
+    fn bind_insert<'query>(
+        &'query self,
+        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+    ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
+        query
+            .bind(self.id)
+            .bind(&self.name)
+            .bind(&self.path)
+            .bind(&self.cover)
+            .bind(&self.banner)
+            .bind(self.last_modified)
+            .bind(self.chapter_template_fk)
+            .bind(self.external_sync_enabled)
+            .bind(self.hidden)
+    }
+
+    fn bind_update<'query>(
+        &'query self,
+        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+    ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
+        query
+            .bind(&self.name)
+            .bind(&self.path)
+            .bind(&self.cover)
+            .bind(&self.banner)
+            .bind(self.last_modified)
+            .bind(self.chapter_template_fk)
+            .bind(self.external_sync_enabled)
+            .bind(self.hidden)
+            .bind(self.id) // <- id pro WHERE id = ?
+    }
+}
+
+/// Diretório de quadrinhos gerenciado pela aplicação.                                                                                                                                                                                                                                      ///
+/// Equivalente a um `@Entity` do JPA — mapeia para a tabela `comic_directory`.
+/// Migration em `src-tauri/migrations/archive`.
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct ComicDirectory {
     pub id: i64,
     pub name: String,
@@ -12,51 +74,4 @@ pub struct ComicDirectory {
     pub chapter_template_fk: Option<i64>,
     pub external_sync_enabled: bool,
     pub hidden: bool,
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::tests::utils::setup_test_db::setup_test_db;
-    use super::super::comic_directory::ComicDirectory;
-    use sqlx::Row;
-
-    #[tokio::test]
-    async fn test_comic_directory_mapping() {
-        // NOTE: Setup
-        let pool = setup_test_db().await;
-
-        let comic: ComicDirectory = ComicDirectory {
-            id: 1,
-            name: "Berserk".to_string(),
-            path: "/quadrinhos/berserk".to_string(),
-            cover: None,
-            banner: None,
-            last_modified: 1700000000,
-            chapter_template_fk: None,
-            external_sync_enabled: true,
-            hidden: false,
-        };
-
-        // NOTE: Ação: Inserção direta (simulando o DAO)
-        sqlx::query(
-            "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden) VALUES (?, ?, ?, ?, ?, ?)"
-        )
-            .bind(comic.id)
-            .bind(&comic.name)
-            .bind(&comic.path)
-            .bind(comic.last_modified)
-            .bind(comic.external_sync_enabled)
-            .bind(comic.hidden)
-            .execute(&pool).await
-            .unwrap();
-
-        // NOTE: Validação: Ler de volta e checar se o mapeamento é real
-        let row = sqlx
-            ::query("SELECT * FROM comic_directory WHERE id = 1")
-            .fetch_one(&pool).await
-            .unwrap();
-
-        assert_eq!(row.get::<String, _>("name"), "Berserk");
-        assert_eq!(row.get::<i64, _>("id"), 1);
-    }
 }

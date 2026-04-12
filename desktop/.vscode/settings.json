@@ -31,5 +31,28 @@
     "**/build": true,
     "**/gen": true
   },
-  "cSpell.words": ["tauri"]
+  "cSpell.words": [
+    "anilist",
+    "axum",
+    "catppuccin",
+    "dracula",
+    "inlang",
+    "mangadex",
+    "mdns",
+    "nord",
+    "outdir",
+    "paraglide",
+    "poppanator",
+    "recv",
+    "serde",
+    "sqlite",
+    "Sqlite",
+    "sqlx",
+    "strs",
+    "subdirs",
+    "tauri",
+    "thiserror",
+    "tokio",
+    "unlisten"
+  ]
 }
