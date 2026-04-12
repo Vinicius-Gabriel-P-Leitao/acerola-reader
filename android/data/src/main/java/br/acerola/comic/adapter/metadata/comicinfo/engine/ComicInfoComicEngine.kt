@@ -2,6 +2,7 @@ package br.acerola.comic.adapter.metadata.comicinfo.engine
 
 import android.database.sqlite.SQLiteException
 import android.net.Uri
+import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
@@ -12,10 +13,10 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
-import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
+import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
@@ -95,7 +96,7 @@ class ComicInfoComicEngine @Inject constructor(
                         bestMatch.cover?.let { dto ->
                             downloadCoverService.searchMedia(dto.url).onRight { bytes ->
                                 coverService.processCover(
-                                    rootUri = Uri.parse(directory.path),
+                                    rootUri = directory.path.toUri(),
                                     folderId = directory.id,
                                     bytes = bytes,
                                     coverUrl = dto.url,
@@ -118,10 +119,6 @@ class ComicInfoComicEngine @Inject constructor(
                 _isIndexing.value = false
             }
         }
-
-    override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
-    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
-    override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(value = Unit)
 
     companion object {
         private const val TAG = "ComicInfoMangaRepository"

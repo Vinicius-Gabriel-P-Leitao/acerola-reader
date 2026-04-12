@@ -181,21 +181,6 @@ class MangadexChapterEngine @Inject constructor(
         )
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<ChapterRemoteInfoPageDto> {
-        return chapterMetadataDao.observeChaptersByMetadataAndNumbers(mangaId, chapters).flatMapLatest { chapterList ->
-            val chapterIds = chapterList.map { it.id }
-
-            flow {
-                val sources: List<ChapterDownloadSource> = chapterIds.takeIf { it.isNotEmpty() }?.let {
-                    chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
-                } ?: emptyList()
-
-                emit(value = chapterList.toViewPageDto(sources = sources))
-            }
-        }
-    }
-
     private fun matchRemoteWithArchive(
         remote: List<ChapterMetadataDto>, local: List<ChapterArchive>
     ): List<Pair<ChapterArchive, ChapterMetadataDto>> {

@@ -1,7 +1,6 @@
 package br.acerola.comic.usecase.chapter
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -21,12 +20,6 @@ open class ObserveChaptersUseCase<T>(
         return chapterRepository.observeChapters(mangaId)
     }
 
-    /**
-     * Retorna um fluxo para uma lista específica de identificadores de capítulos.
-     */
-    fun observeSpecific(mangaId: Long, chapters: List<String>): Flow<T> {
-        return chapterRepository.observeSpecificChapters(mangaId, chapters)
-    }
 
     /**
      * Carrega uma página específica de capítulos sob demanda.

@@ -122,10 +122,6 @@ class AnilistComicEngine @Inject constructor(
             }
         }
 
-    override fun observeLibrary(): Flow<List<ComicMetadataDto>> {
-        return flowOf(emptyList())
-    }
-
     override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(Dispatchers.IO) {
             AcerolaLogger.audit(TAG, "Starting full library AniList refresh", LogSource.REPOSITORY)
@@ -141,8 +137,6 @@ class AnilistComicEngine @Inject constructor(
                 Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
             }
         }
-
-    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = refreshLibrary(baseUri)
 
     override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> =
         withContext(Dispatchers.IO) {

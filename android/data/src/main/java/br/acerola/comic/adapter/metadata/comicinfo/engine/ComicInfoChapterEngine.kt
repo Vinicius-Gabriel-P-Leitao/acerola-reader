@@ -108,12 +108,6 @@ class ComicInfoChapterEngine @Inject constructor(
         ).asStateFlow()
     }
 
-    override fun observeSpecificChapters(mangaId: Long, chapters: List<String>): Flow<ChapterRemoteInfoPageDto> {
-        return flowOf(
-            value = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, page = 0, total = 0)
-        )
-    }
-
     override suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterRemoteInfoPageDto {
         return ChapterRemoteInfoPageDto(items = emptyList(), pageSize, page, total)
     }

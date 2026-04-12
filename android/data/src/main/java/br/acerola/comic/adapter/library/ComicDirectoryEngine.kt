@@ -11,12 +11,12 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
-import br.acerola.comic.adapter.contract.gateway.ComicLibraryWriteGateway
 import br.acerola.comic.config.preference.ComicDirectoryPreference
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
+import br.acerola.comic.local.entity.archive.ChapterTemplate
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.translator.persistence.toMangaDirectoryEntity
 import br.acerola.comic.local.translator.ui.toViewDto
@@ -52,7 +52,7 @@ class ComicDirectoryEngine @Inject constructor(
     private val templateMatcher: TemplateMatcher,
     private val templateService: ChapterNameProcessor,
     @param:ApplicationContext private val context: Context,
-) : ComicGateway<ComicDirectoryDto>, ComicLibraryWriteGateway {
+) : ComicGateway<ComicDirectoryDto> {
 
     @Inject
     @DirectoryEngine
@@ -202,7 +202,6 @@ class ComicDirectoryEngine @Inject constructor(
                         return@catch
                     }
 
-                    val existingFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
                     AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)
                     processFolderList(foldersToProcess, baseUri = baseUri)
                 }.mapLeft { exception ->
@@ -278,25 +277,7 @@ class ComicDirectoryEngine @Inject constructor(
         }
     }
 
-    override suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit> =
-        withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Updating comic settings: $mangaId (externalSyncEnabled=$externalSyncEnabled)", LogSource.REPOSITORY)
-            try {
-                Either.catch {
-                    val existingManga = directoryDao.getDirectoryById(mangaId) ?: return@catch
-                    val updatedManga = existingManga.copy(externalSyncEnabled = externalSyncEnabled)
-                    directoryDao.update(entity = updatedManga)
-                }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Failed to update comic settings: $mangaId", LogSource.REPOSITORY, throwable = exception)
-                    when (exception) {
-                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                        else -> LibrarySyncError.UnexpectedError(cause = exception)
-                    }
-                }
-            } finally {
-                // No progress needed for setting updates
-            }
-        }
+
 
     override fun observeLibrary(): Flow<List<ComicDirectoryDto>> {
         return directoryDao.getAllDirectories().map { folders ->
@@ -304,33 +285,6 @@ class ComicDirectoryEngine @Inject constructor(
             folders.map { it.toViewDto() }
         }
     }
-
-    override suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit> =
-        withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Hiding comic: $mangaId", LogSource.REPOSITORY)
-            Either.catch {
-                directoryDao.setDirectoryHidden(mangaId, hidden = true)
-            }.mapLeft { exception ->
-                AcerolaLogger.e(TAG, "Failed to hide comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
-                LibrarySyncError.UnexpectedError(cause = exception)
-            }
-        }
-
-    override suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit> =
-        withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Deleting comic: $mangaId", LogSource.REPOSITORY)
-            Either.catch {
-                val directory = directoryDao.getDirectoryById(mangaId) ?: return@catch
-                // Delete folder from FS before DB (if FS deletion fails, DB record is preserved)
-                val folderUri = directory.path.toUri()
-                DocumentFile.fromSingleUri(context, folderUri)?.delete()
-                // Remove from DB (CASCADE cleans chapters, metadata, history, etc.)
-                directoryDao.delete(entity = directory)
-            }.mapLeft { exception ->
-                AcerolaLogger.e(TAG, "Failed to delete comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
-                LibrarySyncError.UnexpectedError(cause = exception)
-            }
-        }
 
     private suspend fun processFolderList(
         foldersToProcess: List<ComicDirectory>,
@@ -406,11 +360,11 @@ class ComicDirectoryEngine @Inject constructor(
         return mangaDirectories
     }
 
-    private suspend fun scanRecursive(
+    private fun scanRecursive(
         context: Context,
         rootUri: Uri,
         currentDocId: String,
-        templates: List<br.acerola.comic.local.entity.archive.ChapterTemplate>,
+        templates: List<ChapterTemplate>,
         mangaDirectories: MutableList<ComicDirectory>
     ) {
         val children = ContentQueryHelper.listFiles(context, rootUri, currentDocId).getOrElse { return }
