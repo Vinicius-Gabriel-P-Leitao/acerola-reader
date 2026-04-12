@@ -2,12 +2,7 @@
   import { type ThemeColor, type ThemeMode } from "$lib/hooks/use-theme.svelte";
   import { m } from "$lib/paraglide/messages";
 
-  const themes: {
-    name: () => string;
-    id: ThemeColor;
-    description: () => string;
-    colors: Record<ThemeMode, string[]>;
-  }[] = [
+  const themes: ThemePickerProps[] = [
     {
       id: "catppuccin",
       name: m["theme.catppuccin.name"],
@@ -41,6 +36,7 @@
 <script lang="ts">
   import PaletteIcon from "@lucide/svelte/icons/palette";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
+  import type { ThemePickerProps } from "./theme-picker.types";
 
   let {
     theme,

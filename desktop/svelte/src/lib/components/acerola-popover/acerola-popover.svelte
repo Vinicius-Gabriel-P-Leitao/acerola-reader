@@ -6,6 +6,7 @@
     trigger,
     content,
     open = $bindable(false),
+    contentClass,
   }: AcerolaPopoverProps = $props();
 </script>
 
@@ -13,7 +14,8 @@
   <Popover.Trigger>
     {@render trigger()}
   </Popover.Trigger>
-  <Popover.Content>
+
+  <Popover.Content class={contentClass}>
     {@render content()}
   </Popover.Content>
 </Popover.Root>

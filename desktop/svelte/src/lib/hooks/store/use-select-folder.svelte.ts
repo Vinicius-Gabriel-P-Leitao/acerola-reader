@@ -1,13 +1,17 @@
+import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
+import { LIBRARY_COMMANDS } from "$lib/contracts/library/library.commands";
+import { STORE_FILE, STORE_KEYS } from "$lib/constants/store-plugin";
 import { invoke } from "@tauri-apps/api/core";
 import { load } from "@tauri-apps/plugin-store";
-import { STORE_FILE, STORE_KEYS } from "$lib/constants/store";
 import { toast } from "svelte-sonner";
 
-export function useLibrary() {
+const { notify } = notificationStore;
+
+export function useSelectFolder() {
   let folderPath = $state<string | undefined>(undefined);
 
   async function selectFolder() {
-    const path = await invoke<string>("select_folder");
+    const path = await invoke<string>(LIBRARY_COMMANDS.selectFolder);
 
     if (path) {
       const store = await load(STORE_FILE);
@@ -15,6 +19,7 @@ export function useLibrary() {
       await store.save();
 
       // FIXME: Traduzir
+      notify.success("Pasta salva com sucesso.", { duration: 5000 });
       toast.success("Pasta salva com sucesso.");
       folderPath = path;
     }
@@ -26,10 +31,10 @@ export function useLibrary() {
   }
 
   return {
+    selectFolder,
+    loadSavedPath,
     get folderPath() {
       return folderPath;
     },
-    selectFolder,
-    loadSavedPath,
   };
 }

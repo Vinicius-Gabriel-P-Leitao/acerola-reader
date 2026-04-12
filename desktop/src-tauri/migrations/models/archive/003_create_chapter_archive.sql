@@ -1,9 +1,8 @@
-CREATE TABLE chapter_archive (
+CREATE TABLE IF NOT EXISTS chapter_archive (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chapter TEXT NOT NULL,
-  chapter_path TEXT NOT NULL,
+  path TEXT NOT NULL,
   chapter_sort TEXT NOT NULL,
-  checksum TEXT,
   fast_hash TEXT,
   comic_directory_fk INTEGER NOT NULL,
   last_modified INTEGER NOT NULL DEFAULT 0,

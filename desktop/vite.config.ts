@@ -29,8 +29,8 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || "127.0.0.1",
-    hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
     watch: { ignored: ["**/src-tauri/**"] },
+    hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
     fs: {
       allow: ["svelte/src", "svelte/static", ".svelte-kit", "node_modules"],
     },
