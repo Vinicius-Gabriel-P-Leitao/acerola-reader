@@ -9,11 +9,11 @@
     cover,
     progress,
     description,
-    placeholder,
-    footer,
-    action,
-    overlay,
     class: className,
+    action,
+    footer,
+    overlay,
+    placeholder,
   }: AcerolaCardImageProps = $props();
 </script>
 
@@ -26,7 +26,7 @@
   <!-- Imagem -->
   <AspectRatio
     ratio={2 / 3}
-    class="rounded-3xl overflow-hidden bg-surface shadow-lg group-hover:shadow-2xl group-hover:shadow-primary/20 transition-shadow duration-300"
+    class="rounded-xl overflow-hidden bg-surface shadow-lg group-hover:shadow-2xl group-hover:shadow-primary/20 transition-shadow duration-300"
   >
     <div class="relative w-full h-full">
       {#if cover}

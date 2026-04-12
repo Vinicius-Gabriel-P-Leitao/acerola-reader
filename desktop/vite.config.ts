@@ -13,7 +13,7 @@ export default defineConfig(async () => ({
     sveltekit(),
     tailwindcss(),
     svg({
-      includePaths: ["./svelte/src/lib/assets/icons/"],
+      includePaths: ["./svelte/src/lib/assets/"],
       svgoOptions: {
         multipass: true,
         plugins: ["preset-default"],

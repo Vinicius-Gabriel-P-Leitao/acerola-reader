@@ -1,33 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="120" height="170" viewBox="0 0 120 170">
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="180" viewBox="0 0 120 180">
   <defs>
-    <!-- Static highlight gradient instead of animation -->
     <linearGradient id="highlight" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2a2a3e" stop-opacity="1"/>
       <stop offset="50%" stop-color="#3a3050" stop-opacity="1"/>
       <stop offset="100%" stop-color="#1e1e2e" stop-opacity="1"/>
     </linearGradient>
 
-    <!-- Clip for rounded corners -->
     <clipPath id="card-clip">
-      <rect width="120" height="170" rx="8" ry="8"/>
+      <rect width="120" height="180" rx="8" ry="8"/>
     </clipPath>
   </defs>
 
   <g clip-path="url(#card-clip)">
-    <!-- Base background -->
-    <rect width="120" height="170" fill="#1a1a2e"/>
+    <rect width="120" height="180" fill="#1a1a2e"/>
+    <rect width="120" height="180" fill="url(#highlight)" opacity="0.7"/>
 
-    <!-- Gradient highlight overlay -->
-    <rect width="120" height="170" fill="url(#highlight)" opacity="0.7"/>
+    <line x1="0" y1="90" x2="120" y2="90" stroke="#ffffff" stroke-width="0.3" opacity="0.08"/>
+    <line x1="60" y1="0"  x2="60"  y2="180" stroke="#ffffff" stroke-width="0.3" opacity="0.06"/>
 
-
-    <!-- Decorative panel lines -->
-    <line x1="0" y1="85" x2="120" y2="85" stroke="#ffffff" stroke-width="0.3" opacity="0.08"/>
-    <line x1="60" y1="0"  x2="60"  y2="170" stroke="#ffffff" stroke-width="0.3" opacity="0.06"/>
-
-    <!-- Bottom skeleton area -->
-    <rect x="10" y="128" width="70" height="7" rx="3" fill="#2e2e48" opacity="0.9"/>
-    <rect x="10" y="140" width="50" height="5" rx="2.5" fill="#2e2e48" opacity="0.7"/>
-    <rect x="10" y="151" width="35" height="4" rx="2" fill="#2e2e48" opacity="0.5"/>
+    <rect x="10" y="138" width="70" height="7" rx="3" fill="#2e2e48" opacity="0.9"/>
+    <rect x="10" y="150" width="50" height="5" rx="2.5" fill="#2e2e48" opacity="0.7"/>
+    <rect x="10" y="161" width="35" height="4" rx="2" fill="#2e2e48" opacity="0.5"/>
   </g>
 </svg>

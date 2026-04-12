@@ -3,6 +3,7 @@ use crate::data::repositories::base::{Entity, Repository};
 use crate::infra::error::translations::db_error::DbError;
 use sqlx::SqlitePool;
 
+#[derive(Clone)]
 pub struct ComicRepository {
     pub base: Repository<ComicDirectory>,
     pool: SqlitePool,

@@ -132,7 +132,13 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
     .await
     .unwrap();
 
-    // seeds
+    pool
+}
+
+/// Pool com seeds de produção aplicados — usado quando o teste depende dos templates padrão.
+pub async fn setup_test_db_with_seeds() -> sqlx::SqlitePool {
+    let pool = setup_test_db().await;
+
     sqlx::query(include_str!(
         "../../../migrations/seeds/001_seed_chapter_template.sql"
     ))
@@ -141,6 +147,14 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
     .unwrap();
 
     pool
+}
+
+/// Zera o `last_modified` de todos os comics — usado para forçar reprocessamento no incremental.
+pub async fn reset_comics_last_modified(pool: &sqlx::SqlitePool) {
+    sqlx::query("UPDATE comic_directory SET last_modified = 0")
+        .execute(pool)
+        .await
+        .unwrap();
 }
 
 /// Pool com um comic_directory já inserido — usado por testes de chapter que precisam da FK.

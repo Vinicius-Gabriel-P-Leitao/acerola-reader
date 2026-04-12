@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { useComicSummary } from "$lib/hooks/store/use-comic-summary.svelte";
-  import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
-  import AcerolaCardImage from "$lib/components/acerola-card/acerola-card-image.svelte";
   import PlaceholderManga from "$lib/assets/placeholder/placeholder_manga.svg?component";
+  import AcerolaCardImage from "$lib/components/acerola-card/acerola-card-image.svelte";
+  import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
+  import { useComicSummary } from "$lib/hooks/store/use-comic-summary.svelte";
   import { convertFileSrc } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
-  import { onMount, onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
   const summary = useComicSummary();
 
@@ -25,7 +25,8 @@
 
   function resolveCover(artwork: { cover: string | null; banner: string | null }): string | null {
     const path = artwork.cover ?? artwork.banner ?? null;
-    return path ? convertFileSrc(path) : null;
+    if (!path) return null;
+    return convertFileSrc(path.replaceAll("\\", "/"));
   }
 </script>
 
@@ -43,7 +44,9 @@
           {cover}
         >
           {#snippet placeholder()}
-            <PlaceholderManga class="w-full h-full object-cover object-top" />
+            <div class="w-full h-full bg-surface">
+              <PlaceholderManga class="w-full h-full" />
+            </div>
           {/snippet}
         </AcerolaCardImage>
       {/each}

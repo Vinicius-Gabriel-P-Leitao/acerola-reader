@@ -101,6 +101,38 @@
         {/snippet}
       </AcerolaHeroButton>
 
+      <!-- Item: Gerar ComicInfo.xml para os mangás -->
+      <AcerolaHeroButton
+        title={m["pages.config.file_system.comic_info.title"]()}
+        description={m["pages.config.file_system.comic_info.desc"]()}
+      >
+        {#snippet icon()}
+          <FileTextIcon class="text-chart-2" size={24} />
+        {/snippet}
+
+        {#snippet action()}
+          <AcerolaSwitch
+            checked={comicInfoPreference.comicInfoPreference ?? false}
+            onCheckedChange={async () => {
+              await comicInfoPreference.selectComicInfoPreference();
+            }}
+          />
+        {/snippet}
+      </AcerolaHeroButton>
+    </div>
+  </section>
+
+  <!-- Configuração dos Arquivos -->
+  <section class="space-y-4">
+    <div
+      class="flex items-center gap-3 text-muted-foreground uppercase text-xs font-bold tracking-widest"
+    >
+      <!-- FIXME: Traduzir -->
+      <FolderIcon size={16} />
+      Biblioteca
+    </div>
+
+    <div class="grid gap-4">
       <!-- Item: Iniciar sincronização rápida, aqui sera usado o refresh_library rapido -->
       <AcerolaHeroButton
         title={m["pages.config.file_system.sync.fast.title"]()}
@@ -136,25 +168,6 @@
           >
             <RefreshCw />
           </AcerolaButtonIcon>
-        {/snippet}
-      </AcerolaHeroButton>
-
-      <!-- Item: Gerar ComicInfo.xml para os mangás -->
-      <AcerolaHeroButton
-        title={m["pages.config.file_system.comic_info.title"]()}
-        description={m["pages.config.file_system.comic_info.desc"]()}
-      >
-        {#snippet icon()}
-          <FileTextIcon class="text-chart-2" size={24} />
-        {/snippet}
-
-        {#snippet action()}
-          <AcerolaSwitch
-            checked={comicInfoPreference.comicInfoPreference ?? false}
-            onCheckedChange={async () => {
-              await comicInfoPreference.selectComicInfoPreference();
-            }}
-          />
         {/snippet}
       </AcerolaHeroButton>
     </div>

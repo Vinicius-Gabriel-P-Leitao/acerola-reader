@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { debug } from "@tauri-apps/plugin-log";
 import { toast } from "svelte-sonner";
 import { HOME_COMMANDS } from "$lib/contracts/home/home.commands";
 import { HOME_EVENTS } from "$lib/contracts/home/home.events";
@@ -23,6 +24,10 @@ export function useComicSummary() {
       (event) => {
         comics = event.payload;
         loading = false;
+
+        debug(
+          `[useComicSummary] total=${event.payload.total} fetchedAt=${event.payload.fetchedAt} payload=${JSON.stringify(event.payload.comics.slice(0, 3))}`,
+        );
 
         unlisten();
         unlistenErr();
