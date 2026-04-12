@@ -1,8 +1,4 @@
 package br.acerola.comic.common.viewmodel.library.archive
-import br.acerola.comic.ui.R
-import br.acerola.comic.dto.metadata.category.CategoryDto
-import br.acerola.comic.worker.LibrarySyncWorker
-import br.acerola.comic.worker.WorkerContract
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -16,16 +12,18 @@ import br.acerola.comic.config.permission.FileSystemAccessManager
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
+import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.DirectoryCase
-import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
-import br.acerola.comic.usecase.comic.DeleteComicUseCase
-import br.acerola.comic.usecase.comic.HideComicUseCase
-import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
-import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
+import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
+import br.acerola.comic.usecase.comic.UpdateComicSettingsUseCase
+import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.comic.worker.LibrarySyncWorker
+import br.acerola.comic.worker.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -47,10 +45,9 @@ import javax.inject.Inject
 class ComicDirectoryViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val manager: FileSystemAccessManager,
+    manageCategoriesUseCase: ManageCategoriesUseCase,
     private val coverFromChapterUseCase: CoverFromChapterUseCase,
-    private val hideComicUseCase: HideComicUseCase,
-    private val deleteComicUseCase: DeleteComicUseCase,
-    private val manageCategoriesUseCase: ManageCategoriesUseCase,
+    private val updateComicSettingsUseCase: UpdateComicSettingsUseCase,
     @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>,
     @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
 ) : ViewModel() {
@@ -110,29 +107,7 @@ class ComicDirectoryViewModel @Inject constructor(
 
     fun updateExternalSyncEnabled(mangaId: Long, enabled: Boolean) {
         viewModelScope.launch {
-            observeLibraryUseCase.updateMangaSettings(mangaId, enabled)
-        }
-    }
-
-    fun hideManga(mangaId: Long) {
-        viewModelScope.launch {
-            hideComicUseCase(mangaId).onLeft { error ->
-                _uiEvents.send(error)
-            }
-        }
-    }
-
-    fun deleteManga(mangaId: Long) {
-        viewModelScope.launch {
-            deleteComicUseCase(mangaId).onLeft { error ->
-                _uiEvents.send(error)
-            }
-        }
-    }
-
-    fun setMangaCategory(mangaId: Long, categoryId: Long?) {
-        viewModelScope.launch {
-            manageCategoriesUseCase.updateMangaCategory(mangaId, categoryId)
+            updateComicSettingsUseCase(mangaId, enabled)
         }
     }
 

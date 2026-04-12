@@ -14,13 +14,9 @@ class TrackReadingProgressUseCase @Inject constructor(
         historyRepository.markChapterAsRead(mangaId, chapterId)
     }
 
-    suspend fun unmarkChapterAsRead(chapterId: Long) {
-        historyRepository.unmarkChapterAsRead(chapterId)
-    }
-
     suspend fun toggleReadStatus(mangaId: Long, chapterId: Long, isRead: Boolean) {
         if (isRead) {
-            unmarkChapterAsRead(chapterId)
+            historyRepository.unmarkChapterAsRead(chapterId)
         } else {
             markChapterAsRead(mangaId, chapterId)
         }

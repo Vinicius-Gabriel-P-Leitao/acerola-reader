@@ -6,17 +6,15 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
+import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.config.permission.FileSystemAccessManager
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
-import br.acerola.comic.usecase.comic.DeleteComicUseCase
-import br.acerola.comic.usecase.comic.HideComicUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import com.google.common.truth.Truth.assertThat
@@ -44,8 +42,6 @@ class ComicDirectoryViewModelTest {
     private val manager = mockk<FileSystemAccessManager>(relaxed = true)
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val coverFromChapterUseCase = mockk<CoverFromChapterUseCase>(relaxed = true)
-    private val hideComicUseCase = mockk<HideComicUseCase>(relaxed = true)
-    private val deleteComicUseCase = mockk<DeleteComicUseCase>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
     
     private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
@@ -79,10 +75,9 @@ class ComicDirectoryViewModelTest {
         workManager = workManager,
         manager = manager,
         coverFromChapterUseCase = coverFromChapterUseCase,
+        updateComicSettingsUseCase = mockk(relaxed = true),
         observeLibraryUseCase = observeLibraryUseCase,
         observeChaptersUseCase = observeChaptersUseCase,
-        hideComicUseCase = hideComicUseCase,
-        deleteComicUseCase = deleteComicUseCase,
         manageCategoriesUseCase = manageCategoriesUseCase
     )
 

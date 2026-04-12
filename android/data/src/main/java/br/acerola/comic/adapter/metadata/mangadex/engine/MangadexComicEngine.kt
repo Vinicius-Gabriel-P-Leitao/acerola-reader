@@ -52,8 +52,6 @@ class MangadexComicEngine @Inject constructor(
     @param:MangadexSource private val downloadCoverService: ImageProvider<String>
 ) : ComicGateway<ComicMetadataDto> {
 
-
-
     @Inject
     @MangadexSource
     lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
@@ -141,10 +139,6 @@ class MangadexComicEngine @Inject constructor(
         } finally {
             _isIndexing.value = false
         }
-    }
-
-    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        return refreshLibrary(baseUri)
     }
 
     override fun observeLibrary(): Flow<List<ComicMetadataDto>> {

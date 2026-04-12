@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Interface apenas para observação de dados (Read).
  */
 interface ComicReadOnlyGateway<T> {
-    fun observeLibrary(): Flow<List<T>>
+    fun observeLibrary(): Flow<List<T>> = kotlinx.coroutines.flow.flowOf(emptyList())
 }
 
 /**
@@ -20,11 +20,10 @@ interface ComicSyncGateway {
     val progress: StateFlow<Int>
     val isIndexing: StateFlow<Boolean>
 
-    suspend fun refreshManga(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit>
-    suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
-    suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
-    suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit>
-    suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+    suspend fun refreshManga(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+    suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+    suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+    suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 }
 
 /**
@@ -39,4 +38,5 @@ interface ComicGateway<T> : ComicReadOnlyGateway<T>, ComicSyncGateway
 interface ComicLibraryWriteGateway {
     suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit>
     suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit>
+    suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit>
 }

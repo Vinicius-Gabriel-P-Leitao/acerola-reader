@@ -287,16 +287,6 @@ class ChapterArchiveEngine @Inject constructor(
         return items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
     }
 
-    override fun observeSpecificChapters(
-        mangaId: Long,
-        chapters: List<String>
-    ): Flow<ChapterArchivePageDto> {
-        return chapterArchiveDao.getChaptersByDirectoryAndSorts(folderId = mangaId, chapters = chapters)
-            .map { list ->
-                list.toViewPageDto()
-            }
-    }
-
     fun observeAllChapterCounts(): Flow<Map<Long, Int>> {
         return chapterArchiveDao.getChapterCountsByDirectory().map { list ->
             list.associate { it.comicDirectoryFk to it.count }

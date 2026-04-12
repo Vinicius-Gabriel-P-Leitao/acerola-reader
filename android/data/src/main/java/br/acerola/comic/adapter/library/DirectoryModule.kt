@@ -38,7 +38,7 @@ abstract class DirectoryModule {
     @Singleton
     @DirectoryEngine
     abstract fun bindMangaLibraryWriteGateway(
-        impl: ComicDirectoryEngine
+        impl: ComicLibraryStateEngine
     ): ComicLibraryWriteGateway
 
 }
