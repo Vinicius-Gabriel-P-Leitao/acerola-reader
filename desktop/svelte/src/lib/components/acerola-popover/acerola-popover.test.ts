@@ -18,13 +18,13 @@ describe("AcerolaPopover", () => {
       content,
     });
 
-    const button = screen.getByRole("button");
+    const button = document.querySelector<HTMLElement>("[data-popover-trigger]")!;
     expect(button).toBeInTheDocument();
-    expect(screen.queryByText("Conteudo do Popover")).not.toBeVisible();
+    expect(screen.queryByText("Conteudo do Popover")).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.click(button);
 
-    expect(screen.getByText("Conteudo do Popover")).toBeVisible();
+    expect(screen.getByText("Conteudo do Popover")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,8 @@
 <script lang="ts" module>
-  import { type ThemeColor, type ThemeMode } from "$lib/hooks/use-theme.svelte";
+  import {
+    type ThemeColor,
+    type ThemeMode,
+  } from "$lib/hooks/theme/use-theme.svelte";
   import { m } from "$lib/paraglide/messages";
 
   const themes: ThemePickerProps[] = [

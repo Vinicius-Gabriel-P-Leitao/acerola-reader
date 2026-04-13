@@ -30,6 +30,7 @@ impl TemplateMacro {
     }
 }
 
+// FIXME: Deletar isso, já que o seed é direto do sql
 #[derive(Debug, PartialEq, Eq)]
 pub enum PresetTemplate {
     Numeric,
@@ -38,6 +39,7 @@ pub enum PresetTemplate {
     Chapter,
 }
 
+// FIXME: Deletar isso, já que o seed é direto do sql
 impl PresetTemplate {
     pub fn value(&self) -> (&'static str, &'static str) {
         match self {
