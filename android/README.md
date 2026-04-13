@@ -90,3 +90,11 @@ flowchart TD
 | `.cbz` | Comic Book ZIP — arquivo zip com imagens dentro |
 | `.cbr` | Comic Book RAR — arquivo rar com imagens dentro |
 | `.pdf` | Convertido automaticamente para `.cbz` na primeira leitura |
+
+---
+
+## Integração futura — acerola desktop
+
+O Acerola para Android terá integração com o **acerola-desktop**, o cliente desktop do ecossistema. Com ele conectado, você poderá acessar a biblioteca do seu computador diretamente pelo celular, sincronizar histórico de leitura e progresso entre os dispositivos, e enviar mangás do Android para a coleção do desktop.
+
+Na mesma rede, a conexão é automática e direta. Fora de casa, o acerola-relay garante o acesso remoto sem configuração de roteador ou VPN.
