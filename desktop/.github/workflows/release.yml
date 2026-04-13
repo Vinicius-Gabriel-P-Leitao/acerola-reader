@@ -43,28 +43,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Extract version from tag
+      - name: Extract versions from tag
         shell: bash
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+        run: |
+          VERSION_FULL=${GITHUB_REF_NAME#v}
+          VERSION_MSI=${VERSION_FULL%%-*}
+          echo "VERSION_FULL=$VERSION_FULL" >> $GITHUB_ENV
+          echo "VERSION_MSI=$VERSION_MSI" >> $GITHUB_ENV
 
-      - name: Update tauri.conf.json
+      - name: Update tauri.conf.json (versão MSI sem sufixo)
         shell: bash
         run: |
           node -e "
             const fs = require('fs');
             const config = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
-            config.version = process.env.VERSION;
+            config.version = process.env.VERSION_MSI;
             fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(config, null, 2) + '\n');
           "
         env:
-          VERSION: ${{ env.VERSION }}
+          VERSION_MSI: ${{ env.VERSION_MSI }}
 
       - name: Update Cargo.toml
         shell: bash
         run: |
-          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+          sed -i "s/^version = \".*\"/version = \"$VERSION_FULL\"/" src-tauri/Cargo.toml
         env:
-          VERSION: ${{ env.VERSION }}
+          VERSION_FULL: ${{ env.VERSION_FULL }}
 
       - name: Update package.json
         shell: bash
@@ -72,11 +76,11 @@ jobs:
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version = process.env.VERSION;
+            pkg.version = process.env.VERSION_FULL;
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
         env:
-          VERSION: ${{ env.VERSION }}
+          VERSION_FULL: ${{ env.VERSION_FULL }}
 
       - name: Build MSI
         run: npm run tauri -- build --bundles msi
@@ -90,11 +94,23 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Acerola ${{ env.VERSION }}
+          name: Acerola ${{ env.VERSION_FULL }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(env.VERSION_FULL, '-') }}
           files: acerola/src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi
           generate_release_notes: true
+
+      - name: Restore tauri.conf.json com versão completa
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            config.version = process.env.VERSION_FULL;
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(config, null, 2) + '\n');
+          "
+        env:
+          VERSION_FULL: ${{ env.VERSION_FULL }}
 
       - name: Commit version bump
         shell: bash
@@ -102,7 +118,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src-tauri/tauri.conf.json src-tauri/Cargo.toml package.json
-          git commit -m "[chore]: bump version to $VERSION [skip ci]"
+          git commit -m "[chore]: bump version to $VERSION_FULL [skip ci]"
           git push origin HEAD:main HEAD:develop
         env:
-          VERSION: ${{ env.VERSION }}
+          VERSION_FULL: ${{ env.VERSION_FULL }}
