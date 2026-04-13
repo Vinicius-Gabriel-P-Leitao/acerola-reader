@@ -90,6 +90,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src-tauri/tauri.conf.json src-tauri/Cargo.toml package.json
           git commit -m "[chore]: bump version to $VERSION [skip ci]"
-          git push origin HEAD:main
+          git push origin HEAD:main HEAD:develop
         env:
           VERSION: ${{ env.VERSION }}
