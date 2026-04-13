@@ -61,8 +61,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add acerola/app/build.gradle.kts
-          git commit -m "[chore]: bump version to ${{ env.VERSION }} [skip ci]"
-          git push origin HEAD:main HEAD:develop
+          if ! git diff --staged --quiet; then
+            git commit -m "[chore]: bump version to ${{ env.VERSION }} [skip ci]"
+            git push origin HEAD:main HEAD:develop
+          fi
 
       - name: Rename APK
         run: mv acerola/app/build/outputs/apk/release/app-release.apk acerola/app/build/outputs/apk/release/acerola.apk
