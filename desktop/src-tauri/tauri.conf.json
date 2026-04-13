@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha",
   "productName": "acerola",
   "identifier": "br.acerola.comic",
   "build": {
@@ -26,13 +26,17 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["**"]
+        "scope": [
+          "**"
+        ]
       }
     }
   },
   "plugins": {
     "sql": {
-      "preload": ["sqlite:acerola.db"]
+      "preload": [
+        "sqlite:acerola.db"
+      ]
     }
   },
   "bundle": {
