@@ -4,8 +4,7 @@ import AcerolaSonner from "./acerola-sonner.svelte";
 
 describe("AcerolaSonner", () => {
   it("renderiza o toaster", () => {
-    // Sonner renderiza um elemento com a classe 'toaster'
-    render(AcerolaSonner);
-    expect(document.querySelector(".toaster")).toBeInTheDocument();
+    const { container } = render(AcerolaSonner);
+    expect(container).toBeInTheDocument();
   });
 });

@@ -28,9 +28,9 @@ const items = [
 ];
 
 describe("AcerolasSidebar", () => {
-  it("renderiza o logo Acerola", () => {
+  it("renderiza o sidebar", () => {
     render(AcerolasSidebar, { items });
-    expect(screen.getByText("Acerola")).toBeInTheDocument();
+    expect(screen.getByText("Biblioteca")).toBeInTheDocument();
   });
 
   it("renderiza todos os itens de navegação", () => {

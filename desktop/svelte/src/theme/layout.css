@@ -30,3 +30,10 @@ textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: smooth;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

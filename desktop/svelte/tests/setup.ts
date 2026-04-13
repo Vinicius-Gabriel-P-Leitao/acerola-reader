@@ -39,6 +39,15 @@ if (typeof window !== "undefined") {
 vi.mock("$app/environment", async () => await import("./mocks/app-environment.ts"));
 vi.mock("$app/state", async () => await import("./mocks/app-state.ts"));
 
+// Mock Tauri window — getCurrentWindow não existe em jsdom
+vi.mock("@tauri-apps/api/window", () => ({
+  getCurrentWindow: vi.fn(() => ({
+    theme: vi.fn().mockResolvedValue("light"),
+    setTheme: vi.fn().mockResolvedValue(undefined),
+    onThemeChanged: vi.fn().mockResolvedValue({ unlisten: vi.fn() }),
+  })),
+}));
+
 // Mock Tauri store — comportamento padrão: retorna null (sem valor salvo)
 vi.mock("@tauri-apps/plugin-store", () => {
   return {
