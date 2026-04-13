@@ -11,6 +11,9 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+    defaults:
+      run:
+        working-directory: acerola
 
     steps:
       - name: Checkout
@@ -21,6 +24,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: acerola/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -31,7 +35,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            src-tauri/target
+            acerola/src-tauri/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
@@ -80,7 +84,7 @@ jobs:
           name: Acerola ${{ env.VERSION }}
           draft: false
           prerelease: false
-          files: src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi
+          files: acerola/src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi
           generate_release_notes: true
 
       - name: Commit version bump
