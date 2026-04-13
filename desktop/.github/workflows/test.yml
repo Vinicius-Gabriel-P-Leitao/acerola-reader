@@ -11,6 +11,9 @@ jobs:
   test-build:
     name: Build & Test (Windows)
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: acerola
 
     steps:
       - name: Checkout
@@ -21,6 +24,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: acerola/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -31,7 +35,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            src-tauri/target
+            acerola/src-tauri/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
