@@ -8,7 +8,7 @@ describe("AcerolaToggleGroup", () => {
     let value = "bold";
     const children = createRawSnippet(() => ({
       render: () =>
-        '<button data-value="bold">Bold</button><button data-value="italic">Italic</button>',
+        '<div><button data-value="bold">Bold</button><button data-value="italic">Italic</button></div>',
     }));
 
     render(AcerolaToggleGroup, {

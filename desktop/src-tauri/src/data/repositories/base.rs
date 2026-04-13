@@ -29,6 +29,15 @@ pub struct Repository<T: Entity> {
     _marker: PhantomData<T>,
 }
 
+impl<T: Entity> Clone for Repository<T> {
+    fn clone(&self) -> Self {
+        Self {
+            pool: self.pool.clone(),
+            _marker: PhantomData,
+        }
+    }
+}
+
 impl<T: Entity> Repository<T> {
     pub fn new(pool: Pool<Sqlite>) -> Self {
         Self {

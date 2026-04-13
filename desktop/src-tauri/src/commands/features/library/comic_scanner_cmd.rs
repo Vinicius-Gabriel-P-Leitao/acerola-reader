@@ -1,5 +1,5 @@
 use crate::{
-    commands::events::shared::scanner_event::ScanErrorPayload,
+    commands::events::shared::error_payload::ErrorPayload,
     core::services::comic_scanner_engine::ComicScannerService,
 };
 use sqlx::SqlitePool;
@@ -28,9 +28,7 @@ pub async fn refresh_library(
             .await
         {
             Ok(_) => app.emit("scan:complete", ()).unwrap(),
-            Err(err) => app
-                .emit("scan:error", ScanErrorPayload::from(&err))
-                .unwrap(),
+            Err(err) => app.emit("scan:error", ErrorPayload::from(&err)).unwrap(),
         }
     });
 
@@ -58,9 +56,7 @@ pub async fn incremental_scan(
             .await
         {
             Ok(_) => app.emit("scan:complete", ()).unwrap(),
-            Err(err) => app
-                .emit("scan:error", ScanErrorPayload::from(&err))
-                .unwrap(),
+            Err(err) => app.emit("scan:error", ErrorPayload::from(&err)).unwrap(),
         }
     });
 
@@ -88,9 +84,7 @@ pub async fn rebuild_library(
             .await
         {
             Ok(_) => app.emit("scan:complete", ()).unwrap(),
-            Err(err) => app
-                .emit("scan:error", ScanErrorPayload::from(&err))
-                .unwrap(),
+            Err(err) => app.emit("scan:error", ErrorPayload::from(&err)).unwrap(),
         }
     });
 

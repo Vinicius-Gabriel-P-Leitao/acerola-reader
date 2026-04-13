@@ -3,6 +3,7 @@ mod core;
 mod data;
 mod infra;
 
+use commands::features::home::comic_summary_cmd;
 use commands::features::library::{comic_scanner_cmd, select_folder_cmd};
 use tauri::Manager;
 
@@ -27,9 +28,10 @@ mod app_bootstrap {
             .setup(setup_runtime)
             .invoke_handler(tauri::generate_handler![
                 select_folder_cmd::select_folder,
+                comic_scanner_cmd::incremental_scan,
                 comic_scanner_cmd::refresh_library,
                 comic_scanner_cmd::rebuild_library,
-                comic_scanner_cmd::incremental_scan,
+                comic_summary_cmd::get_comic_summary,
             ])
     }
 

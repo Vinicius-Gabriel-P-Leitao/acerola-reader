@@ -1,20 +1,20 @@
 <script lang="ts" module>
-  import type { SidebarItem } from "$lib/components/acerola-sidebar/acerola-sidebar.types";
   import type { AcerolaSelectOption } from "$lib/components/acerola-select/acerola-select.types";
+  import type { SidebarItem } from "$lib/components/acerola-sidebar/acerola-sidebar.types";
   import type { Locale } from "$lib/paraglide/runtime.js";
 
-  import { locales } from "$lib/paraglide/runtime.js";
   import { m } from "$lib/paraglide/messages";
+  import { locales } from "$lib/paraglide/runtime.js";
 
-  import HouseIcon from "@lucide/svelte/icons/house";
   import HistoryIcon from "@lucide/svelte/icons/history";
+  import HouseIcon from "@lucide/svelte/icons/house";
   import SettingsIcon from "@lucide/svelte/icons/settings";
 
   // Ícones da Titlebar
+  import BookOpenIcon from "@lucide/svelte/icons/book-open";
   import MinusIcon from "@lucide/svelte/icons/minus";
   import SquareIcon from "@lucide/svelte/icons/square";
   import XIcon from "@lucide/svelte/icons/x";
-  import BookOpenIcon from "@lucide/svelte/icons/book-open";
 
   const localeLabels: Record<string, string> = {
     "pt-br": "Português",
@@ -34,25 +34,41 @@
 </script>
 
 <script lang="ts">
+  import { DIRECTORY_SCAN_COMMANDS } from "$lib/contracts/library/library.commands";
+  import { useLibraryScanner } from "$lib/hooks/store/use-comic-scanner.svelte";
+  import { useSelectFolder } from "$lib/hooks/store/use-select-folder.svelte";
+  import { getLocale, setLocale } from "$lib/paraglide/runtime";
   import { onMount } from "svelte";
-  import AcerolaSidebar from "$lib/components/acerola-sidebar/acerola-sidebar.svelte";
-  import AcerolaSelect from "$lib/components/acerola-select/acerola-select.svelte";
+
   import AcerolaModePicker from "$lib/components/acerola-mode-picker/acerola-mode-picker.svelte";
+  import AcerolaSelect from "$lib/components/acerola-select/acerola-select.svelte";
+  import AcerolaSidebar from "$lib/components/acerola-sidebar/acerola-sidebar.svelte";
   import AcerolaSonner from "$lib/components/acerola-sonner/acerola-sonner.svelte";
   import SidebarProvider from "$lib/components/ui/sidebar/sidebar-provider.svelte";
-  import { getLocale, setLocale } from "$lib/paraglide/runtime.js";
 
-  import "$theme/layout.css";
   import AcerolaNotification from "$lib/components/acerola-notification/acerola-notification.svelte";
+  import "$theme/layout.css";
   import Search from "@lucide/svelte/icons/search";
+
+  const incrementalScanner = useLibraryScanner(
+    DIRECTORY_SCAN_COMMANDS.incrementalScan,
+  );
 
   let currentLocale = $state(getLocale());
   let appWindow = $state<any>(null);
+  const folder = useSelectFolder();
 
   onMount(async () => {
-    // WARN: Importação dinâmica para evitar que quebre durante o SSR (Server-Side Rendering)
+    // INFO: Importação dinâmica para evitar que quebre durante o SSR (Server-Side Rendering)
     const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    await folder.loadSavedPath();
+
     appWindow = getCurrentWindow();
+
+    if (folder.folderPath) {
+      incrementalScanner.init(folder.folderPath);
+      incrementalScanner.start();
+    }
   });
 
   function minimize() {

@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Build & Release (Windows)
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version from tag
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Update tauri.conf.json
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            config.version = process.env.VERSION;
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(config, null, 2) + '\n');
+          "
+        env:
+          VERSION: ${{ env.VERSION }}
+
+      - name: Update Cargo.toml
+        shell: bash
+        run: |
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+        env:
+          VERSION: ${{ env.VERSION }}
+
+      - name: Update package.json
+        run: npm version ${{ env.VERSION }} --no-git-tag-version
+
+      - name: Build MSI
+        run: npm run tauri -- build --bundles msi
+
+      - name: Rename MSI
+        shell: powershell
+        run: |
+          $msi = Get-Item "src-tauri/target/release/bundle/msi/*.msi"
+          Rename-Item $msi.FullName "acerola-windows-x86_64.msi"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Acerola ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi
+          generate_release_notes: true
+
+      - name: Commit version bump
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src-tauri/tauri.conf.json src-tauri/Cargo.toml package.json
+          git commit -m "[chore]: bump version to $VERSION [skip ci]"
+          git push origin HEAD:main HEAD:develop
+        env:
+          VERSION: ${{ env.VERSION }}
