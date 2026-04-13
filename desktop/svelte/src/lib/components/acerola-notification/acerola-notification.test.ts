@@ -3,6 +3,10 @@ import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, beforeEach } from "vitest";
 import AcerolaNotification, { notificationStore } from "./acerola-notification.svelte";
 
+function getTrigger() {
+  return document.querySelector<HTMLElement>("[data-popover-trigger]")!;
+}
+
 describe("AcerolaNotification", () => {
   beforeEach(() => {
     notificationStore.clearAll();
@@ -10,7 +14,7 @@ describe("AcerolaNotification", () => {
 
   it("renderiza o botão de notificação", () => {
     render(AcerolaNotification);
-    expect(screen.getByRole("button")).toBeInTheDocument();
+    expect(getTrigger()).toBeInTheDocument();
   });
 
   it("não exibe badge quando não há notificações", () => {
@@ -29,7 +33,7 @@ describe("AcerolaNotification", () => {
     render(AcerolaNotification);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button"));
+    await user.click(getTrigger());
 
     expect(screen.getByText("Scan concluído!")).toBeInTheDocument();
   });
@@ -38,7 +42,7 @@ describe("AcerolaNotification", () => {
     render(AcerolaNotification);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button"));
+    await user.click(getTrigger());
 
     expect(screen.getByText("Nenhuma notificação")).toBeInTheDocument();
   });
@@ -48,11 +52,9 @@ describe("AcerolaNotification", () => {
     render(AcerolaNotification);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button"));
+    await user.click(getTrigger());
 
-    const closeBtn = screen.getAllByRole("button").find((btn) =>
-      btn.querySelector("svg"),
-    );
+    const closeBtn = document.querySelector<HTMLElement>(".size-6.shrink-0");
     await user.click(closeBtn!);
 
     expect(screen.queryByText("Erro de sync")).not.toBeInTheDocument();
@@ -64,7 +66,7 @@ describe("AcerolaNotification", () => {
     render(AcerolaNotification);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button"));
+    await user.click(getTrigger());
     await user.click(screen.getByText("Limpar tudo"));
 
     expect(screen.queryByText("Notificação 1")).not.toBeInTheDocument();
