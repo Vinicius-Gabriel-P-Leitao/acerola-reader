@@ -1,5 +1,5 @@
 use crate::{
-    commands::events::{
+    cmd::events::{
         home::comic_summary_payload::ComicSummaryPayload, shared::error_payload::ErrorPayload,
     },
     core::services::comic_summary_engine::HomeService,
