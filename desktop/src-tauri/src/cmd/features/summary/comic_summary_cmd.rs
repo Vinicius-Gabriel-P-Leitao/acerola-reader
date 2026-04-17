@@ -1,9 +1,10 @@
 use crate::{
     cmd::events::{
-        home::comic_summary_payload::ComicSummaryPayload, shared::error_payload::ErrorPayload,
+        shared::error_payload::ErrorPayload, summary::comic_summary_payload::ComicSummaryPayload,
     },
     core::services::summary::comic_summary_engine::HomeService,
 };
+
 use sqlx::SqlitePool;
 use tauri::{AppHandle, Emitter, State};
 

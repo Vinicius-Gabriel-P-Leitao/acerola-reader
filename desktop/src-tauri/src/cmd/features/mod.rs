@@ -3,6 +3,6 @@ pub mod library {
     pub mod select_folder_cmd;
 }
 
-pub mod home {
+pub mod summary {
     pub mod comic_summary_cmd;
 }

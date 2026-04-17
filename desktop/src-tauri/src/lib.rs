@@ -3,8 +3,8 @@ mod core;
 mod data;
 mod infra;
 
-use cmd::features::home::comic_summary_cmd;
 use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
+use cmd::features::summary::comic_summary_cmd;
 use tauri::Manager;
 
 #[cfg(test)]
