@@ -4,55 +4,50 @@
     "*.css": "tailwindcss"
   },
   "files.readonlyInclude": {
-    "**/.cargo/registry/src/**/*.rs": true,
+    "**/lib/rustlib/src/rust/library/**/*.rs": true,
     "**/.cargo/git/checkouts/**/*.rs": true,
-    "**/lib/rustlib/src/rust/library/**/*.rs": true
+    "**/.cargo/registry/src/**/*.rs": true
   },
   "files.watcherExclude": {
     "**/target/**": true
   },
   "files.exclude": {
-    "**/project.inlang": true,
-    "**/capabilities": true,
-    "**/node_modules": true,
-    "**/.svelte-kit": true,
     "**/paraglide": true,
     "**/target": true,
     "**/build": true,
-    "**/gen": true
+    "**/gen": true,
+    "**/capabilities": true,
+    "**/project.inlang": true,
+    "**/node_modules": true,
+    "**/.svelte-kit": true
   },
   "search.exclude": {
-    "**/project.inlang": true,
-    "**/capabilities": true,
-    "**/node_modules": true,
-    "**/.svelte-kit": true,
-    "**/paraglide": true,
     "**/target": true,
     "**/build": true,
-    "**/gen": true
+    "**/gen": true,
+    "**/paraglide": true,
+    "**/capabilities": true,
+    "**/project.inlang": true,
+    "**/node_modules": true,
+    "**/.svelte-kit": true
   },
-  "cSpell.words": [
-    "anilist",
-    "axum",
-    "catppuccin",
-    "dracula",
-    "inlang",
-    "mangadex",
-    "mdns",
-    "nord",
-    "outdir",
-    "paraglide",
-    "poppanator",
-    "recv",
-    "serde",
-    "sqlite",
-    "Sqlite",
-    "sqlx",
-    "strs",
-    "subdirs",
-    "tauri",
-    "thiserror",
-    "tokio",
-    "unlisten"
-  ]
+  "material-icon-theme.files.customClones": [
+    {
+      "name": "rust-lib",
+      "color": "cyan",
+      "base": "rust"
+    },
+    {
+      "name": "rust-mod",
+      "color": "green",
+      "base": "rust"
+    }
+  ],
+  "material-icon-theme.files.associations": {
+    "lib.rs": "rust-lib",
+    "mod.rs": "rust-mod"
+  },
+  "material-icon-theme.folders.associations": {
+    "peer": "client"
+  }
 }
