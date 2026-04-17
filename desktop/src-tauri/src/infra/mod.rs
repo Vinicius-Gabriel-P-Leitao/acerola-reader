@@ -18,5 +18,4 @@ pub mod pattern {
 
 pub mod remote {
     pub mod peer_guard;
-    pub mod types;
 }

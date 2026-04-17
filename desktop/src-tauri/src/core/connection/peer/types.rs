@@ -1,9 +1,10 @@
 use std::fmt;
 
-/// A tipagem aqui é para especificar que é um Id do peer, usar string direto fica generico
+/// Identificador de um peer na rede P2P.
+/// Newtype sobre String para evitar uso genérico acidental.
 #[derive(Debug)]
-pub struct PeerId{
-    pub id: String
+pub struct PeerId {
+    pub id: String,
 }
 
 impl fmt::Display for PeerId {

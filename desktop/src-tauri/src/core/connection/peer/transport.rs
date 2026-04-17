@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
-use crate::infra::{error::translations::connection_error::ConnectionError, remote::types::PeerId};
+
+use crate::core::connection::peer::types::PeerId;
+use crate::infra::error::translations::connection_error::ConnectionError;
 
 #[async_trait]
 pub trait P2PTransport: Send + Sync {
