@@ -4,6 +4,7 @@ use crate::infra::{
     error::messages::connection_error::ConnectionError, remote::p2p::peer_id::PeerId,
 };
 
+// TODO: Talvez mover isso para infra, não penso em lugar bom para deixar isso, por que vai ser um trait que quando eu montar uma conexão ela vai ter que satisfazer essa struct
 pub struct ConnectionContext<T, F>
 where
     F: Fn(&T) -> Result<(), ConnectionError>,

@@ -8,7 +8,7 @@ pub mod messages {
 }
 
 pub mod translations {
-    pub mod comic_error;
-    pub mod connection_error;
-    pub mod db_error;
+    pub mod comic_translation;
+    pub mod connection_translation;
+    pub mod db_translation;
 }

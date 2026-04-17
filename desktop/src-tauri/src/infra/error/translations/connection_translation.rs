@@ -1,6 +1,5 @@
 use iroh::endpoint::{
-    BindError as IrohBindError,
-    ConnectError as IrohConnectError,
+    BindError as IrohBindError, ConnectError as IrohConnectError,
     ConnectionError as IrohConnectionError,
 };
 
@@ -10,23 +9,38 @@ impl From<IrohBindError> for ConnectionError {
     fn from(bind_err: IrohBindError) -> Self {
         match bind_err {
             IrohBindError::Sockets { meta, .. } => {
-                log::debug!("[IrohTransport::BindError] failed to bind sockets — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::BindError] failed to bind sockets — meta: {:?}",
+                    meta
+                );
                 ConnectionError::StartupFailed("port unavailable".into())
             }
             IrohBindError::CreateQuicEndpoint { meta, .. } => {
-                log::debug!("[IrohTransport::BindError] failed to create QUIC endpoint — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::BindError] failed to create QUIC endpoint — meta: {:?}",
+                    meta
+                );
                 ConnectionError::StartupFailed("failed to create QUIC endpoint".into())
             }
             IrohBindError::CreateNetmonMonitor { meta, .. } => {
-                log::debug!("[IrohTransport::BindError] failed to create network monitor — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::BindError] failed to create network monitor — meta: {:?}",
+                    meta
+                );
                 ConnectionError::StreamFailed("network monitor unavailable".into())
             }
             IrohBindError::InvalidTransportConfig { meta, .. } => {
-                log::debug!("[IrohTransport::BindError] invalid transport configuration — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::BindError] invalid transport configuration — meta: {:?}",
+                    meta
+                );
                 ConnectionError::StartupFailed("invalid transport configuration".into())
             }
             IrohBindError::InvalidCaRootConfig { meta, .. } => {
-                log::debug!("[IrohTransport::BindError] invalid CA root configuration — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::BindError] invalid CA root configuration — meta: {:?}",
+                    meta
+                );
                 ConnectionError::StartupFailed("invalid certificate configuration".into())
             }
             bind_err => {
@@ -42,15 +56,24 @@ impl From<IrohConnectError> for ConnectionError {
         match connect_err {
             IrohConnectError::Connection { source, .. } => ConnectionError::from(source),
             IrohConnectError::Connect { meta, .. } => {
-                log::debug!("[IrohTransport::ConnectError] failed to initiate connection — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::ConnectError] failed to initiate connection — meta: {:?}",
+                    meta
+                );
                 ConnectionError::PeerDisconnected
             }
             IrohConnectError::Connecting { meta, .. } => {
-                log::debug!("[IrohTransport::ConnectError] handshake failed — meta: {:?}", meta);
+                log::debug!(
+                    "[IrohTransport::ConnectError] handshake failed — meta: {:?}",
+                    meta
+                );
                 ConnectionError::PeerDisconnected
             }
             connect_err => {
-                log::debug!("[IrohTransport::ConnectError] unmapped error: {:?}", connect_err);
+                log::debug!(
+                    "[IrohTransport::ConnectError] unmapped error: {:?}",
+                    connect_err
+                );
                 ConnectionError::StreamFailed(connect_err.to_string())
             }
         }
