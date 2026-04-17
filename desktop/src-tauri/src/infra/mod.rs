@@ -15,3 +15,8 @@ pub mod pattern {
     pub mod chapter_template;
     pub mod template_validator;
 }
+
+pub mod remote {
+    pub mod peer_guard;
+    pub mod types;
+}
