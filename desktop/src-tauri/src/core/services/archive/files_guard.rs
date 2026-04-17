@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::infra::{
-    error::translations::file_error::FileError, pattern::archive_format::ArchiveFormat,
+    error::messages::file_error::FileError, pattern::archive_format::ArchiveFormat,
 };
 
 pub struct SupportedFileGuard;
@@ -85,11 +85,6 @@ impl ScannerGuard {
         }
     }
 
-    /// Retorna `Ok` se ao menos um guard aceitar o arquivo.
-    ///
-    /// O scanner usa lógica de OR — um arquivo é válido se qualquer guard
-    /// o reconhecer. Retorna [`FileError::NotAllowed`] se nenhum aceitar,
-    /// o que é esperado para arquivos irrelevantes (`.db`, `.txt`, etc.).
     pub fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let all_rejected = self
             .guards
@@ -112,10 +107,9 @@ impl ScannerGuard {
 #[cfg(test)]
 mod tests {
     use super::{ArtworkFileGuard, FileGuard, MetadataFileGuard, ScannerGuard, SupportedFileGuard};
-    use crate::infra::error::translations::file_error::FileError;
+    use crate::infra::error::messages::file_error::FileError;
     use std::path::Path;
 
-    // NOTE: ComicFileGuard
     #[test]
     fn teste_comic_extensao_valida() {
         let guard = SupportedFileGuard;
@@ -128,7 +122,6 @@ mod tests {
     fn teste_comic_extensao_invalida() {
         let guard = SupportedFileGuard;
         let result = guard.is_allowed(Path::new("berserk.exe"));
-
         assert!(matches!(result, Err(FileError::ExtensionNotAllowed(ext)) if ext == "exe"));
     }
 
@@ -141,7 +134,6 @@ mod tests {
         ));
     }
 
-    // NOTE: MetadataFileGuard
     #[test]
     fn teste_metadata_nome_valido() {
         let guard = MetadataFileGuard;
@@ -152,11 +144,9 @@ mod tests {
     fn teste_metadata_nome_invalido() {
         let guard = MetadataFileGuard;
         let result = guard.is_allowed(Path::new("info.xml"));
-
         assert!(matches!(result, Err(FileError::FileNameNotAllowed(name)) if name == "info.xml"));
     }
 
-    // NOTE: ArtworkFileGuard
     #[test]
     fn teste_artwork_nomes_validos() {
         let guard = ArtworkFileGuard;
@@ -172,13 +162,11 @@ mod tests {
     fn teste_artwork_nome_invalido() {
         let guard = ArtworkFileGuard;
         let result = guard.is_allowed(Path::new("thumbnail.png"));
-
         assert!(
             matches!(result, Err(FileError::FileNameNotAllowed(name)) if name == "thumbnail.png")
         );
     }
 
-    // NOTE: ScannerGuard
     #[test]
     fn teste_scanner_aceita_comic() {
         let guard = ScannerGuard::new();
@@ -201,7 +189,6 @@ mod tests {
     fn teste_scanner_rejeita_arquivo_desconhecido() {
         let guard = ScannerGuard::new();
         let result = guard.is_allowed(Path::new("script.sh"));
-
         assert!(matches!(result, Err(FileError::NotAllowed(_))));
     }
 }

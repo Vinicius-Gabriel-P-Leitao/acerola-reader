@@ -14,7 +14,7 @@ pub struct ScannerEngine {
     pub max_depth: Option<usize>,
 }
 
-// FIXME: Colocar tratamento de erros
+// FIXME: Criar um tratamento de erros
 impl ScannerEngine {
     pub fn new() -> Self {
         Self { max_depth: None }

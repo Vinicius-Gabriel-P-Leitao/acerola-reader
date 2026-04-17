@@ -1,6 +1,6 @@
 use crate::{
     cmd::events::shared::error_payload::ErrorPayload,
-    core::services::comic_scanner_engine::ComicScannerService,
+    core::services::archive::comic_scanner_engine::ComicScannerService,
 };
 use sqlx::SqlitePool;
 use std::path::PathBuf;

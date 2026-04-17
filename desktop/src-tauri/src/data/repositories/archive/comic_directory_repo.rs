@@ -1,6 +1,6 @@
 use crate::data::models::archive::comic_directory::ComicDirectory;
 use crate::data::repositories::base::{Entity, Repository};
-use crate::infra::error::translations::db_error::DbError;
+use crate::infra::error::messages::db_error::DbError;
 use sqlx::SqlitePool;
 
 #[derive(Clone)]
@@ -38,7 +38,7 @@ impl ComicRepository {
 mod tests {
     use super::ComicRepository;
     use crate::data::models::archive::comic_directory::ComicDirectory;
-    use crate::infra::error::translations::db_error::DbError;
+    use crate::infra::error::messages::db_error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
 
     fn berserk() -> ComicDirectory {

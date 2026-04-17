@@ -1,4 +1,4 @@
-use crate::infra::error::translations::db_error::DbError;
+use crate::infra::error::messages::db_error::DbError;
 use sqlx::{
     query, query_as,
     sqlite::{SqliteArguments, SqliteRow},
@@ -137,7 +137,7 @@ impl<T: Entity> Repository<T> {
 mod tests {
     use crate::{
         data::repositories::base::{Bindable, Entity, Repository},
-        infra::error::translations::db_error::DbError,
+        infra::error::messages::db_error::DbError,
         tests::utils::setup_test_db::setup_test_db,
     };
     use sqlx::{query::Query, sqlite::SqliteArguments, FromRow, Sqlite};

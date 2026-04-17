@@ -5,7 +5,7 @@ use crate::{
         models::views::comic_summary_view::ComicSummaryView,
         repositories::views::comic_summary_repo::HomeRepository,
     },
-    infra::error::translations::comic_error::ComicError,
+    infra::error::messages::comic_error::ComicError,
 };
 
 pub struct HomeService {

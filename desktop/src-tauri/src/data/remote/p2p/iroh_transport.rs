@@ -2,22 +2,20 @@ use async_trait::async_trait;
 use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::core::connection::peer::{transport::P2PTransport, types::PeerId};
-use crate::infra::error::translations::connection_error::ConnectionError;
+use crate::infra::error::messages::connection_error::ConnectionError;
+use crate::infra::remote::p2p::{transport::P2PTransport, peer_id::PeerId};
 
 pub struct IrohTransport {
     endpoint: Endpoint,
 }
 
 impl IrohTransport {
-    /// Instancia o Endpoint de conexão.
     /// FIXME: Atualmente usa o preset N0 — será substituído pelo relay próprio.
     pub async fn new() -> Result<Self, ConnectionError> {
         let endpoint = Endpoint::builder(presets::N0).bind().await?;
         Ok(Self { endpoint })
     }
 
-    /// Converte o PeerId para um endereço de conexão.
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
         let id: EndpointId = peer.id.parse().map_err(|_| {
             ConnectionError::PeerNotFound(PeerId {
@@ -31,14 +29,12 @@ impl IrohTransport {
 
 #[async_trait]
 impl P2PTransport for IrohTransport {
-    /// Retorna o id local como PeerId.
     fn local_id(&self) -> PeerId {
         PeerId {
             id: self.endpoint.id().to_string(),
         }
     }
 
-    /// Realiza a conexão bidirecional com um peer.
     async fn open_bi(
         &self,
         alpn: &[u8],
@@ -57,7 +53,6 @@ impl P2PTransport for IrohTransport {
         Ok((Box::new(send), Box::new(recv)))
     }
 
-    /// Encerra o endpoint.
     /// WARN: Os sockets UDP só fecham quando todos os clones do Endpoint são dropados.
     async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.endpoint.close().await;

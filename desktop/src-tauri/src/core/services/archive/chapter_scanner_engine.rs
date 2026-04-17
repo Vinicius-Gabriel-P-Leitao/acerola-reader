@@ -2,11 +2,11 @@ use std::path::Path;
 
 use tokio::fs;
 
+use crate::core::services::archive::path_guard::path_hash;
 use crate::data::models::archive::chapter_archive::ChapterArchive;
 use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-use crate::infra::error::translations::comic_error::ComicError;
-use crate::infra::error::translations::db_error::DbError;
-use crate::infra::filesystem::path_guard::path_hash;
+use crate::infra::error::messages::comic_error::ComicError;
+use crate::infra::error::messages::db_error::DbError;
 use crate::infra::pattern::chapter_template::extract_chapter_parts;
 use crate::infra::pattern::template_validator::{extract_tags, validate_template};
 
@@ -123,9 +123,7 @@ mod tests {
     async fn scan_chapter_insere_no_banco() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 1.cbz").await;
-
         service.scan_chapter(&file, 0, 1, None).await.unwrap();
-
         let all = chapter_repo(&pool).base.find_all().await.unwrap();
         assert_eq!(all.len(), 1);
         assert_eq!(all[0].chapter, "Ch. 1");
@@ -135,12 +133,10 @@ mod tests {
     async fn scan_chapter_com_template_gera_sort_correto() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 10.cbz").await;
-
         service
             .scan_chapter(&file, 0, 1, Some("Ch. {chapter}{decimal}.*.{extension}"))
             .await
             .unwrap();
-
         let all = chapter_repo(&pool).base.find_all().await.unwrap();
         assert_eq!(all[0].chapter_sort, "10");
     }
@@ -149,10 +145,8 @@ mod tests {
     async fn scan_chapter_duplicado_e_ignorado() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 1.cbz").await;
-
         service.scan_chapter(&file, 0, 1, None).await.unwrap();
         service.scan_chapter(&file, 0, 1, None).await.unwrap();
-
         assert_eq!(chapter_repo(&pool).base.count().await.unwrap(), 1);
     }
 
@@ -160,7 +154,6 @@ mod tests {
     async fn scan_chapter_arquivo_inexistente_retorna_erro() {
         let (service, _, _) = setup().await;
         let fake = PathBuf::from("/nao/existe/Ch. 1.cbz");
-
         assert!(service.scan_chapter(&fake, 0, 1, None).await.is_err());
     }
 }
