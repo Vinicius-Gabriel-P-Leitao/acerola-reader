@@ -10,9 +10,6 @@ pub struct ErrorPayload {
 
 impl From<&ComicError> for ErrorPayload {
     fn from(err: &ComicError) -> Self {
-        ErrorPayload {
-            error_type: format!("{:?}", err),
-            message: err.to_string(),
-        }
+        ErrorPayload { error_type: format!("{:?}", err), message: err.to_string() }
     }
 }

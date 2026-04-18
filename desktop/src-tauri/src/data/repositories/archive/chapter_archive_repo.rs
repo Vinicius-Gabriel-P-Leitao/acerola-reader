@@ -10,10 +10,7 @@ pub struct ChapterRepository {
 
 impl ChapterRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool.clone()),
-            pool,
-        }
+        Self { base: Repository::new(pool.clone()), pool }
     }
 
     /// Retorna capítulos de um diretório paginados, ordenados por `chapter_sort`.
@@ -21,10 +18,7 @@ impl ChapterRepository {
     /// A ordenação separa a parte inteira e decimal do campo para garantir que
     /// `0.9` venha antes de `0.10` — ordenação numérica, não lexicográfica.
     pub async fn get_chapters_paged(
-        &self,
-        folder_id: i64,
-        page_size: i64,
-        offset: i64,
+        &self, folder_id: i64, page_size: i64, offset: i64,
     ) -> Result<Vec<ChapterArchive>, DbError> {
         let cols = ChapterArchive::columns()
             .iter()
@@ -93,10 +87,7 @@ mod tests {
 
     async fn setup() -> ChapterRepository {
         let pool = setup_test_db().await;
-        Repository::<ComicDirectory>::new(pool.clone())
-            .insert(&berserk())
-            .await
-            .unwrap();
+        Repository::<ComicDirectory>::new(pool.clone()).insert(&berserk()).await.unwrap();
         ChapterRepository::new(pool)
     }
 
@@ -119,10 +110,8 @@ mod tests {
 
         repo.base.insert(&chapter(1, "001")).await.unwrap();
 
-        let updated = ChapterArchive {
-            chapter: "Capítulo Especial".to_string(),
-            ..chapter(1, "001")
-        };
+        let updated =
+            ChapterArchive { chapter: "Capítulo Especial".to_string(), ..chapter(1, "001") };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.chapter, "Capítulo Especial");
@@ -213,16 +202,10 @@ mod tests {
     #[tokio::test]
     async fn teste_erro_fk_invalida_ao_inserir() {
         let pool = setup_test_db().await;
-        sqlx::query("PRAGMA foreign_keys = ON")
-            .execute(&pool)
-            .await
-            .unwrap();
+        sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await.unwrap();
         let repo = ChapterRepository::new(pool);
 
-        let invalid = ChapterArchive {
-            comic_directory_fk: 999,
-            ..chapter(1, "001")
-        };
+        let invalid = ChapterArchive { comic_directory_fk: 999, ..chapter(1, "001") };
         let result = repo.base.insert(&invalid).await;
 
         assert!(

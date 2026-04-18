@@ -21,9 +21,7 @@ pub struct ChapterScannerService {
 
 impl ChapterScannerService {
     pub fn new(pool: sqlx::SqlitePool) -> Self {
-        Self {
-            chapter_repo: ChapterRepository::new(pool),
-        }
+        Self { chapter_repo: ChapterRepository::new(pool) }
     }
 
     /// Indexa um único arquivo de capítulo no banco de dados.

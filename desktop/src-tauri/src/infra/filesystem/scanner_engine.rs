@@ -23,18 +23,13 @@ impl ScannerEngine {
     /// Escaneia `root` recursivamente e emite via channel um [`DirectoryEntry`]
     /// por pasta que contiver arquivos — sem acumular tudo na heap.
     pub async fn scan(
-        &self,
-        root: PathBuf,
-        tx: mpsc::Sender<DirectoryEntry>,
+        &self, root: PathBuf, tx: mpsc::Sender<DirectoryEntry>,
     ) -> Result<(), std::io::Error> {
         self.walk(&root, &tx, 0).await
     }
 
     fn walk<'a>(
-        &'a self,
-        path: &'a PathBuf,
-        tx: &'a mpsc::Sender<DirectoryEntry>,
-        depth: usize,
+        &'a self, path: &'a PathBuf, tx: &'a mpsc::Sender<DirectoryEntry>, depth: usize,
     ) -> Pin<Box<dyn Future<Output = Result<(), std::io::Error>> + Send + 'a>> {
         Box::pin(async move {
             if let Some(max) = self.max_depth {
@@ -63,12 +58,7 @@ impl ScannerEngine {
 
             // Emite esse diretório se tiver arquivos — sem guardar tudo na heap
             if !files.is_empty() {
-                let _ = tx
-                    .send(DirectoryEntry {
-                        directory: path.clone(),
-                        files,
-                    })
-                    .await;
+                let _ = tx.send(DirectoryEntry { directory: path.clone(), files }).await;
             }
 
             // Desce nos subdiretórios depois de emitir — libera a heap do atual

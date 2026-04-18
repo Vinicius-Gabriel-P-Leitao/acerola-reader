@@ -26,8 +26,7 @@ impl Entity for ChapterArchive {
 /// Garante que o código consiga serializar o sql para o objeto
 impl Bindable for ChapterArchive {
     fn bind_insert<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(self.id)
@@ -40,8 +39,7 @@ impl Bindable for ChapterArchive {
     }
 
     fn bind_update<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(&self.chapter)

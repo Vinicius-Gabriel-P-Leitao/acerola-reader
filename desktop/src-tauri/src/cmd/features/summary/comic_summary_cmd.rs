@@ -16,9 +16,7 @@ pub async fn get_comic_summary(app: AppHandle, pool: State<'_, SqlitePool>) -> R
         let service = HomeService::new(pool);
 
         match service.get_all().await {
-            Ok(comics) => app
-                .emit("home:data", ComicSummaryPayload::from(comics))
-                .unwrap(),
+            Ok(comics) => app.emit("home:data", ComicSummaryPayload::from(comics)).unwrap(),
             Err(err) => app.emit("home:error", ErrorPayload::from(&err)).unwrap(),
         }
     });

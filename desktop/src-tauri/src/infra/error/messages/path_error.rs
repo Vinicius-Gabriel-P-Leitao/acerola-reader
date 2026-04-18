@@ -20,11 +20,7 @@ impl PathError {
     }
 
     pub fn access_denied(canonical: &Path, root: &Path) -> Self {
-        log::warn!(
-            "[PathError] Access denied: {:?} is outside {:?}",
-            canonical,
-            root
-        );
+        log::warn!("[PathError] Access denied: {:?} is outside {:?}", canonical, root);
         PathError::AccessDenied
     }
 

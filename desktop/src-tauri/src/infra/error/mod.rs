@@ -5,10 +5,12 @@ pub mod messages {
     pub mod file_error;
     pub mod path_error;
     pub mod pattern_error;
+    pub mod rpc_error;
 }
 
 pub mod translations {
     pub mod comic_translation;
     pub mod connection_translation;
     pub mod db_translation;
+    pub mod rpc_translation;
 }

@@ -14,9 +14,7 @@ pub struct HomeService {
 
 impl HomeService {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            repo: HomeRepository::new(pool),
-        }
+        Self { repo: HomeRepository::new(pool) }
     }
 
     pub async fn get_all(&self) -> Result<Vec<ComicSummaryView>, ComicError> {

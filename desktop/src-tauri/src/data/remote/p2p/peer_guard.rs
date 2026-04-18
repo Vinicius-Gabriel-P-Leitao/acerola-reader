@@ -1,40 +1,16 @@
-use std::marker::PhantomData;
+use std::future::Future;
 
 use crate::infra::{
-    error::messages::connection_error::ConnectionError, remote::p2p::peer_id::PeerId,
+    error::messages::connection_error::ConnectionError,
+    remote::p2p::connection_context::ConnectionContext,
 };
 
-// TODO: Talvez mover isso para infra, não penso em lugar bom para deixar isso, por que vai ser um trait que quando eu montar uma conexão ela vai ter que satisfazer essa struct
-pub struct ConnectionContext<T, F>
+pub async fn guard<T, F, Fut>(
+    ctx: &ConnectionContext<T>, validate: F,
+) -> Result<(), ConnectionError>
 where
-    F: Fn(&T) -> Result<(), ConnectionError>,
+    F: Fn(&ConnectionContext<T>) -> Fut,
+    Fut: Future<Output = Result<(), ConnectionError>>,
 {
-    _marker: PhantomData<T>,
-    peer_id: PeerId,
-    validate: F,
-}
-
-pub trait ConnectionGuard: Send + Sync {
-    fn is_allowed<T, F>(
-        &self,
-        data: &T,
-        ctx: ConnectionContext<T, F>,
-    ) -> Result<(), ConnectionError>
-    where
-        F: Fn(&T) -> Result<(), ConnectionError>;
-}
-
-pub struct OpenGuard;
-
-impl ConnectionGuard for OpenGuard {
-    fn is_allowed<T, F>(
-        &self,
-        data: &T,
-        ctx: ConnectionContext<T, F>,
-    ) -> Result<(), ConnectionError>
-    where
-        F: Fn(&T) -> Result<(), ConnectionError>,
-    {
-        Ok(())
-    }
+    validate(ctx).await
 }

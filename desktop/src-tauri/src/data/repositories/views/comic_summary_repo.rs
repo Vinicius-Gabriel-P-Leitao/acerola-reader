@@ -11,9 +11,6 @@ pub struct HomeRepository {
 
 impl HomeRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool.clone()),
-            pool,
-        }
+        Self { base: Repository::new(pool.clone()), pool }
     }
 }

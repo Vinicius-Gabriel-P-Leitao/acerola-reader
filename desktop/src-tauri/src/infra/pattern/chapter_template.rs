@@ -57,9 +57,7 @@ pub fn template_to_regex(
 }
 
 pub fn detect_template<'a>(
-    file_name: &str,
-    templates: &[&'a str],
-    validate: impl Fn(&str) -> Result<(), PatternError>,
+    file_name: &str, templates: &[&'a str], validate: impl Fn(&str) -> Result<(), PatternError>,
 ) -> Option<&'a str> {
     templates.iter().copied().find_map(|template| {
         template_to_regex(template, &validate)
@@ -70,21 +68,16 @@ pub fn detect_template<'a>(
 }
 
 pub fn extract_chapter_parts(
-    file_name: &str,
-    template: &str,
-    validate: impl Fn(&str) -> Result<(), PatternError>,
+    file_name: &str, template: &str, validate: impl Fn(&str) -> Result<(), PatternError>,
 ) -> Option<(u64, Option<String>)> {
-    template_to_regex(template, validate)
-        .ok()
-        .and_then(|regex| regex.captures(file_name))
-        .and_then(|caps| {
-            caps.get(1)
-                .and_then(|it| it.as_str().parse::<u64>().ok())
-                .map(|chapter| {
-                    let decimal = caps.get(2).map(|it| it.as_str().to_string());
-                    (chapter, decimal)
-                })
-        })
+    template_to_regex(template, validate).ok().and_then(|regex| regex.captures(file_name)).and_then(
+        |caps| {
+            caps.get(1).and_then(|it| it.as_str().parse::<u64>().ok()).map(|chapter| {
+                let decimal = caps.get(2).map(|it| it.as_str().to_string());
+                (chapter, decimal)
+            })
+        },
+    )
 }
 
 #[cfg(test)]
@@ -107,18 +100,9 @@ mod tests {
 
     #[test]
     fn macro_from_tag_valido() {
-        assert!(matches!(
-            TemplateMacro::from_tag("chapter"),
-            Ok(TemplateMacro::Chapter)
-        ));
-        assert!(matches!(
-            TemplateMacro::from_tag("decimal"),
-            Ok(TemplateMacro::Decimal)
-        ));
-        assert!(matches!(
-            TemplateMacro::from_tag("extension"),
-            Ok(TemplateMacro::Extension)
-        ));
+        assert!(matches!(TemplateMacro::from_tag("chapter"), Ok(TemplateMacro::Chapter)));
+        assert!(matches!(TemplateMacro::from_tag("decimal"), Ok(TemplateMacro::Decimal)));
+        assert!(matches!(TemplateMacro::from_tag("extension"), Ok(TemplateMacro::Extension)));
     }
 
     #[test]
@@ -140,9 +124,8 @@ mod tests {
 
     #[test]
     fn regex_validator_rejeitado_propaga_erro() {
-        let result = template_to_regex("{chapter}.*.{extension}", |_| {
-            Err(PatternError::ChapterRequired)
-        });
+        let result =
+            template_to_regex("{chapter}.*.{extension}", |_| Err(PatternError::ChapterRequired));
         assert!(matches!(result, Err(PatternError::ChapterRequired)));
     }
 

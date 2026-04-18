@@ -15,10 +15,8 @@ pub trait FileGuard: Send + Sync {
 
 impl FileGuard for SupportedFileGuard {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
-        let ext = path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .ok_or(FileError::MissingExtension)?;
+        let ext =
+            path.extension().and_then(|ext| ext.to_str()).ok_or(FileError::MissingExtension)?;
 
         match ArchiveFormat::from_extension(ext) {
             Some(_) => Ok(()),
@@ -29,10 +27,8 @@ impl FileGuard for SupportedFileGuard {
 
 impl FileGuard for ArchiveFileGuard {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
-        let ext = path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .ok_or(FileError::MissingExtension)?;
+        let ext =
+            path.extension().and_then(|ext| ext.to_str()).ok_or(FileError::MissingExtension)?;
 
         match ArchiveFormat::from_extension(ext) {
             Some(ArchiveFormat::Pdf) | None => Err(FileError::ExtensionNotAllowed(ext.to_string())),
@@ -43,10 +39,8 @@ impl FileGuard for ArchiveFileGuard {
 
 impl FileGuard for MetadataFileGuard {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
-        let name = path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or(FileError::MissingFileName)?;
+        let name =
+            path.file_name().and_then(|name| name.to_str()).ok_or(FileError::MissingFileName)?;
 
         match name {
             "ComicInfo.xml" => Ok(()),
@@ -57,10 +51,8 @@ impl FileGuard for MetadataFileGuard {
 
 impl FileGuard for ArtworkFileGuard {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
-        let name = path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or(FileError::MissingFileName)?;
+        let name =
+            path.file_name().and_then(|name| name.to_str()).ok_or(FileError::MissingFileName)?;
 
         match name {
             "cover.png" | "cover.jpg" | "cover.jpeg" | "banner.png" | "banner.jpg"
@@ -86,16 +78,10 @@ impl ScannerGuard {
     }
 
     pub fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
-        let all_rejected = self
-            .guards
-            .iter()
-            .all(|guard| guard.is_allowed(path).is_err());
+        let all_rejected = self.guards.iter().all(|guard| guard.is_allowed(path).is_err());
 
         if all_rejected {
-            let name = path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or("Unknown");
+            let name = path.file_name().and_then(|name| name.to_str()).unwrap_or("Unknown");
 
             return Err(FileError::not_allowed(name));
         }
@@ -128,10 +114,7 @@ mod tests {
     #[test]
     fn teste_comic_sem_extensao() {
         let guard = SupportedFileGuard;
-        assert!(matches!(
-            guard.is_allowed(Path::new("berserk")),
-            Err(FileError::MissingExtension)
-        ));
+        assert!(matches!(guard.is_allowed(Path::new("berserk")), Err(FileError::MissingExtension)));
     }
 
     #[test]

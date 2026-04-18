@@ -15,15 +15,11 @@ pub struct PathGuard {
 
 impl PathGuard {
     pub fn new(root: PathBuf) -> Self {
-        Self {
-            allowed_root: root.canonicalize().unwrap_or(root),
-        }
+        Self { allowed_root: root.canonicalize().unwrap_or(root) }
     }
 
     fn validate(&self, path: &Path) -> Result<(), PathError> {
-        let canonical = path
-            .canonicalize()
-            .map_err(|_| PathError::not_found(path))?;
+        let canonical = path.canonicalize().map_err(|_| PathError::not_found(path))?;
 
         if !canonical.starts_with(&self.allowed_root) {
             return Err(PathError::access_denied(&canonical, &self.allowed_root));
@@ -85,10 +81,7 @@ mod tests {
         let guard = PathGuard::new(root.path().to_path_buf());
         let traversal = root.path().join("../arquivo_malicioso.cbz");
         let result = guard.execute(&traversal, |_| -> Result<(), String> { Ok(()) });
-        assert!(matches!(
-            result,
-            Err(PathError::AccessDenied) | Err(PathError::NotFound(_))
-        ));
+        assert!(matches!(result, Err(PathError::AccessDenied) | Err(PathError::NotFound(_))));
     }
 
     #[test]
@@ -97,9 +90,8 @@ mod tests {
         let guard = PathGuard::new(root.path().to_path_buf());
         let file = root.path().join("arquivo.cbz");
         fs::write(&file, b"").unwrap();
-        let result = guard.execute(&file, |_| -> Result<(), String> {
-            Err("falha simulada".to_string())
-        });
+        let result =
+            guard.execute(&file, |_| -> Result<(), String> { Err("falha simulada".to_string()) });
         assert!(matches!(result, Err(PathError::ActionFailed(_))));
     }
 }

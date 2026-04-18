@@ -1,5 +1,3 @@
-pub mod error;
-
 pub mod db {
     pub mod migrations;
 }
@@ -13,5 +11,7 @@ pub mod pattern {
     pub mod chapter_template;
     pub mod template_validator;
 }
+
+pub mod error;
 
 pub mod remote;

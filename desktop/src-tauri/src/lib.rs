@@ -24,15 +24,13 @@ mod app_bootstrap {
 
         // INFO: Commands que serão chamados via invoke
 
-        builder
-            .setup(setup_runtime)
-            .invoke_handler(tauri::generate_handler![
-                select_folder_cmd::select_folder,
-                comic_scanner_cmd::incremental_scan,
-                comic_scanner_cmd::refresh_library,
-                comic_scanner_cmd::rebuild_library,
-                comic_summary_cmd::get_comic_summary,
-            ])
+        builder.setup(setup_runtime).invoke_handler(tauri::generate_handler![
+            select_folder_cmd::select_folder,
+            comic_scanner_cmd::incremental_scan,
+            comic_scanner_cmd::refresh_library,
+            comic_scanner_cmd::rebuild_library,
+            comic_summary_cmd::get_comic_summary,
+        ])
     }
 
     fn setup_opener(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
@@ -54,10 +52,7 @@ mod app_bootstrap {
     fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         builder.plugin(
             tauri_plugin_sql::Builder::new()
-                .add_migrations(
-                    "sqlite:acerola.db",
-                    crate::infra::db::migrations::get_migrations(),
-                )
+                .add_migrations("sqlite:acerola.db", crate::infra::db::migrations::get_migrations())
                 .build(),
         )
     }

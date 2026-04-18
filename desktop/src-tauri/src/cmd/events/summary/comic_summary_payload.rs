@@ -49,10 +49,7 @@ pub struct ComicSummaryPayload {
 
 impl ComicSummaryPayload {
     pub fn from(comics: Vec<ComicSummaryView>) -> Self {
-        let items = comics
-            .into_iter()
-            .map(ComicSummaryItem::from)
-            .collect::<Vec<_>>();
+        let items = comics.into_iter().map(ComicSummaryItem::from).collect::<Vec<_>>();
         let total = items.len();
 
         Self {
@@ -70,18 +67,13 @@ impl From<ComicSummaryView> for ComicSummaryItem {
                 directory_id: view.directory_id,
                 metadata_id: view.metadata_id,
             },
-            filesystem: ComicSummaryFilesystem {
-                folder_name: view.folder_name,
-            },
+            filesystem: ComicSummaryFilesystem { folder_name: view.folder_name },
             metadata: ComicSummaryMetadata {
                 title: view.metadata_title,
                 external_sync: view.external_sync,
                 active_source: view.active_source,
             },
-            artwork: ComicSummaryArtwork {
-                cover: view.folder_cover,
-                banner: view.folder_banner,
-            },
+            artwork: ComicSummaryArtwork { cover: view.folder_cover, banner: view.folder_banner },
         }
     }
 }

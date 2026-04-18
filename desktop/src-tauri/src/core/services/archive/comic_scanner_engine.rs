@@ -53,12 +53,9 @@ impl ComicScannerService {
     /// Processa todas as pastas encontradas no disco.
     /// INSERT OR IGNORE — pastas já indexadas são ignoradas.
     pub async fn refresh_library(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let entries = self.collect_entries(path).await?;
@@ -86,22 +83,17 @@ impl ComicScannerService {
     /// Compara o disco com o banco e processa apenas pastas novas ou modificadas (upsert).
     /// Remove do banco as pastas que não existem mais no disco.
     pub async fn incremental_scan(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let discovered = self.collect_entries(path).await?;
         let indexed: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
         let repo = self.comic_repo.clone();
 
-        let indexed_map: HashMap<String, &ComicDirectory> = indexed
-            .iter()
-            .map(|comic: &ComicDirectory| (comic.path.clone(), comic))
-            .collect();
+        let indexed_map: HashMap<String, &ComicDirectory> =
+            indexed.iter().map(|comic: &ComicDirectory| (comic.path.clone(), comic)).collect();
 
         let discovered_paths: HashSet<String> = discovered
             .iter()
@@ -133,7 +125,7 @@ impl ComicScannerService {
                         Ok(saved) => Ok(saved),
                         Err(DbError::UniqueViolation) => {
                             r.base.update(&comic).await.map_err(ComicError::from)
-                        }
+                        },
                         Err(e) => Err(ComicError::from(e)),
                     }
                 })
@@ -147,12 +139,9 @@ impl ComicScannerService {
     /// Sobrescreve todos os comics encontrados no disco, ignorando o estado atual do banco.
     /// DELETE + INSERT — capítulos são removidos via CASCADE e reinseridos.
     pub async fn rebuild_library(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let entries = self.collect_entries(path).await?;
@@ -273,9 +262,7 @@ impl ComicScannerService {
     }
 
     fn detect_template_for<'a>(
-        &self,
-        files: &[PathBuf],
-        templates: &'a [ChapterTemplate],
+        &self, files: &[PathBuf], templates: &'a [ChapterTemplate],
     ) -> Option<&'a ChapterTemplate> {
         files
             .first()
@@ -285,9 +272,7 @@ impl ComicScannerService {
                 let template_strs: Vec<&str> =
                     templates.iter().map(|t| t.pattern.as_str()).collect();
 
-                detect_template(file_str, &template_strs, |t| {
-                    validate_template(t, extract_tags)
-                })
+                detect_template(file_str, &template_strs, |t| validate_template(t, extract_tags))
             })
             .and_then(|pattern| templates.iter().find(|t| t.pattern == pattern))
     }
@@ -379,7 +364,12 @@ mod tests {
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
         service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         let mut progress_count = 0usize;
-        service.incremental_scan(root.path().to_path_buf(), |_| { progress_count += 1; }).await.unwrap();
+        service
+            .incremental_scan(root.path().to_path_buf(), |_| {
+                progress_count += 1;
+            })
+            .await
+            .unwrap();
         assert_eq!(progress_count, 0, "Nenhuma pasta deveria ser reprocessada");
     }
 

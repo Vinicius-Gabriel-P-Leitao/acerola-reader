@@ -3,8 +3,7 @@ use crate::infra::{
 };
 
 pub fn validate_template(
-    input: &str,
-    extract: impl Fn(&str) -> Result<Vec<String>, PatternError>,
+    input: &str, extract: impl Fn(&str) -> Result<Vec<String>, PatternError>,
 ) -> Result<(), PatternError> {
     let tags = extract(input)?;
 
@@ -23,19 +22,19 @@ pub fn validate_template(
                 if chapter_pos.is_none() {
                     chapter_pos = Some(index);
                 }
-            }
+            },
             TemplateMacro::Decimal => {
                 decimal_count += 1;
                 if decimal_pos.is_none() {
                     decimal_pos = Some(index);
                 }
-            }
+            },
             TemplateMacro::Extension => {
                 extension_count += 1;
                 if extension_pos.is_none() {
                     extension_pos = Some(index);
                 }
-            }
+            },
         }
     }
 
@@ -90,18 +89,18 @@ pub fn extract_tags(input: &str) -> Result<Vec<String>, PatternError> {
 
                 inside = true;
                 buffer.clear();
-            }
+            },
             '}' => {
                 if inside {
                     result.push(buffer.clone());
                     inside = false;
                 }
-            }
+            },
             _ => {
                 if inside {
                     buffer.push(it);
                 }
-            }
+            },
         }
     }
 
@@ -132,18 +131,12 @@ mod tests {
 
     #[test]
     fn erro_chave_sem_fechamento() {
-        assert!(matches!(
-            extract_tags("{chapter"),
-            Err(PatternError::MalformedMacro)
-        ));
+        assert!(matches!(extract_tags("{chapter"), Err(PatternError::MalformedMacro)));
     }
 
     #[test]
     fn erro_chave_dupla_abertura() {
-        assert!(matches!(
-            extract_tags("{{chapter}"),
-            Err(PatternError::MalformedMacro)
-        ));
+        assert!(matches!(extract_tags("{{chapter}"), Err(PatternError::MalformedMacro)));
     }
 
     #[test]

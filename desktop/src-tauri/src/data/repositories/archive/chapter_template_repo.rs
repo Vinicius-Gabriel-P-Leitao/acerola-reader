@@ -8,9 +8,7 @@ pub struct ChapterTemplateRepository {
 
 impl ChapterTemplateRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool),
-        }
+        Self { base: Repository::new(pool) }
     }
 }
 
@@ -54,10 +52,7 @@ mod tests {
 
         repo.base.insert(&template()).await.unwrap();
 
-        let updated = ChapterTemplate {
-            label: "Preset Deluxe".to_string(),
-            ..template()
-        };
+        let updated = ChapterTemplate { label: "Preset Deluxe".to_string(), ..template() };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.label, "Preset Deluxe");

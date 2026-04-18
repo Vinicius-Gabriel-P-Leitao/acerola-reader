@@ -45,7 +45,9 @@ fn metadata_migrations() -> Vec<Migration> {
         Migration {
             version: 6,
             description: "create_chapter_metadata",
-            sql: include_str!("../../../migrations/models/metadata/002_create_chapter_metadata.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/002_create_chapter_metadata.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
@@ -57,43 +59,57 @@ fn metadata_migrations() -> Vec<Migration> {
         Migration {
             version: 8,
             description: "create_anilist_source",
-            sql: include_str!("../../../migrations/models/metadata/source/001_create_anilist_source.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/source/001_create_anilist_source.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
             version: 9,
             description: "create_comic_info_source",
-            sql: include_str!("../../../migrations/models/metadata/source/002_create_comic_info_source.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/source/002_create_comic_info_source.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
             version: 10,
             description: "create_mangadex_source",
-            sql: include_str!("../../../migrations/models/metadata/source/003_create_mangadex_source.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/source/003_create_mangadex_source.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
             version: 11,
             description: "create_genre",
-            sql: include_str!("../../../migrations/models/metadata/relationship/001_create_genre.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/relationship/001_create_genre.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
             version: 12,
             description: "create_cover",
-            sql: include_str!("../../../migrations/models/metadata/relationship/002_create_cover.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/relationship/002_create_cover.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
             version: 13,
             description: "create_banner",
-            sql: include_str!("../../../migrations/models/metadata/relationship/003_create_banner.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/relationship/003_create_banner.sql"
+            ),
             kind: MigrationKind::Up,
         },
         Migration {
             version: 14,
             description: "create_author",
-            sql: include_str!("../../../migrations/models/metadata/relationship/004_create_author.sql"),
+            sql: include_str!(
+                "../../../migrations/models/metadata/relationship/004_create_author.sql"
+            ),
             kind: MigrationKind::Up,
         },
     ]

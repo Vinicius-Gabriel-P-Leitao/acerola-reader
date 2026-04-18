@@ -3,7 +3,7 @@ use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::infra::error::messages::connection_error::ConnectionError;
-use crate::infra::remote::p2p::{transport::P2PTransport, peer_id::PeerId};
+use crate::infra::remote::p2p::{peer_id::PeerId, transport::P2PTransport};
 
 pub struct IrohTransport {
     endpoint: Endpoint,
@@ -17,11 +17,10 @@ impl IrohTransport {
     }
 
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
-        let id: EndpointId = peer.id.parse().map_err(|_| {
-            ConnectionError::PeerNotFound(PeerId {
-                id: peer.id.clone(),
-            })
-        })?;
+        let id: EndpointId = peer
+            .id
+            .parse()
+            .map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone() }))?;
 
         Ok(EndpointAddr::from(id))
     }
@@ -30,20 +29,30 @@ impl IrohTransport {
 #[async_trait]
 impl P2PTransport for IrohTransport {
     fn local_id(&self) -> PeerId {
-        PeerId {
-            id: self.endpoint.id().to_string(),
-        }
+        PeerId { id: self.endpoint.id().to_string() }
+    }
+
+    async fn accept(
+        &self,
+    ) -> Result<
+        (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
+        ConnectionError,
+    > {
+        let incoming = self.endpoint.accept().await.ok_or(ConnectionError::Shutdown)?;
+
+        let conn = incoming.await?;
+
+        let alpn = conn.alpn().to_vec();
+        let peer = PeerId { id: conn.remote_id().to_string() };
+        let (send, recv) = conn.accept_bi().await?;
+
+        Ok((alpn, peer, Box::new(send), Box::new(recv)))
     }
 
     async fn open_bi(
-        &self,
-        alpn: &[u8],
-        peer: &PeerId,
+        &self, alpn: &[u8], peer: &PeerId,
     ) -> Result<
-        (
-            Box<dyn AsyncWrite + Send + Unpin>,
-            Box<dyn AsyncRead + Send + Unpin>,
-        ),
+        (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     > {
         let addr = self.peer_to_addr(peer)?;

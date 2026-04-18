@@ -8,15 +8,17 @@ use crate::infra::remote::p2p::peer_id::PeerId;
 pub trait P2PTransport: Send + Sync {
     fn local_id(&self) -> PeerId;
 
-    async fn open_bi(
+    async fn accept(
         &self,
-        alpn: &[u8],
-        peer: &PeerId,
     ) -> Result<
-        (
-            Box<dyn AsyncWrite + Send + Unpin>,
-            Box<dyn AsyncRead + Send + Unpin>,
-        ),
+        (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
+        ConnectionError,
+    >;
+
+    async fn open_bi(
+        &self, alpn: &[u8], peer: &PeerId,
+    ) -> Result<
+        (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     >;
 

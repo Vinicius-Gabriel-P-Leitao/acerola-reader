@@ -73,6 +73,7 @@ O objetivo desta fase é criar o núcleo de rede no PC, mantendo o código isola
 - [ ] **Abstrair o transporte via trait `P2PTransport`:**
   - O `NetworkManager` e os handlers dependem do trait, não do Iroh diretamente.
   - Permite trocar Iroh por `quinn` puro ou `libp2p` sem tocar nos handlers.
+
   ```rust
   trait P2PTransport: Send + Sync {
       async fn send_blob(&self, peer: NodeId, hash: Hash) -> Result<()>;
@@ -87,6 +88,7 @@ O objetivo desta fase é criar o núcleo de rede no PC, mantendo o código isola
   - Dois modos trocáveis na inicialização, sem alterar os handlers:
     - `OpenGuard` — sempre autoriza (desenvolvimento / rede local confiável).
     - `TokenGuard` — valida `NodeId` remoto + token de sessão mantido em banco.
+
   ```rust
   trait ConnectionGuard: Send + Sync {
       async fn authorize(&self, node_id: NodeId, alpn: &[u8]) -> Result<(), AuthError>;
@@ -150,16 +152,110 @@ O ecossistema Iroh está em versões 0.9x com breaking changes frequentes entre 
 
 ---
 
+---
+
+## 🧩 Fase 1.5: Cache de Estado Derivado (Jobs Distribuídos)
+
+O objetivo desta fase é introduzir uma camada de **materialização de estado dos jobs remotos**, desacoplando o consumo de estado da origem dos eventos (RPC/stream) e garantindo consistência local para UI, sync e reconexão.
+
+- [ ] **Definir o modelo `RemoteJobState` (estado canônico):**
+  - Representa o snapshot atual de um job remoto, independente de protocolo.
+  - Não deve depender de RPC, GraphQL ou Iroh.
+  - Campos:
+    - `job_id`, `device_id`, `device_name`
+    - `status` (`Queued`, `Running`, `Completed`, `Failed`, etc.)
+    - `progress`, `message`
+    - `started_at`, `completed_at`
+    - `error` (opcional)
+  - Esse struct será a **fonte de verdade local para jobs remotos**.
+
+---
+
+- [ ] **Implementar `RemoteJobCache` (store in-memory):**
+  - Local: `core/services/job_state/`
+  - Estrutura:
+    ```rust
+    HashMap<DeviceId, HashMap<JobId, RemoteJobState>>
+    ```
+  - Concorrência via `Arc<RwLock<...>>`
+  - Responsável por manter o estado atual de todos os jobs remotos ativos e recentes.
+
+---
+
+- [ ] **Implementar reducer de eventos (`handle_event`):**
+  - Entrada: eventos vindos de RPC/stream (`RemoteJobEvent`)
+  - Saída: atualização incremental do `RemoteJobCache`
+  - Regras:
+    - Converter eventos em estado (event → state)
+    - Atualizar apenas campos relevantes por tipo de evento
+    - Não depender de ordem perfeita dos eventos (best effort)
+    - Evitar panics ou inconsistência em eventos inesperados
+
+---
+
+- [ ] **Implementar criação lazy de jobs (tolerância a ordem):**
+  - Se um evento chegar para um job inexistente:
+    - Criar automaticamente um `RemoteJobState` mínimo
+    - Evita perda de estado em cenários de:
+    - reconexão
+    - eventos fora de ordem
+    - restart parcial
+
+---
+
+- [ ] **Expor queries de leitura (read side):**
+  - `get_device_jobs(device_id)`
+  - `get_all_active_jobs()`
+  - (opcional) `get_job(device_id, job_id)`
+  - Sempre retornar snapshots prontos (sem recomputação ou dependência de eventos)
+
+---
+
+- [ ] **Implementar política de lifecycle:**
+  - `cleanup_old_jobs(max_age)`
+    - Remove jobs em estado terminal após TTL
+  - `remove_device_jobs(device_id)`
+    - Limpa cache ao desconectar peer
+  - Evita crescimento ilimitado de memória
+
+---
+
+- [ ] **Integrar com `RpcWebhookHandler`:**
+  - Eventos de job (`JobQueued`, `JobProgress`, etc.) devem:
+    - ser recebidos via RPC
+    - encaminhados para o `RemoteJobCache`
+  - O handler não mantém estado — apenas despacha eventos
+
+---
+
+- [ ] **Preparar integração futura com `GraphQLHandler`:**
+  - Queries GraphQL poderão ler diretamente do `RemoteJobCache`
+  - Evita roundtrip desnecessário via rede
+  - Garante consistência entre:
+    - eventos (RPC)
+    - leitura de estado (GraphQL)
+
+---
+
+- [ ] **Registrar no `lib.rs` (composition root):**
+  - Instanciar `RemoteJobCache`
+  - Injetar em:
+    - `RpcWebhookHandler`
+    - (futuro) `GraphQLHandler`
+  - Garantir acesso compartilhado via `Arc`
+
+---
+
 ## 📱 Fase 2: Integração Mobile (Android / Kotlin)
 
 Quando o Core Rust estiver maduro e testado no Desktop, ele será envelopado para Android. A regra de ouro: **O Rust é "burro e rápido" (transporta bytes e criptografia), o Kotlin é inteligente (UI, Cache e Ciclo de Vida).**
 
-### Escopo e limites definidos:
+### Escopo e limites definidos
 
 - **PC = servidor, Mobile = cliente.** A inversão de papéis (mobile servindo para outro mobile) foi descartada: exigiria um relay com conhecimento de domínio para rotear mobile → relay → mobile, adicionando uma terceira camada de complexidade sem benefício prático dado as limitações de background do Android.
 - **Offline no mobile:** Sem PC na rede, o mobile fica apenas conectado ao relay. Nenhuma operação de leitura ou sync é iniciada. O progresso de leitura em andamento é salvo como estado "pausado".
 
-### Como vai funcionar do lado Android:
+### Como vai funcionar do lado Android
 
 1. **JNI / FFI Bridge Limpa:**
    - Inspirado na arquitetura do *Spacedrive*, usar UniFFI ou JNI manual focado no padrão **JSON-RPC**.

@@ -11,9 +11,7 @@ use tauri::{AppHandle, Emitter};
 /// Pastas já indexadas são ignoradas via INSERT OR IGNORE.
 #[tauri::command]
 pub async fn refresh_library(
-    path: String,
-    app: AppHandle,
-    pool: State<'_, SqlitePool>,
+    path: String, app: AppHandle, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();
@@ -39,9 +37,7 @@ pub async fn refresh_library(
 /// Remove do banco as pastas que não existem mais no disco.
 #[tauri::command]
 pub async fn incremental_scan(
-    path: String,
-    app: AppHandle,
-    pool: State<'_, SqlitePool>,
+    path: String, app: AppHandle, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();
@@ -67,9 +63,7 @@ pub async fn incremental_scan(
 /// É a operação mais pesada — use quando o banco pode estar em estado inconsistente.
 #[tauri::command]
 pub async fn rebuild_library(
-    path: String,
-    app: AppHandle,
-    pool: State<'_, SqlitePool>,
+    path: String, app: AppHandle, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();
