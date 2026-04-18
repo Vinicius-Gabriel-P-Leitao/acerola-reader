@@ -2,7 +2,7 @@ use std::fmt;
 
 /// Identificador de um peer na rede P2P.
 /// Newtype sobre String para evitar uso genérico acidental.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PeerId {
     pub id: String,
 }
