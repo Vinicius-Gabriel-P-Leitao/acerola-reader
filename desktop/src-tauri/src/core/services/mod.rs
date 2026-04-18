@@ -8,3 +8,7 @@ pub mod archive {
 pub mod summary {
     pub mod comic_summary_engine;
 }
+
+pub mod network  {
+    pub mod network_service;
+}

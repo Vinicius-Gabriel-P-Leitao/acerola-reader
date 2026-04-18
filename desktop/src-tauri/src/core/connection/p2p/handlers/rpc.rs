@@ -1,6 +1,9 @@
 use async_trait::async_trait;
+use futures::sink::SinkExt;
 use serde::{Deserialize, Serialize};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncWrite};
+use tokio_stream::StreamExt;
+use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
 use crate::infra::{
     error::messages::{connection_error::ConnectionError, rpc_error::RpcError},
@@ -25,42 +28,39 @@ impl RpcHandler {
     }
 
     async fn read_request(
-        recv: &mut (impl AsyncRead + Unpin),
+        recv: &mut FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>,
     ) -> Result<RpcRequest, RpcError> {
-        let mut len_buf = [0u8; 4];
-        recv.read_exact(&mut len_buf).await?;
-
-        let len = u32::from_be_bytes(len_buf) as usize;
-        let mut buf = vec![0u8; len];
-        recv.read_exact(&mut buf).await?;
-
-        Ok(serde_json::from_slice(&buf)?)
+        let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;
+        Ok(serde_json::from_slice(&bytes)?)
     }
 
     async fn write_response(
-        send: &mut (impl AsyncWrite + Unpin), response: &RpcResponse,
+        send: &mut FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>,
+        response: &RpcResponse,
     ) -> Result<(), RpcError> {
         let bytes = serde_json::to_vec(response)?;
-
-        let len = bytes.len() as u32;
-        send.write_all(&len.to_be_bytes()).await?;
-        send.write_all(&bytes).await?;
-
+        send.send(bytes.into()).await?;
         Ok(())
     }
 }
 
 #[async_trait]
+#[rustfmt::skip]
 impl ProtocolHandler for RpcHandler {
     async fn handle(
-        &self, peer: &PeerId, mut send: Box<dyn AsyncWrite + Send + Unpin>,
-        mut recv: Box<dyn AsyncRead + Send + Unpin>,
+        &self, 
+        peer: &PeerId, 
+        send: Box<dyn AsyncWrite + Send + Unpin>,
+        recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), ConnectionError> {
+        let mut framed_recv = FramedRead::new(recv, LengthDelimitedCodec::new());
+        let mut framed_send = FramedWrite::new(send, LengthDelimitedCodec::new());
+
         loop {
-            match Self::read_request(&mut recv).await {
+            match Self::read_request(&mut framed_recv).await {
                 Ok(RpcRequest::Ping) => {
                     log::debug!("[RpcHandler] ping from {}", peer.id);
-                    Self::write_response(&mut send, &RpcResponse::Pong).await?;
+                    Self::write_response(&mut framed_send, &RpcResponse::Pong).await?;
                 },
                 Err(_) => break,
             }
