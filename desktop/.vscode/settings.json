@@ -48,6 +48,7 @@
     "mod.rs": "rust-mod"
   },
   "material-icon-theme.folders.associations": {
+    "network": "connection",
     "summary": "docs",
     "peer": "client",
     "p2p": "client"
