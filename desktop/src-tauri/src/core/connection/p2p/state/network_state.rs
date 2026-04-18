@@ -1,13 +1,20 @@
 use crate::infra::remote::p2p::peer_id::PeerId;
 use std::collections::HashMap;
 
+#[derive(Clone, Debug)]
+pub enum NetworkMode {
+    Local,
+    Relay,
+}
+
 pub struct NetworkState {
     connected_peers: HashMap<PeerId, Vec<u8>>,
+    mode: NetworkMode,
 }
 
 impl NetworkState {
     pub fn new() -> Self {
-        Self { connected_peers: HashMap::new() }
+        Self { connected_peers: HashMap::new(), mode: NetworkMode::Local }
     }
 
     pub fn connect(&mut self, peer: PeerId, alpn: Vec<u8>) {
@@ -24,5 +31,13 @@ impl NetworkState {
 
     pub fn peers(&self) -> &HashMap<PeerId, Vec<u8>> {
         &self.connected_peers
+    }
+
+    pub fn switch_mode(&mut self, mode: NetworkMode) {
+        self.mode = mode;
+    }
+
+    pub fn mode(&self) -> &NetworkMode {
+        &self.mode
     }
 }

@@ -7,12 +7,8 @@ use crate::infra::{
     remote::p2p::{peer_id::PeerId, transport::P2PTransport},
 };
 
-type IncomingConnection = (
-    Vec<u8>,
-    PeerId,
-    Box<dyn AsyncWrite + Send + Unpin>,
-    Box<dyn AsyncRead + Send + Unpin>,
-);
+type IncomingConnection =
+    (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>);
 
 /// Injeta conexões simuladas no NetworkManager sem precisar do Iroh.
 ///
@@ -28,19 +24,8 @@ pub struct MockTransportHandle {
 }
 
 impl MockTransportHandle {
-    pub fn inject(
-        &self,
-        alpn: &[u8],
-        peer: PeerId,
-        client: DuplexStream,
-        server: DuplexStream,
-    ) {
-        let _ = self.tx.send((
-            alpn.to_vec(),
-            peer,
-            Box::new(server),
-            Box::new(client),
-        ));
+    pub fn inject(&self, alpn: &[u8], peer: PeerId, client: DuplexStream, server: DuplexStream) {
+        let _ = self.tx.send((alpn.to_vec(), peer, Box::new(server), Box::new(client)));
     }
 }
 
@@ -58,26 +43,16 @@ impl P2PTransport for MockTransport {
     async fn accept(
         &self,
     ) -> Result<
-        (
-            Vec<u8>,
-            PeerId,
-            Box<dyn AsyncWrite + Send + Unpin>,
-            Box<dyn AsyncRead + Send + Unpin>,
-        ),
+        (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     > {
         self.rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)
     }
-    
+
     async fn open_bi(
-        &self,
-        _alpn: &[u8],
-        _peer: &PeerId,
+        &self, _alpn: &[u8], _peer: &PeerId,
     ) -> Result<
-        (
-            Box<dyn AsyncWrite + Send + Unpin>,
-            Box<dyn AsyncRead + Send + Unpin>,
-        ),
+        (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     > {
         Err(ConnectionError::Shutdown)

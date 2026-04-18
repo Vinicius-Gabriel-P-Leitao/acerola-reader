@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
 use crate::{
-    core::connection::p2p::state::network_state::NetworkState,
+    core::connection::p2p::state::network_state::{NetworkMode, NetworkState},
     infra::{
         error::messages::connection_error::ConnectionError,
         remote::p2p::{
@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub enum NetworkCommand {
-    SwitchGuard { validator: BoxedValidator },
+    SwitchGuard { validator: BoxedValidator, mode: NetworkMode },
     Connect { peer: PeerId, alpn: Vec<u8> },
     Shutdown,
 }
@@ -80,8 +80,9 @@ impl NetworkManager {
                         NetworkCommand::Connect { peer, alpn } => {
                             let _ = self.transport.open_bi(&alpn, &peer).await;
                         }
-                        NetworkCommand::SwitchGuard { validator } => {
+                        NetworkCommand::SwitchGuard { validator, mode } => {
                             *self.validator.write().await = validator;
+                            self.state.write().await.switch_mode(mode);
                         }
                         NetworkCommand::Shutdown => break,
                     }

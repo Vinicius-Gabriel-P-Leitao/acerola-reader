@@ -4,6 +4,7 @@ mod data;
 mod infra;
 
 use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
+use cmd::features::network::network_cmd;
 use cmd::features::summary::comic_summary_cmd;
 use tauri::Manager;
 
@@ -11,8 +12,16 @@ use tauri::Manager;
 pub mod tests;
 
 mod app_bootstrap {
+    use crate::{
+        core::{
+            connection::p2p::{handlers, network_manager},
+            services::network::network_service::NetworkService,
+        },
+        data::remote::p2p::{iroh_transport, open_guard::open_guard},
+    };
+
     use super::*;
-    use std::path::PathBuf;
+    use std::{path::PathBuf, sync::Arc};
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();
@@ -25,11 +34,16 @@ mod app_bootstrap {
         // INFO: Commands que serão chamados via invoke
 
         builder.setup(setup_runtime).invoke_handler(tauri::generate_handler![
-            select_folder_cmd::select_folder,
             comic_scanner_cmd::incremental_scan,
+            select_folder_cmd::select_folder,
+            comic_summary_cmd::get_comic_summary,
             comic_scanner_cmd::refresh_library,
             comic_scanner_cmd::rebuild_library,
-            comic_summary_cmd::get_comic_summary,
+            network_cmd::get_network_status,
+            network_cmd::switch_to_local,
+            network_cmd::switch_to_relay,
+            network_cmd::connect_to_peer,
+            network_cmd::get_local_id,
         ])
     }
 
@@ -55,6 +69,32 @@ mod app_bootstrap {
                 .add_migrations("sqlite:acerola.db", crate::infra::db::migrations::get_migrations())
                 .build(),
         )
+    }
+
+    async fn setup_database(handle: &tauri::AppHandle, db_path: PathBuf) {
+        #[rustfmt::skip]
+        let pool = sqlx::SqlitePool::connect(&format!(
+            "sqlite:{}?mode=rwc",
+            db_path.to_string_lossy()
+        )).await.unwrap();
+
+        handle.manage(pool);
+    }
+
+    async fn setup_network(handle: &tauri::AppHandle) {
+        let transport = Arc::new(iroh_transport::IrohTransport::new().await.unwrap());
+        let transport_clone = Arc::clone(&transport);
+
+        let (mut manager, command_tx, state) = network_manager::NetworkManager::new(
+            transport,
+            Box::new(|ctx| Box::pin(open_guard(ctx))),
+        );
+
+        manager.register(b"acerola/rpc", Arc::new(handlers::rpc::RpcHandler::new()));
+        tokio::spawn(manager.run());
+
+        let service = NetworkService::new(state, transport_clone, command_tx);
+        handle.manage(service);
     }
 
     fn setup_runtime(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -86,13 +126,8 @@ mod app_bootstrap {
         )?;
 
         tauri::async_runtime::block_on(async move {
-            let pool = sqlx::SqlitePool::connect(&format!(
-                "sqlite:{}?mode=rwc",
-                db_path.to_string_lossy()
-            ))
-            .await
-            .unwrap();
-            handle.manage(pool);
+            setup_database(&handle, db_path).await;
+            setup_network(&handle).await;
         });
 
         Ok(())

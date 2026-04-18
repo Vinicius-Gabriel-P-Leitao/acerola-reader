@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use iroh::address_lookup::mdns;
 use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
 use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -12,7 +13,14 @@ pub struct IrohTransport {
 impl IrohTransport {
     /// FIXME: Atualmente usa o preset N0 — será substituído pelo relay próprio.
     pub async fn new() -> Result<Self, ConnectionError> {
-        let endpoint = Endpoint::builder(presets::N0).bind().await?;
+        let mdns = mdns::MdnsAddressLookup::builder();
+
+        let endpoint = Endpoint::builder(presets::N0)
+            .alpns(vec![b"acerola/rpc".to_vec()])
+            .address_lookup(mdns)
+            .bind()
+            .await?;
+
         Ok(Self { endpoint })
     }
 
