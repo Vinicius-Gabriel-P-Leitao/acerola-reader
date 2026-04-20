@@ -59,14 +59,17 @@ impl NetworkManager {
             tokio::select! {
                 result = self.transport.accept() => {
                     match result {
-                        Ok((alpn, peer, send, recv)) => {
-                            let Some(handler) = self.handlers.get(&alpn) else { continue };
+                        Ok(incoming) => {
+                            let Some(handler) = self.handlers.get(incoming.alpn()) else { continue };
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
 
-                            state.write().await.connect(peer.clone(), alpn.clone());
-
                             tokio::spawn(async move {
+                                let peer = incoming.peer().clone();
+                                let alpn = incoming.alpn().to_vec();
+                                let Ok((send, recv)) = incoming.accept_bi().await else { return };
+
+                                state.write().await.connect(peer.clone(), alpn);
                                 let _ = handler.handle(&peer, send, recv).await;
                                 state.write().await.disconnect(&peer);
                             });
@@ -78,7 +81,24 @@ impl NetworkManager {
                 Some(cmd) = self.command_rx.recv() => {
                     match cmd {
                         NetworkCommand::Connect { peer, alpn } => {
-                            let _ = self.transport.open_bi(&alpn, &peer).await;
+                            let Some(handler) = self.handlers.get(&alpn) else { continue };
+
+                            let state = Arc::clone(&self.state);
+                            let handler = handler.clone();
+
+                            let peer_clone = peer.clone();
+                            let alpn_clone = alpn.clone();
+
+                            match self.transport.open_bi(&alpn, &peer).await {
+                                Ok((send, recv)) => {
+                                    state.write().await.connect(peer_clone.clone(), alpn_clone);
+                                    tokio::spawn(async move {
+                                        let _ = handler.handle(&peer_clone, send, recv).await;
+                                        state.write().await.disconnect(&peer_clone);
+                                    });
+                                }
+                                Err(_) => {}
+                            }
                         }
                         NetworkCommand::SwitchGuard { validator, mode } => {
                             *self.validator.write().await = validator;

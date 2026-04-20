@@ -4,10 +4,38 @@ use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::infra::error::messages::connection_error::ConnectionError;
+use crate::infra::remote::p2p::transport::IncomingConnection;
 use crate::infra::remote::p2p::{peer_id::PeerId, transport::P2PTransport};
+
+pub struct IrohIncoming {
+    conn: iroh::endpoint::Connection,
+    peer: PeerId,
+    alpn: Vec<u8>,
+}
 
 pub struct IrohTransport {
     endpoint: Endpoint,
+}
+
+#[async_trait]
+impl IncomingConnection for IrohIncoming {
+    fn alpn(&self) -> &[u8] {
+        &self.alpn
+    }
+
+    fn peer(&self) -> &PeerId {
+        &self.peer
+    }
+
+    async fn accept_bi(
+        self: Box<Self>,
+    ) -> Result<
+        (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
+        ConnectionError,
+    > {
+        let (send, recv) = self.conn.accept_bi().await?;
+        Ok((Box::new(send), Box::new(recv)))
+    }
 }
 
 impl IrohTransport {
@@ -40,21 +68,15 @@ impl P2PTransport for IrohTransport {
         PeerId { id: self.endpoint.id().to_string() }
     }
 
-    async fn accept(
-        &self,
-    ) -> Result<
-        (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
-        ConnectionError,
-    > {
+    async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
         let incoming = self.endpoint.accept().await.ok_or(ConnectionError::Shutdown)?;
-
         let conn = incoming.await?;
 
-        let alpn = conn.alpn().to_vec();
-        let peer = PeerId { id: conn.remote_id().to_string() };
-        let (send, recv) = conn.accept_bi().await?;
-
-        Ok((alpn, peer, Box::new(send), Box::new(recv)))
+        Ok(Box::new(IrohIncoming {
+            peer: PeerId { id: conn.remote_id().to_string() },
+            alpn: conn.alpn().to_vec(),
+            conn,
+        }))
     }
 
     async fn open_bi(
