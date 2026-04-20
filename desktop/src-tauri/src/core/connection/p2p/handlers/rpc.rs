@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use futures::sink::SinkExt;
 use serde::{Deserialize, Serialize};
-use tauri::Emitter;
+use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
@@ -39,6 +39,8 @@ pub enum RpcResponse {
 type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
 type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;
 
+pub type EventEmitter = Arc<dyn Fn(&str, String) + Send + Sync>;
+
 async fn read_request(recv: &mut Recv) -> Result<RpcRequest, RpcError> {
     let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;
     Ok(serde_json::from_slice(&bytes)?)
@@ -65,12 +67,12 @@ async fn write_response(send: &mut Writer, response: &RpcResponse) -> Result<(),
 // Papel: espera mensagens, responde. Registrado no inbound do manager.
 
 pub struct RpcServerHandler {
-    app: tauri::AppHandle,
+    emit: EventEmitter,
 }
 
 impl RpcServerHandler {
-    pub fn new(app: tauri::AppHandle) -> Self {
-        Self { app }
+    pub fn new(emit: EventEmitter) -> Self {
+        Self { emit }
     }
 }
 
@@ -87,10 +89,10 @@ impl ProtocolHandler for RpcServerHandler {
             match read_request(&mut framed_recv).await {
                 Ok(RpcRequest::Ping) => {
                     log::debug!("[RpcServer] ping from {}", peer.id);
-                    self.app.emit("rpc:ping_received", peer.id.clone()).ok();
+                    (self.emit)("rpc:ping_received", peer.id.clone());
 
                     write_response(&mut framed_send, &RpcResponse::Pong).await?;
-                    self.app.emit("rpc:pong_sent", peer.id.clone()).ok();
+                    (self.emit)("rpc:pong_sent", peer.id.clone());
                 },
                 Err(_) => break,
             }
@@ -104,14 +106,13 @@ impl ProtocolHandler for RpcServerHandler {
 // Papel: fala primeiro (envia Ping), depois entra no mesmo loop bidirecional.
 // Registrado no outbound do manager.
 
-// INFO: Isso para ir para o android, vai ter que ser mudado para uma funcão de callback e não um tauri::AppHandleF
 pub struct RpcClientHandler {
-    app: tauri::AppHandle,
+    emit: EventEmitter,
 }
 
 impl RpcClientHandler {
-    pub fn new(app: tauri::AppHandle) -> Self {
-        Self { app }
+    pub fn new(emit: EventEmitter) -> Self {
+        Self { emit }
     }
 }
 
@@ -126,13 +127,13 @@ impl ProtocolHandler for RpcClientHandler {
 
         // Cliente fala primeiro
         write_request(&mut framed_send, &RpcRequest::Ping).await?;
-        self.app.emit("rpc:ping_sent", peer.id.clone()).ok();
+        (self.emit)("rpc:ping_sent", peer.id.clone());
 
         // Lê o Pong da resposta inicial
         match read_response(&mut framed_recv).await {
             Ok(RpcResponse::Pong) => {
                 log::debug!("[RpcClient] pong from {}", peer.id);
-                self.app.emit("rpc:pong_received", peer.id.clone()).ok();
+                (self.emit)("rpc:pong_received", peer.id.clone());
             },
             Err(_) => return Ok(()),
         }

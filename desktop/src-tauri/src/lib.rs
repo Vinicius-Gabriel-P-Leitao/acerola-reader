@@ -22,6 +22,7 @@ mod app_bootstrap {
 
     use super::*;
     use std::{path::PathBuf, sync::Arc};
+    use tauri::Emitter;
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();
@@ -35,10 +36,10 @@ mod app_bootstrap {
 
         builder.setup(setup_runtime).invoke_handler(tauri::generate_handler![
             comic_scanner_cmd::incremental_scan,
-            select_folder_cmd::select_folder,
             comic_summary_cmd::get_comic_summary,
             comic_scanner_cmd::refresh_library,
             comic_scanner_cmd::rebuild_library,
+            select_folder_cmd::select_folder,
             network_cmd::get_network_status,
             network_cmd::switch_to_local,
             network_cmd::switch_to_relay,
@@ -90,14 +91,19 @@ mod app_bootstrap {
             Box::new(|ctx| Box::pin(open_guard(ctx))),
         );
 
+        let app = handle.clone();
+        let emitter: handlers::rpc::EventEmitter = Arc::new(move |event, peer_id| {
+            app.emit(event, peer_id).ok();
+        });
+
         manager.register_inbound(
             b"acerola/rpc",
-            Arc::new(handlers::rpc::RpcServerHandler::new(handle.clone())),
+            Arc::new(handlers::rpc::RpcServerHandler::new(emitter.clone())),
         );
 
         manager.register_outbound(
             b"acerola/rpc",
-            Arc::new(handlers::rpc::RpcClientHandler::new(handle.clone())),
+            Arc::new(handlers::rpc::RpcClientHandler::new(emitter)),
         );
 
         tokio::spawn(manager.run());
