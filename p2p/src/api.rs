@@ -1,19 +1,29 @@
 use std::{collections::HashMap, sync::Arc};
 
+pub mod error {
+    pub use crate::error::ConnectionError as P2PError;
+}
+pub mod guard {
+    pub use crate::guard::{open_guard, BoxedValidator as Guard, ConnectionContext};
+}
+pub mod peer {
+    pub use crate::peer::PeerId as PeerIdentity;
+}
+pub mod protocol {
+    pub use crate::protocol::{EventEmitter, ProtocolHandler as Handler};
+}
+
 use crate::{
     error::ConnectionError,
     guard::BoxedValidator,
     network::{NetworkCommand, NetworkManager},
     peer::PeerId,
-    protocol::{rpc::{RpcClientHandler, RpcServerHandler}, ProtocolHandler},
+    protocol::{
+        rpc::{RpcClientHandler, RpcServerHandler},
+        EventEmitter, ProtocolHandler,
+    },
     transport::{iroh::IrohTransport, P2PTransport},
 };
-
-pub use crate::error::ConnectionError as P2PError;
-pub use crate::guard::BoxedValidator as Guard;
-pub use crate::peer::PeerId as PeerIdentity;
-pub use crate::protocol::EventEmitter;
-pub use crate::protocol::ProtocolHandler as Handler;
 
 pub struct AcerolaP2PBuilder {
     emit: EventEmitter,
@@ -99,9 +109,6 @@ impl AcerolaP2P {
     }
 
     pub async fn shutdown(&self) -> Result<(), ConnectionError> {
-        self.command_tx
-            .send(NetworkCommand::Shutdown)
-            .await
-            .map_err(|_| ConnectionError::Shutdown)
+        self.command_tx.send(NetworkCommand::Shutdown).await.map_err(|_| ConnectionError::Shutdown)
     }
 }
