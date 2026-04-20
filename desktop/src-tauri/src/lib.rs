@@ -90,7 +90,16 @@ mod app_bootstrap {
             Box::new(|ctx| Box::pin(open_guard(ctx))),
         );
 
-        manager.register(b"acerola/rpc", Arc::new(handlers::rpc::RpcHandler::new()));
+        manager.register_inbound(
+            b"acerola/rpc",
+            Arc::new(handlers::rpc::RpcServerHandler::new(handle.clone())),
+        );
+
+        manager.register_outbound(
+            b"acerola/rpc",
+            Arc::new(handlers::rpc::RpcClientHandler::new(handle.clone())),
+        );
+
         tokio::spawn(manager.run());
 
         let service = NetworkService::new(state, transport_clone, command_tx);

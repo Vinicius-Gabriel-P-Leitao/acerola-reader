@@ -4,23 +4,48 @@ use tokio::sync::{mpsc, Mutex};
 
 use crate::infra::{
     error::messages::connection_error::ConnectionError,
-    remote::p2p::{peer_id::PeerId, transport::P2PTransport},
+    remote::p2p::{
+        peer_id::PeerId,
+        transport::{IncomingConnection, P2PTransport},
+    },
 };
 
-type IncomingConnection =
+type InjectedConnection =
     (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>);
 
-/// Injeta conexões simuladas no NetworkManager sem precisar do Iroh.
-///
-/// O teste cria um par de streams com `tokio::io::duplex`, monta a conexão
-/// e envia via `inject`. O `MockTransport::accept` entrega essa conexão ao
-/// NetworkManager exatamente como o IrohTransport faria.
+struct MockIncoming {
+    alpn: Vec<u8>,
+    peer: PeerId,
+    send: Box<dyn AsyncWrite + Send + Unpin>,
+    recv: Box<dyn AsyncRead + Send + Unpin>,
+}
+
+#[async_trait]
+impl IncomingConnection for MockIncoming {
+    fn alpn(&self) -> &[u8] {
+        &self.alpn
+    }
+
+    fn peer(&self) -> &PeerId {
+        &self.peer
+    }
+
+    async fn accept_bi(
+        self: Box<Self>,
+    ) -> Result<
+        (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
+        ConnectionError,
+    > {
+        Ok((self.send, self.recv))
+    }
+}
+
 pub struct MockTransport {
-    rx: Mutex<mpsc::UnboundedReceiver<IncomingConnection>>,
+    rx: Mutex<mpsc::UnboundedReceiver<InjectedConnection>>,
 }
 
 pub struct MockTransportHandle {
-    tx: mpsc::UnboundedSender<IncomingConnection>,
+    tx: mpsc::UnboundedSender<InjectedConnection>,
 }
 
 impl MockTransportHandle {
@@ -40,13 +65,11 @@ impl P2PTransport for MockTransport {
         PeerId { id: "mock-peer".to_string() }
     }
 
-    async fn accept(
-        &self,
-    ) -> Result<
-        (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
-        ConnectionError,
-    > {
-        self.rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)
+    async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
+        let (alpn, peer, send, recv) =
+            self.rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)?;
+
+        Ok(Box::new(MockIncoming { alpn, peer, send, recv }))
     }
 
     async fn open_bi(

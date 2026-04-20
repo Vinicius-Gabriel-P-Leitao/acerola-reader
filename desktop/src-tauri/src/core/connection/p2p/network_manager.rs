@@ -24,7 +24,8 @@ pub struct NetworkManager {
     validator: Arc<RwLock<BoxedValidator>>,
     command_tx: mpsc::UnboundedSender<NetworkCommand>,
     command_rx: mpsc::UnboundedReceiver<NetworkCommand>,
-    handlers: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
+    handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
+    handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
 }
 
 impl NetworkManager {
@@ -37,21 +38,26 @@ impl NetworkManager {
         let manager = Self {
             transport,
             command_rx,
-            handlers: HashMap::new(),
             command_tx: command_tx.clone(),
             state: Arc::clone(&state),
+            handlers_inbound: HashMap::new(),
+            handlers_outbound: HashMap::new(),
             validator: Arc::new(RwLock::new(validator)),
         };
 
         (manager, command_tx, state)
     }
 
-    pub fn register(&mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) {
-        self.handlers.insert(alpn.to_vec(), handler);
-    }
-
     pub fn state(&self) -> Arc<RwLock<NetworkState>> {
         Arc::clone(&self.state)
+    }
+
+    pub fn register_inbound(&mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) {
+        self.handlers_inbound.insert(alpn.to_vec(), handler);
+    }
+
+    pub fn register_outbound(&mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) {
+        self.handlers_outbound.insert(alpn.to_vec(), handler);
     }
 
     pub async fn run(mut self) {
@@ -60,7 +66,7 @@ impl NetworkManager {
                 result = self.transport.accept() => {
                     match result {
                         Ok(incoming) => {
-                            let Some(handler) = self.handlers.get(incoming.alpn()) else { continue };
+                            let Some(handler) = self.handlers_inbound.get(incoming.alpn()) else { continue };
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
 
@@ -81,7 +87,7 @@ impl NetworkManager {
                 Some(cmd) = self.command_rx.recv() => {
                     match cmd {
                         NetworkCommand::Connect { peer, alpn } => {
-                            let Some(handler) = self.handlers.get(&alpn) else { continue };
+                            let Some(handler) = self.handlers_outbound.get(&alpn) else { continue };
 
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
@@ -129,24 +135,47 @@ mod tests {
         PeerId { id: id.to_string() }
     }
 
+    struct NoopHandler;
+    #[async_trait::async_trait]
+    impl ProtocolHandler for NoopHandler {
+        async fn handle(
+            &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
+            _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
+        ) -> Result<(), connection_error::ConnectionError> {
+            Ok(())
+        }
+    }
+
+    struct SlowHandler;
+    #[async_trait::async_trait]
+    impl ProtocolHandler for SlowHandler {
+        async fn handle(
+            &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
+            _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
+        ) -> Result<(), connection_error::ConnectionError> {
+            sleep(Duration::from_millis(50)).await;
+            Ok(())
+        }
+    }
+
     #[tokio::test]
-    async fn handler_registrado_para_alpn_e_encontrado() {
+    async fn handler_inbound_registrado_para_alpn_e_encontrado() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
 
-        struct NoopHandler;
-        #[async_trait::async_trait]
-        impl ProtocolHandler for NoopHandler {
-            async fn handle(
-                &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
-                _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
-            ) -> Result<(), connection_error::ConnectionError> {
-                Ok(())
-            }
-        }
+        manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
 
-        manager.register(b"acerola/rpc", Arc::new(NoopHandler));
-        assert!(manager.handlers.contains_key(b"acerola/rpc".as_ref()));
+        assert!(manager.handlers_inbound.contains_key(b"acerola/rpc".as_ref()));
+    }
+
+    #[tokio::test]
+    async fn handler_outbound_registrado_para_alpn_e_encontrado() {
+        let (transport, _handle) = mock_transport();
+        let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
+
+        manager.register_outbound(b"acerola/rpc", Arc::new(NoopHandler));
+
+        assert!(manager.handlers_outbound.contains_key(b"acerola/rpc".as_ref()));
     }
 
     #[tokio::test]
@@ -155,19 +184,7 @@ mod tests {
         let transport: Arc<dyn P2PTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
 
-        struct NoopHandler;
-        #[async_trait::async_trait]
-        impl ProtocolHandler for NoopHandler {
-            async fn handle(
-                &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
-                _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
-            ) -> Result<(), connection_error::ConnectionError> {
-                sleep(Duration::from_millis(50)).await;
-                Ok(())
-            }
-        }
-
-        manager.register(b"acerola/rpc", Arc::new(NoopHandler));
+        manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
         handle.inject(b"acerola/rpc", make_peer("peer-1"), client, server);
@@ -184,18 +201,7 @@ mod tests {
         let transport: Arc<dyn P2PTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
 
-        struct NoopHandler;
-        #[async_trait::async_trait]
-        impl ProtocolHandler for NoopHandler {
-            async fn handle(
-                &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
-                _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
-            ) -> Result<(), connection_error::ConnectionError> {
-                Ok(())
-            }
-        }
-
-        manager.register(b"acerola/rpc", Arc::new(NoopHandler));
+        manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
 
         let (client, server) = tokio::io::duplex(1024);
         handle.inject(b"acerola/rpc", make_peer("peer-2"), client, server);

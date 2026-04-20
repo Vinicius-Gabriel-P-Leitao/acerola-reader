@@ -5,22 +5,33 @@
 
   type NetworkConnection = { peerId: string; alpn: string };
   type NetworkStatus = { mode: string; connections: NetworkConnection[] };
+  type RpcEvent = { peerId: string; event: string };
 
   let status: NetworkStatus | null = $state(null);
   let localId = $state("");
   let targetPeerId = $state("");
-  let unlisten: (() => void) | undefined;
+  let rpcLog = $state<RpcEvent[]>([]);
+
+  let unlisteners: (() => void)[] = [];
 
   onMount(async () => {
-    unlisten = await listen<NetworkStatus>("network:status", (event) => {
-      status = event.payload;
-    });
+    unlisteners.push(
+      await listen<NetworkStatus>("network:status", (e) => { status = e.payload; }),
+      await listen<string>("rpc:ping_sent",     (e) => addLog(e.payload, "Ping enviado")),
+      await listen<string>("rpc:ping_received", (e) => addLog(e.payload, "Ping recebido")),
+      await listen<string>("rpc:pong_sent",     (e) => addLog(e.payload, "Pong enviado")),
+      await listen<string>("rpc:pong_received", (e) => addLog(e.payload, "Pong recebido")),
+    );
 
     localId = await invoke("get_local_id");
     await invoke("get_network_status");
   });
 
-  onDestroy(() => unlisten?.());
+  onDestroy(() => unlisteners.forEach((u) => u()));
+
+  function addLog(peerId: string, event: string) {
+    rpcLog = [{ peerId, event }, ...rpcLog].slice(0, 50);
+  }
 
   async function refresh() {
     await invoke("get_network_status");
@@ -72,6 +83,19 @@
       {/each}
     {:else}
       <p class="text-sm text-muted-foreground">Nenhuma conexão ativa.</p>
+    {/if}
+  </div>
+
+  <div>
+    <p class="text-sm font-medium mb-2">Log RPC</p>
+    {#if rpcLog.length}
+      {#each rpcLog as entry}
+        <div class="text-xs font-mono text-muted-foreground">
+          <span class="text-foreground">{entry.event}</span> — {entry.peerId}
+        </div>
+      {/each}
+    {:else}
+      <p class="text-sm text-muted-foreground">Nenhum evento ainda.</p>
     {/if}
   </div>
 </div>
