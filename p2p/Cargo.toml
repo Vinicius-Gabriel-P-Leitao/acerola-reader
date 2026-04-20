@@ -1,0 +1,21 @@
+[lib]
+crate-type = ["lib"]
+name = "acerola_p2p"
+
+[package]
+authors = ["Vinícius Gabriel Pereira Leitão"]
+description = "Biblioteca central P2P para o Acerola — compartilhada entre desktop e mobile"
+edition = "2021"
+license = "GPL-3.0-only"
+name = "acerola-p2p"
+version = "0.1.0"
+
+[dependencies]
+async-trait = "0.1.89"
+futures = "0.3.32"
+iroh = {version = "0.97.0", features = ["address-lookup-mdns"]}
+log = "0.4"
+thiserror = "2.0.18"
+tokio = {version = "1.51.0", features = ["full"]}
+tokio-stream = "0.1.18"
+tokio-util = {version = "0.7.18", features = ["codec"]}
