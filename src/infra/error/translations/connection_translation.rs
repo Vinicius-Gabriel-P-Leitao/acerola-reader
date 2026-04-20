@@ -146,8 +146,6 @@ impl From<RpcError> for ConnectionError {
     fn from(rpc_err: RpcError) -> Self {
         match rpc_err {
             RpcError::Stream(msg) => ConnectionError::StreamFailed(msg),
-            RpcError::Serialize(msg) => ConnectionError::StreamFailed(msg),
-            RpcError::Deserialize(msg) => ConnectionError::StreamFailed(msg),
         }
     }
 }

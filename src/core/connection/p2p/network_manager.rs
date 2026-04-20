@@ -6,11 +6,13 @@ use crate::{
     infra::{
         error::messages::connection_error::ConnectionError,
         remote::p2p::{
-            guard::BoxedValidator, peer_id::PeerId, protocol_handler::ProtocolHandler,
-            transport::P2PTransport,
+            connection_context::ConnectionContext, guard::BoxedValidator, peer_id::PeerId,
+            protocol_handler::ProtocolHandler, transport::P2PTransport,
         },
     },
 };
+
+const COMMAND_CHANNEL_CAPACITY: usize = 64;
 
 pub enum NetworkCommand {
     SwitchGuard { validator: BoxedValidator, mode: NetworkMode },
@@ -22,8 +24,8 @@ pub struct NetworkManager {
     transport: Arc<dyn P2PTransport>,
     state: Arc<RwLock<NetworkState>>,
     validator: Arc<RwLock<BoxedValidator>>,
-    command_tx: mpsc::UnboundedSender<NetworkCommand>,
-    command_rx: mpsc::UnboundedReceiver<NetworkCommand>,
+    command_tx: mpsc::Sender<NetworkCommand>,
+    command_rx: mpsc::Receiver<NetworkCommand>,
     handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
     handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
 }
@@ -31,8 +33,8 @@ pub struct NetworkManager {
 impl NetworkManager {
     pub fn new(
         transport: Arc<dyn P2PTransport>, validator: BoxedValidator,
-    ) -> (Self, mpsc::UnboundedSender<NetworkCommand>, Arc<RwLock<NetworkState>>) {
-        let (command_tx, command_rx) = mpsc::unbounded_channel();
+    ) -> (Self, mpsc::Sender<NetworkCommand>, Arc<RwLock<NetworkState>>) {
+        let (command_tx, command_rx) = mpsc::channel(COMMAND_CHANNEL_CAPACITY);
         let state = Arc::new(RwLock::new(NetworkState::new()));
 
         let manager = Self {
@@ -69,15 +71,31 @@ impl NetworkManager {
                             let Some(handler) = self.handlers_inbound.get(incoming.alpn()) else { continue };
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
+                            let validator = Arc::clone(&self.validator);
 
                             tokio::spawn(async move {
                                 let peer = incoming.peer().clone();
                                 let alpn = incoming.alpn().to_vec();
                                 let Ok((send, recv)) = incoming.accept_bi().await else { return };
 
-                                state.write().await.connect(peer.clone(), alpn);
+                                let ctx = ConnectionContext { 
+                                    peer_id: peer.clone(),
+                                    data: ()
+                                };
+
+                                let allowed = {
+                                    let guard = validator.read().await;
+                                    guard(&ctx)
+                                }.await;
+
+                                if allowed.is_err() {
+                                    log::debug!("connection from {} denied by guard", peer.id);
+                                    return;
+                                }
+
+                                state.write().await.connect(peer.clone(), alpn.clone());
                                 let _ = handler.handle(&peer, send, recv).await;
-                                state.write().await.disconnect(&peer);
+                                state.write().await.disconnect(&peer, &alpn);
                             });
                         }
                         Err(ConnectionError::Shutdown) => break,
@@ -91,16 +109,15 @@ impl NetworkManager {
 
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
-
                             let peer_clone = peer.clone();
                             let alpn_clone = alpn.clone();
 
                             match self.transport.open_bi(&alpn, &peer).await {
                                 Ok((send, recv)) => {
-                                    state.write().await.connect(peer_clone.clone(), alpn_clone);
+                                    state.write().await.connect(peer_clone.clone(), alpn_clone.clone());
                                     tokio::spawn(async move {
                                         let _ = handler.handle(&peer_clone, send, recv).await;
-                                        state.write().await.disconnect(&peer_clone);
+                                        state.write().await.disconnect(&peer_clone, &alpn_clone);
                                     });
                                 }
                                 Err(_) => {}
@@ -233,9 +250,51 @@ mod tests {
         let (manager, command_tx, _) = NetworkManager::new(Arc::new(transport), open_validator());
 
         let handle = tokio::spawn(manager.run());
-        let _ = command_tx.send(NetworkCommand::Shutdown);
+        let _ = command_tx.send(NetworkCommand::Shutdown).await;
 
         let result = tokio::time::timeout(Duration::from_millis(100), handle).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn guard_nega_conexao_de_peer_bloqueado() {
+        let (transport, handle) = mock_transport();
+        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+
+        let deny_all: BoxedValidator =
+            Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied) }));
+
+        let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), deny_all);
+        manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
+
+        let (client, server) = tokio::io::duplex(1024);
+        handle.inject(b"acerola/rpc", make_peer("peer-blocked"), client, server);
+
+        tokio::spawn(manager.run());
+        sleep(Duration::from_millis(30)).await;
+
+        assert!(!state.read().await.is_connected(&make_peer("peer-blocked")));
+    }
+
+    #[tokio::test]
+    async fn mesmo_peer_em_dois_alpns_aparece_conectado() {
+        let (transport, handle) = mock_transport();
+        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+        let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
+
+        manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
+        manager.register_inbound(b"acerola/blob", Arc::new(SlowHandler));
+
+        let (c1, s1) = tokio::io::duplex(1024);
+        let (c2, s2) = tokio::io::duplex(1024);
+        handle.inject(b"acerola/rpc", make_peer("peer-multi"), c1, s1);
+        handle.inject(b"acerola/blob", make_peer("peer-multi"), c2, s2);
+
+        tokio::spawn(manager.run());
+        sleep(Duration::from_millis(20)).await;
+
+        assert!(state.read().await.is_connected(&make_peer("peer-multi")));
+        assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/rpc"));
+        assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/blob"));
     }
 }

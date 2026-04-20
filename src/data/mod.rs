@@ -1,8 +1,6 @@
-pub mod remote  {
-  pub mod p2p {
-    pub mod iroh_transport;
-    pub mod open_guard;
-    pub mod peer_guard;
-    pub mod token_guard;
-  }
+pub mod remote {
+    pub mod p2p {
+        pub mod iroh_transport;
+        pub mod open_guard;
+    }
 }

@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use futures::sink::SinkExt;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_stream::StreamExt;
@@ -11,60 +10,23 @@ use crate::infra::{
     remote::p2p::{peer_id::PeerId, protocol_handler::ProtocolHandler},
 };
 
-// Tipos que representam o protocolo RPC.
-// Ambos os lados sabem serializar e desserializar esses enums.
-#[derive(Debug, Serialize, Deserialize)]
-pub enum RpcRequest {
-    Ping,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum RpcResponse {
-    Pong,
-}
-
-// --- Funções auxiliares compartilhadas ---
-//
-// FramedRead/FramedWrite são wrappers do tokio_util que adicionam
-// enquadramento (framing) sobre streams de bytes brutos.
-//
-// O problema sem framing: TCP/QUIC são streams contínuos de bytes.
-// Se você enviar dois JSONs em sequência, o receptor pode receber
-// tudo junto num único chunk. O LengthDelimitedCodec resolve isso
-// prefixando cada mensagem com seu tamanho em bytes.
-//
-// SinkExt (futures) adiciona o método .send() no FramedWrite.
-// StreamExt (tokio_stream) adiciona o método .next() no FramedRead.
+const PING: u8 = 0x01;
+const PONG: u8 = 0x02;
 
 type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
 type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;
 
 pub type EventEmitter = Arc<dyn Fn(&str, String) + Send + Sync>;
 
-async fn read_request(recv: &mut Recv) -> Result<RpcRequest, RpcError> {
+async fn read_byte(recv: &mut Recv) -> Result<u8, RpcError> {
     let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;
-    Ok(serde_json::from_slice(&bytes)?)
+    bytes.first().copied().ok_or(RpcError::Stream("empty frame".into()))
 }
 
-async fn write_request(send: &mut Writer, request: &RpcRequest) -> Result<(), RpcError> {
-    let bytes = serde_json::to_vec(request)?;
-    send.send(bytes.into()).await?;
+async fn write_byte(send: &mut Writer, byte: u8) -> Result<(), RpcError> {
+    send.send(vec![byte].into()).await?;
     Ok(())
 }
-
-async fn read_response(recv: &mut Recv) -> Result<RpcResponse, RpcError> {
-    let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;
-    Ok(serde_json::from_slice(&bytes)?)
-}
-
-async fn write_response(send: &mut Writer, response: &RpcResponse) -> Result<(), RpcError> {
-    let bytes = serde_json::to_vec(response)?;
-    send.send(bytes.into()).await?;
-    Ok(())
-}
-
-// --- Servidor ---
-// Papel: espera mensagens, responde. Registrado no inbound do manager.
 
 pub struct RpcServerHandler {
     emit: EventEmitter,
@@ -86,25 +48,20 @@ impl ProtocolHandler for RpcServerHandler {
         let mut framed_send = FramedWrite::new(send, LengthDelimitedCodec::new());
 
         loop {
-            match read_request(&mut framed_recv).await {
-                Ok(RpcRequest::Ping) => {
+            match read_byte(&mut framed_recv).await {
+                Ok(PING) => {
                     log::debug!("[RpcServer] ping from {}", peer.id);
                     (self.emit)("rpc:ping_received", peer.id.clone());
-
-                    write_response(&mut framed_send, &RpcResponse::Pong).await?;
+                    write_byte(&mut framed_send, PONG).await?;
                     (self.emit)("rpc:pong_sent", peer.id.clone());
-                },
-                Err(_) => break,
+                }
+                _ => break,
             }
         }
 
         Ok(())
     }
 }
-
-// --- Cliente ---
-// Papel: fala primeiro (envia Ping), depois entra no mesmo loop bidirecional.
-// Registrado no outbound do manager.
 
 pub struct RpcClientHandler {
     emit: EventEmitter,
@@ -125,26 +82,23 @@ impl ProtocolHandler for RpcClientHandler {
         let mut framed_recv = FramedRead::new(recv, LengthDelimitedCodec::new());
         let mut framed_send = FramedWrite::new(send, LengthDelimitedCodec::new());
 
-        // Cliente fala primeiro
-        write_request(&mut framed_send, &RpcRequest::Ping).await?;
+        write_byte(&mut framed_send, PING).await?;
         (self.emit)("rpc:ping_sent", peer.id.clone());
 
-        // Lê o Pong da resposta inicial
-        match read_response(&mut framed_recv).await {
-            Ok(RpcResponse::Pong) => {
+        match read_byte(&mut framed_recv).await {
+            Ok(PONG) => {
                 log::debug!("[RpcClient] pong from {}", peer.id);
                 (self.emit)("rpc:pong_received", peer.id.clone());
-            },
-            Err(_) => return Ok(()),
+            }
+            _ => return Ok(()),
         }
 
-        // Depois fica no mesmo loop bidirecional do servidor
         loop {
-            match read_request(&mut framed_recv).await {
-                Ok(RpcRequest::Ping) => {
-                    write_response(&mut framed_send, &RpcResponse::Pong).await?;
-                },
-                Err(_) => break,
+            match read_byte(&mut framed_recv).await {
+                Ok(PING) => {
+                    write_byte(&mut framed_send, PONG).await?;
+                }
+                _ => break,
             }
         }
 
@@ -156,19 +110,14 @@ impl ProtocolHandler for RpcClientHandler {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn ping_serializa_e_deserializa() {
-        let request = RpcRequest::Ping;
-        let bytes = serde_json::to_vec(&request).unwrap();
-        let decoded: RpcRequest = serde_json::from_slice(&bytes).unwrap();
-        assert!(matches!(decoded, RpcRequest::Ping));
+    #[test]
+    fn ping_byte_diferente_de_pong() {
+        assert_ne!(PING, PONG);
     }
 
-    #[tokio::test]
-    async fn pong_serializa_e_deserializa() {
-        let response = RpcResponse::Pong;
-        let bytes = serde_json::to_vec(&response).unwrap();
-        let decoded: RpcResponse = serde_json::from_slice(&bytes).unwrap();
-        assert!(matches!(decoded, RpcResponse::Pong));
+    #[test]
+    fn bytes_sao_valores_esperados() {
+        assert_eq!(PING, 0x01);
+        assert_eq!(PONG, 0x02);
     }
 }

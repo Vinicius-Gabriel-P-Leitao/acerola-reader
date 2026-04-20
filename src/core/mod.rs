@@ -7,8 +7,6 @@ pub mod connection {
         }
 
         pub mod handlers {
-            pub mod blobs;
-            pub mod graphql;
             pub mod rpc;
         }
     }

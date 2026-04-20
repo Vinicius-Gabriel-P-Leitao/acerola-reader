@@ -1,5 +1,6 @@
+use std::collections::{HashMap, HashSet};
+
 use crate::infra::remote::p2p::peer_id::PeerId;
-use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub enum NetworkMode {
@@ -8,7 +9,7 @@ pub enum NetworkMode {
 }
 
 pub struct NetworkState {
-    connected_peers: HashMap<PeerId, Vec<u8>>,
+    connected_peers: HashMap<PeerId, HashSet<Vec<u8>>>,
     mode: NetworkMode,
 }
 
@@ -18,18 +19,27 @@ impl NetworkState {
     }
 
     pub fn connect(&mut self, peer: PeerId, alpn: Vec<u8>) {
-        self.connected_peers.insert(peer, alpn);
+        self.connected_peers.entry(peer).or_default().insert(alpn);
     }
 
-    pub fn disconnect(&mut self, peer: &PeerId) {
-        self.connected_peers.remove(peer);
+    pub fn disconnect(&mut self, peer: &PeerId, alpn: &[u8]) {
+        if let Some(alpns) = self.connected_peers.get_mut(peer) {
+            alpns.remove(alpn);
+            if alpns.is_empty() {
+                self.connected_peers.remove(peer);
+            }
+        }
     }
 
     pub fn is_connected(&self, peer: &PeerId) -> bool {
         self.connected_peers.contains_key(peer)
     }
 
-    pub fn peers(&self) -> &HashMap<PeerId, Vec<u8>> {
+    pub fn is_connected_on(&self, peer: &PeerId, alpn: &[u8]) -> bool {
+        self.connected_peers.get(peer).map_or(false, |alpns| alpns.contains(alpn))
+    }
+
+    pub fn peers(&self) -> &HashMap<PeerId, HashSet<Vec<u8>>> {
         &self.connected_peers
     }
 
