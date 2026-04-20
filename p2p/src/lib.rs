@@ -1,8 +1,3 @@
-pub mod api;
-pub use api::{
-    AcerolaP2P, AcerolaP2PBuilder, EventEmitter, Guard, Handler, P2PError, PeerIdentity,
-};
-
 #[path = "lib/error.rs"]
 pub(crate) mod error;
 
@@ -23,3 +18,5 @@ pub(crate) mod transport;
 
 #[cfg(test)]
 pub(crate) mod tests;
+
+pub mod api;
