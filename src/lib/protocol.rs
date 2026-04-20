@@ -1,9 +1,15 @@
+#[path = "protocol/rpc.rs"]
+pub(crate) mod rpc;
+
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::infra::{
-    error::messages::connection_error::ConnectionError, remote::p2p::peer_id::PeerId,
-};
+use crate::error::ConnectionError;
+use crate::peer::PeerId;
+
+pub type EventEmitter = Arc<dyn Fn(&str, String) + Send + Sync>;
 
 #[async_trait]
 pub trait ProtocolHandler: Send + Sync {

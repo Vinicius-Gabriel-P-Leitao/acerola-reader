@@ -1,27 +1,19 @@
 use std::{collections::HashMap, sync::Arc};
 
 use crate::{
-    core::connection::p2p::{
-        handlers::rpc::{RpcClientHandler, RpcServerHandler},
-        network_manager::{NetworkCommand, NetworkManager},
-    },
-    data::remote::p2p::iroh_transport::IrohTransport,
-    infra::{
-        error::messages::connection_error::ConnectionError,
-        remote::p2p::{
-            guard::BoxedValidator,
-            peer_id::PeerId,
-            protocol_handler::ProtocolHandler,
-            transport::P2PTransport,
-        },
-    },
+    error::ConnectionError,
+    guard::BoxedValidator,
+    network::{NetworkCommand, NetworkManager},
+    peer::PeerId,
+    protocol::{rpc::{RpcClientHandler, RpcServerHandler}, ProtocolHandler},
+    transport::{iroh::IrohTransport, P2PTransport},
 };
 
-pub use crate::core::connection::p2p::handlers::rpc::EventEmitter;
-pub use crate::infra::error::messages::connection_error::ConnectionError as P2PError;
-pub use crate::infra::remote::p2p::guard::BoxedValidator as Guard;
-pub use crate::infra::remote::p2p::peer_id::PeerId as PeerIdentity;
-pub use crate::infra::remote::p2p::protocol_handler::ProtocolHandler as Handler;
+pub use crate::error::ConnectionError as P2PError;
+pub use crate::guard::BoxedValidator as Guard;
+pub use crate::peer::PeerId as PeerIdentity;
+pub use crate::protocol::EventEmitter;
+pub use crate::protocol::ProtocolHandler as Handler;
 
 pub struct AcerolaP2PBuilder {
     emit: EventEmitter,
@@ -60,13 +52,12 @@ impl AcerolaP2PBuilder {
         let local_id = transport.local_id();
 
         let (mut manager, command_tx, _state) =
-            NetworkManager::new(Arc::clone(&transport) as _, self.guard);
+            NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2PTransport>, self.guard);
 
         manager.register_inbound(
             b"acerola/rpc",
             Arc::new(RpcServerHandler::new(Arc::clone(&self.emit))),
         );
-        
         manager.register_outbound(
             b"acerola/rpc",
             Arc::new(RpcClientHandler::new(Arc::clone(&self.emit))),

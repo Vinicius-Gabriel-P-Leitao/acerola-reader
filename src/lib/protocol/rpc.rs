@@ -1,22 +1,18 @@
 use async_trait::async_trait;
 use futures::sink::SinkExt;
-use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use crate::infra::{
-    error::messages::{connection_error::ConnectionError, rpc_error::RpcError},
-    remote::p2p::{peer_id::PeerId, protocol_handler::ProtocolHandler},
-};
+use crate::error::{ConnectionError, RpcError};
+use crate::peer::PeerId;
+use crate::protocol::{EventEmitter, ProtocolHandler};
 
 const PING: u8 = 0x01;
 const PONG: u8 = 0x02;
 
 type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
 type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;
-
-pub type EventEmitter = Arc<dyn Fn(&str, String) + Send + Sync>;
 
 async fn read_byte(recv: &mut Recv) -> Result<u8, RpcError> {
     let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;

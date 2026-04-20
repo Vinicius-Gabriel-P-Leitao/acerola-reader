@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::infra::remote::p2p::peer_id::PeerId;
+use crate::peer::PeerId;
 
 #[derive(Clone, Debug)]
 pub enum NetworkMode {

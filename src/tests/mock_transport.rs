@@ -2,13 +2,9 @@ use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite, DuplexStream};
 use tokio::sync::{mpsc, Mutex};
 
-use crate::infra::{
-    error::messages::connection_error::ConnectionError,
-    remote::p2p::{
-        peer_id::PeerId,
-        transport::{IncomingConnection, P2PTransport},
-    },
-};
+use crate::error::ConnectionError;
+use crate::peer::PeerId;
+use crate::transport::{IncomingConnection, P2PTransport};
 
 type InjectedConnection =
     (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>);

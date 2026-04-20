@@ -3,9 +3,9 @@ use iroh::address_lookup::mdns;
 use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::infra::error::messages::connection_error::ConnectionError;
-use crate::infra::remote::p2p::transport::IncomingConnection;
-use crate::infra::remote::p2p::{peer_id::PeerId, transport::P2PTransport};
+use crate::error::ConnectionError;
+use crate::peer::PeerId;
+use crate::transport::{IncomingConnection, P2PTransport};
 
 pub struct IrohIncoming {
     conn: iroh::endpoint::Connection,

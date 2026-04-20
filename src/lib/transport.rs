@@ -1,8 +1,11 @@
+#[path = "transport/iroh.rs"]
+pub(crate) mod iroh;
+
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::infra::error::messages::connection_error::ConnectionError;
-use crate::infra::remote::p2p::peer_id::PeerId;
+use crate::error::ConnectionError;
+use crate::peer::PeerId;
 
 #[async_trait]
 pub trait IncomingConnection: Send {

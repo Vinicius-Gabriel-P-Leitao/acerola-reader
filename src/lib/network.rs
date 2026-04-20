@@ -1,15 +1,16 @@
+#[path = "network/state.rs"]
+pub(crate) mod state;
+
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
 use crate::{
-    core::connection::p2p::state::network_state::{NetworkMode, NetworkState},
-    infra::{
-        error::messages::connection_error::ConnectionError,
-        remote::p2p::{
-            connection_context::ConnectionContext, guard::BoxedValidator, peer_id::PeerId,
-            protocol_handler::ProtocolHandler, transport::P2PTransport,
-        },
-    },
+    error::ConnectionError,
+    guard::{BoxedValidator, ConnectionContext},
+    network::state::{NetworkMode, NetworkState},
+    peer::PeerId,
+    protocol::ProtocolHandler,
+    transport::P2PTransport,
 };
 
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
@@ -78,11 +79,7 @@ impl NetworkManager {
                                 let alpn = incoming.alpn().to_vec();
                                 let Ok((send, recv)) = incoming.accept_bi().await else { return };
 
-                                let ctx = ConnectionContext { 
-                                    peer_id: peer.clone(),
-                                    data: ()
-                                };
-
+                                let ctx = ConnectionContext { peer_id: peer.clone(), data: () };
                                 let allowed = {
                                     let guard = validator.read().await;
                                     guard(&ctx)
@@ -138,10 +135,7 @@ impl NetworkManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        infra::{error::messages::connection_error, remote::p2p::guard::BoxedValidator},
-        tests::utils::mock_transport::mock_transport,
-    };
+    use crate::tests::mock_transport::mock_transport;
     use tokio::time::{sleep, Duration};
 
     fn open_validator() -> BoxedValidator {
@@ -158,7 +152,7 @@ mod tests {
         async fn handle(
             &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
             _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
-        ) -> Result<(), connection_error::ConnectionError> {
+        ) -> Result<(), ConnectionError> {
             Ok(())
         }
     }
@@ -169,7 +163,7 @@ mod tests {
         async fn handle(
             &self, _peer: &PeerId, _send: Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
             _recv: Box<dyn tokio::io::AsyncRead + Send + Unpin>,
-        ) -> Result<(), connection_error::ConnectionError> {
+        ) -> Result<(), ConnectionError> {
             sleep(Duration::from_millis(50)).await;
             Ok(())
         }
@@ -179,9 +173,7 @@ mod tests {
     async fn handler_inbound_registrado_para_alpn_e_encontrado() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
-
         manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
-
         assert!(manager.handlers_inbound.contains_key(b"acerola/rpc".as_ref()));
     }
 
@@ -189,9 +181,7 @@ mod tests {
     async fn handler_outbound_registrado_para_alpn_e_encontrado() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
-
         manager.register_outbound(b"acerola/rpc", Arc::new(NoopHandler));
-
         assert!(manager.handlers_outbound.contains_key(b"acerola/rpc".as_ref()));
     }
 
@@ -200,7 +190,6 @@ mod tests {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2PTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
-
         manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
@@ -217,7 +206,6 @@ mod tests {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2PTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
-
         manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
 
         let (client, server) = tokio::io::duplex(1024);
