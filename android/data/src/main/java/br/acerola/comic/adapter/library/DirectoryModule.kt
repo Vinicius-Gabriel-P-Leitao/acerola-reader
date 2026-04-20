@@ -19,26 +19,18 @@ annotation class DirectoryEngine
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DirectoryModule {
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindMangaDirectoryRepository(impl: ComicDirectoryEngine): ComicGateway<ComicDirectoryDto>
 
     @Binds
     @Singleton
     @DirectoryEngine
-    abstract fun bindMangaDirectoryRepository(
-        impl: ComicDirectoryEngine
-    ): ComicGateway<ComicDirectoryDto>
+    abstract fun bindChapterArchiveRepository(int: ChapterArchiveEngine): ChapterGateway<ChapterArchivePageDto>
 
     @Binds
     @Singleton
     @DirectoryEngine
-    abstract fun bindChapterArchiveRepository(
-        int: ChapterArchiveEngine
-    ): ChapterGateway<ChapterArchivePageDto>
-
-    @Binds
-    @Singleton
-    @DirectoryEngine
-    abstract fun bindMangaLibraryWriteGateway(
-        impl: ComicLibraryStateEngine
-    ): ComicLibraryWriteGateway
-
+    abstract fun bindMangaLibraryWriteGateway(impl: ComicLibraryStateEngine): ComicLibraryWriteGateway
 }

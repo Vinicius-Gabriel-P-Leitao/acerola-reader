@@ -26,13 +26,18 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MangadexSourceChapterEngineTest {
-
     @MockK lateinit var chapterArchiveDao: ChapterArchiveDao
+
     @MockK lateinit var comicMetadataDao: ComicMetadataDao
+
     @MockK lateinit var directoryDao: ComicDirectoryDao
+
     @MockK lateinit var chapterMetadataDao: ChapterMetadataDao
+
     @MockK lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
+
     @MockK lateinit var metadataExportService: MetadataExporter
+
     @MockK lateinit var mangadexChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
 
     private lateinit var repository: MangadexChapterEngine
@@ -43,10 +48,15 @@ class MangadexSourceChapterEngineTest {
         MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
 
-        repository = MangadexChapterEngine(
-            directoryDao, chapterArchiveDao, comicMetadataDao,
-            chapterMetadataDao, metadataExportService, chapterDownloadSourceDao
-        )
+        repository =
+            MangadexChapterEngine(
+                directoryDao,
+                chapterArchiveDao,
+                comicMetadataDao,
+                chapterMetadataDao,
+                metadataExportService,
+                chapterDownloadSourceDao,
+            )
         repository.mangadexSourceChapterInfoService = mangadexChapterInfoService
     }
 
@@ -56,11 +66,12 @@ class MangadexSourceChapterEngineTest {
     }
 
     @Test
-    fun `refreshMangaChapters deve retornar sucesso se não houver mangadexId`() = runTest {
-        every { comicMetadataDao.observeComicWithRelationsByDirectoryId(any()) } returns flowOf(null)
+    fun `refreshMangaChapters deve retornar sucesso se não houver mangadexId`() =
+        runTest {
+            every { comicMetadataDao.observeComicWithRelationsByDirectoryId(any()) } returns flowOf(null)
 
-        val result = repository.refreshComicChapters(1L)
+            val result = repository.refreshComicChapters(1L)
 
-        assertTrue(result.isRight())
-    }
+            assertTrue(result.isRight())
+        }
 }

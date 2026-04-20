@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.theme.color
-import br.acerola.comic.ui.R
-
 import androidx.compose.ui.graphics.Color
 
 object Dracula {

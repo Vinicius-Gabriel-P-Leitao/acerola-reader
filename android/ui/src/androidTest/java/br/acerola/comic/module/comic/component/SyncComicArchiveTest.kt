@@ -9,7 +9,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class SyncComicArchiveTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -19,7 +18,7 @@ class SyncComicArchiveTest {
             Comic.Component.SyncMangaArchive(
                 onSyncChapters = {},
                 onRescanCover = {},
-                onExtractFirstPageAsCover = {}
+                onExtractFirstPageAsCover = {},
             )
         }
 
@@ -34,7 +33,7 @@ class SyncComicArchiveTest {
             Comic.Component.SyncMangaArchive(
                 onSyncChapters = { clicked = true },
                 onRescanCover = {},
-                onExtractFirstPageAsCover = {}
+                onExtractFirstPageAsCover = {},
             )
         }
 
@@ -49,7 +48,7 @@ class SyncComicArchiveTest {
             Comic.Component.SyncMangaArchive(
                 onSyncChapters = {},
                 onRescanCover = { clicked = true },
-                onExtractFirstPageAsCover = {}
+                onExtractFirstPageAsCover = {},
             )
         }
 

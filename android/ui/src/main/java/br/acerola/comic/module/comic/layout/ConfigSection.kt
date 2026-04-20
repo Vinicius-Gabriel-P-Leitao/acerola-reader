@@ -33,15 +33,15 @@ private fun SectionHeader(title: String) {
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.secondary,
-        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
     )
 }
 
-fun Comic.Layout.ConfigSection(
+fun Comic.Layout.configSection(
     scope: LazyListScope,
     uiState: ComicUiState,
     onAction: (ComicAction) -> Unit,
-    onSyncAction: (ComicSyncAction) -> Unit
+    onSyncAction: (ComicSyncAction) -> Unit,
 ) {
     scope.item { Spacer(modifier = Modifier.height(16.dp)) }
 
@@ -54,7 +54,7 @@ fun Comic.Layout.ConfigSection(
         Comic.Component.PaginationPreference(
             selected = uiState.selectedChapterPerPage,
             onSelect = { onAction(ComicAction.UpdatePageSize(it)) },
-            modifier = itemModifier
+            modifier = itemModifier,
         )
     }
 
@@ -72,7 +72,7 @@ fun Comic.Layout.ConfigSection(
             selectedCategory = uiState.manga.category,
             allCategories = uiState.allCategories,
             onUpdateMangaCategory = { id -> onAction(ComicAction.UpdateCategory(id)) },
-            modifier = itemModifier
+            modifier = itemModifier,
         )
     }
 
@@ -90,7 +90,7 @@ fun Comic.Layout.ConfigSection(
             onSyncChapters = { onSyncAction(ComicSyncAction.SyncChaptersLocal) },
             onRescanCover = { onSyncAction(ComicSyncAction.RescanComic) },
             onExtractFirstPageAsCover = { onSyncAction(ComicSyncAction.ExtractFirstPageAsCover) },
-            modifier = itemModifier
+            modifier = itemModifier,
         )
     }
 
@@ -107,7 +107,7 @@ fun Comic.Layout.ConfigSection(
         Comic.Component.ComicExternalSyncToggle(
             enabled = uiState.manga.directory.externalSyncEnabled,
             onToggle = { onAction(ComicAction.ToggleExternalSync(it)) },
-            modifier = itemModifier
+            modifier = itemModifier,
         )
     }
 
@@ -122,7 +122,7 @@ fun Comic.Layout.ConfigSection(
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },
             onSyncComicInfoChapters = { onSyncAction(ComicSyncAction.SyncComicInfoChapters) },
             onSyncAnilistInfo = { onSyncAction(ComicSyncAction.SyncAnilistInfo) },
-            modifier = itemModifier
+            modifier = itemModifier,
         )
     }
 

@@ -21,7 +21,6 @@ import java.io.IOException
 @RunWith(AndroidJUnit4::class)
 @SmallTest
 class RemainingDaosTest {
-
     private lateinit var db: AcerolaDatabase
 
     @Before
@@ -37,75 +36,80 @@ class RemainingDaosTest {
     }
 
     @Test
-    fun testMangaDirectoryDao() = runBlocking {
-        val dao = db.mangaDirectoryDao()
-        val manga = MangaDirectoryFixtures.createMangaDirectory(name = "Test Manga")
+    fun testMangaDirectoryDao() =
+        runBlocking {
+            val dao = db.mangaDirectoryDao()
+            val manga = MangaDirectoryFixtures.createMangaDirectory(name = "Test Manga")
 
-        dao.insert(manga)
-        val result = dao.getAllDirectories().first().find { it.name == "Test Manga" }
+            dao.insert(manga)
+            val result = dao.getAllDirectories().first().find { it.name == "Test Manga" }
 
-        assertNotNull(result)
-        assertEquals("Test Manga", result?.name)
-    }
-
-    @Test
-    fun testChapterMetadataDao() = runBlocking {
-        val mangaDao = db.mangaRemoteInfoDao()
-        val chapterDao = db.chapterRemoteInfoDao()
-
-        val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val chapter = MetadataFixtures.createChapterRemoteInfo(mangaRemoteInfoFk = mangaId, chapter = "5")
-
-        chapterDao.insert(chapter)
-        val result = chapterDao.observeChaptersByMetadataId(mangaId).first()
-
-        assertEquals(1, result.size)
-        assertEquals("5", result[0].chapter)
-    }
+            assertNotNull(result)
+            assertEquals("Test Manga", result?.name)
+        }
 
     @Test
-    fun testChapterDownloadSourceDao() = runBlocking {
-        val mangaDao = db.mangaRemoteInfoDao()
-        val chapterDao = db.chapterRemoteInfoDao()
-        val sourceDao = db.chapterDownloadSourceDao()
+    fun testChapterMetadataDao() =
+        runBlocking {
+            val mangaDao = db.mangaRemoteInfoDao()
+            val chapterDao = db.chapterRemoteInfoDao()
 
-        val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val chapterId = chapterDao.insert(MetadataFixtures.createChapterRemoteInfo(mangaRemoteInfoFk = mangaId))
-        val source = MetadataFixtures.createChapterDownloadSource(chapterFk = chapterId, pageNumber = 1)
+            val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val chapter = MetadataFixtures.createChapterRemoteInfo(mangaRemoteInfoFk = mangaId, chapter = "5")
 
-        sourceDao.insert(source)
-        val result = sourceDao.observeChapterDownloadSourcesByChapterIds(listOf(chapterId)).first()
+            chapterDao.insert(chapter)
+            val result = chapterDao.observeChaptersByMetadataId(mangaId).first()
 
-        assertEquals(1, result.size)
-        assertEquals(1, result[0].pageNumber)
-    }
-
-    @Test
-    fun testCoverDao() = runBlocking {
-        val mangaDao = db.mangaRemoteInfoDao()
-        val coverDao = db.coverDao()
-
-        val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val cover = MetadataFixtures.createCover(mangaId = mangaId, fileName = "cover.jpg")
-
-        coverDao.insert(cover)
-        val result = coverDao.getByFileNameAndMetadataId(fileName = "cover.jpg", mangaRemoteInfoFk = mangaId)
-
-        assertNotNull(result)
-        assertEquals("cover.jpg", result?.fileName)
-    }
+            assertEquals(1, result.size)
+            assertEquals("5", result[0].chapter)
+        }
 
     @Test
-    fun testGenreDao() = runBlocking {
-        val mangaDao = db.mangaRemoteInfoDao()
-        val genreDao = db.genreDao()
+    fun testChapterDownloadSourceDao() =
+        runBlocking {
+            val mangaDao = db.mangaRemoteInfoDao()
+            val chapterDao = db.chapterRemoteInfoDao()
+            val sourceDao = db.chapterDownloadSourceDao()
 
-        val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val genre = MetadataFixtures.createGenre(mangaId = mangaId, genre = "Shonen")
+            val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val chapterId = chapterDao.insert(MetadataFixtures.createChapterRemoteInfo(mangaRemoteInfoFk = mangaId))
+            val source = MetadataFixtures.createChapterDownloadSource(chapterFk = chapterId, pageNumber = 1)
 
-        genreDao.insert(genre)
-        val result = genreDao.getIdByNameAndMetadataId(genre = "Shonen", mangaRemoteInfoFk = mangaId)
+            sourceDao.insert(source)
+            val result = sourceDao.observeChapterDownloadSourcesByChapterIds(listOf(chapterId)).first()
 
-        assertNotNull(result)
-    }
+            assertEquals(1, result.size)
+            assertEquals(1, result[0].pageNumber)
+        }
+
+    @Test
+    fun testCoverDao() =
+        runBlocking {
+            val mangaDao = db.mangaRemoteInfoDao()
+            val coverDao = db.coverDao()
+
+            val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val cover = MetadataFixtures.createCover(mangaId = mangaId, fileName = "cover.jpg")
+
+            coverDao.insert(cover)
+            val result = coverDao.getByFileNameAndMetadataId(fileName = "cover.jpg", mangaRemoteInfoFk = mangaId)
+
+            assertNotNull(result)
+            assertEquals("cover.jpg", result?.fileName)
+        }
+
+    @Test
+    fun testGenreDao() =
+        runBlocking {
+            val mangaDao = db.mangaRemoteInfoDao()
+            val genreDao = db.genreDao()
+
+            val mangaId = mangaDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val genre = MetadataFixtures.createGenre(mangaId = mangaId, genre = "Shonen")
+
+            genreDao.insert(genre)
+            val result = genreDao.getIdByNameAndMetadataId(genre = "Shonen", mangaRemoteInfoFk = mangaId)
+
+            assertNotNull(result)
+        }
 }

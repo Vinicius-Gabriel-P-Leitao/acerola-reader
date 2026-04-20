@@ -9,7 +9,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class MetadataMapperTest {
-
     @Test
     fun `MetadataRelations toViewDto deve mapear hierarquia completa`() {
         val manga = MetadataFixtures.createMangaRemoteInfo(title = "Berserk")
@@ -17,12 +16,13 @@ class MetadataMapperTest {
         val genre = MetadataFixtures.createGenre(genre = "Seinen")
         val cover = MetadataFixtures.createCover(url = "url_test")
 
-        val relations = MetadataFixtures.createRemoteInfoRelations(
-            remoteInfo = manga,
-            authors = listOf(author),
-            genres = listOf(genre),
-            covers = listOf(cover)
-        )
+        val relations =
+            MetadataFixtures.createRemoteInfoRelations(
+                remoteInfo = manga,
+                authors = listOf(author),
+                genres = listOf(genre),
+                covers = listOf(cover),
+            )
 
         val dto = relations.toViewDto()
 
@@ -50,10 +50,11 @@ class MetadataMapperTest {
     @Test
     fun `ChapterMetadata toViewDto deve ordenar sources por numero de pagina`() {
         val chapter = MetadataFixtures.createChapterRemoteInfo()
-        val sources = listOf(
-            MetadataFixtures.createChapterDownloadSource(pageNumber = 2, imageUrl = "img2"),
-            MetadataFixtures.createChapterDownloadSource(pageNumber = 1, imageUrl = "img1")
-        )
+        val sources =
+            listOf(
+                MetadataFixtures.createChapterDownloadSource(pageNumber = 2, imageUrl = "img2"),
+                MetadataFixtures.createChapterDownloadSource(pageNumber = 1, imageUrl = "img1"),
+            )
 
         val dto = chapter.toViewDto(sources)
 
@@ -65,7 +66,7 @@ class MetadataMapperTest {
     @Test
     fun `MangaMetadataDto toEntity deve mapear campos base`() {
         val dto = MetadataFixtures.createMangaRemoteInfoDto(title = "Test", year = 2024)
-        
+
         val entity = dto.toEntity()
 
         assertEquals("Test", entity.title)
@@ -74,20 +75,34 @@ class MetadataMapperTest {
 
     @Test
     fun `List ChapterMetadata toViewPageDto deve filtrar sources pelo FK do capitulo`() {
-        val chapters = listOf(
-            MetadataFixtures.createChapterRemoteInfo(id = 1),
-            MetadataFixtures.createChapterRemoteInfo(id = 2)
-        )
-        val sources = listOf(
-            MetadataFixtures.createChapterDownloadSource(chapterFk = 1, imageUrl = "s1"),
-            MetadataFixtures.createChapterDownloadSource(chapterFk = 2, imageUrl = "s2"),
-            MetadataFixtures.createChapterDownloadSource(chapterFk = 1, imageUrl = "s1-2")
-        )
+        val chapters =
+            listOf(
+                MetadataFixtures.createChapterRemoteInfo(id = 1),
+                MetadataFixtures.createChapterRemoteInfo(id = 2),
+            )
+        val sources =
+            listOf(
+                MetadataFixtures.createChapterDownloadSource(chapterFk = 1, imageUrl = "s1"),
+                MetadataFixtures.createChapterDownloadSource(chapterFk = 2, imageUrl = "s2"),
+                MetadataFixtures.createChapterDownloadSource(chapterFk = 1, imageUrl = "s1-2"),
+            )
 
         val page = chapters.toViewPageDto(sources = sources)
 
         assertEquals(2, page.items.size)
-        assertEquals(2, page.items.find { it.id == 1L }?.source?.size)
-        assertEquals(1, page.items.find { it.id == 2L }?.source?.size)
+        assertEquals(
+            2,
+            page.items
+                .find { it.id == 1L }
+                ?.source
+                ?.size,
+        )
+        assertEquals(
+            1,
+            page.items
+                .find { it.id == 2L }
+                ?.source
+                ?.size,
+        )
     }
 }

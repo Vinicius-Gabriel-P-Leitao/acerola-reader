@@ -1,6 +1,4 @@
 package br.acerola.comic.module.reader.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
@@ -65,7 +63,7 @@ fun Reader.Layout.PageContent(
                     listState = listState,
                     onPageRequest = onPageRequest,
                     onUiToggle = onUiToggle,
-                    onZoomChange = onZoomChange
+                    onZoomChange = onZoomChange,
                 )
             }
         }

@@ -20,16 +20,24 @@ interface ComicSyncGateway {
     val progress: StateFlow<Int>
     val isIndexing: StateFlow<Boolean>
 
-    suspend fun refreshManga(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+    suspend fun refreshManga(
+        mangaId: Long,
+        baseUri: Uri? = null,
+    ): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+
     suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+
     suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+
     suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 }
 
 /**
  * Interface completa para Engines que leem e escrevem (Diretórios, MangaDex, AniList).
  */
-interface ComicGateway<T> : ComicReadOnlyGateway<T>, ComicSyncGateway
+interface ComicGateway<T> :
+    ComicReadOnlyGateway<T>,
+    ComicSyncGateway
 
 /**
  * Interface para operações de escrita na biblioteca local (ocultar/deletar).
@@ -37,6 +45,11 @@ interface ComicGateway<T> : ComicReadOnlyGateway<T>, ComicSyncGateway
  */
 interface ComicLibraryWriteGateway {
     suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit>
+
     suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit>
-    suspend fun updateMangaSettings(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit>
+
+    suspend fun updateMangaSettings(
+        mangaId: Long,
+        externalSyncEnabled: Boolean,
+    ): Either<LibrarySyncError, Unit>
 }

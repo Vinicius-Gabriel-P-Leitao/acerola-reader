@@ -1,4 +1,4 @@
-package br.acerola.comic.__fixtures__
+package br.acerola.comic.fixtures
 
 import br.acerola.comic.dto.archive.ChapterFileDto
 
@@ -11,21 +11,20 @@ object ComicFixtures {
         id: Long = 1L,
         name: String = "Capítulo 1",
         path: String = "/path/to/cap1",
-        chapterSort: String = "0001"
+        chapterSort: String = "0001",
     ) = ChapterFileDto(
         id = id,
         name = name,
         path = path,
-        chapterSort = chapterSort
+        chapterSort = chapterSort,
     )
 
-    fun createChapterList(count: Int = 3): List<ChapterFileDto> {
-        return (1..count).map {
+    fun createChapterList(count: Int = 3): List<ChapterFileDto> =
+        (1..count).map {
             createChapterFileDto(
                 id = it.toLong(),
                 name = "Capítulo $it",
-                chapterSort = it.toString().padStart(4, '0')
+                chapterSort = it.toString().padStart(4, '0'),
             )
         }
-    }
 }

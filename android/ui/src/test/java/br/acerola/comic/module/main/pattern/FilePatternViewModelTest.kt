@@ -24,7 +24,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FilePatternViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -46,70 +45,77 @@ class FilePatternViewModelTest {
     }
 
     @Test
-    fun `estado inicial tem lista de templates vazia`() = runTest {
-        viewModel.uiState.test {
-            assertThat(awaitItem().templates).isEmpty()
-            cancelAndIgnoreRemainingEvents()
+    fun `estado inicial tem lista de templates vazia`() =
+        runTest {
+            viewModel.uiState.test {
+                assertThat(awaitItem().templates).isEmpty()
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `estado e atualizado quando use case emite novos templates`() = runTest {
-        val template = ChapterTemplateDto(id = 1L, label = "Vol. Cap.", pattern = "{chapter}")
+    fun `estado e atualizado quando use case emite novos templates`() =
+        runTest {
+            val template = ChapterTemplateDto(id = 1L, label = "Vol. Cap.", pattern = "{chapter}")
 
-        viewModel.uiState.test {
-            awaitItem()
-            templatesFlow.value = listOf(template)
-            assertThat(awaitItem().templates).containsExactly(template)
-            cancelAndIgnoreRemainingEvents()
+            viewModel.uiState.test {
+                awaitItem()
+                templatesFlow.value = listOf(template)
+                assertThat(awaitItem().templates).containsExactly(template)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `AddTemplate delega para use case com label e pattern corretos`() = runTest {
-        viewModel.onAction(FilePatternAction.AddTemplate("Vol.", "{chapter}"))
+    fun `AddTemplate delega para use case com label e pattern corretos`() =
+        runTest {
+            viewModel.onAction(FilePatternAction.AddTemplate("Vol.", "{chapter}"))
 
-        coVerify { addTemplate("Vol.", "{chapter}") }
-    }
-
-    @Test
-    fun `DeleteTemplate delega para use case com id correto`() = runTest {
-        viewModel.onAction(FilePatternAction.DeleteTemplate(42L))
-
-        coVerify { removeTemplate(42L) }
-    }
-
-    @Test
-    fun `EditTemplate delega para use case com id, label e pattern corretos`() = runTest {
-        coEvery { updateTemplate(1L, "Novo Label", "{chapter}") } returns Either.Right(Unit)
-
-        viewModel.onAction(FilePatternAction.EditTemplate(1L, "Novo Label", "{chapter}"))
-
-        coVerify { updateTemplate(1L, "Novo Label", "{chapter}") }
-    }
-
-    @Test
-    fun `EditTemplate emite evento de erro quando use case retorna Left`() = runTest {
-        val error = TemplateError.Duplicate
-        coEvery { updateTemplate(any(), any(), any()) } returns Either.Left(error)
-
-        viewModel.uiEvents.test {
-            viewModel.onAction(FilePatternAction.EditTemplate(1L, "Label", "{chapter}"))
-            val event = awaitItem()
-            assertThat(event).isNotNull()
-            cancelAndIgnoreRemainingEvents()
+            coVerify { addTemplate("Vol.", "{chapter}") }
         }
-    }
 
     @Test
-    fun `AddTemplate emite evento de erro quando use case retorna Left`() = runTest {
-        coEvery { addTemplate(any(), any()) } returns Either.Left(TemplateError.Duplicate)
+    fun `DeleteTemplate delega para use case com id correto`() =
+        runTest {
+            viewModel.onAction(FilePatternAction.DeleteTemplate(42L))
 
-        viewModel.uiEvents.test {
-            viewModel.onAction(FilePatternAction.AddTemplate("Label", "invalido"))
-            val event = awaitItem()
-            assertThat(event).isNotNull()
-            cancelAndIgnoreRemainingEvents()
+            coVerify { removeTemplate(42L) }
         }
-    }
+
+    @Test
+    fun `EditTemplate delega para use case com id, label e pattern corretos`() =
+        runTest {
+            coEvery { updateTemplate(1L, "Novo Label", "{chapter}") } returns Either.Right(Unit)
+
+            viewModel.onAction(FilePatternAction.EditTemplate(1L, "Novo Label", "{chapter}"))
+
+            coVerify { updateTemplate(1L, "Novo Label", "{chapter}") }
+        }
+
+    @Test
+    fun `EditTemplate emite evento de erro quando use case retorna Left`() =
+        runTest {
+            val error = TemplateError.Duplicate
+            coEvery { updateTemplate(any(), any(), any()) } returns Either.Left(error)
+
+            viewModel.uiEvents.test {
+                viewModel.onAction(FilePatternAction.EditTemplate(1L, "Label", "{chapter}"))
+                val event = awaitItem()
+                assertThat(event).isNotNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `AddTemplate emite evento de erro quando use case retorna Left`() =
+        runTest {
+            coEvery { addTemplate(any(), any()) } returns Either.Left(TemplateError.Duplicate)
+
+            viewModel.uiEvents.test {
+                viewModel.onAction(FilePatternAction.AddTemplate("Label", "invalido"))
+                val event = awaitItem()
+                assertThat(event).isNotNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

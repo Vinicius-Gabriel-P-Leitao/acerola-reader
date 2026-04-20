@@ -3,9 +3,9 @@ package br.acerola.comic.usecase
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
+import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
-import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,33 +19,28 @@ annotation class AnilistCase
 @Module
 @InstallIn(SingletonComponent::class)
 object AnilistCaseModule {
-
     @Provides
     @AnilistCase
     fun provideSyncLibraryUseCase(
-        @AnilistEngine repository: ComicGateway<ComicMetadataDto>
-    ): SyncLibraryUseCase {
-        return SyncLibraryUseCase(repository)
-    }
+        @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
+    ): SyncLibraryUseCase = SyncLibraryUseCase(repository)
 
     @Provides
     @AnilistCase
     fun provideObserveLibraryUseCase(
-        @AnilistEngine repository: ComicGateway<ComicMetadataDto>
-    ): ObserveLibraryUseCase<ComicMetadataDto> {
-        return ObserveLibraryUseCase(
+        @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
+    ): ObserveLibraryUseCase<ComicMetadataDto> =
+        ObserveLibraryUseCase(
             mangaRepository = repository,
-            syncGateway = repository
+            syncGateway = repository,
         )
-    }
 
     @Provides
     @AnilistCase
     fun provideRescanComicUseCase(
-        @AnilistEngine repository: ComicGateway<ComicMetadataDto>
-    ): RescanComicUseCase {
-        return RescanComicUseCase(
-            mangaRepository = repository
+        @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
+    ): RescanComicUseCase =
+        RescanComicUseCase(
+            mangaRepository = repository,
         )
-    }
 }

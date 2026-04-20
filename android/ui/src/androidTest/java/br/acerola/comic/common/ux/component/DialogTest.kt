@@ -24,15 +24,15 @@ class DialogTest {
                 confirmButtonContent = {
                     Acerola.Component.DialogButton(
                         text = "Confirmar",
-                        onClick = {}
+                        onClick = {},
                     )
                 },
                 dismissButtonContent = {
                     Acerola.Component.DialogButton(
                         text = "Cancelar",
-                        onClick = {}
+                        onClick = {},
                     )
-                }
+                },
             ) {
                 Text("Conteudo Dialog")
             }
@@ -56,16 +56,16 @@ class DialogTest {
                         onClick = {},
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 dismissButtonContent = {
                     Acerola.Component.DialogButton(
                         text = "Cancel",
                         onClick = {},
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                }
+                },
             ) {
                 Text("Are you sure? Changes will be lost.")
             }
@@ -88,22 +88,27 @@ class DialogTest {
                     Acerola.Component.DialogButton(
                         text = "Adicionar",
                         onClick = {},
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 dismissButtonContent = {
                     Acerola.Component.DialogButton(
                         text = "Cancelar",
-                        onClick = {}
+                        onClick = {},
                     )
-                }
+                },
             ) {
-                Text("{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.")
+                Text(
+                    "{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.",
+                )
             }
         }
 
         composeTestRule.onNodeWithText("Novo Padrão").assertIsDisplayed()
-        composeTestRule.onNodeWithText("{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                "{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.",
+            ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Adicionar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancelar").assertIsDisplayed()
     }

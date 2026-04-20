@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterArchiveDao : BaseDao<ChapterArchive> {
-
     @Query(value = "DELETE FROM chapter_archive WHERE comic_directory_fk = :folderId")
     suspend fun deleteByDirectoryId(folderId: Long)
 
@@ -41,7 +40,7 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
                     ELSE 0 
                 END AS INTEGER
             ) ASC
-    """
+    """,
     )
     fun getChaptersByDirectoryId(folderId: Long): Flow<List<ChapterArchive>>
 
@@ -62,18 +61,18 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
                     END AS INTEGER
                 ) ASC
             LIMIT :pageSize OFFSET :offset
-        """
+        """,
     )
     suspend fun getChaptersByDirectoryPaged(
         folderId: Long,
         pageSize: Int,
-        offset: Int
+        offset: Int,
     ): List<ChapterArchive>
 
     @Query("SELECT * FROM chapter_archive WHERE comic_directory_fk = :folderId AND chapter_sort IN (:chapters)")
     fun getChaptersByDirectoryAndSorts(
         folderId: Long,
-        chapters: List<String>
+        chapters: List<String>,
     ): Flow<List<ChapterArchive>>
 
     @Query("SELECT comic_directory_fk, COUNT(*) as count FROM chapter_archive GROUP BY comic_directory_fk")

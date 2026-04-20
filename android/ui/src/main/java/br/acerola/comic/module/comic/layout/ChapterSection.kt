@@ -1,6 +1,4 @@
 package br.acerola.comic.module.comic.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -15,7 +13,7 @@ import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
 import br.acerola.comic.util.normalizeChapter
 
-fun Comic.Layout.ChapterSection(
+fun Comic.Layout.chapterSection(
     scope: LazyListScope,
     chapters: ChapterDto,
     currentPage: Int,
@@ -30,7 +28,11 @@ fun Comic.Layout.ChapterSection(
         contentType = { "chapter" },
         key = { it.id },
     ) { archiveItem ->
-        val remoteItem: ChapterFeedDto? = chapters.remoteInfo?.items?.firstOrNull { it.chapter.normalizeChapter() == archiveItem.chapterSort.normalizeChapter() }
+        val remoteItem: ChapterFeedDto? =
+            chapters.remoteInfo?.items?.firstOrNull {
+                it.chapter.normalizeChapter() ==
+                    archiveItem.chapterSort.normalizeChapter()
+            }
 
         Comic.Component.ChapterItem(
             chapterFileDto = archiveItem,
@@ -38,19 +40,19 @@ fun Comic.Layout.ChapterSection(
             isRead = readChapters.contains(archiveItem.id),
             onClick = { onChapterClick(archiveItem, remoteItem) },
             onToggleRead = { onToggleRead(archiveItem.id) },
-            modifier = Modifier.padding(all = 4.dp)
+            modifier = Modifier.padding(all = 4.dp),
         )
     }
 
     if (totalPages > 1) {
         scope.item(
             key = "pagination_footer",
-            contentType = "pagination"
+            contentType = "pagination",
         ) {
             Acerola.Component.Pagination(
                 currentPage = currentPage,
                 totalPages = totalPages,
-                onPageChange = onPageChange
+                onPageChange = onPageChange,
             )
         }
     }

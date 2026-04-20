@@ -2,13 +2,19 @@ package br.acerola.comic.module.main.home
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.config.preference.ComicSortType
 import br.acerola.comic.config.preference.HomeLayoutType
+import br.acerola.comic.config.preference.HomeSortPreference
+import br.acerola.comic.config.preference.SortDirection
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.home.state.FilterSettings
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,13 +24,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.ComicSortType
-import br.acerola.comic.config.preference.SortDirection
-import br.acerola.comic.module.main.home.state.FilterSettings
-
 class HomeScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -38,7 +38,7 @@ class HomeScreenTest {
         every { viewModel.mangas } returns MutableStateFlow(emptyList())
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
         every { viewModel.allCategories } returns MutableStateFlow(emptyList())
-        
+
         // Mock com objetos reais, não proxies
         every { viewModel.sortSettings } returns MutableStateFlow(HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING))
         every { viewModel.filterSettings } returns MutableStateFlow(FilterSettings())
@@ -49,7 +49,7 @@ class HomeScreenTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
-                     Main.Home.Layout.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
+                    Main.Home.Layout.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
                 }
             }
         }

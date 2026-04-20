@@ -14,7 +14,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class HeroNestedItemTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -25,7 +24,7 @@ class HeroNestedItemTest {
                 Acerola.Component.HeroNestedItem(
                     title = "Sincronizar Capítulos",
                     icon = Icons.Default.Sync,
-                    onClick = {}
+                    onClick = {},
                 )
             }
         }
@@ -41,7 +40,7 @@ class HeroNestedItemTest {
                     title = "Sincronizar Capítulos",
                     description = "Busca capítulos remotos",
                     icon = Icons.Default.Sync,
-                    onClick = {}
+                    onClick = {},
                 )
             }
         }
@@ -57,7 +56,7 @@ class HeroNestedItemTest {
                     title = "Sem Descrição",
                     description = null,
                     icon = Icons.Default.Sync,
-                    onClick = {}
+                    onClick = {},
                 )
             }
         }
@@ -74,7 +73,7 @@ class HeroNestedItemTest {
                 Acerola.Component.HeroNestedItem(
                     title = "Item Clicável",
                     icon = Icons.Default.Sync,
-                    onClick = { clicked = true }
+                    onClick = { clicked = true },
                 )
             }
         }
@@ -91,7 +90,7 @@ class HeroNestedItemTest {
                 Acerola.Component.HeroNestedItem(
                     title = "Item com Slot",
                     onClick = {},
-                    icon = { Text("IC") }
+                    icon = { Text("IC") },
                 )
             }
         }

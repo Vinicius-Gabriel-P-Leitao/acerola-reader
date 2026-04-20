@@ -21,7 +21,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MetadataSettingsViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -32,10 +31,10 @@ class MetadataSettingsViewModelTest {
     fun setup() {
         mockkObject(MetadataPreference)
         mockkObject(AcerolaLogger)
-        
+
         every { AcerolaLogger.d(any(), any(), any()) } returns Unit
         every { AcerolaLogger.audit(any(), any(), any(), any()) } returns Unit
-        
+
         every { MetadataPreference.generateComicInfoFlow(any()) } returns flowOf(true)
         coEvery { MetadataPreference.saveGenerateComicInfo(any(), any()) } returns Unit
 
@@ -49,15 +48,17 @@ class MetadataSettingsViewModelTest {
     }
 
     @Test
-    fun `deve emitir preferencia de comicinfo ao inicializar`() = runTest {
-        viewModel.generateComicInfo.test {
-            assertThat(awaitItem()).isTrue()
+    fun `deve emitir preferencia de comicinfo ao inicializar`() =
+        runTest {
+            viewModel.generateComicInfo.test {
+                assertThat(awaitItem()).isTrue()
+            }
         }
-    }
 
     @Test
-    fun `deve chamar saveGenerateComicInfo ao alterar configuracao`() = runTest {
-        viewModel.setGenerateComicInfo(false)
-        io.mockk.coVerify { MetadataPreference.saveGenerateComicInfo(any(), false) }
-    }
+    fun `deve chamar saveGenerateComicInfo ao alterar configuracao`() =
+        runTest {
+            viewModel.setGenerateComicInfo(false)
+            io.mockk.coVerify { MetadataPreference.saveGenerateComicInfo(any(), false) }
+        }
 }

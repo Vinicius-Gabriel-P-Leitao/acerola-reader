@@ -5,7 +5,9 @@ import br.acerola.comic.infra.R
 import br.acerola.comic.type.UiText
 
 sealed interface ComicInfoError : UserMessage {
-    data class InvalidXmlFormat(val cause: Throwable? = null) : ComicInfoError {
+    data class InvalidXmlFormat(
+        val cause: Throwable? = null,
+    ) : ComicInfoError {
         override val uiMessage = UiText.StringResource(resId = R.string.error_invalid_metadata_file)
     }
 
@@ -13,7 +15,9 @@ sealed interface ComicInfoError : UserMessage {
         override val uiMessage = UiText.StringResource(resId = R.string.error_metadata_root_missing)
     }
 
-    data class UnrecognizedMetadata(val fileName: String) : ComicInfoError {
+    data class UnrecognizedMetadata(
+        val fileName: String,
+    ) : ComicInfoError {
         override val uiMessage = UiText.StringResource(resId = R.string.error_unrecognized_metadata, args = listOf(fileName))
     }
 }

@@ -7,5 +7,5 @@ data class LogEvent(
     val source: LogSource,
     val throwable: Throwable? = null,
     val extras: Map<String, String> = emptyMap(),
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
 )

@@ -47,80 +47,256 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ComicDirectoryEngine @Inject constructor(
-    private val directoryDao: ComicDirectoryDao,
-    private val templateMatcher: TemplateMatcher,
-    private val templateService: ChapterNameProcessor,
-    @param:ApplicationContext private val context: Context,
-) : ComicGateway<ComicDirectoryDto> {
-
+class ComicDirectoryEngine
     @Inject
-    @DirectoryEngine
-    lateinit var mangaDirectoryOps: ChapterGateway<ChapterArchivePageDto>
+    constructor(
+        private val directoryDao: ComicDirectoryDao,
+        private val templateMatcher: TemplateMatcher,
+        private val templateService: ChapterNameProcessor,
+        @param:ApplicationContext private val context: Context,
+    ) : ComicGateway<ComicDirectoryDto> {
+        @Inject
+        @DirectoryEngine
+        lateinit var mangaDirectoryOps: ChapterGateway<ChapterArchivePageDto>
 
-    private val _progress = MutableStateFlow(value = -1)
-    override val progress: StateFlow<Int> = _progress.asStateFlow()
+        private val _progress = MutableStateFlow(value = -1)
+        override val progress: StateFlow<Int> = _progress.asStateFlow()
 
-    private val _isIndexing = MutableStateFlow(value = false)
-    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+        private val _isIndexing = MutableStateFlow(value = false)
+        override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    override suspend fun refreshManga(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
-        withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Syncing specific comic: $mangaId", LogSource.REPOSITORY)
+        override suspend fun refreshManga(
+            mangaId: Long,
+            baseUri: Uri?,
+        ): Either<LibrarySyncError, Unit> =
+            withContext(context = Dispatchers.IO) {
+                AcerolaLogger.i(TAG, "Syncing specific comic: $mangaId", LogSource.REPOSITORY)
+                _isIndexing.value = true
+                try {
+                    Either
+                        .catch {
+                            val existingManga = directoryDao.getDirectoryById(mangaId) ?: return@catch
+
+                            val folderUri = existingManga.path.toUri()
+                            val folderDoc = DocumentFile.fromSingleUri(context, folderUri)
+
+                            if (folderDoc == null || !folderDoc.isDirectory) return@catch
+
+                            val rootUri =
+                                baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
+                                    ?: return@catch
+
+                            val folderId = DocumentsContract.getDocumentId(folderUri)
+                            val folderChildren =
+                                ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
+
+                            val bannerMetadata = folderChildren.firstOrNull { MediaFilePattern.isBanner(it.name) }
+                            val coverMetadata = folderChildren.firstOrNull { MediaFilePattern.isCover(it.name) }
+
+                            val firstChapterName =
+                                folderChildren
+                                    .firstOrNull {
+                                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR &&
+                                            ArchiveFormatPattern.isSupported(ext = it.name)
+                                    }?.name
+
+                            val templates = templateService.getTemplates()
+                            val detectedTemplate =
+                                firstChapterName?.let {
+                                    templateMatcher.detect(it, templates)
+                                }
+
+                            val bannerDoc =
+                                bannerMetadata?.let {
+                                    DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
+                                }
+
+                            val coverDoc =
+                                coverMetadata?.let {
+                                    DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
+                                }
+
+                            val updatedManga =
+                                folderDoc
+                                    .toMangaDirectoryEntity(
+                                        cover = coverDoc,
+                                        banner = bannerDoc,
+                                        chapterTemplateFk = detectedTemplate?.id,
+                                    ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
+
+                            directoryDao.update(entity = updatedManga)
+
+                            mangaDirectoryOps.refreshComicChapters(mangaId = mangaId, baseUri = rootUri)
+                        }.mapLeft { exception ->
+                            AcerolaLogger.e(TAG, "Failed to refresh specific comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                            when (exception) {
+                                is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
+                                is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                                is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                                else -> LibrarySyncError.UnexpectedError(cause = exception)
+                            }
+                        }
+                } finally {
+                    _isIndexing.value = false
+                }
+            }
+
+        override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+            AcerolaLogger.i(TAG, "Starting incremental library scan", LogSource.REPOSITORY)
             _isIndexing.value = true
             try {
-                Either.catch {
-                    val existingManga = directoryDao.getDirectoryById(mangaId) ?: return@catch
+                return withContext(context = Dispatchers.IO) {
+                    Either
+                        .catch {
+                            if (baseUri === null) return@catch
 
-                    val folderUri = existingManga.path.toUri()
-                    val folderDoc = DocumentFile.fromSingleUri(context, folderUri)
+                            val discoveredFolders: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
+                            val databaseFolders: List<ComicDirectory> =
+                                directoryDao.getAllDirectories().firstOrNull() ?: emptyList()
 
-                    if (folderDoc == null || !folderDoc.isDirectory) return@catch
+                            if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
+                                _progress.value = -1
+                                return@catch
+                            }
 
-                    val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                        ?: return@catch
+                            val existingFoldersMap = databaseFolders.associateBy { normalizeName(it.name) }
+                            val foldersMap = discoveredFolders.associateBy { normalizeName(it.name) }
 
-                    val folderId = DocumentsContract.getDocumentId(folderUri)
-                    val folderChildren =
-                        ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
+                            val foldersToProcess =
+                                discoveredFolders.filter { folder ->
+                                    val normalizedName = normalizeName(folder.name)
+                                    val existing = existingFoldersMap[normalizedName]
 
+                                    when {
+                                        existing == null -> true
+                                        existing.path != folder.path -> true
+                                        existing.lastModified < folder.lastModified -> true
+                                        existing.cover != folder.cover || existing.banner != folder.banner -> true
+                                        else -> false
+                                    }
+                                }
 
-                    val bannerMetadata = folderChildren.firstOrNull { MediaFilePattern.isBanner(it.name) }
-                    val coverMetadata = folderChildren.firstOrNull { MediaFilePattern.isCover(it.name) }
+                            val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
 
-                    val firstChapterName = folderChildren.firstOrNull {
-                        it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR && ArchiveFormatPattern.isSupported(ext = it.name)
-                    }?.name
+                            if (removedFolders.isNotEmpty()) {
+                                AcerolaLogger.d(TAG, "Removing ${removedFolders.size} stale folders from DB", LogSource.REPOSITORY)
+                                removedFolders.forEach { folder ->
+                                    directoryDao.delete(entity = folder)
+                                }
+                            }
 
-                    val templates = templateService.getTemplates()
-                    val detectedTemplate = firstChapterName?.let {
-                        templateMatcher.detect(it, templates)
-                    }
+                            AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)
+                            processFolderList(foldersToProcess, baseUri = baseUri)
+                        }.mapLeft { exception ->
+                            AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, throwable = exception)
+                            when (exception) {
+                                is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
+                                is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
+                                is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                                is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                                else -> LibrarySyncError.UnexpectedError(cause = exception)
+                            }
+                        }
+                }
+            } finally {
+                _isIndexing.value = false
+            }
+        }
 
-                    val bannerDoc = bannerMetadata?.let {
-                        DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
-                    }
+        override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+            AcerolaLogger.i(TAG, "Starting refresh library scan", LogSource.REPOSITORY)
+            _isIndexing.value = true
+            try {
+                return withContext(context = Dispatchers.IO) {
+                    Either
+                        .catch {
+                            if (baseUri === null) return@catch
 
-                    val coverDoc = coverMetadata?.let {
-                        DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id))
-                    }
+                            val foldersToProcess: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
+                            if (foldersToProcess.isEmpty()) {
+                                _progress.value = -1
+                                return@catch
+                            }
 
-                    val updatedManga = folderDoc.toMangaDirectoryEntity(
-                        cover = coverDoc, 
-                        banner = bannerDoc, 
-                        chapterTemplateFk = detectedTemplate?.id
-                    ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
+                            AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)
+                            processFolderList(foldersToProcess, baseUri = baseUri)
+                        }.mapLeft { exception ->
+                            AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, throwable = exception)
+                            when (exception) {
+                                is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
+                                is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
+                                is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                                is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                                else -> LibrarySyncError.UnexpectedError(cause = exception)
+                            }
+                        }
+                }
+            } finally {
+                _isIndexing.value = false
+            }
+        }
 
-                    directoryDao.update(entity = updatedManga)
+        override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
+            AcerolaLogger.i(TAG, "Starting deep rebuild of library", LogSource.REPOSITORY)
+            _isIndexing.value = true
+            try {
+                return withContext(context = Dispatchers.IO) {
+                    refreshLibrary(baseUri).flatMap {
+                        Either
+                            .catch {
+                                val allFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
 
-                    mangaDirectoryOps.refreshComicChapters(mangaId = mangaId, baseUri = rootUri)
-                }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Failed to refresh specific comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
-                    when (exception) {
-                        is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
-                        is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                        else -> LibrarySyncError.UnexpectedError(cause = exception)
+                                if (allFolders.isEmpty()) {
+                                    _progress.value = -1
+                                    return@catch
+                                }
+
+                                val total = allFolders.size
+                                AcerolaLogger.d(TAG, "Deep scanning chapters for $total mangas", LogSource.REPOSITORY)
+
+                                val processed = AtomicInteger(0)
+                                _progress.value = 0
+
+                                allFolders.chunked(CHUNK_SIZE).forEach { batch ->
+                                    coroutineScope {
+                                        batch
+                                            .map { folder ->
+                                                async(context = Dispatchers.IO) {
+                                                    try {
+                                                        mangaDirectoryOps
+                                                            .refreshComicChapters(
+                                                                mangaId = folder.id,
+                                                                baseUri = baseUri,
+                                                            ).onLeft {
+                                                                AcerolaLogger.e(
+                                                                    TAG,
+                                                                    "Error scanning chapters for ${folder.name}",
+                                                                    LogSource.REPOSITORY,
+                                                                    throwable = null,
+                                                                )
+                                                            }
+                                                    } finally {
+                                                        val current = processed.incrementAndGet()
+                                                        _progress.value = ((current.toFloat() / total) * 100).toInt()
+                                                    }
+                                                }
+                                            }.awaitAll()
+                                    }
+                                }
+                                _progress.value = 100
+                                delay(timeMillis = 250)
+
+                                _progress.value = -1
+                            }.mapLeft { exception ->
+                                AcerolaLogger.e(TAG, "Deep rebuild failed", LogSource.REPOSITORY, throwable = exception)
+                                when (exception) {
+                                    is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
+                                    is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
+                                    is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                                    is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                                    else -> LibrarySyncError.UnexpectedError(cause = exception)
+                                }
+                            }
                     }
                 }
             } finally {
@@ -128,285 +304,149 @@ class ComicDirectoryEngine @Inject constructor(
             }
         }
 
-    override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        AcerolaLogger.i(TAG, "Starting incremental library scan", LogSource.REPOSITORY)
-        _isIndexing.value = true
-        try {
-            return withContext(context = Dispatchers.IO) {
-                Either.catch {
-                    if (baseUri === null) return@catch
+        override fun observeLibrary(): Flow<List<ComicDirectoryDto>> =
+            directoryDao.getAllDirectories().map { folders ->
+                AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
+                folders.map { it.toViewDto() }
+            }
 
-                    val discoveredFolders: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
-                    val databaseFolders: List<ComicDirectory> =
-                        directoryDao.getAllDirectories().firstOrNull() ?: emptyList()
+        private suspend fun processFolderList(
+            foldersToProcess: List<ComicDirectory>,
+            baseUri: Uri? = null,
+        ) {
+            if (foldersToProcess.isEmpty()) {
+                _progress.value = -1
+                return
+            }
 
-                    if (discoveredFolders.isEmpty() && databaseFolders.isEmpty()) {
-                        _progress.value = -1
-                        return@catch
-                    }
+            val total = foldersToProcess.size
+            val showProgress = total >= PROGRESS_THRESHOLD
 
-                    val existingFoldersMap = databaseFolders.associateBy { normalizeName(it.name) }
-                    val foldersMap = discoveredFolders.associateBy { normalizeName(it.name) }
-
-                    val foldersToProcess = discoveredFolders.filter { folder ->
-                        val normalizedName = normalizeName(folder.name)
-                        val existing = existingFoldersMap[normalizedName]
-
-                        when {
-                            existing == null -> true
-                            existing.path != folder.path -> true
-                            existing.lastModified < folder.lastModified -> true
-                            existing.cover != folder.cover || existing.banner != folder.banner -> true
-                            else -> false
-                        }
-                    }
-
-                    val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
-
-                    if (removedFolders.isNotEmpty()) {
-                        AcerolaLogger.d(TAG, "Removing ${removedFolders.size} stale folders from DB", LogSource.REPOSITORY)
-                        removedFolders.forEach { folder ->
-                            directoryDao.delete(entity = folder)
-                        }
-                    }
-
-                    AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)
-                    processFolderList(foldersToProcess, baseUri = baseUri)
-                }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, throwable = exception)
-                    when (exception) {
-                        is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
-                        is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
-                        is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                        else -> LibrarySyncError.UnexpectedError(cause = exception)
+            if (!showProgress) {
+                foldersToProcess.chunked(CHUNK_SIZE).forEach { batch ->
+                    coroutineScope {
+                        batch
+                            .map { folder ->
+                                async(context = Dispatchers.IO) {
+                                    upsertFolder(folder = folder, baseUri = baseUri)
+                                }
+                            }.awaitAll()
                     }
                 }
+
+                delay(timeMillis = 250)
+                _progress.value = -1
+                return
             }
-        } finally {
-            _isIndexing.value = false
-        }
-    }
 
-    override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        AcerolaLogger.i(TAG, "Starting refresh library scan", LogSource.REPOSITORY)
-        _isIndexing.value = true
-        try {
-            return withContext(context = Dispatchers.IO) {
-                Either.catch {
-                    if (baseUri === null) return@catch
-
-                    val foldersToProcess: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
-                    if (foldersToProcess.isEmpty()) {
-                        _progress.value = -1
-                        return@catch
-                    }
-
-                    AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)
-                    processFolderList(foldersToProcess, baseUri = baseUri)
-                }.mapLeft { exception ->
-                    AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, throwable = exception)
-                    when (exception) {
-                        is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
-                        is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
-                        is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                        is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                        else -> LibrarySyncError.UnexpectedError(cause = exception)
-                    }
-                }
-            }
-        } finally {
-            _isIndexing.value = false
-        }
-    }
-
-    override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-        AcerolaLogger.i(TAG, "Starting deep rebuild of library", LogSource.REPOSITORY)
-        _isIndexing.value = true
-        try {
-            return withContext(context = Dispatchers.IO) {
-                refreshLibrary(baseUri).flatMap {
-                    Either.catch {
-                        val allFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
-
-                        if (allFolders.isEmpty()) {
-                            _progress.value = -1
-                            return@catch
-                        }
-
-                        val total = allFolders.size
-                        AcerolaLogger.d(TAG, "Deep scanning chapters for $total mangas", LogSource.REPOSITORY)
-
-                        val processed = AtomicInteger(0)
-                        _progress.value = 0
-
-                        allFolders.chunked(CHUNK_SIZE).forEach { batch ->
-                            coroutineScope {
-                                batch.map { folder ->
-                                    async(context = Dispatchers.IO) {
-                                        try {
-                                            mangaDirectoryOps.refreshComicChapters(mangaId = folder.id, baseUri = baseUri).onLeft {
-                                                AcerolaLogger.e(TAG, "Error scanning chapters for ${folder.name}", LogSource.REPOSITORY, throwable = null)
-                                            }
-                                        } finally {
-                                            val current = processed.incrementAndGet()
-                                            _progress.value = ((current.toFloat() / total) * 100).toInt()
-                                        }
-                                    }
-                                }.awaitAll()
-                            }
-                        }
-                        _progress.value = 100
-                        delay(timeMillis = 250)
-
-                        _progress.value = -1
-                    }.mapLeft { exception ->
-                        AcerolaLogger.e(TAG, "Deep rebuild failed", LogSource.REPOSITORY, throwable = exception)
-                        when (exception) {
-                            is IOException -> LibrarySyncError.DiskIOFailure(path = baseUri.toString(), exception)
-                            is PatternSyntaxException -> LibrarySyncError.MalformedLibrary(cause = exception)
-                            is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                            is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                            else -> LibrarySyncError.UnexpectedError(cause = exception)
-                        }
-                    }
-                }
-            }
-        } finally {
-            _isIndexing.value = false
-        }
-    }
-
-
-
-    override fun observeLibrary(): Flow<List<ComicDirectoryDto>> {
-        return directoryDao.getAllDirectories().map { folders ->
-            AcerolaLogger.d(TAG, "Observed directory list update: ${folders.size} folders", LogSource.REPOSITORY)
-            folders.map { it.toViewDto() }
-        }
-    }
-
-    private suspend fun processFolderList(
-        foldersToProcess: List<ComicDirectory>,
-        baseUri: Uri? = null
-    ) {
-        if (foldersToProcess.isEmpty()) {
-            _progress.value = -1
-            return
-        }
-
-        val total = foldersToProcess.size
-        val showProgress = total >= PROGRESS_THRESHOLD
-
-        if (!showProgress) {
+            val processed = AtomicInteger(0)
+            _progress.value = 0
             foldersToProcess.chunked(CHUNK_SIZE).forEach { batch ->
                 coroutineScope {
-                    batch.map { folder ->
-                        async(context = Dispatchers.IO) {
-                            upsertFolder(folder = folder, baseUri = baseUri)
-                        }
-                    }.awaitAll()
+                    batch
+                        .map { folder ->
+                            async(context = Dispatchers.IO) {
+                                try {
+                                    upsertFolder(folder = folder, baseUri = baseUri)
+                                } finally {
+                                    val current = processed.incrementAndGet()
+                                    _progress.value = ((current.toFloat() / total) * 100).toInt()
+                                }
+                            }
+                        }.awaitAll()
                 }
             }
 
+            _progress.value = 100
             delay(timeMillis = 250)
             _progress.value = -1
-            return
         }
 
-        val processed = AtomicInteger(0)
-        _progress.value = 0
-        foldersToProcess.chunked(CHUNK_SIZE).forEach { batch ->
-            coroutineScope {
-                batch.map { folder ->
-                    async(context = Dispatchers.IO) {
-                        try {
-                            upsertFolder(folder = folder, baseUri = baseUri)
-                        } finally {
-                            val current = processed.incrementAndGet()
-                            _progress.value = ((current.toFloat() / total) * 100).toInt()
-                        }
+        private suspend fun upsertFolder(
+            baseUri: Uri? = null,
+            folder: ComicDirectory,
+        ) {
+            val finalMangaId =
+                directoryDao.upsertDirectoryTransaction(folder) {
+                    it.filter { char -> char.isLetterOrDigit() }.lowercase()
+                }
+
+            mangaDirectoryOps.refreshComicChapters(mangaId = finalMangaId, baseUri = baseUri)
+        }
+
+        private suspend fun buildLibrary(
+            context: Context,
+            rootUri: Uri,
+        ): List<ComicDirectory> {
+            val mangaDirectories = mutableListOf<ComicDirectory>()
+            val templates = templateService.getTemplates()
+
+            val rootDocId = DocumentsContract.getTreeDocumentId(rootUri)
+            scanRecursive(context, rootUri, rootDocId, templates, mangaDirectories)
+
+            return mangaDirectories
+        }
+
+        private fun scanRecursive(
+            context: Context,
+            rootUri: Uri,
+            currentDocId: String,
+            templates: List<ChapterTemplate>,
+            mangaDirectories: MutableList<ComicDirectory>,
+        ) {
+            val children = ContentQueryHelper.listFiles(context, rootUri, currentDocId).getOrElse { return }
+
+            val hasMangaFiles =
+                children.any {
+                    it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR &&
+                        ArchiveFormatPattern.isSupported(it.name)
+                }
+
+            if (hasMangaFiles) {
+                val currentUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, currentDocId)
+                val folderDoc = DocumentFile.fromSingleUri(context, currentUri) ?: return
+
+                val coverMetadata = children.firstOrNull { MediaFilePattern.isCover(it.name) }
+                val bannerMetadata = children.firstOrNull { MediaFilePattern.isBanner(it.name) }
+                val firstChapterName = children.firstOrNull { ArchiveFormatPattern.isSupported(it.name) }?.name
+
+                val detectedTemplate =
+                    firstChapterName?.let {
+                        templateMatcher.detect(it, templates)
                     }
-                }.awaitAll()
+
+                val mangaDir =
+                    folderDoc.toMangaDirectoryEntity(
+                        cover =
+                            coverMetadata?.let {
+                                DocumentFile.fromSingleUri(
+                                    context,
+                                    DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id),
+                                )
+                            },
+                        banner =
+                            bannerMetadata?.let {
+                                DocumentFile.fromSingleUri(
+                                    context,
+                                    DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id),
+                                )
+                            },
+                        chapterTemplateFk = detectedTemplate?.id,
+                    )
+
+                mangaDirectories.add(mangaDir)
+            } else {
+                children.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }.forEach { subDir ->
+                    scanRecursive(context, rootUri, subDir.id, templates, mangaDirectories)
+                }
             }
         }
 
-        _progress.value = 100
-        delay(timeMillis = 250)
-        _progress.value = -1
-    }
+        private fun normalizeName(name: String): String = name.filter { it.isLetterOrDigit() }.lowercase()
 
-    private suspend fun upsertFolder(
-        baseUri: Uri? = null,
-        folder: ComicDirectory,
-    ) {
-        val finalMangaId = directoryDao.upsertDirectoryTransaction(folder) {
-            it.filter { char -> char.isLetterOrDigit() }.lowercase()
-        }
-
-        mangaDirectoryOps.refreshComicChapters(mangaId = finalMangaId, baseUri = baseUri)
-    }
-
-    private suspend fun buildLibrary(
-        context: Context,
-        rootUri: Uri
-    ): List<ComicDirectory> {
-        val mangaDirectories = mutableListOf<ComicDirectory>()
-        val templates = templateService.getTemplates()
-
-        val rootDocId = DocumentsContract.getTreeDocumentId(rootUri)
-        scanRecursive(context, rootUri, rootDocId, templates, mangaDirectories)
-
-        return mangaDirectories
-    }
-
-    private fun scanRecursive(
-        context: Context,
-        rootUri: Uri,
-        currentDocId: String,
-        templates: List<ChapterTemplate>,
-        mangaDirectories: MutableList<ComicDirectory>
-    ) {
-        val children = ContentQueryHelper.listFiles(context, rootUri, currentDocId).getOrElse { return }
-
-        val hasMangaFiles = children.any {
-            it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR &&
-                    ArchiveFormatPattern.isSupported(it.name)
-        }
-
-        if (hasMangaFiles) {
-            val currentUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, currentDocId)
-            val folderDoc = DocumentFile.fromSingleUri(context, currentUri) ?: return
-
-            val coverMetadata = children.firstOrNull { MediaFilePattern.isCover(it.name) }
-            val bannerMetadata = children.firstOrNull { MediaFilePattern.isBanner(it.name) }
-            val firstChapterName = children.firstOrNull { ArchiveFormatPattern.isSupported(it.name) }?.name
-            
-            val detectedTemplate = firstChapterName?.let {
-                templateMatcher.detect(it, templates)
-            }
-
-            val mangaDir = folderDoc.toMangaDirectoryEntity(
-                cover = coverMetadata?.let { DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id)) },
-                banner = bannerMetadata?.let { DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id)) },
-                chapterTemplateFk = detectedTemplate?.id
-            )
-
-            mangaDirectories.add(mangaDir)
-        } else {
-            children.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }.forEach { subDir ->
-                scanRecursive(context, rootUri, subDir.id, templates, mangaDirectories)
-            }
+        companion object {
+            private const val TAG = "MangaDirectoryRepository"
+            const val PROGRESS_THRESHOLD = 5
+            const val CHUNK_SIZE = 50
         }
     }
-
-    private fun normalizeName(name: String): String {
-        return name.filter { it.isLetterOrDigit() }.lowercase()
-    }
-
-    companion object {
-        private const val TAG = "MangaDirectoryRepository"
-        const val PROGRESS_THRESHOLD = 5
-        const val CHUNK_SIZE = 50
-    }
-}

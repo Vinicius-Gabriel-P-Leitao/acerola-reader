@@ -17,7 +17,7 @@ class ZoomablePageImageTest {
                 chapterId = 1L,
                 pageIndex = 0,
                 onAreaTap = {},
-                onZoomStatusChange = {}
+                onZoomStatusChange = {},
             )
         }
         composeTestRule.waitForIdle()

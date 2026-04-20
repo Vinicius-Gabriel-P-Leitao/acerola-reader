@@ -26,7 +26,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class ConfigScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -39,18 +38,18 @@ class ConfigScreenTest {
     @Before
     fun setUp() {
         val emptyEvents = MutableSharedFlow<UserMessage>().asSharedFlow()
-        
+
         every { themeVM.currentTheme } returns MutableStateFlow(AppTheme.CATPPUCCIN)
         every { themeVM.uiEvents } returns emptyEvents
-        
+
         every { metadataVM.generateComicInfo } returns MutableStateFlow(true)
         every { metadataVM.metadataLanguage } returns MutableStateFlow(null)
         every { metadataVM.uiEvents } returns emptyEvents
-        
+
         every { mangaDirVM.isIndexing } returns MutableStateFlow(false)
         every { mangaDirVM.progress } returns MutableStateFlow(-1)
         every { mangaDirVM.uiEvents } returns emptyEvents
-        
+
         every { mangaDexVM.isIndexing } returns MutableStateFlow(false)
         every { mangaDexVM.progress } returns MutableStateFlow(-1)
         every { mangaDexVM.uiEvents } returns emptyEvents
@@ -60,7 +59,6 @@ class ConfigScreenTest {
         every { fsAccessVM.folderUri } returns null
         every { fsAccessVM.folderName } returns MutableStateFlow("Mock Folder")
         every { fsAccessVM.tutorialShown } returns MutableStateFlow(true)
-        
     }
 
     @Test
@@ -74,7 +72,7 @@ class ConfigScreenTest {
                         comicDirectoryViewModel = mangaDirVM,
                         mangaDexViewModel = mangaDexVM,
                         themeViewModel = themeVM,
-                        onNavigateToTemplates = {}
+                        onNavigateToTemplates = {},
                     )
                 }
             }
@@ -85,12 +83,14 @@ class ConfigScreenTest {
         // "Arquivos locais" -> "ARQUIVOS LOCAIS" (No strings.xml é title_text_archive_configs_in_app)
         // "Biblioteca" -> "BIBLIOTECA"
         // "Metadados externos" -> "METADADOS EXTERNOS"
-        
-        composeTestRule.onNodeWithText("APARÊNCIA", useUnmergedTree = true)
+
+        composeTestRule
+            .onNodeWithText("APARÊNCIA", useUnmergedTree = true)
             .performScrollTo()
             .assertIsDisplayed()
-        
-        composeTestRule.onNodeWithText("BIBLIOTECA", useUnmergedTree = true)
+
+        composeTestRule
+            .onNodeWithText("BIBLIOTECA", useUnmergedTree = true)
             .performScrollTo()
             .assertIsDisplayed()
     }

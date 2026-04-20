@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -28,51 +26,51 @@ internal fun resolveSnackbarVariant(visuals: SnackbarVisuals): SnackbarVariant =
 
 suspend fun SnackbarHostState.showSnackbar(
     message: String,
-    variant: SnackbarVariant
+    variant: SnackbarVariant,
 ) {
     showSnackbar(
         AcerolaSnackbarVisuals(
             message = message,
-            variant = variant
-        )
+            variant = variant,
+        ),
     )
 }
 
 @Composable
 fun Acerola.Component.SnackbarError(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Snackbar(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         containerColor = MaterialTheme.colorScheme.errorContainer,
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        content = { Text(text = message) }
+        content = { Text(text = message) },
     )
 }
 
 @Composable
 fun Acerola.Component.SnackbarSuccess(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Snackbar(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         containerColor = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        content = { Text(text = message) }
+        content = { Text(text = message) },
     )
 }
 
 @Composable
 fun Acerola.Component.SnackbarWarn(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Snackbar(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        content = { Text(text = message) }
+        content = { Text(text = message) },
     )
 }

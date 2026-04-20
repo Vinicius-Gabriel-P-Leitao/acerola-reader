@@ -25,15 +25,14 @@ import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
 @Composable
-fun Main.Config.Layout.ComicDirectoryAccess(
-    onFolderSelected: (Uri?) -> Unit
-) {
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
-        onResult = { uri ->
-            onFolderSelected(uri)
-        }
-    )
+fun Main.Config.Layout.ComicDirectoryAccess(onFolderSelected: (Uri?) -> Unit) {
+    val launcher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree(),
+            onResult = { uri ->
+                onFolderSelected(uri)
+            },
+        )
 
     Column {
         Acerola.Component.IconButton(
@@ -41,21 +40,23 @@ fun Main.Config.Layout.ComicDirectoryAccess(
             icon = {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(size = 34.dp)
-                        .clip(CircleShape)
-                        .background(color = MaterialTheme.colorScheme.primary),
+                    modifier =
+                        Modifier
+                            .size(size = 34.dp)
+                            .clip(CircleShape)
+                            .background(color = MaterialTheme.colorScheme.primary),
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .size(size = 40.dp)
-                            .padding(all = 4.dp),
+                        modifier =
+                            Modifier
+                                .size(size = 40.dp)
+                                .padding(all = 4.dp),
                     )
                 }
-            }
+            },
         )
     }
 }

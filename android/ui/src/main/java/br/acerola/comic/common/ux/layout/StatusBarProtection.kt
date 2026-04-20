@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,15 +19,17 @@ fun Acerola.Layout.StatusBarProtection(
 ) {
     Canvas(Modifier.fillMaxSize()) {
         val calculatedHeight = heightProvider()
-        val gradient = Brush.verticalGradient(
-            startY = 0f,
-            endY = calculatedHeight,
-            colors = listOf(
-                color.copy(alpha = 1f),
-                color.copy(alpha = .8f),
-                Color.Transparent
-            ),
-        )
+        val gradient =
+            Brush.verticalGradient(
+                startY = 0f,
+                endY = calculatedHeight,
+                colors =
+                    listOf(
+                        color.copy(alpha = 1f),
+                        color.copy(alpha = .8f),
+                        Color.Transparent,
+                    ),
+            )
         drawRect(
             brush = gradient,
             size = Size(size.width, calculatedHeight),

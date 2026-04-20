@@ -13,7 +13,6 @@ import org.junit.Test
 import javax.inject.Provider
 
 class ChapterSourceFactoryTest {
-
     private lateinit var cbzProvider: Provider<CbzPageResolver>
     private lateinit var cbrProvider: Provider<CbrPageResolver>
     private lateinit var factory: ChapterSourceFactory

@@ -53,9 +53,9 @@ fun Acerola.Component.HeroItem(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
-        }
+        },
     )
 }
 
@@ -76,7 +76,7 @@ fun Acerola.Component.HeroItem(
             shape = HeroShape,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             color = MaterialTheme.colorScheme.surface,
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth(),
         ) {
             HeroItemContent(title, description, iconBackground, action, bottomContent, icon)
         }
@@ -85,7 +85,7 @@ fun Acerola.Component.HeroItem(
             shape = HeroShape,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             color = MaterialTheme.colorScheme.surface,
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth(),
         ) {
             HeroItemContent(title, description, iconBackground, action, bottomContent, icon)
         }
@@ -104,16 +104,16 @@ fun Acerola.Component.HeroNestedItem(
     Surface(
         onClick = onClick,
         color = Color.Transparent,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
                 color = iconBackground,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(40.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     icon()
@@ -125,13 +125,13 @@ fun Acerola.Component.HeroNestedItem(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 if (description != null) {
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -160,9 +160,9 @@ fun Acerola.Component.HeroNestedItem(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
-        }
+        },
     )
 }
 
@@ -226,12 +226,12 @@ private fun HeroItemContent(
     Column {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
                 shape = IconShape,
                 color = iconBackground,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(48.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     icon()
@@ -245,13 +245,13 @@ private fun HeroItemContent(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 if (description != null) {
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -264,9 +264,10 @@ private fun HeroItemContent(
 
         if (bottomContent != null) {
             HorizontalDivider(
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .alpha(0.4f)
+                modifier =
+                    Modifier
+                        .padding(horizontal = 20.dp)
+                        .alpha(0.4f),
             )
             bottomContent()
         }

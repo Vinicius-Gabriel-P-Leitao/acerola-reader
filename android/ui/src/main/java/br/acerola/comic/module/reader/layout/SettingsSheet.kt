@@ -21,8 +21,6 @@ import androidx.compose.material.icons.filled.ViewHeadline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.AdaptiveSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +30,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.config.preference.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.ui.R
@@ -40,7 +40,7 @@ import br.acerola.comic.ui.R
 fun Reader.Layout.SettingsSheet(
     onDismissRequest: () -> Unit,
     currentMode: ReadingMode,
-    onModeSelected: (ReadingMode) -> Unit
+    onModeSelected: (ReadingMode) -> Unit,
 ) {
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismissRequest,
@@ -48,44 +48,45 @@ fun Reader.Layout.SettingsSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 32.dp),
         ) {
             Text(
                 text = stringResource(id = R.string.label_reader_config_title),
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(vertical = 24.dp)
+                modifier = Modifier.padding(vertical = 24.dp),
             )
 
             Text(
                 text = "Layout de Leitura",
                 style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary),
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 12.dp),
             )
 
             ReadingModeItem(
                 title = stringResource(id = R.string.label_reader_mode_horizontal),
                 icon = Icons.Default.AutoStories,
                 isSelected = currentMode == ReadingMode.HORIZONTAL,
-                onClick = { onModeSelected(ReadingMode.HORIZONTAL) }
+                onClick = { onModeSelected(ReadingMode.HORIZONTAL) },
             )
 
             ReadingModeItem(
                 title = stringResource(id = R.string.label_reader_mode_vertical),
                 icon = Icons.Default.ViewHeadline,
                 isSelected = currentMode == ReadingMode.VERTICAL,
-                onClick = { onModeSelected(ReadingMode.VERTICAL) }
+                onClick = { onModeSelected(ReadingMode.VERTICAL) },
             )
 
             ReadingModeItem(
                 title = stringResource(id = R.string.label_reader_mode_webtoon),
                 icon = Icons.Default.VerticalAlignBottom,
                 isSelected = currentMode == ReadingMode.WEBTOON,
-                onClick = { onModeSelected(ReadingMode.WEBTOON) }
+                onClick = { onModeSelected(ReadingMode.WEBTOON) },
             )
         }
     }
@@ -96,35 +97,38 @@ private fun ReadingModeItem(
     title: String,
     icon: ImageVector,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
-    val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-    } else {
-        Color.Transparent
-    }
+    val backgroundColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        } else {
+            Color.Transparent
+        }
 
-    val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+    val contentColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(backgroundColor)
+                .clickable(onClick = onClick)
+                .padding(16.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = contentColor,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -133,17 +137,19 @@ private fun ReadingModeItem(
             text = title,
             color = contentColor,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-            ),
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                ),
         )
 
         if (isSelected) {
             Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
+                modifier =
+                    Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
             )
         }
     }

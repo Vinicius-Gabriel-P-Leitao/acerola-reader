@@ -11,7 +11,7 @@ data class ReadingHistoryDto(
     val chapterArchiveId: Long,
     val lastPage: Int,
     val isCompleted: Boolean,
-    val updatedAt: Long
+    val updatedAt: Long,
 ) : Parcelable
 
 @Parcelize
@@ -22,5 +22,5 @@ data class ReadingHistoryWithChapterDto(
     val lastPage: Int,
     val updatedAt: Long,
     val chapterName: String?,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
 ) : Parcelable

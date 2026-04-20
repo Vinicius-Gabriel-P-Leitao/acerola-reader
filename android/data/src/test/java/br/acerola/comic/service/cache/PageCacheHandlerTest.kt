@@ -7,7 +7,6 @@ import org.junit.Before
 import org.junit.Test
 
 class PageCacheHandlerTest {
-
     private lateinit var service: PageCacheHandler
 
     @Before
@@ -46,12 +45,12 @@ class PageCacheHandlerTest {
     fun cache_deve_respeitar_limite_de_tamanho_removendo_antigos() {
         // NOTE: O limite é 60MB.
         val largeData = ByteArray(40 * 1024 * 1024) { 1 } // 40MB
-        
+
         service.put(1, largeData)
         assertTrue("Primeiro item deveria estar no cache", service.get(1).isRight())
 
         service.put(2, largeData) // Total 80MB > 60MB. O 1 deve ser removido.
-        
+
         assertTrue("Segundo item deveria estar no cache", service.get(2).isRight())
         assertTrue("Primeiro item deveria ter sido removido (LRU)", service.get(1).isLeft())
     }

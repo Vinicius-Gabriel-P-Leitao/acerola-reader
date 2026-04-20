@@ -21,7 +21,7 @@ import br.acerola.comic.ui.R
 fun Main.Config.Component.SyncLibraryArchive(
     onDeepScan: () -> Unit,
     onQuickSync: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Acerola.Component.HeroItem(
@@ -30,7 +30,7 @@ fun Main.Config.Component.SyncLibraryArchive(
             icon = Icons.Default.Folder,
             iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
             iconBackground = MaterialTheme.colorScheme.primaryContainer,
-            onClick = onDeepScan
+            onClick = onDeepScan,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Acerola.Component.HeroItem(
@@ -39,7 +39,7 @@ fun Main.Config.Component.SyncLibraryArchive(
             icon = Icons.Default.Sync,
             iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
             iconBackground = MaterialTheme.colorScheme.primaryContainer,
-            onClick = onQuickSync
+            onClick = onQuickSync,
         )
     }
 }

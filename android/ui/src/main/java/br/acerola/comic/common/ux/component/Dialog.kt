@@ -1,5 +1,4 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,25 +38,26 @@ fun Acerola.Component.DialogButton(
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
     contentColor: Color = MaterialTheme.colorScheme.primary,
-    fontWeight: FontWeight = FontWeight.Normal
+    fontWeight: FontWeight = FontWeight.Normal,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxSize(),
         color = containerColor,
-        contentColor = contentColor
+        contentColor = contentColor,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp),
                 fontWeight = fontWeight,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -71,27 +71,28 @@ fun Acerola.Component.Dialog(
     title: String? = null,
     confirmButtonContent: (@Composable () -> Unit)? = null,
     dismissButtonContent: (@Composable () -> Unit)? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     if (show) {
         BasicAlertDialog(
             onDismissRequest = onDismiss,
-            modifier = Modifier.clip(MaterialTheme.shapes.extraLarge)
+            modifier = Modifier.clip(MaterialTheme.shapes.extraLarge),
         ) {
             Surface(
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shape = MaterialTheme.shapes.extraLarge,
-                tonalElevation = 6.dp
+                tonalElevation = 6.dp,
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Column(
-                        modifier = Modifier
-                            .padding(24.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier =
+                            Modifier
+                                .padding(24.dp)
+                                .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         title?.let {
                             Text(
@@ -99,17 +100,17 @@ fun Acerola.Component.Dialog(
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                         }
 
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             CompositionLocalProvider(
-                                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
+                                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
                             ) {
                                 ProvideTextStyle(value = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center)) {
                                     content()
@@ -121,20 +122,22 @@ fun Acerola.Component.Dialog(
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                     )
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min),
                     ) {
                         if (dismissButtonContent != null) {
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 dismissButtonContent()
                             }
@@ -144,16 +147,17 @@ fun Acerola.Component.Dialog(
                             VerticalDivider(
                                 modifier = Modifier.fillMaxHeight(),
                                 thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                             )
                         }
 
                         if (confirmButtonContent != null) {
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 confirmButtonContent()
                             }

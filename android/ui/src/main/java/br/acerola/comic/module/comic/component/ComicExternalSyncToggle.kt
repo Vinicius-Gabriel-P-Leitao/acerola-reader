@@ -16,7 +16,7 @@ import br.acerola.comic.ui.R
 fun Comic.Component.ComicExternalSyncToggle(
     enabled: Boolean,
     onToggle: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.label_config_external_sync),
@@ -28,8 +28,8 @@ fun Comic.Component.ComicExternalSyncToggle(
         action = {
             Switch(
                 checked = enabled,
-                onCheckedChange = onToggle
+                onCheckedChange = onToggle,
             )
-        }
+        },
     )
 }

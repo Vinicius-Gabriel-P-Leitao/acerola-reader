@@ -28,30 +28,32 @@ import br.acerola.comic.ui.R
 fun Main.Pattern.Component.TemplateItem(
     template: ChapterTemplateDto,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            ),
     ) {
         ListItem(
             headlineContent = {
                 Text(
                     text = template.label,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             },
             supportingContent = {
                 Text(
                     text = template.pattern,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
             trailingContent = {
@@ -61,14 +63,14 @@ fun Main.Pattern.Component.TemplateItem(
                             Icon(
                                 Icons.Default.Edit,
                                 contentDescription = stringResource(id = R.string.description_icon_edit_template),
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                         IconButton(onClick = onDelete) {
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = stringResource(id = R.string.description_icon_delete_template),
-                                tint = MaterialTheme.colorScheme.error
+                                tint = MaterialTheme.colorScheme.error,
                             )
                         }
                     }
@@ -77,11 +79,11 @@ fun Main.Pattern.Component.TemplateItem(
                         text = stringResource(id = R.string.label_system_template),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp),
                     )
                 }
             },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
     }
 }

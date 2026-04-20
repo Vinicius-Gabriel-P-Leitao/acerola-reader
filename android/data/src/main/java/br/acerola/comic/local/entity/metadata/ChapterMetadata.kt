@@ -13,30 +13,25 @@ import androidx.room.PrimaryKey
             entity = ComicMetadata::class,
             parentColumns = ["id"],
             childColumns = ["comic_metadata_fk"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index("comic_metadata_fk"),
-        Index(value = ["chapter", "comic_metadata_fk"], unique = true)
-    ]
+        Index(value = ["chapter", "comic_metadata_fk"], unique = true),
+    ],
 )
 data class ChapterMetadata(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     @ColumnInfo(name = "title")
     val title: String?,
-
     @ColumnInfo(name = "chapter")
     val chapter: String,
-
     @ColumnInfo(name = "page_count")
     val pageCount: Int? = null,
-
     @ColumnInfo(name = "scanlation")
     val scanlation: String? = null,
-
     @ColumnInfo(name = "comic_metadata_fk")
     val mangaRemoteInfoFk: Long,
 )

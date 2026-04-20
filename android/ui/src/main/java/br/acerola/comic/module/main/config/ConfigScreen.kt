@@ -60,7 +60,7 @@ fun Main.Config.Layout.Screen(
     comicDirectoryViewModel: ComicDirectoryViewModel = hiltViewModel(),
     mangaDexViewModel: ComicMetadataViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
-    onNavigateToTemplates: () -> Unit
+    onNavigateToTemplates: () -> Unit,
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -100,15 +100,16 @@ fun Main.Config.Layout.Screen(
     val allCategories by mangaDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
     val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
- 
-    val uiState = ConfigUiState(
-        selectedTheme = selectedTheme,
-        folderUri = fileSystemAccessViewModel.folderUri,
-        folderName = folderName,
-        generateComicInfo = generateComicInfo,
-        metadataLanguage = metadataLanguage,
-    )
- 
+
+    val uiState =
+        ConfigUiState(
+            selectedTheme = selectedTheme,
+            folderUri = fileSystemAccessViewModel.folderUri,
+            folderName = folderName,
+            generateComicInfo = generateComicInfo,
+            metadataLanguage = metadataLanguage,
+        )
+
     val onAction: (ConfigAction) -> Unit = { action ->
         when (action) {
             is ConfigAction.UpdateTheme -> themeViewModel.setTheme(action.theme)
@@ -127,14 +128,15 @@ fun Main.Config.Layout.Screen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
+                modifier =
+                    Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
             ) {
                 if (!tutorialShown) {
                     OnboardingGuideCard()
@@ -146,7 +148,7 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.SelectComicDirectory(
                     folderName = uiState.folderName,
                     onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -154,14 +156,14 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.MetadataExportSettings(
                     enabled = uiState.generateComicInfo,
                     onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Main.Config.Component.TemplateManager(
                     onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -172,7 +174,7 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.SyncLibraryArchive(
                     onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
                     onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -182,7 +184,7 @@ fun Main.Config.Layout.Screen(
 
                 Main.Config.Component.ThemeSettings(
                     currentTheme = uiState.selectedTheme,
-                    onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) }
+                    onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) },
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -194,7 +196,7 @@ fun Main.Config.Layout.Screen(
                     categories = allCategories,
                     onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
                     onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
@@ -205,21 +207,21 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.LanguageSettings(
                     selectedLanguage = uiState.metadataLanguage,
                     onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Main.Config.Component.SyncAnilistData(
                     onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -233,7 +235,7 @@ private fun OnboardingGuideCard() {
     Card(
         modifier = Modifier.padding(16.dp).fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -241,19 +243,19 @@ private fun OnboardingGuideCard() {
             Text(
                 text = stringResource(id = R.string.title_tutorial_setup),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "1. " + stringResource(id = R.string.description_tutorial_folder_select),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "2. " + stringResource(id = R.string.description_tutorial_sync_deep),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }
     }
@@ -266,6 +268,6 @@ private fun SectionHeader(title: String) {
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.secondary,
-        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
     )
 }

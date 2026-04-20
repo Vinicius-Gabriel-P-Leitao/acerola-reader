@@ -15,7 +15,7 @@ class SyncMangadexDataTest {
     fun deve_exibir_sincronizar_metadados_mangadex() {
         composeTestRule.setContent {
             Main.Config.Component.SyncMangadexData(
-                onRescan = {}
+                onRescan = {},
             )
         }
         // No SyncMangadexData.kt o texto é "Sincronizar metadados"

@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -32,24 +30,26 @@ fun Acerola.Layout.TopBar(
     actions: @Composable (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier.size(48.dp),
-            contentAlignment = Alignment.CenterStart
+            contentAlignment = Alignment.CenterStart,
         ) {
             navigationIcon?.invoke()
         }
 
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center,
         ) {
             if (title != null) {
                 TitleCapsule(text = title)
@@ -58,7 +58,7 @@ fun Acerola.Layout.TopBar(
 
         Box(
             modifier = Modifier.size(48.dp),
-            contentAlignment = Alignment.CenterEnd
+            contentAlignment = Alignment.CenterEnd,
         ) {
             actions?.invoke()
         }
@@ -68,34 +68,37 @@ fun Acerola.Layout.TopBar(
 @Composable
 fun Acerola.Layout.TitleCapsule(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val shape = RoundedCornerShape(24.dp)
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .wrapContentWidth(Alignment.CenterHorizontally)
-            .glassContainer(shape)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .glassContainer(shape),
     ) {
         Box(
-            modifier = Modifier
-                .matchParentSize()
-                .glass(shape, glassColor, borderColor)
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .glass(shape, glassColor, borderColor),
         )
 
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.5.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            ),
+            style =
+                MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

@@ -1,6 +1,4 @@
 package br.acerola.comic.module.comic.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,9 +32,10 @@ fun Comic.Layout.Tabs(
 
     Row(
         horizontalArrangement = Arrangement.Start,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 20.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp, horizontal = 20.dp),
     ) {
         tabs.forEach { tab ->
             val isActive = tab == activeTab
@@ -47,29 +46,36 @@ fun Comic.Layout.Tabs(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(end = 24.dp)
-                    .clickable { onTabSelected(tab) },
+                modifier =
+                    Modifier
+                        .padding(end = 24.dp)
+                        .clickable { onTabSelected(tab) },
             ) {
                 Text(
                     text = title,
-                    color = if (isActive) MaterialTheme.colorScheme.onBackground
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
-                    ),
+                    color =
+                        if (isActive) {
+                            MaterialTheme.colorScheme.onBackground
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    style =
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                        ),
                 )
 
                 if (isActive) {
                     Spacer(modifier = Modifier.height(height = 4.dp))
                     Box(
-                        modifier = Modifier
-                            .width(width = 20.dp)
-                            .height(height = 3.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(size = 2.dp)
-                            )
+                        modifier =
+                            Modifier
+                                .width(width = 20.dp)
+                                .height(height = 3.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(size = 2.dp),
+                                ),
                     )
                 }
             }

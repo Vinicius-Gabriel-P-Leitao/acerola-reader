@@ -26,10 +26,12 @@ import org.junit.Test
 import java.io.OutputStream
 
 class MetadataExporterTest {
-
     @MockK lateinit var context: Context
+
     @MockK lateinit var parserService: ComicInfoParser
+
     @MockK lateinit var directoryDao: ComicDirectoryDao
+
     @MockK lateinit var remoteInfoDao: ComicMetadataDao
 
     private lateinit var service: MetadataExporter
@@ -49,60 +51,62 @@ class MetadataExporterTest {
     }
 
     @Test
-    fun `exportMangaMetadata deve escrever ComicInfo se pasta existir e tiver permissao`() = runTest {
-        val mangaId = 1L
-        val directory = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, path = "content://comic")
-        val remoteInfo = MetadataFixtures.createMangaRemoteInfoDto()
-        val remoteInfoEntity = MetadataFixtures.createMangaRemoteInfo(mangaDirectoryFk = mangaId, hasComicInfo = false)
-        val mockUri = mockk<Uri>()
-        val mockFolder = mockk<DocumentFile>()
-        val mockFile = mockk<DocumentFile>()
-        val mockOutputStream = mockk<OutputStream>(relaxed = true)
-        val mockResolver = mockk<ContentResolver>()
+    fun `exportMangaMetadata deve escrever ComicInfo se pasta existir e tiver permissao`() =
+        runTest {
+            val mangaId = 1L
+            val directory = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, path = "content://comic")
+            val remoteInfo = MetadataFixtures.createMangaRemoteInfoDto()
+            val remoteInfoEntity = MetadataFixtures.createMangaRemoteInfo(mangaDirectoryFk = mangaId, hasComicInfo = false)
+            val mockUri = mockk<Uri>()
+            val mockFolder = mockk<DocumentFile>()
+            val mockFile = mockk<DocumentFile>()
+            val mockOutputStream = mockk<OutputStream>(relaxed = true)
+            val mockResolver = mockk<ContentResolver>()
 
-        coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
-        every { Uri.parse(any()) } returns mockUri
-        every { DocumentFile.fromTreeUri(context, any()) } returns mockFolder
-        every { mockFolder.exists() } returns true
-        every { mockFolder.canWrite() } returns true
-        every { mockFolder.findFile(any()) } returns null
-        every { mockFolder.createFile(any(), any()) } returns mockFile
-        every { mockFile.uri } returns mockUri
+            coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
+            every { Uri.parse(any()) } returns mockUri
+            every { DocumentFile.fromTreeUri(context, any()) } returns mockFolder
+            every { mockFolder.exists() } returns true
+            every { mockFolder.canWrite() } returns true
+            every { mockFolder.findFile(any()) } returns null
+            every { mockFolder.createFile(any(), any()) } returns mockFile
+            every { mockFile.uri } returns mockUri
 
-        every { parserService.serialize(remoteInfo) } returns "<Xml></Xml>"
-        every { context.contentResolver } returns mockResolver
-        every { mockResolver.openOutputStream(any()) } returns mockOutputStream
-        
-        every { remoteInfoDao.observeComicByDirectoryId(mangaId) } returns flowOf(remoteInfoEntity)
-        coEvery { remoteInfoDao.update(any()) } returns Unit
+            every { parserService.serialize(remoteInfo) } returns "<Xml></Xml>"
+            every { context.contentResolver } returns mockResolver
+            every { mockResolver.openOutputStream(any()) } returns mockOutputStream
 
-        val result = service.exportMangaMetadata(mangaId, remoteInfo)
+            every { remoteInfoDao.observeComicByDirectoryId(mangaId) } returns flowOf(remoteInfoEntity)
+            coEvery { remoteInfoDao.update(any()) } returns Unit
 
-        assertTrue("Deveria retornar sucesso mas foi $result", result.isRight())
-        coVerify { remoteInfoDao.update(match { it.hasComicInfo }) }
-    }
+            val result = service.exportMangaMetadata(mangaId, remoteInfo)
+
+            assertTrue("Deveria retornar sucesso mas foi $result", result.isRight())
+            coVerify { remoteInfoDao.update(match { it.hasComicInfo }) }
+        }
 
     @Test
-    fun `exportMangaMetadata deve retornar DiskIOFailure se falhar ao criar arquivo`() = runTest {
-        val mangaId = 1L
-        val directory = MangaDirectoryFixtures.createMangaDirectory(id = mangaId)
-        val remoteInfo = MetadataFixtures.createMangaRemoteInfoDto()
-        val mockFolder = mockk<DocumentFile>()
-        
-        coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
-        every { Uri.parse(any()) } returns mockk()
-        every { DocumentFile.fromTreeUri(context, any()) } returns mockFolder
-        every { mockFolder.exists() } returns true
-        every { mockFolder.canWrite() } returns true
-        every { mockFolder.findFile(any()) } returns null
-        
-        every { parserService.serialize(any()) } returns ""
-        // Simula falha ao criar arquivo
-        every { mockFolder.createFile(any(), any()) } returns null
+    fun `exportMangaMetadata deve retornar DiskIOFailure se falhar ao criar arquivo`() =
+        runTest {
+            val mangaId = 1L
+            val directory = MangaDirectoryFixtures.createMangaDirectory(id = mangaId)
+            val remoteInfo = MetadataFixtures.createMangaRemoteInfoDto()
+            val mockFolder = mockk<DocumentFile>()
 
-        val result = service.exportMangaMetadata(mangaId, remoteInfo)
+            coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
+            every { Uri.parse(any()) } returns mockk()
+            every { DocumentFile.fromTreeUri(context, any()) } returns mockFolder
+            every { mockFolder.exists() } returns true
+            every { mockFolder.canWrite() } returns true
+            every { mockFolder.findFile(any()) } returns null
 
-        assertTrue("Deveria retornar erro de disco mas foi $result", result.isLeft())
-        result.onLeft { assertTrue(it is LibrarySyncError.DiskIOFailure) }
-    }
+            every { parserService.serialize(any()) } returns ""
+            // Simula falha ao criar arquivo
+            every { mockFolder.createFile(any(), any()) } returns null
+
+            val result = service.exportMangaMetadata(mangaId, remoteInfo)
+
+            assertTrue("Deveria retornar erro de disco mas foi $result", result.isLeft())
+            result.onLeft { assertTrue(it is LibrarySyncError.DiskIOFailure) }
+        }
 }

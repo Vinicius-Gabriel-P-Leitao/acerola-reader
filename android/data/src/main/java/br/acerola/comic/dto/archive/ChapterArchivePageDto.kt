@@ -10,7 +10,7 @@ data class ChapterArchivePageDto(
     val items: List<ChapterFileDto>,
     val pageSize: Int,
     val page: Int,
-    val total: Int
+    val total: Int,
 ) : Parcelable
 
 @Parcelize
@@ -20,5 +20,5 @@ data class ChapterFileDto(
     val name: String,
     val path: String,
     val chapterSort: String,
-    val lastModified: Long = 0
+    val lastModified: Long = 0,
 ) : Parcelable

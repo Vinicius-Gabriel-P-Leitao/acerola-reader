@@ -14,7 +14,6 @@ import java.io.ByteArrayInputStream
 @RunWith(AndroidJUnit4::class)
 @SmallTest
 class ComicInfoParserTest {
-
     private lateinit var service: ComicInfoParser
 
     @Before
@@ -24,7 +23,8 @@ class ComicInfoParserTest {
 
     @Test
     fun parseMangaInfo_deve_retornar_sucesso_com_xml_valido() {
-        val xml = """
+        val xml =
+            """
             <?xml version="1.0"?>
             <ComicInfo>
                 <Title>One Piece</Title>
@@ -34,7 +34,7 @@ class ComicInfoParserTest {
                 <Genre>Action, Adventure, Shonen</Genre>
                 <Year>1997</Year>
             </ComicInfo>
-        """.trimIndent()
+            """.trimIndent()
 
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseMangaInfo(inputStream)
@@ -52,12 +52,13 @@ class ComicInfoParserTest {
 
     @Test
     fun parseMangaInfo_deve_retornar_MissingRootElement_se_xml_nao_for_comicinfo() {
-        val xml = """
+        val xml =
+            """
             <?xml version="1.0"?>
             <WrongRoot>
                 <Title>One Piece</Title>
             </WrongRoot>
-        """.trimIndent()
+            """.trimIndent()
 
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseMangaInfo(inputStream)
@@ -70,12 +71,13 @@ class ComicInfoParserTest {
 
     @Test
     fun parseMangaInfo_deve_retornar_InvalidXmlFormat_se_xml_estiver_quebrado() {
-        val xml = """
+        val xml =
+            """
             <?xml version="1.0"?>
             <ComicInfo>
                 <Title>One Piece
             </ComicInfo> <!-- Falta fechar a tag Title -->
-        """.trimIndent()
+            """.trimIndent()
 
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseMangaInfo(inputStream)
@@ -88,7 +90,8 @@ class ComicInfoParserTest {
 
     @Test
     fun parseChapterInfo_deve_ler_dados_do_capitulo_corretamente() {
-        val xml = """
+        val xml =
+            """
             <?xml version="1.0"?>
             <ComicInfo>
                 <Title>Romance Dawn</Title>
@@ -96,7 +99,7 @@ class ComicInfoParserTest {
                 <Volume>1</Volume>
                 <PageCount>50</PageCount>
             </ComicInfo>
-        """.trimIndent()
+            """.trimIndent()
 
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseChapterInfo(inputStream)
@@ -112,12 +115,13 @@ class ComicInfoParserTest {
 
     @Test
     fun serialize_deve_gerar_xml_valido() {
-        val info = ComicMetadataDto(
-            title = "Berserk",
-            description = "Guts struggle",
-            status = "ongoing",
-            year = 1989
-        )
+        val info =
+            ComicMetadataDto(
+                title = "Berserk",
+                description = "Guts struggle",
+                status = "ongoing",
+                year = 1989,
+            )
 
         val xmlOutput = service.serialize(info)
 

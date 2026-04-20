@@ -45,7 +45,7 @@ fun Main.History.Component.HistoryHeroCard(
     manga: ComicDto,
     onClick: () -> Unit,
     onContinueClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val bannerUri = manga.directory.bannerUri ?: manga.directory.coverUri ?: manga.remoteInfo?.banner?.url
@@ -54,58 +54,69 @@ fun Main.History.Component.HistoryHeroCard(
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .height(240.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(240.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(bannerUri)
-                    .crossfade(true)
-                    .build(),
+                model =
+                    ImageRequest
+                        .Builder(context)
+                        .data(bannerUri)
+                        .crossfade(true)
+                        .build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent, Color.Black.copy(alpha = 0.4f), Color.Black.copy(alpha = 0.9f)
-                            ), startY = 0f
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.4f),
+                                        Color.Black.copy(alpha = 0.9f),
+                                    ),
+                                startY = 0f,
+                            ),
+                        ),
             )
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.Bottom
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                verticalArrangement = Arrangement.Bottom,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Box(
-                        modifier = Modifier
-                            .background(
-                                color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp)
-                            )
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                        modifier =
+                            Modifier
+                                .background(
+                                    color = Color.White.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(16.dp),
+                                ).padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = stringResource(id = R.string.label_history_hero_most_recent),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            ),
-                            color = Color.White
+                            style =
+                                MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp,
+                                ),
+                            color = Color.White,
                         )
                     }
                 }
@@ -114,43 +125,47 @@ fun Main.History.Component.HistoryHeroCard(
 
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    ),
+                    style =
+                        MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                        ),
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = onContinueClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Text(
                             text = stringResource(id = R.string.label_history_hero_continue),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 1.2.sp
-                            )
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = 1.2.sp,
+                                ),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.Filled.PlayArrow,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }

@@ -55,34 +55,34 @@ import br.acerola.comic.ui.R
 @Composable
 fun Main.Config.Component.ThemeSettings(
     currentTheme: AppTheme,
-    onThemeChange: (AppTheme) -> Unit
+    onThemeChange: (AppTheme) -> Unit,
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
     val themes = AppTheme.entries
 
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         ListItem(
             headlineContent = {
                 Text(
                     text = stringResource(R.string.title_settings_appearance),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             supportingContent = {
                 Text(
                     style = MaterialTheme.typography.bodySmall,
-                    text = stringResource(R.string.description_settings_appearance)
+                    text = stringResource(R.string.description_settings_appearance),
                 )
             },
             leadingContent = {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -94,13 +94,13 @@ fun Main.Config.Component.ThemeSettings(
                     }
                 }
             },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(themes) { theme ->
                 ThemeCard(
@@ -109,7 +109,7 @@ fun Main.Config.Component.ThemeSettings(
                     subtitle = getThemeSubtitle(theme, isDark),
                     selected = currentTheme == theme,
                     colors = getThemeColors(theme, isDark, context),
-                    onClick = { onThemeChange(theme) }
+                    onClick = { onThemeChange(theme) },
                 )
             }
         }
@@ -117,64 +117,101 @@ fun Main.Config.Component.ThemeSettings(
 }
 
 @Composable
-private fun getThemeTitle(theme: AppTheme, isDark: Boolean): String {
-    return when (theme) {
+private fun getThemeTitle(
+    theme: AppTheme,
+    isDark: Boolean,
+): String =
+    when (theme) {
         AppTheme.CATPPUCCIN -> stringResource(R.string.title_settings_catppuccin_theme)
         AppTheme.NORD -> stringResource(R.string.title_settings_nord_theme)
-        AppTheme.DRACULA -> if (isDark) stringResource(R.string.title_settings_dracula_theme) else stringResource(R.string.title_settings_alucard_theme)
+        AppTheme.DRACULA ->
+            if (isDark) {
+                stringResource(
+                    R.string.title_settings_dracula_theme,
+                )
+            } else {
+                stringResource(R.string.title_settings_alucard_theme)
+            }
         AppTheme.DYNAMIC -> stringResource(R.string.title_settings_dynamic_color)
     }
-}
 
 @Composable
-private fun getThemeSubtitle(theme: AppTheme, isDark: Boolean): String {
-    return when (theme) {
-        AppTheme.CATPPUCCIN -> if (isDark) stringResource(R.string.subtitle_settings_mocha_theme) else stringResource(R.string.subtitle_settings_latte_theme)
-        AppTheme.NORD -> if (isDark) stringResource(R.string.subtitle_settings_nord_dark_theme) else stringResource(R.string.subtitle_settings_nord_light_theme)
-        AppTheme.DRACULA -> if (isDark) stringResource(R.string.subtitle_settings_vampire_theme) else stringResource(R.string.subtitle_settings_dracula_theme)
+private fun getThemeSubtitle(
+    theme: AppTheme,
+    isDark: Boolean,
+): String =
+    when (theme) {
+        AppTheme.CATPPUCCIN ->
+            if (isDark) {
+                stringResource(
+                    R.string.subtitle_settings_mocha_theme,
+                )
+            } else {
+                stringResource(R.string.subtitle_settings_latte_theme)
+            }
+        AppTheme.NORD ->
+            if (isDark) {
+                stringResource(
+                    R.string.subtitle_settings_nord_dark_theme,
+                )
+            } else {
+                stringResource(R.string.subtitle_settings_nord_light_theme)
+            }
+        AppTheme.DRACULA ->
+            if (isDark) {
+                stringResource(
+                    R.string.subtitle_settings_vampire_theme,
+                )
+            } else {
+                stringResource(R.string.subtitle_settings_dracula_theme)
+            }
         AppTheme.DYNAMIC -> stringResource(R.string.subtitle_settings_dynamic_color)
     }
-}
 
 @Composable
 private fun getThemeColors(
     theme: AppTheme,
     isDark: Boolean,
-    context: Context
-): List<Color> {
-    return when (theme) {
+    context: Context,
+): List<Color> =
+    when (theme) {
         AppTheme.DYNAMIC -> dynamicColorsFromContext(context, isDark)
-        AppTheme.CATPPUCCIN -> if (isDark) {
-            listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
-        } else {
-            listOf(CatppuccinLatte.Mauve, CatppuccinLatte.Pink, CatppuccinLatte.Sky)
-        }
-        AppTheme.DRACULA -> if (isDark) {
-            listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan)
-        } else {
-            listOf(Color(0xFF6272A4), Color(0xFFFF79C6), Color(0xFF8BE9FD))
-        }
-        AppTheme.NORD -> if (isDark) {
-            listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary)
-        } else {
-            listOf(Color(0xFF88C0D0), Color(0xFF81A1C1), Color(0xFF8FBCBB))
-        }
+        AppTheme.CATPPUCCIN ->
+            if (isDark) {
+                listOf(CatppuccinMocha.Mauve, CatppuccinMocha.Pink, CatppuccinMocha.Sky)
+            } else {
+                listOf(CatppuccinLatte.Mauve, CatppuccinLatte.Pink, CatppuccinLatte.Sky)
+            }
+        AppTheme.DRACULA ->
+            if (isDark) {
+                listOf(Dracula.Purple, Dracula.Pink, Dracula.Cyan)
+            } else {
+                listOf(Color(0xFF6272A4), Color(0xFFFF79C6), Color(0xFF8BE9FD))
+            }
+        AppTheme.NORD ->
+            if (isDark) {
+                listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary)
+            } else {
+                listOf(Color(0xFF88C0D0), Color(0xFF81A1C1), Color(0xFF8FBCBB))
+            }
     }
-}
 
 @Composable
 private fun dynamicColorsFromContext(
     context: Context,
-    isDark: Boolean
-): List<Color> {
-    return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+    isDark: Boolean,
+): List<Color> =
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
         val scheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        
+
         listOf(scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer)
     } else {
-        listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
+        listOf(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.tertiaryContainer,
+        )
     }
-}
 
 @Composable
 private fun ThemeCard(
@@ -183,7 +220,7 @@ private fun ThemeCard(
     subtitle: String,
     selected: Boolean,
     colors: List<Color>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
     val containerColor =
@@ -194,38 +231,41 @@ private fun ThemeCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
-        border = CardDefaults.outlinedCardBorder().copy(brush = SolidColor(borderColor))
+        border = CardDefaults.outlinedCardBorder().copy(brush = SolidColor(borderColor)),
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .padding(4.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(60.dp)
+                        .padding(4.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.linearGradient(colors),
-                            shape = CircleShape
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.linearGradient(colors),
+                                shape = CircleShape,
+                            ),
                 )
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy((-12).dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val dotBorderColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.1f)
                     colors.forEach { color ->
                         Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(color, CircleShape)
-                                .border(1.5.dp, dotBorderColor, CircleShape)
+                            modifier =
+                                Modifier
+                                    .size(24.dp)
+                                    .background(color, CircleShape)
+                                    .border(1.5.dp, dotBorderColor, CircleShape),
                         )
                     }
                 }
@@ -238,7 +278,7 @@ private fun ThemeCard(
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
+                maxLines = 1,
             )
 
             Text(
@@ -246,7 +286,7 @@ private fun ThemeCard(
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                maxLines = 1,
             )
 
             if (selected) {
@@ -254,9 +294,10 @@ private fun ThemeCard(
                     imageVector = Icons.Filled.CheckCircle,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .size(16.dp)
+                    modifier =
+                        Modifier
+                            .padding(top = 4.dp)
+                            .size(16.dp),
                 )
             } else {
                 Spacer(modifier = Modifier.height(20.dp))

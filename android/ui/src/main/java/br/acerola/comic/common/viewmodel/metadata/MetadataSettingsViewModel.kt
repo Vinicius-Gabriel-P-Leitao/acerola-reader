@@ -1,6 +1,4 @@
 package br.acerola.comic.common.viewmodel.metadata
-import br.acerola.comic.ui.R
-
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,43 +19,48 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MetadataSettingsViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-) : ViewModel() {
+class MetadataSettingsViewModel
+    @Inject
+    constructor(
+        @param:ApplicationContext private val context: Context,
+    ) : ViewModel() {
+        private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+        val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
-    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+        val generateComicInfo: StateFlow<Boolean> =
+            MetadataPreference
+                .generateComicInfoFlow(context)
+                .onEach { AcerolaLogger.d(TAG, "Generate ComicInfo preference updated: $it", LogSource.VIEWMODEL) }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = true,
+                )
 
-    val generateComicInfo: StateFlow<Boolean> = MetadataPreference.generateComicInfoFlow(context)
-        .onEach { AcerolaLogger.d(TAG, "Generate ComicInfo preference updated: $it", LogSource.VIEWMODEL) }  
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = true
-        )
+        val metadataLanguage: StateFlow<String?> =
+            MetadataPreference
+                .metadataLanguageFlow(context)
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = null,
+                )
 
-    val metadataLanguage: StateFlow<String?> = MetadataPreference.metadataLanguageFlow(context)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+        fun setGenerateComicInfo(value: Boolean) {
+            AcerolaLogger.audit(TAG, "User setting Generate ComicInfo preference: $value", LogSource.VIEWMODEL)
+            viewModelScope.launch {
+                MetadataPreference.saveGenerateComicInfo(context, value)
+            }
+        }
 
-    fun setGenerateComicInfo(value: Boolean) {
-        AcerolaLogger.audit(TAG, "User setting Generate ComicInfo preference: $value", LogSource.VIEWMODEL)  
-        viewModelScope.launch {
-            MetadataPreference.saveGenerateComicInfo(context, value)
+        fun setMetadataLanguage(language: String) {
+            AcerolaLogger.audit(TAG, "User setting Metadata Language preference: $language", LogSource.VIEWMODEL)
+            viewModelScope.launch {
+                MetadataPreference.saveMetadataLanguage(context, language)
+            }
+        }
+
+        companion object {
+            private const val TAG = "MetadataSettingsViewModel"
         }
     }
-
-    fun setMetadataLanguage(language: String) {
-        AcerolaLogger.audit(TAG, "User setting Metadata Language preference: $language", LogSource.VIEWMODEL)
-        viewModelScope.launch {
-            MetadataPreference.saveMetadataLanguage(context, language)
-        }
-    }
-
-    companion object {
-        private const val TAG = "MetadataSettingsViewModel"  
-    }
-}

@@ -1,10 +1,7 @@
 package br.acerola.comic.common.ux.theme.color
-import br.acerola.comic.ui.R
-
 import androidx.compose.ui.graphics.Color
 
 object CatppuccinMocha {
-
     val Rosewater = Color(0xFFF5E0DC)
     val Flamingo = Color(0xFFF2CDCD)
     val Pink = Color(0xFFF5C2E7)
@@ -34,7 +31,6 @@ object CatppuccinMocha {
 }
 
 object CatppuccinLatte {
-
     val Rosewater = Color(0xFFDC8A78)
     val Flamingo = Color(0xFFDD7878)
     val Pink = Color(0xFFEA76CB)
@@ -62,4 +58,3 @@ object CatppuccinLatte {
     val Mantle = Color(0xFFE6E9EF)
     val Crust = Color(0xFFDCE0E8)
 }
-

@@ -7,7 +7,7 @@ data class ChapterMangadexDto(
     val id: String,
     val type: String,
     val attributes: ChapterAttributes,
-    val relationships: List<ChapterRelationship> = emptyList()
+    val relationships: List<ChapterRelationship> = emptyList(),
 ) {
     val volume: String?
         get() = attributes.volume
@@ -35,18 +35,18 @@ data class ChapterAttributes(
     val title: String?,
     val translatedLanguage: String? = null,
     val pages: Int = 0,
-    val version: Int
+    val version: Int,
 )
 
 @JsonClass(generateAdapter = true)
 data class ChapterRelationship(
     val id: String,
     val type: String,
-    val attributes: ChapterRelationshipAttributes? = null
+    val attributes: ChapterRelationshipAttributes? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class ChapterRelationshipAttributes(
     val name: String? = null,
-    val focusedLanguages: List<String>? = emptyList()
+    val focusedLanguages: List<String>? = emptyList(),
 )

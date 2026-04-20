@@ -11,7 +11,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class PaginationFooterTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -22,7 +21,7 @@ class PaginationFooterTest {
                 Acerola.Component.Pagination(
                     currentPage = 0,
                     totalPages = 10,
-                    onPageChange = {}
+                    onPageChange = {},
                 )
             }
         }
@@ -39,7 +38,7 @@ class PaginationFooterTest {
                 Acerola.Component.Pagination(
                     currentPage = 0,
                     totalPages = 5,
-                    onPageChange = { selectedPage = it }
+                    onPageChange = { selectedPage = it },
                 )
             }
         }

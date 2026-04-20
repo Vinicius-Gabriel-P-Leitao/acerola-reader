@@ -6,5 +6,5 @@ import com.squareup.moshi.JsonClass
 data class MangaDexEntityResponseDto<T>(
     val result: String,
     val response: String,
-    val data: T
+    val data: T,
 )

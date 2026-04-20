@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -16,18 +14,20 @@ import br.acerola.comic.common.ux.Acerola
 fun Acerola.Layout.Scaffold(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.background,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(containerColor)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(containerColor),
     ) {
         StatusBarProtection(color = containerColor)
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
         ) {
             content()
         }

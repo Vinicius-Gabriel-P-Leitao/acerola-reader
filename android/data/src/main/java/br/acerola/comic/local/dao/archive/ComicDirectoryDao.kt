@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
 @Dao
-interface ComicDirectoryDao : BaseDao<ComicDirectory>{
+interface ComicDirectoryDao : BaseDao<ComicDirectory> {
     @Query(value = "SELECT * FROM comic_directory WHERE hidden = 0 ORDER BY id ASC")
     fun getVisibleDirectories(): Flow<List<ComicDirectory>>
 
@@ -23,12 +23,15 @@ interface ComicDirectoryDao : BaseDao<ComicDirectory>{
     suspend fun getDirectoryByName(name: String): ComicDirectory?
 
     @Query(value = "UPDATE comic_directory SET hidden = :hidden WHERE id = :mangaId")
-    suspend fun setDirectoryHidden(mangaId: Long, hidden: Boolean)
+    suspend fun setDirectoryHidden(
+        mangaId: Long,
+        hidden: Boolean,
+    )
 
     @Transaction
     suspend fun upsertDirectoryTransaction(
         directory: ComicDirectory,
-        normalizeName: (String) -> String
+        normalizeName: (String) -> String,
     ): Long {
         val allFolders = getAllDirectories().firstOrNull() ?: emptyList()
 

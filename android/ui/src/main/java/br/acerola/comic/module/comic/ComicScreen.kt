@@ -40,10 +40,10 @@ import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewMod
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.comic.component.ChapterSortSheet
-import br.acerola.comic.module.comic.layout.ChapterSection
-import br.acerola.comic.module.comic.layout.ConfigSection
 import br.acerola.comic.module.comic.layout.Header
 import br.acerola.comic.module.comic.layout.Tabs
+import br.acerola.comic.module.comic.layout.chapterSection
+import br.acerola.comic.module.comic.layout.configSection
 import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
@@ -115,25 +115,27 @@ fun ComicScreen(
     val totalChapters = chapterDto?.archive?.total ?: 0
     val currentPage = chapterDto?.archive?.page ?: 0
 
-    val totalPages = remember(key1 = chapterDto?.archive?.total, key2 = chapterDto?.archive?.pageSize) {
-        val size = chapterDto?.archive?.pageSize ?: 1
-        val total = chapterDto?.archive?.total ?: 0
-        if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
-    }
+    val totalPages =
+        remember(key1 = chapterDto?.archive?.total, key2 = chapterDto?.archive?.pageSize) {
+            val size = chapterDto?.archive?.pageSize ?: 1
+            val total = chapterDto?.archive?.total ?: 0
+            if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
+        }
 
-    val uiState = ComicUiState(
-        manga = currentManga,
-        chapters = chapterDto,
-        selectedTab = selectedTab,
-        history = history,
-        readChapters = readChapters.toPersistentSet(),
-        totalChapters = totalChapters,
-        currentPage = currentPage,
-        totalPages = totalPages,
-        selectedChapterPerPage = selectedChapterPerPage,
-        chapterSortSettings = chapterSortSettings,
-        allCategories = allCategories.toPersistentList()
-    )
+    val uiState =
+        ComicUiState(
+            manga = currentManga,
+            chapters = chapterDto,
+            selectedTab = selectedTab,
+            history = history,
+            readChapters = readChapters.toPersistentSet(),
+            totalChapters = totalChapters,
+            currentPage = currentPage,
+            totalPages = totalPages,
+            selectedChapterPerPage = selectedChapterPerPage,
+            chapterSortSettings = chapterSortSettings,
+            allCategories = allCategories.toPersistentList(),
+        )
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -146,27 +148,30 @@ fun ComicScreen(
                 comicViewModel.loadPageAsync(action.page)
             }
             is ComicChapterAction.ClickChapter -> {
-                val intent = Intent(context, ReaderActivity::class.java).apply {
-                    putExtra(ReaderActivity.PageExtra.PAGE, action.chapter)
-                    putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
-                    putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.initialPage)
-                }
+                val intent =
+                    Intent(context, ReaderActivity::class.java).apply {
+                        putExtra(ReaderActivity.PageExtra.PAGE, action.chapter)
+                        putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
+                        putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.initialPage)
+                    }
                 context.startActivity(intent)
             }
             is ComicChapterAction.ClickContinue -> {
                 val chaptersList = uiState.chapters?.archive?.items ?: emptyList()
-                val targetChapter = if (action.chapterId == -1L) {
-                    chaptersList.firstOrNull()
-                } else {
-                    chaptersList.find { it.id == action.chapterId }
-                }
+                val targetChapter =
+                    if (action.chapterId == -1L) {
+                        chaptersList.firstOrNull()
+                    } else {
+                        chaptersList.find { it.id == action.chapterId }
+                    }
 
                 targetChapter?.let {
-                    val intent = Intent(context, ReaderActivity::class.java).apply {
-                        putExtra(ReaderActivity.PageExtra.PAGE, it)
-                        putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
-                        putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.lastPage)
-                    }
+                    val intent =
+                        Intent(context, ReaderActivity::class.java).apply {
+                            putExtra(ReaderActivity.PageExtra.PAGE, it)
+                            putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
+                            putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.lastPage)
+                        }
                     context.startActivity(intent)
                 }
             }
@@ -181,7 +186,12 @@ fun ComicScreen(
             ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.manga.directory.id)
             ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.manga.directory.id)
             ComicSyncAction.SyncMangadexInfo -> comicMetadataViewModel.syncFromMangadex(uiState.manga.directory.id)
-            ComicSyncAction.SyncMangadexChapters -> uiState.manga.remoteInfo?.id?.let { chapterMetadataViewModel.syncChaptersByMangadex(it) }
+            ComicSyncAction.SyncMangadexChapters ->
+                uiState.manga.remoteInfo?.id?.let {
+                    chapterMetadataViewModel.syncChaptersByMangadex(
+                        it,
+                    )
+                }
             ComicSyncAction.SyncComicInfo -> comicMetadataViewModel.syncFromComicInfo(uiState.manga.directory.id)
             ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
             ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.manga.directory.id)
@@ -194,14 +204,16 @@ fun ComicScreen(
             ComicAction.NavigateBack -> onBackClick()
             is ComicAction.SelectTab -> selectedTab = action.tab
             is ComicAction.UpdatePageSize -> comicViewModel.updateChapterPerPage(action.size)
-            is ComicAction.UpdateCategory -> comicMetadataViewModel.updateMangaCategory(
-                uiState.manga.directory.id,
-                action.categoryId
-            )
-            is ComicAction.ToggleExternalSync -> comicDirectoryViewModel.updateExternalSyncEnabled(
-                uiState.manga.directory.id,
-                action.enabled
-            )
+            is ComicAction.UpdateCategory ->
+                comicMetadataViewModel.updateMangaCategory(
+                    uiState.manga.directory.id,
+                    action.categoryId,
+                )
+            is ComicAction.ToggleExternalSync ->
+                comicDirectoryViewModel.updateExternalSyncEnabled(
+                    uiState.manga.directory.id,
+                    action.enabled,
+                )
         }
     }
 
@@ -210,26 +222,29 @@ fun ComicScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            contentColor = MaterialTheme.colorScheme.onBackground
+            contentColor = MaterialTheme.colorScheme.onBackground,
         ) { paddingValues ->
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding())
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(bottom = paddingValues.calculateBottomPadding()),
             ) {
                 item(
-                    key = "header_${uiState.manga.remoteInfo?.title}", contentType = "header"
+                    key = "header_${uiState.manga.remoteInfo?.title}",
+                    contentType = "header",
                 ) {
                     Comic.Layout.Header(
                         manga = uiState.manga,
                         history = uiState.history,
-                        onContinueClick = { id, page -> onChapterAction(ComicChapterAction.ClickContinue(id, page)) }
+                        onContinueClick = { id, page -> onChapterAction(ComicChapterAction.ClickContinue(id, page)) },
                     )
                 }
 
                 item(
-                    key = "tabs_${uiState.manga.remoteInfo?.title}", contentType = "tabs"
+                    key = "tabs_${uiState.manga.remoteInfo?.title}",
+                    contentType = "tabs",
                 ) {
                     Comic.Layout.Tabs(
                         totalChapters = uiState.totalChapters,
@@ -241,7 +256,7 @@ fun ComicScreen(
                 when (uiState.selectedTab) {
                     MainTab.CHAPTERS -> {
                         uiState.chapters?.let {
-                            Comic.Layout.ChapterSection(
+                            Comic.Layout.chapterSection(
                                 scope = this,
                                 chapters = it,
                                 currentPage = uiState.currentPage,
@@ -255,17 +270,18 @@ fun ComicScreen(
                     }
 
                     MainTab.SETTINGS -> {
-                        Comic.Layout.ConfigSection(
+                        Comic.Layout.configSection(
                             scope = this,
                             uiState = uiState,
                             onAction = onAction,
-                            onSyncAction = onSyncAction
+                            onSyncAction = onSyncAction,
                         )
                     }
                 }
 
                 item(
-                    key = "spacer_${uiState.manga.remoteInfo?.title}", contentType = "tabs"
+                    key = "spacer_${uiState.manga.remoteInfo?.title}",
+                    contentType = "tabs",
                 ) {
                     Spacer(modifier = Modifier.height(height = 24.dp))
                 }
@@ -282,7 +298,7 @@ fun ComicScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.description_icon_navigation_back),
                         )
-                    }
+                    },
                 )
             },
             actions = {
@@ -292,18 +308,18 @@ fun ComicScreen(
                         Icon(
                             tint = MaterialTheme.colorScheme.onSurface,
                             imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(id = R.string.description_icon_home_filter)
+                            contentDescription = stringResource(id = R.string.description_icon_home_filter),
                         )
-                    }
+                    },
                 )
-            }
+            },
         )
 
         if (showSortSheet) {
             Comic.Component.ChapterSortSheet(
                 sortSettings = uiState.chapterSortSettings,
                 onSortChange = { comicViewModel.updateChapterSort(it) },
-                onDismiss = { showSortSheet = false }
+                onDismiss = { showSortSheet = false },
             )
         }
     }

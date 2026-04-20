@@ -2,9 +2,9 @@ package br.acerola.comic.fixtures
 
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
+import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.CoverDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
-import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.local.entity.metadata.ChapterDownloadSource
 import br.acerola.comic.local.entity.metadata.ChapterMetadata
 import br.acerola.comic.local.entity.metadata.ComicMetadata
@@ -19,7 +19,6 @@ import br.acerola.comic.local.entity.metadata.source.MangadexSource
 import br.acerola.comic.local.entity.relation.MetadataRelations
 
 object MetadataFixtures {
-
     fun createMangaRemoteInfo(
         id: Long = 10,
         title: String = "Naruto",
@@ -29,7 +28,7 @@ object MetadataFixtures {
         publication: Int = 1999,
         mangaDirectoryFk: Long? = null,
         syncSource: String? = null,
-        hasComicInfo: Boolean = false
+        hasComicInfo: Boolean = false,
     ) = ComicMetadata(
         id = id,
         title = title,
@@ -39,7 +38,7 @@ object MetadataFixtures {
         publication = publication,
         mangaDirectoryFk = mangaDirectoryFk,
         syncSource = syncSource,
-        hasComicInfo = hasComicInfo
+        hasComicInfo = hasComicInfo,
     )
 
     fun createChapterRemoteInfo(
@@ -48,14 +47,14 @@ object MetadataFixtures {
         chapter: String = "1",
         pageCount: Int = 20,
         scanlation: String? = "ScanGroup",
-        mangaRemoteInfoFk: Long = 10
+        mangaRemoteInfoFk: Long = 10,
     ) = ChapterMetadata(
         id = id,
         title = title,
         chapter = chapter,
         pageCount = pageCount,
         scanlation = scanlation,
-        mangaRemoteInfoFk = mangaRemoteInfoFk
+        mangaRemoteInfoFk = mangaRemoteInfoFk,
     )
 
     fun createChapterDownloadSource(
@@ -63,25 +62,25 @@ object MetadataFixtures {
         pageNumber: Int = 0,
         imageUrl: String = "http://img.com/1.jpg",
         downloaded: Boolean = false,
-        chapterFk: Long = 100
+        chapterFk: Long = 100,
     ) = ChapterDownloadSource(
         id = id,
         pageNumber = pageNumber,
         imageUrl = imageUrl,
         downloaded = downloaded,
-        chapterFk = chapterFk
+        chapterFk = chapterFk,
     )
 
     fun createChapterRemoteInfoDto(
         id: String = "ch-1",
         chapter: String = "1",
         mangadexVersion: Int = 1,
-        title: String? = null
+        title: String? = null,
     ) = ChapterMetadataDto(
         id = id,
         chapter = chapter,
         mangadexVersion = mangadexVersion,
-        title = title
+        title = title,
     )
 
     fun createMangaRemoteInfoDto(
@@ -91,7 +90,7 @@ object MetadataFixtures {
         year: Int? = null,
         authors: AuthorDto? = null,
         genre: List<GenreDto> = emptyList(),
-        cover: CoverDto? = null
+        cover: CoverDto? = null,
     ) = ComicMetadataDto(
         title = title,
         description = description,
@@ -99,7 +98,7 @@ object MetadataFixtures {
         year = year,
         authors = authors,
         genre = genre,
-        cover = cover
+        cover = cover,
     )
 
     fun createRemoteInfoRelations(
@@ -110,7 +109,7 @@ object MetadataFixtures {
         authors: List<Author> = emptyList(),
         covers: List<Cover> = emptyList(),
         banners: List<Banner> = emptyList(),
-        genres: List<Genre> = emptyList()
+        genres: List<Genre> = emptyList(),
     ) = MetadataRelations(
         remoteInfo = remoteInfo,
         mangadexSource = mangadexSource,
@@ -119,26 +118,26 @@ object MetadataFixtures {
         author = authors,
         cover = covers,
         banner = banners,
-        genre = genres
+        genre = genres,
     )
 
     fun createAuthor(
         id: Long = 1,
         name: String = "Kishimoto",
         type: TypeAuthor = TypeAuthor.AUTHOR,
-        mangaId: Long = 10
+        mangaId: Long = 10,
     ) = Author(id = id, name = name, type = type, mangaRemoteInfoFk = mangaId)
 
     fun createGenre(
         id: Long = 1,
         genre: String = "Shonen",
-        mangaId: Long = 10
+        mangaId: Long = 10,
     ) = Genre(id = id, genre = genre, mangaRemoteInfoFk = mangaId)
 
     fun createCover(
         id: Long = 1,
         url: String = "http://cover.jpg",
         fileName: String = "cover.jpg",
-        mangaId: Long = 10
+        mangaId: Long = 10,
     ) = Cover(id = id, url = url, fileName = fileName, mangaRemoteInfoFk = mangaId)
 }

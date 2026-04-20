@@ -39,19 +39,20 @@ fun Reader.Layout.TopBar(
     subtitle: String,
     isVisible: Boolean,
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn(),
-        exit = fadeOut()
+        exit = fadeOut(),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             // Back Button
             Box(modifier = Modifier.size(48.dp)) {
@@ -61,17 +62,18 @@ fun Reader.Layout.TopBar(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.description_icon_navigation_back),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
-                    }
+                    },
                 )
             }
 
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 TitleCapsule(title = title, subtitle = subtitle)
             }
@@ -83,9 +85,9 @@ fun Reader.Layout.TopBar(
                         Icon(
                             imageVector = Icons.Filled.Settings,
                             contentDescription = stringResource(id = R.string.label_config_activity),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
-                    }
+                    },
                 )
             }
         }
@@ -95,39 +97,41 @@ fun Reader.Layout.TopBar(
 @Composable
 fun Reader.Layout.TitleCapsule(
     title: String,
-    subtitle: String
+    subtitle: String,
 ) {
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val shape = RoundedCornerShape(24.dp)
 
     Box(
-        modifier = Modifier
-            .wrapContentWidth(Alignment.CenterHorizontally)
-            .glassContainer(shape)
+        modifier =
+            Modifier
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .glassContainer(shape),
     ) {
         Box(
-            modifier = Modifier
-                .matchParentSize()
-                .glass(shape, glassColor, borderColor)
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .glass(shape, glassColor, borderColor),
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
         }
     }

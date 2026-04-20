@@ -2,12 +2,12 @@ package br.acerola.comic.module.reader
 
 import android.content.Context
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
+import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.service.reader.ReaderProcessor
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
-import br.acerola.comic.service.reader.ReaderProcessor
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,7 +18,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReaderViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -29,7 +28,7 @@ class ReaderViewModelTest {
 
     private lateinit var trackReadingProgressUseCase: TrackReadingProgressUseCase
     private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
-    
+
     private lateinit var viewModel: ReaderViewModel
 
     @Before
@@ -40,16 +39,17 @@ class ReaderViewModelTest {
         trackReadingProgressUseCase = TrackReadingProgressUseCase(historyGateway)
         observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
 
-        viewModel = ReaderViewModel(
-            repository = readerService,
-            context = context,
-            trackReadingProgressUseCase = trackReadingProgressUseCase,
-            observeChaptersUseCase = observeChaptersUseCase
-        )
+        viewModel =
+            ReaderViewModel(
+                repository = readerService,
+                context = context,
+                trackReadingProgressUseCase = trackReadingProgressUseCase,
+                observeChaptersUseCase = observeChaptersUseCase,
+            )
     }
 
     @Test
     fun `deve inicializar com estado inicial`() {
-        assert(!viewModel.state.value.isLoading)
+        assert(!viewModel.uiState.value.isLoading)
     }
 }

@@ -10,7 +10,7 @@ data class ChapterRemoteInfoPageDto(
     val items: List<ChapterFeedDto>,
     val pageSize: Int,
     val page: Int,
-    val total: Int
+    val total: Int,
 ) : Parcelable
 
 @Parcelize
@@ -21,7 +21,7 @@ data class ChapterFeedDto(
     val chapter: String,
     val pageCount: Int?,
     val scanlation: String,
-    val source: List<ChapterSourceDto>
+    val source: List<ChapterSourceDto>,
 ) : Parcelable
 
 @Parcelize

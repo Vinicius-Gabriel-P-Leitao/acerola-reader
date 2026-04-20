@@ -14,24 +14,21 @@ import br.acerola.comic.local.entity.metadata.ComicMetadata
             entity = ComicMetadata::class,
             parentColumns = ["id"],
             childColumns = ["comic_metadata_fk"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index(value = ["file_name", "comic_metadata_fk"], unique = true),
-        Index(value = ["comic_metadata_fk"])
-    ]
+        Index(value = ["comic_metadata_fk"]),
+    ],
 )
 data class Banner(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     @ColumnInfo(name = "file_name")
     val fileName: String,
-
     @ColumnInfo(name = "url")
     val url: String,
-
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long
+    val mangaRemoteInfoFk: Long,
 )

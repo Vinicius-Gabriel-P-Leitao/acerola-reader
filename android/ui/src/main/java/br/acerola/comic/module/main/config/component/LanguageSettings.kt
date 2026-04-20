@@ -21,7 +21,7 @@ import br.acerola.comic.ui.R
 fun Main.Config.Component.LanguageSettings(
     selectedLanguage: String?,
     onLanguageSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val resolvedLanguage = selectedLanguage ?: LanguagePattern.PT_BR.code
     val languageLabel = stringResource(id = LanguageMapper.getLabelRes(resolvedLanguage))
@@ -42,11 +42,11 @@ fun Main.Config.Component.LanguageSettings(
                         Icon(
                             imageVector = Icons.Filled.Add,
                             contentDescription = stringResource(id = R.string.label_select_language),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                }
+                },
             )
-        }
+        },
     )
 }

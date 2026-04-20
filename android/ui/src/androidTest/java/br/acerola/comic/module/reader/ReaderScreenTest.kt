@@ -18,7 +18,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class ReaderScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -26,14 +25,14 @@ class ReaderScreenTest {
 
     @Before
     fun setUp() {
-        every { viewModel.state } returns MutableStateFlow(ReaderUiState(isLoading = true))
+        every { viewModel.uiState } returns MutableStateFlow(ReaderUiState(isLoading = true))
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
     }
 
     @Test
     fun `ReaderScreen_deve_renderizar_sem_erros`() {
         val chapter = ChapterFileDto(1L, "Cap 1", "path", "1")
-        
+
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
@@ -42,7 +41,7 @@ class ReaderScreenTest {
                         initialPage = 0,
                         mangaId = 1L,
                         onBackClick = {},
-                        viewModel = viewModel
+                        viewModel = viewModel,
                     )
                 }
             }

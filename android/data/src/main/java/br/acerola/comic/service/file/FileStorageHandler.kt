@@ -12,29 +12,35 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FileStorageHandler @Inject constructor(
-    @param:ApplicationContext private val context: Context
-) {
-    suspend fun saveFile(
-        folder: DocumentFile,
-        fileName: String,
-        mimeType: String,
-        bytes: ByteArray
-    ): Either<IoError, Unit> = withContext(Dispatchers.IO) {
-        val existingFile = folder.findFile(fileName)
-        val file = existingFile ?: folder.createFile(mimeType, fileName)
+class FileStorageHandler
+    @Inject
+    constructor(
+        @param:ApplicationContext private val context: Context,
+    ) {
+        suspend fun saveFile(
+            folder: DocumentFile,
+            fileName: String,
+            mimeType: String,
+            bytes: ByteArray,
+        ): Either<IoError, Unit> =
+            withContext(Dispatchers.IO) {
+                val existingFile = folder.findFile(fileName)
+                val file =
+                    existingFile ?: folder.createFile(mimeType, fileName)
 
-        ?: return@withContext IoError.FileWriteError(
-            path = fileName,
-            cause = Exception("Could not create file in folder: ${folder.uri}. Ensure it's a writable Tree Document.")
-        ).left()
+                        ?: return@withContext IoError
+                            .FileWriteError(
+                                path = fileName,
+                                cause = Exception("Could not create file in folder: ${folder.uri}. Ensure it's a writable Tree Document."),
+                            ).left()
 
-        Either.catch {
-            context.contentResolver.openOutputStream(file.uri, "wt")?.use { it.write(bytes) }
-            Unit
-        }.mapLeft { cause ->
-            if (existingFile == null) file.delete()
-            IoError.FileWriteError(path = fileName, cause = cause)
-        }
+                Either
+                    .catch {
+                        context.contentResolver.openOutputStream(file.uri, "wt")?.use { it.write(bytes) }
+                        Unit
+                    }.mapLeft { cause ->
+                        if (existingFile == null) file.delete()
+                        IoError.FileWriteError(path = fileName, cause = cause)
+                    }
+            }
     }
-}

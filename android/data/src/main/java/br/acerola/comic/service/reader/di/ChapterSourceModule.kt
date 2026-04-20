@@ -1,8 +1,8 @@
 package br.acerola.comic.service.reader.di
 
+import br.acerola.comic.service.reader.contract.PageSource
 import br.acerola.comic.service.reader.extract.CbrPageResolver
 import br.acerola.comic.service.reader.extract.CbzPageResolver
-import br.acerola.comic.service.reader.contract.PageSource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,16 +20,11 @@ annotation class Cbz
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ChapterSourceModule {
-
     @Cbr
     @Binds
-    abstract fun bindCbrService(
-        impl: CbrPageResolver
-    ): PageSource
+    abstract fun bindCbrService(impl: CbrPageResolver): PageSource
 
     @Cbz
     @Binds
-    abstract fun bindCbzService(
-        impl: CbzPageResolver
-    ): PageSource
+    abstract fun bindCbzService(impl: CbzPageResolver): PageSource
 }

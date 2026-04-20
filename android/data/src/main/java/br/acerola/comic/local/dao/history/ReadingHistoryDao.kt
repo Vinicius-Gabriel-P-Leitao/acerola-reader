@@ -20,12 +20,14 @@ interface ReadingHistoryDao {
     @Query("SELECT * FROM reading_history ORDER BY updated_at DESC")
     fun observeAllRecentHistories(): Flow<List<ReadingHistory>>
 
-    @Query("""
+    @Query(
+        """
         SELECT rh.comic_directory_id as mangaDirectoryId, rh.chapter_archive_id as chapterArchiveId, rh.last_page as lastPage, rh.updated_at as updatedAt, ca.chapter as chapterName, rh.is_completed as isCompleted
         FROM reading_history rh
         LEFT JOIN chapter_archive ca ON rh.chapter_archive_id = ca.id
         ORDER BY rh.updated_at DESC
-    """)
+    """,
+    )
     fun observeAllRecentHistoriesWithChapter(): Flow<List<ReadingHistoryWithChapter>>
 
     @Query("DELETE FROM reading_history WHERE comic_directory_id = :mangaId")

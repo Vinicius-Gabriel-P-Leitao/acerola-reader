@@ -1,5 +1,4 @@
 package br.acerola.comic.module.reader.component
-import br.acerola.comic.ui.R
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -27,7 +26,7 @@ fun Reader.Component.HorizontalPagedReader(
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        key = { it }
+        key = { it },
     ) { index ->
         LaunchedEffect(index) {
             onPageRequest(index)
@@ -46,7 +45,7 @@ fun Reader.Component.HorizontalPagedReader(
                     TapArea.CENTER -> onUiToggle()
                     else -> {}
                 }
-            }
+            },
         )
     }
 }

@@ -15,10 +15,10 @@ class SyncLibraryArchiveTest {
         composeTestRule.setContent {
             Main.Config.Component.SyncLibraryArchive(
                 onDeepScan = {},
-                onQuickSync = {}
+                onQuickSync = {},
             )
         }
-        
+
         // Verifica os itens de sincronização (usando assertExists para evitar falhas de scroll/visibilidade)
         composeTestRule.onNodeWithText("Sincronização rápida", substring = true, ignoreCase = true).assertExists()
         composeTestRule.onNodeWithText("Sincronização profunda", substring = true, ignoreCase = true).assertExists()

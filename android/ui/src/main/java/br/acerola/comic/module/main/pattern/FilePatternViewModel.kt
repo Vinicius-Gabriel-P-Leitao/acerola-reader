@@ -25,59 +25,69 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class FilePatternViewModel @Inject constructor(
-    private val addTemplate: AddTemplateUseCase,
-    private val updateTemplate: UpdateTemplateUseCase,
-    private val removeTemplate: RemoveTemplateUseCase,
-    private val observeTemplates: ObserveTemplatesUseCase,
-) : ViewModel() {
+class FilePatternViewModel
+    @Inject
+    constructor(
+        private val addTemplate: AddTemplateUseCase,
+        private val updateTemplate: UpdateTemplateUseCase,
+        private val removeTemplate: RemoveTemplateUseCase,
+        private val observeTemplates: ObserveTemplatesUseCase,
+    ) : ViewModel() {
+        private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+        val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
-    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+        val uiState: StateFlow<FilePatternUiState> =
+            observeTemplates()
+                .map { FilePatternUiState(templates = it) }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = FilePatternUiState(),
+                )
 
-    val uiState: StateFlow<FilePatternUiState> = observeTemplates()
-        .map { FilePatternUiState(templates = it) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = FilePatternUiState()
-        )
-
-    fun onAction(action: FilePatternAction) {
-        when (action) {
-            is FilePatternAction.AddTemplate -> addTemplate(action.label, action.pattern)
-            is FilePatternAction.EditTemplate -> editTemplate(action.id, action.label, action.pattern)
-            is FilePatternAction.DeleteTemplate -> deleteTemplate(action.id)
-        }
-    }
-
-    private fun addTemplate(label: String, pattern: String) {
-        viewModelScope.launch {
-            when (val result = addTemplate.invoke(label, pattern)) {
-                is Either.Left -> _uiEvents.send(UserMessage.Raw(result.value.toUiText()))
-                is Either.Right -> Unit
+        fun onAction(action: FilePatternAction) {
+            when (action) {
+                is FilePatternAction.AddTemplate -> addTemplate(action.label, action.pattern)
+                is FilePatternAction.EditTemplate -> editTemplate(action.id, action.label, action.pattern)
+                is FilePatternAction.DeleteTemplate -> deleteTemplate(action.id)
             }
         }
-    }
 
-    private fun editTemplate(id: Long, label: String, pattern: String) {
-        viewModelScope.launch {
-            when (val result = updateTemplate.invoke(id, label, pattern)) {
-                is Either.Left -> _uiEvents.send(UserMessage.Raw(result.value.toUiText()))
-                is Either.Right -> Unit
+        private fun addTemplate(
+            label: String,
+            pattern: String,
+        ) {
+            viewModelScope.launch {
+                when (val result = addTemplate.invoke(label, pattern)) {
+                    is Either.Left -> _uiEvents.send(UserMessage.Raw(result.value.toUiText()))
+                    is Either.Right -> Unit
+                }
             }
         }
-    }
 
-    private fun deleteTemplate(id: Long) {
-        viewModelScope.launch {
-            removeTemplate.invoke(id)
+        private fun editTemplate(
+            id: Long,
+            label: String,
+            pattern: String,
+        ) {
+            viewModelScope.launch {
+                when (val result = updateTemplate.invoke(id, label, pattern)) {
+                    is Either.Left -> _uiEvents.send(UserMessage.Raw(result.value.toUiText()))
+                    is Either.Right -> Unit
+                }
+            }
         }
-    }
 
-    private fun TemplateError.toUiText(): UiText = when (this) {
-        is TemplateError.InvalidPattern -> uiMessage
-        TemplateError.Duplicate -> UiText.StringResource(R.string.error_template_duplicate)
-        TemplateError.SystemProtected -> UiText.StringResource(R.string.error_template_system_protected)
+        private fun deleteTemplate(id: Long) {
+            viewModelScope.launch {
+                removeTemplate.invoke(id)
+            }
+        }
+
+        private fun TemplateError.toUiText(): UiText =
+            when (this) {
+                is TemplateError.InvalidPattern -> uiMessage
+                TemplateError.Duplicate -> UiText.StringResource(R.string.error_template_duplicate)
+                TemplateError.SystemProtected -> UiText.StringResource(R.string.error_template_system_protected)
+            }
     }
-}

@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,23 +19,24 @@ fun Acerola.Component.RadioGroup(
     selectedIndex: Int,
     options: List<String>,
     onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         options.forEachIndexed { index, label ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .clickable { onSelect(index) }
+                modifier =
+                    Modifier
+                        .padding(end = 12.dp)
+                        .clickable { onSelect(index) },
             ) {
                 RadioButton(
                     selected = (selectedIndex == index),
                     onClick = { onSelect(index) },
-                    modifier = Modifier.testTag("radio_button_$label")
+                    modifier = Modifier.testTag("radio_button_$label"),
                 )
                 Spacer(modifier = Modifier.width(width = 8.dp))
                 Text(text = label)

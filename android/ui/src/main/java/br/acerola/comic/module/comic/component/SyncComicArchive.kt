@@ -22,7 +22,7 @@ fun Comic.Component.SyncMangaArchive(
     onSyncChapters: () -> Unit,
     onRescanCover: () -> Unit,
     onExtractFirstPageAsCover: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Acerola.Component.HeroItem(
@@ -31,7 +31,7 @@ fun Comic.Component.SyncMangaArchive(
             icon = Icons.Default.Refresh,
             iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
             iconBackground = MaterialTheme.colorScheme.secondaryContainer,
-            onClick = onSyncChapters
+            onClick = onSyncChapters,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Acerola.Component.HeroItem(
@@ -40,7 +40,7 @@ fun Comic.Component.SyncMangaArchive(
             icon = Icons.Default.ImageSearch,
             iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
             iconBackground = MaterialTheme.colorScheme.secondaryContainer,
-            onClick = onRescanCover
+            onClick = onRescanCover,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Acerola.Component.HeroItem(
@@ -49,7 +49,7 @@ fun Comic.Component.SyncMangaArchive(
             icon = Icons.Default.ImageSearch,
             iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
             iconBackground = MaterialTheme.colorScheme.secondaryContainer,
-            onClick = onExtractFirstPageAsCover
+            onClick = onExtractFirstPageAsCover,
         )
     }
 }

@@ -1,6 +1,4 @@
 package br.acerola.comic.module.main.config.state
-import br.acerola.comic.ui.R
-
 import android.net.Uri
 import br.acerola.comic.config.preference.AppTheme
 

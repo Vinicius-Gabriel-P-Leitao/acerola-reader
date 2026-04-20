@@ -15,11 +15,8 @@ annotation class LocalHistory
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class HistoryModule {
-
     @Binds
     @Singleton
     @LocalHistory
-    abstract fun bindHistoryRepository(
-        impl: LocalHistoryEngine
-    ): HistoryGateway
+    abstract fun bindHistoryRepository(impl: LocalHistoryEngine): HistoryGateway
 }

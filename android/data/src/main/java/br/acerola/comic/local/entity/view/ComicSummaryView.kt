@@ -17,30 +17,23 @@ import androidx.room.DatabaseView
             mm.id AS metadata_id
         FROM comic_directory md
         LEFT JOIN comic_metadata mm ON md.id = mm.comic_directory_fk
-    """
+    """,
 )
 data class ComicSummaryView(
     @ColumnInfo(name = "directory_id")
     val directoryId: Long,
-
     @ColumnInfo(name = "folder_name")
     val folderName: String,
-
     @ColumnInfo(name = "folder_cover")
     val folderCover: String?,
-
     @ColumnInfo(name = "folder_banner")
     val folderBanner: String?,
-
     @ColumnInfo(name = "external_sync")
     val externalSync: Boolean,
-
     @ColumnInfo(name = "metadata_title")
     val metadataTitle: String?,
-
     @ColumnInfo(name = "active_source")
     val activeSource: String?,
-
     @ColumnInfo(name = "metadata_id")
-    val metadataId: Long?
+    val metadataId: Long?,
 )

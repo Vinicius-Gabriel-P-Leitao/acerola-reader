@@ -13,4 +13,4 @@ data class ComicDto(
     val category: CategoryDto? = null,
     val directory: ComicDirectoryDto,
     val remoteInfo: ComicMetadataDto?,
-): Parcelable
+) : Parcelable

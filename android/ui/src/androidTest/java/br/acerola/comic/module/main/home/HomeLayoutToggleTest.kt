@@ -2,14 +2,21 @@ package br.acerola.comic.module.main.home
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.config.preference.ComicSortType
 import br.acerola.comic.config.preference.HomeLayoutType
+import br.acerola.comic.config.preference.HomeSortPreference
+import br.acerola.comic.config.preference.SortDirection
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.home.state.FilterSettings
+import br.acerola.comic.ui.R
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,15 +25,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import br.acerola.comic.ui.R
-
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.ComicSortType
-import br.acerola.comic.config.preference.SortDirection
-import br.acerola.comic.module.main.home.state.FilterSettings
 
 class HomeLayoutToggleTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -41,7 +41,7 @@ class HomeLayoutToggleTest {
         every { viewModel.mangas } returns MutableStateFlow(emptyList())
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
         every { viewModel.allCategories } returns MutableStateFlow(emptyList())
-        
+
         every { viewModel.sortSettings } returns MutableStateFlow(HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING))
         every { viewModel.filterSettings } returns MutableStateFlow(FilterSettings())
     }
@@ -51,7 +51,7 @@ class HomeLayoutToggleTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
-                     Main.Home.Layout.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
+                    Main.Home.Layout.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
                 }
             }
         }
@@ -62,10 +62,11 @@ class HomeLayoutToggleTest {
 
         // Aguarda animação de expansão do FloatingTool
         composeTestRule.waitForIdle()
-        
+
         // Verifica se o botão de mudar layout está visível no HUB
         val layoutToggleDescription = context.getString(R.string.description_icon_home_change_layout)
-        composeTestRule.onNodeWithContentDescription(layoutToggleDescription, substring = true, useUnmergedTree = true)
+        composeTestRule
+            .onNodeWithContentDescription(layoutToggleDescription, substring = true, useUnmergedTree = true)
             .assertIsDisplayed()
             .performClick()
     }

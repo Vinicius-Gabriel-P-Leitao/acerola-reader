@@ -5,7 +5,6 @@ import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.local.entity.archive.ComicDirectory
 
 object MangaDirectoryFixtures {
-
     fun createMangaDirectory(
         id: Long = 0L,
         name: String = "Manga Test",

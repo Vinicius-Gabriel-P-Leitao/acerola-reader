@@ -70,21 +70,25 @@ fun Main.Common.Component.ComicActionsSheet(
         onDismissRequest = onDismiss,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(data = coverUri)
-                    .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
-                    .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
-                    .build(),
+                model =
+                    ImageRequest
+                        .Builder(context)
+                        .data(data = coverUri)
+                        .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
+                        .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+                        .build(),
                 contentDescription = null,
-                modifier = Modifier
-                    .width(56.dp)
-                    .height(84.dp),
+                modifier =
+                    Modifier
+                        .width(56.dp)
+                        .height(84.dp),
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -118,7 +122,7 @@ fun Main.Common.Component.ComicActionsSheet(
             headlineContent = { Text(text = stringResource(id = R.string.action_bookmark)) },
             supportingContent = {
                 Text(
-                    text = currentCategoryName ?: stringResource(id = R.string.label_no_bookmark)
+                    text = currentCategoryName ?: stringResource(id = R.string.label_no_bookmark),
                 )
             },
             modifier = Modifier.clickable { showCategorySheet = true },
@@ -190,14 +194,14 @@ fun Main.Common.Component.ComicActionsSheet(
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             dismissButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_cancel),
                     onClick = { showHideDialog = false },
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
             content = { Text(text = stringResource(id = R.string.dialog_hide_message)) },
@@ -219,14 +223,14 @@ fun Main.Common.Component.ComicActionsSheet(
                     },
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             dismissButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_cancel),
                     onClick = { showDeleteDialog = false },
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
             content = { Text(text = stringResource(id = R.string.dialog_delete_message)) },
@@ -277,11 +281,12 @@ private fun ComicCategorySheet(
                     headlineContent = { Text(text = category.name) },
                     trailingContent = {
                         Spacer(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .drawBehind {
-                                    drawCircle(color = Color(category.color))
-                                }
+                            modifier =
+                                Modifier
+                                    .size(20.dp)
+                                    .drawBehind {
+                                        drawCircle(color = Color(category.color))
+                                    },
                         )
                     },
                     modifier = Modifier.clickable { onSelect(category.id) },

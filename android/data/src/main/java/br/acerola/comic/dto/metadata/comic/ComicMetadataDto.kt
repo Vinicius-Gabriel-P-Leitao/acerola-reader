@@ -21,7 +21,7 @@ data class ComicMetadataDto(
     val genre: List<GenreDto> = emptyList(),
     val mangaDirectoryFk: Long? = null,
     val syncSource: MetadataSourcePattern? = null,
-    val sources: ComicSourcesDto? = null
+    val sources: ComicSourcesDto? = null,
 ) : Parcelable
 
 @Parcelize
@@ -44,7 +44,7 @@ data class CoverDto(
 @Immutable
 data class GenreDto(
     val id: String,
-    val name: String
+    val name: String,
 ) : Parcelable
 
 @Parcelize
@@ -52,5 +52,5 @@ data class GenreDto(
 data class AuthorDto(
     val id: String,
     val name: String,
-    val type: String
+    val type: String,
 ) : Parcelable

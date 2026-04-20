@@ -11,7 +11,7 @@ import br.acerola.comic.ui.R
 @Composable
 fun Main.Home.Component.WelcomeTutorialDialog(
     onDismiss: () -> Unit,
-    onNavigateToConfig: () -> Unit
+    onNavigateToConfig: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -29,6 +29,6 @@ fun Main.Home.Component.WelcomeTutorialDialog(
             Button(onClick = onDismiss) {
                 Text(text = stringResource(id = R.string.action_cancel))
             }
-        }
+        },
     )
 }

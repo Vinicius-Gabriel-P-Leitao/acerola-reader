@@ -31,54 +31,63 @@ fun Comic.Component.ComicCategorySelector(
     selectedCategory: CategoryDto?,
     allCategories: List<CategoryDto>,
     onUpdateMangaCategory: (Long?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.title_manga_category),
         description = selectedCategory?.name ?: stringResource(id = R.string.label_category_none_selected),
         icon = if (selectedCategory != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
-        iconTint = if (selectedCategory != null) {
-            Color(selectedCategory.color)
-        } else {
-            MaterialTheme.colorScheme.onPrimaryContainer
-        },
+        iconTint =
+            if (selectedCategory != null) {
+                Color(selectedCategory.color)
+            } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            },
         iconBackground = MaterialTheme.colorScheme.primaryContainer,
         modifier = modifier,
-        bottomContent = if (allCategories.isNotEmpty()) {
-            {
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    allCategories.forEach { category ->
-                        val isSelected = selectedCategory?.id == category.id
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                if (isSelected) onUpdateMangaCategory(null)
-                                else onUpdateMangaCategory(category.id)
-                            },
-                            label = { Text(text = category.name) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Rounded.Bookmark,
-                                    contentDescription = null,
-                                    tint = Color(category.color),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                selectedLeadingIconColor = Color(category.color)
+        bottomContent =
+            if (allCategories.isNotEmpty()) {
+                {
+                    FlowRow(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        allCategories.forEach { category ->
+                            val isSelected = selectedCategory?.id == category.id
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    if (isSelected) {
+                                        onUpdateMangaCategory(null)
+                                    } else {
+                                        onUpdateMangaCategory(category.id)
+                                    }
+                                },
+                                label = { Text(text = category.name) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Bookmark,
+                                        contentDescription = null,
+                                        tint = Color(category.color),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                },
+                                colors =
+                                    FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        selectedLeadingIconColor = Color(category.color),
+                                    ),
                             )
-                        )
+                        }
                     }
                 }
-            }
-        } else null
+            } else {
+                null
+            },
     )
 }

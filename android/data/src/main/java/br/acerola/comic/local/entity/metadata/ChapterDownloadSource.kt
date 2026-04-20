@@ -13,27 +13,23 @@ import androidx.room.PrimaryKey
             entity = ChapterMetadata::class,
             parentColumns = ["id"],
             childColumns = ["chapter_fk"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index("chapter_fk"),
-        Index(value = ["chapter_fk", "page_number"], unique = true)
-    ]
+        Index(value = ["chapter_fk", "page_number"], unique = true),
+    ],
 )
 data class ChapterDownloadSource(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     @ColumnInfo(name = "page_number")
     val pageNumber: Int,
-
     @ColumnInfo(name = "image_url")
     val imageUrl: String,
-
     @ColumnInfo(name = "downloaded")
     val downloaded: Boolean = false,
-
     @ColumnInfo(name = "chapter_fk")
     val chapterFk: Long,
 )

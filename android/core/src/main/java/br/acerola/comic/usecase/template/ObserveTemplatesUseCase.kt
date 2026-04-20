@@ -5,8 +5,10 @@ import br.acerola.comic.service.template.ChapterNameProcessor
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class ObserveTemplatesUseCase @Inject constructor(
-    private val service: ChapterNameProcessor
-) {
-    operator fun invoke(): Flow<List<ChapterTemplateDto>> = service.observeTemplatesAsDto()
-}
+class ObserveTemplatesUseCase
+    @Inject
+    constructor(
+        private val service: ChapterNameProcessor,
+    ) {
+        operator fun invoke(): Flow<List<ChapterTemplateDto>> = service.observeTemplatesAsDto()
+    }

@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MediaFilePatternTest {
-
     @Test
     fun `isCover deve identificar corretamente arquivos de capa`() {
         assertTrue(MediaFilePattern.isCover("cover.jpg"))

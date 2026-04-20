@@ -10,12 +10,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ComicSummaryEngine @Inject constructor(
-    private val summaryDao: ComicSummaryDao
-) : ComicReadOnlyGateway<ComicSummaryDto> {
-
-    override fun observeLibrary(): Flow<List<ComicSummaryDto>> {
-        return summaryDao.observeAllComicSummaries()
-            .map { list -> list.map { it.toViewDto() } }
+class ComicSummaryEngine
+    @Inject
+    constructor(
+        private val summaryDao: ComicSummaryDao,
+    ) : ComicReadOnlyGateway<ComicSummaryDto> {
+        override fun observeLibrary(): Flow<List<ComicSummaryDto>> =
+            summaryDao
+                .observeAllComicSummaries()
+                .map { list -> list.map { it.toViewDto() } }
     }
-}

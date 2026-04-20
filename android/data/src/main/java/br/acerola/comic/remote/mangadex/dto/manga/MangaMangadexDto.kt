@@ -11,11 +11,12 @@ data class MangaMangadexDto(
     val id: String,
     val type: String,
     val attributes: MangaAttributes,
-    val relationships: List<Relationship> = emptyList()
+    val relationships: List<Relationship> = emptyList(),
 ) {
     val bestAuthorMatch: Relationship?
-        get() = relationships.find { it.type == TypeAuthor.AUTHOR.type }
-            ?: relationships.find { it.type == TypeAuthor.ARTIST.type }
+        get() =
+            relationships.find { it.type == TypeAuthor.AUTHOR.type }
+                ?: relationships.find { it.type == TypeAuthor.ARTIST.type }
 
     val authorName: String?
         get() = bestAuthorMatch?.attributes?.name
@@ -32,11 +33,12 @@ data class MangaMangadexDto(
     val coverId: String?
         get() = relationships.find { it.type == "cover_art" }?.id
 
-    fun getCoverUrl(): String? {
-        return if (coverFileName != null) {
+    fun getCoverUrl(): String? =
+        if (coverFileName != null) {
             "${BuildConfig.MANGADEX_UPLOAD_URL}/covers/$id/$coverFileName"
-        } else null
-    }
+        } else {
+            null
+        }
 }
 
 @JsonClass(generateAdapter = true)
@@ -49,7 +51,7 @@ data class MangaAttributes(
     val status: String,
     val year: Int? = null,
     val tags: List<Tag> = emptyList(),
-    val latestUploadedChapter: String? = null
+    val latestUploadedChapter: String? = null,
 ) {
     fun getTitle(preferredLanguage: String): String? {
         val pattern = LanguagePattern.from(preferredLanguage)?.code
@@ -72,21 +74,21 @@ data class Links(
     val raw: String? = null,
     val amz: String? = null,
     val ebj: String? = null,
-    val engtl: String? = null
+    val engtl: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class Tag(
     val id: String,
     val type: String,
-    val attributes: TagAttributes
+    val attributes: TagAttributes,
 )
- 
+
 @JsonClass(generateAdapter = true)
 data class TagAttributes(
     @param:Json(name = "name") val nameMap: Map<String, String>,
     val group: String,
-    val version: Int
+    val version: Int,
 ) {
     fun getName(preferredLanguage: String): String? {
         val pattern = LanguagePattern.from(preferredLanguage)?.code
@@ -94,13 +96,12 @@ data class TagAttributes(
     }
 }
 
-
 @JsonClass(generateAdapter = true)
 data class Relationship(
     val id: String,
     val type: String,
     val related: String? = null,
-    val attributes: RelationshipAttributes? = null
+    val attributes: RelationshipAttributes? = null,
 )
 
 @JsonClass(generateAdapter = true)

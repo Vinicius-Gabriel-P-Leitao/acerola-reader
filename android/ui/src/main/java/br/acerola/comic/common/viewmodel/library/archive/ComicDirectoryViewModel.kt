@@ -42,156 +42,176 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class ComicDirectoryViewModel @Inject constructor(
-    private val workManager: WorkManager,
-    private val manager: FileSystemAccessManager,
-    manageCategoriesUseCase: ManageCategoriesUseCase,
-    private val coverFromChapterUseCase: CoverFromChapterUseCase,
-    private val updateComicSettingsUseCase: UpdateComicSettingsUseCase,
-    @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>,
-    @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
-) : ViewModel() {
+class ComicDirectoryViewModel
+    @Inject
+    constructor(
+        private val workManager: WorkManager,
+        private val manager: FileSystemAccessManager,
+        manageCategoriesUseCase: ManageCategoriesUseCase,
+        private val coverFromChapterUseCase: CoverFromChapterUseCase,
+        private val updateComicSettingsUseCase: UpdateComicSettingsUseCase,
+        @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+    ) : ViewModel() {
+        private val _progress = MutableStateFlow<Int>(value = -1)
+        val progress: StateFlow<Int> = _progress.asStateFlow()
 
-    private val _progress = MutableStateFlow<Int>(value = -1)
-    val progress: StateFlow<Int> = _progress.asStateFlow()
+        private val _isIndexing = MutableStateFlow(value = false)
+        val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    private val _isIndexing = MutableStateFlow(value = false)
-    val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+        private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+        val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
-    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+        private val selectedDirectoryId = MutableStateFlow<Long?>(value = null)
 
-    private val _selectedDirectoryId = MutableStateFlow<Long?>(value = null)
-
-    val mangaDirectories: StateFlow<List<ComicDirectoryDto>> = observeLibraryUseCase().stateIn(
-        viewModelScope,
-        initialValue = emptyList(),
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-    )
-
-    val allCategories: StateFlow<List<CategoryDto>> = manageCategoriesUseCase.getAllCategories()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), emptyList())
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val chapters: StateFlow<List<ChapterFileDto>> = _selectedDirectoryId.flatMapLatest { id ->
-        id?.let {
-            observeChaptersUseCase.observeByManga(mangaId = it).map { page -> page.items }
-        } ?: flowOf(value = emptyList())
-    }.stateIn(
-        viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-        initialValue = emptyList()
-    )
-
-    init {
-        syncLibrary()
-    }
-
-    fun syncLibrary() {
-        enqueueSync(LibrarySyncWorker.SYNC_TYPE_INCREMENTAL)
-    }
-
-    fun rescanMangas() {
-        enqueueSync(LibrarySyncWorker.SYNC_TYPE_REFRESH)
-    }
-
-    fun rescanMangaByManga(mangaId: Long) {
-        AcerolaLogger.audit(TAG, "Requesting rescan for comic: $mangaId", LogSource.VIEWMODEL)
-        enqueueSync(LibrarySyncWorker.SYNC_TYPE_SPECIFIC, mangaId)
-    }
-
-    fun deepScanLibrary() {
-        AcerolaLogger.audit(TAG, "User requested deep library scan", LogSource.VIEWMODEL)
-        enqueueSync(LibrarySyncWorker.SYNC_TYPE_REBUILD)
-    }
-
-    fun updateExternalSyncEnabled(mangaId: Long, enabled: Boolean) {
-        viewModelScope.launch {
-            updateComicSettingsUseCase(mangaId, enabled)
-        }
-    }
-
-    fun extractCoverFromChapter(mangaId: Long) {
-        viewModelScope.launch {
-            _isIndexing.value = true
-            coverFromChapterUseCase(mangaId).fold(
-                ifLeft = { error ->
-                    _uiEvents.send(error)
-                },
-                ifRight = {
-                    rescanMangaByManga(mangaId)
-                }
+        val mangaDirectories: StateFlow<List<ComicDirectoryDto>> =
+            observeLibraryUseCase().stateIn(
+                viewModelScope,
+                initialValue = emptyList(),
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             )
-            _isIndexing.value = false
-        }
-    }
 
-    private fun enqueueSync(
-        type: String,
-        mangaId: Long? = null
-    ) {
-        AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
-        viewModelScope.launch {
-            val uri = getFolderUri() ?: if (type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
-                AcerolaLogger.w(TAG, "Sync aborted: base folder URI not found", LogSource.VIEWMODEL)
-                return@launch
-            } else null
+        val allCategories: StateFlow<List<CategoryDto>> =
+            manageCategoriesUseCase
+                .getAllCategories()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), emptyList())
 
-            val syncRequest = OneTimeWorkRequestBuilder<LibrarySyncWorker>()
-                .setInputData(
-                    workDataOf(
-                        LibrarySyncWorker.KEY_SYNC_TYPE to type,
-                        LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
-                        LibrarySyncWorker.KEY_MANGA_ID to (mangaId ?: -1L)
-                    )
+        @OptIn(ExperimentalCoroutinesApi::class)
+        val chapters: StateFlow<List<ChapterFileDto>> =
+            selectedDirectoryId
+                .flatMapLatest { id ->
+                    id?.let {
+                        observeChaptersUseCase.observeByManga(mangaId = it).map { page -> page.items }
+                    } ?: flowOf(value = emptyList())
+                }.stateIn(
+                    viewModelScope,
+                    started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+                    initialValue = emptyList(),
                 )
-                .addTag(WorkerContract.TAG_LIBRARY_SYNC)
-                .build()
 
-            val workName = if (mangaId != null) "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId" else "${WorkerContract.TAG_LIBRARY_SYNC}_unique"
-
-            workManager.enqueueUniqueWork(
-                workName,
-                ExistingWorkPolicy.KEEP,
-                syncRequest
-            )
-
-            observeWorkProgress(syncRequest.id)
+        init {
+            syncLibrary()
         }
-    }
 
-    private fun observeWorkProgress(workerId: UUID) {
-        viewModelScope.launch {
-            workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
-                if (workInfo != null) {
-                    val wasIndexing = _isIndexing.value
-                    _isIndexing.value = !workInfo.state.isFinished
-                    _progress.value = workInfo.progress.getInt(WorkerContract.KEY_PROGRESS, -1)
+        fun syncLibrary() {
+            enqueueSync(LibrarySyncWorker.SYNC_TYPE_INCREMENTAL)
+        }
 
-                    if (wasIndexing && workInfo.state.isFinished) {
-                        AcerolaLogger.i(
-                            TAG, "Sync work finished: ${workInfo.state.name}", LogSource.VIEWMODEL
-                        )
+        fun rescanMangas() {
+            enqueueSync(LibrarySyncWorker.SYNC_TYPE_REFRESH)
+        }
 
-                        if (workInfo.state == WorkInfo.State.FAILED) {
-                            val errorMessage = workInfo.outputData.getString(WorkerContract.KEY_ERROR)
-                            if (errorMessage != null) {
-                                _uiEvents.send(UserMessage.Raw(errorMessage))
+        fun rescanMangaByManga(mangaId: Long) {
+            AcerolaLogger.audit(TAG, "Requesting rescan for comic: $mangaId", LogSource.VIEWMODEL)
+            enqueueSync(LibrarySyncWorker.SYNC_TYPE_SPECIFIC, mangaId)
+        }
+
+        fun deepScanLibrary() {
+            AcerolaLogger.audit(TAG, "User requested deep library scan", LogSource.VIEWMODEL)
+            enqueueSync(LibrarySyncWorker.SYNC_TYPE_REBUILD)
+        }
+
+        fun updateExternalSyncEnabled(
+            mangaId: Long,
+            enabled: Boolean,
+        ) {
+            viewModelScope.launch {
+                updateComicSettingsUseCase(mangaId, enabled)
+            }
+        }
+
+        fun extractCoverFromChapter(mangaId: Long) {
+            viewModelScope.launch {
+                _isIndexing.value = true
+                coverFromChapterUseCase(mangaId).fold(
+                    ifLeft = { error ->
+                        _uiEvents.send(error)
+                    },
+                    ifRight = {
+                        rescanMangaByManga(mangaId)
+                    },
+                )
+                _isIndexing.value = false
+            }
+        }
+
+        private fun enqueueSync(
+            type: String,
+            mangaId: Long? = null,
+        ) {
+            AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
+            viewModelScope.launch {
+                val uri =
+                    getFolderUri() ?: if (type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
+                        AcerolaLogger.w(TAG, "Sync aborted: base folder URI not found", LogSource.VIEWMODEL)
+                        return@launch
+                    } else {
+                        null
+                    }
+
+                val syncRequest =
+                    OneTimeWorkRequestBuilder<LibrarySyncWorker>()
+                        .setInputData(
+                            workDataOf(
+                                LibrarySyncWorker.KEY_SYNC_TYPE to type,
+                                LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
+                                LibrarySyncWorker.KEY_MANGA_ID to (mangaId ?: -1L),
+                            ),
+                        ).addTag(WorkerContract.TAG_LIBRARY_SYNC)
+                        .build()
+
+                val workName =
+                    if (mangaId !=
+                        null
+                    ) {
+                        "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId"
+                    } else {
+                        "${WorkerContract.TAG_LIBRARY_SYNC}_unique"
+                    }
+
+                workManager.enqueueUniqueWork(
+                    workName,
+                    ExistingWorkPolicy.KEEP,
+                    syncRequest,
+                )
+
+                observeWorkProgress(syncRequest.id)
+            }
+        }
+
+        private fun observeWorkProgress(workerId: UUID) {
+            viewModelScope.launch {
+                workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                    if (workInfo != null) {
+                        val wasIndexing = _isIndexing.value
+                        _isIndexing.value = !workInfo.state.isFinished
+                        _progress.value = workInfo.progress.getInt(WorkerContract.KEY_PROGRESS, -1)
+
+                        if (wasIndexing && workInfo.state.isFinished) {
+                            AcerolaLogger.i(
+                                TAG,
+                                "Sync work finished: ${workInfo.state.name}",
+                                LogSource.VIEWMODEL,
+                            )
+
+                            if (workInfo.state == WorkInfo.State.FAILED) {
+                                val errorMessage = workInfo.outputData.getString(WorkerContract.KEY_ERROR)
+                                if (errorMessage != null) {
+                                    _uiEvents.send(UserMessage.Raw(errorMessage))
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
 
-    private suspend fun getFolderUri(): Uri? {
-        manager.loadFolderUri()
-        return manager.folderUri
-    }
+        private suspend fun getFolderUri(): Uri? {
+            manager.loadFolderUri()
+            return manager.folderUri
+        }
 
-    companion object {
-
-        private const val TAG = "MangaDirectoryViewModel"
+        companion object {
+            private const val TAG = "MangaDirectoryViewModel"
+        }
     }
-}

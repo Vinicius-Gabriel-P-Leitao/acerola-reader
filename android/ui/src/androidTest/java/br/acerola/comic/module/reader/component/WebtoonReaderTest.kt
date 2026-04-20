@@ -7,7 +7,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class WebtoonReaderTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -16,14 +15,14 @@ class WebtoonReaderTest {
         var requestedIndices = mutableSetOf<Int>()
         composeTestRule.setContent {
             val listState = rememberLazyListState()
-             Reader.Component.WebtoonReader(
+            Reader.Component.WebtoonReader(
                 pageCount = 10,
                 mangaId = 1L,
                 chapterId = 1L,
                 listState = listState,
                 onUiToggle = {},
                 onPageRequest = { requestedIndices.add(it) },
-                onZoomChange = {}
+                onZoomChange = {},
             )
         }
 

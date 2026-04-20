@@ -1,7 +1,8 @@
 package br.acerola.comic.common.ux.layout
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.navigation.compose.rememberNavController
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.theme.AcerolaTheme
@@ -9,7 +10,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class NavigationBarsTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 

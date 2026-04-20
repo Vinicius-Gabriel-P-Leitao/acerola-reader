@@ -116,23 +116,27 @@ fun <T> Acerola.Component.SearchBar(
         expanded = expanded,
         onExpandedChange = onExpandedChange,
         shape = animatedShape,
-        colors = SearchBarDefaults.colors(
-            containerColor = if (expanded)
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            else Color.Transparent,
-        ),
+        colors =
+            SearchBarDefaults.colors(
+                containerColor =
+                    if (expanded) {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    } else {
+                        Color.Transparent
+                    },
+            ),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
         AnimatedVisibility(
             visible = expanded,
             enter = fadeIn(tween(150)) + expandVertically(),
-            exit = fadeOut(tween(220)) + shrinkVertically()
+            exit = fadeOut(tween(220)) + shrinkVertically(),
         ) {
             Surface(
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Column {
                     if (isLoading) {
@@ -150,9 +154,10 @@ fun <T> Acerola.Component.SearchBar(
                     if (items.isEmpty() && !isLoading && query.isNotEmpty()) {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
                         ) {
                             Text(
                                 text = stringResource(R.string.common_no_results),
@@ -165,7 +170,7 @@ fun <T> Acerola.Component.SearchBar(
                         LazyColumn(contentPadding = contentPadding) {
                             items(
                                 items = items,
-                                key = { item -> itemKey(item) }
+                                key = { item -> itemKey(item) },
                             ) { item ->
                                 itemContent(item)
                             }
@@ -179,26 +184,27 @@ fun <T> Acerola.Component.SearchBar(
 
 @Composable
 private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
-    val transition = updateTransition(
-        targetState = expanded,
-        label = stringResource(R.string.common_search_transition)
-    )
+    val transition =
+        updateTransition(
+            targetState = expanded,
+            label = stringResource(R.string.common_search_transition),
+        )
 
     val bottomCornerRadius by transition.animateDp(
         transitionSpec = {
             if (targetState) {
                 tween(
                     durationMillis = 200,
-                    easing = FastOutSlowInEasing
+                    easing = FastOutSlowInEasing,
                 )
             } else {
                 tween(
                     durationMillis = 300,
-                    easing = LinearOutSlowInEasing
+                    easing = LinearOutSlowInEasing,
                 )
             }
         },
-        label = stringResource(R.string.common_search_corner_radius)
+        label = stringResource(R.string.common_search_corner_radius),
     ) { isExpanded ->
         // 🔥 Aqui está a correção real
         if (isExpanded) 12.dp else 28.dp
@@ -209,7 +215,7 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
             topStart = 28.dp,
             topEnd = 28.dp,
             bottomStart = bottomCornerRadius,
-            bottomEnd = bottomCornerRadius
+            bottomEnd = bottomCornerRadius,
         )
     }
 }

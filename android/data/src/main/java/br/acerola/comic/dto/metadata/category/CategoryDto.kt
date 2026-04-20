@@ -9,5 +9,5 @@ import kotlinx.parcelize.Parcelize
 data class CategoryDto(
     val id: Long = 0,
     val name: String,
-    val color: Int
+    val color: Int,
 ) : Parcelable

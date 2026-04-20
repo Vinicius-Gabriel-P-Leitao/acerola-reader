@@ -21,7 +21,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ThemeViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -43,15 +42,17 @@ class ThemeViewModelTest {
     }
 
     @Test
-    fun `deve emitir tema atual ao inicializar`() = runTest {
-        viewModel.currentTheme.test {
-            assertThat(awaitItem()).isEqualTo(AppTheme.CATPPUCCIN)
+    fun `deve emitir tema atual ao inicializar`() =
+        runTest {
+            viewModel.currentTheme.test {
+                assertThat(awaitItem()).isEqualTo(AppTheme.CATPPUCCIN)
+            }
         }
-    }
 
     @Test
-    fun `deve chamar saveTheme ao alterar configuracao`() = runTest {
-        viewModel.setTheme(AppTheme.NORD)
-        io.mockk.coVerify { ThemePreference.saveTheme(any(), AppTheme.NORD) }
-    }
+    fun `deve chamar saveTheme ao alterar configuracao`() =
+        runTest {
+            viewModel.setTheme(AppTheme.NORD)
+            io.mockk.coVerify { ThemePreference.saveTheme(any(), AppTheme.NORD) }
+        }
 }

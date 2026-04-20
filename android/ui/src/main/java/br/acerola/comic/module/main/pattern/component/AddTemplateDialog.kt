@@ -47,20 +47,25 @@ fun Main.Pattern.Component.AddTemplateDialog(
     Acerola.Component.AdaptiveSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
             Text(
-                text = stringResource(
-                    id = if (isEditMode) R.string.title_dialog_edit_template
-                         else R.string.title_dialog_new_template
-                ),
+                text =
+                    stringResource(
+                        id =
+                            if (isEditMode) {
+                                R.string.title_dialog_edit_template
+                            } else {
+                                R.string.title_dialog_new_template
+                            },
+                    ),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
             )
 
             OutlinedTextField(
                 value = label,
                 onValueChange = { label = it },
                 label = { Text(stringResource(id = R.string.label_template_label)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -68,32 +73,34 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 onValueChange = { pattern = it },
                 label = { Text(stringResource(id = R.string.label_template_pattern)) },
                 placeholder = { Text(stringResource(id = R.string.placeholder_template_pattern)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                    ),
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         Icons.Default.Info,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = stringResource(id = R.string.description_template_macros),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
             }
@@ -103,20 +110,21 @@ fun Main.Pattern.Component.AddTemplateDialog(
             Row(modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
                     onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 ) {
                     Text(stringResource(id = R.string.action_cancel))
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Button(
                     onClick = { if (label.isNotBlank() && pattern.isNotBlank()) onConfirm(label, pattern) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = stringResource(
-                            id = if (isEditMode) R.string.action_save else R.string.action_add
-                        ),
-                        fontWeight = FontWeight.Bold
+                        text =
+                            stringResource(
+                                id = if (isEditMode) R.string.action_save else R.string.action_add,
+                            ),
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }

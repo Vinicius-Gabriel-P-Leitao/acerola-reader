@@ -1,10 +1,13 @@
 package br.acerola.comic.module.reader.state
-import br.acerola.comic.ui.R
-
 import br.acerola.comic.config.preference.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
 
-enum class TapArea { LEFT, CENTER, RIGHT, BOTTOM, TOP
+enum class TapArea {
+    LEFT,
+    CENTER,
+    RIGHT,
+    BOTTOM,
+    TOP,
 }
 
 data class ReaderUiState(

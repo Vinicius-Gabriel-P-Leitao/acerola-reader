@@ -14,7 +14,6 @@ interface ChapterTemplateDao : BaseDao<ChapterTemplate> {
     @Query("SELECT * FROM chapter_template ORDER BY priority DESC, is_default DESC")
     suspend fun getAllTemplates(): List<ChapterTemplate>
 
-
     @Query("SELECT * FROM chapter_template WHERE id = :id")
     suspend fun getTemplateById(id: Long): ChapterTemplate?
 

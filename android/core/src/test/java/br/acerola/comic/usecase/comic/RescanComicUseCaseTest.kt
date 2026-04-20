@@ -1,8 +1,8 @@
 package br.acerola.comic.usecase.comic
 
 import arrow.core.Either
-import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.usecase.library.RescanComicUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -16,7 +16,6 @@ import org.junit.Before
 import org.junit.Test
 
 class RescanComicUseCaseTest {
-
     @MockK
     lateinit var repository: ComicGateway<ComicDirectoryDto>
 
@@ -32,12 +31,13 @@ class RescanComicUseCaseTest {
     }
 
     @Test
-    fun invokeDeveChamarRefreshManga() = runTest {
-        coEvery { repository.refreshManga(mangaId = 1L) } returns Either.Right(value = Unit)
+    fun invokeDeveChamarRefreshManga() =
+        runTest {
+            coEvery { repository.refreshManga(mangaId = 1L) } returns Either.Right(value = Unit)
 
-        val result = useCase(mangaId = 1L)
+            val result = useCase(mangaId = 1L)
 
-        assertTrue(result.isRight())
-        coVerify { repository.refreshManga(mangaId = 1L) }
-    }
+            assertTrue(result.isRight())
+            coVerify { repository.refreshManga(mangaId = 1L) }
+        }
 }

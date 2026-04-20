@@ -22,7 +22,10 @@ android {
         buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
         buildConfigField("String", "MANGADEX_UPLOAD_URL", "\"https://uploads.mangadex.org\"")
         buildConfigField("String", "MANGADEX_BASE_URL", "\"https://api.mangadex.org\"")
-        buildConfigField("String", "ANILIST_BASE_URL", "\"https://graphql.anilist.co\""
+        buildConfigField(
+            "String",
+            "ANILIST_BASE_URL",
+            "\"https://graphql.anilist.co\"",
         )
     }
 

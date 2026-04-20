@@ -53,7 +53,7 @@ fun Main.Home.Component.ComicGridItem(
     history: ReadingHistoryDto? = null,
     chapterCount: Int = 0,
     onShowActions: () -> Unit = {},
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -61,84 +61,102 @@ fun Main.Home.Component.ComicGridItem(
     val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
     val title = manga.remoteInfo?.title ?: manga.directory.name
 
-    val imageSize: Size = with(receiver = density) {
-        Size(
-            width = 140.dp.toPx().toInt(),
-            height = 210.dp.toPx().toInt()
+    val imageSize: Size =
+        with(receiver = density) {
+            Size(
+                width = 140.dp.toPx().toInt(),
+                height = 210.dp.toPx().toInt(),
+            )
+        }
+
+    val placeholderPainter =
+        rememberAsyncImagePainter(
+            model =
+                ImageRequest
+                    .Builder(context)
+                    .data(data = R.raw.placeholder_manga)
+                    .size(resolver = SizeResolver(imageSize))
+                    .build(),
         )
-    }
 
-    val placeholderPainter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(context)
-            .data(data = R.raw.placeholder_manga)
-            .size(resolver = SizeResolver(imageSize))
-            .build()
-    )
-
-    val coverPainter = rememberAsyncImagePainter(
-        placeholder = placeholderPainter,
-        fallback = placeholderPainter,
-        error = placeholderPainter,
-        model = ImageRequest.Builder(context)
-            .data(data = coverUri)
-            .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
-            .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
-            .size(resolver = SizeResolver(imageSize))
-            .build(),
-    )
+    val coverPainter =
+        rememberAsyncImagePainter(
+            placeholder = placeholderPainter,
+            fallback = placeholderPainter,
+            error = placeholderPainter,
+            model =
+                ImageRequest
+                    .Builder(context)
+                    .data(data = coverUri)
+                    .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
+                    .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+                    .size(resolver = SizeResolver(imageSize))
+                    .build(),
+        )
 
     val categoryColor = manga.category?.color
-    val score = manga.remoteInfo?.sources?.anilist?.averageScore?.let { it / 10f }
+    val score =
+        manga.remoteInfo
+            ?.sources
+            ?.anilist
+            ?.averageScore
+            ?.let { it / 10f }
 
     Column(
-        modifier = Modifier
-            .padding(all = 4.dp)
-            .width(width = 140.dp),
-        horizontalAlignment = Alignment.Start
+        modifier =
+            Modifier
+                .padding(all = 4.dp)
+                .width(width = 140.dp),
+        horizontalAlignment = Alignment.Start,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(ratio = 2f / 3f)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(ratio = 2f / 3f),
         ) {
             Acerola.Component.ImageCard(
                 onClick = onClick,
                 image = coverPainter,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 8.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(top = 8.dp),
             )
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .align(Alignment.BottomCenter)
-                    .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .align(Alignment.BottomCenter)
+                        .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
+                            ),
+                        ),
             )
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 8.dp, end = 8.dp),
-                contentAlignment = Alignment.BottomEnd
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 8.dp, end = 8.dp),
+                contentAlignment = Alignment.BottomEnd,
             ) {
-                val sourceIcon = when (manga.remoteInfo?.syncSource) {
-                    MetadataSourcePattern.MANGADEX -> R.drawable.mangadex_v2
-                    MetadataSourcePattern.ANILIST -> R.drawable.anilist
-                    else -> null
-                }
+                val sourceIcon =
+                    when (manga.remoteInfo?.syncSource) {
+                        MetadataSourcePattern.MANGADEX -> R.drawable.mangadex_v2
+                        MetadataSourcePattern.ANILIST -> R.drawable.anilist
+                        else -> null
+                    }
                 if (sourceIcon != null) {
                     Icon(
                         painter = painterResource(id = sourceIcon),
                         contentDescription = null,
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(16.dp),
                     )
                 }
             }
@@ -146,11 +164,12 @@ fun Main.Home.Component.ComicGridItem(
             if (categoryColor != null) {
                 BookmarkRibbon(
                     color = Color(categoryColor),
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 12.dp)
-                        .width(18.dp)
-                        .height(32.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(start = 12.dp)
+                            .width(18.dp)
+                            .height(32.dp),
                 )
             }
         }
@@ -171,7 +190,7 @@ fun Main.Home.Component.ComicGridItem(
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (score != null) {
@@ -179,12 +198,12 @@ fun Main.Home.Component.ComicGridItem(
                         imageVector = Icons.Rounded.Star,
                         contentDescription = null,
                         tint = Color(0xFFFFC107),
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(14.dp),
                     )
                     Text(
                         text = score.toString(),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -193,12 +212,12 @@ fun Main.Home.Component.ComicGridItem(
                         imageVector = Icons.Rounded.AutoStories,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(14.dp),
                     )
                     Text(
                         text = chapterCount.toString(),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -207,26 +226,26 @@ fun Main.Home.Component.ComicGridItem(
                         Text(
                             text = "•",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.outline,
                         )
                     }
                     Text(
                         text = "100%",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
 
             IconButton(
                 onClick = onShowActions,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.MoreHoriz,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

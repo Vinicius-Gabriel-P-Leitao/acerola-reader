@@ -14,23 +14,21 @@ import br.acerola.comic.local.entity.archive.ComicDirectory
             entity = ComicDirectory::class,
             parentColumns = ["id"],
             childColumns = ["comic_directory_id"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = ChapterArchive::class,
             parentColumns = ["id"],
             childColumns = ["chapter_archive_id"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
 )
 data class ChapterRead(
     @ColumnInfo(name = "comic_directory_id")
     val mangaDirectoryId: Long,
-    
     @ColumnInfo(name = "chapter_archive_id")
     val chapterArchiveId: Long,
-    
     @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
 )

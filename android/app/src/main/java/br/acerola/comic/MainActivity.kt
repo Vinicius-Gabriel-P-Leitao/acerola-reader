@@ -28,9 +28,8 @@ import dagger.hilt.android.AndroidEntryPoint
 // FIXME: Fazer um fakeLoading só para precarregar os itens antes de aparecer os itens carregando.
 @AndroidEntryPoint
 class MainActivity(
-    override val startDestinationRes: Int = Destination.HOME.route
+    override val startDestinationRes: Int = Destination.HOME.route,
 ) : BaseActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -38,12 +37,15 @@ class MainActivity(
         }
     }
 
-    override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+    override fun NavGraphBuilder.setupNavGraph(
+        context: Context,
+        navController: NavHostController,
+    ) {
         defaultComposable(context, Destination.HOME) {
             Main.Home.Layout.Screen(
                 onNavigateToConfig = {
                     navController.navigate(context.getString(Destination.CONFIG.route))
-                }
+                },
             )
         }
         defaultComposable(context, Destination.HISTORY) {
@@ -53,12 +55,12 @@ class MainActivity(
             Main.Config.Layout.Screen(
                 onNavigateToTemplates = {
                     navController.navigate(context.getString(Destination.PATTERN.route))
-                }
+                },
             )
         }
         defaultComposable(context, Destination.PATTERN) {
             Main.Pattern.Layout.FilePatternScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
             )
         }
     }
@@ -80,30 +82,35 @@ class MainActivity(
     private fun NavGraphBuilder.defaultComposable(
         context: Context,
         destination: Destination,
-        content: @Composable AnimatedVisibilityScope.(NavBackStackEntry) -> Unit
+        content: @Composable AnimatedVisibilityScope.(NavBackStackEntry) -> Unit,
     ) {
         composable(
-            route = context.getString(destination.route), enterTransition = {
+            route = context.getString(destination.route),
+            enterTransition = {
                 scaleIn(
-                    initialScale = 0.8f, animationSpec = tween(durationMillis = 300)
+                    initialScale = 0.8f,
+                    animationSpec = tween(durationMillis = 300),
                 ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 scaleOut(
-                    targetScale = 0.8f, animationSpec = tween(durationMillis = 300)
+                    targetScale = 0.8f,
+                    animationSpec = tween(durationMillis = 300),
                 ) + fadeOut(animationSpec = tween(durationMillis = 300))
             },
             popEnterTransition = {
                 scaleIn(
-                    initialScale = 1.2f, animationSpec = tween(durationMillis = 300)
+                    initialScale = 1.2f,
+                    animationSpec = tween(durationMillis = 300),
                 ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             popExitTransition = {
                 scaleOut(
-                    targetScale = 1.2f, animationSpec = tween(durationMillis = 300)
+                    targetScale = 1.2f,
+                    animationSpec = tween(durationMillis = 300),
                 ) + fadeOut(animationSpec = tween(durationMillis = 300))
             },
-            content = content
+            content = content,
         )
     }
 }

@@ -1,14 +1,14 @@
 package br.acerola.comic.common.ux.component
 
-import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
 class RadioGroupTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -22,7 +22,7 @@ class RadioGroupTest {
                 Acerola.Component.RadioGroup(
                     selectedIndex = selectedIndex,
                     options = options,
-                    onSelect = { selectedIndex = it }
+                    onSelect = { selectedIndex = it },
                 )
             }
         }

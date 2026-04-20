@@ -32,27 +32,30 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AcerolaDatabase {
-        return Room.databaseBuilder(
-            context, AcerolaDatabase::class.java, "acerola_database"
-        )
-        .addCallback(object : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                ChapterTemplatePattern.presets.entries.forEachIndexed { index, (label, pattern) ->
-                    db.execSQL(
-                        "INSERT OR IGNORE INTO chapter_template (id, label, pattern, is_default, priority) VALUES (?, ?, ?, 1, 0)",
-                        arrayOf(-(index + 1).toLong(), label, pattern)
-                    )
-                }
-            }
-        })
-        .fallbackToDestructiveMigration(dropAllTables = false)
-        .build()
-    }
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+    ): AcerolaDatabase =
+        Room
+            .databaseBuilder(
+                context,
+                AcerolaDatabase::class.java,
+                "acerola_database",
+            ).addCallback(
+                object : RoomDatabase.Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        ChapterTemplatePattern.presets.entries.forEachIndexed { index, (label, pattern) ->
+                            db.execSQL(
+                                "INSERT OR IGNORE INTO chapter_template (id, label, pattern, is_default, priority) VALUES (?, ?, ?, 1, 0)",
+                                arrayOf(-(index + 1).toLong(), label, pattern),
+                            )
+                        }
+                    }
+                },
+            ).fallbackToDestructiveMigration(dropAllTables = false)
+            .build()
 
     @Provides
     fun provideChapterArchiveDao(db: AcerolaDatabase): ChapterArchiveDao = db.chapterArchiveDao()

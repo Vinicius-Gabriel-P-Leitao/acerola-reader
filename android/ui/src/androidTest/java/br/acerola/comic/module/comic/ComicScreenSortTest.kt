@@ -12,7 +12,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class ComicScreenSortTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -25,7 +24,7 @@ class ComicScreenSortTest {
                 Comic.Component.ChapterSortSheet(
                     sortSettings = sortSettings,
                     onSortChange = {},
-                    onDismiss = {}
+                    onDismiss = {},
                 )
             }
         }

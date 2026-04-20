@@ -1,6 +1,6 @@
 package br.acerola.comic.remote.mangadex.api
 
-import br.acerola.comic.remote.mangadex.dto.MangaDexResponse
+import br.acerola.comic.remote.mangadex.dto.MangadexResponseDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import okhttp3.ResponseBody
@@ -14,21 +14,21 @@ interface MangadexChapterMetadataClient {
     @GET(value = "manga/{id}/feed")
     suspend fun getMangaFeed(
         @Path(value = "id") mangaId: String,
-        @Query(value = "translatedLanguage[]") languages: List<String>, 
+        @Query(value = "translatedLanguage[]") languages: List<String>,
         @Query(value = "includes[]") includes: List<String> = listOf("scanlation_group"),
         @Query(value = "order[chapter]") order: String = "asc",
         @Query(value = "limit") limit: Int = 100,
-        @Query(value = "offset") offset: Int = 0
-    ): MangaDexResponse<ChapterMangadexDto>
+        @Query(value = "offset") offset: Int = 0,
+    ): MangadexResponseDto<ChapterMangadexDto>
 
     @GET(value = "at-home/server/{chapterId}")
     suspend fun getChapterImages(
-        @Path(value = "chapterId") chapterId: String
+        @Path(value = "chapterId") chapterId: String,
     ): ChapterSourceMangadexDto
 
     @GET
     @Streaming
     suspend fun downloadChapterPage(
-        @Url fullUrl: String
+        @Url fullUrl: String,
     ): ResponseBody
 }
