@@ -1,8 +1,5 @@
-use crate::infra::{
-    error::messages::connection_error::ConnectionError,
-    remote::p2p::connection_context::ConnectionContext,
-};
+use acerola_p2p::api::{error::P2PError, guard::ConnectionContext};
 
-pub async fn token_guard<T>(_ctx: &ConnectionContext<T>) -> Result<(), ConnectionError> {
+pub async fn token_guard<T>(_ctx: &ConnectionContext<T>) -> Result<(), P2PError> {
     Ok(())
 }

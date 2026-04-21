@@ -3,6 +3,7 @@ mod core;
 mod data;
 mod infra;
 
+use acerola_p2p::api::guard::open_guard;
 use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
 use cmd::features::network::network_cmd;
 use cmd::features::summary::comic_summary_cmd;
@@ -12,13 +13,7 @@ use tauri::Manager;
 pub mod tests;
 
 mod app_bootstrap {
-    use crate::{
-        core::{
-            connection::p2p::{handlers, network_manager},
-            services::network::network_service::NetworkService,
-        },
-        data::remote::p2p::{iroh_transport, open_guard::open_guard},
-    };
+    use crate::core::services::network::network_service::NetworkService;
 
     use super::*;
     use std::{path::PathBuf, sync::Arc};
@@ -83,32 +78,19 @@ mod app_bootstrap {
     }
 
     async fn setup_network(handle: &tauri::AppHandle) {
-        let transport = Arc::new(iroh_transport::IrohTransport::new().await.unwrap());
-        let transport_clone = Arc::clone(&transport);
-
-        let (mut manager, command_tx, state) = network_manager::NetworkManager::new(
-            transport,
-            Box::new(|ctx| Box::pin(open_guard(ctx))),
-        );
-
         let app = handle.clone();
-        let emitter: handlers::rpc::EventEmitter = Arc::new(move |event, peer_id| {
-            app.emit(event, peer_id).ok();
+
+        let emit: acerola_p2p::api::protocol::EventEmitter = Arc::new(move |event, data| {
+            app.emit(event, data).ok();
         });
 
-        manager.register_inbound(
-            b"acerola/rpc",
-            Arc::new(handlers::rpc::RpcServerHandler::new(emitter.clone())),
-        );
+        let node = acerola_p2p::api::AcerolaP2P::builder(emit)
+            .guard(Box::new(|ctx| Box::pin(open_guard(ctx))))
+            .build()
+            .await
+            .expect("Failed to start the p2p node.");
 
-        manager.register_outbound(
-            b"acerola/rpc",
-            Arc::new(handlers::rpc::RpcClientHandler::new(emitter)),
-        );
-
-        tokio::spawn(manager.run());
-
-        let service = NetworkService::new(state, transport_clone, command_tx);
+        let service = NetworkService::new(Arc::new(node));
         handle.manage(service);
     }
 

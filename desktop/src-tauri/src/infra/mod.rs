@@ -14,4 +14,3 @@ pub mod pattern {
 
 pub mod error;
 
-pub mod remote;

@@ -1,35 +1,41 @@
-use crate::core::connection::p2p::state::network_state::NetworkMode;
-use crate::infra::remote::p2p::peer_id::PeerId;
-use std::collections::HashMap;
-use serde::Serialize;
+use std::collections::{HashMap, HashSet};
 
-#[derive(Clone, Serialize)]
+use acerola_p2p::api::{network::NetworkMode, peer};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct NetworkConnectionItem {
+pub struct ConnectedPeerPayload {
     pub peer_id: String,
     pub alpn: String,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkStatusPayload {
     pub mode: String,
-    pub connections: Vec<NetworkConnectionItem>,
+    pub peers: Vec<ConnectedPeerPayload>,
 }
 
 impl NetworkStatusPayload {
-    pub fn from(mode: NetworkMode, peers: HashMap<PeerId, Vec<u8>>) -> Self {
-        let connections = peers
+    pub fn from(mode: NetworkMode, peers: HashMap<peer::PeerIdentity, HashSet<Vec<u8>>>) -> Self {
+        let mode_str = match mode {
+            NetworkMode::Local => "local",
+            NetworkMode::Relay => "relay",
+        };
+
+        let peer_list: Vec<ConnectedPeerPayload> = peers
             .into_iter()
-            .map(|(peer, alpn)| NetworkConnectionItem {
-                peer_id: peer.id,
-                alpn: String::from_utf8_lossy(&alpn).to_string(),
+            .flat_map(|(peer, alpns)| {
+                let peer_id = peer.id; 
+                
+                alpns.into_iter().map(move |alpn| ConnectedPeerPayload {
+                    peer_id: peer_id.clone(),
+                    alpn: String::from_utf8_lossy(&alpn).into_owned(),
+                })
             })
             .collect();
 
-        Self {
-            mode: format!("{:?}", mode),
-            connections,
-        }
+        Self { mode: mode_str.to_string(), peers: peer_list }
     }
 }
