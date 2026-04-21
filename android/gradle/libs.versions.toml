@@ -29,8 +29,9 @@ apollo = "4.1.0"
 
 # -- Utils --
 junrar = "7.5.7"
-kotlinxCoroutines = "1.10.2"
+kotlinxCoroutines = "1.6.4"
 kotlinxCollectionsImmutable = "0.4.0"
+jna = "5.15.0"
 
 # -- Testing --
 junit = "4.13.2"
@@ -60,6 +61,8 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+
 
 # --- Compose ---
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -101,6 +104,7 @@ junrar = { group = "com.github.junrar", name = "junrar", version.ref = "junrar" 
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
 
 # --- Test ---
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
+fun capitalize(s: String): String {
+    return s.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}
+
 android {
     namespace = "br.acerola.comic.native"
     compileSdk = 36
@@ -13,7 +17,7 @@ android {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
-            abiFilters += "arm64-v8a"
+            abiFilters.add("arm64-v8a")
         }
     }
     compileOptions {
@@ -32,25 +36,21 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
-    sourceSets["main"].jniLibs.srcDirs("src/main/jniLibs")
 }
 
-val buildRust = tasks.register<Exec>("buildRust") {
-    workingDir = file("rust")
+tasks.register<Exec>("buildNativeRust") {
+    group = "rust"
+
     environment("CARGO_NDK_PLATFORM", "26")
     commandLine(
-        "cargo", "ndk",
-        "--target", "aarch64-linux-android",
-        "--output-dir", "../src/main/jniLibs",
-        "build", "--release"
+        "cargo", "ndk", "-t", "arm64-v8a", "build", "--release"
     )
 }
 
-tasks.named("preBuild") {
-    dependsOn(buildRust)
-}
 
 dependencies {
+    implementation(libs.jna)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
+    implementation(libs.kotlinx.coroutines.core)
 }
