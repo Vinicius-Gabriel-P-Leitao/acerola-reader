@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::{HashMap, HashSet}, sync::Arc};
 
 pub mod error {
     pub use crate::error::ConnectionError as P2PError;
@@ -16,11 +16,13 @@ pub mod network {
     pub use crate::network::state::NetworkMode;
 }
 
+use tokio::sync::RwLock;
+
 use crate::{
     api::network::NetworkMode,
     error::ConnectionError,
     guard::BoxedValidator,
-    network::{NetworkCommand, NetworkManager},
+    network::{state::NetworkState, NetworkCommand, NetworkManager},
     peer::PeerId,
     protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
@@ -65,13 +67,14 @@ impl AcerolaP2PBuilder {
         let transport = Arc::new(IrohTransport::new().await?);
         let local_id = transport.local_id();
 
-        let (mut manager, command_tx, _state) =
+        let (mut manager, command_tx, state) =
             NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2PTransport>, self.guard);
 
         manager.register_inbound(
             b"acerola/rpc",
             Arc::new(RpcServerHandler::new(Arc::clone(&self.emit))),
         );
+
         manager.register_outbound(
             b"acerola/rpc",
             Arc::new(RpcClientHandler::new(Arc::clone(&self.emit))),
@@ -80,18 +83,20 @@ impl AcerolaP2PBuilder {
         for (alpn, handler) in self.handlers_inbound {
             manager.register_inbound(&alpn, handler);
         }
+
         for (alpn, handler) in self.handlers_outbound {
             manager.register_outbound(&alpn, handler);
         }
 
         tokio::spawn(manager.run());
 
-        Ok(AcerolaP2P { command_tx, local_id })
+        Ok(AcerolaP2P { command_tx, local_id, state })
     }
 }
 
 pub struct AcerolaP2P {
     command_tx: tokio::sync::mpsc::Sender<NetworkCommand>,
+    state: Arc<RwLock<NetworkState>>,
     local_id: PeerId,
 }
 
@@ -110,6 +115,14 @@ impl AcerolaP2P {
             .send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() })
             .await
             .map_err(|_| ConnectionError::Shutdown)
+    }
+
+     pub async fn connected_peers(&self) -> HashMap<PeerId, HashSet<Vec<u8>>> {
+        self.state.read().await.peers().clone()
+    }
+
+    pub async fn mode(&self) -> NetworkMode {
+        self.state.read().await.mode().clone()
     }
 
     pub async fn switch_guard(
