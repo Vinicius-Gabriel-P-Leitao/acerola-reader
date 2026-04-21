@@ -39,7 +39,7 @@ async-trait = "0.1.89"
 tokio-util = "0.7.18"
 tokio-stream = "0.1.18"
 futures = "0.3.32"
-acerola-p2p = { git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.4" }
+acerola-p2p = { git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5" }
 
 [dev-dependencies]
 tempfile = "3"
