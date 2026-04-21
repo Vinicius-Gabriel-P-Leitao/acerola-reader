@@ -12,8 +12,12 @@ pub mod peer {
 pub mod protocol {
     pub use crate::protocol::{EventEmitter, ProtocolHandler as Handler};
 }
+pub mod network {
+    pub use crate::network::state::NetworkMode;
+}
 
 use crate::{
+    api::network::NetworkMode,
     error::ConnectionError,
     guard::BoxedValidator,
     network::{NetworkCommand, NetworkManager},
@@ -104,6 +108,15 @@ impl AcerolaP2P {
         let peer = PeerId { id: peer_id.to_string() };
         self.command_tx
             .send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() })
+            .await
+            .map_err(|_| ConnectionError::Shutdown)
+    }
+
+    pub async fn switch_guard(
+        &self, validator: crate::guard::BoxedValidator, mode: NetworkMode,
+    ) -> Result<(), ConnectionError> {
+        self.command_tx
+            .send(NetworkCommand::SwitchGuard { validator, mode })
             .await
             .map_err(|_| ConnectionError::Shutdown)
     }
