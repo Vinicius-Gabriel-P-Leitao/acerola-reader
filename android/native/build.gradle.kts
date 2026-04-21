@@ -3,10 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-}
-
-fun capitalize(s: String): String {
-    return s.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -36,21 +33,40 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+    sourceSets {
+        getByName("main") {
+            jniLibs.srcDirs("src/main/jniLibs")
+        }
+    }
 }
 
-tasks.register<Exec>("buildNativeRust") {
-    group = "rust"
-
-    environment("CARGO_NDK_PLATFORM", "26")
-    commandLine(
-        "cargo", "ndk", "-t", "arm64-v8a", "build", "--release"
-    )
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xsuppress-version-warnings")
+    }
 }
-
 
 dependencies {
     implementation(libs.jna)
-    testImplementation(libs.junit)
     testImplementation(libs.mockk)
+    testImplementation(libs.junit)
+    implementation(libs.androidx.annotation)
     implementation(libs.kotlinx.coroutines.core)
+}
+
+
+tasks.withType<Test> {
+    systemProperty("java.library.path", "${project.projectDir}/src/main/jniLibs/arm64-v8a")
+    systemProperty("jna.library.path", "${project.projectDir}/src/main/jniLibs/arm64-v8a")
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    filter {
+        exclude { it.file.path.contains("p2p") }
+        exclude { it.file.path.contains("generated") }
+    }
 }

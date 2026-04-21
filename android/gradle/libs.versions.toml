@@ -20,6 +20,7 @@ material3 = "1.4.0"
 material3Adaptive = "1.4.0"
 navigationCompose = "2.9.6"
 coil = "2.7.0"
+annotation = "1.8.0"
 
 # -- Networking --
 retrofit = "3.0.0"
@@ -65,6 +66,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 
 
 # --- Compose ---
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
