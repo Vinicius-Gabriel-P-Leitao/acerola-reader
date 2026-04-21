@@ -18,17 +18,19 @@ package p2p
 // helpers directly inline like we're doing here.
 
 import com.sun.jna.Library
+import com.sun.jna.IntegerType
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-import com.sun.jna.ptr.ByReference
+import com.sun.jna.Callback
+import com.sun.jna.ptr.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.CharBuffer
 import java.nio.charset.CodingErrorAction
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 
 // This is a helper for safely working with byte buffers returned from the Rust code.
 // A rust-owned buffer is represented by its capacity, its current length, and a
@@ -743,6 +745,14 @@ internal open class UniffiVTableCallbackInterfaceP2pCallback(
 
 
 
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -776,9 +786,17 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_acerola_android_fn_method_p2pnode_connect(`ptr`: Pointer,`peerId`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_acerola_android_fn_method_p2pnode_get_connected_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_acerola_android_fn_method_p2pnode_get_local_id(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_acerola_android_fn_method_p2pnode_get_mode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_acerola_android_fn_method_p2pnode_shutdown(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_android_fn_method_p2pnode_switch_to_local(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_android_fn_method_p2pnode_switch_to_relay(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun ffi_acerola_android_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -896,9 +914,17 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_acerola_android_checksum_method_p2pnode_connect(
     ): Short
+    fun uniffi_acerola_android_checksum_method_p2pnode_get_connected_peers(
+    ): Short
     fun uniffi_acerola_android_checksum_method_p2pnode_get_local_id(
     ): Short
+    fun uniffi_acerola_android_checksum_method_p2pnode_get_mode(
+    ): Short
     fun uniffi_acerola_android_checksum_method_p2pnode_shutdown(
+    ): Short
+    fun uniffi_acerola_android_checksum_method_p2pnode_switch_to_local(
+    ): Short
+    fun uniffi_acerola_android_checksum_method_p2pnode_switch_to_relay(
     ): Short
     fun uniffi_acerola_android_checksum_constructor_p2pnode_new(
     ): Short
@@ -925,10 +951,22 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_acerola_android_checksum_method_p2pnode_connect() != 43472.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_acerola_android_checksum_method_p2pnode_get_connected_peers() != 42656.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_acerola_android_checksum_method_p2pnode_get_local_id() != 39006.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_acerola_android_checksum_method_p2pnode_get_mode() != 23737.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_acerola_android_checksum_method_p2pnode_shutdown() != 40695.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_android_checksum_method_p2pnode_switch_to_local() != 6869.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_android_checksum_method_p2pnode_switch_to_relay() != 2371.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_android_checksum_constructor_p2pnode_new() != 3323.toShort()) {
@@ -1457,9 +1495,17 @@ public interface P2pNodeInterface {
     
     fun `connect`(`peerId`: kotlin.String, `alpn`: kotlin.ByteArray)
     
+    fun `getConnectedPeers`(): Map<kotlin.String, List<kotlin.ByteArray>>
+    
     fun `getLocalId`(): kotlin.String
     
+    fun `getMode`(): FfiNetworkMode
+    
     fun `shutdown`()
+    
+    fun `switchToLocal`()
+    
+    fun `switchToRelay`()
     
     companion object
 }
@@ -1563,6 +1609,18 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     
     
 
+    override fun `getConnectedPeers`(): Map<kotlin.String, List<kotlin.ByteArray>> {
+            return FfiConverterMapStringSequenceByteArray.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_get_connected_peers(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
     override fun `getLocalId`(): kotlin.String {
             return FfiConverterString.lift(
     callWithPointer {
@@ -1575,11 +1633,45 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     }
     
 
+    override fun `getMode`(): FfiNetworkMode {
+            return FfiConverterTypeFfiNetworkMode.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_get_mode(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
     override fun `shutdown`()
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_shutdown(
+        it, _status)
+}
+    }
+    
+    
+
+    override fun `switchToLocal`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_switch_to_local(
+        it, _status)
+}
+    }
+    
+    
+
+    override fun `switchToRelay`()
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_switch_to_relay(
         it, _status)
 }
     }
@@ -1619,6 +1711,103 @@ public object FfiConverterTypeP2PNode: FfiConverter<P2pNode, Pointer> {
         // The Rust code always expects pointers written as 8 bytes,
         // and will fail to compile if they don't fit.
         buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+
+
+enum class FfiNetworkMode {
+    
+    LOCAL,
+    RELAY;
+    companion object
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiNetworkMode: FfiConverterRustBuffer<FfiNetworkMode> {
+    override fun read(buf: ByteBuffer) = try {
+        FfiNetworkMode.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: FfiNetworkMode) = 4UL
+
+    override fun write(value: FfiNetworkMode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceByteArray: FfiConverterRustBuffer<List<kotlin.ByteArray>> {
+    override fun read(buf: ByteBuffer): List<kotlin.ByteArray> {
+        val len = buf.getInt()
+        return List<kotlin.ByteArray>(len) {
+            FfiConverterByteArray.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<kotlin.ByteArray>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterByteArray.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<kotlin.ByteArray>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterByteArray.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterMapStringSequenceByteArray: FfiConverterRustBuffer<Map<kotlin.String, List<kotlin.ByteArray>>> {
+    override fun read(buf: ByteBuffer): Map<kotlin.String, List<kotlin.ByteArray>> {
+        val len = buf.getInt()
+        return buildMap<kotlin.String, List<kotlin.ByteArray>>(len) {
+            repeat(len) {
+                val k = FfiConverterString.read(buf)
+                val v = FfiConverterSequenceByteArray.read(buf)
+                this[k] = v
+            }
+        }
+    }
+
+    override fun allocationSize(value: Map<kotlin.String, List<kotlin.ByteArray>>): ULong {
+        val spaceForMapSize = 4UL
+        val spaceForChildren = value.map { (k, v) ->
+            FfiConverterString.allocationSize(k) +
+            FfiConverterSequenceByteArray.allocationSize(v)
+        }.sum()
+        return spaceForMapSize + spaceForChildren
+    }
+
+    override fun write(value: Map<kotlin.String, List<kotlin.ByteArray>>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        // The parens on `(k, v)` here ensure we're calling the right method,
+        // which is important for compatibility with older android devices.
+        // Ref https://blog.danlew.net/2017/03/16/kotlin-puzzler-whose-line-is-it-anyways/
+        value.forEach { (k, v) ->
+            FfiConverterString.write(k, buf)
+            FfiConverterSequenceByteArray.write(v, buf)
+        }
     }
 }
 
