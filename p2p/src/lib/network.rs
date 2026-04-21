@@ -1,3 +1,10 @@
+//! Gestão de ciclos de execução, roteamento e controle central da rede.
+//!
+//! O `NetworkManager` atua como o cérebro assíncrono da biblioteca. 
+//! Ele encapsula a instância de transporte físico (ex: Iroh), executa o laço de eventos
+//! (event loop) para aceitar conexões ativamente, e faz a ponte (dispatch) entre os
+//! canais I/O recém-chegados e o respectivo `ProtocolHandler` mapeado para o ALPN requisitado.
+
 #[path = "network/state.rs"]
 pub(crate) mod state;
 
@@ -13,25 +20,46 @@ use crate::{
     transport::P2PTransport,
 };
 
+/// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
 
+/// Sinais de controle enviados ao Event Loop da rede.
+///
+/// Como o manager é blindado e opera numa tarefa em background, toda interação
+/// externa é sinalizada e enfileirada no canal por meio deste enum.
 pub enum NetworkCommand {
+    /// Troca dinâmica da política de validação (Guard) e estado nominal da rede.
     SwitchGuard { validator: BoxedValidator, mode: NetworkMode },
+    /// Tenta discar ativamente para outro par através de um protocolo.
     Connect { peer: PeerId, alpn: Vec<u8> },
+    /// Provoca a desmontagem e desligamento seguro do daemon P2P.
     Shutdown,
 }
 
+/// Motor principal do nó acerola-p2p, responsável pelo event loop e orquestração.
 pub struct NetworkManager {
+    /// Provedor base responsável por I/O e alocação de sockets (Iroh).
     transport: Arc<dyn P2PTransport>,
+    /// Referência concorrente para o estado (peers conectados, etc).
     state: Arc<RwLock<NetworkState>>,
+    /// Referência do Guard atual ativo para validação no aceite de conexões.
     validator: Arc<RwLock<BoxedValidator>>,
+    /// Produtor de comandos mantido internamente pelo Manager.
     command_tx: mpsc::Sender<NetworkCommand>,
+    /// Fila para consumo dos comandos requisitados externamente.
     command_rx: mpsc::Receiver<NetworkCommand>,
+    /// Tabela de protocolos autorizados para quem recebe conexões (Servidor).
     handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
+    /// Tabela de protocolos operados por quem inicia conexões (Cliente).
     handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
 }
 
 impl NetworkManager {
+    /// Inicializa os componentes internos de gerência de rede.
+    ///
+    /// Cria e compartilha buffers MPSC e o `NetworkState`. Retorna uma tupla
+    /// contendo a instância pronta para rodar, o comunicador (sender) e a view
+    /// do estado da rede, garantindo que o chamador mantenha as referências ativas.
     pub fn new(
         transport: Arc<dyn P2PTransport>, validator: BoxedValidator,
     ) -> (Self, mpsc::Sender<NetworkCommand>, Arc<RwLock<NetworkState>>) {
@@ -51,34 +79,53 @@ impl NetworkManager {
         (manager, command_tx, state)
     }
 
+    /// Retorna um clone de uso seguro da estrutura de Estado da Rede.
     pub fn state(&self) -> Arc<RwLock<NetworkState>> {
         Arc::clone(&self.state)
     }
 
+    /// Registra um serviço voltado ao recebimento passivo de conexões.
+    ///
+    /// Mapeia uma string ALPN a um `ProtocolHandler`. Ao receber conexões com este ALPN,
+    /// a conexão passará primeiro pelo guard e, se permitida, será roteada a este tratador.
     pub fn register_inbound(&mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) {
         self.handlers_inbound.insert(alpn.to_vec(), handler);
     }
 
+    /// Registra um serviço focado no disparo ativo de conexões ao ecossistema.
+    ///
+    /// Mapeia o ALPN em cenários em que o nó é proativo (dialer) em invocar funcionalidades.
     pub fn register_outbound(&mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) {
         self.handlers_outbound.insert(alpn.to_vec(), handler);
     }
 
+    /// Assume o controle da Thread e dispara o laço principal de IO da biblioteca.
+    ///
+    /// Deve ser convocado via `tokio::spawn(manager.run())`. Durante este loop infinito
+    /// ele espera assincronamente (multiplexando pelo `tokio::select!`) por conexões
+    /// externas advindas do Transporte e comandos oriundos dos canais MPSC locais.
     pub async fn run(mut self) {
         loop {
             tokio::select! {
+                // Evento 1: Uma conexão externa solicitando handshake foi recebida.
                 result = self.transport.accept() => {
                     match result {
                         Ok(incoming) => {
+                            // Ignora e droppa conexões se o ALPN não está suportado no mapa local.
                             let Some(handler) = self.handlers_inbound.get(incoming.alpn()) else { continue };
+                            
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
                             let validator = Arc::clone(&self.validator);
 
+                            // Lança o tratamento da stream em background (Tarefa paralela).
                             tokio::spawn(async move {
                                 let peer = incoming.peer().clone();
                                 let alpn = incoming.alpn().to_vec();
+                                // Exige a promoção da conexão à canais de leitura e escrita.
                                 let Ok((send, recv)) = incoming.accept_bi().await else { return };
 
+                                // Etapa de Segurança: Invoca a Validação (Guard).
                                 let ctx = ConnectionContext { peer_id: peer.clone(), data: () };
                                 let allowed = {
                                     let guard = validator.read().await;
@@ -87,18 +134,22 @@ impl NetworkManager {
 
                                 if allowed.is_err() {
                                     log::debug!("connection from {} denied by guard", peer.id);
-                                    return;
+                                    return; // O early return mata as streams `send` e `recv`.
                                 }
 
+                                // Promove a conexão a 'Conectada' no tracker central
                                 state.write().await.connect(peer.clone(), alpn.clone());
+                                // Bloqueia esta Task na execução do protocolo ALPN assinalado.
                                 let _ = handler.handle(&peer, send, recv).await;
+                                // Protocolo encerrou, retira a tag ALPN do Estado Central.
                                 state.write().await.disconnect(&peer, &alpn);
                             });
                         }
-                        Err(ConnectionError::Shutdown) => break,
-                        Err(_) => continue,
+                        Err(ConnectionError::Shutdown) => break, // Trata finalização programada.
+                        Err(_) => continue, // Permite que a rede tente se recuperar sob outros erros.
                     }
                 }
+                // Evento 2: Uma requisição na fila do manager vinda da própria API da biblioteca.
                 Some(cmd) = self.command_rx.recv() => {
                     match cmd {
                         NetworkCommand::Connect { peer, alpn } => {
@@ -109,6 +160,7 @@ impl NetworkManager {
                             let peer_clone = peer.clone();
                             let alpn_clone = alpn.clone();
 
+                            // Procede abrindo requisição ativa à interface física.
                             match self.transport.open_bi(&alpn, &peer).await {
                                 Ok((send, recv)) => {
                                     state.write().await.connect(peer_clone.clone(), alpn_clone.clone());
@@ -117,14 +169,15 @@ impl NetworkManager {
                                         state.write().await.disconnect(&peer_clone, &alpn_clone);
                                     });
                                 }
-                                Err(_) => {}
+                                Err(_) => {} // Pode-se adicionar log para alertar a falha de handshake ativo.
                             }
                         }
                         NetworkCommand::SwitchGuard { validator, mode } => {
+                            // Substitui on-the-fly as proteções de rede e estado operacional.
                             *self.validator.write().await = validator;
                             self.state.write().await.switch_mode(mode);
                         }
-                        NetworkCommand::Shutdown => break,
+                        NetworkCommand::Shutdown => break, // Rompe o loop explicitamente.
                     }
                 }
             }

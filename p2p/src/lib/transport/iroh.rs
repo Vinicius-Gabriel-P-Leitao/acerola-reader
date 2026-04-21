@@ -1,3 +1,8 @@
+//! Implementação baseada no Iroh como motor Quic/UDP principal.
+//!
+//! Este módulo converte o sistema do endpoint Iroh e conectividade hole-punching
+//! para os traits genéricos `P2PTransport` e `IncomingConnection` do ecossistema local.
+
 use async_trait::async_trait;
 use iroh::address_lookup::mdns;
 use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
@@ -7,13 +12,16 @@ use crate::error::ConnectionError;
 use crate::peer::PeerId;
 use crate::transport::{IncomingConnection, P2PTransport};
 
+/// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
     conn: iroh::endpoint::Connection,
     peer: PeerId,
     alpn: Vec<u8>,
 }
 
+/// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
 pub struct IrohTransport {
+    /// Referência mantida viva para os contextos globais e loops do iroh-net subjacente.
     endpoint: Endpoint,
 }
 
@@ -39,10 +47,14 @@ impl IncomingConnection for IrohIncoming {
 }
 
 impl IrohTransport {
-    /// FIXME: Atualmente usa o preset N0 — será substituído pelo relay próprio.
+    /// Inicia um novo endpoint na rede usando as portas disponíveis do host.
+    ///
+    // TODO: Permitir que o código que usa a lib passe o endpoint do relay configurado,
+    // mantendo o mDNS local como fallback ao invés de fixar o preset N0.
     pub async fn new() -> Result<Self, ConnectionError> {
         let mdns = mdns::MdnsAddressLookup::builder();
 
+        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padrão.
         let endpoint = Endpoint::builder(presets::N0)
             .alpns(vec![b"acerola/rpc".to_vec()])
             .address_lookup(mdns)
@@ -52,6 +64,7 @@ impl IrohTransport {
         Ok(Self { endpoint })
     }
 
+    /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
         let id: EndpointId = peer
             .id
@@ -92,7 +105,10 @@ impl P2PTransport for IrohTransport {
         Ok((Box::new(send), Box::new(recv)))
     }
 
-    /// WARN: Os sockets UDP só fecham quando todos os clones do Endpoint são dropados.
+    /// Executa o teardown forçado do componente iroh.
+    ///
+    /// Warn: O endpoint é compartilhado em formato Arc no backend do crate `iroh`.
+    /// Desligar essa faceta pode necessitar dropar todos os componentes de leitura remanescentes.
     async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.endpoint.close().await;
         Ok(())

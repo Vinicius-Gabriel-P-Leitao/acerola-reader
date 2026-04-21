@@ -1,3 +1,9 @@
+//! Implementação do protocolo interno nativo de sinalização (RPC).
+//!
+//! Este módulo contém os Handlers que definem o protocolo ALPN `acerola/rpc`.
+//! Sua finalidade é viabilizar recursos nativos da biblioteca (como heartbeat/Ping-Pong)
+//! operando de maneira agnóstica na mesma infraestrutura que roda aplicações do usuário.
+
 use async_trait::async_trait;
 use futures::sink::SinkExt;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -8,27 +14,38 @@ use crate::error::{ConnectionError, RpcError};
 use crate::peer::PeerId;
 use crate::protocol::{EventEmitter, ProtocolHandler};
 
+/// Sinal enviado no payload que representa uma solicitação de heartbeat ("Você está vivo?").
 const PING: u8 = 0x01;
+/// Sinal enviado como resposta obrigatória correspondente a um `PING` válido.
 const PONG: u8 = 0x02;
 
+/// Wrapper em torno das streams de Leitura garantindo as separações por tamanho no framing.
 type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
+/// Wrapper em torno das streams de Escrita limitadas por frame.
 type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;
 
+/// Lê os blocos assincronamente a partir da network esperando extrair 1 único byte sinalizador.
 async fn read_byte(recv: &mut Recv) -> Result<u8, RpcError> {
     let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;
     bytes.first().copied().ok_or(RpcError::Stream("empty frame".into()))
 }
 
+/// Envelopa um byte sinalizador solitário no codec delimitado e o escreve no TCP/QUIC em baixo-nível.
 async fn write_byte(send: &mut Writer, byte: u8) -> Result<(), RpcError> {
     send.send(vec![byte].into()).await?;
     Ok(())
 }
 
+/// Processa as instâncias ativas do protocolo `acerola/rpc` sob a perspectiva de Servidor.
+///
+/// Este struct apenas fica estacionário, respondendo solicitações ping com pong
+/// passivamente aos pares que solicitaram conexões RPC e as enviaram.
 pub struct RpcServerHandler {
     emit: EventEmitter,
 }
 
 impl RpcServerHandler {
+    /// Inicializa e fornece referências para emissores de eventos subjacentes.
     pub fn new(emit: EventEmitter) -> Self {
         Self { emit }
     }
@@ -59,11 +76,16 @@ impl ProtocolHandler for RpcServerHandler {
     }
 }
 
+/// Lida com fluxos abertos para o `acerola/rpc` a partir da perspectiva Cliente.
+///
+/// Dispara imediatamente o `PING` logo quando se conecta, depois se mantém no laço
+/// de prontidão caso os peers entrem em acordo para enviar fluxos mútuos.
 pub struct RpcClientHandler {
     emit: EventEmitter,
 }
 
 impl RpcClientHandler {
+    /// Instancia o protocolo repassando o sistema de propagação dos logs e callbacks.
     pub fn new(emit: EventEmitter) -> Self {
         Self { emit }
     }
@@ -78,6 +100,7 @@ impl ProtocolHandler for RpcClientHandler {
         let mut framed_recv = FramedRead::new(recv, LengthDelimitedCodec::new());
         let mut framed_send = FramedWrite::new(send, LengthDelimitedCodec::new());
 
+        // Protocolo Ativo: Primeiramente, notifica a vida ativamente ao par conectado.
         write_byte(&mut framed_send, PING).await?;
         (self.emit)("rpc:ping_sent", peer.id.clone());
 
@@ -89,6 +112,7 @@ impl ProtocolHandler for RpcClientHandler {
             _ => return Ok(()),
         }
 
+        // Loop continuado onde o cliente também processa Heartbeats eventuais retornados pelo nó remoto
         loop {
             match read_byte(&mut framed_recv).await {
                 Ok(PING) => {
