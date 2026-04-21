@@ -1,27 +1,76 @@
-//! Implementação baseada no Iroh como motor Quic/UDP principal.
+//! Implementa��o baseada no Iroh como motor Quic/UDP principal.
 //!
-//! Este módulo converte o sistema do endpoint Iroh e conectividade hole-punching
-//! para os traits genéricos `P2PTransport` e `IncomingConnection` do ecossistema local.
+//! Este m�dulo converte o sistema do endpoint Iroh e conectividade hole-punching
+//! para os traits gen�ricos `P2PTransport` e `IncomingConnection` do ecossistema local.
 
 use async_trait::async_trait;
 use iroh::address_lookup::mdns;
 use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
-use tokio::io::{AsyncRead, AsyncWrite};
+use std::pin::Pin;
+use std::sync::Arc;
+use std::task::{Context, Poll};
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::error::ConnectionError;
 use crate::peer::PeerId;
 use crate::transport::{IncomingConnection, P2PTransport};
 
-/// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
+/// Embalagem da estrutura de conex�o transit�ria `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
     conn: iroh::endpoint::Connection,
     peer: PeerId,
     alpn: Vec<u8>,
 }
 
-/// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
+/// Wrapper que mant�m a inst�ncia do `iroh::endpoint::Connection` viva enquanto a stream de escrita for utilizada.
+pub struct ConnectionWriter {
+    inner: iroh::endpoint::SendStream,
+    _conn: Arc<iroh::endpoint::Connection>,
+}
+
+impl AsyncWrite for ConnectionWriter {
+    fn poll_write(
+        mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8],
+    ) -> Poll<Result<usize, std::io::Error>> {
+        Pin::new(&mut self.inner)
+            .poll_write(cx, buf)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), std::io::Error>> {
+        Pin::new(&mut self.inner)
+            .poll_flush(cx)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    }
+
+    fn poll_shutdown(
+        mut self: Pin<&mut Self>, cx: &mut Context<'_>,
+    ) -> Poll<Result<(), std::io::Error>> {
+        Pin::new(&mut self.inner)
+            .poll_shutdown(cx)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    }
+}
+
+/// Wrapper que mant�m a inst�ncia do `iroh::endpoint::Connection` viva enquanto a stream de leitura for utilizada.
+pub struct ConnectionReader {
+    inner: iroh::endpoint::RecvStream,
+    _conn: Arc<iroh::endpoint::Connection>,
+}
+
+impl AsyncRead for ConnectionReader {
+    fn poll_read(
+        mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>,
+    ) -> Poll<Result<(), std::io::Error>> {
+        Pin::new(&mut self.inner)
+            .poll_read(cx, buf)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    }
+}
+
+/// Interface concreta que gerencia o Endpoint UDP local e a configura��o de chaves usando a suite Iroh.
 pub struct IrohTransport {
-    /// Referência mantida viva para os contextos globais e loops do iroh-net subjacente.
+    /// Refer�ncia mantida viva para os contextos globais e loops do iroh-net subjacente.
     endpoint: Endpoint,
 }
 
@@ -42,19 +91,23 @@ impl IncomingConnection for IrohIncoming {
         ConnectionError,
     > {
         let (send, recv) = self.conn.accept_bi().await?;
-        Ok((Box::new(send), Box::new(recv)))
+        let shared_conn = Arc::new(self.conn);
+        Ok((
+            Box::new(ConnectionWriter { inner: send, _conn: Arc::clone(&shared_conn) }),
+            Box::new(ConnectionReader { inner: recv, _conn: shared_conn }),
+        ))
     }
 }
 
 impl IrohTransport {
-    /// Inicia um novo endpoint na rede usando as portas disponíveis do host.
+    /// Inicia um novo endpoint na rede usando as portas dispon�veis do host.
     ///
-    // TODO: Permitir que o código que usa a lib passe o endpoint do relay configurado,
-    // mantendo o mDNS local como fallback ao invés de fixar o preset N0.
+    // TODO: Permitir que o c�digo que usa a lib passe o endpoint do relay configurado,
+    // mantendo o mDNS local como fallback ao inv�s de fixar o preset N0.
     pub async fn new() -> Result<Self, ConnectionError> {
         let mdns = mdns::MdnsAddressLookup::builder();
 
-        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padrão.
+        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padr�o.
         let endpoint = Endpoint::builder(presets::N0)
             .alpns(vec![b"acerola/rpc".to_vec()])
             .address_lookup(mdns)
@@ -64,7 +117,7 @@ impl IrohTransport {
         Ok(Self { endpoint })
     }
 
-    /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
+    /// Trata a convers�o sint�tica das Strings em NodeIds estritos nativos do iroh.
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
         let id: EndpointId = peer
             .id
@@ -102,12 +155,16 @@ impl P2PTransport for IrohTransport {
         let conn = self.endpoint.connect(addr, alpn).await?;
         let (send, recv) = conn.open_bi().await?;
 
-        Ok((Box::new(send), Box::new(recv)))
+        let shared_conn = Arc::new(conn);
+        Ok((
+            Box::new(ConnectionWriter { inner: send, _conn: Arc::clone(&shared_conn) }),
+            Box::new(ConnectionReader { inner: recv, _conn: shared_conn }),
+        ))
     }
 
-    /// Executa o teardown forçado do componente iroh.
+    /// Executa o teardown for�ado do componente iroh.
     ///
-    /// Warn: O endpoint é compartilhado em formato Arc no backend do crate `iroh`.
+    /// Warn: O endpoint � compartilhado em formato Arc no backend do crate `iroh`.
     /// Desligar essa faceta pode necessitar dropar todos os componentes de leitura remanescentes.
     async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.endpoint.close().await;
