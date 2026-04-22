@@ -12,7 +12,7 @@ name = "acerola"
 
 [[bin]]
 name = "uniffi-bindgen"
-path = "uniffi-bindgen.rs"
+path = "src/bin/uniffi-bindgen.rs"
 
 [dependencies]
 acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5"}
