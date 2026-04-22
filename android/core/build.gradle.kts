@@ -60,6 +60,7 @@ room {
 
 dependencies {
     implementation(project(":infra"))
+    api(project(":native"))
     api(project(":data"))
 
     // --- Core ---

@@ -8,7 +8,7 @@ version = "0.0.1"
 
 [lib]
 crate-type = ["cdylib"]
-name = "acerola_android"
+name = "acerola"
 
 [[bin]]
 name = "uniffi-bindgen"

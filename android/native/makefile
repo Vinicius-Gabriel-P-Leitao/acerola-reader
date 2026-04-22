@@ -1,9 +1,11 @@
 RUST_DIR := rust
 API_LEVEL := 26
 ABI := arm64-v8a
-LIB_NAME := acerola_android
+LIB_NAME := acerola
 TARGET := aarch64-linux-android
+
 SO_SOURCE := $(RUST_DIR)/target/$(TARGET)/release/lib$(LIB_NAME).so
+SO_SOURCE_REL := target/$(TARGET)/release/lib$(LIB_NAME).so
 
 KOTLIN_OUT := src/main/java/br/acerola/comic
 JNILIBS_OUT := src/main/jniLibs/$(ABI)
@@ -30,7 +32,7 @@ generate-bindings:
 	cd $(RUST_DIR) && \
 	cargo run --bin uniffi-bindgen -- generate \
 	--config uniffi.toml \
-	--library ./target/$(TARGET)/release/lib$(LIB_NAME).so \
+	--library $(SO_SOURCE_REL) \
 	--language kotlin \
 	--out-dir ../$(KOTLIN_OUT)
 

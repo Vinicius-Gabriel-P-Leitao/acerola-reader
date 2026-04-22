@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.library)
@@ -7,14 +8,20 @@ plugins {
 }
 
 android {
-    namespace = "br.acerola.comic.native"
+    namespace = "br.acerola.comic.rust"
     compileSdk = 36
-
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        ndk {
-            abiFilters.add("arm64-v8a")
+    }
+    sourceSets {
+        getByName("main") {
+            jniLibs.srcDirs("src/main/jniLibs")
+        }
+    }
+    packaging {
+        jniLibs {
+            pickFirsts.add("**/libjnidispatch.so")
         }
     }
     compileOptions {
@@ -33,11 +40,6 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
-    sourceSets {
-        getByName("main") {
-            jniLibs.srcDirs("src/main/jniLibs")
-        }
-    }
 }
 
 kotlin {
@@ -47,11 +49,18 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.jna)
     testImplementation(libs.mockk)
     testImplementation(libs.junit)
     implementation(libs.androidx.annotation)
     implementation(libs.kotlinx.coroutines.core)
+    implementation("net.java.dev.jna:jna:5.12.0@aar")
+}
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    filter {
+        exclude { it.file.path.contains("p2p") }
+        exclude { it.file.path.contains("generated") }
+    }
 }
 
 
@@ -64,9 +73,50 @@ tasks.withType<Test> {
     }
 }
 
-configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-    filter {
-        exclude { it.file.path.contains("p2p") }
-        exclude { it.file.path.contains("generated") }
-    }
+val localProps = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
 }
+
+val cargo = localProps.getProperty("cargo.dir") ?: error("cargo.dir não definido no local.properties")
+
+
+tasks.register<Exec>("buildRust") {
+    workingDir = file("rust")
+
+    commandLine(
+        cargo, "ndk",
+        "-t", "aarch64-linux-android",
+        "build",
+        "--release"
+    )
+}
+
+tasks.register<Exec>("generateBindings") {
+    workingDir = file("rust")
+
+    val soPath = file("rust/target/aarch64-linux-android/release/libacerola.so").absolutePath
+
+    commandLine(
+        cargo, "run",
+        "--bin", "uniffi-bindgen", "--",
+        "generate",
+        "--config", "uniffi.toml",
+        "--library", soPath,
+        "--language", "kotlin",
+        "--out-dir", file("src/main/java/br/acerola/comic").absolutePath
+    )
+
+    dependsOn("buildRust")
+}
+
+tasks.register<Copy>("copyRustLib") {
+    from("rust/target/aarch64-linux-android/release/libacerola.so")
+    into("src/main/jniLibs/arm64-v8a")
+
+    dependsOn("buildRust")
+}
+
+tasks.named("preBuild") {
+    dependsOn("generateBindings", "copyRustLib")
+}
+

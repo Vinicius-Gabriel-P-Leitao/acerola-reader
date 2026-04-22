@@ -17,20 +17,20 @@ package p2p
 // compile the Rust component. The easiest way to ensure this is to bundle the Kotlin
 // helpers directly inline like we're doing here.
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.sun.jna.Library
-import com.sun.jna.IntegerType
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-import com.sun.jna.Callback
-import com.sun.jna.ptr.*
+import com.sun.jna.ptr.ByReference
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.CharBuffer
 import java.nio.charset.CodingErrorAction
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 // This is a helper for safely working with byte buffers returned from the Rust code.
 // A rust-owned buffer is represented by its capacity, its current length, and a
@@ -59,7 +59,7 @@ open class RustBuffer : Structure() {
     companion object {
         internal fun alloc(size: ULong = 0UL) = uniffiRustCall() { status ->
             // Note: need to convert the size to a `Long` value to make this work with JVM.
-            UniffiLib.INSTANCE.ffi_acerola_android_rustbuffer_alloc(size.toLong(), status)
+            UniffiLib.INSTANCE.ffi_acerola_rustbuffer_alloc(size.toLong(), status)
         }.also {
             if(it.data == null) {
                throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
@@ -75,7 +75,7 @@ open class RustBuffer : Structure() {
         }
 
         internal fun free(buf: RustBuffer.ByValue) = uniffiRustCall() { status ->
-            UniffiLib.INSTANCE.ffi_acerola_android_rustbuffer_free(buf, status)
+            UniffiLib.INSTANCE.ffi_acerola_rustbuffer_free(buf, status)
         }
     }
 
@@ -375,7 +375,7 @@ private fun findLibraryName(componentName: String): String {
     if (libOverride != null) {
         return libOverride
     }
-    return "acerola"
+    return ""
 }
 
 private inline fun <reified Lib : Library> loadIndirect(
@@ -753,16 +753,18 @@ internal open class UniffiVTableCallbackInterfaceP2pCallback(
 
 
 
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
 internal interface UniffiLib : Library {
     companion object {
         internal val INSTANCE: UniffiLib by lazy {
-            loadIndirect<UniffiLib>(componentName = "acerola_android")
+            loadIndirect<UniffiLib>(componentName = "acerola")
             .also { lib: UniffiLib ->
                 uniffiCheckContractApiVersion(lib)
                 uniffiCheckApiChecksums(lib)
+                uniffiCallbackInterfaceP2PCallback.register(lib)
                 }
         }
         
@@ -772,163 +774,165 @@ internal interface UniffiLib : Library {
         }
     }
 
-    fun uniffi_acerola_android_fn_clone_p2pcallback(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_clone_p2pcallback(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun uniffi_acerola_android_fn_free_p2pcallback(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_free_p2pcallback(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_android_fn_method_p2pcallback_on_event(`ptr`: Pointer,`event`: RustBuffer.ByValue,`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_init_callback_vtable_p2pcallback(`vtable`: UniffiVTableCallbackInterfaceP2pCallback,
     ): Unit
-    fun uniffi_acerola_android_fn_clone_p2pnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pcallback_on_event(`ptr`: Pointer,`event`: RustBuffer.ByValue,`data`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_fn_clone_p2pnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun uniffi_acerola_android_fn_free_p2pnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_free_p2pnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_android_fn_constructor_p2pnode_new(`callback`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_constructor_p2pnode_new(`callback`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun uniffi_acerola_android_fn_method_p2pnode_connect(`ptr`: Pointer,`peerId`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_connect(`ptr`: Pointer,`peerId`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_android_fn_method_p2pnode_get_connected_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_get_connected_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_acerola_android_fn_method_p2pnode_get_local_id(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_get_local_id(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_acerola_android_fn_method_p2pnode_get_mode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_get_mode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun uniffi_acerola_android_fn_method_p2pnode_shutdown(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_shutdown(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_android_fn_method_p2pnode_switch_to_local(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_switch_to_local(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_android_fn_method_p2pnode_switch_to_relay(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_switch_to_relay(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun ffi_acerola_android_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_acerola_android_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_acerola_android_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun ffi_acerola_android_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_acerola_android_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_u8(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_u8(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_u8(`handle`: Long,
+    fun ffi_acerola_rust_future_free_u8(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun ffi_acerola_android_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_i8(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_i8(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_i8(`handle`: Long,
+    fun ffi_acerola_rust_future_free_i8(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun ffi_acerola_android_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_u16(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_u16(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_u16(`handle`: Long,
+    fun ffi_acerola_rust_future_free_u16(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Short
-    fun ffi_acerola_android_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_i16(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_i16(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_i16(`handle`: Long,
+    fun ffi_acerola_rust_future_free_i16(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Short
-    fun ffi_acerola_android_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_u32(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_u32(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_u32(`handle`: Long,
+    fun ffi_acerola_rust_future_free_u32(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
-    fun ffi_acerola_android_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_i32(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_i32(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_i32(`handle`: Long,
+    fun ffi_acerola_rust_future_free_i32(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
-    fun ffi_acerola_android_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_u64(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_u64(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_u64(`handle`: Long,
+    fun ffi_acerola_rust_future_free_u64(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
-    fun ffi_acerola_android_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_i64(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_i64(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_i64(`handle`: Long,
+    fun ffi_acerola_rust_future_free_i64(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
-    fun ffi_acerola_android_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_f32(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_f32(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_f32(`handle`: Long,
+    fun ffi_acerola_rust_future_free_f32(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Float
-    fun ffi_acerola_android_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_f64(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_f64(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_f64(`handle`: Long,
+    fun ffi_acerola_rust_future_free_f64(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Double
-    fun ffi_acerola_android_rust_future_poll_pointer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_pointer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_pointer(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_pointer(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_pointer(`handle`: Long,
+    fun ffi_acerola_rust_future_free_pointer(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_pointer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_pointer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun ffi_acerola_android_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_rust_buffer(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_rust_buffer(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_rust_buffer(`handle`: Long,
+    fun ffi_acerola_rust_future_free_rust_buffer(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    fun ffi_acerola_android_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    fun ffi_acerola_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_cancel_void(`handle`: Long,
+    fun ffi_acerola_rust_future_cancel_void(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_free_void(`handle`: Long,
+    fun ffi_acerola_rust_future_free_void(`handle`: Long,
     ): Unit
-    fun ffi_acerola_android_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    fun ffi_acerola_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_android_checksum_method_p2pcallback_on_event(
+    fun uniffi_acerola_checksum_method_p2pcallback_on_event(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_connect(
+    fun uniffi_acerola_checksum_method_p2pnode_connect(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_get_connected_peers(
+    fun uniffi_acerola_checksum_method_p2pnode_get_connected_peers(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_get_local_id(
+    fun uniffi_acerola_checksum_method_p2pnode_get_local_id(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_get_mode(
+    fun uniffi_acerola_checksum_method_p2pnode_get_mode(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_shutdown(
+    fun uniffi_acerola_checksum_method_p2pnode_shutdown(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_switch_to_local(
+    fun uniffi_acerola_checksum_method_p2pnode_switch_to_local(
     ): Short
-    fun uniffi_acerola_android_checksum_method_p2pnode_switch_to_relay(
+    fun uniffi_acerola_checksum_method_p2pnode_switch_to_relay(
     ): Short
-    fun uniffi_acerola_android_checksum_constructor_p2pnode_new(
+    fun uniffi_acerola_checksum_constructor_p2pnode_new(
     ): Short
-    fun ffi_acerola_android_uniffi_contract_version(
+    fun ffi_acerola_uniffi_contract_version(
     ): Int
     
 }
@@ -937,7 +941,7 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
     // Get the bindings contract version from our ComponentInterface
     val bindings_contract_version = 26
     // Get the scaffolding contract version by calling the into the dylib
-    val scaffolding_contract_version = lib.ffi_acerola_android_uniffi_contract_version()
+    val scaffolding_contract_version = lib.ffi_acerola_uniffi_contract_version()
     if (bindings_contract_version != scaffolding_contract_version) {
         throw RuntimeException("UniFFI contract version mismatch: try cleaning and rebuilding your project")
     }
@@ -945,31 +949,31 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: UniffiLib) {
-    if (lib.uniffi_acerola_android_checksum_method_p2pcallback_on_event() != 47480.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pcallback_on_event() != 37231.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_connect() != 43472.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_connect() != 44925.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_get_connected_peers() != 42656.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_get_connected_peers() != 36858.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_get_local_id() != 39006.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_get_local_id() != 1168.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_get_mode() != 23737.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_get_mode() != 16134.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_shutdown() != 40695.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_shutdown() != 3258.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_switch_to_local() != 6869.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_switch_to_local() != 58934.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_method_p2pnode_switch_to_relay() != 2371.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_switch_to_relay() != 54345.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_android_checksum_constructor_p2pnode_new() != 3323.toShort()) {
+    if (lib.uniffi_acerola_checksum_constructor_p2pnode_new() != 2337.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1232,39 +1236,39 @@ private class UniffiJnaCleanable(
 // using Android or not.
 // There are further runtime checks to chose the correct implementation
 // of the cleaner.
+
+
 private fun UniffiCleaner.Companion.create(): UniffiCleaner =
-    try {
-        // For safety's sake: if the library hasn't been run in android_cleaner = true
-        // mode, but is being run on Android, then we still need to think about
-        // Android API versions.
-        // So we check if java.lang.ref.Cleaner is there, and use that…
-        java.lang.Class.forName("java.lang.ref.Cleaner")
-        JavaLangRefCleaner()
-    } catch (e: ClassNotFoundException) {
-        // … otherwise, fallback to the JNA cleaner.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        AndroidSystemCleaner()
+    } else {
         UniffiJnaCleaner()
     }
 
-private class JavaLangRefCleaner : UniffiCleaner {
-    val cleaner = java.lang.ref.Cleaner.create()
+// The SystemCleaner, available from API Level 33.
+// Some API Level 33 OSes do not support using it, so we require API Level 34.
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+private class AndroidSystemCleaner : UniffiCleaner {
+    val cleaner = android.system.SystemCleaner.cleaner()
 
     override fun register(value: Any, cleanUpTask: Runnable): UniffiCleaner.Cleanable =
-        JavaLangRefCleanable(cleaner.register(value, cleanUpTask))
+        AndroidSystemCleanable(cleaner.register(value, cleanUpTask))
 }
 
-private class JavaLangRefCleanable(
-    val cleanable: java.lang.ref.Cleaner.Cleanable
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+private class AndroidSystemCleanable(
+    private val cleanable: java.lang.ref.Cleaner.Cleanable,
 ) : UniffiCleaner.Cleanable {
     override fun clean() = cleanable.clean()
 }
-public interface P2pCallbackInterface {
+public interface P2pCallback {
     
     fun `onEvent`(`event`: kotlin.String, `data`: kotlin.String)
     
     companion object
 }
 
-open class P2pCallback: Disposable, AutoCloseable, P2pCallbackInterface {
+open class P2pCallbackImpl: Disposable, AutoCloseable, P2pCallback {
 
     constructor(pointer: Pointer) {
         this.pointer = pointer
@@ -1333,7 +1337,7 @@ open class P2pCallback: Disposable, AutoCloseable, P2pCallbackInterface {
         override fun run() {
             pointer?.let { ptr ->
                 uniffiRustCall { status ->
-                    UniffiLib.INSTANCE.uniffi_acerola_android_fn_free_p2pcallback(ptr, status)
+                    UniffiLib.INSTANCE.uniffi_acerola_fn_free_p2pcallback(ptr, status)
                 }
             }
         }
@@ -1341,7 +1345,7 @@ open class P2pCallback: Disposable, AutoCloseable, P2pCallbackInterface {
 
     fun uniffiClonePointer(): Pointer {
         return uniffiRustCall() { status ->
-            UniffiLib.INSTANCE.uniffi_acerola_android_fn_clone_p2pcallback(pointer!!, status)
+            UniffiLib.INSTANCE.uniffi_acerola_fn_clone_p2pcallback(pointer!!, status)
         }
     }
 
@@ -1349,7 +1353,7 @@ open class P2pCallback: Disposable, AutoCloseable, P2pCallbackInterface {
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pcallback_on_event(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pcallback_on_event(
         it, FfiConverterString.lower(`event`),FfiConverterString.lower(`data`),_status)
 }
     }
@@ -1363,18 +1367,85 @@ open class P2pCallback: Disposable, AutoCloseable, P2pCallbackInterface {
     companion object
     
 }
+// Magic number for the Rust proxy to call using the same mechanism as every other method,
+// to free the callback once it's dropped by Rust.
+internal const val IDX_CALLBACK_FREE = 0
+// Callback return codes
+internal const val UNIFFI_CALLBACK_SUCCESS = 0
+internal const val UNIFFI_CALLBACK_ERROR = 1
+internal const val UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
+
+/**
+ * @suppress
+ */
+public abstract class FfiConverterCallbackInterface<CallbackInterface: Any>: FfiConverter<CallbackInterface, Long> {
+    internal val handleMap = UniffiHandleMap<CallbackInterface>()
+
+    internal fun drop(handle: Long) {
+        handleMap.remove(handle)
+    }
+
+    override fun lift(value: Long): CallbackInterface {
+        return handleMap.get(value)
+    }
+
+    override fun read(buf: ByteBuffer) = lift(buf.getLong())
+
+    override fun lower(value: CallbackInterface) = handleMap.insert(value)
+
+    override fun allocationSize(value: CallbackInterface) = 8UL
+
+    override fun write(value: CallbackInterface, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceP2PCallback {
+    internal object `onEvent`: UniffiCallbackInterfaceP2pCallbackMethod0 {
+        override fun callback(`uniffiHandle`: Long,`event`: RustBuffer.ByValue,`data`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeP2PCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`onEvent`(
+                    FfiConverterString.lift(`event`),
+                    FfiConverterString.lift(`data`),
+                )
+            }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeP2PCallback.handleMap.remove(handle)
+        }
+    }
+
+    internal var vtable = UniffiVTableCallbackInterfaceP2pCallback.UniffiByValue(
+        `onEvent`,
+        uniffiFree,
+    )
+
+    // Registers the foreign callback with the Rust side.
+    // This method is generated for each callback interface.
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_acerola_fn_init_callback_vtable_p2pcallback(vtable)
+    }
+}
 
 /**
  * @suppress
  */
 public object FfiConverterTypeP2PCallback: FfiConverter<P2pCallback, Pointer> {
+    internal val handleMap = UniffiHandleMap<P2pCallback>()
 
     override fun lower(value: P2pCallback): Pointer {
-        return value.uniffiClonePointer()
+        return Pointer(handleMap.insert(value))
     }
 
     override fun lift(value: Pointer): P2pCallback {
-        return P2pCallback(value)
+        return P2pCallbackImpl(value)
     }
 
     override fun read(buf: ByteBuffer): P2pCallback {
@@ -1530,7 +1601,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     constructor(`callback`: P2pCallback) :
         this(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_constructor_p2pnode_new(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_constructor_p2pnode_new(
         FfiConverterTypeP2PCallback.lower(`callback`),_status)
 }
     )
@@ -1586,7 +1657,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         override fun run() {
             pointer?.let { ptr ->
                 uniffiRustCall { status ->
-                    UniffiLib.INSTANCE.uniffi_acerola_android_fn_free_p2pnode(ptr, status)
+                    UniffiLib.INSTANCE.uniffi_acerola_fn_free_p2pnode(ptr, status)
                 }
             }
         }
@@ -1594,7 +1665,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
 
     fun uniffiClonePointer(): Pointer {
         return uniffiRustCall() { status ->
-            UniffiLib.INSTANCE.uniffi_acerola_android_fn_clone_p2pnode(pointer!!, status)
+            UniffiLib.INSTANCE.uniffi_acerola_fn_clone_p2pnode(pointer!!, status)
         }
     }
 
@@ -1602,7 +1673,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_connect(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_connect(
         it, FfiConverterString.lower(`peerId`),FfiConverterByteArray.lower(`alpn`),_status)
 }
     }
@@ -1613,7 +1684,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
             return FfiConverterMapStringSequenceByteArray.lift(
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_get_connected_peers(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_connected_peers(
         it, _status)
 }
     }
@@ -1625,7 +1696,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
             return FfiConverterString.lift(
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_get_local_id(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_local_id(
         it, _status)
 }
     }
@@ -1637,7 +1708,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
             return FfiConverterTypeFfiNetworkMode.lift(
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_get_mode(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_mode(
         it, _status)
 }
     }
@@ -1649,7 +1720,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_shutdown(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_shutdown(
         it, _status)
 }
     }
@@ -1660,7 +1731,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_switch_to_local(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_switch_to_local(
         it, _status)
 }
     }
@@ -1671,7 +1742,7 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_acerola_android_fn_method_p2pnode_switch_to_relay(
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_switch_to_relay(
         it, _status)
 }
     }

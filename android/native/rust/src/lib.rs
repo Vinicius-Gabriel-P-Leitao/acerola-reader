@@ -10,7 +10,7 @@ use tokio::{runtime::Runtime, sync::RwLock};
 
 uniffi::setup_scaffolding!();
 
-#[uniffi::export]
+#[uniffi::export(with_foreign)]
 pub trait P2PCallback: Send + Sync {
     fn on_event(&self, event: String, data: String);
 }
@@ -51,8 +51,10 @@ impl P2PNode {
         let runtime = TOKIO_RUNTIME.clone();
 
         let node = runtime.block_on(async {
+            let cb_clone = Arc::clone(&callback);
+
             let emit: acerola_p2p::api::protocol::EventEmitter = Arc::new(move |event, data| {
-                callback.on_event(event.to_string(), data);
+                cb_clone.on_event(event.to_string(), data);
             });
 
             Arc::new(
@@ -77,7 +79,6 @@ impl P2PNode {
 
     pub fn connect(&self, peer_id: String, alpn: Vec<u8>) {
         let node = Arc::clone(&self.node);
-
         self.runtime.spawn(async move {
             let _ = node.connect(&peer_id, &alpn).await;
         });
@@ -85,7 +86,6 @@ impl P2PNode {
 
     pub fn shutdown(&self) {
         let node = Arc::clone(&self.node);
-
         self.runtime.block_on(async move {
             let _ = node.shutdown().await;
         });
