@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -19,17 +20,22 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -286,13 +292,37 @@ fun P2pDemoSection(
 ) {
     val localId = remember(p2pViewModel) { p2pViewModel.getLocalId() }
     val mode = remember(p2pViewModel) { p2pViewModel.getMode() }
+    val clipboardManager = LocalClipboardManager.current
+    var remotePeerId by remember { mutableStateOf("") }
 
     SectionHeader("P2P Demo")
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Text(text = "Local ID: $localId", style = MaterialTheme.typography.bodySmall)
+        Row {
+            Text(text = "Local ID: $localId", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.weight(1f))
+            Button(onClick = { clipboardManager.setText(AnnotatedString(localId)) }) {
+                Icon(Icons.Default.ContentCopy, contentDescription = null)
+            }
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = "Mode: $mode", style = MaterialTheme.typography.bodySmall)
         Spacer(modifier = Modifier.height(16.dp))
+        
+        OutlinedTextField(
+            value = remotePeerId,
+            onValueChange = { remotePeerId = it },
+            label = { Text("Remote Peer ID") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, byteArrayOf()) }) {
+            Text("Connect")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        
         Row {
             Button(onClick = { p2pViewModel.switchToLocal() }) {
                 Text("Switch to Local")

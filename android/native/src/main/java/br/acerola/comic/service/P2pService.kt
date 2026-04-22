@@ -1,5 +1,6 @@
 package br.acerola.comic.service
 
+import android.util.Log
 import p2p.FfiNetworkMode
 import p2p.P2pCallback
 import p2p.P2pNode
@@ -18,6 +19,7 @@ class P2pService(
 
     private val callbackHandler = object : P2pCallback {
         override fun onEvent(event: String, data: String) {
+            Log.d("P2pService", "Event received: $event, Data: $data")
             eventListener(event, data)
         }
     }
@@ -34,6 +36,7 @@ class P2pService(
         peerId: String,
         alpn: ByteArray
     ) {
+        Log.d("P2pService", "Connecting to peer: $peerId")
         p2pNode.connect(peerId, alpn)
     }
 
