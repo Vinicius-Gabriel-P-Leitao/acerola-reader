@@ -5,7 +5,9 @@
 
 use async_trait::async_trait;
 use iroh::address_lookup::mdns;
-use iroh::{endpoint::presets, Endpoint, EndpointAddr, EndpointId};
+use iroh::endpoint::presets;
+use iroh::{Endpoint, EndpointAddr, EndpointId};
+use iroh::{RelayConfig, RelayMap, RelayUrl};
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -34,13 +36,15 @@ impl AsyncWrite for ConnectionWriter {
     ) -> Poll<Result<usize, std::io::Error>> {
         Pin::new(&mut self.inner)
             .poll_write(cx, buf)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
     }
 
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), std::io::Error>> {
+    fn poll_flush(
+        mut self: Pin<&mut Self>, cx: &mut Context<'_>,
+    ) -> Poll<Result<(), std::io::Error>> {
         Pin::new(&mut self.inner)
             .poll_flush(cx)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .map_err(|err: std::io::Error| std::io::Error::new(std::io::ErrorKind::Other, err))
     }
 
     fn poll_shutdown(
@@ -48,7 +52,7 @@ impl AsyncWrite for ConnectionWriter {
     ) -> Poll<Result<(), std::io::Error>> {
         Pin::new(&mut self.inner)
             .poll_shutdown(cx)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
     }
 }
 
@@ -64,7 +68,7 @@ impl AsyncRead for ConnectionReader {
     ) -> Poll<Result<(), std::io::Error>> {
         Pin::new(&mut self.inner)
             .poll_read(cx, buf)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
     }
 }
 
@@ -107,9 +111,16 @@ impl IrohTransport {
     pub async fn new() -> Result<Self, ConnectionError> {
         let mdns = mdns::MdnsAddressLookup::builder();
 
-        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padr�o.
+        // FIXME: Converter para o meu relay futuramente
+        let n0_relay_us: RelayUrl = "https://use1-1.relay.iroh.network".parse()?;
+
+        let relay_config = RelayConfig { url: n0_relay_us.clone(), quic: None };
+        let relay_map = RelayMap::from_iter([(relay_config)]);
+
+        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padrão, o preset é para usar os DNS do N0 para resolver o relay.
         let endpoint = Endpoint::builder(presets::N0)
             .alpns(vec![b"acerola/rpc".to_vec()])
+            .relay_mode(iroh::RelayMode::Custom(relay_map))
             .address_lookup(mdns)
             .bind()
             .await?;
@@ -118,12 +129,9 @@ impl IrohTransport {
     }
 
     /// Trata a convers�o sint�tica das Strings em NodeIds estritos nativos do iroh.
+    #[rustfmt::skip]
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
-        let id: EndpointId = peer
-            .id
-            .parse()
-            .map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone() }))?;
-
+        let id: EndpointId = peer.id.parse().map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone() }))?;
         Ok(EndpointAddr::from(id))
     }
 }
@@ -131,6 +139,7 @@ impl IrohTransport {
 #[async_trait]
 impl P2PTransport for IrohTransport {
     fn local_id(&self) -> PeerId {
+        // Converte o EndpointID para o meu PeerId
         PeerId { id: self.endpoint.id().to_string() }
     }
 

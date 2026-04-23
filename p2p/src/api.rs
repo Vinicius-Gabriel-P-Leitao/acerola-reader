@@ -4,7 +4,10 @@
 //! de modo a ocultar o path complexo das pastas internas. Ele centraliza
 //! o padrão de construção (Builder pattern) usado para inicializar uma instância P2P completa.
 
-use std::{collections::{HashMap, HashSet}, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 /// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2P.
 pub mod error {
@@ -45,7 +48,7 @@ use crate::{
 /// Estrutura auxiliar para pré-configurar o ecossistema P2P antes da iniciação real no sistema operacional.
 ///
 /// Através desse builder é possível injetar regras de firewall,
-/// registrar portas e protocols customizados (handlers ALPN) e repassar 
+/// registrar portas e protocols customizados (handlers ALPN) e repassar
 /// as lógicas de monitoria pro usuário.
 pub struct AcerolaP2PBuilder {
     emit: EventEmitter,
@@ -72,7 +75,7 @@ impl AcerolaP2PBuilder {
         self
     }
 
-    /// Acopla um manipulador passivo de requisições de serviço à pilha. 
+    /// Acopla um manipulador passivo de requisições de serviço à pilha.
     /// Dispara somente quando um par iniciar conexão invocando a exata chave `alpn`.
     pub fn inbound(mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) -> Self {
         self.handlers_inbound.insert(alpn.to_vec(), handler);
@@ -156,8 +159,8 @@ impl AcerolaP2P {
             .map_err(|_| ConnectionError::Shutdown)
     }
 
-     /// Captura um Snapshot/Cópia pesada dos nós que estão trafegando e seus marcadores de sub-protocolo atrelados.
-     pub async fn connected_peers(&self) -> HashMap<PeerId, HashSet<Vec<u8>>> {
+    /// Captura um Snapshot/Cópia pesada dos nós que estão trafegando e seus marcadores de sub-protocolo atrelados.
+    pub async fn connected_peers(&self) -> HashMap<PeerId, HashSet<Vec<u8>>> {
         self.state.read().await.peers().clone()
     }
 
@@ -178,7 +181,7 @@ impl AcerolaP2P {
             .map_err(|_| ConnectionError::Shutdown)
     }
 
-    /// Aciona a sequência final de drenagem forçando o cancelamento do background Event Loop 
+    /// Aciona a sequência final de drenagem forçando o cancelamento do background Event Loop
     /// e do serviço nativo na memória.
     pub async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.command_tx.send(NetworkCommand::Shutdown).await.map_err(|_| ConnectionError::Shutdown)
