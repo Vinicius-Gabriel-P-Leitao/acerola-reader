@@ -119,8 +119,8 @@ impl IrohTransport {
 
         // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padrão, o preset é para usar os DNS do N0 para resolver o relay.
         let endpoint = Endpoint::builder(presets::N0)
-            .alpns(vec![b"acerola/rpc".to_vec()])
             .relay_mode(iroh::RelayMode::Custom(relay_map))
+            .alpns(vec![b"acerola/rpc".to_vec()])
             .address_lookup(mdns)
             .bind()
             .await?;
