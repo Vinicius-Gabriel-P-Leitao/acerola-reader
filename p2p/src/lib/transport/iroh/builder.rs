@@ -39,9 +39,7 @@ impl TransportP2pBuilder for IrohTransportBuilder {
         } else {
             let relay_configs: Vec<RelayConfig> = self.relay_urls.into_iter()
                 .map(|url| {
-                    url.parse::<RelayUrl>().map(|relay_url| RelayConfig {
-                        url: relay_url, quic: None
-                    })
+                    url.parse::<RelayUrl>().map(RelayConfig::from)
                 }).collect::<Result<_, iroh::RelayUrlParseError>>()?;
             iroh::RelayMode::Custom(RelayMap::from_iter(relay_configs))
         };
