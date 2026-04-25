@@ -42,10 +42,7 @@ use crate::{
         rpc::{RpcClientHandler, RpcServerHandler},
         EventEmitter, ProtocolHandler,
     },
-    transport::{
-        iroh::{IrohTransport, IrohTransportBuilder},
-        P2pTransport, TransportP2pBuilder,
-    },
+    transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
 };
 
 /// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
@@ -57,7 +54,7 @@ pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder = IrohTransportBuilder>
 where
     TB::Output: 'static,
 {
-    trasport: TB,
+    transport: TB,
     emit: EventEmitter,
     guard: BoxedValidator,
     handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
@@ -66,10 +63,10 @@ where
 
 impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     /// Gera o molde base definindo handlers padrão vazios e um fallback que não emite erros.
-    fn new(emit: EventEmitter, trasport: TB) -> Self {
+    fn new(emit: EventEmitter, transport: TB) -> Self {
         Self {
             emit,
-            trasport,
+            transport,
             handlers_inbound: HashMap::new(),
             handlers_outbound: HashMap::new(),
             // Permite passagem livre global se nenhuma restrição for registrada posteriormente.
@@ -103,7 +100,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
         #[rustfmt::skip]
         let transport = Arc::new(
-            self.trasport.build(
+            self.transport.build(
                     self.handlers_inbound.keys().chain(self.handlers_outbound.keys()).cloned().collect(),
                 ).await?,
         );
@@ -206,25 +203,46 @@ impl AcerolaP2p {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::network::state::NetworkMode;
     use crate::transport::iroh::IrohTransportBuilder;
+    use std::sync::Mutex;
+    use tokio::io::{AsyncRead, AsyncWrite};
 
     fn no_op_emitter() -> EventEmitter {
         Arc::new(|_event: &str, _payload: String| {})
     }
 
+    fn capture_emitter() -> (EventEmitter, Arc<Mutex<Vec<String>>>) {
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let clone = Arc::clone(&events);
+        let emit: EventEmitter = Arc::new(move |event: &str, _: String| {
+            clone.lock().unwrap().push(event.to_string());
+        });
+
+        (emit, events)
+    }
+
+    struct NoOpHandler;
+
+    #[async_trait::async_trait]
+    impl ProtocolHandler for NoOpHandler {
+        async fn handle(
+            &self, _peer: &PeerId, _send: Box<dyn AsyncWrite + Send + Unpin>,
+            _recv: Box<dyn AsyncRead + Send + Unpin>,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+    }
+
     async fn build_node() -> AcerolaP2p {
-        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
-            .build()
-            .await
-            .unwrap()
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default()).build().await.unwrap()
     }
 
     #[tokio::test]
+    #[rustfmt::skip]
     async fn build_retorna_no_valido() {
         assert!(AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
-            .build()
-            .await
-            .is_ok());
+            .build().await.is_ok());
     }
 
     #[tokio::test]
@@ -243,5 +261,34 @@ mod tests {
     async fn shutdown_sem_erro() {
         let node = build_node().await;
         assert!(node.shutdown().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn modo_inicial_e_local() {
+        let node = build_node().await;
+        assert_eq!(node.mode().await, NetworkMode::Local);
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn build_com_handler_customizado_nao_falha() {
+        let result = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
+            .inbound(b"meu/protocolo", Arc::new(NoOpHandler))
+            .outbound(b"meu/protocolo", Arc::new(NoOpHandler))
+            .build().await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn dois_nos_tem_ids_distintos() {
+        let (emit_a, _) = capture_emitter();
+        let (emit_b, _) = capture_emitter();
+
+        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default()).build().await.unwrap();
+        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default()).build().await.unwrap();
+
+        assert_ne!(node_a.local_id(), node_b.local_id());
     }
 }

@@ -12,7 +12,6 @@ pub mod iroh {
     pub use transport::IrohTransport;
 }
 
-use ::iroh::RelayUrl;
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 

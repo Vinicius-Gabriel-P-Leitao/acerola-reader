@@ -11,7 +11,7 @@ use crate::peer::PeerId;
 ///
 /// Define o nível atual de abstração sobre a comunicação: se o nó
 /// está operando somente localmente ou se depende de conectividade externa/relays.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum NetworkMode {
     /// Modo focado em testes ou tráfego P2P estritamente em LAN.
     Local,
