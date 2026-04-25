@@ -2,12 +2,12 @@
 
 ## Etapa 0 — Correções Críticas (fazer antes de qualquer outra coisa)
 
-- [ ] **Fix ALPN registration bug** — `api.rs` + `transport/iroh.rs`
+- [x] **Fix ALPN registration bug** — `api.rs` + `transport/iroh.rs`
   - `build()` deve coletar todos os ALPNs de `handlers_inbound` e passá-los para `IrohTransport::new(alpns)`
   - Sem esse fix, protocolos customizados registrados via `.inbound()` são silenciosamente rejeitados pelo Iroh no nível TLS
   - Critério: dois nós conseguem trocar mensagens em um ALPN customizado (não-rpc)
 
-- [ ] **Relay configurável via builder** — `api.rs` + `transport/iroh.rs`
+- [x] **Relay configurável via builder** — `api.rs` + `transport/iroh.rs`
   - Adicionar `.relay(url: &str)` no `AcerolaP2PBuilder`
   - `IrohTransport::new()` recebe `relay_url: &str` ao invés de hardcoded
   - Remover o FIXME em `iroh.rs:114`
