@@ -76,13 +76,14 @@ impl ConnectionReader {
     }
 }
 
+#[rustfmt::skip]
 impl AsyncRead for ConnectionReader {
     fn poll_read(
         mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
-        Pin::new(&mut self.inner)
-            .poll_read(cx, buf)
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
+        Pin::new(&mut self.inner).poll_read(cx, buf).map_err(|err| std::io::Error::new(
+            std::io::ErrorKind::Other, err
+        ))
     }
 }
 
@@ -104,6 +105,7 @@ impl IncomingConnection for IrohIncoming {
     > {
         let (send, recv) = self.conn.accept_bi().await?;
         let shared_conn = Arc::new(self.conn);
+
         Ok((
             Box::new(ConnectionWriter::new(send, Arc::clone(&shared_conn))),
             Box::new(ConnectionReader::new(recv, shared_conn)),

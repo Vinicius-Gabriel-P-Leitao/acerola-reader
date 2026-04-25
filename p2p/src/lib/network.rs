@@ -69,8 +69,8 @@ impl NetworkManager {
         let manager = Self {
             transport,
             command_rx,
-            command_tx: command_tx.clone(),
             state: Arc::clone(&state),
+            command_tx: command_tx.clone(),
             handlers_inbound: HashMap::new(),
             handlers_outbound: HashMap::new(),
             validator: Arc::new(RwLock::new(validator)),

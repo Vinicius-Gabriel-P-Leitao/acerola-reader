@@ -3,10 +3,10 @@ use iroh::{Endpoint, EndpointAddr, EndpointId};
 use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 
+use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
 use crate::error::ConnectionError;
 use crate::peer::PeerId;
 use crate::transport::{IncomingConnection, P2pTransport};
-use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
 
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
 pub struct IrohTransport {
@@ -51,6 +51,7 @@ impl P2pTransport for IrohTransport {
     > {
         let addr = self.peer_to_addr(peer)?;
         let conn = self.endpoint.connect(addr, alpn).await?;
+
         let (send, recv) = conn.open_bi().await?;
 
         let shared_conn = Arc::new(conn);
@@ -67,5 +68,28 @@ impl P2pTransport for IrohTransport {
     async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.endpoint.close().await;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::builder::IrohTransportBuilder;
+    use super::*;
+    use crate::transport::TransportP2pBuilder;
+
+    async fn build_transport() -> IrohTransport {
+        IrohTransportBuilder::default().build(vec![b"test/proto".to_vec()]).await.unwrap()
+    }
+
+    #[tokio::test]
+    async fn local_id_nao_vazio() {
+        let transport = build_transport().await;
+        assert!(!transport.local_id().id.is_empty());
+    }
+
+    #[tokio::test]
+    async fn shutdown_sem_erro() {
+        let transport = build_transport().await;
+        assert!(transport.shutdown().await.is_ok());
     }
 }

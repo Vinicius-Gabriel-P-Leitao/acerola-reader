@@ -3,6 +3,9 @@
 //! Provê o `MockTransport` e a sua respectiva manivela (`MockTransportHandle`), que
 //! permite injetar conexões programaticamente (como pipes duplexados na memória)
 //! simulando solicitações reais que viriam da rede exterior.
+//!
+//! O `open_bi` também é suportado via `MockTransportHandle::expect_open`, permitindo
+//! pré-registrar streams que serão devolvidas ao chamador quando o transporte discar.
 
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite, DuplexStream};
@@ -13,8 +16,11 @@ use crate::peer::PeerId;
 use crate::transport::{IncomingConnection, P2pTransport};
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".
-type InjectedConnection =
-    (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>);
+#[rustfmt::skip]
+type InjectedConnection = (Vec<u8>, PeerId, Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>);
+
+/// Assinatura interna de uma resposta pré-registrada para `open_bi`.
+type OutboundConnection = (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>);
 
 /// Conexão simulada representando um par de streams já atreladas a um nó fictício.
 struct MockIncoming {
@@ -44,29 +50,40 @@ impl IncomingConnection for MockIncoming {
     }
 }
 
-/// Implementador falso (Dummy) da trait `P2PTransport`.
+/// Implementador falso (Dummy) da trait `P2pTransport`.
 /// O NetworkManager irá ficar suspenso esperando conexões que o handle submete pelo buffer.
 pub struct MockTransport {
-    rx: Mutex<mpsc::UnboundedReceiver<InjectedConnection>>,
+    inbound_rx: Mutex<mpsc::UnboundedReceiver<InjectedConnection>>,
+    outbound_rx: Mutex<mpsc::UnboundedReceiver<OutboundConnection>>,
 }
 
-/// A manivela para disparar streams pra dentro do ambiente Mocado.
+/// A manivela para disparar streams pra dentro do ambiente mockado.
 pub struct MockTransportHandle {
-    tx: mpsc::UnboundedSender<InjectedConnection>,
+    inbound_tx: mpsc::UnboundedSender<InjectedConnection>,
+    outbound_tx: mpsc::UnboundedSender<OutboundConnection>,
 }
 
 impl MockTransportHandle {
-    /// Dispara falsamente a solicitação simulando um Remote Peer tentando parear um protocolo.
+    /// Simula um peer remoto iniciando uma conexão de entrada.
     pub fn inject(&self, alpn: &[u8], peer: PeerId, client: DuplexStream, server: DuplexStream) {
-        let _ = self.tx.send((alpn.to_vec(), peer, Box::new(server), Box::new(client)));
+        let _ = self.inbound_tx.send((alpn.to_vec(), peer, Box::new(server), Box::new(client)));
+    }
+
+    /// Pré-registra streams que serão devolvidas na próxima chamada a `open_bi`.
+    pub fn expect_open(&self, client: DuplexStream, server: DuplexStream) {
+        let _ = self.outbound_tx.send((Box::new(client), Box::new(server)));
     }
 }
 
 /// Construtor emparelhado que devolve tanto o Transporte Fictício (para injetar no Builder)
 /// quanto o Handle (para ser usado pelo desenvolvedor nos scripts de teste).
 pub fn mock_transport() -> (MockTransport, MockTransportHandle) {
-    let (tx, rx) = mpsc::unbounded_channel();
-    (MockTransport { rx: Mutex::new(rx) }, MockTransportHandle { tx })
+    let (inbound_tx, inbound_rx) = mpsc::unbounded_channel();
+    let (outbound_tx, outbound_rx) = mpsc::unbounded_channel();
+    (
+        MockTransport { inbound_rx: Mutex::new(inbound_rx), outbound_rx: Mutex::new(outbound_rx) },
+        MockTransportHandle { inbound_tx, outbound_tx },
+    )
 }
 
 #[async_trait]
@@ -77,18 +94,19 @@ impl P2pTransport for MockTransport {
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
         let (alpn, peer, send, recv) =
-            self.rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)?;
+            self.inbound_rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)?;
 
         Ok(Box::new(MockIncoming { alpn, peer, send, recv }))
     }
 
+    #[rustfmt::skip]
     async fn open_bi(
         &self, _alpn: &[u8], _peer: &PeerId,
     ) -> Result<
         (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     > {
-        Err(ConnectionError::Shutdown)
+        self.outbound_rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)
     }
 
     async fn shutdown(&self) -> Result<(), ConnectionError> {
