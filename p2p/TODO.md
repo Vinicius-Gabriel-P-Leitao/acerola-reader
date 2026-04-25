@@ -17,6 +17,8 @@
 
 ## Etapa 1 — Identidade Determinística
 
+ ❗Mudança de planos, usaremos blake3
+
 - [ ] **Seed → SecretKey via HKDF** — `transport/iroh.rs` + `api.rs`
   - Adicionar dependências: `hkdf`, `sha2`
   - Implementar `derive_secret_key(seed: &[u8; 32]) -> iroh::SecretKey` com HKDF-SHA256

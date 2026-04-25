@@ -12,10 +12,11 @@ version = "0.0.5"
 
 [dependencies]
 async-trait = "0.1.89"
+blake3 = "1.8.5"
 futures = "0.3.32"
-iroh = {version = "0.97.0", features = ["address-lookup-mdns"]}
+iroh = { version = "0.98.1", features = [ "address-lookup-mdns" ] }
 log = "0.4"
 thiserror = "2.0.18"
-tokio = {version = "1.51.0", features = ["full"]}
+tokio = { version = "1.52.1", features = [ "full" ] }
 tokio-stream = "0.1.18"
-tokio-util = {version = "0.7.18", features = ["codec"]}
+tokio-util = { version = "0.7.18", features = ["codec"] }
