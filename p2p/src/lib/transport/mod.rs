@@ -3,8 +3,14 @@
 //! Contratos (traits) que permitem plugar camadas de transporte diferentes à biblioteca.
 //! Todo o acerola-p2p se baseia em instâncias de structs que implementam `P2PTransport` e `IncomingConnection`.
 
-#[path = "transport/iroh.rs"]
-pub(crate) mod iroh;
+pub mod iroh {
+    pub(crate) mod builder;
+    pub(crate) mod connection;
+    pub(crate) mod transport;
+
+    pub use builder::IrohTransportBuilder;
+    pub use transport::IrohTransport;
+}
 
 use ::iroh::RelayUrl;
 use async_trait::async_trait;
