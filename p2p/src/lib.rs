@@ -24,7 +24,7 @@ pub(crate) mod peer;
 #[path = "lib/protocol.rs"]
 pub(crate) mod protocol;
 
-#[path = "lib/transport.rs"]
+#[path = "lib/transport/mod.rs"]
 pub(crate) mod transport;
 
 #[cfg(test)]

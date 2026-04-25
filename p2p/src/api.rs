@@ -2,22 +2,22 @@
 //!
 //! Este módulo exporta ordenadamente todos os primitivos consumidos pelas aplicações finais
 //! de modo a ocultar o path complexo das pastas internas. Ele centraliza
-//! o padrão de construção (Builder pattern) usado para inicializar uma instância P2P completa.
+//! o padrão de construção (Builder pattern) usado para inicializar uma instância P2p completa.
 
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
 };
 
-/// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2P.
+/// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2p.
 pub mod error {
-    pub use crate::error::ConnectionError as P2PError;
+    pub use crate::error::ConnectionError as P2pError;
 }
 /// Utilitários ligados ao sistema de middlewares (Guards) de rede.
 pub mod guard {
     pub use crate::guard::{open_guard, BoxedValidator as Guard, ConnectionContext};
 }
-/// Encapsulamento da identificação de instâncias ligadas ao P2P.
+/// Encapsulamento da identificação de instâncias ligadas ao P2p.
 pub mod peer {
     pub use crate::peer::PeerId as PeerIdentity;
 }
@@ -30,7 +30,7 @@ pub mod network {
     pub use crate::network::state::NetworkMode;
 }
 
-use tokio::sync::RwLock;
+use tokio::sync::{mpsc, RwLock};
 
 use crate::{
     api::network::NetworkMode,
@@ -42,30 +42,35 @@ use crate::{
         rpc::{RpcClientHandler, RpcServerHandler},
         EventEmitter, ProtocolHandler,
     },
-    transport::{iroh::IrohTransport, P2PTransport},
+    transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
 };
 
-/// Estrutura auxiliar para pré-configurar o ecossistema P2P antes da iniciação real no sistema operacional.
+/// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
 ///
 /// Através desse builder é possível injetar regras de firewall,
 /// registrar portas e protocols customizados (handlers ALPN) e repassar
 /// as lógicas de monitoria pro usuário.
-pub struct AcerolaP2PBuilder {
+pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder = IrohTransportBuilder>
+where
+    TB::Output: 'static,
+{
+    transport: TB,
     emit: EventEmitter,
     guard: BoxedValidator,
     handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
     handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
 }
 
-impl AcerolaP2PBuilder {
+impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     /// Gera o molde base definindo handlers padrão vazios e um fallback que não emite erros.
-    fn new(emit: EventEmitter) -> Self {
+    fn new(emit: EventEmitter, transport: TB) -> Self {
         Self {
             emit,
-            // Permite passagem livre global se nenhuma restrição for registrada posteriormente.
-            guard: Box::new(|_ctx| Box::pin(async { Ok(()) })),
+            transport,
             handlers_inbound: HashMap::new(),
             handlers_outbound: HashMap::new(),
+            // Permite passagem livre global se nenhuma restrição for registrada posteriormente.
+            guard: Box::new(|_ctx| Box::pin(async { Ok(()) })),
         }
     }
 
@@ -92,12 +97,18 @@ impl AcerolaP2PBuilder {
     /// Compila as configurações submetidas e consolida a interface física no sistema operacional (abre as sockets).
     ///
     /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/rpc`.
-    pub async fn build(self) -> Result<AcerolaP2P, ConnectionError> {
-        let transport = Arc::new(IrohTransport::new().await?);
+    pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
+        #[rustfmt::skip]
+        let transport = Arc::new(
+            self.transport.build(
+                    self.handlers_inbound.keys().chain(self.handlers_outbound.keys()).cloned().collect(),
+                ).await?,
+        );
+
         let local_id = transport.local_id();
 
-        let (mut manager, command_tx, state) =
-            NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2PTransport>, self.guard);
+        #[rustfmt::skip]
+        let (mut manager, command_tx, state) = NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2pTransport>, self.guard);
 
         manager.register_inbound(
             b"acerola/rpc",
@@ -119,7 +130,7 @@ impl AcerolaP2PBuilder {
 
         tokio::spawn(manager.run());
 
-        Ok(AcerolaP2P { command_tx, local_id, state })
+        Ok(AcerolaP2p { command_tx, local_id, state })
     }
 }
 
@@ -128,19 +139,24 @@ impl AcerolaP2PBuilder {
 /// É com este objeto instanciado que a aplicação cliente irá de fato provocar a rede,
 /// discando ativamente para outros nós, requisitando o estado global ou mandando
 /// comandos administrativos de desligamento ou reorientação (SwitchGuard).
-pub struct AcerolaP2P {
+pub struct AcerolaP2p {
     /// O canal atrelado à Worker Thread de Event Loop (Manager).
-    command_tx: tokio::sync::mpsc::Sender<NetworkCommand>,
+    command_tx: mpsc::Sender<NetworkCommand>,
     /// Provisão de leitura dos contadores e views instantâneas de peers.
     state: Arc<RwLock<NetworkState>>,
     /// Identity cacheada desta cópia do servidor para acesso leve (sem Mutex).
     local_id: PeerId,
 }
 
-impl AcerolaP2P {
+impl AcerolaP2p {
     /// Único ponto de partida da API, devolve uma estrutura passível de configuração.
-    pub fn builder(emit: EventEmitter) -> AcerolaP2PBuilder {
-        AcerolaP2PBuilder::new(emit)
+    pub fn builder<TB: TransportP2pBuilder>(
+        emit: EventEmitter, transport: TB,
+    ) -> AcerolaP2pBuilder<TB>
+    where
+        TB::Output: 'static,
+    {
+        AcerolaP2pBuilder::new(emit, transport)
     }
 
     /// Retorna a string legível (Base32/Base64, dependendo do backend Iroh) do nó residente.
@@ -151,12 +167,10 @@ impl AcerolaP2P {
     /// Pede ativamente ao daemon de gerência para abrir um pipe QUIC até um determinado Nó.
     ///
     /// Se a resposta for exitosa, as transmissões vão direto pro handler do protocolo (`alpn`) mapeado.
+    #[rustfmt::skip]
     pub async fn connect(&self, peer_id: &str, alpn: &[u8]) -> Result<(), ConnectionError> {
         let peer = PeerId { id: peer_id.to_string() };
-        self.command_tx
-            .send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() })
-            .await
-            .map_err(|_| ConnectionError::Shutdown)
+        self.command_tx.send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() }).await.map_err(|_| ConnectionError::Shutdown)
     }
 
     /// Captura um Snapshot/Cópia pesada dos nós que estão trafegando e seus marcadores de sub-protocolo atrelados.
@@ -172,18 +186,109 @@ impl AcerolaP2P {
     /// Solicita em runtime ao Daemon a permuta de middleware de restrição sem cair nenhuma thread.
     ///
     /// Ao receber o novo validator o gerente recusa/aceita instantes novas conexões sem derrubar os sockets mantidos.
+    #[rustfmt::skip]
     pub async fn switch_guard(
         &self, validator: crate::guard::BoxedValidator, mode: NetworkMode,
     ) -> Result<(), ConnectionError> {
-        self.command_tx
-            .send(NetworkCommand::SwitchGuard { validator, mode })
-            .await
-            .map_err(|_| ConnectionError::Shutdown)
+        self.command_tx.send(NetworkCommand::SwitchGuard { validator, mode }).await.map_err(|_| ConnectionError::Shutdown)
     }
 
     /// Aciona a sequência final de drenagem forçando o cancelamento do background Event Loop
     /// e do serviço nativo na memória.
     pub async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.command_tx.send(NetworkCommand::Shutdown).await.map_err(|_| ConnectionError::Shutdown)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::network::state::NetworkMode;
+    use crate::transport::iroh::IrohTransportBuilder;
+    use std::sync::Mutex;
+    use tokio::io::{AsyncRead, AsyncWrite};
+
+    fn no_op_emitter() -> EventEmitter {
+        Arc::new(|_event: &str, _payload: String| {})
+    }
+
+    fn capture_emitter() -> (EventEmitter, Arc<Mutex<Vec<String>>>) {
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let clone = Arc::clone(&events);
+        let emit: EventEmitter = Arc::new(move |event: &str, _: String| {
+            clone.lock().unwrap().push(event.to_string());
+        });
+
+        (emit, events)
+    }
+
+    struct NoOpHandler;
+
+    #[async_trait::async_trait]
+    impl ProtocolHandler for NoOpHandler {
+        async fn handle(
+            &self, _peer: &PeerId, _send: Box<dyn AsyncWrite + Send + Unpin>,
+            _recv: Box<dyn AsyncRead + Send + Unpin>,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+    }
+
+    async fn build_node() -> AcerolaP2p {
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default()).build().await.unwrap()
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn build_retorna_no_valido() {
+        assert!(AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
+            .build().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn local_id_nao_vazio() {
+        let node = build_node().await;
+        assert!(!node.local_id().is_empty());
+    }
+
+    #[tokio::test]
+    async fn peers_conectados_comecam_vazios() {
+        let node = build_node().await;
+        assert!(node.connected_peers().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn shutdown_sem_erro() {
+        let node = build_node().await;
+        assert!(node.shutdown().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn modo_inicial_e_local() {
+        let node = build_node().await;
+        assert_eq!(node.mode().await, NetworkMode::Local);
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn build_com_handler_customizado_nao_falha() {
+        let result = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
+            .inbound(b"meu/protocolo", Arc::new(NoOpHandler))
+            .outbound(b"meu/protocolo", Arc::new(NoOpHandler))
+            .build().await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn dois_nos_tem_ids_distintos() {
+        let (emit_a, _) = capture_emitter();
+        let (emit_b, _) = capture_emitter();
+
+        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default()).build().await.unwrap();
+        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default()).build().await.unwrap();
+
+        assert_ne!(node_a.local_id(), node_b.local_id());
     }
 }
