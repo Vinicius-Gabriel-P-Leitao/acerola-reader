@@ -6,6 +6,7 @@
 #[path = "transport/iroh.rs"]
 pub(crate) mod iroh;
 
+use ::iroh::RelayUrl;
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -38,7 +39,7 @@ pub trait IncomingConnection: Send {
 /// Um implementador de transporte (como o `IrohTransport`) deve instanciar endpoints QUIC/TCP,
 /// resolver DNS, prover descoberta Multicast-Mdns e despachar streams de IO.
 #[async_trait]
-pub trait P2PTransport: Send + Sync {
+pub trait P2pTransport: Send + Sync {
     /// Fornece as chaves/IDs públicas usadas por este nó.
     fn local_id(&self) -> PeerId;
 
@@ -60,4 +61,11 @@ pub trait P2PTransport: Send + Sync {
 
     /// Realiza a destruição graciosa das portas e threads ocupadas pelo driver físico.
     async fn shutdown(&self) -> Result<(), ConnectionError>;
+}
+
+/// Inteface para montar um transporte responsável paar montar o transporte antes de qualquer coisa
+#[async_trait]
+pub trait TransportP2pBuilder: Send + Sync {
+    type Output: P2pTransport;
+    async fn build(self, alpns: Vec<Vec<u8>>) -> Result<Self::Output, ConnectionError>;
 }

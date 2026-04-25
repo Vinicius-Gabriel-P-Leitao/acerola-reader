@@ -15,7 +15,7 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::error::ConnectionError;
 use crate::peer::PeerId;
-use crate::transport::{IncomingConnection, P2PTransport};
+use crate::transport::{IncomingConnection, P2pTransport, TransportP2pBuilder};
 
 /// Embalagem da estrutura de conex�o transit�ria `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
@@ -104,30 +104,6 @@ impl IncomingConnection for IrohIncoming {
 }
 
 impl IrohTransport {
-    /// Inicia um novo endpoint na rede usando as portas dispon�veis do host.
-    ///
-    // TODO: Permitir que o c�digo que usa a lib passe o endpoint do relay configurado,
-    // mantendo o mDNS local como fallback ao inv�s de fixar o preset N0.
-    pub async fn new() -> Result<Self, ConnectionError> {
-        let mdns = mdns::MdnsAddressLookup::builder();
-
-        // FIXME: Converter para o meu relay futuramente
-        let n0_relay_us: RelayUrl = "https://use1-1.relay.iroh.network".parse()?;
-
-        let relay_config = RelayConfig { url: n0_relay_us.clone(), quic: None };
-        let relay_map = RelayMap::from_iter([(relay_config)]);
-
-        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padrão, o preset é para usar os DNS do N0 para resolver o relay.
-        let endpoint = Endpoint::builder(presets::N0)
-            .relay_mode(iroh::RelayMode::Custom(relay_map))
-            .alpns(vec![b"acerola/rpc".to_vec()])
-            .address_lookup(mdns)
-            .bind()
-            .await?;
-
-        Ok(Self { endpoint })
-    }
-
     /// Trata a convers�o sint�tica das Strings em NodeIds estritos nativos do iroh.
     #[rustfmt::skip]
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
@@ -137,7 +113,7 @@ impl IrohTransport {
 }
 
 #[async_trait]
-impl P2PTransport for IrohTransport {
+impl P2pTransport for IrohTransport {
     fn local_id(&self) -> PeerId {
         // Converte o EndpointID para o meu PeerId
         PeerId { id: self.endpoint.id().to_string() }
@@ -181,27 +157,45 @@ impl P2PTransport for IrohTransport {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub struct IrohTransportBuilder {
+    relay_urls: Vec<String>,
+}
 
-    #[tokio::test]
-    async fn test_new_cria_endpoint() {
-        let transport = IrohTransport::new().await;
-        assert!(transport.is_ok());
+impl Default for IrohTransportBuilder {
+    fn default() -> Self {
+        Self { relay_urls: Vec::new() }
     }
+}
 
-    #[tokio::test]
-    async fn test_local_id_nao_vazio() {
-        let transport = IrohTransport::new().await.unwrap();
-        let id = transport.local_id();
-        assert!(!id.id.is_empty());
+impl IrohTransportBuilder {
+    pub fn relay(mut self, url: &str) -> Self {
+        self.relay_urls.push(url.to_string());
+        self
     }
+}
 
-    #[tokio::test]
-    async fn test_shutdown_limpo() {
-        let transport = IrohTransport::new().await.unwrap();
-        let result = transport.shutdown().await;
-        assert!(result.is_ok());
+#[async_trait]
+impl TransportP2pBuilder for IrohTransportBuilder {
+    type Output = IrohTransport;
+
+    /// Inicia um novo endpoint na rede usando as portas dispon�veis do host.
+    ///
+    /// mantendo o mDNS local como fallback ao inv�s de fixar o preset N0.
+    #[rustfmt::skip]
+    async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
+        let mdns = mdns::MdnsAddressLookup::builder();
+
+        let relay_configs: Vec<RelayConfig> = self.relay_urls.into_iter()
+            .map(|url| {
+                url.parse::<RelayUrl>().map(|relay_url| RelayConfig { url: relay_url, quic: None })
+            }).collect::<Result<_, iroh::RelayUrlParseError>>()?;
+
+        // Faz o bind inicializando o discovery via rede local e os recursos P2P ALPN autorizados por padrão, o preset é para usar os DNS do N0 para resolver o relay.
+        let endpoint = Endpoint::builder(presets::N0)
+            .relay_mode(iroh::RelayMode::Custom(
+                RelayMap::from_iter(relay_configs)
+            )).alpns(alpns).address_lookup(mdns).bind().await?;
+
+        Ok(IrohTransport { endpoint })
     }
 }

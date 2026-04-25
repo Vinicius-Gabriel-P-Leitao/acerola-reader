@@ -10,7 +10,7 @@ use tokio::sync::{mpsc, Mutex};
 
 use crate::error::ConnectionError;
 use crate::peer::PeerId;
-use crate::transport::{IncomingConnection, P2PTransport};
+use crate::transport::{IncomingConnection, P2pTransport};
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".
 type InjectedConnection =
@@ -70,7 +70,7 @@ pub fn mock_transport() -> (MockTransport, MockTransportHandle) {
 }
 
 #[async_trait]
-impl P2PTransport for MockTransport {
+impl P2pTransport for MockTransport {
     fn local_id(&self) -> PeerId {
         PeerId { id: "mock-peer".to_string() }
     }

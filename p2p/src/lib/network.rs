@@ -17,7 +17,7 @@ use crate::{
     network::state::{NetworkMode, NetworkState},
     peer::PeerId,
     protocol::ProtocolHandler,
-    transport::P2PTransport,
+    transport::P2pTransport,
 };
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
@@ -39,7 +39,7 @@ pub enum NetworkCommand {
 /// Motor principal do nó acerola-p2p, responsável pelo event loop e orquestração.
 pub struct NetworkManager {
     /// Provedor base responsável por I/O e alocação de sockets (Iroh).
-    transport: Arc<dyn P2PTransport>,
+    transport: Arc<dyn P2pTransport>,
     /// Referência concorrente para o estado (peers conectados, etc).
     state: Arc<RwLock<NetworkState>>,
     /// Referência do Guard atual ativo para validação no aceite de conexões.
@@ -61,7 +61,7 @@ impl NetworkManager {
     /// contendo a instância pronta para rodar, o comunicador (sender) e a view
     /// do estado da rede, garantindo que o chamador mantenha as referências ativas.
     pub fn new(
-        transport: Arc<dyn P2PTransport>, validator: BoxedValidator,
+        transport: Arc<dyn P2pTransport>, validator: BoxedValidator,
     ) -> (Self, mpsc::Sender<NetworkCommand>, Arc<RwLock<NetworkState>>) {
         let (command_tx, command_rx) = mpsc::channel(COMMAND_CHANNEL_CAPACITY);
         let state = Arc::new(RwLock::new(NetworkState::new()));
@@ -241,7 +241,7 @@ mod tests {
     #[tokio::test]
     async fn peer_adicionado_ao_state_ao_aceitar_conexao() {
         let (transport, handle) = mock_transport();
-        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
         manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
 
@@ -257,7 +257,7 @@ mod tests {
     #[tokio::test]
     async fn peer_removido_do_state_quando_handler_termina() {
         let (transport, handle) = mock_transport();
-        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
         manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
 
@@ -273,7 +273,7 @@ mod tests {
     #[tokio::test]
     async fn alpn_desconhecido_e_ignorado() {
         let (transport, handle) = mock_transport();
-        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
 
         let (client, server) = tokio::io::duplex(1024);
@@ -300,7 +300,7 @@ mod tests {
     #[tokio::test]
     async fn guard_nega_conexao_de_peer_bloqueado() {
         let (transport, handle) = mock_transport();
-        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
 
         let deny_all: BoxedValidator =
             Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied) }));
@@ -320,7 +320,7 @@ mod tests {
     #[tokio::test]
     async fn mesmo_peer_em_dois_alpns_aparece_conectado() {
         let (transport, handle) = mock_transport();
-        let transport: Arc<dyn P2PTransport> = Arc::new(transport);
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
 
         manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));

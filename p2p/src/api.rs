@@ -2,22 +2,22 @@
 //!
 //! Este módulo exporta ordenadamente todos os primitivos consumidos pelas aplicações finais
 //! de modo a ocultar o path complexo das pastas internas. Ele centraliza
-//! o padrão de construção (Builder pattern) usado para inicializar uma instância P2P completa.
+//! o padrão de construção (Builder pattern) usado para inicializar uma instância P2p completa.
 
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
 };
 
-/// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2P.
+/// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2p.
 pub mod error {
-    pub use crate::error::ConnectionError as P2PError;
+    pub use crate::error::ConnectionError as P2pError;
 }
 /// Utilitários ligados ao sistema de middlewares (Guards) de rede.
 pub mod guard {
     pub use crate::guard::{open_guard, BoxedValidator as Guard, ConnectionContext};
 }
-/// Encapsulamento da identificação de instâncias ligadas ao P2P.
+/// Encapsulamento da identificação de instâncias ligadas ao P2p.
 pub mod peer {
     pub use crate::peer::PeerId as PeerIdentity;
 }
@@ -42,22 +42,22 @@ use crate::{
         rpc::{RpcClientHandler, RpcServerHandler},
         EventEmitter, ProtocolHandler,
     },
-    transport::{iroh::IrohTransport, P2PTransport},
+    transport::{iroh::IrohTransport, P2pTransport},
 };
 
-/// Estrutura auxiliar para pré-configurar o ecossistema P2P antes da iniciação real no sistema operacional.
+/// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
 ///
 /// Através desse builder é possível injetar regras de firewall,
 /// registrar portas e protocols customizados (handlers ALPN) e repassar
 /// as lógicas de monitoria pro usuário.
-pub struct AcerolaP2PBuilder {
+pub struct AcerolaP2pBuilder {
     emit: EventEmitter,
     guard: BoxedValidator,
     handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
     handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
 }
 
-impl AcerolaP2PBuilder {
+impl AcerolaP2pBuilder {
     /// Gera o molde base definindo handlers padrão vazios e um fallback que não emite erros.
     fn new(emit: EventEmitter) -> Self {
         Self {
@@ -92,12 +92,12 @@ impl AcerolaP2PBuilder {
     /// Compila as configurações submetidas e consolida a interface física no sistema operacional (abre as sockets).
     ///
     /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/rpc`.
-    pub async fn build(self) -> Result<AcerolaP2P, ConnectionError> {
+    pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
         let transport = Arc::new(IrohTransport::new().await?);
         let local_id = transport.local_id();
 
         let (mut manager, command_tx, state) =
-            NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2PTransport>, self.guard);
+            NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2pTransport>, self.guard);
 
         manager.register_inbound(
             b"acerola/rpc",
@@ -119,7 +119,7 @@ impl AcerolaP2PBuilder {
 
         tokio::spawn(manager.run());
 
-        Ok(AcerolaP2P { command_tx, local_id, state })
+        Ok(AcerolaP2p { command_tx, local_id, state })
     }
 }
 
@@ -128,7 +128,7 @@ impl AcerolaP2PBuilder {
 /// É com este objeto instanciado que a aplicação cliente irá de fato provocar a rede,
 /// discando ativamente para outros nós, requisitando o estado global ou mandando
 /// comandos administrativos de desligamento ou reorientação (SwitchGuard).
-pub struct AcerolaP2P {
+pub struct AcerolaP2p {
     /// O canal atrelado à Worker Thread de Event Loop (Manager).
     command_tx: tokio::sync::mpsc::Sender<NetworkCommand>,
     /// Provisão de leitura dos contadores e views instantâneas de peers.
@@ -137,10 +137,10 @@ pub struct AcerolaP2P {
     local_id: PeerId,
 }
 
-impl AcerolaP2P {
+impl AcerolaP2p {
     /// Único ponto de partida da API, devolve uma estrutura passível de configuração.
-    pub fn builder(emit: EventEmitter) -> AcerolaP2PBuilder {
-        AcerolaP2PBuilder::new(emit)
+    pub fn builder(emit: EventEmitter) -> AcerolaP2pBuilder {
+        AcerolaP2pBuilder::new(emit)
     }
 
     /// Retorna a string legível (Base32/Base64, dependendo do backend Iroh) do nó residente.
