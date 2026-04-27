@@ -29,6 +29,10 @@ pub mod protocol {
 pub mod network {
     pub use crate::network::state::NetworkMode;
 }
+/// Entidades dentro de um p2p
+pub mod identity {
+    
+}
 
 use tokio::sync::{mpsc, RwLock};
 
@@ -42,7 +46,7 @@ use crate::{
         rpc::{RpcClientHandler, RpcServerHandler},
         EventEmitter, ProtocolHandler,
     },
-    transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
+    acerola::transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
 };
 
 /// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
@@ -204,7 +208,7 @@ impl AcerolaP2p {
 mod tests {
     use super::*;
     use crate::network::state::NetworkMode;
-    use crate::transport::iroh::IrohTransportBuilder;
+    use crate:: acerola::transport::iroh::IrohTransportBuilder;
     use std::sync::Mutex;
     use tokio::io::{AsyncRead, AsyncWrite};
 

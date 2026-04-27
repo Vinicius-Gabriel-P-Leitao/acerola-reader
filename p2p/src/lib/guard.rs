@@ -2,7 +2,7 @@
 //!
 //! Os `Guards` funcionam como uma barreira que valida conexões entrantes
 //! (e possivelmente sainte) antes delas ocuparem recursos da aplicação,
-//! permitindo implementar firewalls P2P, whitelists, blacklists ou 
+//! permitindo implementar firewalls P2P, whitelists, blacklists ou
 //! verificação de chaves com facilidade.
 
 use std::future::Future;
@@ -70,12 +70,18 @@ mod tests {
         let allow: BoxedValidator = Box::new(|ctx| {
             let allowed = ctx.peer_id.id == "trusted-peer";
             Box::pin(async move {
-                if allowed { Ok(()) } else { Err(ConnectionError::AuthDenied) }
+                if allowed {
+                    Ok(())
+                } else {
+                    Err(ConnectionError::AuthDenied)
+                }
             })
         });
 
-        let trusted = ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string() }, data: () };
-        let unknown = ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string() }, data: () };
+        let trusted =
+            ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string() }, data: () };
+        let unknown =
+            ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string() }, data: () };
 
         assert!(allow(&trusted).await.is_ok());
         assert!(allow(&unknown).await.is_err());

@@ -13,7 +13,7 @@ use tokio::sync::{mpsc, Mutex};
 
 use crate::error::ConnectionError;
 use crate::peer::PeerId;
-use crate::transport::{IncomingConnection, P2pTransport};
+use crate::acerola::transport::{IncomingConnection, P2pTransport};
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".
 #[rustfmt::skip]

@@ -1,20 +1,22 @@
 use async_trait::async_trait;
 use iroh::address_lookup::mdns;
-use iroh::endpoint::presets;
-use iroh::{Endpoint, RelayConfig, RelayMap, RelayUrl};
+use iroh::endpoint::{self, presets};
+use iroh::{Endpoint, RelayConfig, RelayMap, RelayUrl, SecretKey};
+use secrecy::{ExposeSecret, SecretBox};
 
 use super::transport::IrohTransport;
+use crate::acerola::transport::TransportP2pBuilder;
 use crate::error::ConnectionError;
-use crate::transport::TransportP2pBuilder;
 
 /// Construtor configurável para o `IrohTransport`.
 pub struct IrohTransportBuilder {
     relay_urls: Vec<String>,
+    seed: Option<SecretBox<[u8; 32]>>,
 }
 
 impl Default for IrohTransportBuilder {
     fn default() -> Self {
-        Self { relay_urls: Vec::new() }
+        Self { relay_urls: Vec::new(), seed: None }
     }
 }
 
@@ -24,31 +26,53 @@ impl IrohTransportBuilder {
         self.relay_urls.push(url.to_string());
         self
     }
+
+    pub fn seed(mut self, seed: [u8; 32]) -> Self {
+        self.seed = Some(SecretBox::new(Box::new(seed)));
+        self
+    }
 }
 
 #[async_trait]
-#[rustfmt::skip]
 impl TransportP2pBuilder for IrohTransportBuilder {
     type Output = IrohTransport;
 
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
-        let mdns = mdns::MdnsAddressLookup::builder();
+        let mut builder = self.build_mode(alpns)?;
+        builder = self.apply_secret(builder);
 
-        let mode = if self.relay_urls.is_empty() {
-            iroh::RelayMode::Disabled
+        let endpoint = builder.bind().await?;
+        Ok(IrohTransport::new(endpoint))
+    }
+}
+
+#[rustfmt::skip]
+impl IrohTransportBuilder {
+    fn build_mode(&self, alpns: Vec<Vec<u8>>) -> Result<endpoint::Builder, ConnectionError> {
+        let mdns = mdns::MdnsAddressLookup::builder();
+        let mut builder = Endpoint::builder(presets::N0).address_lookup(mdns).alpns(alpns);
+
+        builder = if self.relay_urls.is_empty() {
+            builder.relay_mode(iroh::RelayMode::Disabled)
         } else {
-            let relay_configs: Vec<RelayConfig> = self.relay_urls.into_iter()
-                .map(|url| {
-                    url.parse::<RelayUrl>().map(RelayConfig::from)
-                }).collect::<Result<_, iroh::RelayUrlParseError>>()?;
-            iroh::RelayMode::Custom(RelayMap::from_iter(relay_configs))
+            let relay_configs: Vec<RelayConfig> = self.relay_urls.iter()
+                .map(|url| url.parse::<RelayUrl>().map(
+                    RelayConfig::from
+                )).collect::<Result<_, iroh::RelayUrlParseError>>()?;
+
+            builder.relay_mode(iroh::RelayMode::Custom(RelayMap::from_iter(relay_configs)))
         };
 
-        let endpoint = Endpoint::builder(presets::N0)
-            .address_lookup(mdns).relay_mode(mode).alpns(alpns)
-            .bind().await?;
+        Ok(builder)
+    }
 
-        Ok(IrohTransport::new(endpoint))
+    fn apply_secret(&self, mut builder: endpoint::Builder) -> endpoint::Builder {
+        if let Some(secret) = self.seed.as_ref() {
+            let derive =  blake3::derive_key("acerola-p2p 2026 node identity", secret.expose_secret());
+            builder = builder.secret_key(SecretKey::from_bytes(&derive));
+        }
+
+        builder
     }
 }
 

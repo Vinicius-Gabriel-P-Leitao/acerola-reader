@@ -24,8 +24,8 @@ pub(crate) mod peer;
 #[path = "lib/protocol.rs"]
 pub(crate) mod protocol;
 
-#[path = "lib/transport/mod.rs"]
-pub(crate) mod transport;
+#[path = "lib/mod.rs"]
+pub(crate) mod acerola;
 
 #[cfg(test)]
 pub(crate) mod tests;

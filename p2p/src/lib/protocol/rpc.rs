@@ -67,7 +67,7 @@ impl ProtocolHandler for RpcServerHandler {
                     (self.emit)("rpc:ping_received", peer.id.clone());
                     write_byte(&mut framed_send, PONG).await?;
                     (self.emit)("rpc:pong_sent", peer.id.clone());
-                }
+                },
                 _ => break,
             }
         }
@@ -108,7 +108,7 @@ impl ProtocolHandler for RpcClientHandler {
             Ok(PONG) => {
                 log::debug!("[RpcClient] pong from {}", peer.id);
                 (self.emit)("rpc:pong_received", peer.id.clone());
-            }
+            },
             _ => return Ok(()),
         }
 
@@ -117,7 +117,7 @@ impl ProtocolHandler for RpcClientHandler {
             match read_byte(&mut framed_recv).await {
                 Ok(PING) => {
                     write_byte(&mut framed_send, PONG).await?;
-                }
+                },
                 _ => break,
             }
         }

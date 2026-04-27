@@ -6,7 +6,7 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::error::ConnectionError;
 use crate::peer::PeerId;
-use crate::transport::IncomingConnection;
+use crate::acerola::transport::IncomingConnection;
 
 /// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
