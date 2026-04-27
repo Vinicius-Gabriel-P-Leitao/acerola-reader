@@ -34,7 +34,7 @@
 
 ## Etapa 2 — Bootstrap Handshake
 
-- [ ] **Protocolo de apresentação** — `protocol/hello.rs` (novo arquivo)
+- [x] **Protocolo de apresentação** — `protocol/hello.rs` (novo arquivo)
   - Definir struct `DeviceInfo { name, os, version, public_key }`
   - Serialização via MessagePack (`rmp-serde`)
   - Ao estabelecer qualquer conexão, a primeira troca obrigatória é `DeviceInfo` em ambas as direções
