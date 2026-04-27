@@ -1,8 +1,8 @@
-use crate::data::repositories::base::{Bindable, Entity};
+use crate::data::repositories::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
-/// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
+/// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ChapterTemplate {
     fn columns() -> &'static [&'static str] {
         &["id", "label", "pattern", "is_default", "priority"]

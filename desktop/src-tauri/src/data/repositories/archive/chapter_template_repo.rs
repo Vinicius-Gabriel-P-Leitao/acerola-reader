@@ -1,5 +1,5 @@
 use crate::data::models::archive::chapter_template::ChapterTemplate;
-use crate::data::repositories::base::Repository;
+use crate::data::repositories::Repository;
 use sqlx::SqlitePool;
 
 pub struct ChapterTemplateRepository {

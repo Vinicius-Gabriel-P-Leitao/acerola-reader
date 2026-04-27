@@ -1,5 +1,5 @@
 use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::base::{Entity, Repository};
+use crate::data::repositories::{Entity, Repository};
 use crate::infra::error::DbError;
 use sqlx::SqlitePool;
 
