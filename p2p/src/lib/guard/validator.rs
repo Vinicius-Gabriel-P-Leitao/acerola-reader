@@ -8,8 +8,8 @@
 use std::future::Future;
 use std::pin::Pin;
 
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
+use crate::acerola::error::types::ConnectionError;
+use crate::acerola::peer::peer_id::PeerId;
 
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///

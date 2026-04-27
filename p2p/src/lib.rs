@@ -9,21 +9,6 @@
 //! Ela simplifica o processo de descoberta, roteamento de sub-protocolos (via ALPN)
 //! e aplicação de regras de segurança (guards) durante as conexões.
 
-#[path = "lib/error.rs"]
-pub(crate) mod error;
-
-#[path = "lib/guard.rs"]
-pub(crate) mod guard;
-
-#[path = "lib/network.rs"]
-pub(crate) mod network;
-
-#[path = "lib/peer.rs"]
-pub(crate) mod peer;
-
-#[path = "lib/protocol.rs"]
-pub(crate) mod protocol;
-
 #[path = "lib/mod.rs"]
 pub(crate) mod acerola;
 

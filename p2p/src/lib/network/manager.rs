@@ -5,19 +5,16 @@
 //! (event loop) para aceitar conexões ativamente, e faz a ponte (dispatch) entre os
 //! canais I/O recém-chegados e o respectivo `ProtocolHandler` mapeado para o ALPN requisitado.
 
-#[path = "network/state.rs"]
-pub(crate) mod state;
-
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
-use crate::{
-    acerola::transport::P2pTransport,
-    error::ConnectionError,
-    guard::{BoxedValidator, ConnectionContext},
+use crate::acerola::{
+    transport::P2pTransport,
+    error::types::ConnectionError,
+    guard::validator::{BoxedValidator, ConnectionContext},
     network::state::{NetworkMode, NetworkState},
-    peer::PeerId,
-    protocol::ProtocolHandler,
+    peer::peer_id::PeerId,
+    protocol::handler::ProtocolHandler,
 };
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.

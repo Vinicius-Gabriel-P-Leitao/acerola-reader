@@ -10,9 +10,9 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use crate::error::{ConnectionError, RpcError};
-use crate::peer::PeerId;
-use crate::protocol::{EventEmitter, ProtocolHandler};
+use crate::acerola::error::types::{ConnectionError, RpcError};
+use crate::acerola::peer::peer_id::PeerId;
+use crate::acerola::protocol::handler::{EventEmitter, ProtocolHandler};
 
 /// Sinal enviado no payload que representa uma solicitação de heartbeat ("Você está vivo?").
 const PING: u8 = 0x01;

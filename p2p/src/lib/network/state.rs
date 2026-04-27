@@ -5,7 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::peer::PeerId;
+use crate::acerola::peer::peer_id::PeerId;
 
 /// Modos de operação da rede.
 ///

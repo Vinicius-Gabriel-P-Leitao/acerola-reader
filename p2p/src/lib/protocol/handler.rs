@@ -4,16 +4,13 @@
 //! sobre ALPN (Application-Layer Protocol Negotiation). Este módulo fornece as
 //! definições base para a criação de rotinas de comunicação padronizadas.
 
-#[path = "protocol/rpc.rs"]
-pub(crate) mod rpc;
-
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
+use crate::acerola::error::types::ConnectionError;
+use crate::acerola::peer::peer_id::PeerId;
 
 /// Tipo de função delegada para emitir eventos para a aplicação cliente.
 ///

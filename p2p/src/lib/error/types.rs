@@ -13,7 +13,7 @@ use iroh::{
 };
 use thiserror::Error;
 
-use crate::peer::PeerId;
+use crate::acerola::peer::peer_id::PeerId;
 
 /// Erros relacionados ao ciclo de vida e estabelecimento de conexões P2P.
 ///

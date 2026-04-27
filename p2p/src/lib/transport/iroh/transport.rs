@@ -5,8 +5,8 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
 use crate::acerola::transport::{IncomingConnection, P2pTransport};
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
+use crate::acerola::error::types::ConnectionError;
+use crate::acerola::peer::peer_id::PeerId;
 
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
 pub struct IrohTransport {

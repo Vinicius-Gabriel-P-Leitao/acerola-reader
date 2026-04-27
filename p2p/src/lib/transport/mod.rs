@@ -9,14 +9,13 @@ pub mod iroh {
     pub(crate) mod transport;
 
     pub use builder::IrohTransportBuilder;
-    pub use transport::IrohTransport;
 }
 
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
+use crate::acerola::error::types::ConnectionError;
+use crate::acerola::peer::peer_id::PeerId;
 
 /// Representa um handshake inicial recebido pelo daemon aguardando conversão em fluxos úteis.
 #[async_trait]

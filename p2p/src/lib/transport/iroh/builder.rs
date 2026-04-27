@@ -6,7 +6,7 @@ use secrecy::{ExposeSecret, SecretBox};
 
 use super::transport::IrohTransport;
 use crate::acerola::transport::TransportP2pBuilder;
-use crate::error::ConnectionError;
+use crate::acerola::error::types::ConnectionError;
 
 /// Construtor configurável para o `IrohTransport`.
 pub struct IrohTransportBuilder {
