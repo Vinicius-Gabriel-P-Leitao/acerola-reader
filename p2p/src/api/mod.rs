@@ -31,7 +31,14 @@ pub mod network {
 }
 /// Entidades dentro de um p2p
 pub mod identity {
+    pub use crate::data::identity::device_info::{DeviceInfo, DeviceInfoProvider};
     pub use crate::data::identity::generate_seed;
+
+    #[cfg(target_os = "windows")]
+    pub use crate::core::device::windows::DefaultDeviceInfoProvider;
+    
+    #[cfg(target_os = "linux")]
+    pub use crate::core::device::linux::DefaultDeviceInfoProvider;
 }
 
 use tokio::sync::{mpsc, RwLock};
@@ -44,6 +51,7 @@ use crate::{
         state::NetworkState,
     },
     core::transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
+    data::identity::device_info::DeviceInfo,
     data::protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
         {EventEmitter, ProtocolHandler},
@@ -63,6 +71,7 @@ where
 {
     transport: TB,
     emit: EventEmitter,
+    device_info: DeviceInfo,
     guard: BoxedValidator,
     handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
     handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
@@ -70,10 +79,11 @@ where
 
 impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     /// Gera o molde base definindo handlers padrão vazios e um fallback que não emite erros.
-    fn new(emit: EventEmitter, transport: TB) -> Self {
+    fn new(emit: EventEmitter, transport: TB, device_info: DeviceInfo) -> Self {
         Self {
             emit,
             transport,
+            device_info,
             handlers_inbound: HashMap::new(),
             handlers_outbound: HashMap::new(),
             // Permite passagem livre global se nenhuma restrição for registrada posteriormente.
@@ -119,12 +129,20 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
 
         manager.register_inbound(
             b"acerola/rpc",
-            Arc::new(RpcServerHandler::new(Arc::clone(&self.emit))),
+            Arc::new(RpcServerHandler::new(
+                Arc::clone(&self.emit),
+                self.device_info.clone(),
+                Arc::clone(&state),
+            )),
         );
 
         manager.register_outbound(
             b"acerola/rpc",
-            Arc::new(RpcClientHandler::new(Arc::clone(&self.emit))),
+            Arc::new(RpcClientHandler::new(
+                Arc::clone(&self.emit),
+                self.device_info.clone(),
+                Arc::clone(&state),
+            )),
         );
 
         for (alpn, handler) in self.handlers_inbound {
@@ -137,7 +155,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
 
         tokio::spawn(manager.run());
 
-        Ok(AcerolaP2p { command_tx, local_id, state })
+        Ok(AcerolaP2p { command_tx, local_id, state, device_info: self.device_info })
     }
 }
 
@@ -153,17 +171,19 @@ pub struct AcerolaP2p {
     state: Arc<RwLock<NetworkState>>,
     /// Identity cacheada desta cópia do servidor para acesso leve (sem Mutex).
     local_id: PeerId,
+    /// Metadados do dispositivo local informados no builder.
+    device_info: DeviceInfo,
 }
 
 impl AcerolaP2p {
     /// Único ponto de partida da API, devolve uma estrutura passível de configuração.
     pub fn builder<TB: TransportP2pBuilder>(
-        emit: EventEmitter, transport: TB,
+        emit: EventEmitter, transport: TB, device_info: DeviceInfo,
     ) -> AcerolaP2pBuilder<TB>
     where
         TB::Output: 'static,
     {
-        AcerolaP2pBuilder::new(emit, transport)
+        AcerolaP2pBuilder::new(emit, transport, device_info)
     }
 
     /// Retorna a string legível (Base32/Base64, dependendo do backend Iroh) do nó residente.
@@ -174,6 +194,11 @@ impl AcerolaP2p {
     /// Retorna o `device_id` UUID v5 derivado da chave pública do nó.
     pub fn local_device_id(&self) -> Option<&str> {
         self.local_id.device_id.as_deref()
+    }
+
+    /// Retorna os metadados do dispositivo local informados no builder.
+    pub fn local_device_info(&self) -> &DeviceInfo {
+        &self.device_info
     }
 
     /// Pede ativamente ao daemon de gerência para abrir um pipe QUIC até um determinado Nó.
@@ -215,9 +240,8 @@ impl AcerolaP2p {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::network::state::NetworkMode;
     use crate::core::transport::iroh::IrohTransportBuilder;
-    use crate::data::identity::DeviceInfo;
+    use crate::{core::network::state::NetworkMode, data::identity::device_info::DeviceInfo};
     use std::sync::Mutex;
     use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -323,7 +347,7 @@ mod tests {
                 .build()
                 .await
                 .unwrap();
-            
+
         let node_b =
             AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
                 .build()
