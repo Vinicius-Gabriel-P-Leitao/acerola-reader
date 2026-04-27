@@ -5,15 +5,15 @@ mod infra;
 
 use acerola_p2p::api::guard::open_guard;
 use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
-use cmd::features::network::network_cmd;
-use cmd::features::summary::comic_summary_cmd;
+use cmd::features::network as network_cmd;
+use cmd::features::summary as comic_summary_cmd;
 use tauri::Manager;
 
 #[cfg(test)]
 pub mod tests;
 
 mod app_bootstrap {
-    use crate::core::services::network::network_service::NetworkService;
+    use crate::core::services::network::NetworkService;
 
     use super::*;
     use std::{path::PathBuf, sync::Arc};
@@ -61,7 +61,7 @@ mod app_bootstrap {
     fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         builder.plugin(
             tauri_plugin_sql::Builder::new()
-                .add_migrations("sqlite:acerola.db", crate::infra::db::migrations::get_migrations())
+                .add_migrations("sqlite:acerola.db", crate::infra::db::get_migrations())
                 .build(),
         )
     }

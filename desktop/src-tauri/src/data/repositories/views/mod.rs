@@ -1,7 +1,7 @@
 use sqlx::SqlitePool;
 
 use crate::data::{
-    models::views::comic_summary_view::ComicSummaryView, repositories::Repository,
+    models::views::ComicSummaryView, repositories::Repository,
 };
 
 pub struct HomeRepository {

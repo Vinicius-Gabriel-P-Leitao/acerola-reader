@@ -151,8 +151,8 @@ mod tests {
         let level2 = level1.join("Berserk");
         fs::create_dir_all(&level2).unwrap();
 
-        fs::write(level1.join("cap1.cbz"), b"").unwrap(); // depth 1 — entra
-        fs::write(level2.join("cap2.cbz"), b"").unwrap(); // depth 2 — bloqueado
+        fs::write(level1.join("cap1.cbz"), b"").unwrap();
+        fs::write(level2.join("cap2.cbz"), b"").unwrap();
 
         let (tx, mut rx) = mpsc::channel(32);
         let engine = ScannerEngine { max_depth: Some(1) };

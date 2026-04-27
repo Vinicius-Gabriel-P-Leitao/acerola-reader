@@ -2,8 +2,8 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::views::comic_summary_view::ComicSummaryView,
-        repositories::views::comic_summary_repo::HomeRepository,
+        models::views::ComicSummaryView,
+        repositories::views::HomeRepository,
     },
     infra::error::ComicError,
 };

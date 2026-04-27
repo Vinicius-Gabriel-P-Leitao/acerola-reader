@@ -1,4 +1,4 @@
-use crate::data::models::views::comic_summary_view::ComicSummaryView;
+use crate::data::models::views::ComicSummaryView;
 use chrono::Local;
 use serde::Serialize;
 

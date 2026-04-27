@@ -27,8 +27,8 @@ impl NetworkStatusPayload {
         let peer_list: Vec<ConnectedPeerPayload> = peers
             .into_iter()
             .flat_map(|(peer, alpns)| {
-                let peer_id = peer.id; 
-                
+                let peer_id = peer.id;
+
                 alpns.into_iter().map(move |alpn| ConnectedPeerPayload {
                     peer_id: peer_id.clone(),
                     alpn: String::from_utf8_lossy(&alpn).into_owned(),

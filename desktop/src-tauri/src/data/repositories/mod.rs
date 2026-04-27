@@ -6,15 +6,8 @@ use sqlx::{
 };
 use std::marker::PhantomData;
 
-pub mod archive {
-    pub mod chapter_archive_repo;
-    pub mod chapter_template_repo;
-    pub mod comic_directory_repo;
-}
-
-pub mod views {
-    pub mod comic_summary_repo;
-}
+pub mod archive;
+pub mod views;
 
 pub trait Entity {
     fn columns() -> &'static [&'static str];

@@ -1,12 +1,3 @@
-pub mod library {
-    pub mod comic_scanner_cmd;
-    pub mod select_folder_cmd;
-}
-
-pub mod summary {
-    pub mod comic_summary_cmd;
-}
-
-pub mod network {
-    pub mod network_cmd;
-}
+pub mod library;
+pub mod summary;
+pub mod network;

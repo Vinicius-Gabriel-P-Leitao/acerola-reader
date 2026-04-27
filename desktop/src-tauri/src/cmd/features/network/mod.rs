@@ -1,6 +1,6 @@
 use crate::{
-    cmd::events::network::network_status_payload::NetworkStatusPayload,
-    core::services::network::network_service::NetworkService,
+    cmd::events::network::NetworkStatusPayload,
+    core::services::network::NetworkService,
 };
 
 use tauri::{AppHandle, Emitter, State};

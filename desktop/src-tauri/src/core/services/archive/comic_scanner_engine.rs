@@ -15,7 +15,7 @@ use crate::data::repositories::archive::chapter_template_repo::ChapterTemplateRe
 use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
 use crate::infra::error::ComicError;
 use crate::infra::error::DbError;
-use crate::infra::filesystem::scanner_engine::{DirectoryEntry, ScannerEngine};
+use crate::infra::filesystem::{DirectoryEntry, ScannerEngine};
 use crate::infra::pattern::chapter_template::detect_template;
 use crate::infra::pattern::template_validator::{extract_tags, validate_template};
 
@@ -69,7 +69,7 @@ impl ComicScannerService {
                 match r.base.insert(&comic).await {
                     Ok(saved) => Ok(saved),
                     Err(DbError::UniqueViolation) => Ok(comic),
-                    Err(e) => Err(ComicError::from(e)),
+                    Err(err) => Err(ComicError::from(err)),
                 }
             })
             .await?;
@@ -126,7 +126,7 @@ impl ComicScannerService {
                         Err(DbError::UniqueViolation) => {
                             r.base.update(&comic).await.map_err(ComicError::from)
                         },
-                        Err(e) => Err(ComicError::from(e)),
+                        Err(err) => Err(ComicError::from(err)),
                     }
                 })
                 .await?;
@@ -150,11 +150,11 @@ impl ComicScannerService {
         for entry in entries {
             let directory = entry.directory.to_string_lossy().to_string();
             on_progress(directory);
-            let r = repo.clone();
+            let repo = repo.clone();
 
             self.process_entry(entry, &templates, |comic| async move {
-                r.base.delete(comic.id).await?;
-                r.base.insert(&comic).await.map_err(ComicError::from)
+                repo.base.delete(comic.id).await?;
+                repo.base.insert(&comic).await.map_err(ComicError::from)
             })
             .await?;
         }
@@ -270,11 +270,11 @@ impl ComicScannerService {
             .and_then(|name| name.to_str())
             .and_then(|file_str| {
                 let template_strs: Vec<&str> =
-                    templates.iter().map(|t| t.pattern.as_str()).collect();
+                    templates.iter().map(|template| template.pattern.as_str()).collect();
 
                 detect_template(file_str, &template_strs, |t| validate_template(t, extract_tags))
             })
-            .and_then(|pattern| templates.iter().find(|t| t.pattern == pattern))
+            .and_then(|pattern| templates.iter().find(|template| template.pattern == pattern))
     }
 }
 

@@ -1,14 +1,3 @@
-pub mod archive {
-    pub mod chapter_scanner_engine;
-    pub mod comic_scanner_engine;
-    pub mod files_guard;
-    pub mod path_guard;
-}
-
-pub mod summary {
-    pub mod comic_summary_engine;
-}
-
-pub mod network {
-    pub mod network_service;
-}
+pub mod archive;
+pub mod summary;
+pub mod network;

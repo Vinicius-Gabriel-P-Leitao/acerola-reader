@@ -1,5 +1,5 @@
 use crate::{
-    cmd::events::shared::error_payload::ErrorPayload,
+    cmd::events::shared::ErrorPayload,
     core::services::archive::comic_scanner_engine::ComicScannerService,
 };
 use sqlx::SqlitePool;

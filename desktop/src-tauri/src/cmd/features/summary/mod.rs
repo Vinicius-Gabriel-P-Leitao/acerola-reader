@@ -1,8 +1,6 @@
 use crate::{
-    cmd::events::{
-        shared::error_payload::ErrorPayload, summary::comic_summary_payload::ComicSummaryPayload,
-    },
-    core::services::summary::comic_summary_engine::HomeService,
+    cmd::events::{shared::ErrorPayload, summary::ComicSummaryPayload},
+    core::services::summary::HomeService,
 };
 
 use sqlx::SqlitePool;
