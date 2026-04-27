@@ -4,3 +4,4 @@
 //! da biblioteca sem depender do driver físico QUIC ou DNS local.
 
 pub mod mock_transport;
+

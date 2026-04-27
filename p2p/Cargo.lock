@@ -9,6 +9,7 @@ dependencies = [
  "async-trait",
  "blake3",
  "futures",
+ "getrandom 0.4.2",
  "iroh",
  "log",
  "rand",

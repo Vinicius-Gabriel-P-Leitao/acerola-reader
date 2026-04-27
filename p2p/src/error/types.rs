@@ -13,7 +13,7 @@ use iroh::{
 };
 use thiserror::Error;
 
-use crate::acerola::peer::peer_id::PeerId;
+use crate::peer::peer_id::PeerId;
 
 /// Erros relacionados ao ciclo de vida e estabelecimento de conexões P2P.
 ///
@@ -218,3 +218,11 @@ impl From<RelayUrlParseError> for ConnectionError {
         ConnectionError::StartupFailed("invalid relay URL".into())
     }
 }
+
+impl From<getrandom::Error> for ConnectionError {
+    fn from(err: getrandom::Error) -> Self {
+        log::error!("[generate_seed] system failed to provide secure entropy — error: {:?}", err);
+        ConnectionError::StartupFailed("system cannot provide secure entropy".into())
+    }
+}
+

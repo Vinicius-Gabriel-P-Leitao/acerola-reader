@@ -11,9 +11,9 @@ use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite, DuplexStream};
 use tokio::sync::{mpsc, Mutex};
 
-use crate::acerola::error::types::ConnectionError;
-use crate::acerola::peer::peer_id::PeerId;
-use crate::acerola::transport::{IncomingConnection, P2pTransport};
+use crate::error::types::ConnectionError;
+use crate::peer::peer_id::PeerId;
+use crate::transport::{IncomingConnection, P2pTransport};
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".
 #[rustfmt::skip]
@@ -113,3 +113,4 @@ impl P2pTransport for MockTransport {
         Ok(())
     }
 }
+

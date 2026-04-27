@@ -11,37 +11,37 @@ use std::{
 
 /// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2p.
 pub mod error {
-    pub use crate::acerola::error::types::ConnectionError as P2pError;
+    pub use crate::error::types::ConnectionError as P2pError;
 }
 /// Utilitários ligados ao sistema de middlewares (Guards) de rede.
 pub mod guard {
-    pub use crate::acerola::guard::validator::{open_guard, BoxedValidator as Guard, ConnectionContext};
+    pub use crate::guard::validator::{open_guard, BoxedValidator as Guard, ConnectionContext};
 }
 /// Encapsulamento da identificação de instâncias ligadas ao P2p.
 pub mod peer {
-    pub use crate::acerola::peer::peer_id::PeerId as PeerIdentity;
+    pub use crate::peer::peer_id::PeerId as PeerIdentity;
 }
 /// Interfaces essenciais e contratos que descrevem lógicas customizadas.
 pub mod protocol {
-    pub use crate::acerola::protocol::handler::{EventEmitter, ProtocolHandler as Handler};
+    pub use crate::protocol::{EventEmitter, ProtocolHandler as Handler};
 }
 /// Enums descritivos de tipologias do protocolo.
 pub mod network {
-    pub use crate::acerola::network::state::NetworkMode;
+    pub use crate::network::state::NetworkMode;
 }
 /// Entidades dentro de um p2p
 pub mod identity {}
 
 use tokio::sync::{mpsc, RwLock};
 
-use crate::acerola::{
+use crate::{
     error::types::ConnectionError,
     guard::validator::BoxedValidator,
     network::{state::NetworkState, manager::{NetworkCommand, NetworkManager}},
     peer::peer_id::PeerId,
     protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
-        handler::{EventEmitter, ProtocolHandler},
+        {EventEmitter, ProtocolHandler},
     },
     transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
 };
@@ -190,7 +190,7 @@ impl AcerolaP2p {
     /// Ao receber o novo validator o gerente recusa/aceita instantes novas conexões sem derrubar os sockets mantidos.
     #[rustfmt::skip]
     pub async fn switch_guard(
-        &self, validator: crate::acerola::guard::validator::BoxedValidator, mode: NetworkMode,
+        &self, validator: crate::guard::validator::BoxedValidator, mode: NetworkMode,
     ) -> Result<(), ConnectionError> {
         self.command_tx.send(NetworkCommand::SwitchGuard { validator, mode }).await.map_err(|_| ConnectionError::Shutdown)
     }
@@ -205,7 +205,7 @@ impl AcerolaP2p {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::acerola::network::state::NetworkMode;
+    use crate::network::state::NetworkMode;
     use crate:: acerola::transport::iroh::IrohTransportBuilder;
     use std::sync::Mutex;
     use tokio::io::{AsyncRead, AsyncWrite};
@@ -294,3 +294,4 @@ mod tests {
         assert_ne!(node_a.local_id(), node_b.local_id());
     }
 }
+

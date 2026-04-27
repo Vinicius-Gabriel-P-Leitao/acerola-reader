@@ -5,7 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::acerola::peer::peer_id::PeerId;
+use crate::peer::peer_id::PeerId;
 
 /// Modos de operação da rede.
 ///
@@ -146,3 +146,4 @@ mod tests {
         assert!(matches!(state.mode(), NetworkMode::Local));
     }
 }
+

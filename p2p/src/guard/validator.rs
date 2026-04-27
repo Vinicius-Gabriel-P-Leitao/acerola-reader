@@ -8,8 +8,8 @@
 use std::future::Future;
 use std::pin::Pin;
 
-use crate::acerola::error::types::ConnectionError;
-use crate::acerola::peer::peer_id::PeerId;
+use crate::error::types::ConnectionError;
+use crate::peer::peer_id::PeerId;
 
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///
@@ -87,3 +87,4 @@ mod tests {
         assert!(allow(&unknown).await.is_err());
     }
 }
+

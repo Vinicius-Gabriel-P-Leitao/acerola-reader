@@ -4,9 +4,9 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
-use crate::acerola::error::types::ConnectionError;
-use crate::acerola::peer::peer_id::PeerId;
-use crate::acerola::transport::IncomingConnection;
+use crate::error::types::ConnectionError;
+use crate::peer::peer_id::PeerId;
+use crate::transport::IncomingConnection;
 
 /// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
@@ -112,3 +112,4 @@ impl IncomingConnection for IrohIncoming {
         ))
     }
 }
+

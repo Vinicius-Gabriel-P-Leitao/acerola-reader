@@ -8,13 +8,13 @@
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
-use crate::acerola::{
+use crate::{
     transport::P2pTransport,
     error::types::ConnectionError,
     guard::validator::{BoxedValidator, ConnectionContext},
     network::state::{NetworkMode, NetworkState},
     peer::peer_id::PeerId,
-    protocol::handler::ProtocolHandler,
+    protocol::ProtocolHandler,
 };
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
@@ -336,3 +336,4 @@ mod tests {
         assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/blob"));
     }
 }
+

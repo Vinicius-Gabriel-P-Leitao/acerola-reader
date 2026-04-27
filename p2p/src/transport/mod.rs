@@ -14,8 +14,8 @@ pub mod iroh {
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::acerola::error::types::ConnectionError;
-use crate::acerola::peer::peer_id::PeerId;
+use crate::error::types::ConnectionError;
+use crate::peer::peer_id::PeerId;
 
 /// Representa um handshake inicial recebido pelo daemon aguardando conversão em fluxos úteis.
 #[async_trait]
@@ -73,3 +73,4 @@ pub trait TransportP2pBuilder: Send + Sync {
     type Output: P2pTransport;
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<Self::Output, ConnectionError>;
 }
+

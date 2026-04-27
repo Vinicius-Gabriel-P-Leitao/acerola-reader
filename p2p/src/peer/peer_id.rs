@@ -21,3 +21,4 @@ impl fmt::Display for PeerId {
         write!(f, "{}", self.id)
     }
 }
+

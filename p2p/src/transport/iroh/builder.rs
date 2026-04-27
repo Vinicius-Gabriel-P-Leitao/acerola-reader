@@ -5,8 +5,10 @@ use iroh::{Endpoint, RelayConfig, RelayMap, RelayUrl, SecretKey};
 use secrecy::{ExposeSecret, SecretBox};
 
 use super::transport::IrohTransport;
-use crate::acerola::transport::TransportP2pBuilder;
-use crate::acerola::error::types::ConnectionError;
+use crate::transport::TransportP2pBuilder;
+use crate::error::types::ConnectionError;
+
+const IDENTITY_DERIVE_CONTEXT: &str = "acerola-p2p 2026 node identity";
 
 /// Construtor configurável para o `IrohTransport`.
 pub struct IrohTransportBuilder {
@@ -68,7 +70,7 @@ impl IrohTransportBuilder {
 
     fn apply_secret(&self, mut builder: endpoint::Builder) -> endpoint::Builder {
         if let Some(secret) = self.seed.as_ref() {
-            let derive =  blake3::derive_key("acerola-p2p 2026 node identity", secret.expose_secret());
+            let derive = blake3::derive_key(IDENTITY_DERIVE_CONTEXT, secret.expose_secret());
             builder = builder.secret_key(SecretKey::from_bytes(&derive));
         }
 
@@ -102,3 +104,4 @@ mod tests {
         assert!(transport.await.is_err());
     }
 }
+
