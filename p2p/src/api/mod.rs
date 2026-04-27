@@ -1,0 +1,42 @@
+//! Fachada pública e Builder do nó Acerola.
+//!
+//! Este módulo exporta ordenadamente todos os primitivos consumidos pelas aplicações finais
+//! de modo a ocultar o path complexo das pastas internas. Ele centraliza
+//! o padrão de construção (Builder pattern) usado para inicializar uma instância P2p completa.
+
+/// Renomeação transparente dos tipos de exceções manipulados no ecossistema P2p.
+pub mod error {
+    pub use crate::infra::error::ConnectionError as P2pError;
+}
+/// Utilitários ligados ao sistema de middlewares (Guards) de rede.
+pub mod guard {
+    pub use crate::core::guard::{open_guard, BoxedValidator as Guard, ConnectionContext};
+}
+/// Encapsulamento da identificação de instâncias ligadas ao P2p.
+pub mod peer {
+    pub use crate::infra::peer::PeerId as PeerIdentity;
+}
+/// Interfaces essenciais e contratos que descrevem lógicas customizadas.
+pub mod protocol {
+    pub use crate::data::protocol::{EventEmitter, ProtocolHandler as Handler};
+}
+/// Enums descritivos de tipologias do protocolo.
+pub mod network {
+    pub use crate::core::network::state::NetworkMode;
+}
+/// Entidades dentro de um p2p
+pub mod identity {
+    pub use crate::data::identity::device_info::{DeviceInfo, DeviceInfoProvider};
+    pub use crate::data::identity::generate_seed;
+
+    #[cfg(target_os = "windows")]
+    pub use crate::core::device::windows::DefaultDeviceInfoProvider;
+    #[cfg(target_os = "linux")]
+    pub use crate::core::device::linux::DefaultDeviceInfoProvider;
+}
+
+mod acerola_builder;
+mod acerola_p2p;
+
+pub use acerola_builder::AcerolaP2pBuilder;
+pub use acerola_p2p::AcerolaP2p;

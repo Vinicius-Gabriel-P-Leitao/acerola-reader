@@ -12,10 +12,17 @@ version = "0.0.5"
 
 [dependencies]
 async-trait = "0.1.89"
+blake3 = "1.8.5"
 futures = "0.3.32"
-iroh = {version = "0.97.0", features = ["address-lookup-mdns"]}
+getrandom = "0.4"
+iroh = {version = "0.98.1", features = ["address-lookup-mdns"]}
 log = "0.4"
+rand = "0.10.1"
+secrecy = "0.10.3"
+serde = {version = "1", features = ["derive"]}
+serde_json = "1"
 thiserror = "2.0.18"
-tokio = {version = "1.51.0", features = ["full"]}
+tokio = {version = "1.52.1", features = ["full"]}
 tokio-stream = "0.1.18"
 tokio-util = {version = "0.7.18", features = ["codec"]}
+uuid = {version = "1.23.1", features = ["v5"]}

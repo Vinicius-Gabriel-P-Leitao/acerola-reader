@@ -1,24 +1,19 @@
 //! Gestão de ciclos de execução, roteamento e controle central da rede.
 //!
-//! O `NetworkManager` atua como o cérebro assíncrono da biblioteca. 
+//! O `NetworkManager` atua como o cérebro assíncrono da biblioteca.
 //! Ele encapsula a instância de transporte físico (ex: Iroh), executa o laço de eventos
 //! (event loop) para aceitar conexões ativamente, e faz a ponte (dispatch) entre os
 //! canais I/O recém-chegados e o respectivo `ProtocolHandler` mapeado para o ALPN requisitado.
 
-#[path = "network/state.rs"]
-pub(crate) mod state;
-
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
-use crate::{
-    error::ConnectionError,
-    guard::{BoxedValidator, ConnectionContext},
-    network::state::{NetworkMode, NetworkState},
-    peer::PeerId,
-    protocol::ProtocolHandler,
-    transport::P2pTransport,
-};
+use crate::core::transport::P2pTransport;
+use crate::infra::error::ConnectionError;
+use crate::core::guard::{BoxedValidator, ConnectionContext};
+use crate::core::network::state::{NetworkMode, NetworkState};
+use crate::infra::peer::PeerId;
+use crate::data::protocol::ProtocolHandler;
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
@@ -113,7 +108,7 @@ impl NetworkManager {
                         Ok(incoming) => {
                             // Ignora e droppa conexões se o ALPN não está suportado no mapa local.
                             let Some(handler) = self.handlers_inbound.get(incoming.alpn()) else { continue };
-                            
+
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
                             let validator = Arc::clone(&self.validator);
@@ -196,7 +191,7 @@ mod tests {
     }
 
     fn make_peer(id: &str) -> PeerId {
-        PeerId { id: id.to_string() }
+        PeerId { id: id.to_string(), device_id: None }
     }
 
     struct NoopHandler;

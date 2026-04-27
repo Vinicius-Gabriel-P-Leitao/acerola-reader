@@ -17,14 +17,16 @@
 
 ## Etapa 1 — Identidade Determinística
 
-- [ ] **Seed → SecretKey via HKDF** — `transport/iroh.rs` + `api.rs`
+ ❗Mudança de planos, usaremos blake3
+
+- [x] **Seed → SecretKey via HKDF** — `transport/iroh.rs` + `api.rs`
   - Adicionar dependências: `hkdf`, `sha2`
   - Implementar `derive_secret_key(seed: &[u8; 32]) -> iroh::SecretKey` com HKDF-SHA256
   - Usar `Endpoint::builder().secret_key(key)` para fixar a identidade
   - Expor `.seed(seed: [u8; 32])` no `AcerolaP2PBuilder`
   - Critério: `PeerId` idêntico após reiniciar com a mesma seed
 
-- [ ] **DeviceId determinístico** — `peer.rs`
+- [x] **DeviceId determinístico** — `peer.rs`
   - `PeerId` expõe um `device_id: String` derivado do hash Blake3 da chave pública
   - Critério: `device_id` é o mesmo UUID a cada reinício com mesma seed
 
@@ -32,7 +34,7 @@
 
 ## Etapa 2 — Bootstrap Handshake
 
-- [ ] **Protocolo de apresentação** — `protocol/hello.rs` (novo arquivo)
+- [x] **Protocolo de apresentação** — `protocol/hello.rs` (novo arquivo)
   - Definir struct `DeviceInfo { name, os, version, public_key }`
   - Serialização via MessagePack (`rmp-serde`)
   - Ao estabelecer qualquer conexão, a primeira troca obrigatória é `DeviceInfo` em ambas as direções

@@ -1,0 +1,279 @@
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
+use tokio::sync::{mpsc, RwLock};
+
+use crate::{
+    core::guard::BoxedValidator,
+    core::network::{
+        manager::NetworkCommand,
+        state::{NetworkMode, NetworkState},
+    },
+    core::transport::TransportP2pBuilder,
+    data::identity::device_info::DeviceInfo,
+    data::protocol::EventEmitter,
+    infra::error::ConnectionError,
+    infra::peer::PeerId,
+};
+
+use super::acerola_builder::AcerolaP2pBuilder;
+
+/// A Instância consolidada e o Controlador do Nó rodando em background.
+///
+/// É com este objeto instanciado que a aplicação cliente irá de fato provocar a rede,
+/// discando ativamente para outros nós, requisitando o estado global ou mandando
+/// comandos administrativos de desligamento ou reorientação (SwitchGuard).
+pub struct AcerolaP2p {
+    pub(super) command_tx: mpsc::Sender<NetworkCommand>,
+    pub(super) state: Arc<RwLock<NetworkState>>,
+    pub(super) local_id: PeerId,
+    pub(super) device_info: DeviceInfo,
+}
+
+impl AcerolaP2p {
+    /// Único ponto de partida da API, devolve uma estrutura passível de configuração.
+    pub fn builder<TB: TransportP2pBuilder>(
+        emit: EventEmitter, transport: TB, device_info: DeviceInfo,
+    ) -> AcerolaP2pBuilder<TB>
+    where
+        TB::Output: 'static,
+    {
+        AcerolaP2pBuilder::new(emit, transport, device_info)
+    }
+
+    /// Retorna a string legível (Base32/Base64, dependendo do backend Iroh) do nó residente.
+    pub fn local_id(&self) -> &str {
+        &self.local_id.id
+    }
+
+    /// Retorna o `device_id` UUID v5 derivado da chave pública do nó.
+    pub fn local_device_id(&self) -> Option<&str> {
+        self.local_id.device_id.as_deref()
+    }
+
+    /// Retorna os metadados do dispositivo local informados no builder.
+    pub fn local_device_info(&self) -> &DeviceInfo {
+        &self.device_info
+    }
+
+    /// Pede ativamente ao daemon de gerência para abrir um pipe QUIC até um determinado Nó.
+    ///
+    /// Se a resposta for exitosa, as transmissões vão direto pro handler do protocolo (`alpn`) mapeado.
+    #[rustfmt::skip]
+    pub async fn connect(&self, peer_id: &str, alpn: &[u8]) -> Result<(), ConnectionError> {
+        let peer = PeerId { id: peer_id.to_string(), device_id: None };
+        self.command_tx.send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() }).await.map_err(|_| ConnectionError::Shutdown)
+    }
+
+    /// Captura um Snapshot/Cópia pesada dos nós que estão trafegando e seus marcadores de sub-protocolo atrelados.
+    pub async fn connected_peers(&self) -> HashMap<PeerId, HashSet<Vec<u8>>> {
+        self.state.read().await.peers().clone()
+    }
+
+    /// Extrai o modo da interface (Local/Relay) operando no momento.
+    pub async fn mode(&self) -> NetworkMode {
+        self.state.read().await.mode().clone()
+    }
+
+    /// Solicita em runtime ao Daemon a permuta de middleware de restrição sem cair nenhuma thread.
+    ///
+    /// Ao receber o novo validator o gerente recusa/aceita instantes novas conexões sem derrubar os sockets mantidos.
+    #[rustfmt::skip]
+    pub async fn switch_guard(
+        &self, validator: BoxedValidator, mode: NetworkMode,
+    ) -> Result<(), ConnectionError> {
+        self.command_tx.send(NetworkCommand::SwitchGuard { validator, mode }).await.map_err(|_| ConnectionError::Shutdown)
+    }
+
+    /// Aciona a sequência final de drenagem forçando o cancelamento do background Event Loop
+    /// e do serviço nativo na memória.
+    pub async fn shutdown(&self) -> Result<(), ConnectionError> {
+        self.command_tx.send(NetworkCommand::Shutdown).await.map_err(|_| ConnectionError::Shutdown)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::transport::iroh::IrohTransportBuilder;
+    use crate::data::identity::device_info::DeviceInfo;
+    use std::sync::Mutex;
+
+    fn no_op_emitter() -> EventEmitter {
+        Arc::new(|_event: &str, _payload: String| {})
+    }
+
+    fn capture_emitter() -> (EventEmitter, Arc<Mutex<Vec<String>>>) {
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let clone = Arc::clone(&events);
+        let emit: EventEmitter = Arc::new(move |event: &str, _: String| {
+            clone.lock().unwrap().push(event.to_string());
+        });
+        (emit, events)
+    }
+
+    fn test_device_info() -> DeviceInfo {
+        DeviceInfo { name: "test-device".to_string(), os: "linux".to_string(), version: "0.0.1".to_string() }
+    }
+
+    async fn build_node() -> AcerolaP2p {
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn local_id_nao_vazio() {
+        let node = build_node().await;
+        assert!(!node.local_id().is_empty());
+    }
+
+    #[tokio::test]
+    async fn peers_conectados_comecam_vazios() {
+        let node = build_node().await;
+        assert!(node.connected_peers().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn shutdown_sem_erro() {
+        let node = build_node().await;
+        assert!(node.shutdown().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn modo_inicial_e_local() {
+        let node = build_node().await;
+        assert_eq!(node.mode().await, NetworkMode::Local);
+    }
+
+    #[tokio::test]
+    async fn dois_nos_tem_ids_distintos() {
+        let (emit_a, _) = capture_emitter();
+        let (emit_b, _) = capture_emitter();
+
+        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap();
+
+        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap();
+
+        assert_ne!(node_a.local_id(), node_b.local_id());
+    }
+
+    #[tokio::test]
+    async fn local_device_id_preenchido() {
+        let node = build_node().await;
+        assert!(node.local_device_id().is_some());
+    }
+
+    #[tokio::test]
+    async fn mesma_seed_gera_mesmo_device_id() {
+        let seed = [0x42u8; 32];
+
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed(seed),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed(seed),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        assert_eq!(node_a.local_device_id(), node_b.local_device_id());
+    }
+
+    #[tokio::test]
+    async fn seeds_diferentes_geram_device_ids_diferentes() {
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed([0x11u8; 32]),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed([0x22u8; 32]),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        assert_ne!(node_a.local_device_id(), node_b.local_device_id());
+    }
+
+    #[tokio::test]
+    async fn device_info_name_acessivel_apos_build() {
+        let info = DeviceInfo { name: "meu-pc".to_string(), os: "linux".to_string(), version: "1.0.0".to_string() };
+        let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
+            .build()
+            .await
+            .unwrap();
+        assert_eq!(node.local_device_info().name, "meu-pc");
+    }
+
+    #[tokio::test]
+    async fn device_info_os_acessivel_apos_build() {
+        let info = DeviceInfo { name: "meu-pc".to_string(), os: "windows".to_string(), version: "1.0.0".to_string() };
+        let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
+            .build()
+            .await
+            .unwrap();
+        assert_eq!(node.local_device_info().os, "windows");
+    }
+
+    #[tokio::test]
+    async fn device_info_version_acessivel_apos_build() {
+        let info = DeviceInfo { name: "meu-pc".to_string(), os: "linux".to_string(), version: "2.3.1".to_string() };
+        let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
+            .build()
+            .await
+            .unwrap();
+        assert_eq!(node.local_device_info().version, "2.3.1");
+    }
+
+    #[tokio::test]
+    async fn dois_nos_com_device_infos_distintos_sao_independentes() {
+        let (emit_a, _) = capture_emitter();
+        let (emit_b, _) = capture_emitter();
+
+        let node_a = AcerolaP2p::builder(
+            emit_a,
+            IrohTransportBuilder::default(),
+            DeviceInfo { name: "desktop".to_string(), os: "linux".to_string(), version: "1.0.0".to_string() },
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let node_b = AcerolaP2p::builder(
+            emit_b,
+            IrohTransportBuilder::default(),
+            DeviceInfo { name: "android".to_string(), os: "android".to_string(), version: "1.0.0".to_string() },
+        )
+        .build()
+        .await
+        .unwrap();
+
+        assert_ne!(node_a.local_device_info().name, node_b.local_device_info().name);
+        assert_ne!(node_a.local_device_info().os, node_b.local_device_info().os);
+    }
+}

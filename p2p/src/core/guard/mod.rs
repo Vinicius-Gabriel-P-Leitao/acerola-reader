@@ -2,14 +2,14 @@
 //!
 //! Os `Guards` funcionam como uma barreira que valida conexões entrantes
 //! (e possivelmente sainte) antes delas ocuparem recursos da aplicação,
-//! permitindo implementar firewalls P2P, whitelists, blacklists ou 
+//! permitindo implementar firewalls P2P, whitelists, blacklists ou
 //! verificação de chaves com facilidade.
 
 use std::future::Future;
 use std::pin::Pin;
 
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
+use crate::infra::error::ConnectionError;
+use crate::infra::peer::PeerId;
 
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///
@@ -48,7 +48,7 @@ mod tests {
     use super::*;
 
     fn make_ctx() -> ConnectionContext<()> {
-        ConnectionContext { peer_id: PeerId { id: "test-peer".to_string() }, data: () }
+        ConnectionContext { peer_id: PeerId { id: "test-peer".to_string(), device_id: None }, data: () }
     }
 
     #[tokio::test]
@@ -70,12 +70,18 @@ mod tests {
         let allow: BoxedValidator = Box::new(|ctx| {
             let allowed = ctx.peer_id.id == "trusted-peer";
             Box::pin(async move {
-                if allowed { Ok(()) } else { Err(ConnectionError::AuthDenied) }
+                if allowed {
+                    Ok(())
+                } else {
+                    Err(ConnectionError::AuthDenied)
+                }
             })
         });
 
-        let trusted = ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string() }, data: () };
-        let unknown = ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string() }, data: () };
+        let trusted =
+            ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string(), device_id: None }, data: () };
+        let unknown =
+            ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string(), device_id: None }, data: () };
 
         assert!(allow(&trusted).await.is_ok());
         assert!(allow(&unknown).await.is_err());

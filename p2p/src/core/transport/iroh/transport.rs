@@ -4,9 +4,9 @@ use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
-use crate::transport::{IncomingConnection, P2pTransport};
+use crate::infra::error::ConnectionError;
+use crate::infra::peer::PeerId;
+use crate::core::transport::{IncomingConnection, P2pTransport};
 
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
 pub struct IrohTransport {
@@ -21,7 +21,7 @@ impl IrohTransport {
     /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
     #[rustfmt::skip]
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
-        let id: EndpointId = peer.id.parse().map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone() }))?;
+        let id: EndpointId = peer.id.parse().map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone(), device_id: None }))?;
         Ok(EndpointAddr::from(id))
     }
 }
@@ -29,7 +29,8 @@ impl IrohTransport {
 #[async_trait]
 impl P2pTransport for IrohTransport {
     fn local_id(&self) -> PeerId {
-        PeerId { id: self.endpoint.id().to_string() }
+        let node_id = self.endpoint.id();
+        PeerId::from_public_key(node_id.to_string(), node_id.as_bytes())
     }
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
@@ -38,7 +39,7 @@ impl P2pTransport for IrohTransport {
 
         Ok(Box::new(IrohIncoming::new(
             conn.clone(),
-            PeerId { id: conn.remote_id().to_string() },
+            PeerId::from_public_key(conn.remote_id().to_string(), conn.remote_id().as_bytes()),
             conn.alpn().to_vec(),
         )))
     }
@@ -73,9 +74,9 @@ impl P2pTransport for IrohTransport {
 
 #[cfg(test)]
 mod tests {
-    use super::super::builder::IrohTransportBuilder;
+    use crate::core::transport::iroh::IrohTransportBuilder;
     use super::*;
-    use crate::transport::TransportP2pBuilder;
+    use crate::core::transport::TransportP2pBuilder;
 
     async fn build_transport() -> IrohTransport {
         IrohTransportBuilder::default().build(vec![b"test/proto".to_vec()]).await.unwrap()
@@ -85,6 +86,27 @@ mod tests {
     async fn local_id_nao_vazio() {
         let transport = build_transport().await;
         assert!(!transport.local_id().id.is_empty());
+    }
+
+    #[tokio::test]
+    async fn local_id_tem_device_id_preenchido() {
+        let transport = build_transport().await;
+        assert!(transport.local_id().device_id.is_some());
+    }
+
+    #[tokio::test]
+    async fn mesma_seed_gera_mesmo_device_id() {
+        let seed = [0x42u8; 32];
+        let t1 = IrohTransportBuilder::default().seed(seed).build(vec![]).await.unwrap();
+        let t2 = IrohTransportBuilder::default().seed(seed).build(vec![]).await.unwrap();
+        assert_eq!(t1.local_id().device_id, t2.local_id().device_id);
+    }
+
+    #[tokio::test]
+    async fn seeds_diferentes_geram_device_ids_diferentes() {
+        let t1 = IrohTransportBuilder::default().seed([0x11u8; 32]).build(vec![]).await.unwrap();
+        let t2 = IrohTransportBuilder::default().seed([0x22u8; 32]).build(vec![]).await.unwrap();
+        assert_ne!(t1.local_id().device_id, t2.local_id().device_id);
     }
 
     #[tokio::test]

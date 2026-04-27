@@ -3,20 +3,13 @@
 //! Contratos (traits) que permitem plugar camadas de transporte diferentes à biblioteca.
 //! Todo o acerola-p2p se baseia em instâncias de structs que implementam `P2PTransport` e `IncomingConnection`.
 
-pub mod iroh {
-    pub(crate) mod builder;
-    pub(crate) mod connection;
-    pub(crate) mod transport;
-
-    pub use builder::IrohTransportBuilder;
-    pub use transport::IrohTransport;
-}
+pub mod iroh;
 
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::error::ConnectionError;
-use crate::peer::PeerId;
+use crate::infra::error::ConnectionError;
+use crate::infra::peer::PeerId;
 
 /// Representa um handshake inicial recebido pelo daemon aguardando conversão em fluxos úteis.
 #[async_trait]
@@ -68,7 +61,7 @@ pub trait P2pTransport: Send + Sync {
     async fn shutdown(&self) -> Result<(), ConnectionError>;
 }
 
-/// Inteface para montar um transporte responsável paar montar o transporte antes de qualquer coisa
+/// Interface para montar um transporte responsável por montar o transporte antes de qualquer coisa
 #[async_trait]
 pub trait TransportP2pBuilder: Send + Sync {
     type Output: P2pTransport;
