@@ -30,14 +30,20 @@ pub mod network {
     pub use crate::network::state::NetworkMode;
 }
 /// Entidades dentro de um p2p
-pub mod identity {}
+pub mod identity {
+    pub use crate::identity::seed;
+}
 
 use tokio::sync::{mpsc, RwLock};
 
+use crate::api::network::NetworkMode;
 use crate::{
     error::types::ConnectionError,
     guard::validator::BoxedValidator,
-    network::{state::NetworkState, manager::{NetworkCommand, NetworkManager}},
+    network::{
+        manager::{NetworkCommand, NetworkManager},
+        state::NetworkState,
+    },
     peer::peer_id::PeerId,
     protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
@@ -45,7 +51,6 @@ use crate::{
     },
     transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
 };
-use crate::api::network::NetworkMode;
 
 /// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
 ///
@@ -166,12 +171,17 @@ impl AcerolaP2p {
         &self.local_id.id
     }
 
+    /// Retorna o `device_id` UUID v5 derivado da chave pública do nó.
+    pub fn local_device_id(&self) -> Option<&str> {
+        self.local_id.device_id.as_deref()
+    }
+
     /// Pede ativamente ao daemon de gerência para abrir um pipe QUIC até um determinado Nó.
     ///
     /// Se a resposta for exitosa, as transmissões vão direto pro handler do protocolo (`alpn`) mapeado.
     #[rustfmt::skip]
     pub async fn connect(&self, peer_id: &str, alpn: &[u8]) -> Result<(), ConnectionError> {
-        let peer = PeerId { id: peer_id.to_string() };
+        let peer = PeerId { id: peer_id.to_string(), device_id: None };
         self.command_tx.send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() }).await.map_err(|_| ConnectionError::Shutdown)
     }
 
@@ -206,7 +216,7 @@ impl AcerolaP2p {
 mod tests {
     use super::*;
     use crate::network::state::NetworkMode;
-    use crate:: acerola::transport::iroh::IrohTransportBuilder;
+    use crate::transport::iroh::IrohTransportBuilder;
     use std::sync::Mutex;
     use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -293,5 +303,27 @@ mod tests {
 
         assert_ne!(node_a.local_id(), node_b.local_id());
     }
-}
 
+    #[tokio::test]
+    async fn local_device_id_preenchido() {
+        let node = build_node().await;
+        assert!(node.local_device_id().is_some());
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn mesma_seed_gera_mesmo_device_id() {
+        let seed = [0x42u8; 32];
+        let node_a = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed(seed)).build().await.unwrap();
+        let node_b = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed(seed)).build().await.unwrap();
+        assert_eq!(node_a.local_device_id(), node_b.local_device_id());
+    }
+
+    #[tokio::test]
+    #[rustfmt::skip]
+    async fn seeds_diferentes_geram_device_ids_diferentes() {
+        let node_a = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed([0x11u8; 32])).build().await.unwrap();
+        let node_b = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed([0x22u8; 32])).build().await.unwrap();
+        assert_ne!(node_a.local_device_id(), node_b.local_device_id());
+    }
+}

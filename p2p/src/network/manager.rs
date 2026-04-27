@@ -193,7 +193,7 @@ mod tests {
     }
 
     fn make_peer(id: &str) -> PeerId {
-        PeerId { id: id.to_string() }
+        PeerId { id: id.to_string() , device_id: None }
     }
 
     struct NoopHandler;
@@ -336,4 +336,5 @@ mod tests {
         assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/blob"));
     }
 }
+
 

@@ -89,7 +89,7 @@ pub fn mock_transport() -> (MockTransport, MockTransportHandle) {
 #[async_trait]
 impl P2pTransport for MockTransport {
     fn local_id(&self) -> PeerId {
-        PeerId { id: "mock-peer".to_string() }
+        PeerId { id: "mock-peer".to_string() , device_id: None }
     }
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
