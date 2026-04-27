@@ -5,8 +5,8 @@ use iroh::{Endpoint, RelayConfig, RelayMap, RelayUrl, SecretKey};
 use secrecy::{ExposeSecret, SecretBox};
 
 use super::transport::IrohTransport;
-use crate::transport::TransportP2pBuilder;
-use crate::error::types::ConnectionError;
+use crate::core::transport::TransportP2pBuilder;
+use crate::infra::error::ConnectionError;
 
 const IDENTITY_DERIVE_CONTEXT: &str = "acerola-p2p 2026 node identity";
 
@@ -104,4 +104,3 @@ mod tests {
         assert!(transport.await.is_err());
     }
 }
-

@@ -5,8 +5,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::error::types::ConnectionError;
-use crate::peer::peer_id::PeerId;
+use crate::infra::error::ConnectionError;
+use crate::infra::peer::PeerId;
 
 pub type EventEmitter = Arc<dyn Fn(&str, String) + Send + Sync>;
 
@@ -17,4 +17,3 @@ pub trait ProtocolHandler: Send + Sync {
         recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), ConnectionError>;
 }
-

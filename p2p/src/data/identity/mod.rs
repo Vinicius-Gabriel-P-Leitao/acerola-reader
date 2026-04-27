@@ -1,6 +1,6 @@
 use getrandom::{rand_core::TryRng, SysRng};
 use secrecy::SecretBox;
-use crate::error::types::ConnectionError;
+use crate::infra::error::ConnectionError;
 
 pub fn generate_seed() -> Result<SecretBox<[u8; 32]>, ConnectionError> {
     let mut bytes = [0u8; 32];
@@ -8,4 +8,3 @@ pub fn generate_seed() -> Result<SecretBox<[u8; 32]>, ConnectionError> {
 
     Ok(SecretBox::new(Box::new(bytes)))
 }
-

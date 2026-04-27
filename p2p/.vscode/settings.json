@@ -29,6 +29,10 @@
     "lib.rs": "rust-lib",
     "mod.rs": "rust-mod"
   },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "mod.rs": "*"
+  },
   "material-icon-theme.folders.associations": {
     "transport": "connection",
     "network": "connection",

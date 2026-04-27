@@ -8,8 +8,8 @@
 use std::future::Future;
 use std::pin::Pin;
 
-use crate::error::types::ConnectionError;
-use crate::peer::peer_id::PeerId;
+use crate::infra::error::ConnectionError;
+use crate::infra::peer::PeerId;
 
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///
@@ -48,7 +48,7 @@ mod tests {
     use super::*;
 
     fn make_ctx() -> ConnectionContext<()> {
-        ConnectionContext { peer_id: PeerId { id: "test-peer".to_string() , device_id: None }, data: () }
+        ConnectionContext { peer_id: PeerId { id: "test-peer".to_string(), device_id: None }, data: () }
     }
 
     #[tokio::test]
@@ -79,13 +79,11 @@ mod tests {
         });
 
         let trusted =
-            ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string() , device_id: None }, data: () };
+            ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string(), device_id: None }, data: () };
         let unknown =
-            ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string() , device_id: None }, data: () };
+            ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string(), device_id: None }, data: () };
 
         assert!(allow(&trusted).await.is_ok());
         assert!(allow(&unknown).await.is_err());
     }
 }
-
-

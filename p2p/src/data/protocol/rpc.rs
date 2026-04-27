@@ -10,9 +10,9 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use crate::error::types::{ConnectionError, RpcError};
-use crate::peer::peer_id::PeerId;
-use crate::protocol::{EventEmitter, ProtocolHandler};
+use crate::infra::error::{ConnectionError, RpcError};
+use crate::infra::peer::PeerId;
+use crate::data::protocol::{EventEmitter, ProtocolHandler};
 
 /// Sinal enviado no payload que representa uma solicitação de heartbeat ("Você está vivo?").
 const PING: u8 = 0x01;
@@ -142,7 +142,7 @@ mod tests {
     }
 
     fn make_peer(id: &str) -> PeerId {
-        PeerId { id: id.to_string() , device_id: None }
+        PeerId { id: id.to_string(), device_id: None }
     }
 
     #[test]
@@ -224,5 +224,3 @@ mod tests {
         assert!(count >= 1);
     }
 }
-
-

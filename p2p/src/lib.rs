@@ -1,10 +1,6 @@
-pub(crate) mod error;
-pub(crate) mod guard;
-pub mod identity;
-pub(crate) mod network;
-pub(crate) mod peer;
-pub(crate) mod protocol;
-pub mod transport;
+pub(crate) mod infra;
+pub(crate) mod data;
+pub(crate) mod core;
 
 #[cfg(test)]
 pub(crate) mod tests;

@@ -5,7 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::peer::peer_id::PeerId;
+use crate::infra::peer::PeerId;
 
 /// Modos de operação da rede.
 ///
@@ -89,7 +89,7 @@ mod tests {
     use super::*;
 
     fn make_peer(id: &str) -> PeerId {
-        PeerId { id: id.to_string() , device_id: None }
+        PeerId { id: id.to_string(), device_id: None }
     }
 
     #[test]
@@ -146,5 +146,3 @@ mod tests {
         assert!(matches!(state.mode(), NetworkMode::Local));
     }
 }
-
-

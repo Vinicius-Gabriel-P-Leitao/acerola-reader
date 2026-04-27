@@ -8,14 +8,12 @@
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
-use crate::{
-    transport::P2pTransport,
-    error::types::ConnectionError,
-    guard::validator::{BoxedValidator, ConnectionContext},
-    network::state::{NetworkMode, NetworkState},
-    peer::peer_id::PeerId,
-    protocol::ProtocolHandler,
-};
+use crate::core::transport::P2pTransport;
+use crate::infra::error::ConnectionError;
+use crate::core::guard::{BoxedValidator, ConnectionContext};
+use crate::core::network::state::{NetworkMode, NetworkState};
+use crate::infra::peer::PeerId;
+use crate::data::protocol::ProtocolHandler;
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
@@ -193,7 +191,7 @@ mod tests {
     }
 
     fn make_peer(id: &str) -> PeerId {
-        PeerId { id: id.to_string() , device_id: None }
+        PeerId { id: id.to_string(), device_id: None }
     }
 
     struct NoopHandler;
@@ -336,5 +334,3 @@ mod tests {
         assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/blob"));
     }
 }
-
-
