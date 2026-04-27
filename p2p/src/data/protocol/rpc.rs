@@ -6,13 +6,17 @@
 
 use async_trait::async_trait;
 use futures::sink::SinkExt;
+use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::sync::RwLock;
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
+use crate::core::network::state::NetworkState;
+use crate::data::identity::device_info::DeviceInfo;
+use crate::data::protocol::{EventEmitter, ProtocolHandler};
 use crate::infra::error::{ConnectionError, RpcError};
 use crate::infra::peer::PeerId;
-use crate::data::protocol::{EventEmitter, ProtocolHandler};
 
 /// Sinal enviado no payload que representa uma solicitação de heartbeat ("Você está vivo?").
 const PING: u8 = 0x01;
@@ -30,9 +34,20 @@ async fn read_byte(recv: &mut Recv) -> Result<u8, RpcError> {
     bytes.first().copied().ok_or(RpcError::Stream("empty frame".into()))
 }
 
+async fn read_device_info(recv: &mut Recv) -> Result<DeviceInfo, RpcError> {
+    let bytes = recv.next().await.ok_or(RpcError::Stream("stream closed".into()))??;
+    Ok(serde_json::from_slice(&bytes)?)
+}
+
 /// Envelopa um byte sinalizador solitário no codec delimitado e o escreve no TCP/QUIC em baixo-nível.
 async fn write_byte(send: &mut Writer, byte: u8) -> Result<(), RpcError> {
     send.send(vec![byte].into()).await?;
+    Ok(())
+}
+
+async fn write_device_info(send: &mut Writer, device: &DeviceInfo) -> Result<(), RpcError> {
+    let bytes = serde_json::to_vec(device)?;
+    send.send(bytes.into()).await?;
     Ok(())
 }
 
@@ -42,12 +57,16 @@ async fn write_byte(send: &mut Writer, byte: u8) -> Result<(), RpcError> {
 /// passivamente aos pares que solicitaram conexões RPC e as enviaram.
 pub struct RpcServerHandler {
     emit: EventEmitter,
+    local_info: DeviceInfo,
+    state: Arc<RwLock<NetworkState>>,
 }
 
 impl RpcServerHandler {
     /// Inicializa e fornece referências para emissores de eventos subjacentes.
-    pub fn new(emit: EventEmitter) -> Self {
-        Self { emit }
+    pub fn new(
+        emit: EventEmitter, local_info: DeviceInfo, state: Arc<RwLock<NetworkState>>,
+    ) -> Self {
+        Self { emit, local_info, state }
     }
 }
 
@@ -65,8 +84,15 @@ impl ProtocolHandler for RpcServerHandler {
                 Ok(PING) => {
                     log::debug!("[RpcServer] ping from {}", peer.id);
                     (self.emit)("rpc:ping_received", peer.id.clone());
+
                     write_byte(&mut framed_send, PONG).await?;
                     (self.emit)("rpc:pong_sent", peer.id.clone());
+
+                    let device_info = read_device_info(&mut framed_recv).await?;
+                    write_device_info(&mut framed_send, &self.local_info).await?;
+
+                    let mut state = self.state.write().await;
+                    state.store_device_info(peer.clone(), device_info);
                 },
                 _ => break,
             }
@@ -82,12 +108,15 @@ impl ProtocolHandler for RpcServerHandler {
 /// de prontidão caso os peers entrem em acordo para enviar fluxos mútuos.
 pub struct RpcClientHandler {
     emit: EventEmitter,
+    local_info: DeviceInfo,
+    state: Arc<RwLock<NetworkState>>,
 }
 
 impl RpcClientHandler {
-    /// Instancia o protocolo repassando o sistema de propagação dos logs e callbacks.
-    pub fn new(emit: EventEmitter) -> Self {
-        Self { emit }
+    pub fn new(
+        emit: EventEmitter, local_info: DeviceInfo, state: Arc<RwLock<NetworkState>>,
+    ) -> Self {
+        Self { emit, local_info, state }
     }
 }
 
@@ -100,25 +129,72 @@ impl ProtocolHandler for RpcClientHandler {
         let mut framed_recv = FramedRead::new(recv, LengthDelimitedCodec::new());
         let mut framed_send = FramedWrite::new(send, LengthDelimitedCodec::new());
 
-        // Protocolo Ativo: Primeiramente, notifica a vida ativamente ao par conectado.
-        write_byte(&mut framed_send, PING).await?;
+        self.perform_handshake(peer, &mut framed_send, &mut framed_recv).await?;
+        self.exchange_device_info(peer, &mut framed_send, &mut framed_recv).await?;
+
+        // Loop isolado: runtime do protocolo (heartbeat + extensões futuras)
+        self.protocol_loop(&mut framed_send, &mut framed_recv).await?;
+
+        Ok(())
+    }
+}
+
+impl RpcClientHandler {
+    async fn perform_handshake(
+        &self, peer: &PeerId,
+        send: &mut FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>,
+        recv: &mut FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>,
+    ) -> Result<(), ConnectionError> {
+        write_byte(send, PING).await?;
         (self.emit)("rpc:ping_sent", peer.id.clone());
 
-        match read_byte(&mut framed_recv).await {
+        match read_byte(recv).await {
             Ok(PONG) => {
                 log::debug!("[RpcClient] pong from {}", peer.id);
                 (self.emit)("rpc:pong_received", peer.id.clone());
+                Ok(())
             },
-            _ => return Ok(()),
+            Ok(_) => Err(ConnectionError::StreamFailed("Unexpected response to ping".into())),
+            Err(err) => Err(ConnectionError::from(err)),
         }
+    }
 
-        // Loop continuado onde o cliente também processa Heartbeats eventuais retornados pelo nó remoto
+    async fn exchange_device_info(
+        &self, peer: &PeerId,
+        send: &mut FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>,
+        recv: &mut FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>,
+    ) -> Result<(), ConnectionError> {
+        write_device_info(send, &self.local_info).await?;
+        (self.emit)("rpc:device_info_sent", peer.id.clone());
+
+        match read_device_info(recv).await {
+            Ok(device_info) => {
+                log::debug!("[RpcClient] deviceinfo from {}", peer.id);
+                (self.emit)("rpc:device_info_received", peer.id.clone());
+
+                let mut state = self.state.write().await;
+                state.store_device_info(peer.clone(), device_info);
+
+                Ok(())
+            },
+            Err(err) => Err(ConnectionError::from(err)),
+        }
+    }
+
+    async fn protocol_loop(
+        &self, send: &mut FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>,
+        recv: &mut FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>,
+    ) -> Result<(), ConnectionError> {
         loop {
-            match read_byte(&mut framed_recv).await {
+            match read_byte(recv).await {
                 Ok(PING) => {
-                    write_byte(&mut framed_send, PONG).await?;
+                    write_byte(send, PONG).await?;
                 },
-                _ => break,
+                Ok(_) => {
+                    // ponto de extensão: outros opcodes
+                    break;
+                },
+                Err(err) => return Err(ConnectionError::from(err)),
             }
         }
 

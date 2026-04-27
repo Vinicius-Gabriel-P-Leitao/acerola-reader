@@ -51,3 +51,19 @@ pub enum RpcError {
     #[error("stream error: {0}")]
     Stream(String),
 }
+
+/// Erros na camda de entrevista do dispositivo.
+#[derive(Debug, Error)]
+pub enum DeviceInfoError {
+    /// Ao buscar o nome do dispositivo obtemos erro.
+    #[error("failed to read device name")]
+    NameUnavailable,
+
+    /// Busca de qual SO a applicação está rodando falhou.
+    #[error("failed to read operating system")]
+    OsUnavailable,
+
+    /// Falaha ao pegar versão do app a qual o dispositivo roda.
+    #[error("failed to read app version")]
+    VersionUnavailable,
+}

@@ -38,18 +38,18 @@ use tokio::sync::{mpsc, RwLock};
 
 use crate::core::network::state::NetworkMode;
 use crate::{
-    infra::error::ConnectionError,
     core::guard::BoxedValidator,
     core::network::{
         manager::{NetworkCommand, NetworkManager},
         state::NetworkState,
     },
-    infra::peer::PeerId,
+    core::transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
     data::protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
         {EventEmitter, ProtocolHandler},
     },
-    core::transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
+    infra::error::ConnectionError,
+    infra::peer::PeerId,
 };
 
 /// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
@@ -217,6 +217,7 @@ mod tests {
     use super::*;
     use crate::core::network::state::NetworkMode;
     use crate::core::transport::iroh::IrohTransportBuilder;
+    use crate::data::identity::DeviceInfo;
     use std::sync::Mutex;
     use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -234,6 +235,14 @@ mod tests {
         (emit, events)
     }
 
+    fn test_device_info() -> DeviceInfo {
+        DeviceInfo {
+            name: "test-device".to_string(),
+            os: "linux".to_string(),
+            version: "0.0.1".to_string(),
+        }
+    }
+
     struct NoOpHandler;
 
     #[async_trait::async_trait]
@@ -247,14 +256,22 @@ mod tests {
     }
 
     async fn build_node() -> AcerolaP2p {
-        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default()).build().await.unwrap()
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap()
     }
 
     #[tokio::test]
-    #[rustfmt::skip]
     async fn build_retorna_no_valido() {
-        assert!(AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
-            .build().await.is_ok());
+        assert!(AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info()
+        )
+        .build()
+        .await
+        .is_ok());
     }
 
     #[tokio::test]
@@ -282,24 +299,36 @@ mod tests {
     }
 
     #[tokio::test]
-    #[rustfmt::skip]
     async fn build_com_handler_customizado_nao_falha() {
-        let result = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default())
-            .inbound(b"meu/protocolo", Arc::new(NoOpHandler))
-            .outbound(b"meu/protocolo", Arc::new(NoOpHandler))
-            .build().await;
+        let result = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .inbound(b"meu/protocolo", Arc::new(NoOpHandler))
+        .outbound(b"meu/protocolo", Arc::new(NoOpHandler))
+        .build()
+        .await;
 
         assert!(result.is_ok());
     }
 
     #[tokio::test]
-    #[rustfmt::skip]
     async fn dois_nos_tem_ids_distintos() {
         let (emit_a, _) = capture_emitter();
         let (emit_b, _) = capture_emitter();
 
-        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default()).build().await.unwrap();
-        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default()).build().await.unwrap();
+        let node_a =
+            AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
+            
+        let node_b =
+            AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
 
         assert_ne!(node_a.local_id(), node_b.local_id());
     }
@@ -311,19 +340,131 @@ mod tests {
     }
 
     #[tokio::test]
-    #[rustfmt::skip]
     async fn mesma_seed_gera_mesmo_device_id() {
         let seed = [0x42u8; 32];
-        let node_a = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed(seed)).build().await.unwrap();
-        let node_b = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed(seed)).build().await.unwrap();
+
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed(seed),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed(seed),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
         assert_eq!(node_a.local_device_id(), node_b.local_device_id());
     }
 
     #[tokio::test]
-    #[rustfmt::skip]
     async fn seeds_diferentes_geram_device_ids_diferentes() {
-        let node_a = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed([0x11u8; 32])).build().await.unwrap();
-        let node_b = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default().seed([0x22u8; 32])).build().await.unwrap();
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed([0x11u8; 32]),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().seed([0x22u8; 32]),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
         assert_ne!(node_a.local_device_id(), node_b.local_device_id());
+    }
+
+    // --- DeviceInfo ---
+
+    #[tokio::test]
+    async fn device_info_name_acessivel_apos_build() {
+        let info = DeviceInfo {
+            name: "meu-pc".to_string(),
+            os: "linux".to_string(),
+            version: "1.0.0".to_string(),
+        };
+
+        let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
+            .build()
+            .await
+            .unwrap();
+
+        assert_eq!(node.local_device_info().name, "meu-pc");
+    }
+
+    #[tokio::test]
+    async fn device_info_os_acessivel_apos_build() {
+        let info = DeviceInfo {
+            name: "meu-pc".to_string(),
+            os: "windows".to_string(),
+            version: "1.0.0".to_string(),
+        };
+
+        let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
+            .build()
+            .await
+            .unwrap();
+
+        assert_eq!(node.local_device_info().os, "windows");
+    }
+
+    #[tokio::test]
+    async fn device_info_version_acessivel_apos_build() {
+        let info = DeviceInfo {
+            name: "meu-pc".to_string(),
+            os: "linux".to_string(),
+            version: "2.3.1".to_string(),
+        };
+
+        let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
+            .build()
+            .await
+            .unwrap();
+
+        assert_eq!(node.local_device_info().version, "2.3.1");
+    }
+
+    #[tokio::test]
+    async fn dois_nos_com_device_infos_distintos_sao_independentes() {
+        let info_a = DeviceInfo {
+            name: "desktop".to_string(),
+            os: "linux".to_string(),
+            version: "1.0.0".to_string(),
+        };
+
+        let info_b = DeviceInfo {
+            name: "android".to_string(),
+            os: "android".to_string(),
+            version: "1.0.0".to_string(),
+        };
+
+        let (emit_a, _) = capture_emitter();
+        let (emit_b, _) = capture_emitter();
+
+        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), info_a)
+            .build()
+            .await
+            .unwrap();
+
+        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), info_b)
+            .build()
+            .await
+            .unwrap();
+
+        assert_ne!(node_a.local_device_info().name, node_b.local_device_info().name);
+        assert_ne!(node_a.local_device_info().os, node_b.local_device_info().os);
     }
 }

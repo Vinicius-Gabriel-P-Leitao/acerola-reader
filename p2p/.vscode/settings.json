@@ -37,6 +37,7 @@
     "transport": "connection",
     "network": "connection",
     "identity": "class",
+    "device": "console",
     "protocol": "core",
     "summary": "docs",
     "peer": "client",
