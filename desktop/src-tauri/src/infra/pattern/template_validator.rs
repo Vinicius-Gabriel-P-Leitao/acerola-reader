@@ -1,5 +1,5 @@
 use crate::infra::{
-    error::messages::pattern_error::PatternError, pattern::chapter_template::TemplateMacro,
+    error::PatternError, pattern::chapter_template::TemplateMacro,
 };
 
 pub fn validate_template(
@@ -114,7 +114,7 @@ pub fn extract_tags(input: &str) -> Result<Vec<String>, PatternError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::infra::error::messages::pattern_error::PatternError;
+    use crate::infra::error::PatternError;
 
     // NOTE: extract_tags
 

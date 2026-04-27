@@ -16,7 +16,7 @@ impl ChapterTemplateRepository {
 mod tests {
     use super::ChapterTemplateRepository;
     use crate::data::models::archive::chapter_template::ChapterTemplate;
-    use crate::infra::error::messages::db_error::DbError;
+    use crate::infra::error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
 
     fn template() -> ChapterTemplate {

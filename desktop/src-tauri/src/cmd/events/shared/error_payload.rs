@@ -1,4 +1,4 @@
-use crate::infra::error::messages::comic_error::ComicError;
+use crate::infra::error::ComicError;
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]

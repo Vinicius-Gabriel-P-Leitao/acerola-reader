@@ -31,6 +31,10 @@
     "**/node_modules": true,
     "**/.svelte-kit": true
   },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "mod.rs": "*"
+  },
   "material-icon-theme.files.customClones": [
     {
       "name": "rust-lib",

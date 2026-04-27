@@ -28,7 +28,6 @@ mod app_bootstrap {
         let builder = setup_fs(builder);
 
         // INFO: Commands que serão chamados via invoke
-
         builder.setup(setup_runtime).invoke_handler(tauri::generate_handler![
             comic_scanner_cmd::incremental_scan,
             comic_summary_cmd::get_comic_summary,
@@ -85,7 +84,9 @@ mod app_bootstrap {
         });
 
         let node = acerola_p2p::api::AcerolaP2P::builder(emit)
-            .guard(Box::new(|ctx| Box::pin(open_guard(ctx))))
+            .guard(Box::new(|ctx: &acerola_p2p::api::guard::ConnectionContext<()>| {
+                Box::pin(open_guard(ctx))
+            }))
             .build()
             .await
             .expect("Failed to start the p2p node.");

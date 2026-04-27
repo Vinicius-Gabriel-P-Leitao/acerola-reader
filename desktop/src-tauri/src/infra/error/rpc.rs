@@ -1,4 +1,4 @@
-use crate::infra::error::messages::rpc_error::RpcError;
+use super::RpcError;
 
 impl From<serde_json::Error> for RpcError {
     fn from(serde_err: serde_json::Error) -> Self {

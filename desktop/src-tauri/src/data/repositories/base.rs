@@ -1,4 +1,4 @@
-use crate::infra::error::messages::db_error::DbError;
+use crate::infra::error::DbError;
 use sqlx::{
     query, query_as,
     sqlite::{SqliteArguments, SqliteRow},
@@ -6,6 +6,7 @@ use sqlx::{
 };
 use std::marker::PhantomData;
 
+// FIXME: Mover para o mod.rs
 pub trait Entity {
     fn columns() -> &'static [&'static str];
     fn table_name() -> &'static str;
@@ -105,7 +106,7 @@ impl<T: Entity> Repository<T> {
 mod tests {
     use crate::{
         data::repositories::base::{Bindable, Entity, Repository},
-        infra::error::messages::db_error::DbError,
+        infra::error::DbError,
         tests::utils::setup_test_db::setup_test_db,
     };
     use sqlx::{query::Query, sqlite::SqliteArguments, FromRow, Sqlite};

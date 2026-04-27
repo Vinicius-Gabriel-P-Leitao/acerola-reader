@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::infra::{
-    error::messages::file_error::FileError, pattern::archive_format::ArchiveFormat,
+    error::FileError, pattern::archive_format::ArchiveFormat,
 };
 
 pub struct SupportedFileGuard;
@@ -93,7 +93,7 @@ impl ScannerGuard {
 #[cfg(test)]
 mod tests {
     use super::{ArtworkFileGuard, FileGuard, MetadataFileGuard, ScannerGuard, SupportedFileGuard};
-    use crate::infra::error::messages::file_error::FileError;
+    use crate::infra::error::FileError;
     use std::path::Path;
 
     #[test]

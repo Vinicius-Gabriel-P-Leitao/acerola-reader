@@ -1,7 +1,7 @@
 use regex::Regex;
 
 use crate::infra::{
-    error::messages::pattern_error::PatternError, pattern::archive_format::ArchiveFormat,
+    error::PatternError, pattern::archive_format::ArchiveFormat,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -83,7 +83,7 @@ pub fn extract_chapter_parts(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::infra::error::messages::pattern_error::PatternError;
+    use crate::infra::error::PatternError;
 
     fn setup_true_validate(_: &str) -> Result<(), PatternError> {
         Ok(())

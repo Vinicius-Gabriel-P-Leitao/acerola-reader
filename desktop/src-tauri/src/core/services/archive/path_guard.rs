@@ -1,4 +1,4 @@
-use crate::infra::error::messages::path_error::PathError;
+use crate::infra::error::PathError;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
@@ -41,7 +41,7 @@ impl PathGuard {
 #[cfg(test)]
 mod tests {
     use super::PathGuard;
-    use crate::infra::error::messages::path_error::PathError;
+    use crate::infra::error::PathError;
     use std::fs;
     use tempfile::tempdir;
 

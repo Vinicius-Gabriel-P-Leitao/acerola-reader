@@ -5,8 +5,8 @@ use tokio::fs;
 use crate::core::services::archive::path_guard::path_hash;
 use crate::data::models::archive::chapter_archive::ChapterArchive;
 use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-use crate::infra::error::messages::comic_error::ComicError;
-use crate::infra::error::messages::db_error::DbError;
+use crate::infra::error::ComicError;
+use crate::infra::error::DbError;
 use crate::infra::pattern::chapter_template::extract_chapter_parts;
 use crate::infra::pattern::template_validator::{extract_tags, validate_template};
 
