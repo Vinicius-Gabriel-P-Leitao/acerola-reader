@@ -1,0 +1,24 @@
+[package]
+authors = ["Vinícius Gabriel Pereira Leitão"]
+description = "FFI para implementar camada p2p para o android conectar a outros node"
+edition = "2021"
+license = "GPL-3.0-only"
+name = "acerola_android"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib"]
+name = "acerola"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[dependencies]
+acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5"}
+once_cell = "1.20.2"
+tokio = {version = "1.51.0", features = ["full"]}
+uniffi = {version = "0.28.0", features = ["cli", "tokio"]}
+
+[build-dependencies]
+uniffi = {version = "0.28.0", features = ["build"]}

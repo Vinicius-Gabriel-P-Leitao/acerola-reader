@@ -27,6 +27,9 @@ Acerola é um aplicativo Android focado em entusiastas de mangás que preferem g
 - [ ] **Ação de Conclusão Manual:** Implementar botão/opção para o usuário marcar um quadrinho ou capítulo como concluído manualmente.
 - [ ] **Seleção Múltipla (Multi-select):** Permitir a seleção de múltiplos capítulos e quadrinhos segurando (*long press*) o card ou botão correspondente.
 
+### Corrigir problema com zoom e ocultar layout de leitor quando clicar no meio da tela ou pinça ou dois cliques
+- [ ] **Suposto lugar** Acredito que seja o problema no código de gesture por que funciona somente no método de webtoom, nos outros não funcionam.
+
 ### Correções (Bugfixes)
 - [ ] **Falso-positivo na conclusão de leitura (Android):**
     - O app está marcando mangás como concluídos automaticamente durante o carregamento das páginas.

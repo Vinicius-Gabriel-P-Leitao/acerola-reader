@@ -3,7 +3,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import br.acerola.comic.config.preference.ReadingMode
 import br.acerola.comic.module.reader.Reader
@@ -22,21 +25,23 @@ fun Reader.Component.VerticalPagedReader(
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
+    var isZoomed by remember { mutableStateOf(false) }
+
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
         key = { it },
+        userScrollEnabled = !isZoomed,
     ) { index ->
-        LaunchedEffect(index) {
-            onPageRequest(index)
-        }
-
         Reader.Gesture.ZoomablePageImage(
             mangaId = mangaId,
             chapterId = chapterId,
             pageIndex = index,
             orientation = ReadingMode.VERTICAL,
-            onZoomStatusChange = onZoomChange,
+            onZoomStatusChange = { zoomed ->
+                isZoomed = zoomed
+                onZoomChange(zoomed)
+            },
             onAreaTap = { area ->
                 when (area) {
                     TapArea.TOP -> onPrevClick()

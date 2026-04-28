@@ -2,6 +2,7 @@ package br.acerola.comic.module.main.config
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,22 +12,30 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -37,6 +46,7 @@ import br.acerola.comic.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.common.viewmodel.metadata.MetadataSettingsViewModel
+import br.acerola.comic.common.viewmodel.network.P2pViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.component.GlobalCategoryManager
@@ -166,7 +176,12 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Biblioteca
                 SectionHeader(stringResource(id = R.string.label_library_context))
@@ -177,7 +192,12 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Aparência
                 SectionHeader(stringResource(id = R.string.title_settings_appearance))
@@ -187,7 +207,12 @@ fun Main.Config.Layout.Screen(
                     onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) },
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Categorias
                 SectionHeader(stringResource(id = R.string.title_config_categories))
@@ -199,7 +224,12 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Metadados
                 SectionHeader(stringResource(id = R.string.label_sync_group))
@@ -224,6 +254,16 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
+
+                // FIXME: Só descomentar quando tiver pronto a função.
+                // P2pDemoSection()
+
                 Spacer(modifier = Modifier.height(48.dp))
             }
         }
@@ -233,7 +273,10 @@ fun Main.Config.Layout.Screen(
 @Composable
 private fun OnboardingGuideCard() {
     Card(
-        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         shape = RoundedCornerShape(12.dp),
     ) {
@@ -270,4 +313,51 @@ private fun SectionHeader(title: String) {
         color = MaterialTheme.colorScheme.secondary,
         modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
     )
+}
+
+@Composable
+fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
+    val localId = remember(p2pViewModel) { p2pViewModel.getLocalId() }
+    val mode = remember(p2pViewModel) { p2pViewModel.getMode() }
+    val clipboardManager = LocalClipboardManager.current
+    var remotePeerId by remember { mutableStateOf("") }
+
+    SectionHeader("P2P Demo")
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Row {
+            Text(text = "Local ID: $localId", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.weight(1f))
+            Button(onClick = { clipboardManager.setText(AnnotatedString(localId)) }) {
+                Icon(Icons.Default.ContentCopy, contentDescription = null)
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Mode: $mode", style = MaterialTheme.typography.bodySmall)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = remotePeerId,
+            onValueChange = { remotePeerId = it },
+            label = { Text("Remote Peer ID") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, byteArrayOf()) }) {
+            Text("Connect")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row {
+            Button(onClick = { p2pViewModel.switchToLocal() }) {
+                Text("Switch to Local")
+            }
+            Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+            Button(onClick = { p2pViewModel.switchToRelay() }) {
+                Text("Switch to Relay")
+            }
+        }
+    }
 }
