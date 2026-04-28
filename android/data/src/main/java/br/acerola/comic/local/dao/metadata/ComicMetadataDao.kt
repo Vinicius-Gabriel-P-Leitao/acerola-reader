@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.firstOrNull
 
 @Dao
 interface ComicMetadataDao : BaseDao<ComicMetadata> {
-
     @Query(value = "SELECT * FROM comic_metadata ORDER BY id ASC")
     fun observeAllComics(): Flow<List<ComicMetadata>>
 
@@ -58,16 +57,17 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
         genreDao: GenreDao,
         mangadexDao: MangadexSourceDao? = null,
         anilistDao: AnilistSourceDao? = null,
-        comicInfoDao: ComicInfoSourceDao? = null
+        comicInfoDao: ComicInfoSourceDao? = null,
     ): Long {
         val existing = observeComicByDirectoryId(metadata.mangaDirectoryFk!!).firstOrNull()
 
-        val mangaId = if (existing != null) {
-            update(metadata.copy(id = existing.id))
-            existing.id
-        } else {
-            insert(metadata)
-        }
+        val mangaId =
+            if (existing != null) {
+                update(metadata.copy(id = existing.id))
+                existing.id
+            } else {
+                insert(metadata)
+            }
 
         if (mangaId != -1L) {
             authorDao.deleteByMetadataId(mangaId)

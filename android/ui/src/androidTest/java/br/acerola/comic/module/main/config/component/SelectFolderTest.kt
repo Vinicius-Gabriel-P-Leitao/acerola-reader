@@ -16,7 +16,7 @@ class SelectFolderTest {
         composeTestRule.setContent {
             Main.Config.Component.SelectComicDirectory(
                 folderName = null,
-                onFolderSelected = {}
+                onFolderSelected = {},
             )
         }
         // Texto corrigido conforme strings.xml

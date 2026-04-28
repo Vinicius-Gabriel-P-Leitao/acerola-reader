@@ -35,7 +35,6 @@ import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComicDirectoryViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -43,13 +42,13 @@ class ComicDirectoryViewModelTest {
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val coverFromChapterUseCase = mockk<CoverFromChapterUseCase>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
-    
+
     private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
     private val mangaRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
-    
+
     private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
     private lateinit var observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>
-    
+
     private lateinit var viewModel: ComicDirectoryViewModel
 
     @Before
@@ -61,7 +60,7 @@ class ComicDirectoryViewModelTest {
         every { mangaRepo.observeLibrary() } returns MutableStateFlow(emptyList())
         every { mangaRepo.isIndexing } returns MutableStateFlow(false)
         every { mangaRepo.progress } returns MutableStateFlow(-1)
-        
+
         every { chapterRepo.isIndexing } returns MutableStateFlow(false)
         every { chapterRepo.progress } returns MutableStateFlow(-1)
 
@@ -71,15 +70,16 @@ class ComicDirectoryViewModelTest {
         viewModel = createViewModel()
     }
 
-    private fun createViewModel() = ComicDirectoryViewModel(
-        workManager = workManager,
-        manager = manager,
-        coverFromChapterUseCase = coverFromChapterUseCase,
-        updateComicSettingsUseCase = mockk(relaxed = true),
-        observeLibraryUseCase = observeLibraryUseCase,
-        observeChaptersUseCase = observeChaptersUseCase,
-        manageCategoriesUseCase = manageCategoriesUseCase
-    )
+    private fun createViewModel() =
+        ComicDirectoryViewModel(
+            workManager = workManager,
+            manager = manager,
+            coverFromChapterUseCase = coverFromChapterUseCase,
+            updateComicSettingsUseCase = mockk(relaxed = true),
+            observeLibraryUseCase = observeLibraryUseCase,
+            observeChaptersUseCase = observeChaptersUseCase,
+            manageCategoriesUseCase = manageCategoriesUseCase,
+        )
 
     @After
     fun tearDown() {
@@ -92,29 +92,31 @@ class ComicDirectoryViewModelTest {
     }
 
     @Test
-    fun `deve emitir lista de diretorios da biblioteca`() = runTest {
-        val directories = listOf(mockk<ComicDirectoryDto>())
-        every { mangaRepo.observeLibrary() } returns MutableStateFlow(directories)
-        
-        viewModel = createViewModel()
+    fun `deve emitir lista de diretorios da biblioteca`() =
+        runTest {
+            val directories = listOf(mockk<ComicDirectoryDto>())
+            every { mangaRepo.observeLibrary() } returns MutableStateFlow(directories)
 
-        viewModel.mangaDirectories.test {
-            assertThat(awaitItem()).isEqualTo(directories)
+            viewModel = createViewModel()
+
+            viewModel.mangaDirectories.test {
+                assertThat(awaitItem()).isEqualTo(directories)
+            }
         }
-    }
 
     @Test
-    fun `deve refletir progresso do WorkManager`() = runTest {
-        val workInfo = mockk<WorkInfo>()
-        every { workInfo.state } returns WorkInfo.State.RUNNING
-        every { workInfo.progress.getInt(any<String>(), any<Int>()) } returns 75
-        
-        every { workManager.getWorkInfoByIdFlow(any<UUID>()) } returns flowOf(workInfo)
+    fun `deve refletir progresso do WorkManager`() =
+        runTest {
+            val workInfo = mockk<WorkInfo>()
+            every { workInfo.state } returns WorkInfo.State.RUNNING
+            every { workInfo.progress.getInt(any<String>(), any<Int>()) } returns 75
 
-        viewModel.rescanMangas()
+            every { workManager.getWorkInfoByIdFlow(any<UUID>()) } returns flowOf(workInfo)
 
-        viewModel.progress.test {
-            assertThat(awaitItem()).isEqualTo(75)
+            viewModel.rescanMangas()
+
+            viewModel.progress.test {
+                assertThat(awaitItem()).isEqualTo(75)
+            }
         }
-    }
 }

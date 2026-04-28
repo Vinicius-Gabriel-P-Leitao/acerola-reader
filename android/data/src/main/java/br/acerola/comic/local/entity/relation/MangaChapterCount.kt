@@ -5,5 +5,5 @@ import androidx.room.ColumnInfo
 data class MangaChapterCount(
     @ColumnInfo(name = "comic_directory_fk")
     val comicDirectoryFk: Long,
-    val count: Int
+    val count: Int,
 )

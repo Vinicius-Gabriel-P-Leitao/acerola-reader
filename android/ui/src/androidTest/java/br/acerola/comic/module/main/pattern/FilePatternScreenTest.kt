@@ -18,7 +18,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class FilePatternScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -35,7 +34,7 @@ class FilePatternScreenTest {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
                     Main.Pattern.Layout.FilePatternScreen(
                         onBack = {},
-                        viewModel = viewModel
+                        viewModel = viewModel,
                     )
                 }
             }
@@ -44,10 +43,11 @@ class FilePatternScreenTest {
 
     @Test
     fun deve_exibir_lista_de_templates_no_layout() {
-        val templates = listOf(
-            ChapterTemplateDto(id = 1L, label = "Padrão Teste 1", pattern = "{chapter}", isDefault = true),
-            ChapterTemplateDto(id = 2L, label = "Padrão Teste 2", pattern = "Cap. {chapter}", isDefault = false)
-        )
+        val templates =
+            listOf(
+                ChapterTemplateDto(id = 1L, label = "Padrão Teste 1", pattern = "{chapter}", isDefault = true),
+                ChapterTemplateDto(id = 2L, label = "Padrão Teste 2", pattern = "Cap. {chapter}", isDefault = false),
+            )
 
         setScreen(buildViewModel(templates))
 
@@ -64,9 +64,10 @@ class FilePatternScreenTest {
 
     @Test
     fun deve_exibir_badge_de_sistema_para_template_padrao() {
-        val templates = listOf(
-            ChapterTemplateDto(id = 1L, label = "Template Sistema", pattern = "{chapter}", isDefault = true)
-        )
+        val templates =
+            listOf(
+                ChapterTemplateDto(id = 1L, label = "Template Sistema", pattern = "{chapter}", isDefault = true),
+            )
 
         setScreen(buildViewModel(templates))
 

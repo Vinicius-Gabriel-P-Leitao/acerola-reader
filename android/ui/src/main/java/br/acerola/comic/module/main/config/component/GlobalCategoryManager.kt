@@ -42,12 +42,28 @@ import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
 // FIXME: Verificar como isso tá chegando no banco de dados, provavelmente o frotend é a verdade e só manda isso para o banco de dados
-val categoryColors = listOf(
-    0xFFF44336, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7, 0xFF3F51B5,
-    0xFF2196F3, 0xFF03A9F4, 0xFF00BCD4, 0xFF009688, 0xFF4CAF50,
-    0xFF8BC34A, 0xFFCDDC39, 0xFFFFEB3B, 0xFFFFC107, 0xFFFF9800,
-    0xFFFF5722, 0xFF795548, 0xFF9E9E9E, 0xFF607D8B
-)
+val categoryColors =
+    listOf(
+        0xFFF44336,
+        0xFFE91E63,
+        0xFF9C27B0,
+        0xFF673AB7,
+        0xFF3F51B5,
+        0xFF2196F3,
+        0xFF03A9F4,
+        0xFF00BCD4,
+        0xFF009688,
+        0xFF4CAF50,
+        0xFF8BC34A,
+        0xFFCDDC39,
+        0xFFFFEB3B,
+        0xFFFFC107,
+        0xFFFF9800,
+        0xFFFF5722,
+        0xFF795548,
+        0xFF9E9E9E,
+        0xFF607D8B,
+    )
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -55,17 +71,18 @@ fun Main.Config.Component.GlobalCategoryManager(
     categories: List<CategoryDto>,
     onCreateCategory: (String, Int) -> Unit,
     onDeleteCategory: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
 
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.action_add_category),
-        description = if (categories.isEmpty()) {
-            stringResource(id = R.string.description_config_categories)
-        } else {
-            null
-        },
+        description =
+            if (categories.isEmpty()) {
+                stringResource(id = R.string.description_config_categories)
+            } else {
+                null
+            },
         icon = Icons.Rounded.Add,
         iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
         iconBackground = MaterialTheme.colorScheme.primaryContainer,
@@ -77,50 +94,56 @@ fun Main.Config.Component.GlobalCategoryManager(
                     text = "${categories.size}",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         },
-        bottomContent = if (categories.isNotEmpty()) {
-            {
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    categories.forEach { category ->
-                        InputChip(
-                            onClick = { },
-                            label = { Text(text = category.name) },
-                            selected = true,
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Rounded.Bookmark,
-                                    contentDescription = null,
-                                    tint = Color(category.color),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = stringResource(id = R.string.action_delete_category),
-                                    modifier = Modifier
-                                        .size(14.dp)
-                                        .clickable { onDeleteCategory(category.id) }
-                                )
-                            },
-                            colors = InputChipDefaults.inputChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                selectedLabelColor = MaterialTheme.colorScheme.onSurface
+        bottomContent =
+            if (categories.isNotEmpty()) {
+                {
+                    FlowRow(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        categories.forEach { category ->
+                            InputChip(
+                                onClick = { },
+                                label = { Text(text = category.name) },
+                                selected = true,
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Bookmark,
+                                        contentDescription = null,
+                                        tint = Color(category.color),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = stringResource(id = R.string.action_delete_category),
+                                        modifier =
+                                            Modifier
+                                                .size(14.dp)
+                                                .clickable { onDeleteCategory(category.id) },
+                                    )
+                                },
+                                colors =
+                                    InputChipDefaults.inputChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+                                    ),
                             )
-                        )
+                        }
                     }
                 }
-            }
-        } else null
+            } else {
+                null
+            },
     )
 
     if (showCreateDialog) {
@@ -129,7 +152,7 @@ fun Main.Config.Component.GlobalCategoryManager(
             onConfirm = { name, color ->
                 onCreateCategory(name, color)
                 showCreateDialog = false
-            }
+            },
         )
     }
 }
@@ -138,7 +161,7 @@ fun Main.Config.Component.GlobalCategoryManager(
 @Composable
 private fun CreateCategoryDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, Int) -> Unit
+    onConfirm: (String, Int) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var selectedColor by remember { mutableStateOf(categoryColors.first()) }
@@ -153,14 +176,14 @@ private fun CreateCategoryDialog(
                 onClick = { if (name.isNotBlank()) onConfirm(name, selectedColor.toInt()) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         },
         dismissButtonContent = {
             Acerola.Component.DialogButton(
                 text = stringResource(id = android.R.string.cancel),
                 onClick = onDismiss,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         content = {
@@ -174,35 +197,35 @@ private fun CreateCategoryDialog(
                     label = { Text(stringResource(id = R.string.label_category_name)) },
                     placeholder = { Text(stringResource(id = R.string.placeholder_category_name)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Text(
                     text = stringResource(id = R.string.label_category_color),
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
 
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     categoryColors.forEach { color ->
                         Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color(color))
-                                .border(
-                                    width = if (selectedColor == color) 2.dp else 0.dp,
-                                    color = if (selectedColor == color) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = CircleShape
-                                )
-                                .clickable { selectedColor = color }
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(color))
+                                    .border(
+                                        width = if (selectedColor == color) 2.dp else 0.dp,
+                                        color = if (selectedColor == color) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        shape = CircleShape,
+                                    ).clickable { selectedColor = color },
                         )
                     }
                 }
             }
-        }
+        },
     )
 }

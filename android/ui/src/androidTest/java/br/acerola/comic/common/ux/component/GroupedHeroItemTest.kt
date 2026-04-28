@@ -15,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class GroupedHeroItemTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -25,7 +24,7 @@ class GroupedHeroItemTest {
             AcerolaTheme {
                 Acerola.Component.GroupedHeroItem(
                     title = "Configurações",
-                    icon = Icons.Default.Settings
+                    icon = Icons.Default.Settings,
                 )
             }
         }
@@ -40,7 +39,7 @@ class GroupedHeroItemTest {
                 Acerola.Component.GroupedHeroItem(
                     title = "Configurações",
                     description = "Ajuste as preferências",
-                    icon = Icons.Default.Settings
+                    icon = Icons.Default.Settings,
                 )
             }
         }
@@ -57,7 +56,7 @@ class GroupedHeroItemTest {
                 Acerola.Component.GroupedHeroItem(
                     title = "Item Clicável",
                     icon = Icons.Default.Settings,
-                    onClick = { clicked = true }
+                    onClick = { clicked = true },
                 )
             }
         }
@@ -78,9 +77,9 @@ class GroupedHeroItemTest {
                         Acerola.Component.HeroNestedItem(
                             title = "Item Aninhado",
                             icon = Icons.Default.Sync,
-                            onClick = {}
+                            onClick = {},
                         )
-                    }
+                    },
                 )
             }
         }
@@ -96,7 +95,7 @@ class GroupedHeroItemTest {
                 Acerola.Component.GroupedHeroItem(
                     title = "Item Sem Aninhado",
                     icon = Icons.Default.Settings,
-                    nestedItem = null
+                    nestedItem = null,
                 )
             }
         }
@@ -112,7 +111,7 @@ class GroupedHeroItemTest {
                 Acerola.Component.GroupedHeroItem(
                     title = "Item com Action",
                     icon = Icons.Default.Settings,
-                    action = { Text("Badge") }
+                    action = { Text("Badge") },
                 )
             }
         }
@@ -127,7 +126,7 @@ class GroupedHeroItemTest {
             AcerolaTheme {
                 Acerola.Component.GroupedHeroItem(
                     title = "Item com Slot de Ícone",
-                    icon = { Text("IC") }
+                    icon = { Text("IC") },
                 )
             }
         }

@@ -5,13 +5,12 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.module.comic.state.MainTab
 import br.acerola.comic.module.comic.Comic
+import br.acerola.comic.module.comic.state.MainTab
 import org.junit.Rule
 import org.junit.Test
 
 class TabsTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -22,7 +21,7 @@ class TabsTest {
                 Comic.Layout.Tabs(
                     totalChapters = 150,
                     activeTab = MainTab.CHAPTERS,
-                    onTabSelected = {}
+                    onTabSelected = {},
                 )
             }
         }
@@ -40,7 +39,7 @@ class TabsTest {
                 Comic.Layout.Tabs(
                     totalChapters = 10,
                     activeTab = MainTab.CHAPTERS,
-                    onTabSelected = { selectedTab = it }
+                    onTabSelected = { selectedTab = it },
                 )
             }
         }

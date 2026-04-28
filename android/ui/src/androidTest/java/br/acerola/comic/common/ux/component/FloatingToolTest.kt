@@ -3,34 +3,37 @@ package br.acerola.comic.common.ux.component
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
 class FloatingToolTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
     fun `FloatingTool_deve_exibir_itens_ao_ser_clicado`() {
         var itemClicked = false
-        val items = listOf(
-            FloatingToolItem(
-                label = "Ação 1",
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                onClick = { itemClicked = true }
+        val items =
+            listOf(
+                FloatingToolItem(
+                    label = "Ação 1",
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    onClick = { itemClicked = true },
+                ),
             )
-        )
 
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.FloatingTool(
                     icon = { Icon(Icons.Default.Add, contentDescription = "Abrir") },
-                    items = items
+                    items = items,
                 )
             }
         }

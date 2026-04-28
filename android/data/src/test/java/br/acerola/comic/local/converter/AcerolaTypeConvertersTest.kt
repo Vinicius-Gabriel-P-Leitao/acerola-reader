@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class AcerolaTypeConvertersTest {
-
     private val converter = AcerolaTypeConverters()
 
     @Test

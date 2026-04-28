@@ -46,254 +46,302 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ChapterArchiveEngine @Inject constructor(
-    private val directoryDao: ComicDirectoryDao,
-    private val chapterArchiveDao: ChapterArchiveDao,
-    private val templateService: ChapterNameProcessor,
-    @param:ApplicationContext private val context: Context,
-    private val pdfToCbzConverterService: PdfToCbzConverter,
-) : ChapterGateway<ChapterArchivePageDto> {
+class ChapterArchiveEngine
+    @Inject
+    constructor(
+        private val directoryDao: ComicDirectoryDao,
+        private val chapterArchiveDao: ChapterArchiveDao,
+        private val templateService: ChapterNameProcessor,
+        @param:ApplicationContext private val context: Context,
+        private val pdfToCbzConverterService: PdfToCbzConverter,
+    ) : ChapterGateway<ChapterArchivePageDto> {
+        private val semaphore = Semaphore(permits = 3)
 
-    private val semaphore = Semaphore(permits = 3)
+        private val _progress = MutableStateFlow(value = -1)
+        override val progress: StateFlow<Int> = _progress.asStateFlow()
 
-    private val _progress = MutableStateFlow(value = -1)
-    override val progress: StateFlow<Int> = _progress.asStateFlow()
+        private val _isIndexing = MutableStateFlow(value = false)
+        override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
-    private val _isIndexing = MutableStateFlow(value = false)
-    override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+        override suspend fun refreshComicChapters(
+            mangaId: Long,
+            baseUri: Uri?,
+        ): Either<LibrarySyncError, Unit> =
+            withContext(context = Dispatchers.IO) {
+                AcerolaLogger.i(TAG, "Starting chapter sync for mangaId: $mangaId", LogSource.REPOSITORY)
+                _isIndexing.value = true
+                _progress.value = 0
 
-    override suspend fun refreshComicChapters(mangaId: Long, baseUri: Uri?): Either<LibrarySyncError, Unit> =
-        withContext(context = Dispatchers.IO) {
-            AcerolaLogger.i(TAG, "Starting chapter sync for mangaId: $mangaId", LogSource.REPOSITORY)
-            _isIndexing.value = true
-            _progress.value = 0
+                val result =
+                    Either
+                        .catch {
+                            val folder = directoryDao.getDirectoryById(mangaId = mangaId) ?: return@catch
+                            val folderUri = folder.path.toUri()
 
-            val result = Either.catch {
-                val folder = directoryDao.getDirectoryById(mangaId = mangaId) ?: return@catch
-                val folderUri = folder.path.toUri()
+                            var allFiles: List<FastFileMetadata>
+                            val folderDoc: DocumentFile
 
-                var allFiles: List<FastFileMetadata>
-                val folderDoc: DocumentFile
+                            if (baseUri != null) {
+                                val folderDocId = DocumentsContract.getDocumentId(folderUri)
+                                allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
+                                folderDoc = DocumentFile.fromTreeUri(context, folderUri) ?: return@catch
+                            } else {
+                                folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
+                                allFiles =
+                                    folderDoc.listFiles().filter { it.isFile }.map {
+                                        it.toFastMetadata()
+                                    }
+                            }
 
-                if (baseUri != null) {
-                    val folderDocId = DocumentsContract.getDocumentId(folderUri)
-                    allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
-                    folderDoc = DocumentFile.fromTreeUri(context, folderUri) ?: return@catch
-                } else {
-                    folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
-                    allFiles = folderDoc.listFiles().filter { it.isFile }.map {
-                        it.toFastMetadata()
-                    }
-                }
-
-                val allTemplates = templateService.getTemplates()
-                var activeTemplate = folder.chapterTemplateFk?.let { id ->
-                    allTemplates.find { it.id == id }
-                }
-
-                if (activeTemplate == null && allFiles.isNotEmpty()) {
-                    val filenames = allFiles.map { it.name }
-                    activeTemplate = findBestTemplate(filenames, allTemplates) ?: allTemplates.find { it.id == -2L } ?: allTemplates.firstOrNull()
-
-                    if (activeTemplate != null) {
-                        directoryDao.update(folder.copy(chapterTemplateFk = activeTemplate.id))
-                    }
-                }
-
-                val defaultPattern = ChapterTemplatePattern.presets.values.first()
-                val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: defaultPattern)
-
-                val existingChapters = chapterArchiveDao.getChaptersListByDirectoryId(folderId = mangaId)
-                val existingChaptersMap = existingChapters.associateBy { it.path }
-                val folderLastModified = if (baseUri == null) folderDoc.lastModified() else 0
-
-                // NOTE: Processa PDFs to CBZ
-                val pdfFiles = allFiles.filter { it.name.endsWith(ArchiveFormatPattern.PDF.extension, ignoreCase = true) }
-                val cbzNames = allFiles.map { it.name }.toSet()
-                
-                if (pdfFiles.isNotEmpty()) {
-                    var needsRefresh = false
-                    pdfFiles.forEach { pdf ->
-                        val fakeCbzName = pdf.name.substringBeforeLast(".") + ArchiveFormatPattern.CBZ.extension
-                        val match = chapterRegex.matchEntire(fakeCbzName)
-
-                        if (match != null) {
-                            val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormatPattern.CBZ.extension
-                            if (!cbzNames.contains(targetCbzName)) {
-                                AcerolaLogger.i(TAG, "Converting PDF to CBZ: ${pdf.name} -> $targetCbzName", LogSource.REPOSITORY)
-
-                                val pdfDocUri = if (baseUri != null) {
-                                    DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
-                                } else {
-                                    DocumentsContract.buildDocumentUriUsingTree(folderUri, pdf.id)
+                            val allTemplates = templateService.getTemplates()
+                            var activeTemplate =
+                                folder.chapterTemplateFk?.let { id ->
+                                    allTemplates.find { it.id == id }
                                 }
 
-                                val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri)
-                                if (pdfDoc != null) {
-                                    pdfToCbzConverterService.convertPdfToCbz(folderDoc, pdfDoc, targetCbzName)
-                                    needsRefresh = true
+                            if (activeTemplate == null && allFiles.isNotEmpty()) {
+                                val filenames = allFiles.map { it.name }
+                                activeTemplate =
+                                    findBestTemplate(filenames, allTemplates) ?: allTemplates.find { it.id == -2L }
+                                        ?: allTemplates.firstOrNull()
+
+                                if (activeTemplate != null) {
+                                    directoryDao.update(folder.copy(chapterTemplateFk = activeTemplate.id))
                                 }
                             }
-                        }
-                    }
-                    
-                    if (needsRefresh) {
-                        if (baseUri != null) {
-                            val folderDocId = DocumentsContract.getDocumentId(folderUri)
-                            allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
-                        } else {
-                            allFiles = folderDoc.listFiles().filter { it.isFile }.map {
-                                it.toFastMetadata()
+
+                            val defaultPattern = ChapterTemplatePattern.presets.values.first()
+                            val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: defaultPattern)
+
+                            val existingChapters = chapterArchiveDao.getChaptersListByDirectoryId(folderId = mangaId)
+                            val existingChaptersMap = existingChapters.associateBy { it.path }
+                            val folderLastModified = if (baseUri == null) folderDoc.lastModified() else 0
+
+                            // NOTE: Processa PDFs to CBZ
+                            val pdfFiles = allFiles.filter { it.name.endsWith(ArchiveFormatPattern.PDF.extension, ignoreCase = true) }
+                            val cbzNames = allFiles.map { it.name }.toSet()
+
+                            if (pdfFiles.isNotEmpty()) {
+                                var needsRefresh = false
+                                pdfFiles.forEach { pdf ->
+                                    val fakeCbzName = pdf.name.substringBeforeLast(".") + ArchiveFormatPattern.CBZ.extension
+                                    val match = chapterRegex.matchEntire(fakeCbzName)
+
+                                    if (match != null) {
+                                        val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormatPattern.CBZ.extension
+                                        if (!cbzNames.contains(targetCbzName)) {
+                                            AcerolaLogger.i(
+                                                TAG,
+                                                "Converting PDF to CBZ: ${pdf.name} -> $targetCbzName",
+                                                LogSource.REPOSITORY,
+                                            )
+
+                                            val pdfDocUri =
+                                                if (baseUri != null) {
+                                                    DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
+                                                } else {
+                                                    DocumentsContract.buildDocumentUriUsingTree(folderUri, pdf.id)
+                                                }
+
+                                            val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri)
+                                            if (pdfDoc != null) {
+                                                pdfToCbzConverterService.convertPdfToCbz(folderDoc, pdfDoc, targetCbzName)
+                                                needsRefresh = true
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (needsRefresh) {
+                                    if (baseUri != null) {
+                                        val folderDocId = DocumentsContract.getDocumentId(folderUri)
+                                        allFiles = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
+                                    } else {
+                                        allFiles =
+                                            folderDoc.listFiles().filter { it.isFile }.map {
+                                                it.toFastMetadata()
+                                            }
+                                    }
+                                }
+                            }
+
+                            val chapterFiles = allFiles.filter { ArchiveFormatPattern.isIndexable(ext = it.name) }
+
+                            if (existingChapters.isNotEmpty() && baseUri == null && folder.lastModified >= folderLastModified) {
+                                AcerolaLogger.d(TAG, "No changes detected for comic: ${folder.name}, skipping sync", LogSource.REPOSITORY)
+                                return@catch
+                            }
+
+                            _progress.value = 30
+
+                            val chaptersToInsert = mutableListOf<ChapterArchive>()
+                            val chaptersToDelete = existingChapters.toMutableList()
+
+                            chapterFiles.forEachIndexed { index, file ->
+                                val name = file.name
+                                val match = chapterRegex.matchEntire(input = name)
+
+                                val currentFastHash = "${file.name}|${file.size}|${file.lastModified}"
+
+                                val fileUri =
+                                    if (baseUri != null) {
+                                        DocumentsContract.buildDocumentUriUsingTree(baseUri, file.id).toString()
+                                    } else {
+                                        DocumentsContract.buildDocumentUriUsingTree(folderUri, file.id).toString()
+                                    }
+
+                                val existing = existingChaptersMap[fileUri]
+
+                                if (existing != null && existing.fastHash == currentFastHash) {
+                                    chaptersToDelete.remove(existing)
+                                    return@forEachIndexed
+                                }
+
+                                semaphore.withPermit {
+                                    val chapterSort: String
+
+                                    if (match != null) {
+                                        val integerPart = match.groupValues[1].toInt()
+                                        val fractionalPartRaw = match.groupValues.getOrNull(index = 2)
+                                        val fractionalPart = fractionalPartRaw?.toIntOrNull() ?: 0
+
+                                        chapterSort =
+                                            if (fractionalPart == 0) {
+                                                integerPart.toString()
+                                            } else {
+                                                "$integerPart.$fractionalPart"
+                                            }
+                                    } else {
+                                        chapterSort =
+                                            name
+                                                .filter { it.isDigit() || it == '.' || it == ',' }
+                                                .replace(',', '.')
+                                                .ifBlank { (index + 1).toString() }
+                                    }
+
+                                    chaptersToInsert.add(
+                                        file.toChapterArchiveEntity(
+                                            mangaId = mangaId,
+                                            fileUri = fileUri,
+                                            chapterSort = chapterSort,
+                                            fastHash = currentFastHash,
+                                        ),
+                                    )
+                                }
+
+                                _progress.value = 30 + ((index + 1) * 60 / chapterFiles.size)
+                            }
+
+                            if (chaptersToDelete.isNotEmpty()) {
+                                AcerolaLogger.d(
+                                    TAG,
+                                    "Deleting ${chaptersToDelete.size} missing chapters for comic: ${folder.name}",
+                                    LogSource.REPOSITORY,
+                                )
+                                chaptersToDelete.forEach { chapterArchiveDao.delete(it) }
+                            }
+
+                            if (chaptersToInsert.isNotEmpty()) {
+                                AcerolaLogger.d(
+                                    TAG,
+                                    "Inserting ${chaptersToInsert.size} new chapters for comic: ${folder.name}",
+                                    LogSource.REPOSITORY,
+                                )
+                                chapterArchiveDao.insertAll(*chaptersToInsert.toTypedArray())
+                            }
+
+                            if (folderLastModified > 0 && folder.lastModified < folderLastModified) {
+                                directoryDao.update(entity = folder.copy(lastModified = folderLastModified))
+                            }
+
+                            AcerolaLogger.i(TAG, "Finished chapter sync for comic: ${folder.name}", LogSource.REPOSITORY)
+                            _progress.value = 100
+                        }.mapLeft { exception ->
+                            AcerolaLogger.e(TAG, "Chapter sync failed for mangaId: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                            when (exception) {
+                                is IOException -> LibrarySyncError.DiskIOFailure(path = "Unknown", cause = exception)
+                                is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
+                                is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
+                                else -> LibrarySyncError.UnexpectedError(cause = exception)
                             }
                         }
-                    }
-                }
 
-                val chapterFiles = allFiles.filter { ArchiveFormatPattern.isIndexable(ext = it.name) }
+                _isIndexing.value = false
+                _progress.value = -1
+                result
+            }
 
-                if (existingChapters.isNotEmpty() && baseUri == null && folder.lastModified >= folderLastModified) {
-                    AcerolaLogger.d(TAG, "No changes detected for comic: ${folder.name}, skipping sync", LogSource.REPOSITORY)
-                    return@catch
-                }
+        private fun findBestTemplate(
+            filenames: List<String>,
+            templates: List<ChapterTemplate>,
+        ): ChapterTemplate? {
+            if (filenames.isEmpty()) return null
 
-                _progress.value = 30
-
-                val chaptersToInsert = mutableListOf<ChapterArchive>()
-                val chaptersToDelete = existingChapters.toMutableList()
-
-                chapterFiles.forEachIndexed { index, file ->
-                    val name = file.name
-                    val match = chapterRegex.matchEntire(input = name)
-
-                    val currentFastHash = "${file.name}|${file.size}|${file.lastModified}"
-
-                    val fileUri = if (baseUri != null) {
-                        DocumentsContract.buildDocumentUriUsingTree(baseUri, file.id).toString()
-                    } else {
-                        DocumentsContract.buildDocumentUriUsingTree(folderUri, file.id).toString()
-                    }
-
-                    val existing = existingChaptersMap[fileUri]
-
-                    if (existing != null && existing.fastHash == currentFastHash) {
-                        chaptersToDelete.remove(existing)
-                        return@forEachIndexed
-                    }
-
-                    semaphore.withPermit {
-                        val chapterSort: String
-
-                        if (match != null) {
-                            val integerPart = match.groupValues[1].toInt()
-                            val fractionalPartRaw = match.groupValues.getOrNull(index = 2)
-                            val fractionalPart = fractionalPartRaw?.toIntOrNull() ?: 0
-
-                            chapterSort = if (fractionalPart == 0) integerPart.toString()
-                            else "$integerPart.$fractionalPart"
-                        } else {
-                            chapterSort = name.filter { it.isDigit() || it == '.' || it == ',' }
-                                .replace(',', '.')
-                                .ifBlank { (index + 1).toString() }
-                        }
-
-                        chaptersToInsert.add(
-                            file.toChapterArchiveEntity(
-                                mangaId = mangaId,
-                                fileUri = fileUri,
-                                chapterSort = chapterSort,
-                                fastHash = currentFastHash
+            val counts =
+                templates.associateWith { template ->
+                    val regex = templateToRegex(template.pattern)
+                    filenames.count { filename ->
+                        regex.matches(filename) ||
+                            regex.matches(
+                                filename.substringBeforeLast(".") + ArchiveFormatPattern.CBZ.extension,
                             )
-                        )
                     }
-
-                    _progress.value = 30 + ((index + 1) * 60 / chapterFiles.size)
                 }
 
-                if (chaptersToDelete.isNotEmpty()) {
-                    AcerolaLogger.d(TAG, "Deleting ${chaptersToDelete.size} missing chapters for comic: ${folder.name}", LogSource.REPOSITORY)
-                    chaptersToDelete.forEach { chapterArchiveDao.delete(it) }
-                }
-
-                if (chaptersToInsert.isNotEmpty()) {
-                    AcerolaLogger.d(TAG, "Inserting ${chaptersToInsert.size} new chapters for comic: ${folder.name}", LogSource.REPOSITORY)
-                    chapterArchiveDao.insertAll(*chaptersToInsert.toTypedArray())
-                }
-
-                if (folderLastModified > 0 && folder.lastModified < folderLastModified) {
-                    directoryDao.update(entity = folder.copy(lastModified = folderLastModified))
-                }
-
-                AcerolaLogger.i(TAG, "Finished chapter sync for comic: ${folder.name}", LogSource.REPOSITORY)
-                _progress.value = 100
-            }.mapLeft { exception ->
-                AcerolaLogger.e(TAG, "Chapter sync failed for mangaId: $mangaId", LogSource.REPOSITORY, throwable = exception)
-                when (exception) {
-                    is IOException -> LibrarySyncError.DiskIOFailure(path = "Unknown", cause = exception)
-                    is SecurityException -> LibrarySyncError.FolderAccessDenied(cause = exception)
-                    is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                    else -> LibrarySyncError.UnexpectedError(cause = exception)
-                }
-            }
-
-            _isIndexing.value = false
-            _progress.value = -1
-            result
+            return counts.entries
+                .filter { it.value > 0 }
+                .sortedWith(
+                    compareByDescending<Map.Entry<ChapterTemplate, Int>> { it.value }
+                        .thenByDescending { it.key.id > 0 }
+                        .thenByDescending { it.key.id },
+                ).firstOrNull()
+                ?.key
         }
 
-    private fun findBestTemplate(filenames: List<String>, templates: List<ChapterTemplate>): ChapterTemplate? {
-        if (filenames.isEmpty()) return null
-
-        val counts = templates.associateWith { template ->
-            val regex = templateToRegex(template.pattern)
-            filenames.count { filename ->
-                regex.matches(filename) || regex.matches(
-                    filename.substringBeforeLast(".") + ArchiveFormatPattern.CBZ.extension
+        override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> =
+            chapterArchiveDao
+                .getChaptersByDirectoryId(folderId = mangaId)
+                .map { list: List<ChapterArchive> ->
+                    AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
+                    list.toViewPageDto()
+                }.stateIn(
+                    started = SharingStarted.Lazily,
+                    scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
+                    initialValue = ChapterArchivePageDto(items = emptyList(), pageSize = 0, total = 0, page = 0),
                 )
+
+        override suspend fun getChapterPage(
+            mangaId: Long,
+            total: Int,
+            page: Int,
+            pageSize: Int,
+        ): ChapterArchivePageDto {
+            val offset = page * pageSize
+            AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)
+
+            val realTotal =
+                if (total > 0) {
+                    total
+                } else {
+                    chapterArchiveDao.countByDirectoryId(folderId = mangaId)
+                }
+
+            val items =
+                chapterArchiveDao.getChaptersByDirectoryPaged(
+                    pageSize = pageSize,
+                    folderId = mangaId,
+                    offset = offset,
+                )
+
+            return items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
+        }
+
+        fun observeAllChapterCounts(): Flow<Map<Long, Int>> =
+            chapterArchiveDao.getChapterCountsByDirectory().map { list ->
+                list.associate { it.comicDirectoryFk to it.count }
             }
-        }
 
-        return counts.entries
-            .filter { it.value > 0 }
-            .sortedWith(
-                compareByDescending<Map.Entry<ChapterTemplate, Int>> { it.value }
-                    .thenByDescending { it.key.id > 0 }
-                    .thenByDescending { it.key.id }
-            )
-            .firstOrNull()?.key
-    }
-
-    override fun observeChapters(mangaId: Long): StateFlow<ChapterArchivePageDto> {
-        return chapterArchiveDao.getChaptersByDirectoryId(folderId = mangaId).map { list: List<ChapterArchive> ->
-            AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
-            list.toViewPageDto()
-        }.stateIn(
-            started = SharingStarted.Lazily,
-            scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-            initialValue = ChapterArchivePageDto(items = emptyList(), pageSize = 0, total = 0, page = 0)
-        )
-    }
-
-    override suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int): ChapterArchivePageDto {
-        val offset = page * pageSize
-        AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize)", LogSource.REPOSITORY)
-
-        val realTotal = if (total > 0) total
-        else chapterArchiveDao.countByDirectoryId(folderId = mangaId)
-
-        val items = chapterArchiveDao.getChaptersByDirectoryPaged(
-            pageSize = pageSize, folderId = mangaId, offset = offset
-        )
-
-        return items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
-    }
-
-    fun observeAllChapterCounts(): Flow<Map<Long, Int>> {
-        return chapterArchiveDao.getChapterCountsByDirectory().map { list ->
-            list.associate { it.comicDirectoryFk to it.count }
+        companion object {
+            private const val TAG = "ChapterArchiveRepository"
         }
     }
-
-    companion object {
-        private const val TAG = "ChapterArchiveRepository"
-    }
-}

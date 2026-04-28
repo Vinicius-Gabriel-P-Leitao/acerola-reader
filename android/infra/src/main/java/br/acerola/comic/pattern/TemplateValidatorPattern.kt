@@ -6,7 +6,6 @@ import br.acerola.comic.infra.R
 import br.acerola.comic.type.UiText
 
 object TemplateValidatorPattern {
-
     fun validateCustomTemplate(input: String): Either<TemplateError, Unit> {
         var valueCount = 0
         var subCount = 0
@@ -25,10 +24,11 @@ object TemplateValidatorPattern {
                 }
 
                 val tag = input.substring(cursor + 1, end)
-                val macro = TemplateMacro.fromTag(tag)
-                    ?: return Either.Left(
-                        TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_invalid_macro, args = listOf(tag)))
-                    )
+                val macro =
+                    TemplateMacro.fromTag(tag)
+                        ?: return Either.Left(
+                            TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_invalid_macro, args = listOf(tag))),
+                        )
 
                 when (macro) {
                     TemplateMacro.CHAPTER -> {

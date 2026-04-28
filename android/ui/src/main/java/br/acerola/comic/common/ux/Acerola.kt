@@ -1,5 +1,4 @@
 package br.acerola.comic.common.ux
-import br.acerola.comic.ui.R
 
 /**
  * Namespace central para todos os componentes visuais customizados do Acerola.
@@ -7,5 +6,6 @@ import br.acerola.comic.ui.R
  */
 object Acerola {
     object Component
+
     object Layout
 }

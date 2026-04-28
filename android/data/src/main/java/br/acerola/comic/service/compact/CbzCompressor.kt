@@ -11,32 +11,35 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class CbzCompressor @Inject constructor(
-    @param:ApplicationContext private val context: Context
-) {
+class CbzCompressor
+    @Inject
+    constructor(
+        @param:ApplicationContext private val context: Context,
+    ) {
+        suspend fun createCbz(
+            folder: DocumentFile,
+            fileName: String,
+            pageEntries: List<Pair<String, ByteArray>>,
+        ): Either<IoError, Unit> {
+            val file =
+                folder.createFile("application/octet-stream", fileName)
+                    ?: return Either.Left(IoError.FileWriteError(path = fileName))
 
-    suspend fun createCbz(
-        folder: DocumentFile,
-        fileName: String,
-        pageEntries: List<Pair<String, ByteArray>>
-    ): Either<IoError, Unit> {
-        val file = folder.createFile("application/octet-stream", fileName)
-            ?: return Either.Left(IoError.FileWriteError(path = fileName))
-
-        return Either.catch {
-            context.contentResolver.openOutputStream(file.uri)?.use { outStream ->
-                ZipOutputStream(outStream).use { zip ->
-                    pageEntries.forEach { (entryName, bytes) ->
-                        zip.putNextEntry(ZipEntry(entryName))
-                        zip.write(bytes)
-                        zip.closeEntry()
+            return Either
+                .catch {
+                    context.contentResolver.openOutputStream(file.uri)?.use { outStream ->
+                        ZipOutputStream(outStream).use { zip ->
+                            pageEntries.forEach { (entryName, bytes) ->
+                                zip.putNextEntry(ZipEntry(entryName))
+                                zip.write(bytes)
+                                zip.closeEntry()
+                            }
+                        }
                     }
+                    Unit
+                }.mapLeft { cause ->
+                    file.delete()
+                    IoError.FileWriteError(path = fileName, cause = cause) as IoError
                 }
-            }
-            Unit
-        }.mapLeft { cause ->
-            file.delete()
-            IoError.FileWriteError(path = fileName, cause = cause) as IoError
         }
     }
-}

@@ -56,7 +56,7 @@ import br.acerola.comic.ui.R
 @Composable
 fun Main.Home.Layout.Screen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToConfig: () -> Unit
+    onNavigateToConfig: () -> Unit,
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -74,14 +74,15 @@ fun Main.Home.Layout.Screen(
     val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
     val filterSettings by homeViewModel.filterSettings.collectAsStateWithLifecycle()
 
-    val uiState = HomeUiState(
-        layout = layout,
-        isIndexing = isIndexing,
-        mangas = mangas,
-        sortType = sortSettings.type,
-        sortDirection = sortSettings.direction,
-        filter = filterSettings
-    )
+    val uiState =
+        HomeUiState(
+            layout = layout,
+            isIndexing = isIndexing,
+            mangas = mangas,
+            sortType = sortSettings.type,
+            sortDirection = sortSettings.direction,
+            filter = filterSettings,
+        )
 
     var selectedMangaForActions by remember { mutableStateOf<ComicDto?>(null) }
     var showFilterSheet by remember { mutableStateOf(false) }
@@ -89,33 +90,36 @@ fun Main.Home.Layout.Screen(
     var query by rememberSaveable { mutableStateOf("") }
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val filteredMangas = remember(query, uiState.mangas) {
-        val list = uiState.mangas ?: return@remember emptyList()
-        if (query.isEmpty()) {
-            list
-        } else {
-            list.filter { (comic, _, _) ->
-                comic.directory.name.contains(query, ignoreCase = true) ||
+    val filteredMangas =
+        remember(query, uiState.mangas) {
+            val list = uiState.mangas ?: return@remember emptyList()
+            if (query.isEmpty()) {
+                list
+            } else {
+                list.filter { (comic, _, _) ->
+                    comic.directory.name.contains(query, ignoreCase = true) ||
                         comic.remoteInfo?.title?.contains(query, ignoreCase = true) == true
+                }
             }
         }
-    }
 
     val onAction: (HomeAction) -> Unit = { action ->
         when (action) {
             is HomeAction.UpdateLayout -> homeViewModel.updateHomeLayout(action.layout)
             is HomeAction.ClickManga -> {
-                val intent = Intent(context, ComicActivity::class.java).apply {
-                    putExtra(ComicActivity.ChapterExtra.COMIC, action.manga)
-                }
+                val intent =
+                    Intent(context, ComicActivity::class.java).apply {
+                        putExtra(ComicActivity.ChapterExtra.COMIC, action.manga)
+                    }
                 context.startActivity(intent)
             }
             is HomeAction.ClickContinue -> {
-                val intent = Intent(context, ReaderActivity::class.java).apply {
-                    putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
-                    putExtra(ReaderActivity.PageExtra.MANGA_ID, action.manga.directory.id)
-                    putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
-                }
+                val intent =
+                    Intent(context, ReaderActivity::class.java).apply {
+                        putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
+                        putExtra(ReaderActivity.PageExtra.MANGA_ID, action.manga.directory.id)
+                        putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
+                    }
                 context.startActivity(intent)
             }
         }
@@ -127,10 +131,11 @@ fun Main.Home.Layout.Screen(
             mangaList == null -> Unit
             mangaList.isEmpty() && !uiState.isIndexing -> EmptyState()
             else -> {
-                val gridCells = when (uiState.layout) {
-                    HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
-                    HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
-                }
+                val gridCells =
+                    when (uiState.layout) {
+                        HomeLayoutType.GRID -> GridCells.Adaptive(minSize = 120.dp)
+                        HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
+                    }
 
                 LazyVerticalGrid(
                     columns = gridCells,
@@ -140,22 +145,24 @@ fun Main.Home.Layout.Screen(
                 ) {
                     items(items = if (searchExpanded) filteredMangas else mangaList) { (manga, history, chapterCount) ->
                         when (uiState.layout) {
-                            HomeLayoutType.GRID -> Main.Home.Component.ComicGridItem(
-                                manga = manga,
-                                history = history,
-                                chapterCount = chapterCount,
-                                onShowActions = { selectedMangaForActions = manga },
-                                onClick = { onAction(HomeAction.ClickManga(manga)) }
-                            )
+                            HomeLayoutType.GRID ->
+                                Main.Home.Component.ComicGridItem(
+                                    manga = manga,
+                                    history = history,
+                                    chapterCount = chapterCount,
+                                    onShowActions = { selectedMangaForActions = manga },
+                                    onClick = { onAction(HomeAction.ClickManga(manga)) },
+                                )
 
-                            HomeLayoutType.LIST -> Main.Common.Component.ComicListItem(
-                                manga = manga,
-                                chapterCount = chapterCount,
-                                subtitle = manga.remoteInfo?.authors?.name,
-                                onClick = { onAction(HomeAction.ClickManga(manga)) },
-                                onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
-                                onShowActions = { selectedMangaForActions = manga },
-                            )
+                            HomeLayoutType.LIST ->
+                                Main.Common.Component.ComicListItem(
+                                    manga = manga,
+                                    chapterCount = chapterCount,
+                                    subtitle = manga.remoteInfo?.authors?.name,
+                                    onClick = { onAction(HomeAction.ClickManga(manga)) },
+                                    onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
+                                    onShowActions = { selectedMangaForActions = manga },
+                                )
                         }
                     }
                 }
@@ -172,56 +179,68 @@ fun Main.Home.Layout.Screen(
             contentPadding = PaddingValues(bottom = 16.dp),
             itemKey = { (manga, _, _) -> manga.directory.id },
             placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 8.dp),
             itemContent = { (manga, history, chapterCount) ->
                 Main.Common.Component.ComicListItem(
                     manga = manga,
                     chapterCount = chapterCount,
                     onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(manga, it)) } },
-                    onClick = { onAction(HomeAction.ClickManga(manga)) }
+                    onClick = { onAction(HomeAction.ClickManga(manga)) },
                 )
-            })
+            },
+        )
 
         if (!searchExpanded) {
             Acerola.Component.FloatingTool(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub)
+                        contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub),
                     )
-                }, items = listOf(
-                    FloatingToolItem(
-                        onClick = {
-                            onAction(
-                                HomeAction.UpdateLayout(
-                                    layout = when (uiState.layout) {
-                                        HomeLayoutType.LIST -> HomeLayoutType.GRID
-                                        HomeLayoutType.GRID -> HomeLayoutType.LIST
-                                    }
+                },
+                items =
+                    listOf(
+                        FloatingToolItem(
+                            onClick = {
+                                onAction(
+                                    HomeAction.UpdateLayout(
+                                        layout =
+                                            when (uiState.layout) {
+                                                HomeLayoutType.LIST -> HomeLayoutType.GRID
+                                                HomeLayoutType.GRID -> HomeLayoutType.LIST
+                                            },
+                                    ),
                                 )
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (uiState.layout == HomeLayoutType.GRID) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
-                                contentDescription = stringResource(id = R.string.description_icon_home_change_layout)
-                            )
-                        },
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector =
+                                        if (uiState.layout ==
+                                            HomeLayoutType.GRID
+                                        ) {
+                                            Icons.AutoMirrored.Filled.ViewList
+                                        } else {
+                                            Icons.Default.GridView
+                                        },
+                                    contentDescription = stringResource(id = R.string.description_icon_home_change_layout),
+                                )
+                            },
+                        ),
+                        FloatingToolItem(
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.FilterList,
+                                    contentDescription = stringResource(id = R.string.description_icon_home_filter),
+                                )
+                            },
+                            onClick = { showFilterSheet = true },
+                        ),
                     ),
-
-                    FloatingToolItem(
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = stringResource(id = R.string.description_icon_home_filter)
-                            )
-                        }, onClick = { showFilterSheet = true })
-                )
             )
-
         }
 
         val activeManga = selectedMangaForActions
@@ -252,12 +271,13 @@ fun Main.Home.Layout.Screen(
 @Composable
 private fun EmptyState() {
     Box(
-        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = stringResource(id = R.string.description_text_home_empty_state),
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
             )
         }
     }

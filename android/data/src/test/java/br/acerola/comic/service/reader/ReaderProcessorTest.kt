@@ -1,22 +1,21 @@
 package br.acerola.comic.service.reader
 
-import br.acerola.comic.__fixtures__.ComicFixtures
+import arrow.core.right
+import br.acerola.comic.fixtures.ComicFixtures
 import br.acerola.comic.service.cache.BitmapCacheHandler
 import br.acerola.comic.service.reader.contract.PageSource
+import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
-import com.google.common.truth.Truth.assertThat
-import arrow.core.right
 
 class ReaderProcessorTest {
-
     private val factory = mockk<ChapterSourceFactory>()
     private val bitmapCache = mockk<BitmapCacheHandler>(relaxed = true)
     private val source = mockk<PageSource>(relaxed = true)
-    
+
     private lateinit var repository: ReaderProcessor
 
     @Before

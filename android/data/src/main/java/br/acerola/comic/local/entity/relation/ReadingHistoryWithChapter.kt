@@ -6,5 +6,5 @@ data class ReadingHistoryWithChapter(
     val updatedAt: Long,
     val chapterArchiveId: Long,
     val chapterName: String?,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
 )

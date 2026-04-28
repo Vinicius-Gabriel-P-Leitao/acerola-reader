@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.layout
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,11 +17,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import br.acerola.comic.common.navigation.Destination
 import br.acerola.comic.common.ux.Acerola
 
-private val navDestinations = listOf(
-    Destination.HOME,
-    Destination.HISTORY,
-    Destination.CONFIG,
-)
+private val navDestinations =
+    listOf(
+        Destination.HOME,
+        Destination.HISTORY,
+        Destination.CONFIG,
+    )
 
 @Composable
 fun Acerola.Layout.BottomBar(navController: NavHostController) {
@@ -33,7 +32,7 @@ fun Acerola.Layout.BottomBar(navController: NavHostController) {
     NavigationBar(
         modifier = Modifier,
         windowInsets = NavigationBarDefaults.windowInsets,
-        containerColor = NavigationBarDefaults.containerColor
+        containerColor = NavigationBarDefaults.containerColor,
     ) {
         navDestinations.forEach { destination ->
             val routeString = stringResource(id = destination.route)
@@ -53,7 +52,7 @@ fun Acerola.Layout.BottomBar(navController: NavHostController) {
                 icon = {
                     Icon(
                         imageVector = destination.icon,
-                        contentDescription = stringResource(destination.contentDescriptionRes)
+                        contentDescription = stringResource(destination.contentDescriptionRes),
                     )
                 },
             )
@@ -88,7 +87,7 @@ fun Acerola.Layout.SideBar(navController: NavHostController) {
                 icon = {
                     Icon(
                         imageVector = destination.icon,
-                        contentDescription = stringResource(destination.contentDescriptionRes)
+                        contentDescription = stringResource(destination.contentDescriptionRes),
                     )
                 },
             )

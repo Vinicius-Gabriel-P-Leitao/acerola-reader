@@ -1,6 +1,4 @@
 package br.acerola.comic.module.reader
-import br.acerola.comic.ui.R
-
 import android.content.Context
 import android.os.Build
 import androidx.compose.runtime.Composable
@@ -16,9 +14,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class ReaderActivity(
-    override val startDestinationRes: Int = Destination.READER.route
+    override val startDestinationRes: Int = Destination.READER.route,
 ) : BaseActivity() {
-
     object PageExtra {
         const val PAGE = "PAGE"
         const val MANGA_ID = "MANGA_ID"
@@ -37,13 +34,14 @@ class ReaderActivity(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             safeIntent.extras?.getParcelable(PageExtra.PAGE, ChapterFileDto::class.java)
         } else {
-            @Suppress("DEPRECATION") safeIntent.extras?.getParcelable(PageExtra.PAGE)
+            @Suppress("DEPRECATION")
+            safeIntent.extras?.getParcelable(PageExtra.PAGE)
         }
     }
 
     override fun NavGraphBuilder.setupNavGraph(
         context: Context,
-        navController: NavHostController
+        navController: NavHostController,
     ) {
         composable(route = context.getString(Destination.READER.route)) {
             val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
@@ -57,7 +55,7 @@ class ReaderActivity(
                 chapterId = chapterId,
                 mangaId = mangaId,
                 initialPage = initialPage,
-                onBackClick = { finish() }
+                onBackClick = { finish() },
             )
         }
     }

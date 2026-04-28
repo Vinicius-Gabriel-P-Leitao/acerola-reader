@@ -9,7 +9,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class PageContentTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -18,8 +17,8 @@ class PageContentTest {
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
             val listState = rememberLazyListState()
-            
-             Reader.Layout.PageContent(
+
+            Reader.Layout.PageContent(
                 pageCount = 10,
                 pagerState = pagerState,
                 onUiToggle = {},
@@ -30,7 +29,7 @@ class PageContentTest {
                 mangaId = 1L,
                 chapterId = 1L,
                 onPageRequest = {},
-                onZoomChange = {}
+                onZoomChange = {},
             )
         }
 

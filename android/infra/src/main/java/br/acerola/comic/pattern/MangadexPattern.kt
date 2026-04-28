@@ -1,7 +1,6 @@
 package br.acerola.comic.pattern
 
 object MangadexPattern {
-
     /**
      * Extrai o UUID de uma URL completa do MangaDex.
      *

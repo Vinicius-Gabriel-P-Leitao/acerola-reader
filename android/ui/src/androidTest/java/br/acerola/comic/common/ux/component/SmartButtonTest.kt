@@ -13,7 +13,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class SmartButtonTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -23,7 +22,7 @@ class SmartButtonTest {
         composeTestRule.setContent {
             Acerola.Component.Button(
                 text = "Clique Aqui",
-                onClick = { clicked = true }
+                onClick = { clicked = true },
             )
         }
 
@@ -36,7 +35,7 @@ class SmartButtonTest {
         composeTestRule.setContent {
             Acerola.Component.IconButton(
                 onClick = {},
-                icon = { Icon(Icons.Default.Add, contentDescription = "Adicionar") }
+                icon = { Icon(Icons.Default.Add, contentDescription = "Adicionar") },
             )
         }
 
@@ -49,7 +48,7 @@ class SmartButtonTest {
             Acerola.Component.Button(
                 text = "Salvar",
                 onClick = {},
-                icon = { Icon(Icons.Default.Add, contentDescription = "Icone") }
+                icon = { Icon(Icons.Default.Add, contentDescription = "Icone") },
             )
         }
 

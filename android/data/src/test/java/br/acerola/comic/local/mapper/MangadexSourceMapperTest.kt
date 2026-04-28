@@ -20,25 +20,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MangadexSourceMapperTest {
-
     @Test
     fun `MangaMangadexDto toViewDto deve extrair autor e capa das relacoes`() {
         val context = mockk<Context>()
         every { context.getString(R.string.description_manga_untitled) } returns "Untitled"
 
-        val attributes = MangaAttributes(
-            titleMap = mapOf("en" to "Solo Leveling"),
-            status = "ongoing",
-            links = null,
-            tags = listOf(
-                Tag("t1", "tag", TagAttributes(mapOf("en" to "Action"), "group", 1))
+        val attributes =
+            MangaAttributes(
+                titleMap = mapOf("en" to "Solo Leveling"),
+                status = "ongoing",
+                links = null,
+                tags =
+                    listOf(
+                        Tag("t1", "tag", TagAttributes(mapOf("en" to "Action"), "group", 1)),
+                    ),
             )
-        )
-        
-        val relationships = listOf(
-            Relationship("a1", "author", attributes = RelationshipAttributes(name = "Author Name")),
-            Relationship("c1", "cover_art", attributes = RelationshipAttributes(fileName = "cover.jpg"))
-        )
+
+        val relationships =
+            listOf(
+                Relationship("a1", "author", attributes = RelationshipAttributes(name = "Author Name")),
+                Relationship("c1", "cover_art", attributes = RelationshipAttributes(fileName = "cover.jpg")),
+            )
 
         val mangaRaw = MangaMangadexDto("m1", "comic", attributes, relationships)
 
@@ -55,11 +57,12 @@ class MangadexSourceMapperTest {
     fun `ChapterMangadexDto toViewDto deve construir URLs de paginas quando source fornecido`() {
         val attr = ChapterAttributes("1", "1", "Ch 1", pages = 20, version = 1)
         val chapterRaw = ChapterMangadexDto("ch1", "chapter", attr, emptyList())
-        
-        val source = ChapterSourceMangadexDto(
-            baseUrl = "https://server.com",
-            chapter = ChapterPage("hash123", data = listOf("1.jpg", "2.jpg"))
-        )
+
+        val source =
+            ChapterSourceMangadexDto(
+                baseUrl = "https://server.com",
+                chapter = ChapterPage("hash123", data = listOf("1.jpg", "2.jpg")),
+            )
 
         val dto = chapterRaw.toViewDto(source)
 

@@ -1,8 +1,8 @@
 package br.acerola.comic.repository.adapter.remote.mangadex.manga
 
+import br.acerola.comic.adapter.metadata.mangadex.source.MangadexFetchCoverSource
 import br.acerola.comic.error.message.NetworkError
 import br.acerola.comic.remote.mangadex.api.MangadexMangaDownloadClient
-import br.acerola.comic.adapter.metadata.mangadex.source.MangadexFetchCoverSource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -17,7 +17,6 @@ import org.junit.Test
 import java.io.IOException
 
 class MangadexSourceFetchCoverRepositoryTest {
-
     @MockK lateinit var api: MangadexMangaDownloadClient
     private lateinit var repository: MangadexFetchCoverSource
 
@@ -28,30 +27,32 @@ class MangadexSourceFetchCoverRepositoryTest {
     }
 
     @Test
-    fun `searchCover deve baixar bytes corretamente`() = runTest {
-        val url = "http://cover.jpg"
-        val bytes = byteArrayOf(1, 2, 3)
-        val responseBody = mockk<ResponseBody>()
+    fun `searchCover deve baixar bytes corretamente`() =
+        runTest {
+            val url = "http://cover.jpg"
+            val bytes = byteArrayOf(1, 2, 3)
+            val responseBody = mockk<ResponseBody>()
 
-        every { responseBody.bytes() } returns bytes
-        
-        coEvery { api.downloadFile(url) } returns responseBody
+            every { responseBody.bytes() } returns bytes
 
-        val result = repository.searchMedia(url)
+            coEvery { api.downloadFile(url) } returns responseBody
 
-        assertTrue(result.isRight())
-        result.onRight { 
-            assertArrayEquals(bytes, it)
+            val result = repository.searchMedia(url)
+
+            assertTrue(result.isRight())
+            result.onRight {
+                assertArrayEquals(bytes, it)
+            }
         }
-    }
 
     @Test
-    fun `searchCover deve retornar ConnectionFailed em erro de rede`() = runTest {
-        coEvery { api.downloadFile(any()) } throws IOException("Net error")
+    fun `searchCover deve retornar ConnectionFailed em erro de rede`() =
+        runTest {
+            coEvery { api.downloadFile(any()) } throws IOException("Net error")
 
-        val result = repository.searchMedia("url")
+            val result = repository.searchMedia("url")
 
-        assertTrue(result.isLeft())
-        result.onLeft { assertTrue(it is NetworkError.ConnectionFailed) }
-    }
+            assertTrue(result.isLeft())
+            result.onLeft { assertTrue(it is NetworkError.ConnectionFailed) }
+        }
 }

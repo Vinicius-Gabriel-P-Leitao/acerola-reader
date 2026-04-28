@@ -33,7 +33,7 @@ import br.acerola.comic.ui.R
 fun Acerola.Component.Pagination(
     currentPage: Int,
     totalPages: Int,
-    onPageChange: (Int) -> Unit
+    onPageChange: (Int) -> Unit,
 ) {
     if (totalPages <= 1) return
 
@@ -44,14 +44,15 @@ fun Acerola.Component.Pagination(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
     ) {
         Text(
             text = stringResource(id = R.string.label_pagination_format, currentPage + 1, totalPages),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(height = 8.dp))
@@ -59,43 +60,55 @@ fun Acerola.Component.Pagination(
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             IconButton(
                 onClick = { onPageChange(currentPage - 1) },
-                enabled = currentPage > 0
+                enabled = currentPage > 0,
             ) {
                 Icon(
                     contentDescription = stringResource(id = R.string.description_icon_pagination_previous),
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    tint =
+                        if (currentPage > 0) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        },
                 )
             }
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 for (page in startPage until endPage) {
                     val isSelected = page == currentPage
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(size = 36.dp)
-                            .clip(shape = RoundedCornerShape(size = 8.dp))
-                            .background(
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            .clickable { onPageChange(page) }
+                        modifier =
+                            Modifier
+                                .size(size = 36.dp)
+                                .clip(shape = RoundedCornerShape(size = 8.dp))
+                                .background(
+                                    color =
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        },
+                                ).clickable { onPageChange(page) },
                     ) {
                         Text(
                             text = (page + 1).toString(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color =
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
                         )
                     }
                 }
@@ -103,13 +116,17 @@ fun Acerola.Component.Pagination(
 
             IconButton(
                 onClick = { onPageChange(currentPage + 1) },
-                enabled = currentPage < lastPageIndex
+                enabled = currentPage < lastPageIndex,
             ) {
                 Icon(
                     contentDescription = stringResource(id = R.string.description_icon_pagination_next),
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    tint = if (currentPage < lastPageIndex) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    tint =
+                        if (currentPage < lastPageIndex) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        },
                 )
             }
         }

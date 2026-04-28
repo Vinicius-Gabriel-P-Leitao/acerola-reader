@@ -1,14 +1,14 @@
 package br.acerola.comic.common.ux.layout
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
 class ProgressIndicatorTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -18,7 +18,7 @@ class ProgressIndicatorTest {
             AcerolaTheme {
                 Acerola.Layout.ProgressIndicator(
                     isLoading = true,
-                    progress = 0.45f // 45%
+                    progress = 0.45f, // 45%
                 )
             }
         }
@@ -32,7 +32,7 @@ class ProgressIndicatorTest {
             AcerolaTheme {
                 Acerola.Layout.ProgressIndicator(
                     isLoading = true,
-                    progress = null
+                    progress = null,
                 )
             }
         }
@@ -46,7 +46,7 @@ class ProgressIndicatorTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Layout.ProgressIndicator(
-                    isLoading = false
+                    isLoading = false,
                 )
             }
         }

@@ -27,32 +27,23 @@ annotation class ComicInfoSourceQualifier
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ComicInfoModule {
+    @Binds
+    @Singleton
+    @ComicInfoEngine
+    abstract fun bindComicInfoMangaRepository(impl: ComicInfoComicEngine): br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
 
     @Binds
     @Singleton
     @ComicInfoEngine
-    abstract fun bindComicInfoMangaRepository(
-        impl: ComicInfoComicEngine
-    ): br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
-
-    @Binds
-    @Singleton
-    @ComicInfoEngine
-    abstract fun bindComicInfoChapterRepository(
-        impl: ComicInfoChapterEngine
-    ): ChapterGateway<ChapterRemoteInfoPageDto>
+    abstract fun bindComicInfoChapterRepository(impl: ComicInfoChapterEngine): ChapterGateway<ChapterRemoteInfoPageDto>
 
     @Binds
     @Singleton
     @ComicInfoSourceQualifier
-    abstract fun bindComicInfoMangaInfoService(
-        impl: ComicInfoSource
-    ): MetadataProvider<ComicMetadataDto, String>
+    abstract fun bindComicInfoMangaInfoService(impl: ComicInfoSource): MetadataProvider<ComicMetadataDto, String>
 
     @Binds
     @Singleton
     @ComicInfoSourceQualifier
-    abstract fun bindComicInfoChapterInfoService(
-        impl: ChapterComicInfoSource
-    ): MetadataProvider<ChapterMetadataDto, String>
+    abstract fun bindComicInfoChapterInfoService(impl: ChapterComicInfoSource): MetadataProvider<ChapterMetadataDto, String>
 }

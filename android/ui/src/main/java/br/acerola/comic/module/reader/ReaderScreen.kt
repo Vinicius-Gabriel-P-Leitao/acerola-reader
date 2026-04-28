@@ -21,9 +21,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.layout.ProgressIndicator
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
+import br.acerola.comic.common.ux.layout.ProgressIndicator
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.comic.config.preference.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
@@ -47,7 +47,7 @@ fun ReaderScreen(
 ) {
     val context = LocalContext.current
 
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.uiState.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current
 
     LaunchedEffect(chapter, chapterId, mangaId) {
@@ -73,7 +73,12 @@ fun ReaderScreen(
             ReaderAction.LoadNextChapter -> viewModel.loadNextChapter(mangaId)
             ReaderAction.LoadPreviousChapter -> viewModel.loadPreviousChapter(mangaId)
             is ReaderAction.PageVisible -> viewModel.onPageVisible(mangaId, state.currentChapter?.id ?: chapterId, action.index)
-            is ReaderAction.CurrentPageChanged -> viewModel.onCurrentPageChanged(mangaId, state.currentChapter?.id ?: chapterId, action.index)
+            is ReaderAction.CurrentPageChanged ->
+                viewModel.onCurrentPageChanged(
+                    mangaId,
+                    state.currentChapter?.id ?: chapterId,
+                    action.index,
+                )
         }
     }
 
@@ -82,13 +87,15 @@ fun ReaderScreen(
         return
     }
 
-    val pagerState = rememberPagerState(
-        initialPage = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0)),
-        pageCount = { state.pageCount }
-    )
-    val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0))
-    )
+    val pagerState =
+        rememberPagerState(
+            initialPage = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0)),
+            pageCount = { state.pageCount },
+        )
+    val listState =
+        rememberLazyListState(
+            initialFirstVisibleItemIndex = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0)),
+        )
 
     LaunchedEffect(pagerState, listState, state.readingMode, mangaId, chapter, chapterId) {
         snapshotFlow {
@@ -128,25 +135,25 @@ fun ReaderScreen(
             onPageRequest = { index -> onAction(ReaderAction.PageVisible(index)) },
             onPrevClick = { onAction(ReaderAction.ChangePage(state.currentPage - 1)) },
             onNextClick = { onAction(ReaderAction.ChangePage(state.currentPage + 1)) },
-            onZoomChange = {}
+            onZoomChange = {},
         )
 
         // UI Overlay
         val activeChapter = state.currentChapter ?: chapter
-        
+
         Reader.Layout.TopBar(
             title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
             subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
             isVisible = state.isUiVisible,
             onBackClick = { onAction(ReaderAction.NavigateBack) },
-            onSettingsClick = { showSettings = true }
+            onSettingsClick = { showSettings = true },
         )
 
         AnimatedVisibility(
             visible = state.isUiVisible,
             enter = slideInVertically { it },
             exit = slideOutVertically { it },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Box(contentAlignment = Alignment.BottomCenter) {
                 Reader.Layout.BottomControls(
@@ -160,7 +167,7 @@ fun ReaderScreen(
                     onNextChapterClick = { onAction(ReaderAction.LoadNextChapter) },
                     onPrevClick = { onAction(ReaderAction.ChangePage(state.currentPage - 1)) },
                     onNextClick = { onAction(ReaderAction.ChangePage(state.currentPage + 1)) },
-                    onPreviousChapterClick = { onAction(ReaderAction.LoadPreviousChapter) }
+                    onPreviousChapterClick = { onAction(ReaderAction.LoadPreviousChapter) },
                 )
             }
         }
@@ -172,7 +179,7 @@ fun ReaderScreen(
                 onModeSelected = { mode ->
                     onAction(ReaderAction.UpdateReadingMode(mode))
                     showSettings = false
-                }
+                },
             )
         }
     }

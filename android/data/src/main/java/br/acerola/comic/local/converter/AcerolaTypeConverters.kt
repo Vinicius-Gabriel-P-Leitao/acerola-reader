@@ -4,7 +4,6 @@ import androidx.room.TypeConverter
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
 
 class AcerolaTypeConverters {
-
     @TypeConverter
     fun fromStringList(list: List<String>): String = list.joinToString(separator = ",")
 

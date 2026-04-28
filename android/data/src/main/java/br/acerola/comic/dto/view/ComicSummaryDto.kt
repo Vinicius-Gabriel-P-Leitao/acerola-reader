@@ -15,5 +15,5 @@ data class ComicSummaryDto(
     val externalSync: Boolean,
     val metadataTitle: String?,
     val activeSource: MetadataSourcePattern?,
-    val metadataId: Long?
+    val metadataId: Long?,
 ) : Parcelable

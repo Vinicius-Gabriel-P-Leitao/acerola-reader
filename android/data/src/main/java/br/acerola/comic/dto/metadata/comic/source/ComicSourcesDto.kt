@@ -9,5 +9,5 @@ import kotlinx.parcelize.Parcelize
 data class ComicSourcesDto(
     val mangadex: MangadexSourceDto? = null,
     val anilist: AnilistSourceDto? = null,
-    val comicInfo: ComicInfoSourceDto? = null
+    val comicInfo: ComicInfoSourceDto? = null,
 ) : Parcelable

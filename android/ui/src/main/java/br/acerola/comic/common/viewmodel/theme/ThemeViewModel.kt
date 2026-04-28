@@ -1,6 +1,4 @@
 package br.acerola.comic.common.viewmodel.theme
-import br.acerola.comic.ui.R
-
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -19,24 +17,28 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ThemeViewModel @Inject constructor(
-    private val application: Application
-) : ViewModel() {
-    private val context: Context get() = application
+class ThemeViewModel
+    @Inject
+    constructor(
+        private val application: Application,
+    ) : ViewModel() {
+        private val context: Context get() = application
 
-    private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
-    val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+        private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
+        val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-    val currentTheme: StateFlow<AppTheme> = ThemePreference.themeFlow(context)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = AppTheme.CATPPUCCIN
-        )
+        val currentTheme: StateFlow<AppTheme> =
+            ThemePreference
+                .themeFlow(context)
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+                    initialValue = AppTheme.CATPPUCCIN,
+                )
 
-    fun setTheme(theme: AppTheme) {
-        viewModelScope.launch {
-            ThemePreference.saveTheme(context, theme)
+        fun setTheme(theme: AppTheme) {
+            viewModelScope.launch {
+                ThemePreference.saveTheme(context, theme)
+            }
         }
     }
-}

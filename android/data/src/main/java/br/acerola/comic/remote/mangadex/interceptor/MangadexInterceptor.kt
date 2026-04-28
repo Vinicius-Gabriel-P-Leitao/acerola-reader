@@ -7,9 +7,11 @@ import okhttp3.Response
 class MangadexInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val newRequest = originalRequest.newBuilder()
-            .header(name = "User-Agent", value = "AcerolaMangaApp/1.0 (${BuildConfig.GITHUB_USER_AGENT})")
-            .build()
+        val newRequest =
+            originalRequest
+                .newBuilder()
+                .header(name = "User-Agent", value = "AcerolaMangaApp/1.0 (${BuildConfig.GITHUB_USER_AGENT})")
+                .build()
 
         return chain.proceed(newRequest)
     }

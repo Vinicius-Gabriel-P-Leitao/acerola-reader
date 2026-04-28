@@ -11,7 +11,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class PaginationPreferenceTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -20,7 +19,7 @@ class PaginationPreferenceTest {
         composeTestRule.setContent {
             Comic.Component.PaginationPreference(
                 selected = ChapterPageSizeType.SHORT,
-                onSelect = {}
+                onSelect = {},
             )
         }
 
@@ -37,7 +36,7 @@ class PaginationPreferenceTest {
         composeTestRule.setContent {
             Comic.Component.PaginationPreference(
                 selected = ChapterPageSizeType.SHORT,
-                onSelect = { selectedSize = it }
+                onSelect = { selectedSize = it },
             )
         }
 

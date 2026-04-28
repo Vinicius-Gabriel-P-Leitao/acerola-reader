@@ -7,23 +7,27 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-enum class HomeLayoutType(val key: String) {
+enum class HomeLayoutType(
+    val key: String,
+) {
     LIST(key = "LIST"),
-    GRID(key = "GRID");
+    GRID(key = "GRID"),
+    ;
 
     companion object {
-
         fun fromKey(key: String?): HomeLayoutType = entries.firstOrNull { it.key == key } ?: LIST
     }
 }
 
 object HomeLayoutPreference {
-
     private val Context.dataStore by preferencesDataStore(name = "home_layout_prefs")
 
     private val HOME_LAYOUT_KEY = stringPreferencesKey(name = "home_layout_type")
 
-    suspend fun saveLayout(context: Context, layout: HomeLayoutType) {
+    suspend fun saveLayout(
+        context: Context,
+        layout: HomeLayoutType,
+    ) {
         context.dataStore.edit { prefs ->
             prefs[HOME_LAYOUT_KEY] = layout.key
         }
@@ -31,6 +35,6 @@ object HomeLayoutPreference {
 
     fun layoutFlow(context: Context): Flow<HomeLayoutType> =
         context.dataStore.data.map { prefs ->
-            HomeLayoutType.fromKey(key =prefs[HOME_LAYOUT_KEY])
+            HomeLayoutType.fromKey(key = prefs[HOME_LAYOUT_KEY])
         }
 }

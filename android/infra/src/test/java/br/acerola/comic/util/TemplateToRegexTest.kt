@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TemplateToRegexTest {
-
     @Test
     fun `deve converter um padrao de template para regex corretamente`() {
         val template = "Cap. {chapter}{decimal}*{extension}"
@@ -50,7 +49,7 @@ class TemplateToRegexTest {
 
         val preset3 = detectTemplate("Ch. 5.5 - Fim.cbz")
         assertEquals("Ch. {chapter}{decimal}.*.{extension}", preset3)
-        
+
         val presetFallback = detectTemplate("FormatoDesconhecido_01.rar")
         assertEquals("Ch. {chapter}{decimal}.*.{extension}", presetFallback)
     }

@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -15,32 +13,35 @@ import androidx.compose.ui.unit.LayoutDirection
 @Composable
 fun BookmarkRibbon(
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val ribbonShape = remember {
-        object : Shape {
-            override fun createOutline(
-                size: androidx.compose.ui.geometry.Size,
-                layoutDirection: LayoutDirection,
-                density: androidx.compose.ui.unit.Density
-            ): Outline {
-                val path = Path().apply {
-                    moveTo(0f, 0f)
-                    lineTo(size.width, 0f)
-                    lineTo(size.width, size.height)
-                    lineTo(size.width / 2f, size.height * 0.75f)
-                    lineTo(0f, size.height)
-                    close()
+    val ribbonShape =
+        remember {
+            object : Shape {
+                override fun createOutline(
+                    size: androidx.compose.ui.geometry.Size,
+                    layoutDirection: LayoutDirection,
+                    density: androidx.compose.ui.unit.Density,
+                ): Outline {
+                    val path =
+                        Path().apply {
+                            moveTo(0f, 0f)
+                            lineTo(size.width, 0f)
+                            lineTo(size.width, size.height)
+                            lineTo(size.width / 2f, size.height * 0.75f)
+                            lineTo(0f, size.height)
+                            close()
+                        }
+                    return Outline.Generic(path)
                 }
-                return Outline.Generic(path)
             }
         }
-    }
 
     Box(
-        modifier = modifier.background(
+        modifier =
+            modifier.background(
                 color = color,
-                shape = ribbonShape
-            )
+                shape = ribbonShape,
+            ),
     )
 }

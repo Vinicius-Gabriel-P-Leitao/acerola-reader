@@ -2,8 +2,8 @@ package br.acerola.comic.usecase.library
 
 import android.net.Uri
 import arrow.core.Either
-import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
+import br.acerola.comic.error.message.LibrarySyncError
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -13,20 +13,14 @@ import kotlinx.coroutines.flow.StateFlow
  * Agora depende diretamente de [ComicSyncGateway].
  */
 class SyncLibraryUseCase(
-    private val repository: ComicSyncGateway
+    private val repository: ComicSyncGateway,
 ) {
     val progress: StateFlow<Int> = repository.progress
     val isIndexing: StateFlow<Boolean> = repository.isIndexing
 
-    suspend fun sync(baseUri: Uri? = null): Either<LibrarySyncError, Unit> {
-        return repository.incrementalScan(baseUri)
-    }
+    suspend fun sync(baseUri: Uri? = null): Either<LibrarySyncError, Unit> = repository.incrementalScan(baseUri)
 
-    suspend fun rescan(baseUri: Uri? = null): Either<LibrarySyncError, Unit> {
-        return repository.refreshLibrary(baseUri)
-    }
+    suspend fun rescan(baseUri: Uri? = null): Either<LibrarySyncError, Unit> = repository.refreshLibrary(baseUri)
 
-    suspend fun deepRescan(baseUri: Uri? = null): Either<LibrarySyncError, Unit> {
-        return repository.rebuildLibrary(baseUri)
-    }
+    suspend fun deepRescan(baseUri: Uri? = null): Either<LibrarySyncError, Unit> = repository.rebuildLibrary(baseUri)
 }

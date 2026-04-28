@@ -4,8 +4,8 @@ import br.acerola.comic.pattern.LanguagePattern
 import br.acerola.comic.ui.R
 
 object LanguageMapper {
-    fun getLabelRes(languageCode: String): Int {
-        return when (LanguagePattern.from(languageCode)) {
+    fun getLabelRes(languageCode: String): Int =
+        when (LanguagePattern.from(languageCode)) {
             LanguagePattern.PT_BR -> R.string.lang_pt_br
             LanguagePattern.EN -> R.string.lang_en
             LanguagePattern.ES_LA -> R.string.lang_es_la
@@ -20,7 +20,6 @@ object LanguageMapper {
             LanguagePattern.ID -> R.string.lang_id
             null -> R.string.manga_header_unknown
         }
-    }
 
     fun getAllCodes(): List<String> = LanguagePattern.entries.map { it.code }
 }

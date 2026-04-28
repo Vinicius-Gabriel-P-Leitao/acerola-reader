@@ -1,7 +1,7 @@
 package br.acerola.comic.usecase.comic
 
-import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 import io.mockk.MockKAnnotations
 import io.mockk.coVerify
 import io.mockk.every
@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class ObserveLibraryUseCaseTest {
-
     @MockK
     lateinit var repository: ComicGateway<ComicDirectoryDto>
     private lateinit var useCase: ObserveLibraryUseCase<ComicDirectoryDto>
@@ -29,13 +28,14 @@ class ObserveLibraryUseCaseTest {
     }
 
     @Test
-    fun `invoke deve retornar fluxo da biblioteca`() = runTest {
-        val list = listOf(mockk<ComicDirectoryDto>())
-        every { repository.observeLibrary() } returns MutableStateFlow(value = list)
+    fun `invoke deve retornar fluxo da biblioteca`() =
+        runTest {
+            val list = listOf(mockk<ComicDirectoryDto>())
+            every { repository.observeLibrary() } returns MutableStateFlow(value = list)
 
-        val result = useCase().first()
+            val result = useCase().first()
 
-        assertEquals(list, result)
-        coVerify { repository.observeLibrary() }
-    }
+            assertEquals(list, result)
+            coVerify { repository.observeLibrary() }
+        }
 }

@@ -1,6 +1,4 @@
 package br.acerola.comic.module.comic
-import br.acerola.comic.ui.R
-
 import android.content.Context
 import android.os.Build
 import androidx.compose.runtime.Composable
@@ -15,9 +13,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class ComicActivity(
-    override val startDestinationRes: Int = Destination.COMIC.route
+    override val startDestinationRes: Int = Destination.COMIC.route,
 ) : BaseActivity() {
-
     object ChapterExtra {
         const val COMIC = "COMIC"
     }
@@ -32,12 +29,15 @@ class ComicActivity(
         }
     }
 
-    override fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+    override fun NavGraphBuilder.setupNavGraph(
+        context: Context,
+        navController: NavHostController,
+    ) {
         composable(route = context.getString(Destination.COMIC.route)) {
             if (manga != null) {
                 ComicScreen(
                     manga = manga!!,
-                    onBackClick = { finish() }
+                    onBackClick = { finish() },
                 )
             } else {
                 LaunchedEffect(Unit) {

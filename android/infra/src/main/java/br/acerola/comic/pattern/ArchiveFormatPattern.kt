@@ -1,9 +1,13 @@
 package br.acerola.comic.pattern
 
-enum class ArchiveFormatPattern(val extension: String, val indexable: Boolean = true) {
+enum class ArchiveFormatPattern(
+    val extension: String,
+    val indexable: Boolean = true,
+) {
     CBZ(extension = ".cbz"),
     CBR(extension = ".cbr"),
-    PDF(extension = ".pdf", indexable = false);
+    PDF(extension = ".pdf", indexable = false),
+    ;
 
     companion object {
         fun isSupported(ext: String?): Boolean {

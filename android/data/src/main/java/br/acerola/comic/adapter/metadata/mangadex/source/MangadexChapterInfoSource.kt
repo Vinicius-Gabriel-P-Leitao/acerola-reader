@@ -24,74 +24,86 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MangadexChapterInfoSource @Inject constructor(
-    private val api: MangadexChapterMetadataClient,
-    @param:ApplicationContext private val context: Context
-) : MetadataProvider<ChapterMetadataDto, String> {
+class MangadexChapterInfoSource
+    @Inject
+    constructor(
+        private val api: MangadexChapterMetadataClient,
+        @param:ApplicationContext private val context: Context,
+    ) : MetadataProvider<ChapterMetadataDto, String> {
+        override suspend fun searchInfo(
+            manga: String,
+            limit: Int,
+            offset: Int,
+            onProgress: ((Int) -> Unit)?,
+            vararg extra: String?,
+        ): Either<NetworkError, List<ChapterMetadataDto>> =
+            withContext(context = Dispatchers.IO) {
+                val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
+                val languagesList = listOf(preferredLanguage)
 
-    override suspend fun searchInfo(
-        manga: String, limit: Int, offset: Int, onProgress: ((Int) -> Unit)?, vararg extra: String?
-    ): Either<NetworkError, List<ChapterMetadataDto>> = withContext(context = Dispatchers.IO) {
-        val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
-        val languagesList = listOf(preferredLanguage)
-        
-        AcerolaLogger.d(TAG, "GET /comic/$manga/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
-        
-        val allChapters = mutableListOf<ChapterMetadataDto>()
-        val semaphore = Semaphore(permits = 3)
-        var currentOffset = offset
-        var error: NetworkError? = null
+                AcerolaLogger.d(TAG, "GET /comic/$manga/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
 
-        val initialResponseResult = safeApiCall { api.getMangaFeed(mangaId = manga, languages = languagesList, limit = 1, offset = 0) }
-        val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
+                val allChapters = mutableListOf<ChapterMetadataDto>()
+                val semaphore = Semaphore(permits = 3)
+                var currentOffset = offset
+                var error: NetworkError? = null
 
-        while (true) {
-            if (totalChapters > 0 && onProgress != null) {
-                val progress = ((currentOffset.toFloat() / totalChapters.toFloat()) * 100).toInt()
-                onProgress(progress)
-            }
+                val initialResponseResult =
+                    safeApiCall { api.getMangaFeed(mangaId = manga, languages = languagesList, limit = 1, offset = 0) }
+                val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
 
-            val responseFeedResult = safeApiCall {
-                api.getMangaFeed(mangaId = manga, languages = languagesList, limit = limit, offset = currentOffset)
-            }
-
-            if (responseFeedResult is Either.Left) {
-                AcerolaLogger.e(TAG, "Failed to fetch chapter feed for comic: $manga", LogSource.NETWORK)
-                error = responseFeedResult.value
-                break
-            }
-
-            val responseFeed = responseFeedResult.getOrNull()!!
-            AcerolaLogger.d(TAG, "Feed received: ${responseFeed.data.size} chapters in this batch", LogSource.NETWORK)
-
-            val processedBatch = responseFeed.data.map { item ->
-                async {
-                    semaphore.withPermit {
-                        val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
-                        val source = sourceResult.getOrNull()
-                        item.toViewDto(source)
+                while (true) {
+                    if (totalChapters > 0 && onProgress != null) {
+                        val progress = ((currentOffset.toFloat() / totalChapters.toFloat()) * 100).toInt()
+                        onProgress(progress)
                     }
+
+                    val responseFeedResult =
+                        safeApiCall {
+                            api.getMangaFeed(mangaId = manga, languages = languagesList, limit = limit, offset = currentOffset)
+                        }
+
+                    if (responseFeedResult is Either.Left) {
+                        AcerolaLogger.e(TAG, "Failed to fetch chapter feed for comic: $manga", LogSource.NETWORK)
+                        error = responseFeedResult.value
+                        break
+                    }
+
+                    val responseFeed = responseFeedResult.getOrNull()!!
+                    AcerolaLogger.d(TAG, "Feed received: ${responseFeed.data.size} chapters in this batch", LogSource.NETWORK)
+
+                    val processedBatch =
+                        responseFeed.data
+                            .map { item ->
+                                async {
+                                    semaphore.withPermit {
+                                        val sourceResult = safeApiCall { api.getChapterImages(chapterId = item.id) }
+                                        val source = sourceResult.getOrNull()
+                                        item.toViewDto(source)
+                                    }
+                                }
+                            }.awaitAll()
+
+                    allChapters.addAll(elements = processedBatch)
+                    currentOffset += 100
+
+                    if (currentOffset >= responseFeed.total) break
                 }
-            }.awaitAll()
 
-            allChapters.addAll(elements = processedBatch)
-            currentOffset += 100
+                if (error != null && allChapters.isEmpty()) {
+                    Either.Left(value = error)
+                } else {
+                    AcerolaLogger.i(TAG, "Successfully fetched total of ${allChapters.size} chapters for comic $manga", LogSource.NETWORK)
+                    Either.Right(value = allChapters)
+                }
+            }
 
-            if (currentOffset >= responseFeed.total) break
-        }
+        override suspend fun saveInfo(
+            manga: String,
+            info: ChapterMetadataDto,
+        ): Either<NetworkError, Unit> = Either.Right(Unit)
 
-        if (error != null && allChapters.isEmpty()) {
-            Either.Left(value = error)
-        } else {
-            AcerolaLogger.i(TAG, "Successfully fetched total of ${allChapters.size} chapters for comic $manga", LogSource.NETWORK)
-            Either.Right(value = allChapters)
+        companion object {
+            private const val TAG = "MangadexChapterInfoSource"
         }
     }
-
-    override suspend fun saveInfo(manga: String, info: ChapterMetadataDto): Either<NetworkError, Unit> =
-        Either.Right(Unit)
-
-    companion object {
-        private const val TAG = "MangadexChapterInfoSource"
-    }
-}

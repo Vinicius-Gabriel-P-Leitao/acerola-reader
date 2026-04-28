@@ -14,13 +14,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import br.acerola.comic.common.ux.component.AdaptiveSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.config.preference.ChapterSortPreferenceData
 import br.acerola.comic.config.preference.ChapterSortType
 import br.acerola.comic.config.preference.SortDirection
@@ -31,7 +31,7 @@ import br.acerola.comic.ui.R
 fun Comic.Component.ChapterSortSheet(
     sortSettings: ChapterSortPreferenceData,
     onSortChange: (ChapterSortPreferenceData) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
@@ -39,54 +39,65 @@ fun Comic.Component.ChapterSortSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
         ) {
             Text(
                 text = stringResource(id = R.string.title_chapter_sort_sheet),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             ChapterSortType.entries.forEach { type ->
-                val label = when (type) {
-                    ChapterSortType.NUMBER -> stringResource(id = R.string.label_sort_number)
-                    ChapterSortType.LAST_UPDATE -> stringResource(id = R.string.label_sort_last_update)
-                }
+                val label =
+                    when (type) {
+                        ChapterSortType.NUMBER -> stringResource(id = R.string.label_sort_number)
+                        ChapterSortType.LAST_UPDATE -> stringResource(id = R.string.label_sort_last_update)
+                    }
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSortChange(sortSettings.copy(type = type)) }
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onSortChange(sortSettings.copy(type = type)) }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = label,
                         modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                     if (sortSettings.type == type) {
                         IconButton(onClick = {
                             onSortChange(
                                 sortSettings.copy(
-                                    direction = if (sortSettings.direction == SortDirection.ASCENDING)
-                                        SortDirection.DESCENDING else SortDirection.ASCENDING
-                                )
+                                    direction =
+                                        if (sortSettings.direction == SortDirection.ASCENDING) {
+                                            SortDirection.DESCENDING
+                                        } else {
+                                            SortDirection.ASCENDING
+                                        },
+                                ),
                             )
                         }) {
                             Icon(
-                                imageVector = if (sortSettings.direction == SortDirection.ASCENDING)
-                                    Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                                contentDescription = null
+                                imageVector =
+                                    if (sortSettings.direction == SortDirection.ASCENDING) {
+                                        Icons.Default.ArrowUpward
+                                    } else {
+                                        Icons.Default.ArrowDownward
+                                    },
+                                contentDescription = null,
                             )
                         }
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }

@@ -1,14 +1,14 @@
 package br.acerola.comic.module.reader.layout
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.module.reader.Reader
 import org.junit.Rule
 import org.junit.Test
 
 class BottomControlsTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -22,7 +22,7 @@ class BottomControlsTest {
                     onPrevClick = {},
                     onNextClick = {},
                     onNextChapterClick = {},
-                    onPreviousChapterClick = {}
+                    onPreviousChapterClick = {},
                 )
             }
         }
@@ -43,7 +43,7 @@ class BottomControlsTest {
                     onPrevClick = {},
                     onNextClick = {},
                     onNextChapterClick = {},
-                    onPreviousChapterClick = {}
+                    onPreviousChapterClick = {},
                 )
             }
         }
@@ -62,7 +62,7 @@ class BottomControlsTest {
                     onPrevClick = {},
                     onNextClick = {},
                     onNextChapterClick = {},
-                    onPreviousChapterClick = {}
+                    onPreviousChapterClick = {},
                 )
             }
         }

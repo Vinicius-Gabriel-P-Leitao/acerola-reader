@@ -2,8 +2,8 @@ package br.acerola.comic.usecase.library
 
 import android.net.Uri
 import arrow.core.Either
-import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,7 +17,6 @@ import org.junit.Before
 import org.junit.Test
 
 class SyncLibraryUseCaseTest {
-
     @MockK
     lateinit var repository: ComicGateway<ComicDirectoryDto>
 
@@ -33,35 +32,38 @@ class SyncLibraryUseCaseTest {
     }
 
     @Test
-    fun `sync deve chamar incrementalScan`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { repository.incrementalScan(baseUri = uri) } returns Either.Right(value = Unit)
+    fun `sync deve chamar incrementalScan`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { repository.incrementalScan(baseUri = uri) } returns Either.Right(value = Unit)
 
-        val result = useCase.sync(baseUri = uri)
+            val result = useCase.sync(baseUri = uri)
 
-        assertTrue(result.isRight())
-        coVerify { repository.incrementalScan(baseUri = uri) }
-    }
-
-    @Test
-    fun `rescan deve chamar refreshLibrary`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { repository.refreshLibrary(baseUri = uri) } returns Either.Right(value = Unit)
-
-        val result = useCase.rescan(baseUri = uri)
-
-        assertTrue(result.isRight())
-        coVerify { repository.refreshLibrary(baseUri = uri) }
-    }
+            assertTrue(result.isRight())
+            coVerify { repository.incrementalScan(baseUri = uri) }
+        }
 
     @Test
-    fun `deepRescan deve chamar rebuildLibrary`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { repository.rebuildLibrary(baseUri = uri) } returns Either.Right(value = Unit)
+    fun `rescan deve chamar refreshLibrary`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { repository.refreshLibrary(baseUri = uri) } returns Either.Right(value = Unit)
 
-        val result = useCase.deepRescan(baseUri = uri)
+            val result = useCase.rescan(baseUri = uri)
 
-        assertTrue(result.isRight())
-        coVerify { repository.rebuildLibrary(baseUri = uri) }
-    }
+            assertTrue(result.isRight())
+            coVerify { repository.refreshLibrary(baseUri = uri) }
+        }
+
+    @Test
+    fun `deepRescan deve chamar rebuildLibrary`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { repository.rebuildLibrary(baseUri = uri) } returns Either.Right(value = Unit)
+
+            val result = useCase.deepRescan(baseUri = uri)
+
+            assertTrue(result.isRight())
+            coVerify { repository.rebuildLibrary(baseUri = uri) }
+        }
 }

@@ -11,43 +11,54 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class CategoryManager @Inject constructor(
-    private val categoryDao: CategoryDao
-) {
-    fun getAllCategories(): Flow<List<CategoryDto>> = categoryDao.observeAllCategories().map { list ->
-        list.map { it.toViewDto() }
-    }
+class CategoryManager
+    @Inject
+    constructor(
+        private val categoryDao: CategoryDao,
+    ) {
+        fun getAllCategories(): Flow<List<CategoryDto>> =
+            categoryDao.observeAllCategories().map { list ->
+                list.map { it.toViewDto() }
+            }
 
-    suspend fun createCategory(name: String, color: Int) {
-        categoryDao.insert(Category(name = name, color = color))
-    }
-
-    suspend fun deleteCategory(id: Long) {
-        categoryDao.delete(Category(id = id, name = "", color = 0))
-    }
-
-    suspend fun updateMangaCategory(directoryId: Long, categoryId: Long?) {
-        categoryDao.deleteComicCategoryByDirectoryId(directoryId)
-        if (categoryId != null) {
-            categoryDao.insertComicCategory(
-                ComicCategory(
-                    mangaDirectoryFk = directoryId, categoryId = categoryId
-                )
-            )
+        suspend fun createCategory(
+            name: String,
+            color: Int,
+        ) {
+            categoryDao.insert(Category(name = name, color = color))
         }
-    }
 
-    fun getCategoryByMangaId(directoryId: Long): Flow<CategoryDto?> = 
-        categoryDao.observeCategoryByDirectoryId(directoryId).map { it?.toViewDto() }
+        suspend fun deleteCategory(id: Long) {
+            categoryDao.delete(Category(id = id, name = "", color = 0))
+        }
 
-    fun getAllMangaCategories(): Flow<Map<Long, CategoryDto>> = 
-        categoryDao.observeAllComicCategoriesJoined().map { list ->
-            list.associate { result ->
-                result.mangaDirectoryId to CategoryDto(
-                    id = result.categoryId, 
-                    name = result.name, 
-                    color = result.color
+        suspend fun updateMangaCategory(
+            directoryId: Long,
+            categoryId: Long?,
+        ) {
+            categoryDao.deleteComicCategoryByDirectoryId(directoryId)
+            if (categoryId != null) {
+                categoryDao.insertComicCategory(
+                    ComicCategory(
+                        mangaDirectoryFk = directoryId,
+                        categoryId = categoryId,
+                    ),
                 )
             }
         }
-}
+
+        fun getCategoryByMangaId(directoryId: Long): Flow<CategoryDto?> =
+            categoryDao.observeCategoryByDirectoryId(directoryId).map { it?.toViewDto() }
+
+        fun getAllMangaCategories(): Flow<Map<Long, CategoryDto>> =
+            categoryDao.observeAllComicCategoriesJoined().map { list ->
+                list.associate { result ->
+                    result.mangaDirectoryId to
+                        CategoryDto(
+                            id = result.categoryId,
+                            name = result.name,
+                            color = result.color,
+                        )
+                }
+            }
+    }

@@ -16,7 +16,6 @@ annotation class SummaryEngine
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SummaryModule {
-
     @Binds
     @Singleton
     @SummaryEngine

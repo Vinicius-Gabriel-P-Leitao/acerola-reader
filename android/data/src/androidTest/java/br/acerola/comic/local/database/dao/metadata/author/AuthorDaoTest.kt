@@ -6,9 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import br.acerola.comic.fixtures.MetadataFixtures
-import br.acerola.comic.local.database.AcerolaDatabase
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
+import br.acerola.comic.local.database.AcerolaDatabase
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -20,7 +20,6 @@ import java.io.IOException
 @RunWith(AndroidJUnit4::class)
 @SmallTest
 class AuthorDaoTest {
-
     private lateinit var db: AcerolaDatabase
     private lateinit var authorDao: AuthorDao
     private lateinit var mangaDao: ComicMetadataDao
@@ -40,17 +39,18 @@ class AuthorDaoTest {
     }
 
     @Test
-    fun upsertAndGetId_com_unique_constraint_retorna_mesmo_id() = runBlocking {
-        // Arrange
-        val manga = MetadataFixtures.createMangaRemoteInfo()
-        val mangaId = mangaDao.insert(manga)
-        val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Kishimoto")
+    fun upsertAndGetId_com_unique_constraint_retorna_mesmo_id() =
+        runBlocking {
+            // Arrange
+            val manga = MetadataFixtures.createMangaRemoteInfo()
+            val mangaId = mangaDao.insert(manga)
+            val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Kishimoto")
 
-        // Act — inserting same author twice should return the same ID
-        val id1 = authorDao.upsertAndGetId(author)
-        val id2 = authorDao.upsertAndGetId(author)
+            // Act — inserting same author twice should return the same ID
+            val id1 = authorDao.upsertAndGetId(author)
+            val id2 = authorDao.upsertAndGetId(author)
 
-        // Assert — with UNIQUE(name, manga_remote_info_fk), same author returns same ID
-        assertEquals(id1, id2)
-    }
+            // Assert — with UNIQUE(name, manga_remote_info_fk), same author returns same ID
+            assertEquals(id1, id2)
+        }
 }

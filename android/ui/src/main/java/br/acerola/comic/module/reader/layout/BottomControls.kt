@@ -1,10 +1,19 @@
 package br.acerola.comic.module.reader.layout
-import br.acerola.comic.ui.R
 
-import androidx.compose.animation.*
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -29,6 +38,7 @@ import br.acerola.comic.common.ux.modifier.glassContainer
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.module.reader.Reader
+import br.acerola.comic.ui.R
 
 private const val TAG = "ReaderBottomControls"
 
@@ -44,12 +54,12 @@ fun Reader.Layout.BottomControls(
     hasNextChapter: Boolean = false,
     hasPreviousChapter: Boolean = false,
     enableNavigation: Boolean = true,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
 ) {
     AcerolaLogger.d(
         TAG,
         "Recomposed: isChapterRead=$isChapterRead, hasNextChapter=$hasNextChapter, page=$currentPage/$pageCount",
-        LogSource.UI
+        LogSource.UI,
     )
 
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
@@ -57,29 +67,33 @@ fun Reader.Layout.BottomControls(
     val shape = RoundedCornerShape(32.dp)
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(16.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .glassContainer(shape)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .glassContainer(shape),
         ) {
             Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .glass(shape, glassColor, borderColor)
+                modifier =
+                    Modifier
+                        .matchParentSize()
+                        .glass(shape, glassColor, borderColor),
             )
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .animateContentSize()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PageIndicator(currentPage = currentPage, pageCount = pageCount)
 
@@ -96,7 +110,7 @@ fun Reader.Layout.BottomControls(
                     onPreviousChapterClick = onPreviousChapterClick,
                     onPrevClick = onPrevClick,
                     onNextClick = onNextClick,
-                    onNextChapterClick = onNextChapterClick
+                    onNextChapterClick = onNextChapterClick,
                 )
             }
         }
@@ -106,23 +120,23 @@ fun Reader.Layout.BottomControls(
 @Composable
 private fun PageIndicator(
     currentPage: Int,
-    pageCount: Int
+    pageCount: Int,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.Bottom,
         ) {
             Text(
                 text = stringResource(id = R.string.label_reader_pages_prefix),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
             Text(
                 text = "${currentPage + 1} / $pageCount",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -131,10 +145,11 @@ private fun PageIndicator(
         val progress = if (pageCount > 0) (currentPage + 1).toFloat() / pageCount.toFloat() else 0f
         LinearProgressIndicator(
             progress = { progress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
         )
@@ -153,17 +168,17 @@ private fun ChapterNavigation(
     onPreviousChapterClick: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    onNextChapterClick: () -> Unit
+    onNextChapterClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             PreviousChapterButton(
                 visible = hasPreviousChapter,
                 isLoading = isLoading,
-                onClick = onPreviousChapterClick
+                onClick = onPreviousChapterClick,
             )
         }
 
@@ -172,7 +187,7 @@ private fun ChapterNavigation(
                 currentPage = currentPage,
                 pageCount = pageCount,
                 onPrevClick = onPrevClick,
-                onNextClick = onNextClick
+                onNextClick = onNextClick,
             )
         }
 
@@ -180,7 +195,7 @@ private fun ChapterNavigation(
             NextChapterButton(
                 visible = isChapterRead && hasNextChapter,
                 isLoading = isLoading,
-                onClick = onNextChapterClick
+                onClick = onNextChapterClick,
             )
         }
     }
@@ -190,36 +205,46 @@ private fun ChapterNavigation(
 private fun PreviousChapterButton(
     visible: Boolean,
     isLoading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     if (visible) {
         Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLoading) 0.05f else 0.1f)
-                )
-                .clickable(enabled = !isLoading, onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLoading) 0.05f else 0.1f),
+                    ).clickable(enabled = !isLoading, onClick = onClick)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
                     contentDescription = null,
-                    tint = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.3f
-                    ) else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(20.dp)
+                    tint =
+                        if (isLoading) {
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    modifier = Modifier.size(20.dp),
                 )
                 Text(
                     text = stringResource(id = R.string.label_reader_previous_chapter),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = if (isLoading) MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.3f
-                    ) else MaterialTheme.colorScheme.onSurface,
+                    color =
+                        if (isLoading) {
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                     maxLines = 1,
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp),
                 )
             }
         }
@@ -230,40 +255,55 @@ private fun PreviousChapterButton(
 private fun NextChapterButton(
     visible: Boolean,
     isLoading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     if (visible) {
         Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    if (isLoading) MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.5f
-                    ) else MaterialTheme.colorScheme.primary
-                )
-                .clickable(enabled = !isLoading, onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        if (isLoading) {
+                            MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.5f,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                    ).clickable(enabled = !isLoading, onClick = onClick)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(id = R.string.label_reader_next_chapter),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    color = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(
-                        alpha = 0.5f
-                    ) else MaterialTheme.colorScheme.onPrimary,
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                        ),
+                    color =
+                        if (isLoading) {
+                            MaterialTheme.colorScheme.onPrimary.copy(
+                                alpha = 0.5f,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme.onPrimary
+                        },
                     maxLines = 1,
-                    modifier = Modifier.padding(end = 4.dp)
+                    modifier = Modifier.padding(end = 4.dp),
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                     contentDescription = null,
-                    tint = if (isLoading) MaterialTheme.colorScheme.onPrimary.copy(
-                        alpha = 0.5f
-                    ) else MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp)
+                    tint =
+                        if (isLoading) {
+                            MaterialTheme.colorScheme.onPrimary.copy(
+                                alpha = 0.5f,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme.onPrimary
+                        },
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -275,12 +315,12 @@ private fun PageNavigationControls(
     currentPage: Int,
     pageCount: Int,
     onPrevClick: () -> Unit,
-    onNextClick: () -> Unit
+    onNextClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Acerola.Component.GlassButton(
             modifier = Modifier.size(40.dp),
@@ -288,14 +328,20 @@ private fun PageNavigationControls(
             icon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = stringResource(
-                        id = R.string.description_icon_pagination_previous
-                    ),
-                    tint = if (currentPage > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.3f
-                    )
+                    contentDescription =
+                        stringResource(
+                            id = R.string.description_icon_pagination_previous,
+                        ),
+                    tint =
+                        if (currentPage > 0) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f,
+                            )
+                        },
                 )
-            }
+            },
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -306,14 +352,22 @@ private fun PageNavigationControls(
             icon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(
-                        id = R.string.description_icon_pagination_next
-                    ),
-                    tint = if (currentPage < pageCount - 1) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.3f
-                    )
+                    contentDescription =
+                        stringResource(
+                            id = R.string.description_icon_pagination_next,
+                        ),
+                    tint =
+                        if (currentPage <
+                            pageCount - 1
+                        ) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f,
+                            )
+                        },
                 )
-            }
+            },
         )
     }
 }

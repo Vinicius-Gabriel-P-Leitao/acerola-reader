@@ -6,9 +6,13 @@ import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.error.message.LibrarySyncError
 import javax.inject.Inject
 
-class UpdateComicSettingsUseCase @Inject constructor(
-    @param:DirectoryEngine private val gateway: ComicLibraryWriteGateway,
-) {
-    suspend operator fun invoke(mangaId: Long, externalSyncEnabled: Boolean): Either<LibrarySyncError, Unit> =
-        gateway.updateMangaSettings(mangaId, externalSyncEnabled)
-}
+class UpdateComicSettingsUseCase
+    @Inject
+    constructor(
+        @param:DirectoryEngine private val gateway: ComicLibraryWriteGateway,
+    ) {
+        suspend operator fun invoke(
+            mangaId: Long,
+            externalSyncEnabled: Boolean,
+        ): Either<LibrarySyncError, Unit> = gateway.updateMangaSettings(mangaId, externalSyncEnabled)
+    }

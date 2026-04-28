@@ -15,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class HeroItemTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -25,7 +24,7 @@ class HeroItemTest {
             AcerolaTheme {
                 Acerola.Component.HeroItem(
                     title = "Configurações",
-                    icon = Icons.Default.Settings
+                    icon = Icons.Default.Settings,
                 )
             }
         }
@@ -40,7 +39,7 @@ class HeroItemTest {
                 Acerola.Component.HeroItem(
                     title = "Configurações",
                     description = "Descrição do item",
-                    icon = Icons.Default.Settings
+                    icon = Icons.Default.Settings,
                 )
             }
         }
@@ -55,7 +54,7 @@ class HeroItemTest {
                 Acerola.Component.HeroItem(
                     title = "Sem Descrição",
                     description = null,
-                    icon = Icons.Default.Settings
+                    icon = Icons.Default.Settings,
                 )
             }
         }
@@ -72,7 +71,7 @@ class HeroItemTest {
                 Acerola.Component.HeroItem(
                     title = "Item Clicável",
                     icon = Icons.Default.Settings,
-                    onClick = { clicked = true }
+                    onClick = { clicked = true },
                 )
             }
         }
@@ -89,7 +88,7 @@ class HeroItemTest {
                 Acerola.Component.HeroItem(
                     title = "Item com Action",
                     icon = Icons.Default.Settings,
-                    action = { Switch(checked = false, onCheckedChange = null) }
+                    action = { Switch(checked = false, onCheckedChange = null) },
                 )
             }
         }
@@ -104,7 +103,7 @@ class HeroItemTest {
                 Acerola.Component.HeroItem(
                     title = "Item com Conteúdo Extra",
                     icon = Icons.Default.Settings,
-                    bottomContent = { Text("Conteúdo Inferior") }
+                    bottomContent = { Text("Conteúdo Inferior") },
                 )
             }
         }
@@ -119,7 +118,7 @@ class HeroItemTest {
             AcerolaTheme {
                 Acerola.Component.HeroItem(
                     title = "Item com Slot de Ícone",
-                    icon = { Text("IC") }
+                    icon = { Text("IC") },
                 )
             }
         }

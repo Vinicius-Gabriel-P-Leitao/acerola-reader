@@ -49,101 +49,118 @@ import coil.request.ImageRequest
 fun Comic.Layout.Header(
     manga: ComicDto,
     history: ReadingHistoryDto?,
-    onContinueClick: (Long, Int) -> Unit
+    onContinueClick: (Long, Int) -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
     var isExpanded by remember { mutableStateOf(value = false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.background)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.background),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height = 420.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(height = 420.dp),
         ) {
             val context = LocalContext.current
             val bannerModel = manga.directory.bannerUri ?: manga.directory.coverUri
 
-            val placeholderPainter = coil.compose.rememberAsyncImagePainter(
-                model = ImageRequest.Builder(context)
-                    .data(data = R.raw.placeholder_manga)
-                    .build()
-            )
+            val placeholderPainter =
+                coil.compose.rememberAsyncImagePainter(
+                    model =
+                        ImageRequest
+                            .Builder(context)
+                            .data(data = R.raw.placeholder_manga)
+                            .build(),
+                )
 
             AsyncImage(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                model = ImageRequest.Builder(context = context)
-                    .data(data = bannerModel)
-                    .memoryCacheKey("${bannerModel}_${manga.directory.lastModified}")
-                    .diskCacheKey("${bannerModel}_${manga.directory.lastModified}")
-                    .crossfade(enable = true)
-                    .build(),
+                model =
+                    ImageRequest
+                        .Builder(context = context)
+                        .data(data = bannerModel)
+                        .memoryCacheKey("${bannerModel}_${manga.directory.lastModified}")
+                        .diskCacheKey("${bannerModel}_${manga.directory.lastModified}")
+                        .crossfade(enable = true)
+                        .build(),
                 placeholder = placeholderPainter,
                 error = placeholderPainter,
                 fallback = placeholderPainter,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .blur(radius = 20.dp)
-                    .height(height = 350.dp)
-                    .align(Alignment.TopCenter)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .blur(radius = 20.dp)
+                        .height(height = 350.dp)
+                        .align(Alignment.TopCenter),
             )
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(height = 350.dp)
-                    .background(
-                        Brush.verticalGradient(colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background))
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(height = 350.dp)
+                        .background(
+                            Brush.verticalGradient(colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)),
+                        ),
             )
 
             Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 20.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 20.dp),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
                     AsyncImage(
                         contentDescription = stringResource(id = R.string.manga_header_cover_description),
                         contentScale = ContentScale.Crop,
-                        model = ImageRequest.Builder(context = context)
-                            .data(data = manga.directory.coverUri)
-                            .memoryCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
-                            .diskCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
-                            .crossfade(enable = true)
-                            .build(),
+                        model =
+                            ImageRequest
+                                .Builder(context = context)
+                                .data(data = manga.directory.coverUri)
+                                .memoryCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
+                                .diskCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
+                                .crossfade(enable = true)
+                                .build(),
                         placeholder = placeholderPainter,
                         error = placeholderPainter,
                         fallback = placeholderPainter,
-                        modifier = Modifier
-                            .clip(shape = RoundedCornerShape(size = 12.dp))
-                            .width(width = 130.dp)
-                            .height(height = 190.dp)
-                            .background(color = MaterialTheme.colorScheme.surfaceVariant)
+                        modifier =
+                            Modifier
+                                .clip(shape = RoundedCornerShape(size = 12.dp))
+                                .width(width = 130.dp)
+                                .height(height = 190.dp)
+                                .background(color = MaterialTheme.colorScheme.surfaceVariant),
                     )
 
                     Spacer(modifier = Modifier.width(width = 16.dp))
 
                     Column(
                         verticalArrangement = Arrangement.Bottom,
-                        modifier = Modifier
-                            .height(height = 170.dp)
-                            .weight(weight = 1f),
+                        modifier =
+                            Modifier
+                                .height(height = 170.dp)
+                                .weight(weight = 1f),
                     ) {
                         Text(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                             text = manga.remoteInfo?.title ?: manga.directory.name,
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground
-                            ),
+                            style =
+                                MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                ),
                         )
 
                         Text(
@@ -168,12 +185,14 @@ fun Comic.Layout.Header(
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(scrollState)
-                .padding(
-                    horizontal = 20.dp, vertical = 16.dp
-                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(scrollState)
+                    .padding(
+                        horizontal = 20.dp,
+                        vertical = 16.dp,
+                    ),
         ) {
             manga.remoteInfo?.genre?.forEach { genre ->
                 GenreBadge(text = genre.name)
@@ -181,13 +200,15 @@ fun Comic.Layout.Header(
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .animateContentSize()
-                .padding(horizontal = 20.dp)
-                .clickable {
-                    isExpanded = !isExpanded
-                }) {
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+                    .padding(horizontal = 20.dp)
+                    .clickable {
+                        isExpanded = !isExpanded
+                    },
+        ) {
             Text(
                 text = stringResource(id = R.string.manga_header_synopsis_title),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -208,18 +229,26 @@ fun Comic.Layout.Header(
             Text(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 4.dp),
-                text = if (isExpanded) stringResource(id = R.string.manga_header_read_less) else stringResource(id = R.string.manga_header_read_more),
+                text =
+                    if (isExpanded) {
+                        stringResource(
+                            id = R.string.manga_header_read_less,
+                        )
+                    } else {
+                        stringResource(id = R.string.manga_header_read_more)
+                    },
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
             )
 
             Spacer(modifier = Modifier.height(height = 8.dp))
 
-            val buttonText = when {
-                history?.isCompleted == true -> stringResource(id = R.string.label_manga_action_reread)
-                history != null -> stringResource(id = R.string.label_manga_action_continue)
-                else -> stringResource(id = R.string.label_manga_action_start)
-            }
-            
+            val buttonText =
+                when {
+                    history?.isCompleted == true -> stringResource(id = R.string.label_manga_action_reread)
+                    history != null -> stringResource(id = R.string.label_manga_action_continue)
+                    else -> stringResource(id = R.string.label_manga_action_start)
+                }
+
             Acerola.Component.Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
@@ -229,7 +258,7 @@ fun Comic.Layout.Header(
                         onContinueClick(-1L, 0)
                     }
                 },
-                text = buttonText
+                text = buttonText,
             )
         }
     }
@@ -237,67 +266,79 @@ fun Comic.Layout.Header(
 
 @Composable
 private fun GenreBadge(
-    text: String, modifier: Modifier = Modifier
+    text: String,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .clip(shape = RoundedCornerShape(percent = 50))
-            .background(color = MaterialTheme.colorScheme.secondaryContainer)
-            .padding(
-                horizontal = 16.dp, vertical = 6.dp
-            )
+        modifier =
+            modifier
+                .clip(shape = RoundedCornerShape(percent = 50))
+                .background(color = MaterialTheme.colorScheme.secondaryContainer)
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 6.dp,
+                ),
     ) {
         Text(
-            text = text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
 
 @Composable
 private fun SourceBadge(
-    source: String, modifier: Modifier = Modifier
+    source: String,
+    modifier: Modifier = Modifier,
 ) {
-    val color = when (source) {
-        "COMIC_INFO" -> MaterialTheme.colorScheme.secondaryContainer
-        "MANGADEX" -> MaterialTheme.colorScheme.tertiaryContainer
-        "ANILIST" -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
+    val color =
+        when (source) {
+            "COMIC_INFO" -> MaterialTheme.colorScheme.secondaryContainer
+            "MANGADEX" -> MaterialTheme.colorScheme.tertiaryContainer
+            "ANILIST" -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceVariant
+        }
 
     Box(
-        modifier = modifier
-            .clip(shape = RoundedCornerShape(size = 4.dp))
-            .background(color = color)
-            .border(
-                width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = RoundedCornerShape(size = 4.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+        modifier =
+            modifier
+                .clip(shape = RoundedCornerShape(size = 4.dp))
+                .background(color = color)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(size = 4.dp),
+                ).padding(horizontal = 8.dp, vertical = 2.dp),
     ) {
         Text(
             text = source,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
 
 @Composable
 private fun StatusBadge(
-    status: String, modifier: Modifier = Modifier
+    status: String,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .clip(shape = RoundedCornerShape(size = 4.dp))
-            .background(color = MaterialTheme.colorScheme.primaryContainer)
-            .border(
-                width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = RoundedCornerShape(size = 4.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+        modifier =
+            modifier
+                .clip(shape = RoundedCornerShape(size = 4.dp))
+                .background(color = MaterialTheme.colorScheme.primaryContainer)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(size = 4.dp),
+                ).padding(horizontal = 8.dp, vertical = 2.dp),
     ) {
         Text(
             text = status,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
         )
     }
 }

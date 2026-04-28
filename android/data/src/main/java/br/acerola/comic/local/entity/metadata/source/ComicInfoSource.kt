@@ -14,20 +14,18 @@ import br.acerola.comic.local.entity.metadata.ComicMetadata
             entity = ComicMetadata::class,
             parentColumns = ["id"],
             childColumns = ["comic_metadata_fk"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
-        Index(value = ["comic_metadata_fk"], unique = true)
-    ]
+        Index(value = ["comic_metadata_fk"], unique = true),
+    ],
 )
 data class ComicInfoSource(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     @ColumnInfo(name = "local_hash")
     val localHash: String,
-
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long
+    val mangaRemoteInfoFk: Long,
 )

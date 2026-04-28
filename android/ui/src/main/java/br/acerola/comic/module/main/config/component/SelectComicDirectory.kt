@@ -17,13 +17,14 @@ import br.acerola.comic.ui.R
 fun Main.Config.Component.SelectComicDirectory(
     folderName: String?,
     onFolderSelected: (Uri?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val description = if (folderName != null) {
-        stringResource(id = R.string.description_text_selected_comic_directory, folderName)
-    } else {
-        stringResource(id = R.string.description_text_config_select_path_manga)
-    }
+    val description =
+        if (folderName != null) {
+            stringResource(id = R.string.description_text_selected_comic_directory, folderName)
+        } else {
+            stringResource(id = R.string.description_text_config_select_path_manga)
+        }
 
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.title_text_config_select_path_manga),
@@ -34,6 +35,6 @@ fun Main.Config.Component.SelectComicDirectory(
         modifier = modifier,
         action = {
             Main.Config.Layout.ComicDirectoryAccess(onFolderSelected = onFolderSelected)
-        }
+        },
     )
 }

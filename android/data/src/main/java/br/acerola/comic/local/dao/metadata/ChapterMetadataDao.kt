@@ -22,7 +22,7 @@ interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
         SELECT * FROM chapter_metadata
         WHERE comic_metadata_fk = :mangaId 
         ORDER BY chapter ASC
-    """
+    """,
     )
     fun observeChaptersByMetadataId(mangaId: Long): Flow<List<ChapterMetadata>>
 
@@ -32,10 +32,17 @@ interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
         WHERE comic_metadata_fk = :mangaId
         ORDER BY chapter ASC
         LIMIT :pageSize OFFSET :offset
-    """
+    """,
     )
-    suspend fun getChaptersByMetadataPaged(mangaId: Long, pageSize: Int, offset: Int): List<ChapterMetadata>
+    suspend fun getChaptersByMetadataPaged(
+        mangaId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterMetadata>
 
     @Query("SELECT * FROM chapter_metadata WHERE comic_metadata_fk = :mangaId AND chapter IN (:chapters)")
-    fun observeChaptersByMetadataAndNumbers(mangaId: Long, chapters: List<String>): Flow<List<ChapterMetadata>>
+    fun observeChaptersByMetadataAndNumbers(
+        mangaId: Long,
+        chapters: List<String>,
+    ): Flow<List<ChapterMetadata>>
 }

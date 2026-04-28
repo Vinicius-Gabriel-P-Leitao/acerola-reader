@@ -7,7 +7,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class HorizontalPagedReaderTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -16,7 +15,7 @@ class HorizontalPagedReaderTest {
         var requestedIndex = -1
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
-             Reader.Component.HorizontalPagedReader(
+            Reader.Component.HorizontalPagedReader(
                 pageCount = 10,
                 mangaId = 1L,
                 chapterId = 1L,
@@ -25,7 +24,7 @@ class HorizontalPagedReaderTest {
                 onPrevClick = {},
                 onNextClick = {},
                 onPageRequest = { requestedIndex = it },
-                onZoomChange = {}
+                onZoomChange = {},
             )
         }
 

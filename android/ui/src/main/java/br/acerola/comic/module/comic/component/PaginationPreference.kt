@@ -19,7 +19,7 @@ import br.acerola.comic.ui.R
 fun Comic.Component.PaginationPreference(
     selected: ChapterPageSizeType?,
     onSelect: (ChapterPageSizeType) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val options = ChapterPageSizeType.entries
     val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
@@ -36,8 +36,8 @@ fun Comic.Component.PaginationPreference(
                 selectedIndex = selectedIndex,
                 options = options.map { it.key.lowercase() },
                 onSelect = { index -> onSelect(options[index]) },
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             )
-        }
+        },
     )
 }

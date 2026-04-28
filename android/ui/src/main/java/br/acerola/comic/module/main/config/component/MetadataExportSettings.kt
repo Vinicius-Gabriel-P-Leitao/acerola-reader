@@ -16,7 +16,7 @@ import br.acerola.comic.ui.R
 fun Main.Config.Component.MetadataExportSettings(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.title_preference_metadata_comic_info),
@@ -28,8 +28,8 @@ fun Main.Config.Component.MetadataExportSettings(
         action = {
             Switch(
                 checked = enabled,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
             )
-        }
+        },
     )
 }

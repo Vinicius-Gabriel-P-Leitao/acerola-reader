@@ -27,7 +27,6 @@ import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChapterArchiveViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -50,31 +49,33 @@ class ChapterArchiveViewModelTest {
     }
 
     @Test
-    fun `deve enfileirar trabalho de sincronizacao ao solicitar`() = runTest {
-        viewModel.syncChaptersByMangaDirectory(1L)
-        
-        verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
-    }
+    fun `deve enfileirar trabalho de sincronizacao ao solicitar`() =
+        runTest {
+            viewModel.syncChaptersByMangaDirectory(1L)
+
+            verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
+        }
 
     @Test
-    fun `deve refletir progresso do WorkManager`() = runTest {
-        val workerId = UUID.randomUUID()
-        val workInfo = mockk<WorkInfo>()
-        every { workInfo.state } returns WorkInfo.State.RUNNING
-        every { workInfo.progress.getInt("progress", -1) } returns 50
-        
-        // Mocking observeWorkStatus internally is hard, 
-        // but we can mock the flow returned by workManager
-        every { workManager.getWorkInfoByIdFlow(any<UUID>()) } returns flowOf(workInfo)
+    fun `deve refletir progresso do WorkManager`() =
+        runTest {
+            val workerId = UUID.randomUUID()
+            val workInfo = mockk<WorkInfo>()
+            every { workInfo.state } returns WorkInfo.State.RUNNING
+            every { workInfo.progress.getInt("progress", -1) } returns 50
 
-        // Precisamos disparar o observeWorkStatus através do enqueueSync
-        viewModel.syncChaptersByMangaDirectory(1L)
+            // Mocking observeWorkStatus internally is hard,
+            // but we can mock the flow returned by workManager
+            every { workManager.getWorkInfoByIdFlow(any<UUID>()) } returns flowOf(workInfo)
 
-        viewModel.progress.test {
-            assertThat(awaitItem()).isEqualTo(50)
+            // Precisamos disparar o observeWorkStatus através do enqueueSync
+            viewModel.syncChaptersByMangaDirectory(1L)
+
+            viewModel.progress.test {
+                assertThat(awaitItem()).isEqualTo(50)
+            }
+            viewModel.isIndexing.test {
+                assertThat(awaitItem()).isTrue()
+            }
         }
-        viewModel.isIndexing.test {
-            assertThat(awaitItem()).isTrue()
-        }
-    }
 }

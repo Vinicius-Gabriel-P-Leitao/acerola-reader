@@ -2,16 +2,16 @@ package br.acerola.comic.module.history
 
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
+import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
-import br.acerola.comic.adapter.contract.gateway.HistoryGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
-import br.acerola.comic.usecase.chapter.GetChapterCountUseCase
-import br.acerola.comic.usecase.history.ObserveHistoryUseCase
-import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
-import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.module.main.history.HistoryViewModel
 import br.acerola.comic.logging.AcerolaLogger
+import br.acerola.comic.module.main.history.HistoryViewModel
+import br.acerola.comic.usecase.chapter.GetChapterCountUseCase
+import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
+import br.acerola.comic.usecase.history.ObserveHistoryUseCase
+import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -27,7 +27,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
-
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
@@ -40,7 +39,7 @@ class HistoryViewModelTest {
     private lateinit var observeHistoryUseCase: ObserveHistoryUseCase
     private lateinit var mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>
-    
+
     private lateinit var viewModel: HistoryViewModel
 
     @Before
@@ -58,13 +57,14 @@ class HistoryViewModelTest {
         mangadexObserve = ObserveLibraryUseCase(mangaRepository = mangadexRepo)
         directoryObserve = ObserveLibraryUseCase(mangaRepository = directoryRepo)
 
-        viewModel = HistoryViewModel(
-            observeHistoryUseCase = observeHistoryUseCase,
-            mangadexObserve = mangadexObserve,
-            directoryObserve = directoryObserve,
-            manageCategoriesUseCase = manageCategoriesUseCase,
-            getChapterCountUseCase = getChapterCountUseCase
-        )
+        viewModel =
+            HistoryViewModel(
+                observeHistoryUseCase = observeHistoryUseCase,
+                mangadexObserve = mangadexObserve,
+                directoryObserve = directoryObserve,
+                manageCategoriesUseCase = manageCategoriesUseCase,
+                getChapterCountUseCase = getChapterCountUseCase,
+            )
     }
 
     @After
@@ -73,9 +73,10 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `deve inicializar com lista vazia`() = runTest {
-        viewModel.historyItems.test {
-            assertThat(awaitItem()).isEmpty()
+    fun `deve inicializar com lista vazia`() =
+        runTest {
+            viewModel.historyItems.test {
+                assertThat(awaitItem()).isEmpty()
+            }
         }
-    }
 }

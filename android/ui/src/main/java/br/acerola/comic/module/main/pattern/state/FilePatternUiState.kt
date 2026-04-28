@@ -1,8 +1,6 @@
 package br.acerola.comic.module.main.pattern.state
-import br.acerola.comic.ui.R
-
 import br.acerola.comic.dto.archive.ChapterTemplateDto
 
 data class FilePatternUiState(
-    val templates: List<ChapterTemplateDto> = emptyList()
+    val templates: List<ChapterTemplateDto> = emptyList(),
 )

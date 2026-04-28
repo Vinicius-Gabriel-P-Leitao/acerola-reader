@@ -9,9 +9,9 @@ package br.acerola.comic.error.exception
  * @param cause Causa raiz da exceção, se houver.
  */
 sealed class TechnicalException(
-    message: String, cause: Throwable? = null
+    message: String,
+    cause: Throwable? = null,
 ) : RuntimeException(message, cause) {
-
     /**
      * Indica um estado inválido que nunca deveria ocorrer em um código correto.
      * Ex: Um serviço não inicializado antes de ser usado, uma configuração interna inválida.
@@ -20,7 +20,8 @@ sealed class TechnicalException(
      * @param cause Causa raiz da exceção.
      */
     class InvalidStateException(
-        message: String, cause: Throwable? = null
+        message: String,
+        cause: Throwable? = null,
     ) : TechnicalException(message, cause)
 
     /**
@@ -31,7 +32,8 @@ sealed class TechnicalException(
      * @param cause Causa raiz da exceção.
      */
     class ContractViolationException(
-        message: String, cause: Throwable? = null
+        message: String,
+        cause: Throwable? = null,
     ) : TechnicalException(message, cause)
 
     /**
@@ -42,7 +44,8 @@ sealed class TechnicalException(
      * @param cause Causa raiz da exceção.
      */
     class UnsupportedOperationException(
-        message: String, cause: Throwable? = null
+        message: String,
+        cause: Throwable? = null,
     ) : TechnicalException(message, cause)
 }
 
@@ -52,7 +55,10 @@ sealed class TechnicalException(
  * @param value Condição booleana que deve ser verdadeira.
  * @param lazyMessage Função que retorna a mensagem de erro se a condição for falsa.
  */
-inline fun require(value: Boolean, lazyMessage: () -> String) {
+inline fun require(
+    value: Boolean,
+    lazyMessage: () -> String,
+) {
     if (!value) {
         throw TechnicalException.ContractViolationException(lazyMessage())
     }
@@ -65,6 +71,7 @@ inline fun require(value: Boolean, lazyMessage: () -> String) {
  * @param lazyMessage Função que retorna a mensagem de erro se o valor for nulo.
  * @return O valor não nulo.
  */
-inline fun <T : Any> requireNotNull(value: T?, lazyMessage: () -> String): T {
-    return value ?: throw TechnicalException.InvalidStateException(lazyMessage())
-}
+inline fun <T : Any> requireNotNull(
+    value: T?,
+    lazyMessage: () -> String,
+): T = value ?: throw TechnicalException.InvalidStateException(lazyMessage())

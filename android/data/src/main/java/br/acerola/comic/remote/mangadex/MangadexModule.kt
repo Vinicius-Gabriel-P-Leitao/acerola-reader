@@ -27,53 +27,51 @@ annotation class DownloadApi
 @Module
 @InstallIn(SingletonComponent::class)
 object MangadexModule {
-
     @MainApi
     @Provides
     @Singleton
-    fun provideMainOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder()
+    fun provideMainOkHttpClient(): OkHttpClient =
+        OkHttpClient
+            .Builder()
             .addInterceptor(interceptor = MangadexInterceptor())
             .connectTimeout(timeout = 30, unit = TimeUnit.SECONDS)
             .writeTimeout(timeout = 30, unit = TimeUnit.SECONDS)
             .readTimeout(timeout = 30, unit = TimeUnit.SECONDS)
             .build()
-    }
 
     @MainApi
     @Provides
     @Singleton
-    fun provideMainRetrofit(@MainApi okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+    fun provideMainRetrofit(
+        @MainApi okHttpClient: OkHttpClient,
+    ): Retrofit =
+        Retrofit
+            .Builder()
             .baseUrl(BuildConfig.MANGADEX_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
-    }
 
     @Provides
     @Singleton
     @DownloadApi
-    fun provideDownloadRetrofit(): Retrofit {
-        return Retrofit.Builder().baseUrl(BuildConfig.MANGADEX_UPLOAD_URL).build()
-    }
+    fun provideDownloadRetrofit(): Retrofit = Retrofit.Builder().baseUrl(BuildConfig.MANGADEX_UPLOAD_URL).build()
 
     @Provides
     @Singleton
-    fun provideMangadexMangaInfoApi(@MainApi retrofit: Retrofit): MangadexMangaMetadataClient {
-        return retrofit.create(MangadexMangaMetadataClient::class.java)
-    }
+    fun provideMangadexMangaInfoApi(
+        @MainApi retrofit: Retrofit,
+    ): MangadexMangaMetadataClient = retrofit.create(MangadexMangaMetadataClient::class.java)
 
     @Provides
     @Singleton
-    fun provideMangadexDownloadApi(@DownloadApi retrofit: Retrofit): MangadexMangaDownloadClient {
-        return retrofit.create(MangadexMangaDownloadClient::class.java)
-    }
+    fun provideMangadexDownloadApi(
+        @DownloadApi retrofit: Retrofit,
+    ): MangadexMangaDownloadClient = retrofit.create(MangadexMangaDownloadClient::class.java)
 
     @Provides
     @Singleton
-    fun provideMangadexChapterInfoApi(@MainApi retrofit: Retrofit): MangadexChapterMetadataClient {
-        return retrofit.create(MangadexChapterMetadataClient::class.java)
-    }
-
+    fun provideMangadexChapterInfoApi(
+        @MainApi retrofit: Retrofit,
+    ): MangadexChapterMetadataClient = retrofit.create(MangadexChapterMetadataClient::class.java)
 }

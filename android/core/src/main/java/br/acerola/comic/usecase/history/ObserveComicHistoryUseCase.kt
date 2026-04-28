@@ -8,12 +8,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ObserveComicHistoryUseCase @Inject constructor(
-    @param:LocalHistory private val historyRepository: HistoryGateway
-) {
-    fun observeByManga(mangaId: Long): Flow<ReadingHistoryDto?> =
-        historyRepository.getHistoryByMangaId(mangaId)
+class ObserveComicHistoryUseCase
+    @Inject
+    constructor(
+        @param:LocalHistory private val historyRepository: HistoryGateway,
+    ) {
+        fun observeByManga(mangaId: Long): Flow<ReadingHistoryDto?> = historyRepository.getHistoryByMangaId(mangaId)
 
-    fun observeReadChapters(mangaId: Long): Flow<List<Long>> =
-        historyRepository.getReadChaptersByMangaId(mangaId)
-}
+        fun observeReadChapters(mangaId: Long): Flow<List<Long>> = historyRepository.getReadChaptersByMangaId(mangaId)
+    }

@@ -13,53 +13,58 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FileSystemAccessManager @Inject constructor(
-    @param:ApplicationContext private val context: Context
-) {
-    var folderUri: Uri? = null
-        private set
+class FileSystemAccessManager
+    @Inject
+    constructor(
+        @param:ApplicationContext private val context: Context,
+    ) {
+        var folderUri: Uri? = null
+            private set
 
-    suspend fun saveFolderUri(uri: Uri?): Either<LibrarySyncError, Unit> {
-        if (uri == null) {
-            folderUri = null
-            ComicDirectoryPreference.clearFolderUri(context)
-            return Either.Right(Unit)
-        }
-
-        return try {
-            context.contentResolver.takePersistableUriPermission(
-                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            folderUri = uri
-            ComicDirectoryPreference.saveFolderUri(context, uri.toString())
-            Either.Right(Unit)
-        } catch (securityException: SecurityException) {
-            folderUri = null
-            Either.Left(LibrarySyncError.FolderAccessDenied(cause = securityException))
-        }
-    }
-
-    suspend fun loadFolderUri() {
-        ComicDirectoryPreference.folderUriFlow(context)
-            .firstOrNull()?.let { uriString ->
-                val uri = uriString.toUri()
-                if (hasPermission(uri)) {
-                    folderUri = uri
-                } else {
-                    ComicDirectoryPreference.clearFolderUri(context)
-                    folderUri = null
-                }
+        suspend fun saveFolderUri(uri: Uri?): Either<LibrarySyncError, Unit> {
+            if (uri == null) {
+                folderUri = null
+                ComicDirectoryPreference.clearFolderUri(context)
+                return Either.Right(Unit)
             }
-    }
 
-    fun hasPermission(uri: Uri?): Boolean {
-        uri ?: return false
+            return try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+                folderUri = uri
+                ComicDirectoryPreference.saveFolderUri(context, uri.toString())
+                Either.Right(Unit)
+            } catch (securityException: SecurityException) {
+                folderUri = null
+                Either.Left(LibrarySyncError.FolderAccessDenied(cause = securityException))
+            }
+        }
 
-        val persistedUris = context.contentResolver.persistedUriPermissions
-        return persistedUris.any { permission ->
-            permission.uri == uri &&
+        suspend fun loadFolderUri() {
+            ComicDirectoryPreference
+                .folderUriFlow(context)
+                .firstOrNull()
+                ?.let { uriString ->
+                    val uri = uriString.toUri()
+                    if (hasPermission(uri)) {
+                        folderUri = uri
+                    } else {
+                        ComicDirectoryPreference.clearFolderUri(context)
+                        folderUri = null
+                    }
+                }
+        }
+
+        fun hasPermission(uri: Uri?): Boolean {
+            uri ?: return false
+
+            val persistedUris = context.contentResolver.persistedUriPermissions
+            return persistedUris.any { permission ->
+                permission.uri == uri &&
                     permission.isReadPermission &&
                     permission.isWritePermission
+            }
         }
     }
-}

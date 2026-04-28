@@ -1,10 +1,19 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +26,7 @@ import br.acerola.comic.common.ux.modifier.glass
 fun Acerola.Component.IconButton(
     icon: @Composable () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     IconButton(onClick = onClick, modifier = modifier) {
         icon()
@@ -30,12 +39,12 @@ fun Acerola.Component.Button(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-    icon: @Composable (() -> Unit)? = null
+    icon: @Composable (() -> Unit)? = null,
 ) {
     Button(onClick = onClick, modifier = modifier, colors = colors) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             if (icon != null) {
                 icon()
@@ -50,22 +59,24 @@ fun Acerola.Component.Button(
 fun Acerola.Component.GlassButton(
     icon: @Composable () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
 
     Box(
-        modifier = modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier
-                .matchParentSize()
-                .glass(CircleShape, glassColor, borderColor)
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .glass(CircleShape, glassColor, borderColor),
         )
 
         icon()

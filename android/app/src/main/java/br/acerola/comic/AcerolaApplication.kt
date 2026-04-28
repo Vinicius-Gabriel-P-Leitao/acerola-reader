@@ -12,24 +12,28 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class AcerolaApplication : Application(), Configuration.Provider, ImageLoaderFactory {
+class AcerolaApplication :
+    Application(),
+    Configuration.Provider,
+    ImageLoaderFactory {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
-    
+
     @Inject
     lateinit var readerProcessor: ReaderProcessor
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
+        get() =
+            Configuration
+                .Builder()
+                .setWorkerFactory(workerFactory)
+                .build()
 
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader.Builder(this)
+    override fun newImageLoader(): ImageLoader =
+        ImageLoader
+            .Builder(this)
             .components {
                 add(SvgDecoder.Factory())
                 add(PageFetcherFactory(readerProcessor))
-            }
-            .build()
-    }
+            }.build()
 }

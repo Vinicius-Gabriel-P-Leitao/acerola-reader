@@ -13,7 +13,10 @@ object ComicDirectoryPreference {
     private val FOLDER_URI = stringPreferencesKey(name = "folder_uri")
     private val TUTORIAL_SHOWN = booleanPreferencesKey(name = "tutorial_shown")
 
-    suspend fun saveFolderUri(context: Context, uri: String) {
+    suspend fun saveFolderUri(
+        context: Context,
+        uri: String,
+    ) {
         context.dataStore.edit { prefs ->
             prefs[FOLDER_URI] = uri
         }
@@ -25,15 +28,16 @@ object ComicDirectoryPreference {
         }
     }
 
-    fun folderUriFlow(context: Context): Flow<String?> =
-        context.dataStore.data.map { prefs -> prefs[FOLDER_URI] }
+    fun folderUriFlow(context: Context): Flow<String?> = context.dataStore.data.map { prefs -> prefs[FOLDER_URI] }
 
-    suspend fun setTutorialShown(context: Context, shown: Boolean) {
+    suspend fun setTutorialShown(
+        context: Context,
+        shown: Boolean,
+    ) {
         context.dataStore.edit { prefs ->
             prefs[TUTORIAL_SHOWN] = shown
         }
     }
 
-    fun tutorialShownFlow(context: Context): Flow<Boolean> =
-        context.dataStore.data.map { prefs -> prefs[TUTORIAL_SHOWN] ?: false }
+    fun tutorialShownFlow(context: Context): Flow<Boolean> = context.dataStore.data.map { prefs -> prefs[TUTORIAL_SHOWN] ?: false }
 }

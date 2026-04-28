@@ -1,6 +1,4 @@
 package br.acerola.comic.common.activity
-import br.acerola.comic.ui.R
-
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -52,7 +50,10 @@ abstract class BaseActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
     private val globalProgressViewModel: GlobalProgressViewModel by viewModels()
 
-    open fun NavGraphBuilder.setupNavGraph(context: Context, navController: NavHostController) {
+    open fun NavGraphBuilder.setupNavGraph(
+        context: Context,
+        navController: NavHostController,
+    ) {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,7 +72,7 @@ abstract class BaseActivity : ComponentActivity() {
                 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                 CompositionLocalProvider(
-                    value = LocalSnackbarHostState provides snackbarHostState
+                    value = LocalSnackbarHostState provides snackbarHostState,
                 ) {
                     Acerola.Layout.Scaffold {
                         Scaffold(
@@ -98,9 +99,10 @@ abstract class BaseActivity : ComponentActivity() {
                                 Box(modifier = Modifier.weight(1f)) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
                                     Acerola.Layout.ProgressIndicator(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomStart)
-                                            .padding(all = 8.dp),
+                                        modifier =
+                                            Modifier
+                                                .align(Alignment.BottomStart)
+                                                .padding(all = 8.dp),
                                         isLoading = isIndexing,
                                         progress = progress,
                                     )

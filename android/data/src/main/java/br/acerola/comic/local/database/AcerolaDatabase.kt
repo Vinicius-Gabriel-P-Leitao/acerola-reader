@@ -55,10 +55,10 @@ import br.acerola.comic.local.entity.metadata.source.MangadexSource
         AnilistSource::class,
         ComicInfoSource::class,
         Category::class,
-        ComicCategory::class
+        ComicCategory::class,
     ],
     views = [
-        br.acerola.comic.local.entity.view.ComicSummaryView::class
+        br.acerola.comic.local.entity.view.ComicSummaryView::class,
     ],
     exportSchema = false,
     version = 1,
@@ -66,19 +66,34 @@ import br.acerola.comic.local.entity.metadata.source.MangadexSource
 @TypeConverters(AcerolaTypeConverters::class)
 abstract class AcerolaDatabase : RoomDatabase() {
     abstract fun chapterArchiveDao(): ChapterArchiveDao
+
     abstract fun mangaDirectoryDao(): ComicDirectoryDao
+
     abstract fun chapterTemplateDao(): ChapterTemplateDao
+
     abstract fun mangaRemoteInfoDao(): ComicMetadataDao
+
     abstract fun chapterRemoteInfoDao(): ChapterMetadataDao
+
     abstract fun chapterDownloadSourceDao(): ChapterDownloadSourceDao
+
     abstract fun authorDao(): AuthorDao
+
     abstract fun coverDao(): CoverDao
+
     abstract fun bannerDao(): BannerDao
+
     abstract fun genreDao(): GenreDao
+
     abstract fun readingHistoryDao(): ReadingHistoryDao
+
     abstract fun mangadexSourceDao(): MangadexSourceDao
+
     abstract fun anilistSourceDao(): AnilistSourceDao
+
     abstract fun comicInfoSourceDao(): ComicInfoSourceDao
+
     abstract fun categoryDao(): CategoryDao
+
     abstract fun mangaSummaryDao(): br.acerola.comic.local.dao.view.ComicSummaryDao
 }

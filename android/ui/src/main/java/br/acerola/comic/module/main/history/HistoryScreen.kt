@@ -26,19 +26,17 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.module.comic.ComicActivity
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.common.component.ComicListItem
 import br.acerola.comic.module.main.history.component.HistoryHeroCard
 import br.acerola.comic.module.main.history.state.HistoryAction
 import br.acerola.comic.module.main.history.state.HistoryUiState
-import br.acerola.comic.module.comic.ComicActivity
 import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
 
 @Composable
-fun Main.History.Layout.Screen(
-    viewModel: HistoryViewModel = hiltViewModel()
-) {
+fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val historyItems by viewModel.historyItems.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current
@@ -54,54 +52,57 @@ fun Main.History.Layout.Screen(
     val onAction: (HistoryAction) -> Unit = { action ->
         when (action) {
             is HistoryAction.ClickManga -> {
-                val intent = Intent(context, ComicActivity::class.java).apply {
-                    putExtra(ComicActivity.ChapterExtra.COMIC, action.manga)
-                }
+                val intent =
+                    Intent(context, ComicActivity::class.java).apply {
+                        putExtra(ComicActivity.ChapterExtra.COMIC, action.manga)
+                    }
                 context.startActivity(intent)
             }
             is HistoryAction.ClickContinue -> {
-                val intent = Intent(context, ReaderActivity::class.java).apply {
-                    putExtra(ReaderActivity.PageExtra.MANGA_ID, action.manga.directory.id)
-                    putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
-                    putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
-                }
+                val intent =
+                    Intent(context, ReaderActivity::class.java).apply {
+                        putExtra(ReaderActivity.PageExtra.MANGA_ID, action.manga.directory.id)
+                        putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
+                        putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
+                    }
                 context.startActivity(intent)
             }
         }
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
         ) {
             if (uiState.items.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = stringResource(id = R.string.description_history_empty_state),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item {
                         val firstItem = uiState.items.first()
                         Main.History.Component.HistoryHeroCard(
                             manga = firstItem.manga,
                             onClick = { onAction(HistoryAction.ClickManga(firstItem.manga)) },
-                            onContinueClick = { onAction(HistoryAction.ClickContinue(firstItem.manga, firstItem.history)) }
+                            onContinueClick = { onAction(HistoryAction.ClickContinue(firstItem.manga, firstItem.history)) },
                         )
 
                         if (uiState.items.size > 1) {
@@ -110,13 +111,17 @@ fun Main.History.Layout.Screen(
                     }
 
                     items(uiState.items.drop(1), key = { it.manga.directory.id }) { item ->
-                        val chapterInfo = item.history.chapterName ?: stringResource(
-                            id = R.string.label_chapter_unknown
-                        )
+                        val chapterInfo =
+                            item.history.chapterName ?: stringResource(
+                                id = R.string.label_chapter_unknown,
+                            )
 
-                        val progressInfo = stringResource(
-                            id = R.string.label_history_chapter_progress, chapterInfo, item.history.lastPage + 1
-                        )
+                        val progressInfo =
+                            stringResource(
+                                id = R.string.label_history_chapter_progress,
+                                chapterInfo,
+                                item.history.lastPage + 1,
+                            )
 
                         Main.Common.Component.ComicListItem(
                             manga = item.manga,
@@ -124,7 +129,7 @@ fun Main.History.Layout.Screen(
                             chapterCount = item.chapterCount,
                             isCompleted = item.history.isCompleted,
                             onPlayClick = { onAction(HistoryAction.ClickContinue(item.manga, item.history)) },
-                            onClick = { onAction(HistoryAction.ClickManga(item.manga)) }
+                            onClick = { onAction(HistoryAction.ClickManga(item.manga)) },
                         )
                     }
                 }

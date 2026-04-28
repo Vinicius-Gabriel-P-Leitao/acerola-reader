@@ -17,7 +17,5 @@ open class ObserveLibraryUseCase<T>(
     val progress: StateFlow<Int> get() = syncGateway?.progress ?: MutableStateFlow(-1).asStateFlow()
     val isIndexing: StateFlow<Boolean> get() = syncGateway?.isIndexing ?: MutableStateFlow(false).asStateFlow()
 
-    operator fun invoke(): Flow<List<T>> {
-        return mangaRepository.observeLibrary()
-    }
+    operator fun invoke(): Flow<List<T>> = mangaRepository.observeLibrary()
 }

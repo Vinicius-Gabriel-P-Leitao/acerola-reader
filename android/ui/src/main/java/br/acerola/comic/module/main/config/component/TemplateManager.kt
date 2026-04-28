@@ -14,7 +14,7 @@ import br.acerola.comic.ui.R
 @Composable
 fun Main.Config.Component.TemplateManager(
     onManageTemplates: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.title_chapter_naming_templates),
@@ -23,6 +23,6 @@ fun Main.Config.Component.TemplateManager(
         iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
         iconBackground = MaterialTheme.colorScheme.primaryContainer,
         onClick = onManageTemplates,
-        modifier = modifier
+        modifier = modifier,
     )
 }

@@ -11,13 +11,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AnilistFetchCoverSource @Inject constructor(
-    private val api: MangadexMangaDownloadClient
-) : ImageProvider<String> {
-    override suspend fun searchMedia(url: String, vararg extra: String?): Either<NetworkError, ByteArray> =
-        safeApiCall {
-            withContext(Dispatchers.IO) {
-                api.downloadFile(fileUrl = url).bytes()
+class AnilistFetchCoverSource
+    @Inject
+    constructor(
+        private val api: MangadexMangaDownloadClient,
+    ) : ImageProvider<String> {
+        override suspend fun searchMedia(
+            url: String,
+            vararg extra: String?,
+        ): Either<NetworkError, ByteArray> =
+            safeApiCall {
+                withContext(Dispatchers.IO) {
+                    api.downloadFile(fileUrl = url).bytes()
+                }
             }
-        }
-}
+    }

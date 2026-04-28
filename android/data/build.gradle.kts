@@ -19,18 +19,19 @@ android {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        
-
         buildConfigField("String", "GITHUB_USER_AGENT", "\"github.com/Vinicius-Gabriel-P-Leitao/acerola\"")
         buildConfigField("String", "MANGADEX_UPLOAD_URL", "\"https://uploads.mangadex.org\"")
         buildConfigField("String", "MANGADEX_BASE_URL", "\"https://api.mangadex.org\"")
-        buildConfigField("String", "ANILIST_BASE_URL", "\"https://graphql.anilist.co\""
+        buildConfigField(
+            "String",
+            "ANILIST_BASE_URL",
+            "\"https://graphql.anilist.co\"",
         )
     }
-    
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
@@ -43,7 +44,7 @@ android {
 
     kotlin {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
 }

@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
-
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -41,22 +39,24 @@ fun Acerola.Component.AdaptiveSheet(
     if (isLandscape) {
         Dialog(
             onDismissRequest = onDismissRequest,
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+            properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { onDismissRequest() }
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) { onDismissRequest() },
                 )
                 Surface(
-                    modifier = Modifier
-                        .width(360.dp)
-                        .fillMaxHeight()
-                        .align(Alignment.CenterEnd),
+                    modifier =
+                        Modifier
+                            .width(360.dp)
+                            .fillMaxHeight()
+                            .align(Alignment.CenterEnd),
                     color = containerColor,
                     contentColor = contentColor,
                     shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),

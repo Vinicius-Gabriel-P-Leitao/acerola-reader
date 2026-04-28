@@ -11,6 +11,15 @@ interface ChapterGateway<T> {
 
     fun observeChapters(mangaId: Long): StateFlow<T>
 
-    suspend fun refreshComicChapters(mangaId: Long, baseUri: Uri? = null): Either<LibrarySyncError, Unit>
-    suspend fun getChapterPage(mangaId: Long, total: Int, page: Int, pageSize: Int = 20): T
+    suspend fun refreshComicChapters(
+        mangaId: Long,
+        baseUri: Uri? = null,
+    ): Either<LibrarySyncError, Unit>
+
+    suspend fun getChapterPage(
+        mangaId: Long,
+        total: Int,
+        page: Int,
+        pageSize: Int = 20,
+    ): T
 }

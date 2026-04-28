@@ -4,6 +4,7 @@ include(":app")
 include(":data")
 include(":core")
 include(":infra")
+include(":native")
 
 pluginManagement {
     repositories {

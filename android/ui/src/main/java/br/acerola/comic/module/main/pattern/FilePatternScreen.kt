@@ -49,7 +49,7 @@ import br.acerola.comic.ui.R
 @Composable
 fun Main.Pattern.Layout.FilePatternScreen(
     viewModel: FilePatternViewModel = hiltViewModel(),
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -64,7 +64,7 @@ fun Main.Pattern.Layout.FilePatternScreen(
     FilePatternLayout(
         uiState = uiState,
         onAction = viewModel::onAction,
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
@@ -73,7 +73,7 @@ fun Main.Pattern.Layout.FilePatternScreen(
 private fun FilePatternLayout(
     uiState: FilePatternUiState,
     onAction: (FilePatternAction) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var editingTemplate by remember { mutableStateOf<ChapterTemplateDto?>(null) }
@@ -85,7 +85,7 @@ private fun FilePatternLayout(
                     Text(
                         text = stringResource(id = R.string.label_template_config_activity),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 navigationIcon = {
@@ -93,60 +93,63 @@ private fun FilePatternLayout(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             tint = MaterialTheme.colorScheme.onSurface,
-                            contentDescription = stringResource(id = R.string.description_icon_navigation_back)
+                            contentDescription = stringResource(id = R.string.description_icon_navigation_back),
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(id = R.string.action_add_template)
+                    contentDescription = stringResource(id = R.string.action_add_template),
                 )
             }
-        }
+        },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             if (uiState.templates.isEmpty()) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = stringResource(id = R.string.label_template_empty_state),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
+                    contentPadding = PaddingValues(16.dp),
                 ) {
                     items(
                         items = uiState.templates,
-                        key = { it.id }
+                        key = { it.id },
                     ) { template ->
                         Main.Pattern.Component.TemplateItem(
                             template = template,
                             onEdit = { editingTemplate = template },
-                            onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) }
+                            onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) },
                         )
                     }
                 }
@@ -160,7 +163,7 @@ private fun FilePatternLayout(
             onConfirm = { label, pattern ->
                 onAction(FilePatternAction.AddTemplate(label, pattern))
                 showAddDialog = false
-            }
+            },
         )
     }
 
@@ -173,7 +176,7 @@ private fun FilePatternLayout(
             onConfirm = { label, pattern ->
                 onAction(FilePatternAction.EditTemplate(template.id, label, pattern))
                 editingTemplate = null
-            }
+            },
         )
     }
 }

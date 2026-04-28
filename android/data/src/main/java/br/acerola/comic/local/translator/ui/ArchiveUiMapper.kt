@@ -7,8 +7,8 @@ import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
 
-fun ComicDirectory.toViewDto(): ComicDirectoryDto {
-    return ComicDirectoryDto(
+fun ComicDirectory.toViewDto(): ComicDirectoryDto =
+    ComicDirectoryDto(
         id = id,
         name = name,
         path = path,
@@ -17,24 +17,26 @@ fun ComicDirectory.toViewDto(): ComicDirectoryDto {
         lastModified = lastModified,
         chapterTemplateFk = chapterTemplateFk,
         externalSyncEnabled = externalSyncEnabled,
-        hidden = hidden
+        hidden = hidden,
     )
-}
 
-fun ChapterArchive.toViewDto(): ChapterFileDto {
-    return ChapterFileDto(
+fun ChapterArchive.toViewDto(): ChapterFileDto =
+    ChapterFileDto(
         id = id,
         name = chapter,
         path = path,
         chapterSort = chapterSort,
-        lastModified = lastModified
+        lastModified = lastModified,
     )
-}
 
 fun List<ChapterArchive>.toViewPageDto(
-    pageSize: Int = this.size, total: Int = this.size, page: Int = 0
-): ChapterArchivePageDto {
-    return ChapterArchivePageDto(
-        items = this.map { it.toViewDto() }, pageSize = pageSize, total = total, page = page
+    pageSize: Int = this.size,
+    total: Int = this.size,
+    page: Int = 0,
+): ChapterArchivePageDto =
+    ChapterArchivePageDto(
+        items = this.map { it.toViewDto() },
+        pageSize = pageSize,
+        total = total,
+        page = page,
     )
-}

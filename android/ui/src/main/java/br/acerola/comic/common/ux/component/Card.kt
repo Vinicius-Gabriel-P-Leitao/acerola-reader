@@ -1,6 +1,4 @@
 package br.acerola.comic.common.ux.component
-import br.acerola.comic.ui.R
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -49,21 +47,22 @@ fun Acerola.Component.ImageCard(
                 painter = image,
                 contentDescription = title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
 
             if (footer != null) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
                 ) {
                     Text(
                         text = footer,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
             }
@@ -88,15 +87,16 @@ fun Acerola.Component.TextCard(
         elevation = elevation,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
         ) {
             if (title != null) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -135,15 +135,16 @@ fun Acerola.Component.Card(
         elevation = elevation,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
         ) {
             if (title != null) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }

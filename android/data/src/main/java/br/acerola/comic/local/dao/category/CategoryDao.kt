@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao : BaseDao<Category> {
-
     @Query("SELECT * FROM category ORDER BY name ASC")
     fun observeAllCategories(): Flow<List<Category>>
 
@@ -25,16 +24,20 @@ interface CategoryDao : BaseDao<Category> {
     @Query("DELETE FROM manga_category WHERE comic_directory_fk = :mangaId")
     suspend fun deleteComicCategoryByDirectoryId(mangaId: Long)
 
-    @Query("""
+    @Query(
+        """
         SELECT category.* FROM category
         INNER JOIN manga_category ON category.id = manga_category.category_id
         WHERE manga_category.comic_directory_fk = :mangaId
-    """)
+    """,
+    )
     fun observeCategoryByDirectoryId(mangaId: Long): Flow<Category?>
 
-    @Query("""
+    @Query(
+        """
         SELECT manga_category.comic_directory_fk, category.* FROM category
         INNER JOIN manga_category ON category.id = manga_category.category_id
-    """)
+    """,
+    )
     fun observeAllComicCategoriesJoined(): Flow<List<ComicCategoryJoinResult>>
 }

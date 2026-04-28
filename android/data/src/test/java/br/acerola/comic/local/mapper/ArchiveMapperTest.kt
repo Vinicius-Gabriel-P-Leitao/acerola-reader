@@ -19,7 +19,6 @@ import org.junit.Before
 import org.junit.Test
 
 class ArchiveMapperTest {
-
     @Before
     fun setUp() {
         mockkStatic(Uri::class)
@@ -32,10 +31,11 @@ class ArchiveMapperTest {
 
     @Test
     fun `MangaDirectory toViewDto deve mapear todos os campos corretamente`() {
-        val entity = MangaDirectoryFixtures.createMangaDirectory(
-            cover = "content://cover",
-            banner = "content://banner"
-        )
+        val entity =
+            MangaDirectoryFixtures.createMangaDirectory(
+                cover = "content://cover",
+                banner = "content://banner",
+            )
         val uriMock = mockk<Uri>()
         every { Uri.parse(any()) } returns uriMock
 
@@ -50,7 +50,7 @@ class ArchiveMapperTest {
     @Test
     fun `MangaDirectory toViewDto deve tratar campos nulos`() {
         val entity = MangaDirectoryFixtures.createMangaDirectory(cover = null, banner = null)
-        
+
         val dto = entity.toViewDto()
 
         assertNull(dto.coverUri)
@@ -59,17 +59,18 @@ class ArchiveMapperTest {
 
     @Test
     fun `ChapterArchive toViewDto deve mapear campos corretamente`() {
-        val entity = ChapterArchive(
-            id = 1,
-            chapter = "10",
-            path = "path",
-            chapterSort = "10",
-            checksum = "hash",
-            fastHash = "hash",
-            folderPathFk = 1,
-            lastModified = 500L
-        )
-        
+        val entity =
+            ChapterArchive(
+                id = 1,
+                chapter = "10",
+                path = "path",
+                chapterSort = "10",
+                checksum = "hash",
+                fastHash = "hash",
+                folderPathFk = 1,
+                lastModified = 500L,
+            )
+
         val dto = entity.toViewDto()
 
         assertEquals(entity.id, dto.id)
@@ -82,10 +83,11 @@ class ArchiveMapperTest {
     fun `MangaDirectoryDto toEntity deve mapear para entidade`() {
         val coverUri = mockk<Uri>()
         val bannerUri = mockk<Uri>()
-        val dto = MangaDirectoryFixtures.createMangaDirectoryDto(
-            coverUri = coverUri, 
-            bannerUri = bannerUri
-        )
+        val dto =
+            MangaDirectoryFixtures.createMangaDirectoryDto(
+                coverUri = coverUri,
+                bannerUri = bannerUri,
+            )
         every { coverUri.toString() } returns "uri_cover"
         every { bannerUri.toString() } returns "uri_banner"
 
@@ -98,26 +100,27 @@ class ArchiveMapperTest {
 
     @Test
     fun `List ChapterArchive toViewPageDto deve criar objeto de paginação correto`() {
-        val list = listOf(
-            ChapterArchive(
-                id = 1,
-                chapter = "1",
-                path = "p1",
-                chapterSort = "1",
-                checksum = null,
-                fastHash = "10",
-                folderPathFk = 1
-            ),
-            ChapterArchive(
-                id = 2,
-                chapter = "2",
-                path = "p2",
-                chapterSort = "2",
-                checksum = null,
-                fastHash = "10",
-                folderPathFk = 1
+        val list =
+            listOf(
+                ChapterArchive(
+                    id = 1,
+                    chapter = "1",
+                    path = "p1",
+                    chapterSort = "1",
+                    checksum = null,
+                    fastHash = "10",
+                    folderPathFk = 1,
+                ),
+                ChapterArchive(
+                    id = 2,
+                    chapter = "2",
+                    path = "p2",
+                    chapterSort = "2",
+                    checksum = null,
+                    fastHash = "10",
+                    folderPathFk = 1,
+                ),
             )
-        )
 
         val pageDto = list.toViewPageDto(pageSize = 10, total = 100, page = 1)
 
@@ -132,7 +135,7 @@ class ArchiveMapperTest {
         val folder = mockk<DocumentFile>()
         val cover = mockk<DocumentFile>()
         val banner = mockk<DocumentFile>()
-        
+
         val folderUri = mockk<Uri>()
         val coverUri = mockk<Uri>()
         val bannerUri = mockk<Uri>()
@@ -141,10 +144,10 @@ class ArchiveMapperTest {
         every { folder.uri } returns folderUri
         every { folderUri.toString() } returns "uri_folder"
         every { folder.lastModified() } returns 5000L
-        
+
         every { cover.uri } returns coverUri
         every { coverUri.toString() } returns "uri_cover"
-        
+
         every { banner.uri } returns bannerUri
         every { bannerUri.toString() } returns "uri_banner"
 

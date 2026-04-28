@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TemplateValidatorPatternTest {
-
     @Test
     fun `deve validar com sucesso um padrao perfeito`() {
         val input = "Cap. {chapter}{decimal} - {extension}"
@@ -19,7 +18,7 @@ class TemplateValidatorPatternTest {
     fun `deve falhar se nao houver macro value`() {
         val input = "Cap. {decimal} - {extension}"
         val result = TemplateValidatorPattern.validateCustomTemplate(input)
-        
+
         assertTrue(result.isLeft())
         result.onLeft {
             assertEquals(R.string.error_template_chapter_required, (it as TemplateError.InvalidPattern).uiMessage.resId)

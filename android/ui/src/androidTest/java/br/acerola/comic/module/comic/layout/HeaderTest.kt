@@ -12,42 +12,44 @@ import org.junit.Rule
 import org.junit.Test
 
 class HeaderTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
     fun `MangaHeader_deve_exibir_o_titulo_remoto_quando_disponivel`() {
-        val manga = ComicDto(
-            directory = ComicDirectoryDto(
-                id = 1L,
-                name = "Pasta",
-                path = "",
-                coverUri = null,
-                bannerUri = null,
-                lastModified = 0L,
-                chapterTemplateFk = null
-            ),
-            remoteInfo = ComicMetadataDto(
-                title = "Manga Fantástico",
-                description = "Uma sinopse qualquer",
-                status = "Lançando"
+        val manga =
+            ComicDto(
+                directory =
+                    ComicDirectoryDto(
+                        id = 1L,
+                        name = "Pasta",
+                        path = "",
+                        coverUri = null,
+                        bannerUri = null,
+                        lastModified = 0L,
+                        chapterTemplateFk = null,
+                    ),
+                remoteInfo =
+                    ComicMetadataDto(
+                        title = "Manga Fantástico",
+                        description = "Uma sinopse qualquer",
+                        status = "Lançando",
+                    ),
             )
-        )
 
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Layout.Header(
                     manga = manga,
                     history = null,
-                    onContinueClick = { _, _ -> }
+                    onContinueClick = { _, _ -> },
                 )
             }
         }
 
         // Verifica se o título remoto é exibido com prioridade
         composeTestRule.onNodeWithText("Manga Fantástico").assertIsDisplayed()
-        
+
         // Verifica se a sinopse aparece
         composeTestRule.onNodeWithText("Uma sinopse qualquer").assertIsDisplayed()
     }

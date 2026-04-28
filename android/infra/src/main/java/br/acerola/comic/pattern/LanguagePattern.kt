@@ -1,6 +1,8 @@
 package br.acerola.comic.pattern
 
-enum class LanguagePattern(val code: String) {
+enum class LanguagePattern(
+    val code: String,
+) {
     PT_BR("pt-br"),
     EN("en"),
     ES_LA("es-la"),
@@ -12,10 +14,10 @@ enum class LanguagePattern(val code: String) {
     JA("ja"),
     KO("ko"),
     ZH("zh"),
-    ID("id");
+    ID("id"),
+    ;
 
     companion object {
-        fun from(code: String?): LanguagePattern? =
-            entries.find { it.code.equals(code, ignoreCase = true) }
+        fun from(code: String?): LanguagePattern? = entries.find { it.code.equals(code, ignoreCase = true) }
     }
 }

@@ -7,20 +7,26 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TemplateMatcher @Inject constructor() {
-    private val regexCache = ConcurrentHashMap<Long, Regex>()
+class TemplateMatcher
+    @Inject
+    constructor() {
+        private val regexCache = ConcurrentHashMap<Long, Regex>()
 
-    fun detect(fileName: String, templates: List<ChapterTemplate>): ChapterTemplate? {
-        if (regexCache.size != templates.size) {
-            regexCache.clear()
-        }
-
-        for (template in templates) {
-            val regex = regexCache.getOrPut(template.id) {
-                templateToRegex(template.pattern)
+        fun detect(
+            fileName: String,
+            templates: List<ChapterTemplate>,
+        ): ChapterTemplate? {
+            if (regexCache.size != templates.size) {
+                regexCache.clear()
             }
-            if (regex.matches(fileName)) return template
+
+            for (template in templates) {
+                val regex =
+                    regexCache.getOrPut(template.id) {
+                        templateToRegex(template.pattern)
+                    }
+                if (regex.matches(fileName)) return template
+            }
+            return null
         }
-        return null
     }
-}

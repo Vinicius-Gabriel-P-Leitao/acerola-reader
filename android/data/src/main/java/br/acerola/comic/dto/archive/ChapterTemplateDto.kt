@@ -5,5 +5,5 @@ data class ChapterTemplateDto(
     val label: String,
     val pattern: String,
     val isDefault: Boolean = false,
-    val priority: Int = 0
+    val priority: Int = 0,
 )
