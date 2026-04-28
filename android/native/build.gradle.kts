@@ -72,12 +72,18 @@ tasks.withType<Test> {
     }
 }
 
-val localProps =
-    Properties().apply {
-        load(rootProject.file("local.properties").inputStream())
+val cargo: String = run {
+    val localProps = Properties()
+    val localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) {
+        localPropsFile.inputStream().use { localProps.load(it) }
     }
 
-val cargo = localProps.getProperty("cargo.dir") ?: error("cargo.dir não definido no local.properties")
+    project.findProperty("cargo.dir") as? String
+        ?: System.getenv("CARGO")
+        ?: localProps.getProperty("cargo.dir")
+        ?: "cargo"
+}
 
 tasks.register<Exec>("buildRust") {
     workingDir = file("rust")
