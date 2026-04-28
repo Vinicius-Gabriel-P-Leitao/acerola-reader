@@ -43,14 +43,19 @@
 
 ---
 
-## Etapa 3 — Segurança (Challenge-Response)
+## Etapa 3 — Segurança (TOFU Guard)
 
-- [ ] **Desafio criptográfico Ed25519** — `protocol/auth.rs` (novo arquivo)
-  - Adicionar dependências: `ed25519-dalek`, `rand`
-  - Fluxo: `A → B: Challenge(32 bytes)` → `B → A: Signature(Ed25519)` → A verifica contra NodeId de B
-  - Integrar com `ConnectionContext`: adicionar campo `challenge_verified: bool`
-  - Guard pode rejeitar conexões com `!ctx.challenge_verified`
-  - Critério: nó não-pareado não consegue enviar mensagens de sistema
+> O iroh já prova posse da chave privada via TLS durante o handshake QUIC — challenge-response
+> na camada de aplicação seria redundante. O NodeId que chega no Guard já é autêntico.
+> O modelo SSH-like (Trust On First Use) é suficiente e mais simples.
+
+- [ ] **TofuGuard** — `core/guard/tofu.rs` (novo arquivo)
+  - Struct `TofuGuard` com uma store injetável (`Arc<dyn TrustedPeerStore>`)
+  - Trait `TrustedPeerStore`: `contains(&str) -> bool` + `insert(&str)`
+  - Implementação padrão em memória: `InMemoryTrustedStore` (HashSet protegido por Mutex)
+  - Lógica: NodeId conhecido → permite; desconhecido → insere e permite (TOFU); NodeId na blocklist → rejeita
+  - Re-exportar via `api::guard::TofuGuard` e `api::guard::InMemoryTrustedStore`
+  - Critério: consumidor consegue restringir conexões a peers previamente vistos sem escrever Guard custom
 
 ---
 
