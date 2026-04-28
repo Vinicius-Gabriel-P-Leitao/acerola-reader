@@ -11,17 +11,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     @Provides
     @Singleton
-    fun provideP2pService(): P2pService {
-        return P2pService { event, data ->
+    fun provideP2pService(): P2pService =
+        P2pService { event, data ->
         }
-    }
 
     @Provides
     @Singleton
-    fun provideP2pUseCase(p2pService: P2pService): P2pUseCase {
-        return P2pUseCase(p2pService)
-    }
+    fun provideP2pUseCase(p2pService: P2pService): P2pUseCase = P2pUseCase(p2pService)
 }

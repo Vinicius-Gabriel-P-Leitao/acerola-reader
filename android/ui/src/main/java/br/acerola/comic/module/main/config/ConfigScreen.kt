@@ -176,7 +176,12 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Biblioteca
                 SectionHeader(stringResource(id = R.string.label_library_context))
@@ -187,7 +192,12 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Aparência
                 SectionHeader(stringResource(id = R.string.title_settings_appearance))
@@ -197,7 +207,12 @@ fun Main.Config.Layout.Screen(
                     onThemeChange = { onAction(ConfigAction.UpdateTheme(it)) },
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Categorias
                 SectionHeader(stringResource(id = R.string.title_config_categories))
@@ -209,7 +224,12 @@ fun Main.Config.Layout.Screen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
 
                 // NOTE: Metadados
                 SectionHeader(stringResource(id = R.string.label_sync_group))
@@ -233,10 +253,16 @@ fun Main.Config.Layout.Screen(
                     onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
-                
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
 
-                P2pDemoSection()
+                HorizontalDivider(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .alpha(0.3f),
+                )
+
+                // FIXME: Só descomentar quando tiver pronto a função.
+                // P2pDemoSection()
 
                 Spacer(modifier = Modifier.height(48.dp))
             }
@@ -247,7 +273,10 @@ fun Main.Config.Layout.Screen(
 @Composable
 private fun OnboardingGuideCard() {
     Card(
-        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         shape = RoundedCornerShape(12.dp),
     ) {
@@ -287,9 +316,7 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-fun P2pDemoSection(
-    p2pViewModel: P2pViewModel = hiltViewModel()
-) {
+fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
     val localId = remember(p2pViewModel) { p2pViewModel.getLocalId() }
     val mode = remember(p2pViewModel) { p2pViewModel.getMode() }
     val clipboardManager = LocalClipboardManager.current
@@ -307,22 +334,22 @@ fun P2pDemoSection(
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = "Mode: $mode", style = MaterialTheme.typography.bodySmall)
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         OutlinedTextField(
             value = remotePeerId,
             onValueChange = { remotePeerId = it },
             label = { Text("Remote Peer ID") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, byteArrayOf()) }) {
             Text("Connect")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Row {
             Button(onClick = { p2pViewModel.switchToLocal() }) {
                 Text("Switch to Local")

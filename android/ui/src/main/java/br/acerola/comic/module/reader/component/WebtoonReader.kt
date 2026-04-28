@@ -103,10 +103,6 @@ fun Reader.Component.WebtoonReader(
                     ),
         ) {
             items(pageCount) { index ->
-                LaunchedEffect(key1 = index) {
-                    onPageRequest(index)
-                }
-
                 AsyncImage(
                     model =
                         ImageRequest

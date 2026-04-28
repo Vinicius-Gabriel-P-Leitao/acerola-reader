@@ -63,7 +63,6 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     }
 }
 
-
 tasks.withType<Test> {
     systemProperty("java.library.path", "${project.projectDir}/src/main/jniLibs/arm64-v8a")
     systemProperty("jna.library.path", "${project.projectDir}/src/main/jniLibs/arm64-v8a")
@@ -73,21 +72,23 @@ tasks.withType<Test> {
     }
 }
 
-val localProps = Properties().apply {
-    load(rootProject.file("local.properties").inputStream())
-}
+val localProps =
+    Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
 
 val cargo = localProps.getProperty("cargo.dir") ?: error("cargo.dir não definido no local.properties")
-
 
 tasks.register<Exec>("buildRust") {
     workingDir = file("rust")
 
     commandLine(
-        cargo, "ndk",
-        "-t", "aarch64-linux-android",
+        cargo,
+        "ndk",
+        "-t",
+        "aarch64-linux-android",
         "build",
-        "--release"
+        "--release",
     )
 }
 
@@ -97,13 +98,20 @@ tasks.register<Exec>("generateBindings") {
     val soPath = file("rust/target/aarch64-linux-android/release/libacerola.so").absolutePath
 
     commandLine(
-        cargo, "run",
-        "--bin", "uniffi-bindgen", "--",
+        cargo,
+        "run",
+        "--bin",
+        "uniffi-bindgen",
+        "--",
         "generate",
-        "--config", "uniffi.toml",
-        "--library", soPath,
-        "--language", "kotlin",
-        "--out-dir", file("src/main/java/br/acerola/comic").absolutePath
+        "--config",
+        "uniffi.toml",
+        "--library",
+        soPath,
+        "--language",
+        "kotlin",
+        "--out-dir",
+        file("src/main/java/br/acerola/comic").absolutePath,
     )
 
     dependsOn("buildRust")
@@ -119,4 +127,3 @@ tasks.register<Copy>("copyRustLib") {
 tasks.named("preBuild") {
     dependsOn("generateBindings", "copyRustLib")
 }
-
