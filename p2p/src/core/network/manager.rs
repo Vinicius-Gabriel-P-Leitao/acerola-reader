@@ -8,12 +8,12 @@
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 
-use crate::core::transport::P2pTransport;
-use crate::infra::error::ConnectionError;
 use crate::core::guard::{BoxedValidator, ConnectionContext};
 use crate::core::network::state::{NetworkMode, NetworkState};
-use crate::infra::peer::PeerId;
+use crate::core::transport::P2pTransport;
 use crate::data::protocol::ProtocolHandler;
+use crate::infra::error::ConnectionError;
+use crate::infra::peer::PeerId;
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
@@ -221,16 +221,16 @@ mod tests {
     async fn handler_inbound_registrado_para_alpn_e_encontrado() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
-        manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
-        assert!(manager.handlers_inbound.contains_key(b"acerola/rpc".as_ref()));
+        manager.register_inbound(b"acerola/handshake/1", Arc::new(NoopHandler));
+        assert!(manager.handlers_inbound.contains_key(b"acerola/handshake/1".as_ref()));
     }
 
     #[tokio::test]
     async fn handler_outbound_registrado_para_alpn_e_encontrado() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
-        manager.register_outbound(b"acerola/rpc", Arc::new(NoopHandler));
-        assert!(manager.handlers_outbound.contains_key(b"acerola/rpc".as_ref()));
+        manager.register_outbound(b"acerola/handshake/1", Arc::new(NoopHandler));
+        assert!(manager.handlers_outbound.contains_key(b"acerola/handshake/1".as_ref()));
     }
 
     #[tokio::test]
@@ -238,10 +238,10 @@ mod tests {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
-        manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
+        manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
-        handle.inject(b"acerola/rpc", make_peer("peer-1"), client, server);
+        handle.inject(b"acerola/handshake/1", make_peer("peer-1"), client, server);
 
         tokio::spawn(manager.run());
         sleep(Duration::from_millis(20)).await;
@@ -254,10 +254,10 @@ mod tests {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
-        manager.register_inbound(b"acerola/rpc", Arc::new(NoopHandler));
+        manager.register_inbound(b"acerola/handshake/1", Arc::new(NoopHandler));
 
         let (client, server) = tokio::io::duplex(1024);
-        handle.inject(b"acerola/rpc", make_peer("peer-2"), client, server);
+        handle.inject(b"acerola/handshake/1", make_peer("peer-2"), client, server);
 
         tokio::spawn(manager.run());
         sleep(Duration::from_millis(50)).await;
@@ -301,10 +301,10 @@ mod tests {
             Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied) }));
 
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), deny_all);
-        manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
+        manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
-        handle.inject(b"acerola/rpc", make_peer("peer-blocked"), client, server);
+        handle.inject(b"acerola/handshake/1", make_peer("peer-blocked"), client, server);
 
         tokio::spawn(manager.run());
         sleep(Duration::from_millis(30)).await;
@@ -318,19 +318,22 @@ mod tests {
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
 
-        manager.register_inbound(b"acerola/rpc", Arc::new(SlowHandler));
-        manager.register_inbound(b"acerola/blob", Arc::new(SlowHandler));
+        manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
+        manager.register_inbound(b"acerola/blob/1", Arc::new(SlowHandler));
 
         let (c1, s1) = tokio::io::duplex(1024);
         let (c2, s2) = tokio::io::duplex(1024);
-        handle.inject(b"acerola/rpc", make_peer("peer-multi"), c1, s1);
-        handle.inject(b"acerola/blob", make_peer("peer-multi"), c2, s2);
+        handle.inject(b"acerola/handshake/1", make_peer("peer-multi"), c1, s1);
+        handle.inject(b"acerola/blob/1", make_peer("peer-multi"), c2, s2);
 
         tokio::spawn(manager.run());
         sleep(Duration::from_millis(20)).await;
 
         assert!(state.read().await.is_connected(&make_peer("peer-multi")));
-        assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/rpc"));
-        assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/blob"));
+        assert!(state
+            .read()
+            .await
+            .is_connected_on(&make_peer("peer-multi"), b"acerola/handshake/1"));
+        assert!(state.read().await.is_connected_on(&make_peer("peer-multi"), b"acerola/blob/1"));
     }
 }
