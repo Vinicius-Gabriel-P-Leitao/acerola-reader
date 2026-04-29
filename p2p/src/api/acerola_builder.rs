@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use crate::{
     core::guard::BoxedValidator,
     core::network::manager::NetworkManager,
-    core::transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
+    core::transport::{P2pTransport, TransportP2pBuilder},
     data::identity::device_info::DeviceInfo,
     data::protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
@@ -14,12 +14,14 @@ use crate::{
 
 use super::acerola_p2p::AcerolaP2p;
 
+const RESERVED_ALPNS: &[&[u8]] = &[b"acerola/handshake/1"];
+
 /// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
 ///
 /// Através desse builder é possível injetar regras de firewall,
 /// registrar portas e protocols customizados (handlers ALPN) e repassar
 /// as lógicas de monitoria pro usuário.
-pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder = IrohTransportBuilder>
+pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder>
 where
     TB::Output: 'static,
 {
@@ -52,6 +54,11 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     /// Acopla um manipulador passivo de requisições de serviço à pilha.
     /// Dispara somente quando um par iniciar conexão invocando a exata chave `alpn`.
     pub fn inbound(mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) -> Self {
+        assert!(
+            !RESERVED_ALPNS.contains(&alpn),
+            "ALPN {:?} is reserved by the library and cannot be overridden",
+            alpn
+        );
         self.handlers_inbound.insert(alpn.to_vec(), handler);
         self
     }
@@ -59,13 +66,18 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     /// Acopla um manipulador proativo à pilha, a ser usado toda vez que o software
     /// quiser ativamente invocar um sub-serviço e processar a via dupla ativamente.
     pub fn outbound(mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) -> Self {
+        assert!(
+            !RESERVED_ALPNS.contains(&alpn),
+            "ALPN {:?} is reserved by the library and cannot be overridden",
+            alpn
+        );
         self.handlers_outbound.insert(alpn.to_vec(), handler);
         self
     }
 
     /// Compila as configurações submetidas e consolida a interface física no sistema operacional (abre as sockets).
     ///
-    /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/rpc`.
+    /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/handshake/1`.
     pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
         #[rustfmt::skip]
         let transport = Arc::new(
@@ -80,7 +92,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
         let (mut manager, command_tx, state) = NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2pTransport>, self.guard);
 
         manager.register_inbound(
-            b"acerola/rpc",
+            b"acerola/handshake/1",
             Arc::new(RpcServerHandler::new(
                 Arc::clone(&self.emit),
                 self.device_info.clone(),
@@ -89,7 +101,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
         );
 
         manager.register_outbound(
-            b"acerola/rpc",
+            b"acerola/handshake/1",
             Arc::new(RpcClientHandler::new(
                 Arc::clone(&self.emit),
                 self.device_info.clone(),
@@ -111,7 +123,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "iroh"))]
 mod tests {
     use super::*;
     use crate::core::transport::iroh::IrohTransportBuilder;
@@ -153,6 +165,20 @@ mod tests {
         .build()
         .await
         .is_ok());
+    }
+
+    #[test]
+    #[should_panic(expected = "reserved by the library")]
+    fn inbound_com_alpn_reservado_causa_panic() {
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .inbound(b"acerola/handshake/1", Arc::new(NoOpHandler));
+    }
+
+    #[test]
+    #[should_panic(expected = "reserved by the library")]
+    fn outbound_com_alpn_reservado_causa_panic() {
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .outbound(b"acerola/handshake/1", Arc::new(NoOpHandler));
     }
 
     #[tokio::test]

@@ -93,7 +93,7 @@ impl AcerolaP2p {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "iroh"))]
 mod tests {
     use super::*;
     use crate::core::transport::iroh::IrohTransportBuilder;

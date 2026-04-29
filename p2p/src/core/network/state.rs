@@ -112,39 +112,39 @@ mod tests {
     #[test]
     fn peer_conectado_aparece_no_state() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/rpc".to_vec());
+        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
         assert!(state.is_connected(&make_peer("peer-1")));
     }
 
     #[test]
     fn peer_desconectado_some_do_state() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/rpc".to_vec());
-        state.disconnect(&make_peer("peer-1"), b"acerola/rpc");
+        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
+        state.disconnect(&make_peer("peer-1"), b"acerola/handshake/1");
         assert!(!state.is_connected(&make_peer("peer-1")));
     }
 
     #[test]
     fn peer_permanece_conectado_apos_remover_um_de_dois_alpns() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/rpc".to_vec());
-        state.connect(make_peer("peer-1"), b"acerola/blob".to_vec());
+        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
+        state.connect(make_peer("peer-1"), b"acerola/blob/1".to_vec());
 
-        state.disconnect(&make_peer("peer-1"), b"acerola/rpc");
+        state.disconnect(&make_peer("peer-1"), b"acerola/handshake/1");
 
         assert!(state.is_connected(&make_peer("peer-1")));
-        assert!(!state.is_connected_on(&make_peer("peer-1"), b"acerola/rpc"));
-        assert!(state.is_connected_on(&make_peer("peer-1"), b"acerola/blob"));
+        assert!(!state.is_connected_on(&make_peer("peer-1"), b"acerola/handshake/1"));
+        assert!(state.is_connected_on(&make_peer("peer-1"), b"acerola/blob/1"));
     }
 
     #[test]
     fn peer_removido_quando_todos_alpns_desconectam() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/rpc".to_vec());
-        state.connect(make_peer("peer-1"), b"acerola/blob".to_vec());
+        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
+        state.connect(make_peer("peer-1"), b"acerola/blob/1".to_vec());
 
-        state.disconnect(&make_peer("peer-1"), b"acerola/rpc");
-        state.disconnect(&make_peer("peer-1"), b"acerola/blob");
+        state.disconnect(&make_peer("peer-1"), b"acerola/handshake/1");
+        state.disconnect(&make_peer("peer-1"), b"acerola/blob/1");
 
         assert!(!state.is_connected(&make_peer("peer-1")));
     }
@@ -152,7 +152,7 @@ mod tests {
     #[test]
     fn disconnect_de_alpn_inexistente_nao_afeta_outros() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/rpc".to_vec());
+        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
         state.disconnect(&make_peer("peer-1"), b"acerola/unknown");
         assert!(state.is_connected(&make_peer("peer-1")));
     }
@@ -198,9 +198,9 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/rpc".to_vec());
+        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
-        state.disconnect(&peer, b"acerola/rpc");
+        state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(state.get_device_info(&peer).is_none());
     }
@@ -210,10 +210,10 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/rpc".to_vec());
-        state.connect(peer.clone(), b"acerola/blob".to_vec());
+        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), b"acerola/blob/1".to_vec());
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
-        state.disconnect(&peer, b"acerola/rpc");
+        state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(state.get_device_info(&peer).is_some());
     }
@@ -223,11 +223,11 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/rpc".to_vec());
-        state.connect(peer.clone(), b"acerola/blob".to_vec());
+        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), b"acerola/blob/1".to_vec());
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
-        state.disconnect(&peer, b"acerola/rpc");
-        state.disconnect(&peer, b"acerola/blob");
+        state.disconnect(&peer, b"acerola/handshake/1");
+        state.disconnect(&peer, b"acerola/blob/1");
 
         assert!(state.get_device_info(&peer).is_none());
     }
@@ -237,8 +237,8 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/rpc".to_vec());
-        state.disconnect(&peer, b"acerola/rpc");
+        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
+        state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(state.get_device_info(&peer).is_none());
     }
