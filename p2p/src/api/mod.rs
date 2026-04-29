@@ -33,6 +33,8 @@ pub mod identity {
     pub use crate::core::device::windows::DefaultDeviceInfoProvider;
     #[cfg(target_os = "linux")]
     pub use crate::core::device::linux::DefaultDeviceInfoProvider;
+    #[cfg(target_os = "android")]
+    pub use crate::core::device::android::DefaultDeviceInfoProvider;
 }
 
 mod acerola_builder;

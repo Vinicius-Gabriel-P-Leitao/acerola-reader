@@ -58,16 +58,17 @@
 
 ## Etapa 2.2 — Proteção do Protocolo Interno
 
-- [ ] **ALPN `acerola/rpc` imutável** — `api/acerola_builder.rs`
+- [x] **ALPN `acerola/rpc` imutável** — `api/acerola_builder.rs`
   - Adicionar conjunto de ALPNs reservados: `const RESERVED: &[&[u8]] = &[b"acerola/rpc"]`
   - Em `.inbound()` e `.outbound()`, checar contra `RESERVED` e `panic!` com mensagem clara
   - Critério: tentar registrar handler com ALPN reservado causa erro imediato em tempo de execução
+  ! Foi mudado para acerola/handshake/1
 
 ---
 
 ## Etapa 2.3 — Feature UniFFI para DeviceInfo
 
-- [ ] **`DeviceInfo` como UniFFI record opcional** — `data/identity/device_info.rs` + `Cargo.toml`
+- [x] **`DeviceInfo` como UniFFI record opcional** — `data/identity/device_info.rs` + `Cargo.toml`
   - Adicionar feature: `uniffi = ["dep:uniffi"]`
   - Adicionar `#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]` na struct `DeviceInfo`
   - Facilita integração Android: o Kotlin passa `DeviceInfo(name, os, version)` diretamente via binding gerado
