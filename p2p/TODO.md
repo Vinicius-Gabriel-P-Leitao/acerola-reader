@@ -43,6 +43,39 @@
 
 ---
 
+## Etapa 2.1 — Feature Flag de Transport
+
+- [ ] **Iroh como feature opcional** — `Cargo.toml` + `core/transport/` + `api/`
+  - Tornar a dependência `iroh` opcional: `iroh = { version = "...", optional = true }`
+  - Adicionar `[features] default = ["iroh"]`
+  - Gatar `pub mod iroh` em `core/transport/mod.rs` com `#[cfg(feature = "iroh")]`
+  - Remover o default generic de `AcerolaP2pBuilder<TB = IrohTransportBuilder>` — fica `<TB: TransportP2pBuilder>`
+  - Gatar o método `AcerolaP2p::builder()` com `#[cfg(feature = "iroh")]`
+  - Gatar testes que usam `IrohTransportBuilder` diretamente com `#[cfg(feature = "iroh")]`
+  - Critério: `cargo build --no-default-features` compila sem erros; `cargo test --features iroh` passa tudo
+
+---
+
+## Etapa 2.2 — Proteção do Protocolo Interno
+
+- [ ] **ALPN `acerola/rpc` imutável** — `api/acerola_builder.rs`
+  - Adicionar conjunto de ALPNs reservados: `const RESERVED: &[&[u8]] = &[b"acerola/rpc"]`
+  - Em `.inbound()` e `.outbound()`, checar contra `RESERVED` e `panic!` com mensagem clara
+  - Critério: tentar registrar handler com ALPN reservado causa erro imediato em tempo de execução
+
+---
+
+## Etapa 2.3 — Feature UniFFI para DeviceInfo
+
+- [ ] **`DeviceInfo` como UniFFI record opcional** — `data/identity/device_info.rs` + `Cargo.toml`
+  - Adicionar feature: `uniffi = ["dep:uniffi"]`
+  - Adicionar `#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]` na struct `DeviceInfo`
+  - Facilita integração Android: o Kotlin passa `DeviceInfo(name, os, version)` diretamente via binding gerado
+  - Sem a feature, zero overhead — desktop usa `DefaultDeviceInfoProvider` normalmente
+  - Critério: `cargo build --features uniffi` compila; binding gerado expõe `DeviceInfo` como record no Kotlin
+
+---
+
 ## Etapa 3 — Segurança (TOFU Guard)
 
 > O iroh já prova posse da chave privada via TLS durante o handshake QUIC — challenge-response
