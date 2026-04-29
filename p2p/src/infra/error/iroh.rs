@@ -146,9 +146,3 @@ impl From<RelayUrlParseError> for ConnectionError {
     }
 }
 
-impl From<getrandom::Error> for ConnectionError {
-    fn from(err: getrandom::Error) -> Self {
-        log::error!("[generate_seed] system failed to provide secure entropy — error: {:?}", err);
-        ConnectionError::StartupFailed("system cannot provide secure entropy".into())
-    }
-}

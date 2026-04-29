@@ -45,7 +45,7 @@
 
 ## Etapa 2.1 — Feature Flag de Transport
 
-- [ ] **Iroh como feature opcional** — `Cargo.toml` + `core/transport/` + `api/`
+- [x] **Iroh como feature opcional** — `Cargo.toml` + `core/transport/` + `api/`
   - Tornar a dependência `iroh` opcional: `iroh = { version = "...", optional = true }`
   - Adicionar `[features] default = ["iroh"]`
   - Gatar `pub mod iroh` em `core/transport/mod.rs` com `#[cfg(feature = "iroh")]`

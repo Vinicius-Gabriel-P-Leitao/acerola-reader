@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use crate::{
     core::guard::BoxedValidator,
     core::network::manager::NetworkManager,
-    core::transport::{iroh::IrohTransportBuilder, P2pTransport, TransportP2pBuilder},
+    core::transport::{P2pTransport, TransportP2pBuilder},
     data::identity::device_info::DeviceInfo,
     data::protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
@@ -19,7 +19,7 @@ use super::acerola_p2p::AcerolaP2p;
 /// Através desse builder é possível injetar regras de firewall,
 /// registrar portas e protocols customizados (handlers ALPN) e repassar
 /// as lógicas de monitoria pro usuário.
-pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder = IrohTransportBuilder>
+pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder>
 where
     TB::Output: 'static,
 {
@@ -111,7 +111,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "iroh"))]
 mod tests {
     use super::*;
     use crate::core::transport::iroh::IrohTransportBuilder;

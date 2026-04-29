@@ -1,8 +1,8 @@
+#[cfg(feature = "iroh")]
 pub(crate) mod iroh;
 pub(crate) mod rpc;
 
 use thiserror::Error;
-
 use crate::infra::peer::PeerId;
 
 /// Erros relacionados ao ciclo de vida e estabelecimento de conexões P2P.
@@ -66,4 +66,11 @@ pub enum DeviceInfoError {
     /// Falaha ao pegar versão do app a qual o dispositivo roda.
     #[error("failed to read app version")]
     VersionUnavailable,
+}
+
+impl From<getrandom::Error> for ConnectionError {
+    fn from(err: getrandom::Error) -> Self {
+        log::error!("[generate_seed] system failed to provide secure entropy — error: {:?}", err);
+        ConnectionError::StartupFailed("system cannot provide secure entropy".into())
+    }
 }
