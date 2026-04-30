@@ -4,6 +4,14 @@ Este documento serve como o roteiro técnico e conjunto de regras para a impleme
 
 ## 🛠️ Tasks (Order of Implementation)
 
+### 0. Safety & Migration Strategy (The "Don't Break Progress" Phase)
+- [ ] **Task 0.1**: History Link Audit.
+    - [ ] Verify if `ChapterRead` and metadata link via `id` or `path`.
+    - [ ] **Change**: Plan migration to link history via `comic_id` + `chapter_sort` to ensure reading progress survives file moves between volumes.
+- [ ] **Task 0.2**: Media Strategy.
+    - [ ] Add `cover` and `banner` fields to `volume_archive`.
+    - [ ] Rule: Volume media is independent. The main Comic cover remains the primary identity on the Home screen.
+
 ### 1. Infra Layer: Numerical Normalization
 - [ ] **Task 1.1**: Create `br.acerola.comic.util.SortNormalizer`.
     - [ ] Extract logic from `ChapterArchiveEngine` and `NormalizeChapterSort.kt`.
@@ -13,15 +21,15 @@ Este documento serve como o roteiro técnico e conjunto de regras para a impleme
 
 ### 2. Data Layer: Persistence & Schema
 - [ ] **Task 2.1**: Create `volume_archive` Entity.
-    - [ ] Fields: `id`, `comic_directory_fk` (FK CASCADE), `name`, `path`, `volume_sort`, `is_special`.
+    - [ ] Fields: `id`, `comic_directory_fk` (FK CASCADE), `name`, `path`, `volume_sort`, `is_special`, `cover`, `banner`.
     - [ ] Unique Constraint: `(comic_directory_fk, volume_sort)`.
 - [ ] **Task 2.2**: Update `chapter_archive` Entity.
     - [ ] Add `volume_id_fk: Long?` (FK CASCADE).
     - [ ] Add `is_special: Boolean`.
     - [ ] **Strict Constraint**: Maintain `UNIQUE(comic_directory_fk, chapter)` to protect metadata integrity.
 - [ ] **Task 2.3**: Database Migration.
-    - [ ] Implement migration script to create the new table and update existing chapter records.
-    - [ ] **Validation**: Run database tests to ensure no data loss.
+    - [ ] Implement migration script using a temporary table strategy to handle `UniqueConstraint` changes.
+    - [ ] **Validation**: Run database tests to ensure no data loss (especially History/Progress).
 
 ### 3. Data Layer: Scanning Engine
 - [ ] **Task 3.1**: Hierarchical Scanning.
@@ -29,8 +37,8 @@ Este documento serve como o roteiro técnico e conjunto de regras para a impleme
     - [ ] Implement Root Volume logic: chapters in the comic root folder get `volume_id_fk = null`.
 - [ ] **Task 3.2**: Conflict Resolution.
     - [ ] Implement strict duplicate detection: if a chapter number exists in two volumes, log error via `AcerolaLogger` and skip.
-- [ ] **Task 3.3**: Metadata Propagation.
-    - [ ] Ensure `is_special` from Volume is inherited by Chapters during scan.
+- [ ] **Task 3.3**: Dynamic `is_special`.
+    - [ ] **Change**: Do not propagate `is_special` to DB chapters. Use SQL logic `(chapter.is_special OR volume.is_special)` for real-time inheritance.
 
 ### 4. Data/Core Layer: Breaking Contract Changes
 - [ ] **Task 4.1**: DTO Updates.
@@ -42,7 +50,7 @@ Este documento serve como o roteiro técnico e conjunto de regras para a impleme
 ### 5. Data Layer: DAO & Hierarchical SQL
 - [ ] **Task 5.1**: SQL Order By Logic.
     - [ ] Refactor `ChapterArchiveDao` queries with `LEFT JOIN volume_archive`.
-    - [ ] Implement 6-level sorting: `Vol.is_special -> Vol.Sort -> Ch.is_special -> Ch.Sort`.
+    - [ ] Implement 6-level sorting: `(Ch.is_special OR Vol.is_special) -> Vol.Sort -> Ch.Sort`.
 
 ### 6. Core/UI Layer: ViewModel & UseCases
 - [ ] **Task 6.1**: Business Logic Update.
