@@ -9,7 +9,10 @@ import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.getOrElse
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.VolumeChapterGateway
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
@@ -18,6 +21,8 @@ import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ChapterTemplate
 import br.acerola.comic.local.translator.persistence.toChapterArchiveEntity
 import br.acerola.comic.local.translator.persistence.toVolumeArchiveEntity
+import br.acerola.comic.local.translator.ui.toGroupDto
+import br.acerola.comic.local.translator.ui.toViewDto
 import br.acerola.comic.local.translator.ui.toViewPageDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
@@ -51,6 +56,7 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// FIXME: VolumeChapterGateway Implementação errada isso deve virar uma classe nova.
 @Singleton
 class ChapterArchiveEngine
     @Inject
@@ -61,7 +67,7 @@ class ChapterArchiveEngine
         private val templateService: ChapterNameProcessor,
         @param:ApplicationContext private val context: Context,
         private val pdfToCbzConverterService: PdfToCbzConverter,
-    ) : ChapterGateway<ChapterArchivePageDto> {
+    ) : ChapterGateway<ChapterArchivePageDto>, VolumeChapterGateway {
         private val semaphore = Semaphore(permits = 3)
 
         private val _progress = MutableStateFlow(value = -1)
@@ -421,6 +427,68 @@ class ChapterArchiveEngine
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
                     initialValue = ChapterArchivePageDto(items = emptyList(), pageSize = 0, total = 0, page = 0),
                 )
+
+        override fun observeVolumeGroups(
+            comicId: Long,
+            previewSize: Int,
+            sortType: String,
+            isAscending: Boolean,
+        ): StateFlow<List<VolumeChapterGroupDto>> =
+            volumeArchiveDao
+                .getVolumeChapterCountsByDirectoryId(comicId)
+                .map { summaries ->
+                    val sortedSummaries = if (isAscending) summaries else summaries.reversed()
+                    sortedSummaries.map { summary ->
+                        val previewItems =
+                            chapterArchiveDao
+                                .getChaptersByVolumePaged(
+                                    comicId = comicId,
+                                    volumeId = summary.id,
+                                    pageSize = previewSize,
+                                    offset = 0,
+                                ).let { joins ->
+                                    val base = joins.map { it.toViewDto() }
+                                    if (sortType == "LAST_UPDATE") {
+                                        val ordered = base.sortedBy { it.lastModified }
+                                        if (isAscending) ordered else ordered.reversed()
+                                    } else {
+                                        if (isAscending) base else base.reversed()
+                                    }
+                                }
+
+                        summary.toGroupDto(items = previewItems)
+                    }
+                }.stateIn(
+                    started = SharingStarted.Lazily,
+                    scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
+                    initialValue = emptyList(),
+                )
+
+        override suspend fun getVolumeChapterPage(
+            comicId: Long,
+            volumeId: Long,
+            offset: Int,
+            pageSize: Int,
+            sortType: String,
+            isAscending: Boolean,
+        ): List<ChapterFileDto> =
+            chapterArchiveDao
+                .getChaptersByVolumePaged(
+                    comicId = comicId,
+                    volumeId = volumeId,
+                    pageSize = pageSize,
+                    offset = offset,
+                ).let { joins ->
+                    val base = joins.map { it.toViewDto() }
+                    if (sortType == "LAST_UPDATE") {
+                        val ordered = base.sortedBy { it.lastModified }
+                        if (isAscending) ordered else ordered.reversed()
+                    } else {
+                        if (isAscending) base else base.reversed()
+                    }
+                }
+
+        override suspend fun hasRootChapters(comicId: Long): Boolean = chapterArchiveDao.countRootChaptersByDirectoryId(comicId) > 0
 
         override suspend fun getChapterPage(
             comicId: Long,

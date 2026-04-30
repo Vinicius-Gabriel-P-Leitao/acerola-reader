@@ -5,10 +5,12 @@ import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeDto
+import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.entity.archive.VolumeArchive
 import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
+import br.acerola.comic.local.entity.relation.VolumeChapterCount
 
 fun ComicDirectory.toViewDto(): ComicDirectoryDto =
     ComicDirectoryDto(
@@ -46,6 +48,25 @@ fun ChapterArchive.toViewDto(volumeName: String? = null): ChapterFileDto =
     )
 
 fun ChapterVolumeJoin.toViewDto(): ChapterFileDto = chapter.toViewDto(volumeName = volume?.name)
+
+fun VolumeChapterCount.toViewDto(): VolumeDto =
+    VolumeDto(
+        id = id,
+        name = name,
+        volumeSort = volumeSort,
+        isSpecial = isSpecial,
+        coverUri = cover,
+        bannerUri = banner,
+    )
+
+fun VolumeChapterCount.toGroupDto(items: List<ChapterFileDto>): VolumeChapterGroupDto =
+    VolumeChapterGroupDto(
+        volume = toViewDto(),
+        items = items,
+        totalChapters = chapterCount,
+        loadedCount = items.size,
+        hasMore = items.size < chapterCount,
+    )
 
 fun List<ChapterVolumeJoin>.toViewPageDto(
     pageSize: Int = this.size,

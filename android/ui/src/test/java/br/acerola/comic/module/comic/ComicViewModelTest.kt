@@ -20,6 +20,7 @@ import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveComicHistoryUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
@@ -60,6 +61,7 @@ class ComicViewModelTest {
     private lateinit var mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>
     private lateinit var directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>
+    private val directoryObserveVolumeChapters = mockk<ObserveVolumeChaptersUseCase>(relaxed = true)
     private lateinit var mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
 
     private val localChaptersFlow = MutableStateFlow(ChapterArchivePageDto(emptyList(), emptyList(), 20, 0, 0))
@@ -145,6 +147,9 @@ class ComicViewModelTest {
         }
         every { mangadexChapterRepo.observeChapters(any(), any(), any()) } returns remoteChaptersFlow
         every { manageCategoriesUseCase.getCategoryByMangaId(any()) } returns flowOf(null)
+        every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns MutableStateFlow(emptyList())
+        coEvery { directoryObserveVolumeChapters.hasRootChapters(any()) } returns true
+        coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()
 
         observeComicHistoryUseCase = ObserveComicHistoryUseCase(historyGateway)
         mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
@@ -171,6 +176,7 @@ class ComicViewModelTest {
             mangadexObserve = mangadexObserve,
             directoryObserve = directoryObserve,
             directoryGetChapters = directoryGetChapters,
+            directoryObserveVolumeChapters = directoryObserveVolumeChapters,
             mangadexGetChapters = mangadexGetChapters,
             manageCategoriesUseCase = manageCategoriesUseCase,
         )
@@ -344,6 +350,14 @@ class ComicViewModelTest {
         runTest {
             val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+            coEvery { directoryObserveVolumeChapters.hasRootChapters(any()) } returns false
+            every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
+                MutableStateFlow(
+                    listOf(
+                        br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume1, listOf(), 1, 0, true),
+                        br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume2, listOf(), 1, 0, true),
+                    ),
+                )
 
             localChaptersFlow.value =
                 ChapterArchivePageDto(
@@ -377,6 +391,12 @@ class ComicViewModelTest {
                     page = 0,
                     total = 2,
                 )
+            every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
+                MutableStateFlow(
+                    listOf(
+                        br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume1, listOf(), 2, 0, true),
+                    ),
+                )
 
             viewModel.chapters.test {
                 var item = awaitItem()
@@ -391,6 +411,7 @@ class ComicViewModelTest {
         runTest {
             val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+            coEvery { directoryObserveVolumeChapters.hasRootChapters(any()) } returns true
 
             localChaptersFlow.value =
                 ChapterArchivePageDto(

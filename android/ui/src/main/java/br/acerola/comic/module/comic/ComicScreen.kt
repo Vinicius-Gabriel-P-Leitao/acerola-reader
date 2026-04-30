@@ -223,7 +223,7 @@ fun ComicScreen(
         }
     }
 
-    var expandedCardId by rememberSaveable { mutableStateOf<String?>(null) }
+    var expandedVolumeIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -272,6 +272,16 @@ fun ComicScreen(
                                 onToggleRead = { id -> onChapterAction(ComicChapterAction.ToggleReadStatus(id)) },
                                 onChapterClick = { chapter, _ -> onChapterAction(ComicChapterAction.ClickChapter(chapter, 0)) },
                                 showVolumeHeaders = uiState.showVolumeHeaders,
+                                expandedVolumeIds = expandedVolumeIds,
+                                onToggleVolumeExpanded = { volumeId ->
+                                    expandedVolumeIds =
+                                        if (expandedVolumeIds.contains(volumeId)) {
+                                            expandedVolumeIds - volumeId
+                                        } else {
+                                            expandedVolumeIds + volumeId
+                                        }
+                                },
+                                onLoadMoreVolume = comicViewModel::loadMoreVolumeChapters,
                             )
                         }
                     }

@@ -1,12 +1,14 @@
 package br.acerola.comic.module.comic.layout
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeDto
+import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.fixtures.ComicFixtures
 import br.acerola.comic.module.comic.Comic
@@ -47,7 +49,7 @@ class ChapterSectionTest {
     }
 
     @Test
-    fun `deve_exibir_headers_por_volume_quando_houver_transicao_de_volume`() {
+    fun `deve_exibir_cards_colapsaveis_por_volume`() {
         val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
         val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = true)
         val chapters =
@@ -55,13 +57,26 @@ class ChapterSectionTest {
                 archive =
                     ComicFixtures
                         .createChapterArchivePageDto(
-                            items =
+                        ).copy(
+                            volumes = listOf(volume1, volume2),
+                            volumeSections =
                                 listOf(
-                                    ChapterFileDto(id = 1L, name = "Cap. 1", path = "", chapterSort = "1", volumeId = 10L),
-                                    ChapterFileDto(id = 2L, name = "Cap. 2", path = "", chapterSort = "2", volumeId = 10L),
-                                    ChapterFileDto(id = 3L, name = "Cap. 3", path = "", chapterSort = "3", volumeId = 20L),
+                                    VolumeChapterGroupDto(
+                                        volume = volume1,
+                                        items = listOf(ChapterFileDto(id = 1L, name = "Cap. 1", path = "", chapterSort = "1", volumeId = 10L)),
+                                        totalChapters = 2,
+                                        loadedCount = 1,
+                                        hasMore = true,
+                                    ),
+                                    VolumeChapterGroupDto(
+                                        volume = volume2,
+                                        items = listOf(ChapterFileDto(id = 3L, name = "Cap. 3", path = "", chapterSort = "3", volumeId = 20L)),
+                                        totalChapters = 1,
+                                        loadedCount = 1,
+                                        hasMore = false,
+                                    ),
                                 ),
-                        ).copy(volumes = listOf(volume1, volume2)),
+                        ),
                 remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = true,
             )
@@ -77,15 +92,17 @@ class ChapterSectionTest {
                     onToggleRead = {},
                     onPageChange = {},
                     showVolumeHeaders = true,
+                    expandedVolumeIds = setOf(10L, 20L),
                 )
             }
         }
 
         composeTestRule.onNodeWithText("Vol. 1").assertIsDisplayed()
         composeTestRule.onNodeWithText("Vol. 2").assertIsDisplayed()
-        composeTestRule.onNodeWithText("2 cap", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("1 cap", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("1 de 2", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("1 de 1", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Especial").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Carregar mais capítulos").assertIsDisplayed()
     }
 
     @Test

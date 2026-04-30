@@ -12,6 +12,17 @@ data class ChapterArchivePageDto(
     val pageSize: Int,
     val page: Int,
     val total: Int,
+    val volumeSections: List<VolumeChapterGroupDto> = emptyList(),
+) : Parcelable
+
+@Parcelize
+@Immutable
+data class VolumeChapterGroupDto(
+    val volume: VolumeDto,
+    val items: List<ChapterFileDto>,
+    val totalChapters: Int,
+    val loadedCount: Int,
+    val hasMore: Boolean,
 ) : Parcelable
 
 @Parcelize

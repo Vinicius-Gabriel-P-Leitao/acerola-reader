@@ -26,6 +26,9 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     @Query("SELECT * FROM chapter_archive WHERE comic_directory_fk = :folderId")
     suspend fun getChaptersListByDirectoryId(folderId: Long): List<ChapterArchive>
 
+    @Query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = :folderId AND volume_id_fk IS NULL")
+    suspend fun countRootChaptersByDirectoryId(folderId: Long): Int
+
     @Transaction
     @Query(
         value = """
@@ -95,6 +98,34 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     )
     suspend fun getChaptersByDirectoryPaged(
         folderId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterVolumeJoin>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *
+            FROM chapter_archive
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :comicId
+              AND chapter_archive.volume_id_fk = :volumeId
+            ORDER BY 
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC,
+                CAST(chapter_archive.chapter_sort AS INTEGER) ASC,
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC
+            LIMIT :pageSize OFFSET :offset
+        """,
+    )
+    suspend fun getChaptersByVolumePaged(
+        comicId: Long,
+        volumeId: Long,
         pageSize: Int,
         offset: Int,
     ): List<ChapterVolumeJoin>

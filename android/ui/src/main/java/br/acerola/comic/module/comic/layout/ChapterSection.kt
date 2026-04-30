@@ -12,6 +12,7 @@ import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
+import br.acerola.comic.module.comic.component.VolumeCard
 import br.acerola.comic.module.comic.component.VolumeHeader
 import br.acerola.comic.util.normalizeChapter
 
@@ -26,7 +27,36 @@ fun Comic.Layout.chapterSection(
     onToggleRead: (String) -> Unit,
     onPageChange: (Int) -> Unit,
     showVolumeHeaders: Boolean = false,
+    expandedVolumeIds: Set<Long> = emptySet(),
+    onToggleVolumeExpanded: (Long) -> Unit = {},
+    onLoadMoreVolume: (Long) -> Unit = {},
 ) {
+    if (showVolumeHeaders && chapters.archive.volumeSections.isNotEmpty()) {
+        chapters.archive.volumeSections.forEach { group ->
+            scope.item(
+                key = "volume_card_${group.volume.id}",
+                contentType = "volume_card",
+            ) {
+                Comic.Component.VolumeCard(
+                    group = group,
+                    expanded = expandedVolumeIds.contains(group.volume.id),
+                    readChapters = readChapters,
+                    onToggleExpanded = { onToggleVolumeExpanded(group.volume.id) },
+                    onLoadMore = { onLoadMoreVolume(group.volume.id) },
+                    onChapterClick = { chapter -> onChapterClick(chapter, null) },
+                    onToggleRead = onToggleRead,
+                    remoteResolver = { chapterSort ->
+                        chapters.remoteInfo?.items?.firstOrNull {
+                            it.chapter.normalizeChapter() == chapterSort
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                )
+            }
+        }
+        return
+    }
+
     val volumeMap = chapters.archive.volumes.associateBy { it.id }
     val chapterCountByVolume =
         chapters.archive.items

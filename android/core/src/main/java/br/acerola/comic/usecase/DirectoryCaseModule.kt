@@ -2,10 +2,12 @@ package br.acerola.comic.usecase
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.VolumeChapterGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase
@@ -64,5 +66,14 @@ object DirectoryCaseModule {
     ): ObserveChaptersUseCase<ChapterArchivePageDto> =
         ObserveChaptersUseCase(
             chapterRepository = chapterOps,
+        )
+
+    @Provides
+    @DirectoryCase
+    fun provideObserveVolumeChaptersUseCase(
+        @DirectoryEngine volumeOps: VolumeChapterGateway,
+    ): ObserveVolumeChaptersUseCase =
+        ObserveVolumeChaptersUseCase(
+            volumeGateway = volumeOps,
         )
 }
