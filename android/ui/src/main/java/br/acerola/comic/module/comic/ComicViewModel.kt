@@ -244,7 +244,10 @@ class ComicViewModel
                             remoteMap[local.chapterSort.normalizeChapter()]
                         }
 
-                    val showVolumeHeaders = localAll.volumes.isNotEmpty() || items.any { it.volumeId != null }
+                    val hasVolumes = items.any { it.volumeId != null }
+                    val hasRootChapters = items.any { it.volumeId == null }
+                    val distinctVolumeCount = items.mapNotNull { it.volumeId }.distinct().size
+                    val showVolumeHeaders = hasVolumes && distinctVolumeCount > 1 && !hasRootChapters
 
                     ChapterDto(
                         archive =

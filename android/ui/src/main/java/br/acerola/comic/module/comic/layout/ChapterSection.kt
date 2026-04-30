@@ -3,7 +3,6 @@ package br.acerola.comic.module.comic.layout
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
@@ -28,31 +27,28 @@ fun Comic.Layout.chapterSection(
     onPageChange: (Int) -> Unit,
     showVolumeHeaders: Boolean = false,
 ) {
-    val grouped =
-        if (showVolumeHeaders) {
-            chapters.archive.items.groupBy { it.volumeId }
-        } else {
-            mapOf(null to chapters.archive.items)
-        }
+    val volumeMap = chapters.archive.volumes.associateBy { it.id }
+    val chapterCountByVolume = chapters.archive.items.mapNotNull { it.volumeId }.groupingBy { it }.eachCount()
 
-    grouped.forEach { (volumeId, items) ->
-        // FIXME: Remover esse else-if
-        if (showVolumeHeaders && volumeId != null) {
-            val volumeDto = chapters.archive.volumes.find { it.id == volumeId }
+    chapters.archive.items.forEachIndexed { index, archiveItem ->
+        val volumeId = archiveItem.volumeId
+        val previousVolumeId = chapters.archive.items.getOrNull(index - 1)?.volumeId
+        val shouldShowHeader = showVolumeHeaders && volumeId != null && volumeId != previousVolumeId
+
+        if (shouldShowHeader) {
+            val volumeDto = volumeMap[volumeId] ?: return@forEachIndexed
             scope.stickyHeader(key = "vol_$volumeId") {
-                Comic.Component.VolumeHeader(volume = volumeDto)
-            }
-        } else if (showVolumeHeaders && grouped.size > 1) {
-            scope.stickyHeader(key = "vol_root") {
-                Comic.Component.VolumeHeader(volume = null)
+                Comic.Component.VolumeHeader(
+                    volume = volumeDto,
+                    chapterCount = chapterCountByVolume[volumeId] ?: 0,
+                )
             }
         }
 
-        scope.items(
-            items = items,
-            contentType = { "chapter" },
-            key = { it.id },
-        ) { archiveItem ->
+        scope.item(
+            key = archiveItem.id,
+            contentType = "chapter",
+        ) {
             val remoteItem: ChapterFeedDto? =
                 chapters.remoteInfo?.items?.firstOrNull {
                     it.chapter.normalizeChapter() ==

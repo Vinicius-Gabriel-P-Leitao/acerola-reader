@@ -123,8 +123,8 @@ fun ComicScreen(
         }
 
     val showVolumeHeaders =
-        remember(key1 = chapterDto?.archive?.volumes) {
-            chapterDto?.archive?.volumes?.isNotEmpty() ?: false
+        remember(key1 = chapterDto?.showVolumeHeaders) {
+            chapterDto?.showVolumeHeaders ?: false
         }
 
     val uiState =

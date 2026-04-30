@@ -2,12 +2,14 @@ package br.acerola.comic.module.comic.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,13 +25,10 @@ import br.acerola.comic.ui.R
 
 @Composable
 fun Comic.Component.VolumeHeader(
-    volume: VolumeDto?,
+    volume: VolumeDto,
+    chapterCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    val volumeName = volume?.name ?: stringResource(
-        id = if (volume == null) R.string.label_volume_header_root else R.string.label_volume_header_unknown
-    )
-
     Box(
         modifier =
             modifier
@@ -54,13 +53,33 @@ fun Comic.Component.VolumeHeader(
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(20.dp),
             )
-            Text(
-                text = volumeName,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp),
-            )
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+            ) {
+                Text(
+                    text = volume.name.ifBlank { stringResource(id = R.string.label_volume_header_unknown) },
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = stringResource(id = R.string.label_volume_header_chapter_count, chapterCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            if (volume.isSpecial) {
+                AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = {
+                        Text(text = stringResource(id = R.string.label_volume_header_special))
+                    },
+                )
+            }
         }
     }
 }

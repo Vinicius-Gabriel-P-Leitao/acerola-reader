@@ -15,6 +15,7 @@ import br.acerola.comic.config.preference.SortDirection
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
+import br.acerola.comic.dto.archive.VolumeDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
@@ -302,6 +303,80 @@ class ComicViewModelTest {
 
                 assertThat(item.archive.items[0].id).isEqualTo(2L)
                 assertThat(item.archive.items[1].id).isEqualTo(1L)
+            }
+        }
+    @Test
+    fun `deve exibir headers apenas quando houver multiplos volumes reais`() =
+        runTest {
+            val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+            val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+
+            localChaptersFlow.value =
+                ChapterArchivePageDto(
+                    items =
+                        listOf(
+                            ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L),
+                            ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L),
+                        ),
+                    volumes = listOf(volume1, volume2),
+                    pageSize = 20,
+                    page = 0,
+                    total = 2,
+                )
+
+            viewModel.chapters.test {
+                var item = awaitItem()
+                while (item == null || item.archive.items.isEmpty()) item = awaitItem()
+                assertThat(item.showVolumeHeaders).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            localChaptersFlow.value =
+                ChapterArchivePageDto(
+                    items =
+                        listOf(
+                            ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L),
+                            ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 10L),
+                        ),
+                    volumes = listOf(volume1),
+                    pageSize = 20,
+                    page = 0,
+                    total = 2,
+                )
+
+            viewModel.chapters.test {
+                var item = awaitItem()
+                while (item == null || item.archive.items.isEmpty()) item = awaitItem()
+                assertThat(item.showVolumeHeaders).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `deve ocultar headers quando houver capitulos root misturados`() =
+        runTest {
+            val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+            val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+
+            localChaptersFlow.value =
+                ChapterArchivePageDto(
+                    items =
+                        listOf(
+                            ChapterFileDto(id = 1L, name = "Ch. 0", path = "", chapterSort = "0"),
+                            ChapterFileDto(id = 2L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L),
+                            ChapterFileDto(id = 3L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L),
+                        ),
+                    volumes = listOf(volume1, volume2),
+                    pageSize = 20,
+                    page = 0,
+                    total = 3,
+                )
+
+            viewModel.chapters.test {
+                var item = awaitItem()
+                while (item == null || item.archive.items.isEmpty()) item = awaitItem()
+                assertThat(item.showVolumeHeaders).isFalse()
+                cancelAndIgnoreRemainingEvents()
             }
         }
 }

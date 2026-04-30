@@ -112,6 +112,8 @@
     <string name="label_chapter_detail_pages">Páginas</string>
     <string name="label_chapter_scanlation_prefix">Scan: %1$s</string>
     <string name="label_volume_header_unknown">Volume Desconhecido</string>
+    <string name="label_volume_header_special">Especial</string>
+    <string name="label_volume_header_chapter_count">%1$d capítulos</string>
     <string name="label_volume_header_root">Capítulos Avulsos</string>
 
     <!-- Comic Header -->
