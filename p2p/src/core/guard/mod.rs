@@ -11,7 +11,9 @@ use std::pin::Pin;
 use crate::infra::error::ConnectionError;
 use crate::infra::peer::PeerId;
 
+pub mod open;
 pub mod tofu;
+
 
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///
@@ -38,25 +40,12 @@ pub type BoxedValidator = Box<
         + Sync,
 >;
 
-/// Guard padrão que aceita de forma permissiva qualquer conexão recebida.
-///
-/// É utilizado caso a aplicação não configure regras estritas usando o método `builder.guard()`.
-pub async fn open_guard<T>(_ctx: &ConnectionContext<T>) -> Result<(), ConnectionError> {
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn make_ctx() -> ConnectionContext<()> {
         ConnectionContext { peer_id: PeerId { id: "test-peer".to_string(), device_id: None }, data: () }
-    }
-
-    #[tokio::test]
-    async fn open_guard_permite_qualquer_conexao() {
-        let ctx = make_ctx();
-        assert!(open_guard(&ctx).await.is_ok());
     }
 
     #[tokio::test]

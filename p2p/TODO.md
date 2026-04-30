@@ -83,7 +83,7 @@
 > na camada de aplicação seria redundante. O NodeId que chega no Guard já é autêntico.
 > O modelo SSH-like (Trust On First Use) é suficiente e mais simples.
 
-- [ ] **TofuGuard** — `core/guard/tofu.rs` (novo arquivo)
+- [x] **TofuGuard** — `core/guard/tofu.rs` (novo arquivo)
   - Struct `TofuGuard` com uma store injetável (`Arc<dyn TrustedPeerStore>`)
   - Trait `TrustedPeerStore`: `contains(&str) -> bool` + `insert(&str)`
   - Implementação padrão em memória: `InMemoryTrustedStore` (HashSet protegido por Mutex)
