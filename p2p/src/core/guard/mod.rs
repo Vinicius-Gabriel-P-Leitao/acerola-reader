@@ -11,6 +11,8 @@ use std::pin::Pin;
 use crate::infra::error::ConnectionError;
 use crate::infra::peer::PeerId;
 
+pub mod tofu;
+
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///
 /// Contém o `PeerId` do nó que está tentando se conectar, além de um
