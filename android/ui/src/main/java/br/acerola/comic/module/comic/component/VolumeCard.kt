@@ -9,8 +9,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -50,7 +52,7 @@ fun Comic.Component.VolumeCard(
             Acerola.Component.GlassButton(
                 onClick = onToggleExpanded,
                 icon = {
-                    androidx.compose.material3.Icon(
+                    Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurface,
@@ -88,8 +90,11 @@ fun Comic.Component.VolumeCard(
                     )
                 }
 
+                // FIXME: Transformar em scroll infinito ou pagina por contexto usando o paginated  igual a versão de chapter, paginado + scroll
+                //  infinito é o melhor por que ele contempla só o volume não o comic inteiro e remover o scroll forçado para cima quando carrega
+                //  mais itens
                 if (group.hasMore) {
-                    androidx.compose.material3.TextButton(
+                    TextButton(
                         onClick = onLoadMore,
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(vertical = 12.dp),

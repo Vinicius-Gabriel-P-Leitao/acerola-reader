@@ -119,6 +119,7 @@ fun Main.Home.Layout.Screen(
                         putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
                         putExtra(ReaderActivity.PageExtra.MANGA_ID, action.comic.directory.id)
                         putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
+                        putExtra(ReaderActivity.PageExtra.CHAPTER_SORT, action.history.chapterSort)
                     }
                 context.startActivity(intent)
             }

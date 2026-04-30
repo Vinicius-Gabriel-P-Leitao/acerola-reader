@@ -63,6 +63,7 @@ fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
                     Intent(context, ReaderActivity::class.java).apply {
                         putExtra(ReaderActivity.PageExtra.MANGA_ID, action.comic.directory.id)
                         putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
+                        putExtra(ReaderActivity.PageExtra.CHAPTER_SORT, action.history.chapterSort)
                         putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
                     }
                 context.startActivity(intent)

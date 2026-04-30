@@ -16,6 +16,7 @@ import br.acerola.comic.module.comic.component.VolumeCard
 import br.acerola.comic.module.comic.component.VolumeHeader
 import br.acerola.comic.util.normalizeChapter
 
+// FIXME: Remover scroll forçado para cima quando carrega nova pagina.
 @OptIn(ExperimentalFoundationApi::class)
 fun Comic.Layout.chapterSection(
     scope: LazyListScope,

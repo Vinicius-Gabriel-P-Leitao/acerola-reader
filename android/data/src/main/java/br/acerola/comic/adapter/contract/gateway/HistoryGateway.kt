@@ -26,5 +26,11 @@ interface HistoryGateway {
         chapterSort: String,
     )
 
+    suspend fun updateChapterIdBySort(
+        comicId: Long,
+        chapterSort: String,
+        newId: Long,
+    )
+
     suspend fun deleteHistory(comicId: Long)
 }

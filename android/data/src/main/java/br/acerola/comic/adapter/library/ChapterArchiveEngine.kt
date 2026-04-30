@@ -17,6 +17,7 @@ import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
+import br.acerola.comic.local.dao.history.ReadingHistoryDao
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ChapterTemplate
 import br.acerola.comic.local.translator.persistence.toChapterArchiveEntity
@@ -64,6 +65,7 @@ class ChapterArchiveEngine
         private val directoryDao: ComicDirectoryDao,
         private val chapterArchiveDao: ChapterArchiveDao,
         private val volumeArchiveDao: VolumeArchiveDao,
+        private val readingHistoryDao: ReadingHistoryDao,
         private val templateService: ChapterNameProcessor,
         @param:ApplicationContext private val context: Context,
         private val pdfToCbzConverterService: PdfToCbzConverter,
@@ -352,8 +354,12 @@ class ChapterArchiveEngine
                             }
 
                             if (chaptersToInsert.isNotEmpty()) {
-                                AcerolaLogger.d(TAG, "Inserting ${chaptersToInsert.size} new chapters", LogSource.REPOSITORY)
-                                chapterArchiveDao.insertAll(*chaptersToInsert.toTypedArray())
+                                AcerolaLogger.d(TAG, "Inserting ${chaptersToInsert.size} new chapters and updating history", LogSource.REPOSITORY)
+                                chaptersToInsert.forEach { chapter ->
+                                    val newId = chapterArchiveDao.insert(chapter)
+                                    readingHistoryDao.updateHistoryChapterIdBySort(comicId, chapter.chapterSort, newId)
+                                    readingHistoryDao.updateChapterReadIdBySort(comicId, chapter.chapterSort, newId)
+                                }
                             }
 
                             val folderLastModified = if (baseUri == null) folderDoc.lastModified() else 0

@@ -147,7 +147,11 @@ class ReaderViewModel
                     }.collect { (pageDto, isIndexing) ->
                         val chapter =
                             pageDto.items.find {
-                                if (chapterId != null) it.id == chapterId else it.chapterSort == chapterSort
+                                if (chapterId != null && it.id == chapterId) {
+                                    true
+                                } else {
+                                    it.chapterSort == chapterSort
+                                }
                             }
                         if (chapter != null) {
                             AcerolaLogger.d(TAG, "Chapter metadata found. Opening...", LogSource.VIEWMODEL)

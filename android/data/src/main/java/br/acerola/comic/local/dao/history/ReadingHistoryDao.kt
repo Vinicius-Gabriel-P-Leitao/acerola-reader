@@ -42,6 +42,20 @@ interface ReadingHistoryDao {
     @Query("DELETE FROM reading_history WHERE comic_directory_id = :comicId")
     suspend fun deleteHistoryByDirectoryId(comicId: Long)
 
+    @Query("UPDATE reading_history SET chapter_archive_id = :newId WHERE comic_directory_id = :comicId AND chapter_sort = :chapterSort")
+    suspend fun updateHistoryChapterIdBySort(
+        comicId: Long,
+        chapterSort: String,
+        newId: Long,
+    )
+
+    @Query("UPDATE chapter_read SET chapter_archive_id = :newId WHERE comic_directory_id = :comicId AND chapter_sort = :chapterSort")
+    suspend fun updateChapterReadIdBySort(
+        comicId: Long,
+        chapterSort: String,
+        newId: Long,
+    )
+
     // Chapter Read
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertChapterRead(chapterRead: ChapterRead)

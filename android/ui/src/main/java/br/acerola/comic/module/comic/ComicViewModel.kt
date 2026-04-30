@@ -422,10 +422,10 @@ class ComicViewModel
 
         fun toggleChapterReadStatus(
             chapterSort: String,
-            chapterId: Long? = null,
         ) {
             val comicId = selectedDirectoryId.value ?: return
             val isRead = readChapters.value.contains(chapterSort)
+            val chapterId = chapters.value?.archive?.items?.find { it.chapterSort == chapterSort }?.id
 
             AcerolaLogger.audit(
                 TAG,

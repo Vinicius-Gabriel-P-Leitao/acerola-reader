@@ -67,6 +67,15 @@ class LocalHistoryEngine
             readingHistoryDao.deleteChapterRead(comicId, chapterSort)
         }
 
+        override suspend fun updateChapterIdBySort(
+            comicId: Long,
+            chapterSort: String,
+            newId: Long,
+        ) {
+            readingHistoryDao.updateHistoryChapterIdBySort(comicId, chapterSort, newId)
+            readingHistoryDao.updateChapterReadIdBySort(comicId, chapterSort, newId)
+        }
+
         override suspend fun deleteHistory(comicId: Long) {
             AcerolaLogger.audit(TAG, "User deleting reading reading history for comic: $comicId", LogSource.REPOSITORY)
             readingHistoryDao.deleteHistoryByDirectoryId(comicId)
