@@ -7,7 +7,7 @@ import kotlinx.parcelize.Parcelize
 // FIXME: Nome errado, correto deve ser VolumeArchiveDto
 @Parcelize
 @Immutable
-data class VolumeDto(
+data class VolumeArchiveDto(
     val id: Long,
     val name: String,
     val volumeSort: String,

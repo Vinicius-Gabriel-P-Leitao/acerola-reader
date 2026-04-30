@@ -33,7 +33,7 @@ abstract class DirectoryModule {
     @Binds
     @Singleton
     @DirectoryEngine
-    abstract fun bindVolumeChapterRepository(impl: ChapterArchiveEngine): VolumeChapterGateway
+    abstract fun bindVolumeChapterRepository(impl: VolumeArchiveEngine): VolumeChapterGateway
 
     @Binds
     @Singleton

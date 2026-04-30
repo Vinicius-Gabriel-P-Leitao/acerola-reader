@@ -19,13 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.comic.dto.archive.VolumeDto
+import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 
 @Composable
 fun Comic.Component.VolumeHeader(
-    volume: VolumeDto,
+    volume: VolumeArchiveDto,
     chapterCount: Int,
     modifier: Modifier = Modifier,
 ) {

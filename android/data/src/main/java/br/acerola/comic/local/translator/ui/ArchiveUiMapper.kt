@@ -4,7 +4,7 @@ import androidx.core.net.toUri
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
-import br.acerola.comic.dto.archive.VolumeDto
+import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
@@ -25,8 +25,8 @@ fun ComicDirectory.toViewDto(): ComicDirectoryDto =
         hidden = hidden,
     )
 
-fun VolumeArchive.toViewDto(): VolumeDto =
-    VolumeDto(
+fun VolumeArchive.toViewDto(): VolumeArchiveDto =
+    VolumeArchiveDto(
         id = id,
         name = name,
         volumeSort = volumeSort,
@@ -49,8 +49,8 @@ fun ChapterArchive.toViewDto(volumeName: String? = null): ChapterFileDto =
 
 fun ChapterVolumeJoin.toViewDto(): ChapterFileDto = chapter.toViewDto(volumeName = volume?.name)
 
-fun VolumeChapterCount.toViewDto(): VolumeDto =
-    VolumeDto(
+fun VolumeChapterCount.toViewDto(): VolumeArchiveDto =
+    VolumeArchiveDto(
         id = id,
         name = name,
         volumeSort = volumeSort,

@@ -15,7 +15,7 @@ import br.acerola.comic.config.preference.SortDirection
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
-import br.acerola.comic.dto.archive.VolumeDto
+import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
@@ -34,9 +34,9 @@ import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -349,14 +349,16 @@ class ComicViewModelTest {
     @Test
     fun `deve exibir headers apenas quando houver multiplos volumes reais`() =
         runTest {
-            val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
-            val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+            val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+            val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
             hasRootChaptersFlow.value = false
             every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
                 MutableStateFlow(
                     listOf(
-                        br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume1, listOf(), 1, 0, true),
-                        br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume2, listOf(), 1, 0, true),
+                        br.acerola.comic.dto.archive
+                            .VolumeChapterGroupDto(volume1, listOf(), 1, 0, true),
+                        br.acerola.comic.dto.archive
+                            .VolumeChapterGroupDto(volume2, listOf(), 1, 0, true),
                     ),
                 )
 
@@ -395,7 +397,8 @@ class ComicViewModelTest {
             every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
                 MutableStateFlow(
                     listOf(
-                        br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume1, listOf(), 2, 0, true),
+                        br.acerola.comic.dto.archive
+                            .VolumeChapterGroupDto(volume1, listOf(), 2, 0, true),
                     ),
                 )
 
@@ -410,8 +413,8 @@ class ComicViewModelTest {
     @Test
     fun `deve ocultar headers quando houver capitulos root misturados`() =
         runTest {
-            val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
-            val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+            val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+            val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
             hasRootChaptersFlow.value = true
 
             localChaptersFlow.value =

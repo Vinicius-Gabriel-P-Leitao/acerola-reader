@@ -43,7 +43,6 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -79,6 +78,7 @@ class ComicViewModel
         val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
 
         private val _volumeSectionOverrides = MutableStateFlow<Map<Long, VolumeChapterGroupDto>>(emptyMap())
+        val volumeSectionOverrides: StateFlow<Map<Long, VolumeChapterGroupDto>> = _volumeSectionOverrides.asStateFlow()
 
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -244,7 +244,12 @@ class ComicViewModel
                     val hasRootChaptersFlow = directoryObserveVolumeChapters.observeHasRootChapters(folderId)
 
                     emitAll(
-                        combine(localFlow, volumeSectionsFlow, remoteFlow, hasRootChaptersFlow) { localAll, volumeSections, remoteAll, hasRootChapters ->
+                        combine(
+                            localFlow,
+                            volumeSectionsFlow,
+                            remoteFlow,
+                            hasRootChaptersFlow,
+                        ) { localAll, volumeSections, remoteAll, hasRootChapters ->
                             val shouldUseVolumeCards =
                                 sort.type == ChapterSortType.NUMBER &&
                                     !hasRootChapters &&
@@ -388,7 +393,11 @@ class ComicViewModel
 
         fun loadMoreVolumeChapters(volumeId: Long) {
             val comicId = selectedDirectoryId.value ?: return
-            val currentSection = chapters.value?.archive?.volumeSections?.firstOrNull { it.volume.id == volumeId } ?: return
+            val currentSection =
+                chapters.value
+                    ?.archive
+                    ?.volumeSections
+                    ?.firstOrNull { it.volume.id == volumeId } ?: return
             if (!currentSection.hasMore) return
 
             viewModelScope.launch {
@@ -420,12 +429,15 @@ class ComicViewModel
             _currentPage.value = page
         }
 
-        fun toggleChapterReadStatus(
-            chapterSort: String,
-        ) {
+        fun toggleChapterReadStatus(chapterSort: String) {
             val comicId = selectedDirectoryId.value ?: return
             val isRead = readChapters.value.contains(chapterSort)
-            val chapterId = chapters.value?.archive?.items?.find { it.chapterSort == chapterSort }?.id
+            val chapterId =
+                chapters.value
+                    ?.archive
+                    ?.items
+                    ?.find { it.chapterSort == chapterSort }
+                    ?.id
 
             AcerolaLogger.audit(
                 TAG,

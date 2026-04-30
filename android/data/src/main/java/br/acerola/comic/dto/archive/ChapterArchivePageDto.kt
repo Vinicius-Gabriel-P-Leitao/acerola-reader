@@ -8,7 +8,7 @@ import kotlinx.parcelize.Parcelize
 @Immutable
 data class ChapterArchivePageDto(
     val items: List<ChapterFileDto>,
-    val volumes: List<VolumeDto> = emptyList(),
+    val volumes: List<VolumeArchiveDto> = emptyList(),
     val pageSize: Int,
     val page: Int,
     val total: Int,
@@ -18,7 +18,7 @@ data class ChapterArchivePageDto(
 @Parcelize
 @Immutable
 data class VolumeChapterGroupDto(
-    val volume: VolumeDto,
+    val volume: VolumeArchiveDto,
     val items: List<ChapterFileDto>,
     val totalChapters: Int,
     val loadedCount: Int,

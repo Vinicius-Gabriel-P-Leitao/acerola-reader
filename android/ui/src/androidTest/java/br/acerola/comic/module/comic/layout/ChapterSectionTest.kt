@@ -1,13 +1,12 @@
 package br.acerola.comic.module.comic.layout
 
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
-import br.acerola.comic.dto.archive.VolumeDto
+import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.fixtures.ComicFixtures
@@ -50,14 +49,14 @@ class ChapterSectionTest {
 
     @Test
     fun `deve_exibir_cards_colapsaveis_por_volume`() {
-        val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
-        val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = true)
+        val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+        val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = true)
         val chapters =
             ChapterDto(
                 archive =
                     ComicFixtures
-                        .createChapterArchivePageDto(
-                        ).copy(
+                        .createChapterArchivePageDto()
+                        .copy(
                             volumes = listOf(volume1, volume2),
                             volumeSections =
                                 listOf(
@@ -107,7 +106,7 @@ class ChapterSectionTest {
 
     @Test
     fun `nao_deve_exibir_header_quando_showVolumeHeaders_for_falso`() {
-        val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+        val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
         val chapters =
             ChapterDto(
                 archive =
