@@ -38,11 +38,11 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideObserveLibraryUseCase(
-        @br.acerola.comic.adapter.library.SummaryEngine summaryRepo: ComicReadOnlyGateway<br.acerola.comic.dto.view.ComicSummaryDto>,
+        @br.acerola.comic.adapter.library.SummaryEngine summaryRepo: ComicReadOnlyGateway<ComicSummaryDto>,
         @ComicInfoEngine syncOps: ComicSyncGateway,
     ): ObserveLibraryUseCase<ComicSummaryDto> =
         ObserveLibraryUseCase(
-            mangaRepository = summaryRepo,
+            comicRepository = summaryRepo,
             syncGateway = syncOps,
         )
 
@@ -52,7 +52,7 @@ object ComicInfoCaseModule {
         @ComicInfoEngine syncOps: ComicSyncGateway,
     ): RescanComicUseCase =
         RescanComicUseCase(
-            mangaRepository = syncOps,
+            comicRepository = syncOps,
         )
 
     @Provides

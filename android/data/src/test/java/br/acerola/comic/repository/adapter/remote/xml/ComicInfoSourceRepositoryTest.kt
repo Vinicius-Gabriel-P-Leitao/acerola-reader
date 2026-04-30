@@ -38,7 +38,7 @@ class ComicInfoSourceRepositoryTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = ComicInfoSource(context, parser, chapterSourceFactory)
+        repository = ComicInfoSource(parser, chapterSourceFactory, context)
 
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)

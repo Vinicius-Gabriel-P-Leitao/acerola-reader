@@ -34,7 +34,7 @@ class LibrarySyncWorker
         companion object {
             const val KEY_SYNC_TYPE = "sync_type"
             const val KEY_BASE_URI = "base_uri"
-            const val KEY_MANGA_ID = "manga_id"
+            const val KEY_MANGA_ID = "comic_id"
 
             const val SYNC_TYPE_REFRESH = "refresh"
             const val SYNC_TYPE_REBUILD = "rebuild"
@@ -47,7 +47,7 @@ class LibrarySyncWorker
             coroutineScope {
                 val syncType = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_INCREMENTAL
                 val baseUriString = inputData.getString(KEY_BASE_URI)
-                val mangaId = inputData.getLong(KEY_MANGA_ID, -1L)
+                val comicId = inputData.getLong(KEY_MANGA_ID, -1L)
                 val baseUri = baseUriString?.toUri()
 
                 val title =
@@ -87,11 +87,11 @@ class LibrarySyncWorker
                             SYNC_TYPE_REFRESH -> repository.refreshLibrary(baseUri)
                             SYNC_TYPE_REBUILD -> repository.rebuildLibrary(baseUri)
                             SYNC_TYPE_SPECIFIC ->
-                                if (mangaId != -1L) {
-                                    repository.refreshManga(mangaId, baseUri)
+                                if (comicId != -1L) {
+                                    repository.refreshManga(comicId, baseUri)
                                 } else {
                                     progressJob.cancel()
-                                    return@coroutineScope Result.failure(workDataOf(WorkerContract.KEY_ERROR to "Manga ID not found"))
+                                    return@coroutineScope Result.failure(workDataOf(WorkerContract.KEY_ERROR to "Comic ID not found"))
                                 }
                             else -> repository.incrementalScan(baseUri)
                         }

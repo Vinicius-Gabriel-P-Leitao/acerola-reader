@@ -1,5 +1,5 @@
 query MediaDetails($id: Int) {
-  Media(id: $id, type: MANGA) {
+  Media(id: $id, type: Comic) {
     id
     title {
       userPreferred

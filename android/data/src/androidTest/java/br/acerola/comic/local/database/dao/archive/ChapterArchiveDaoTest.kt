@@ -33,7 +33,7 @@ class ChapterArchiveDaoTest {
                 .allowMainThreadQueries()
                 .build()
         dao = db.chapterArchiveDao()
-        directoryDao = db.mangaDirectoryDao()
+        directoryDao = db.comicDirectoryDao()
     }
 
     @After
@@ -60,10 +60,10 @@ class ChapterArchiveDaoTest {
             val result = dao.getChaptersByDirectoryId(folderId).first()
 
             // Assert: Ordem esperada: 1, 1.5, 2, 10
-            assertEquals("1", result[0].chapterSort)
-            assertEquals("1.5", result[1].chapterSort)
-            assertEquals("2", result[2].chapterSort)
-            assertEquals("10", result[3].chapterSort)
+            assertEquals("1", result[0].chapter.chapterSort)
+            assertEquals("1.5", result[1].chapter.chapterSort)
+            assertEquals("2", result[2].chapter.chapterSort)
+            assertEquals("10", result[3].chapter.chapterSort)
         }
 
     @Test
@@ -88,8 +88,8 @@ class ChapterArchiveDaoTest {
     fun deleteChaptersByMangaDirectoryId_deve_remover_apenas_capitulos_daquele_comic() =
         runBlocking {
             // Arrange
-            val id1 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L, name = "Manga 1"))
-            val id2 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L, name = "Manga 2"))
+            val id1 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L, name = "Comic 1"))
+            val id2 = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L, name = "Comic 2"))
 
             dao.insert(ChapterArchive(chapter = "1", path = "p1", chapterSort = "1", folderPathFk = id1))
             dao.insert(ChapterArchive(chapter = "1", path = "p2", chapterSort = "1", folderPathFk = id2))

@@ -39,5 +39,5 @@ data class ComicMetadata(
     @ColumnInfo(name = "has_comic_info")
     val hasComicInfo: Boolean = false,
     @ColumnInfo(name = "comic_directory_fk")
-    val mangaDirectoryFk: Long? = null,
+    val comicDirectoryFk: Long? = null,
 )

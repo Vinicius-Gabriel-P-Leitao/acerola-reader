@@ -57,15 +57,15 @@ class AnilistComicEngine
         override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
         override suspend fun refreshManga(
-            mangaId: Long,
+            comicId: Long,
             baseUri: Uri?,
         ): Either<LibrarySyncError, Unit> =
             withContext(Dispatchers.IO) {
-                AcerolaLogger.audit(TAG, "Initiating AniList sync for comic: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.audit(TAG, "Initiating AniList sync for comic: $comicId", LogSource.REPOSITORY)
                 _isIndexing.value = true
                 try {
                     val directory =
-                        directoryDao.getDirectoryById(mangaId)
+                        directoryDao.getDirectoryById(comicId)
                             ?: return@withContext Either.Left(
                                 LibrarySyncError.UnexpectedError(cause = Exception("Directory not found")),
                             )
@@ -77,7 +77,7 @@ class AnilistComicEngine
                     val normalizedDirName = normalizeName(directory.name)
 
                     anilistSearchByTitleSource
-                        .searchInfo(manga = directory.name, limit = 10)
+                        .searchInfo(comic = directory.name, limit = 10)
                         .mapLeft { networkError ->
                             LibrarySyncError.RemoteNetworkError(error = networkError)
                         }.flatMap { results ->
@@ -95,18 +95,18 @@ class AnilistComicEngine
 
                             Either
                                 .catch {
-                                    val mangaToSave =
+                                    val comicToSave =
                                         dto.toEntity().copy(
-                                            mangaDirectoryFk = mangaId,
+                                            comicDirectoryFk = comicId,
                                             syncSource = MetadataSourcePattern.ANILIST.source,
                                         )
 
                                     val remoteInfoId =
                                         comicMetadataDao.upsertComicWithRelationsTransaction(
-                                            metadata = mangaToSave,
-                                            authors = dto.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
-                                            genres = dto.genre.map { it.toEntity(mangaId = 0L) },
-                                            anilistSource = dto.toAnilistSourceEntity(mangaRemoteInfoFk = 0L),
+                                            metadata = comicToSave,
+                                            authors = dto.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
+                                            genres = dto.genre.map { it.toEntity(comicId = 0L) },
+                                            anilistSource = dto.toAnilistSourceEntity(comicRemoteInfoFk = 0L),
                                             authorDao = authorDao,
                                             genreDao = genreDao,
                                             anilistDao = anilistSourceDao,
@@ -114,7 +114,7 @@ class AnilistComicEngine
 
                                     if (remoteInfoId != -1L) {
                                         persistAnilistData(
-                                            mangaId = mangaId,
+                                            comicId = comicId,
                                             remoteInfoId = remoteInfoId,
                                             dto = dto,
                                             baseUri = baseUri,
@@ -124,7 +124,7 @@ class AnilistComicEngine
                                             "Successfully synced AniList metadata",
                                             LogSource.REPOSITORY,
                                             mapOf(
-                                                "mangaId" to mangaId.toString(),
+                                                "comicId" to comicId.toString(),
                                                 "anilistId" to (
                                                     dto.sources
                                                         ?.anilist
@@ -150,10 +150,12 @@ class AnilistComicEngine
                     val directories =
                         (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
                             .filter { it.externalSyncEnabled }
+
                     directories.forEachIndexed { index, directory ->
                         refreshManga(directory.id, baseUri)
                         _progress.value = ((index + 1) * 100 / directories.size.coerceAtLeast(1))
                     }
+
                     Either.Right(Unit)
                 } catch (exception: Exception) {
                     Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
@@ -167,6 +169,7 @@ class AnilistComicEngine
                     val directories =
                         (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
                             .filter { it.externalSyncEnabled }
+
                     val toSync =
                         directories.filter { directory ->
                             val remoteInfo =
@@ -175,6 +178,7 @@ class AnilistComicEngine
                             val anilistSource = anilistSourceDao.getByMetadataId(remoteInfo.id)
                             anilistSource == null
                         }
+
                     toSync.forEachIndexed { index, directory ->
                         refreshManga(directory.id, baseUri)
                         _progress.value = ((index + 1) * 100 / toSync.size.coerceAtLeast(1))
@@ -188,12 +192,12 @@ class AnilistComicEngine
         private fun normalizeName(name: String): String = name.filter { it.isLetterOrDigit() }.lowercase()
 
         private suspend fun persistAnilistData(
-            mangaId: Long,
+            comicId: Long,
             remoteInfoId: Long,
             dto: ComicMetadataDto,
             baseUri: Uri?,
         ) {
-            val directory = directoryDao.getDirectoryById(mangaId) ?: return
+            val directory = directoryDao.getDirectoryById(comicId) ?: return
 
             val rootPath =
                 baseUri?.toString()
@@ -209,8 +213,8 @@ class AnilistComicEngine
                         folderId = directory.id,
                         bytes = bytes,
                         coverUrl = url,
-                        mangaFolderName = directory.name,
-                        mangaRemoteInfoFk = remoteInfoId,
+                        comicFolderName = directory.name,
+                        comicRemoteInfoFk = remoteInfoId,
                     )
                 }
             }
@@ -222,14 +226,14 @@ class AnilistComicEngine
                         folderId = directory.id,
                         bytes = bytes,
                         bannerUrl = url,
-                        mangaFolderName = directory.name,
-                        mangaRemoteInfoFk = remoteInfoId,
+                        comicFolderName = directory.name,
+                        comicRemoteInfoFk = remoteInfoId,
                     )
                 }
             }
         }
 
         companion object {
-            private const val TAG = "AnilistMangaRepository"
+            private const val TAG = "AnilistComicEngine"
         }
     }

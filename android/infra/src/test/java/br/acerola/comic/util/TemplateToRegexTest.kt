@@ -22,7 +22,7 @@ class TemplateToRegexTest {
         val regex = templateToRegex(template)
 
         // Deve aceitar qualquer coisa entre os colchetes e a extensao (devido ao *)
-        assertTrue(regex.matches("[12] Meu Manga.cbz"))
+        assertTrue(regex.matches("[12] Meu Comic.cbz"))
         assertTrue(regex.matches("[01] - Arquivo Especial.cbr"))
         assertFalse(regex.matches("(01) - Errado.cbz"))
     }
@@ -40,17 +40,17 @@ class TemplateToRegexTest {
     }
 
     @Test
-    fun `detectTemplate deve identificar corretamente o melhor preset`() {
-        val preset = detectTemplate("Cap. 01 - O Início.cbz")
+    fun `detectArchiveTemplate deve identificar corretamente o melhor preset`() {
+        val preset = detectArchiveTemplate("Cap. 01 - O Início.cbz", SortType.CHAPTER)
         assertEquals("Cap. {chapter}{decimal}.*.{extension}", preset)
 
-        val preset2 = detectTemplate("chapter 10.cbz")
+        val preset2 = detectArchiveTemplate("chapter 10.cbz", SortType.CHAPTER)
         assertEquals("chapter {chapter}{decimal}.*.{extension}", preset2)
 
-        val preset3 = detectTemplate("Ch. 5.5 - Fim.cbz")
+        val preset3 = detectArchiveTemplate("Ch. 5.5 - Fim.cbz", SortType.CHAPTER)
         assertEquals("Ch. {chapter}{decimal}.*.{extension}", preset3)
 
-        val presetFallback = detectTemplate("FormatoDesconhecido_01.rar")
-        assertEquals("Ch. {chapter}{decimal}.*.{extension}", presetFallback)
+        val presetFallback = detectArchiveTemplate("FormatoDesconhecido_01.rar", SortType.CHAPTER)
+        assertEquals("{chapter}{decimal}.*.{extension}", presetFallback)
     }
 }

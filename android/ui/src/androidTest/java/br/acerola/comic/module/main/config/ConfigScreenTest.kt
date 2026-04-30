@@ -30,8 +30,8 @@ class ConfigScreenTest {
     val composeTestRule = createComposeRule()
 
     private val fsAccessVM = mockk<FileSystemAccessViewModel>(relaxed = true)
-    private val mangaDirVM = mockk<ComicDirectoryViewModel>(relaxed = true)
-    private val mangaDexVM = mockk<ComicMetadataViewModel>(relaxed = true)
+    private val comicDirVM = mockk<ComicDirectoryViewModel>(relaxed = true)
+    private val comicDexVM = mockk<ComicMetadataViewModel>(relaxed = true)
     private val metadataVM = mockk<MetadataSettingsViewModel>(relaxed = true)
     private val themeVM = mockk<ThemeViewModel>(relaxed = true)
 
@@ -46,14 +46,14 @@ class ConfigScreenTest {
         every { metadataVM.metadataLanguage } returns MutableStateFlow(null)
         every { metadataVM.uiEvents } returns emptyEvents
 
-        every { mangaDirVM.isIndexing } returns MutableStateFlow(false)
-        every { mangaDirVM.progress } returns MutableStateFlow(-1)
-        every { mangaDirVM.uiEvents } returns emptyEvents
+        every { comicDirVM.isIndexing } returns MutableStateFlow(false)
+        every { comicDirVM.progress } returns MutableStateFlow(-1)
+        every { comicDirVM.uiEvents } returns emptyEvents
 
-        every { mangaDexVM.isIndexing } returns MutableStateFlow(false)
-        every { mangaDexVM.progress } returns MutableStateFlow(-1)
-        every { mangaDexVM.uiEvents } returns emptyEvents
-        every { mangaDexVM.allCategories } returns MutableStateFlow(emptyList())
+        every { comicDexVM.isIndexing } returns MutableStateFlow(false)
+        every { comicDexVM.progress } returns MutableStateFlow(-1)
+        every { comicDexVM.uiEvents } returns emptyEvents
+        every { comicDexVM.allCategories } returns MutableStateFlow(emptyList())
 
         every { fsAccessVM.uiEvents } returns emptyEvents
         every { fsAccessVM.folderUri } returns null
@@ -69,8 +69,8 @@ class ConfigScreenTest {
                     Main.Config.Layout.Screen(
                         metadataSettingsViewModel = metadataVM,
                         fileSystemAccessViewModel = fsAccessVM,
-                        comicDirectoryViewModel = mangaDirVM,
-                        mangaDexViewModel = mangaDexVM,
+                        comicDirectoryViewModel = comicDirVM,
+                        comicDexViewModel = comicDexVM,
                         themeViewModel = themeVM,
                         onNavigateToTemplates = {},
                     )

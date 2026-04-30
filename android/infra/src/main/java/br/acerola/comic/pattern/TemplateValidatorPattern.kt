@@ -43,6 +43,10 @@ object TemplateValidatorPattern {
                         extCount++
                         if (extIdx == -1) extIdx = cursor
                     }
+                    TemplateMacro.VOLUME -> {
+                        // A macro de volume poderá ser suportada futuramente para capítulos, tipo Ch. {chapter}.{decimal}-{volume}.{extension},
+                        // por enquanto, ignore para satisfazer a condição de exaustivo quando
+                    }
                 }
 
                 cursor = end

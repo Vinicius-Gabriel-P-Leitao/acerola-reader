@@ -11,4 +11,5 @@ import kotlinx.parcelize.Parcelize
 data class ChapterDto(
     val archive: ChapterArchivePageDto,
     val remoteInfo: ChapterRemoteInfoPageDto?,
+    val showVolumeHeaders: Boolean = false,
 ) : Parcelable

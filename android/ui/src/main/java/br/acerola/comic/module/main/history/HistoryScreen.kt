@@ -54,14 +54,14 @@ fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
             is HistoryAction.ClickManga -> {
                 val intent =
                     Intent(context, ComicActivity::class.java).apply {
-                        putExtra(ComicActivity.ChapterExtra.COMIC, action.manga)
+                        putExtra(ComicActivity.ChapterExtra.COMIC, action.comic)
                     }
                 context.startActivity(intent)
             }
             is HistoryAction.ClickContinue -> {
                 val intent =
                     Intent(context, ReaderActivity::class.java).apply {
-                        putExtra(ReaderActivity.PageExtra.MANGA_ID, action.manga.directory.id)
+                        putExtra(ReaderActivity.PageExtra.MANGA_ID, action.comic.directory.id)
                         putExtra(ReaderActivity.PageExtra.CHAPTER_ID, action.history.chapterArchiveId)
                         putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.history.lastPage)
                     }
@@ -100,9 +100,9 @@ fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
                     item {
                         val firstItem = uiState.items.first()
                         Main.History.Component.HistoryHeroCard(
-                            manga = firstItem.manga,
-                            onClick = { onAction(HistoryAction.ClickManga(firstItem.manga)) },
-                            onContinueClick = { onAction(HistoryAction.ClickContinue(firstItem.manga, firstItem.history)) },
+                            comic = firstItem.comic,
+                            onClick = { onAction(HistoryAction.ClickManga(firstItem.comic)) },
+                            onContinueClick = { onAction(HistoryAction.ClickContinue(firstItem.comic, firstItem.history)) },
                         )
 
                         if (uiState.items.size > 1) {
@@ -110,7 +110,7 @@ fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
                         }
                     }
 
-                    items(uiState.items.drop(1), key = { it.manga.directory.id }) { item ->
+                    items(uiState.items.drop(1), key = { it.comic.directory.id }) { item ->
                         val chapterInfo =
                             item.history.chapterName ?: stringResource(
                                 id = R.string.label_chapter_unknown,
@@ -124,12 +124,12 @@ fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
                             )
 
                         Main.Common.Component.ComicListItem(
-                            manga = item.manga,
+                            comic = item.comic,
                             subtitle = progressInfo,
                             chapterCount = item.chapterCount,
                             isCompleted = item.history.isCompleted,
-                            onPlayClick = { onAction(HistoryAction.ClickContinue(item.manga, item.history)) },
-                            onClick = { onAction(HistoryAction.ClickManga(item.manga)) },
+                            onPlayClick = { onAction(HistoryAction.ClickContinue(item.comic, item.history)) },
+                            onClick = { onAction(HistoryAction.ClickManga(item.comic)) },
                         )
                     }
                 }

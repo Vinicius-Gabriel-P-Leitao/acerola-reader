@@ -16,8 +16,8 @@ import br.acerola.comic.module.reader.state.TapArea
 @Composable
 fun Reader.Component.VerticalPagedReader(
     pageCount: Int,
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     pagerState: PagerState,
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
@@ -34,7 +34,7 @@ fun Reader.Component.VerticalPagedReader(
         userScrollEnabled = !isZoomed,
     ) { index ->
         Reader.Gesture.ZoomablePageImage(
-            mangaId = mangaId,
+            comicId = comicId,
             chapterId = chapterId,
             pageIndex = index,
             orientation = ReadingMode.VERTICAL,

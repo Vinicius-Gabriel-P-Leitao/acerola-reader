@@ -1,18 +1,5 @@
 package br.acerola.comic.pattern
 
-enum class TemplateMacro(
-    val tag: String,
-) {
-    CHAPTER("chapter"),
-    DECIMAL("decimal"),
-    EXTENSION("extension"),
-    ;
-
-    companion object {
-        fun fromTag(tag: String) = entries.find { it.tag == tag }
-    }
-}
-
 object ChapterTemplatePattern {
     val presets: Map<String, String> =
         mapOf(

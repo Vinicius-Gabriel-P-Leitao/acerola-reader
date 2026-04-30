@@ -13,21 +13,23 @@ class TrackReadingProgressUseCase
         @param:LocalHistory private val historyRepository: HistoryGateway,
     ) {
         suspend fun markChapterAsRead(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
+            chapterId: Long? = null,
         ) {
-            historyRepository.markChapterAsRead(mangaId, chapterId)
+            historyRepository.markChapterAsRead(comicId, chapterSort, chapterId)
         }
 
         suspend fun toggleReadStatus(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
             isRead: Boolean,
+            chapterId: Long? = null,
         ) {
             if (isRead) {
-                historyRepository.unmarkChapterAsRead(chapterId)
+                historyRepository.unmarkChapterAsRead(comicId, chapterSort)
             } else {
-                markChapterAsRead(mangaId, chapterId)
+                markChapterAsRead(comicId, chapterSort, chapterId)
             }
         }
 

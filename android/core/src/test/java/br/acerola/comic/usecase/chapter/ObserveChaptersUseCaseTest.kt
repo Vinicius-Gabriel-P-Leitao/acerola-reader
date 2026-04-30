@@ -34,23 +34,23 @@ class ObserveChaptersUseCaseTest {
     fun `observeByManga deve delegar para o repositorio`() =
         runTest {
             val dto = mockk<ChapterArchivePageDto>()
-            every { repository.observeChapters(mangaId = 1L) } returns MutableStateFlow(value = dto)
+            every { repository.observeChapters(comicId = 1L) } returns MutableStateFlow(value = dto)
 
-            val result = useCase.observeByManga(mangaId = 1L).first()
+            val result = useCase.observeByManga(comicId = 1L).first()
 
             assertEquals(dto, result)
-            coVerify { repository.observeChapters(mangaId = 1L) }
+            coVerify { repository.observeChapters(comicId = 1L) }
         }
 
     @Test
     fun `loadPage deve delegar para o repositorio com parametros corretos`() =
         runTest {
             val dto = mockk<ChapterArchivePageDto>()
-            coEvery { repository.getChapterPage(mangaId = 1L, total = 100, page = 2, pageSize = 20) } returns dto
+            coEvery { repository.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) } returns dto
 
-            val result = useCase.loadPage(mangaId = 1L, total = 100, page = 2)
+            val result = useCase.loadPage(comicId = 1L, total = 100, page = 2)
 
             assertEquals(dto, result)
-            coVerify { repository.getChapterPage(mangaId = 1L, total = 100, page = 2, pageSize = 20) }
+            coVerify { repository.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) }
         }
 }

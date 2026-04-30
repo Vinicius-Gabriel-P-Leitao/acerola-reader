@@ -3,6 +3,7 @@ package br.acerola.comic.util
 import br.acerola.comic.pattern.ArchiveFormatPattern
 import br.acerola.comic.pattern.ChapterTemplatePattern
 import br.acerola.comic.pattern.TemplateMacro
+import br.acerola.comic.pattern.VolumeTemplatePattern
 
 fun templateToRegex(template: String): Regex {
     val extensions = ArchiveFormatPattern.entries.joinToString("|") { it.name.lowercase() }
@@ -16,6 +17,7 @@ fun templateToRegex(template: String): Regex {
             .replace("]", "\\]")
             .replace(".", "\\.")
             .replace("{${TemplateMacro.CHAPTER.tag}}", "(\\d+)")
+            .replace("{${TemplateMacro.VOLUME.tag}}", "(\\d+)")
             .replace("{${TemplateMacro.DECIMAL.tag}}", "(?:[.,](\\d+))?")
             .replace("{${TemplateMacro.EXTENSION.tag}}", "\\.?($extensions)")
             .replace("*", ".*?")
@@ -24,14 +26,28 @@ fun templateToRegex(template: String): Regex {
     return Regex(pattern = "^$pattern$", option = RegexOption.IGNORE_CASE)
 }
 
-fun detectTemplate(fileName: String): String {
-    ChapterTemplatePattern.presets.values.forEach { template ->
+fun detectArchiveTemplate(
+    name: String,
+    type: SortType,
+): String {
+    val presets =
+        if (type == SortType.VOLUME) {
+            VolumeTemplatePattern.presets.values
+        } else {
+            ChapterTemplatePattern.presets.values
+        }
+
+    presets.forEach { template ->
         val regex = templateToRegex(template)
 
-        if (regex.matches(input = fileName)) {
+        if (regex.matches(input = name)) {
             return template
         }
     }
 
-    return "Ch. {chapter}{decimal}.*.{extension}"
+    return if (type == SortType.VOLUME) {
+        VolumeTemplatePattern.getTemplate()
+    } else {
+        ChapterTemplatePattern.getTemplate()
+    }
 }

@@ -16,13 +16,13 @@ class ComicGridItemTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `MangaGridItem_deve_exibir_o_título_do_mangá_corretamente_abaixo_da_capa`() {
-        val manga =
+    fun `MangaGridItem_deve_exibir_o_título_do_quadrinho_corretamente_abaixo_da_capa`() {
+        val comic =
             ComicDto(
                 directory =
                     ComicDirectoryDto(
                         id = 1L,
-                        name = "Pasta Manga",
+                        name = "Pasta Comic",
                         path = "",
                         coverUri = null,
                         bannerUri = null,
@@ -31,7 +31,7 @@ class ComicGridItemTest {
                     ),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Título do Manga",
+                        title = "Título do Comic",
                         description = "",
                         status = "",
                     ),
@@ -39,11 +39,11 @@ class ComicGridItemTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                Main.Home.Component.ComicGridItem(manga = manga, onClick = {})
+                Main.Home.Component.ComicGridItem(comic = comic, onClick = {})
             }
         }
 
         // Valida se o título é renderizado corretamente
-        composeTestRule.onNodeWithText("Título do Manga").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Título do Comic").assertIsDisplayed()
     }
 }

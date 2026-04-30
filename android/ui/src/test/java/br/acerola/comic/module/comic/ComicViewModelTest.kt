@@ -58,7 +58,7 @@ class ComicViewModelTest {
     private lateinit var directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>
     private lateinit var mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
 
-    private val localChaptersFlow = MutableStateFlow(ChapterArchivePageDto(emptyList(), 20, 0, 0))
+    private val localChaptersFlow = MutableStateFlow(ChapterArchivePageDto(emptyList(), emptyList(), 20, 0, 0))
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
 
     private lateinit var viewModel: ComicViewModel
@@ -95,12 +95,26 @@ class ComicViewModelTest {
         every { mangadexChapterRepo.isIndexing } returns MutableStateFlow(false)
         every { mangadexChapterRepo.progress } returns MutableStateFlow(-1)
 
-        every { directoryChapterRepo.observeChapters(any()) } returns localChaptersFlow
-        every { mangadexChapterRepo.observeChapters(any()) } returns remoteChaptersFlow
+        every { directoryChapterRepo.observeChapters(any(), any(), any()) } answers {
+            val sortType = it.invocation.args[1] as String
+            val isAscending = it.invocation.args[2] as Boolean
+
+            val baseList =
+                if (sortType == "LAST_UPDATE") {
+                    localChaptersFlow.value.items.sortedBy { it.lastModified }
+                } else {
+                    localChaptersFlow.value.items
+                }
+
+            val finalList = if (isAscending) baseList else baseList.reversed()
+            MutableStateFlow(localChaptersFlow.value.copy(items = finalList))
+        }
+        every { mangadexChapterRepo.observeChapters(any(), any(), any()) } returns remoteChaptersFlow
+        every { manageCategoriesUseCase.getCategoryByMangaId(any()) } returns flowOf(null)
 
         observeComicHistoryUseCase = ObserveComicHistoryUseCase(historyGateway)
-        mangadexObserve = ObserveLibraryUseCase(mangaRepository = mangadexRepo)
-        directoryObserve = ObserveLibraryUseCase(mangaRepository = directoryRepo)
+        mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
+        directoryObserve = ObserveLibraryUseCase(comicRepository = directoryRepo)
         directoryGetChapters = ObserveChaptersUseCase(directoryChapterRepo)
         mangadexGetChapters = ObserveChaptersUseCase(mangadexChapterRepo)
 
@@ -133,12 +147,14 @@ class ComicViewModelTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Cap 1", path = "", chapterSort = "1", lastModified = 1000L)
             val cap2 = ChapterFileDto(id = 2L, name = "Cap 2", path = "", chapterSort = "2", lastModified = 500L)
 
-            localChaptersFlow.value = ChapterArchivePageDto(listOf(cap2, cap1), 20, 0, 2)
+            viewModel.init(1L, null)
+            // Providing sorted data as the DB would do
+            localChaptersFlow.value = ChapterArchivePageDto(listOf(cap1, cap2), emptyList(), 20, 0, 2)
             viewModel.updateChapterSort(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
 
             viewModel.chapters.test {
+                // Initial state might be null
                 var item = awaitItem()
-                // Skip initial empty state if needed
                 while (item == null || item.archive.items.isEmpty()) {
                     item = awaitItem()
                 }
@@ -159,9 +175,11 @@ class ComicViewModelTest {
             val ch010 = ChapterFileDto(id = 10L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
             val ch011 = ChapterFileDto(id = 11L, name = "Ch. 0.11", path = "", chapterSort = "0.11")
 
+            // Providing sorted data
             localChaptersFlow.value =
                 ChapterArchivePageDto(
-                    listOf(ch010, ch009, ch001, ch011, ch002),
+                    listOf(ch001, ch002, ch009, ch010, ch011),
+                    emptyList(),
                     20,
                     0,
                     5,
@@ -190,9 +208,11 @@ class ComicViewModelTest {
             val ch11 = ChapterFileDto(id = 11L, name = "Ch. 11", path = "", chapterSort = "11")
             val ch100 = ChapterFileDto(id = 100L, name = "Ch. 100", path = "", chapterSort = "100")
 
+            // Providing sorted data
             localChaptersFlow.value =
                 ChapterArchivePageDto(
-                    listOf(ch100, ch10, ch1, ch11, ch9, ch2),
+                    listOf(ch1, ch2, ch9, ch10, ch11, ch100),
+                    emptyList(),
                     20,
                     0,
                     6,
@@ -218,9 +238,11 @@ class ComicViewModelTest {
             val ch2 = ChapterFileDto(id = 5L, name = "Ch. 2", path = "", chapterSort = "2")
             val ch10 = ChapterFileDto(id = 6L, name = "Ch. 10", path = "", chapterSort = "10")
 
+            // Providing sorted data
             localChaptersFlow.value =
                 ChapterArchivePageDto(
-                    listOf(ch10, ch1dot5, ch010, ch2, ch1, ch001),
+                    listOf(ch001, ch010, ch1, ch1dot5, ch2, ch10),
+                    emptyList(),
                     20,
                     0,
                     6,
@@ -243,9 +265,11 @@ class ComicViewModelTest {
             val ch002 = ChapterFileDto(id = 2L, name = "Ch. 0.02", path = "", chapterSort = "0.2")
             val ch010 = ChapterFileDto(id = 3L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
 
+            // Providing ASCENDING data from DB. ViewModel will reverse it.
             localChaptersFlow.value =
                 ChapterArchivePageDto(
-                    listOf(ch001, ch010, ch002),
+                    listOf(ch001, ch002, ch010),
+                    emptyList(),
                     20,
                     0,
                     3,
@@ -267,7 +291,7 @@ class ComicViewModelTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Cap 1", path = "", chapterSort = "1", lastModified = 1000L)
             val cap2 = ChapterFileDto(id = 2L, name = "Cap 2", path = "", chapterSort = "2", lastModified = 2000L)
 
-            localChaptersFlow.value = ChapterArchivePageDto(listOf(cap1, cap2), 20, 0, 2)
+            localChaptersFlow.value = ChapterArchivePageDto(listOf(cap1, cap2), emptyList(), 20, 0, 2)
             viewModel.updateChapterSort(ChapterSortPreferenceData(ChapterSortType.LAST_UPDATE, SortDirection.DESCENDING))
 
             viewModel.chapters.test {

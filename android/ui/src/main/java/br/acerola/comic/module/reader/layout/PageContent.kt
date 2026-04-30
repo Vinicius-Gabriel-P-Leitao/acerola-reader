@@ -20,8 +20,8 @@ fun Reader.Layout.PageContent(
     onNextClick: () -> Unit,
     readingMode: ReadingMode,
     listState: LazyListState,
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
@@ -30,7 +30,7 @@ fun Reader.Layout.PageContent(
             ReadingMode.HORIZONTAL -> {
                 Reader.Component.HorizontalPagedReader(
                     pageCount = pageCount,
-                    mangaId = mangaId,
+                    comicId = comicId,
                     chapterId = chapterId,
                     onUiToggle = onUiToggle,
                     pagerState = pagerState,
@@ -44,7 +44,7 @@ fun Reader.Layout.PageContent(
             ReadingMode.VERTICAL -> {
                 Reader.Component.VerticalPagedReader(
                     pageCount = pageCount,
-                    mangaId = mangaId,
+                    comicId = comicId,
                     chapterId = chapterId,
                     onUiToggle = onUiToggle,
                     pagerState = pagerState,
@@ -58,7 +58,7 @@ fun Reader.Layout.PageContent(
             ReadingMode.WEBTOON -> {
                 Reader.Component.WebtoonReader(
                     pageCount = pageCount,
-                    mangaId = mangaId,
+                    comicId = comicId,
                     chapterId = chapterId,
                     listState = listState,
                     onPageRequest = onPageRequest,

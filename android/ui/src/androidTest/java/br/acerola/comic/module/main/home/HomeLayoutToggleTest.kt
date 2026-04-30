@@ -38,7 +38,7 @@ class HomeLayoutToggleTest {
         every { viewModel.selectedHomeLayout } returns MutableStateFlow(HomeLayoutType.LIST)
         every { viewModel.isIndexing } returns MutableStateFlow(false)
         every { viewModel.progress } returns MutableStateFlow(-1)
-        every { viewModel.mangas } returns MutableStateFlow(emptyList())
+        every { viewModel.comics } returns MutableStateFlow(emptyList())
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
         every { viewModel.allCategories } returns MutableStateFlow(emptyList())
 

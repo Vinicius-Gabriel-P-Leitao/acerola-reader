@@ -35,7 +35,7 @@ class HomeScreenTest {
         every { viewModel.selectedHomeLayout } returns MutableStateFlow(HomeLayoutType.LIST)
         every { viewModel.isIndexing } returns MutableStateFlow(false)
         every { viewModel.progress } returns MutableStateFlow(-1)
-        every { viewModel.mangas } returns MutableStateFlow(emptyList())
+        every { viewModel.comics } returns MutableStateFlow(emptyList())
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
         every { viewModel.allCategories } returns MutableStateFlow(emptyList())
 
@@ -55,7 +55,7 @@ class HomeScreenTest {
         }
 
         // Verifica se o placeholder da busca aparece
-        composeTestRule.onNodeWithText("Buscar mangá...", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Buscar quadrinho...", substring = true).assertIsDisplayed()
 
         // Verifica se o FloatingTool (HUB) está presente
         composeTestRule.onNodeWithContentDescription("hub", substring = true).assertIsDisplayed()

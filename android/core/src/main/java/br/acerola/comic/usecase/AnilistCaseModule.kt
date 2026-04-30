@@ -31,7 +31,7 @@ object AnilistCaseModule {
         @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
     ): ObserveLibraryUseCase<ComicMetadataDto> =
         ObserveLibraryUseCase(
-            mangaRepository = repository,
+            comicRepository = repository,
             syncGateway = repository,
         )
 
@@ -41,6 +41,6 @@ object AnilistCaseModule {
         @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
     ): RescanComicUseCase =
         RescanComicUseCase(
-            mangaRepository = repository,
+            comicRepository = repository,
         )
 }

@@ -13,17 +13,36 @@ open class ObserveChaptersUseCase<T>(
     val isIndexing: StateFlow<Boolean> get() = chapterRepository.isIndexing
 
     /**
-     * Retorna o fluxo principal de capítulos para um mangá.
+     * Retorna o fluxo principal de capítulos para um quadrinho com ordenação opcional.
      */
-    fun observeByManga(mangaId: Long): StateFlow<T> = chapterRepository.observeChapters(mangaId)
+    fun observeByManga(
+        comicId: Long,
+        sortType: String = "NUMBER",
+        isAscending: Boolean = true,
+    ): StateFlow<T> =
+        chapterRepository.observeChapters(
+            comicId = comicId,
+            sortType = sortType,
+            isAscending = isAscending,
+        )
 
     /**
      * Carrega uma página específica de capítulos sob demanda.
      */
     suspend fun loadPage(
-        mangaId: Long,
+        comicId: Long,
         total: Int,
         page: Int,
         pageSize: Int = 20,
-    ): T = chapterRepository.getChapterPage(mangaId, total, page, pageSize)
+        sortType: String = "NUMBER",
+        isAscending: Boolean = true,
+    ): T =
+        chapterRepository.getChapterPage(
+            comicId = comicId,
+            total = total,
+            page = page,
+            pageSize = pageSize,
+            sortType = sortType,
+            isAscending = isAscending,
+        )
 }

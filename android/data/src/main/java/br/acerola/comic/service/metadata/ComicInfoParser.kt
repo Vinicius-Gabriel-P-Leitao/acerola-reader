@@ -139,7 +139,7 @@ class ComicInfoParser
             tag(serializer, "Writer", info.authors?.name ?: "")
             tag(serializer, "Year", info.year?.toString() ?: "")
             tag(serializer, "Genre", info.genre.joinToString(", ") { it.name })
-            tag(serializer, "Manga", "Yes")
+            tag(serializer, "Comic", "Yes")
 
             serializer.endTag("", "ComicInfo")
             serializer.endDocument()

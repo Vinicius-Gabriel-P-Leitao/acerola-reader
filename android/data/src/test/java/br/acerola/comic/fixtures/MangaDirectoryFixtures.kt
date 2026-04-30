@@ -7,7 +7,7 @@ import br.acerola.comic.local.entity.archive.ComicDirectory
 object MangaDirectoryFixtures {
     fun createMangaDirectory(
         id: Long = 1L,
-        name: String = "Manga Test",
+        name: String = "Comic Test",
         path: String = "content://path/test",
         cover: String? = null,
         banner: String? = null,
@@ -25,7 +25,7 @@ object MangaDirectoryFixtures {
 
     fun createMangaDirectoryDto(
         id: Long = 1L,
-        name: String = "Manga Test",
+        name: String = "Comic Test",
         path: String = "content://path/test",
         coverUri: Uri? = null,
         bannerUri: Uri? = null,

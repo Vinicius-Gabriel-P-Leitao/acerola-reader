@@ -55,7 +55,7 @@ class LibrarySyncWorkerTest {
     // SYNC_TYPE_SPECIFIC
 
     @Test
-    fun `doWork deve retornar falha quando mangaId é -1 em SYNC_TYPE_SPECIFIC`() =
+    fun `doWork deve retornar falha quando comicId é -1 em SYNC_TYPE_SPECIFIC`() =
         runBlocking {
             val worker =
                 buildWorker(
@@ -71,7 +71,7 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando SYNC_TYPE_SPECIFIC com mangaId válido`() =
+    fun `doWork deve retornar sucesso quando SYNC_TYPE_SPECIFIC com comicId válido`() =
         runBlocking {
             coEvery { repository.refreshManga(any(), null) } returns Either.Right(Unit)
 

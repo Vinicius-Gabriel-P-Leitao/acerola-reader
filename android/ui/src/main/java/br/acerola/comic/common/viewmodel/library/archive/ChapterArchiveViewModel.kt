@@ -8,13 +8,11 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.config.permission.FileSystemAccessManager
 import br.acerola.comic.dto.archive.ChapterArchivePageDto
-import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.comic.util.normalizeChapter
 import br.acerola.comic.worker.LibrarySyncWorker
 import br.acerola.comic.worker.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -71,18 +69,13 @@ class ChapterArchiveViewModel
 
                 val result: ChapterArchivePageDto =
                     observeChaptersUseCase.loadPage(
-                        mangaId = selectedDirectoryId.value!!,
+                        comicId = selectedDirectoryId.value!!,
                         pageSize = pageSize,
                         total = total,
                         page = page,
                     )
 
-                val sortedItems: List<ChapterFileDto> =
-                    result.items.sortedBy {
-                        it.chapterSort.normalizeChapter().toFloatOrNull() ?: 0f
-                    }
-
-                chapterPage.value = result.copy(items = sortedItems)
+                chapterPage.value = result
             }
         }
 
@@ -98,11 +91,11 @@ class ChapterArchiveViewModel
 
         private fun enqueueSync(
             type: String,
-            mangaId: Long,
+            comicId: Long,
         ) {
             AcerolaLogger.d(
                 TAG,
-                "Enqueuing local sync from ChapterViewModel: $type, mangaId: $mangaId",
+                "Enqueuing local sync from ChapterViewModel: $type, comicId: $comicId",
                 LogSource.VIEWMODEL,
             )
             viewModelScope.launch {
@@ -115,13 +108,13 @@ class ChapterArchiveViewModel
                             workDataOf(
                                 LibrarySyncWorker.KEY_SYNC_TYPE to type,
                                 LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
-                                LibrarySyncWorker.KEY_MANGA_ID to mangaId,
+                                LibrarySyncWorker.KEY_MANGA_ID to comicId,
                             ),
                         ).addTag(WorkerContract.TAG_LIBRARY_SYNC)
                         .build()
 
                 workManager.enqueueUniqueWork(
-                    "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId",
+                    "${WorkerContract.TAG_LIBRARY_SYNC}_$comicId",
                     ExistingWorkPolicy.KEEP,
                     syncRequest,
                 )

@@ -27,7 +27,7 @@ class MangadexMangaInfoSource
         private val api: MangadexMangaMetadataClient,
     ) : MetadataProvider<ComicMetadataDto, String> {
         override suspend fun searchInfo(
-            manga: String,
+            comic: String,
             limit: Int,
             offset: Int,
             onProgress: ((Int) -> Unit)?,
@@ -37,28 +37,28 @@ class MangadexMangaInfoSource
                 withContext(context = Dispatchers.IO) {
                     val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
                     val languages = listOf(preferredLanguage)
-                    AcerolaLogger.d(TAG, "Fetching comic: $manga, languages: $languages", LogSource.NETWORK)
+                    AcerolaLogger.d(TAG, "Fetching comic: $comic, languages: $languages", LogSource.NETWORK)
 
-                    if (UUID_REGEX.matches(manga)) {
-                        AcerolaLogger.d(TAG, "Detected UUID — fetching comic by ID: $manga", LogSource.NETWORK)
+                    if (UUID_REGEX.matches(comic)) {
+                        AcerolaLogger.d(TAG, "Detected UUID — fetching comic by ID: $comic", LogSource.NETWORK)
 
-                        val response = api.getMangaById(mangaId = manga, languages = languages)
+                        val response = api.getMangaById(comicId = comic, languages = languages)
                         listOf(response.data.toViewDto(context, preferredLanguage))
                     } else {
-                        AcerolaLogger.d(TAG, "Searching MangaDex for title: $manga (limit: $limit, offset: $offset)", LogSource.NETWORK)
-                        val response = api.searchMangaByName(title = manga, limit = limit, offset = offset, languages = languages)
+                        AcerolaLogger.d(TAG, "Searching MangaDex for title: $comic (limit: $limit, offset: $offset)", LogSource.NETWORK)
+                        val response = api.searchMangaByName(title = comic, limit = limit, offset = offset, languages = languages)
                         val list = response.data.map { it.toViewDto(context, preferredLanguage) }
 
-                        AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$manga'", LogSource.NETWORK)
+                        AcerolaLogger.i(TAG, "Search completed: ${list.size} matches found for '$comic'", LogSource.NETWORK)
                         list
                     }
                 }
             }.onLeft {
-                AcerolaLogger.e(TAG, "MangaDex search failed for '$manga'", LogSource.NETWORK, throwable = null)
+                AcerolaLogger.e(TAG, "MangaDex search failed for '$comic'", LogSource.NETWORK, throwable = null)
             }
 
         override suspend fun saveInfo(
-            manga: String,
+            comic: String,
             info: ComicMetadataDto,
         ): Either<NetworkError, Unit> = Either.Right(Unit)
 

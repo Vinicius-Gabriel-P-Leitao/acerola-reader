@@ -1,4 +1,6 @@
 package br.acerola.comic.module.comic.layout
+
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -11,37 +13,61 @@ import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
+import br.acerola.comic.module.comic.component.VolumeHeader
 import br.acerola.comic.util.normalizeChapter
 
+@OptIn(ExperimentalFoundationApi::class)
 fun Comic.Layout.chapterSection(
     scope: LazyListScope,
     chapters: ChapterDto,
     currentPage: Int,
     totalPages: Int,
-    readChapters: List<Long> = emptyList(),
+    readChapters: List<String> = emptyList(),
     onChapterClick: (ChapterFileDto, ChapterFeedDto?) -> Unit,
-    onToggleRead: (Long) -> Unit,
+    onToggleRead: (String) -> Unit,
     onPageChange: (Int) -> Unit,
+    showVolumeHeaders: Boolean = false,
 ) {
-    scope.items(
-        items = chapters.archive.items,
-        contentType = { "chapter" },
-        key = { it.id },
-    ) { archiveItem ->
-        val remoteItem: ChapterFeedDto? =
-            chapters.remoteInfo?.items?.firstOrNull {
-                it.chapter.normalizeChapter() ==
-                    archiveItem.chapterSort.normalizeChapter()
-            }
+    val grouped =
+        if (showVolumeHeaders) {
+            chapters.archive.items.groupBy { it.volumeId }
+        } else {
+            mapOf(null to chapters.archive.items)
+        }
 
-        Comic.Component.ChapterItem(
-            chapterFileDto = archiveItem,
-            chapterRemoteInfoDto = remoteItem,
-            isRead = readChapters.contains(archiveItem.id),
-            onClick = { onChapterClick(archiveItem, remoteItem) },
-            onToggleRead = { onToggleRead(archiveItem.id) },
-            modifier = Modifier.padding(all = 4.dp),
-        )
+    grouped.forEach { (volumeId, items) ->
+        // FIXME: Remover esse else-if
+        if (showVolumeHeaders && volumeId != null) {
+            val volumeDto = chapters.archive.volumes.find { it.id == volumeId }
+            scope.stickyHeader(key = "vol_$volumeId") {
+                Comic.Component.VolumeHeader(volume = volumeDto)
+            }
+        } else if (showVolumeHeaders && grouped.size > 1) {
+            scope.stickyHeader(key = "vol_root") {
+                Comic.Component.VolumeHeader(volume = null)
+            }
+        }
+
+        scope.items(
+            items = items,
+            contentType = { "chapter" },
+            key = { it.id },
+        ) { archiveItem ->
+            val remoteItem: ChapterFeedDto? =
+                chapters.remoteInfo?.items?.firstOrNull {
+                    it.chapter.normalizeChapter() ==
+                            archiveItem.chapterSort.normalizeChapter()
+                }
+
+            Comic.Component.ChapterItem(
+                chapterFileDto = archiveItem,
+                chapterRemoteInfoDto = remoteItem,
+                isRead = readChapters.contains(archiveItem.chapterSort),
+                onClick = { onChapterClick(archiveItem, remoteItem) },
+                onToggleRead = { onToggleRead(archiveItem.chapterSort) },
+                modifier = Modifier.padding(all = 4.dp),
+            )
+        }
     }
 
     if (totalPages > 1) {

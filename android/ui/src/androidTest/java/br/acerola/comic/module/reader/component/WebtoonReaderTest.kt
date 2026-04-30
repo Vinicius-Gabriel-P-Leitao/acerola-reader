@@ -17,7 +17,7 @@ class WebtoonReaderTest {
             val listState = rememberLazyListState()
             Reader.Component.WebtoonReader(
                 pageCount = 10,
-                mangaId = 1L,
+                comicId = 1L,
                 chapterId = 1L,
                 listState = listState,
                 onUiToggle = {},

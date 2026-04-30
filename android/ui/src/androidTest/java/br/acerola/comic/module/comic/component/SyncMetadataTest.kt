@@ -18,7 +18,7 @@ class SyncMetadataTest {
     val composeTestRule = createComposeRule()
 
     private fun setContent(
-        remoteInfo: ComicMetadataDto? = ComicMetadataDto(title = "Manga Teste", description = "Desc", status = "Ongoing"),
+        remoteInfo: ComicMetadataDto? = ComicMetadataDto(title = "Comic Teste", description = "Desc", status = "Ongoing"),
         externalSyncEnabled: Boolean = true,
         onSyncMangadexChapters: () -> Unit = {},
         onSyncComicInfoChapters: () -> Unit = {},
@@ -61,7 +61,7 @@ class SyncMetadataTest {
         val remoteInfo =
             ComicMetadataDto(
                 id = 1L,
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
                 syncSource = MetadataSourcePattern.MANGADEX,
@@ -82,7 +82,7 @@ class SyncMetadataTest {
         val remoteInfo =
             ComicMetadataDto(
                 id = 1L,
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
                 syncSource = MetadataSourcePattern.COMIC_INFO,
@@ -101,7 +101,7 @@ class SyncMetadataTest {
     fun deve_exibir_item_aninhado_de_capitulos_comicinfo_quando_ativo_e_com_fonte() {
         val remoteInfo =
             ComicMetadataDto(
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
                 syncSource = MetadataSourcePattern.COMIC_INFO,
@@ -121,7 +121,7 @@ class SyncMetadataTest {
     fun nao_deve_exibir_item_aninhado_de_capitulos_comicinfo_quando_sem_fonte() {
         val remoteInfo =
             ComicMetadataDto(
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
                 syncSource = MetadataSourcePattern.COMIC_INFO,

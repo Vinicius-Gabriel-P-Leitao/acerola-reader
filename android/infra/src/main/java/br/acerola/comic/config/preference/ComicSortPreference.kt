@@ -38,10 +38,10 @@ data class HomeSortPreference(
 )
 
 object ComicSortPreference {
-    private val Context.dataStore by preferencesDataStore(name = "manga_sort_prefs")
+    private val Context.dataStore by preferencesDataStore(name = "comic_sort_prefs")
 
-    private val MANGA_SORT_TYPE_KEY = stringPreferencesKey(name = "manga_sort_type")
-    private val MANGA_SORT_DIRECTION_KEY = stringPreferencesKey(name = "manga_sort_direction")
+    private val MANGA_SORT_TYPE_KEY = stringPreferencesKey(name = "comic_sort_type")
+    private val MANGA_SORT_DIRECTION_KEY = stringPreferencesKey(name = "comic_sort_direction")
 
     suspend fun saveSort(
         context: Context,

@@ -9,11 +9,11 @@ sealed interface HomeAction {
     ) : HomeAction
 
     data class ClickManga(
-        val manga: ComicDto,
+        val comic: ComicDto,
     ) : HomeAction
 
     data class ClickContinue(
-        val manga: ComicDto,
+        val comic: ComicDto,
         val history: ReadingHistoryDto,
     ) : HomeAction
 }

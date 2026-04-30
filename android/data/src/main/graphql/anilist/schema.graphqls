@@ -33,7 +33,7 @@ enum MediaSort {
 
 enum MediaType {
   ANIME
-  MANGA
+  Comic
 }
 
 enum MediaStatus {

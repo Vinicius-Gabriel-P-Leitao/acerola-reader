@@ -33,15 +33,16 @@ class CoverExtractor
         private val fileStorageHandler: FileStorageHandler,
         private val chapterSourceFactory: ChapterSourceFactory,
     ) {
-        suspend fun extractFirstPageAsCover(mangaId: Long): Either<IoError, Unit> =
+
+    suspend fun extractFirstPageAsCover(comicId: Long): Either<IoError, Unit> =
             withContext(Dispatchers.IO) {
                 val directory =
-                    directoryDao.getDirectoryById(mangaId)
+                    directoryDao.getDirectoryById(comicId)
                         ?: return@withContext IoError.FileNotFound("Comic directory not found in DB").left()
 
-                val chapters = chapterArchiveDao.getChaptersByDirectoryId(mangaId).first()
+                val chapters = chapterArchiveDao.getChaptersByDirectoryId(comicId).first()
                 val firstChapter =
-                    chapters.minByOrNull { it.chapterSort.toDoubleOrNull() ?: Double.MAX_VALUE }
+                    chapters.firstOrNull()
                         ?: return@withContext IoError.FileNotFound("No chapters found for this comic").left()
 
                 val folderUri = directory.path.toUri()
@@ -72,6 +73,7 @@ class CoverExtractor
 
                                     val outputStream = ByteArrayOutputStream()
                                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+
                                     val bytes = outputStream.toByteArray()
                                     bitmap.recycle()
 

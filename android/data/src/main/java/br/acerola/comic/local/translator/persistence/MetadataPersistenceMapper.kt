@@ -27,35 +27,35 @@ fun CategoryDto.toEntity(): Category =
         color = color,
     )
 
-fun AuthorDto.toEntity(mangaId: Long): Author =
+fun AuthorDto.toEntity(comicId: Long): Author =
     Author(
         name = name,
         type = TypeAuthor.getByType(type),
-        mangaRemoteInfoFk = mangaId,
+        comicRemoteInfoFk = comicId,
     )
 
-fun GenreDto.toEntity(mangaId: Long): Genre =
+fun GenreDto.toEntity(comicId: Long): Genre =
     Genre(
         genre = name,
-        mangaRemoteInfoFk = mangaId,
+        comicRemoteInfoFk = comicId,
     )
 
-fun CoverDto.toEntity(mangaId: Long): Cover =
+fun CoverDto.toEntity(comicId: Long): Cover =
     Cover(
         fileName = fileName,
         url = url,
-        mangaRemoteInfoFk = mangaId,
+        comicRemoteInfoFk = comicId,
     )
 
-fun BannerDto.toEntity(mangaId: Long): Banner =
+fun BannerDto.toEntity(comicId: Long): Banner =
     Banner(
         fileName = fileName,
         url = url,
-        mangaRemoteInfoFk = mangaId,
+        comicRemoteInfoFk = comicId,
     )
 
 fun ComicMetadataDto.toEntity(
-    mangaDirectoryFk: Long? = this.mangaDirectoryFk,
+    comicDirectoryFk: Long? = this.comicDirectoryFk,
     syncSource: String? = this.syncSource?.source,
 ): ComicMetadata =
     ComicMetadata(
@@ -65,17 +65,17 @@ fun ComicMetadataDto.toEntity(
         romanji = this.romanji.orEmpty(),
         status = this.status,
         publication = this.year ?: 0,
-        mangaDirectoryFk = mangaDirectoryFk,
+        comicDirectoryFk = comicDirectoryFk,
         syncSource = syncSource,
     )
 
-fun ChapterMetadataDto.toEntity(mangaRemoteInfoFk: Long): ChapterMetadata =
+fun ChapterMetadataDto.toEntity(comicRemoteInfoFk: Long): ChapterMetadata =
     ChapterMetadata(
         chapter = chapter!!,
         title = title,
         pageCount = pages,
         scanlation = scanlator,
-        mangaRemoteInfoFk = mangaRemoteInfoFk,
+        comicRemoteInfoFk = comicRemoteInfoFk,
     )
 
 fun ChapterMetadataDto.toDownloadSourcesEntities(chapterFk: Long): List<ChapterDownloadSource> =
@@ -88,7 +88,7 @@ fun ChapterMetadataDto.toDownloadSourcesEntities(chapterFk: Long): List<ChapterD
         )
     }
 
-fun ComicMetadataDto.toMangadexSourceEntity(mangaRemoteInfoFk: Long): MangadexSource {
+fun ComicMetadataDto.toMangadexSourceEntity(comicRemoteInfoFk: Long): MangadexSource {
     val mangadex = sources?.mangadex ?: throw IllegalStateException("MangaDex source is null in DTO")
     return MangadexSource(
         mangadexId = mangadex.mangadexId,
@@ -97,11 +97,11 @@ fun ComicMetadataDto.toMangadexSourceEntity(mangaRemoteInfoFk: Long): MangadexSo
         ebookjapanUrl = mangadex.ebookjapanUrl,
         rawUrl = mangadex.rawUrl,
         engtlUrl = mangadex.engtlUrl,
-        mangaRemoteInfoFk = mangaRemoteInfoFk,
+        comicRemoteInfoFk = comicRemoteInfoFk,
     )
 }
 
-fun ComicMetadataDto.toAnilistSourceEntity(mangaRemoteInfoFk: Long): AnilistSource {
+fun ComicMetadataDto.toAnilistSourceEntity(comicRemoteInfoFk: Long): AnilistSource {
     val anilist = sources?.anilist ?: throw IllegalStateException("AniList source is null in DTO")
     return AnilistSource(
         anilistId = anilist.anilistId,
@@ -110,14 +110,14 @@ fun ComicMetadataDto.toAnilistSourceEntity(mangaRemoteInfoFk: Long): AnilistSour
         trending = anilist.trending,
         coverImage = anilist.coverImage,
         bannerImage = anilist.bannerImage,
-        mangaRemoteInfoFk = mangaRemoteInfoFk,
+        comicRemoteInfoFk = comicRemoteInfoFk,
     )
 }
 
-fun ComicMetadataDto.toComicInfoSourceEntity(mangaRemoteInfoFk: Long): ComicInfoSource {
+fun ComicMetadataDto.toComicInfoSourceEntity(comicRemoteInfoFk: Long): ComicInfoSource {
     val comicInfo = sources?.comicInfo
     return ComicInfoSource(
         localHash = comicInfo?.localHash ?: "local-${this.title.hashCode()}",
-        mangaRemoteInfoFk = mangaRemoteInfoFk,
+        comicRemoteInfoFk = comicRemoteInfoFk,
     )
 }

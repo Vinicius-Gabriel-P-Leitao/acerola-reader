@@ -34,15 +34,10 @@ fun Comic.Component.ComicCategorySelector(
     modifier: Modifier = Modifier,
 ) {
     Acerola.Component.HeroItem(
-        title = stringResource(id = R.string.title_manga_category),
+        title = stringResource(id = R.string.title_comic_category),
         description = selectedCategory?.name ?: stringResource(id = R.string.label_category_none_selected),
         icon = if (selectedCategory != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
-        iconTint =
-            if (selectedCategory != null) {
-                Color(selectedCategory.color)
-            } else {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            },
+        iconTint = if (selectedCategory != null) Color(selectedCategory.color) else MaterialTheme.colorScheme.onPrimaryContainer,
         iconBackground = MaterialTheme.colorScheme.primaryContainer,
         modifier = modifier,
         bottomContent =

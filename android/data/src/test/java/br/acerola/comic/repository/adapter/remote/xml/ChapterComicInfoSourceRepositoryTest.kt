@@ -32,7 +32,7 @@ class ChapterComicInfoSourceRepositoryTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = ChapterComicInfoSource(context, parser, chapterSourceFactory)
+        repository = ChapterComicInfoSource(parser, chapterSourceFactory)
     }
 
     @Test
@@ -48,7 +48,7 @@ class ChapterComicInfoSourceRepositoryTest {
             coEvery { parser.parseChapterInfo(inputStream) } returns Either.Right(expectedInfo)
             every { sourceService.close() } returns Unit
 
-            val result = repository.searchInfo(manga = chapterUri, onProgress = null)
+            val result = repository.searchInfo(comic = chapterUri, onProgress = null)
 
             assertTrue("Deveria retornar sucesso, mas foi $result", result.isRight())
             result.onRight { list ->
@@ -65,7 +65,7 @@ class ChapterComicInfoSourceRepositoryTest {
             coEvery { sourceService.getFileStream("ComicInfo.xml") } returns Either.Left(mockk())
             every { sourceService.close() } returns Unit
 
-            val result = repository.searchInfo(manga = "path.cbz", onProgress = null)
+            val result = repository.searchInfo(comic = "path.cbz", onProgress = null)
 
             assertTrue(result.isLeft())
             result.onLeft { assertTrue(it is NetworkError.NotFound) }

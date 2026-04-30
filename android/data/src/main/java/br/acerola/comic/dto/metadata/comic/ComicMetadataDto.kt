@@ -19,7 +19,7 @@ data class ComicMetadataDto(
     val banner: BannerDto? = null,
     val authors: AuthorDto? = null,
     val genre: List<GenreDto> = emptyList(),
-    val mangaDirectoryFk: Long? = null,
+    val comicDirectoryFk: Long? = null,
     val syncSource: MetadataSourcePattern? = null,
     val sources: ComicSourcesDto? = null,
 ) : Parcelable

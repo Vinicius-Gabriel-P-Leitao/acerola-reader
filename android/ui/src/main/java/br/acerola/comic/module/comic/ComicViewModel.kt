@@ -75,7 +75,7 @@ class ComicViewModel
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-        val mangaIsIndexing: StateFlow<Boolean> =
+        val comicIsIndexing: StateFlow<Boolean> =
             combine(
                 flow = directoryObserve.isIndexing,
                 flow2 = mangadexObserve.isIndexing,
@@ -99,7 +99,7 @@ class ComicViewModel
                 initialValue = false,
             )
 
-        val mangaProgress: StateFlow<Int> =
+        val comicProgress: StateFlow<Int> =
             combine(
                 flow = directoryObserve.isIndexing,
                 flow2 = directoryObserve.progress,
@@ -136,7 +136,7 @@ class ComicViewModel
             )
 
         @OptIn(ExperimentalCoroutinesApi::class)
-        val manga: StateFlow<ComicDto?> =
+        val comic: StateFlow<ComicDto?> =
             combine(
                 selectedDirectoryId,
                 selectedMangaId,
@@ -153,7 +153,7 @@ class ComicViewModel
                 if (folderId == null) return@combine null
                 val directory = directories.find { it.id == folderId } ?: return@combine null
 
-                var remote = remoteInfos.find { it.mangaDirectoryFk == folderId }
+                var remote = remoteInfos.find { it.comicDirectoryFk == folderId }
 
                 if (remote == null && remoteInfoId != null) {
                     remote = remoteInfos.find { it.id == remoteInfoId }
@@ -187,7 +187,7 @@ class ComicViewModel
                 )
 
         @OptIn(ExperimentalCoroutinesApi::class)
-        val readChapters: StateFlow<List<Long>> =
+        val readChapters: StateFlow<List<String>> =
             selectedDirectoryId
                 .flatMapLatest { id ->
                     if (id == null) {
@@ -203,88 +203,88 @@ class ComicViewModel
 
         @OptIn(ExperimentalCoroutinesApi::class)
         val chapters: StateFlow<ChapterDto?> =
-            selectedDirectoryId
-                .flatMapLatest { folderId ->
-                    if (folderId == null) return@flatMapLatest flowOf(null)
+            combine(
+                selectedDirectoryId,
+                _chapterSortSettings,
+                _currentPage,
+                _selectedChapterPerPage,
+            ) { folderId, sort, page, pageSizeType ->
+                folderId to Quadruple(sort, page, pageSizeType, folderId)
+            }.flatMapLatest { (folderId, params) ->
+                if (folderId == null) return@flatMapLatest flowOf(null)
+                val (sort, page, pageSizeType, _) = params
 
-                    val localFlow = directoryGetChapters.observeByManga(folderId)
-                    val remoteFlow =
-                        manga.flatMapLatest {
-                            val mangaId = it?.remoteInfo?.id
+                val localFlow = directoryGetChapters.observeByManga(folderId, sort.type.name, sort.direction == SortDirection.ASCENDING)
+                val remoteFlow =
+                    comic.flatMapLatest {
+                        val comicId = it?.remoteInfo?.id
+                        if (comicId != null) {
+                            mangadexGetChapters.observeByManga(comicId, sort.type.name, sort.direction == SortDirection.ASCENDING)
+                        } else {
+                            flowOf(ChapterRemoteInfoPageDto(emptyList(), 0, 0, 0))
+                        }
+                    }
 
-                            if (mangaId != null) {
-                                mangadexGetChapters.observeByManga(mangaId)
-                            } else {
-                                flowOf(ChapterRemoteInfoPageDto(emptyList(), 0, 0, 0))
-                            }
+                combine(localFlow, remoteFlow) { localAll, remoteAll ->
+                    val items = localAll.items
+                    if (items.isEmpty()) return@combine ChapterDto(localAll, remoteAll)
+
+                    val total = items.size
+                    val pageSize = pageSizeType.key.toInt()
+                    val totalPages = ceil(total.toDouble() / pageSize).toInt()
+                    val safePage = page.coerceIn(0, max(0, totalPages - 1))
+
+                    val start = safePage * pageSize
+                    val end = (start + pageSize).coerceIn(0, total)
+
+                    val pagedLocalItems = if (start < total) items.subList(start, end) else emptyList()
+                    val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
+                    val filteredRemoteItems =
+                        pagedLocalItems.mapNotNull { local ->
+                            remoteMap[local.chapterSort.normalizeChapter()]
                         }
 
-                    combine(
-                        localFlow,
-                        remoteFlow,
-                        _currentPage,
-                        _selectedChapterPerPage,
-                        _chapterSortSettings,
-                    ) { localAll, remoteAll, page, pageSizeType, sort ->
-                        val items = localAll.items
-                        if (items.isEmpty()) return@combine ChapterDto(localAll, remoteAll)
+                    val showVolumeHeaders = localAll.volumes.isNotEmpty() || items.any { it.volumeId != null }
 
-                        // Apply Sorting
-                        val sortedItems =
-                            when (sort.type) {
-                                ChapterSortType.NUMBER ->
-                                    items.sortedWith(
-                                        compareBy(
-                                            { it.chapterSort.substringBefore('.').toIntOrNull() ?: 0 },
-                                            { it.chapterSort.substringAfter('.', "0").toIntOrNull() ?: 0 },
-                                        ),
-                                    )
+                    ChapterDto(
+                        archive =
+                            ChapterArchivePageDto(
+                                items = pagedLocalItems,
+                                volumes = localAll.volumes,
+                                pageSize = pageSize,
+                                total = total,
+                                page = safePage,
+                            ),
+                        remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, safePage, total),
+                        showVolumeHeaders = showVolumeHeaders,
+                    )
+                }
+            }.stateIn(
+                initialValue = null,
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+            )
 
-                                ChapterSortType.LAST_UPDATE -> items.sortedBy { it.lastModified }
-                            }
-
-                        val finalItems = if (sort.direction == SortDirection.DESCENDING) sortedItems.reversed() else sortedItems
-
-                        val total = finalItems.size
-                        val pageSize = pageSizeType.key.toInt()
-                        val totalPages = ceil(total.toDouble() / pageSize).toInt()
-                        val safePage = page.coerceIn(0, max(0, totalPages - 1))
-
-                        val start = safePage * pageSize
-                        val end = (start + pageSize).coerceIn(0, total)
-
-                        val pagedLocalItems = if (start < total) finalItems.subList(start, end) else emptyList()
-
-                        val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
-
-                        val filteredRemoteItems =
-                            pagedLocalItems.mapNotNull { local ->
-                                remoteMap[local.chapterSort.normalizeChapter()]
-                            }
-
-                        ChapterDto(
-                            archive = ChapterArchivePageDto(pagedLocalItems, pageSize, safePage, total),
-                            remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, safePage, total),
-                        )
-                    }
-                }.stateIn(
-                    initialValue = null,
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-                )
+// Add this helper class at the end of the file or use a Pair/Triple nesting
+        data class Quadruple<A, B, C, D>(
+            val first: A,
+            val second: B,
+            val third: C,
+            val fourth: D,
+        )
 
         fun init(
             folderId: Long,
-            mangaId: Long?,
+            comicId: Long?,
         ) {
             AcerolaLogger.audit(
                 TAG,
                 "Initializing MangaScreen",
                 LogSource.VIEWMODEL,
-                mapOf("folderId" to folderId.toString(), "mangaId" to mangaId.toString()),
+                mapOf("folderId" to folderId.toString(), "comicId" to comicId.toString()),
             )
             selectedDirectoryId.value = folderId
-            selectedMangaId.value = mangaId
+            selectedMangaId.value = comicId
 
             viewModelScope.launch {
                 ChapterPerPagePreference.chapterPerPageFlow(context).collect { size ->
@@ -299,8 +299,8 @@ class ComicViewModel
             }
 
             viewModelScope.launch {
-                manga.collect { mangaDto ->
-                    val newRemoteId = mangaDto?.remoteInfo?.id
+                comic.collect { comicDto ->
+                    val newRemoteId = comicDto?.remoteInfo?.id
                     if (newRemoteId != null && newRemoteId != selectedMangaId.value) {
                         AcerolaLogger.d(TAG, "Syncing remote ID: $newRemoteId", LogSource.VIEWMODEL)
                         selectedMangaId.value = newRemoteId
@@ -330,19 +330,22 @@ class ComicViewModel
             _currentPage.value = page
         }
 
-        fun toggleChapterReadStatus(chapterId: Long) {
-            val mangaId = selectedDirectoryId.value ?: return
-            val isRead = readChapters.value.contains(chapterId)
+        fun toggleChapterReadStatus(
+            chapterSort: String,
+            chapterId: Long? = null,
+        ) {
+            val comicId = selectedDirectoryId.value ?: return
+            val isRead = readChapters.value.contains(chapterSort)
 
             AcerolaLogger.audit(
                 TAG,
                 "Toggling chapter read status",
                 LogSource.VIEWMODEL,
-                mapOf("chapterId" to chapterId.toString(), "newStatus" to (!isRead).toString()),
+                mapOf("chapterSort" to chapterSort, "newStatus" to (!isRead).toString()),
             )
 
             viewModelScope.launch {
-                trackReadingProgressUseCase.toggleReadStatus(mangaId, chapterId, isRead)
+                trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId)
             }
         }
 

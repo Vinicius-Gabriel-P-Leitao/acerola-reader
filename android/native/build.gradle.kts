@@ -72,18 +72,19 @@ tasks.withType<Test> {
     }
 }
 
-val cargo: String = run {
-    val localProps = Properties()
-    val localPropsFile = rootProject.file("local.properties")
+val cargo: String =
+    run {
+        val localProps = Properties()
+        val localPropsFile = rootProject.file("local.properties")
 
-    if (localPropsFile.exists()) {
-        localPropsFile.inputStream().use {
-            localProps.load(it)
+        if (localPropsFile.exists()) {
+            localPropsFile.inputStream().use {
+                localProps.load(it)
+            }
         }
-    }
 
-    project.findProperty("cargo.dir") as? String ?: System.getenv("CARGO") ?: localProps.getProperty("cargo.dir") ?: "cargo"
-}
+        project.findProperty("cargo.dir") as? String ?: System.getenv("CARGO") ?: localProps.getProperty("cargo.dir") ?: "cargo"
+    }
 
 tasks.register<Exec>("buildRust") {
     workingDir = file("rust")

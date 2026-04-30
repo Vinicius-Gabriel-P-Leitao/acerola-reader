@@ -98,9 +98,9 @@ class ComicMetadataViewModel
             enqueueMetadataSync(MetadataSyncWorker.SOURCE_ANILIST, -1L, MetadataSyncWorker.SYNC_TYPE_RESCAN)
         }
 
-        fun rescanMangaByManga(mangaId: Long) {
-            AcerolaLogger.audit(TAG, "User requested metadata rescan for comic: $mangaId", LogSource.VIEWMODEL)
-            enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, mangaId, MetadataSyncWorker.SYNC_TYPE_RESCAN)
+        fun rescanMangaByManga(comicId: Long) {
+            AcerolaLogger.audit(TAG, "User requested metadata rescan for comic: $comicId", LogSource.VIEWMODEL)
+            enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, comicId, MetadataSyncWorker.SYNC_TYPE_RESCAN)
         }
 
         fun syncFromMangadex(directoryId: Long) {

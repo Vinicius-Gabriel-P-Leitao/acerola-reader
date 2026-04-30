@@ -33,12 +33,12 @@ sealed interface ComicChapterAction {
     ) : ComicChapterAction
 
     data class ClickContinue(
-        val chapterId: Long,
+        val chapterId: Long?,
         val lastPage: Int,
     ) : ComicChapterAction
 
     data class ToggleReadStatus(
-        val chapterId: Long,
+        val chapterSort: String,
     ) : ComicChapterAction
 }
 

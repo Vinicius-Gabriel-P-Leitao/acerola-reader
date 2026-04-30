@@ -69,7 +69,7 @@ fun Comic.Layout.configSection(
 
     scope.item {
         Comic.Component.ComicCategorySelector(
-            selectedCategory = uiState.manga.category,
+            selectedCategory = uiState.comic.category,
             allCategories = uiState.allCategories,
             onUpdateMangaCategory = { id -> onAction(ComicAction.UpdateCategory(id)) },
             modifier = itemModifier,
@@ -105,7 +105,7 @@ fun Comic.Layout.configSection(
 
     scope.item {
         Comic.Component.ComicExternalSyncToggle(
-            enabled = uiState.manga.directory.externalSyncEnabled,
+            enabled = uiState.comic.directory.externalSyncEnabled,
             onToggle = { onAction(ComicAction.ToggleExternalSync(it)) },
             modifier = itemModifier,
         )
@@ -115,8 +115,8 @@ fun Comic.Layout.configSection(
 
     scope.item {
         Comic.Component.SyncMetadata(
-            remoteInfo = uiState.manga.remoteInfo,
-            externalSyncEnabled = uiState.manga.directory.externalSyncEnabled,
+            remoteInfo = uiState.comic.remoteInfo,
+            externalSyncEnabled = uiState.comic.directory.externalSyncEnabled,
             onSyncMangadexInfo = { onSyncAction(ComicSyncAction.SyncMangadexInfo) },
             onSyncMangadexChapters = { onSyncAction(ComicSyncAction.SyncMangadexChapters) },
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },

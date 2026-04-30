@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * UseCase para observar a lista de mangás da biblioteca.
+ * UseCase para observar a lista de quadrinhos da biblioteca.
  */
 open class ObserveLibraryUseCase<T>(
     private val syncGateway: ComicSyncGateway? = null,
-    private val mangaRepository: ComicReadOnlyGateway<T>,
+    private val comicRepository: ComicReadOnlyGateway<T>,
 ) {
     val progress: StateFlow<Int> get() = syncGateway?.progress ?: MutableStateFlow(-1).asStateFlow()
     val isIndexing: StateFlow<Boolean> get() = syncGateway?.isIndexing ?: MutableStateFlow(false).asStateFlow()
 
-    operator fun invoke(): Flow<List<T>> = mangaRepository.observeLibrary()
+    operator fun invoke(): Flow<List<T>> = comicRepository.observeLibrary()
 }

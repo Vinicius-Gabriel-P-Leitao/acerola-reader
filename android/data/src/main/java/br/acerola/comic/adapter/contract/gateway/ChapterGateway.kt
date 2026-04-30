@@ -9,17 +9,23 @@ interface ChapterGateway<T> {
     val progress: StateFlow<Int>
     val isIndexing: StateFlow<Boolean>
 
-    fun observeChapters(mangaId: Long): StateFlow<T>
+    fun observeChapters(
+        comicId: Long,
+        sortType: String = "NUMBER",
+        isAscending: Boolean = true,
+    ): StateFlow<T>
 
     suspend fun refreshComicChapters(
-        mangaId: Long,
+        comicId: Long,
         baseUri: Uri? = null,
     ): Either<LibrarySyncError, Unit>
 
     suspend fun getChapterPage(
-        mangaId: Long,
+        comicId: Long,
         total: Int,
         page: Int,
         pageSize: Int = 20,
+        sortType: String = "NUMBER",
+        isAscending: Boolean = true,
     ): T
 }

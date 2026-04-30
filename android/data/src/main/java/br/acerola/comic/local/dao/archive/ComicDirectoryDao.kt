@@ -16,15 +16,15 @@ interface ComicDirectoryDao : BaseDao<ComicDirectory> {
     @Query(value = "SELECT * FROM comic_directory ORDER BY id ASC")
     fun getAllDirectories(): Flow<List<ComicDirectory>>
 
-    @Query(value = "SELECT * FROM comic_directory WHERE id = :mangaId")
-    suspend fun getDirectoryById(mangaId: Long): ComicDirectory?
+    @Query(value = "SELECT * FROM comic_directory WHERE id = :comicId")
+    suspend fun getDirectoryById(comicId: Long): ComicDirectory?
 
     @Query(value = "SELECT * FROM comic_directory WHERE name = :name")
     suspend fun getDirectoryByName(name: String): ComicDirectory?
 
-    @Query(value = "UPDATE comic_directory SET hidden = :hidden WHERE id = :mangaId")
+    @Query(value = "UPDATE comic_directory SET hidden = :hidden WHERE id = :comicId")
     suspend fun setDirectoryHidden(
-        mangaId: Long,
+        comicId: Long,
         hidden: Boolean,
     )
 

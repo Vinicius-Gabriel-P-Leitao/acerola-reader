@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Acerola is a native Android app (Kotlin + Jetpack Compose) for managing and reading local manga files (`.cbz`/`.cbr`). It scans local library directories, enriches metadata via MangaDex API, and provides a reading interface.
+Acerola is a native Android app (Kotlin + Jetpack Compose) for managing and reading local comic files (`.cbz`/`.cbr`). It scans local library directories, enriches metadata via MangaDex API, and provides a reading interface.
 
 ## Commands
 
@@ -53,7 +53,7 @@ Four Gradle modules with a strict dependency hierarchy:
 
 ## Room Database (v6)
 
-Tables: `comic_directory`, `manga_remote_info`, `chapter_archive`, `chapter_remote_info`, `chapter_download_source`, `author`, `genre`, `cover`, `reading_history`, `chapter_read`.
+Tables: `comic_directory`, `comic_remote_info`, `chapter_archive`, `chapter_remote_info`, `chapter_download_source`, `author`, `genre`, `cover`, `reading_history`, `chapter_read`.
 
 Remote APIs: `https://api.mangadex.org` (REST via Retrofit/Moshi) and Apollo GraphQL client.
 

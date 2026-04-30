@@ -19,7 +19,7 @@ class ComicActivity(
         const val COMIC = "COMIC"
     }
 
-    val manga: ComicDto? by lazy {
+    val comic: ComicDto? by lazy {
         val safeIntent = intent ?: return@lazy null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             safeIntent.extras?.getParcelable(ChapterExtra.COMIC, ComicDto::class.java)
@@ -34,9 +34,9 @@ class ComicActivity(
         navController: NavHostController,
     ) {
         composable(route = context.getString(Destination.COMIC.route)) {
-            if (manga != null) {
+            if (comic != null) {
                 ComicScreen(
-                    manga = manga!!,
+                    comic = comic!!,
                     onBackClick = { finish() },
                 )
             } else {

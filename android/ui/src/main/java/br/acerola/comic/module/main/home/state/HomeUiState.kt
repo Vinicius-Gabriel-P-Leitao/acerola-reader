@@ -14,7 +14,7 @@ data class FilterSettings(
 data class HomeUiState(
     val isIndexing: Boolean = false,
     val layout: HomeLayoutType = HomeLayoutType.LIST,
-    val mangas: List<Triple<ComicDto, ReadingHistoryDto?, Int>>? = null,
+    val comics: List<Triple<ComicDto, ReadingHistoryDto?, Int>>? = null,
     val sortType: ComicSortType = ComicSortType.TITLE,
     val sortDirection: SortDirection = SortDirection.ASCENDING,
     val filter: FilterSettings = FilterSettings(),

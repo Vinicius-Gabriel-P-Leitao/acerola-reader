@@ -49,19 +49,19 @@ class ComicInfoChapterEngine
         override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
         override suspend fun refreshComicChapters(
-            mangaId: Long,
+            comicId: Long,
             baseUri: Uri?,
         ): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Starting ComicInfo metadata sync for chapter archives of comic: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Starting ComicInfo metadata sync for chapter archives of comic: $comicId", LogSource.REPOSITORY)
                 _isIndexing.value = true
                 _progress.value = 0
 
                 Either
                     .catch {
                         val directory =
-                            directoryDao.getDirectoryById(mangaId)
-                                ?: throw Exception("Directory not found for ID: $mangaId")
+                            directoryDao.getDirectoryById(comicId)
+                                ?: throw Exception("Directory not found for ID: $comicId")
 
                         val remoteManga =
                             comicMetadataDao.observeComicByDirectoryId(directory.id).first()
@@ -79,13 +79,13 @@ class ComicInfoChapterEngine
                             yield()
                             val result =
                                 comicInfoSourceService
-                                    .searchInfo(manga = archive.path)
+                                    .searchInfo(comic = archive.chapter.path)
                                     .getOrNull()
                                     ?.firstOrNull()
 
                             if (result != null) {
-                                AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter}", LogSource.REPOSITORY)
-                                val chapterRemoteInfoEntity = result.toEntity(mangaRemoteInfoFk = remoteManga.id)
+                                AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter.chapter}", LogSource.REPOSITORY)
+                                val chapterRemoteInfoEntity = result.toEntity(comicRemoteInfoFk = remoteManga.id)
                                 val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
 
                                 val downloadSourceEntities = result.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
@@ -100,7 +100,7 @@ class ComicInfoChapterEngine
                     }.mapLeft { exception ->
                         AcerolaLogger.e(
                             TAG,
-                            "ComicInfo chapter sync failed for comic: $mangaId",
+                            "ComicInfo chapter sync failed for comic: $comicId",
                             LogSource.REPOSITORY,
                             throwable = exception,
                         )
@@ -114,19 +114,25 @@ class ComicInfoChapterEngine
                     }
             }
 
-        override fun observeChapters(mangaId: Long): StateFlow<ChapterRemoteInfoPageDto> =
+        override fun observeChapters(
+            comicId: Long,
+            sortType: String,
+            isAscending: Boolean,
+        ): StateFlow<ChapterRemoteInfoPageDto> =
             MutableStateFlow(
                 value = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, page = 0, total = 0),
             ).asStateFlow()
 
         override suspend fun getChapterPage(
-            mangaId: Long,
+            comicId: Long,
             total: Int,
             page: Int,
             pageSize: Int,
+            sortType: String,
+            isAscending: Boolean,
         ): ChapterRemoteInfoPageDto = ChapterRemoteInfoPageDto(items = emptyList(), pageSize, page, total)
 
         companion object {
-            private const val TAG = "ComicInfoChapterRepository"
+            private const val TAG = "ComicInfoChapterEngine"
         }
     }

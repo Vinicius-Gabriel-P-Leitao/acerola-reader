@@ -14,7 +14,7 @@ class ConfigSectionTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_todas_as_secoes_de_configuracao_do_manga() {
+    fun deve_exibir_todas_as_secoes_de_configuracao_do_comic() {
         val uiState = ComicFixtures.createMangaUiState()
 
         composeTestRule.setContent {

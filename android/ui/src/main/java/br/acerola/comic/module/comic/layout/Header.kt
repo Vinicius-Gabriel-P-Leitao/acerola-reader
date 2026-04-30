@@ -47,9 +47,9 @@ import coil.request.ImageRequest
 
 @Composable
 fun Comic.Layout.Header(
-    manga: ComicDto,
+    comic: ComicDto,
     history: ReadingHistoryDto?,
-    onContinueClick: (Long, Int) -> Unit,
+    onContinueClick: (Long?, Int) -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
@@ -68,14 +68,14 @@ fun Comic.Layout.Header(
                     .height(height = 420.dp),
         ) {
             val context = LocalContext.current
-            val bannerModel = manga.directory.bannerUri ?: manga.directory.coverUri
+            val bannerModel = comic.directory.bannerUri ?: comic.directory.coverUri
 
             val placeholderPainter =
                 coil.compose.rememberAsyncImagePainter(
                     model =
                         ImageRequest
                             .Builder(context)
-                            .data(data = R.raw.placeholder_manga)
+                            .data(data = R.raw.placeholder_comic)
                             .build(),
                 )
 
@@ -86,8 +86,8 @@ fun Comic.Layout.Header(
                     ImageRequest
                         .Builder(context = context)
                         .data(data = bannerModel)
-                        .memoryCacheKey("${bannerModel}_${manga.directory.lastModified}")
-                        .diskCacheKey("${bannerModel}_${manga.directory.lastModified}")
+                        .memoryCacheKey("${bannerModel}_${comic.directory.lastModified}")
+                        .diskCacheKey("${bannerModel}_${comic.directory.lastModified}")
                         .crossfade(enable = true)
                         .build(),
                 placeholder = placeholderPainter,
@@ -122,14 +122,14 @@ fun Comic.Layout.Header(
                     verticalAlignment = Alignment.Bottom,
                 ) {
                     AsyncImage(
-                        contentDescription = stringResource(id = R.string.manga_header_cover_description),
+                        contentDescription = stringResource(id = R.string.comic_header_cover_description),
                         contentScale = ContentScale.Crop,
                         model =
                             ImageRequest
                                 .Builder(context = context)
-                                .data(data = manga.directory.coverUri)
-                                .memoryCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
-                                .diskCacheKey("${manga.directory.coverUri}_${manga.directory.lastModified}")
+                                .data(data = comic.directory.coverUri)
+                                .memoryCacheKey("${comic.directory.coverUri}_${comic.directory.lastModified}")
+                                .diskCacheKey("${comic.directory.coverUri}_${comic.directory.lastModified}")
                                 .crossfade(enable = true)
                                 .build(),
                         placeholder = placeholderPainter,
@@ -155,7 +155,7 @@ fun Comic.Layout.Header(
                         Text(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            text = manga.remoteInfo?.title ?: manga.directory.name,
+                            text = comic.remoteInfo?.title ?: comic.directory.name,
                             style =
                                 MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
@@ -166,15 +166,15 @@ fun Comic.Layout.Header(
                         Text(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge,
-                            text = manga.remoteInfo?.authors?.name ?: stringResource(id = R.string.manga_header_unknown),
+                            text = comic.remoteInfo?.authors?.name ?: stringResource(id = R.string.comic_header_unknown),
                         )
 
                         Spacer(modifier = Modifier.height(height = 8.dp))
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            val status = ComicStatusPattern.fromRawValue(manga.remoteInfo?.status)
+                            val status = ComicStatusPattern.fromRawValue(comic.remoteInfo?.status)
                             StatusBadge(status = stringResource(id = status.stringRes))
-                            manga.remoteInfo?.syncSource?.let { source ->
+                            comic.remoteInfo?.syncSource?.let { source ->
                                 SourceBadge(source = source.displayName)
                             }
                         }
@@ -194,7 +194,7 @@ fun Comic.Layout.Header(
                         vertical = 16.dp,
                     ),
         ) {
-            manga.remoteInfo?.genre?.forEach { genre ->
+            comic.remoteInfo?.genre?.forEach { genre ->
                 GenreBadge(text = genre.name)
             }
         }
@@ -210,7 +210,7 @@ fun Comic.Layout.Header(
                     },
         ) {
             Text(
-                text = stringResource(id = R.string.manga_header_synopsis_title),
+                text = stringResource(id = R.string.comic_header_synopsis_title),
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             )
@@ -223,7 +223,7 @@ fun Comic.Layout.Header(
                 maxLines = if (isExpanded) Int.MAX_VALUE else 3,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-                text = manga.remoteInfo?.description ?: stringResource(id = R.string.manga_header_no_description),
+                text = comic.remoteInfo?.description ?: stringResource(id = R.string.comic_header_no_description),
             )
 
             Text(
@@ -232,10 +232,10 @@ fun Comic.Layout.Header(
                 text =
                     if (isExpanded) {
                         stringResource(
-                            id = R.string.manga_header_read_less,
+                            id = R.string.comic_header_read_less,
                         )
                     } else {
-                        stringResource(id = R.string.manga_header_read_more)
+                        stringResource(id = R.string.comic_header_read_more)
                     },
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
             )
@@ -244,9 +244,9 @@ fun Comic.Layout.Header(
 
             val buttonText =
                 when {
-                    history?.isCompleted == true -> stringResource(id = R.string.label_manga_action_reread)
-                    history != null -> stringResource(id = R.string.label_manga_action_continue)
-                    else -> stringResource(id = R.string.label_manga_action_start)
+                    history?.isCompleted == true -> stringResource(id = R.string.label_comic_action_reread)
+                    history != null -> stringResource(id = R.string.label_comic_action_continue)
+                    else -> stringResource(id = R.string.label_comic_action_start)
                 }
 
             Acerola.Component.Button(

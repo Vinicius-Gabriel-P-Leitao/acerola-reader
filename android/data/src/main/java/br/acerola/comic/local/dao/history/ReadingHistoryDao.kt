@@ -14,32 +14,44 @@ interface ReadingHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertHistory(history: ReadingHistory)
 
-    @Query("SELECT * FROM reading_history WHERE comic_directory_id = :mangaId")
-    fun observeHistoryByDirectoryId(mangaId: Long): Flow<ReadingHistory?>
+    @Query("SELECT * FROM reading_history WHERE comic_directory_id = :comicId")
+    fun observeHistoryByDirectoryId(comicId: Long): Flow<ReadingHistory?>
 
     @Query("SELECT * FROM reading_history ORDER BY updated_at DESC")
     fun observeAllRecentHistories(): Flow<List<ReadingHistory>>
 
     @Query(
         """
-        SELECT rh.comic_directory_id as mangaDirectoryId, rh.chapter_archive_id as chapterArchiveId, rh.last_page as lastPage, rh.updated_at as updatedAt, ca.chapter as chapterName, rh.is_completed as isCompleted
+        SELECT
+            rh.comic_directory_id AS comicDirectoryId,
+            rh.chapter_archive_id AS chapterArchiveId,
+            rh.chapter_sort AS chapterSort,
+            rh.last_page AS lastPage,
+            rh.updated_at AS updatedAt,
+            ca.chapter AS chapterName,
+            rh.is_completed AS isCompleted
         FROM reading_history rh
-        LEFT JOIN chapter_archive ca ON rh.chapter_archive_id = ca.id
-        ORDER BY rh.updated_at DESC
+        LEFT JOIN chapter_archive ca
+            ON rh.comic_directory_id = ca.comic_directory_fk
+            AND rh.chapter_sort = ca.chapter_sort
+        ORDER BY rh.updated_at DESC;
     """,
     )
     fun observeAllRecentHistoriesWithChapter(): Flow<List<ReadingHistoryWithChapter>>
 
-    @Query("DELETE FROM reading_history WHERE comic_directory_id = :mangaId")
-    suspend fun deleteHistoryByDirectoryId(mangaId: Long)
+    @Query("DELETE FROM reading_history WHERE comic_directory_id = :comicId")
+    suspend fun deleteHistoryByDirectoryId(comicId: Long)
 
     // Chapter Read
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertChapterRead(chapterRead: ChapterRead)
 
-    @Query("SELECT chapter_archive_id FROM chapter_read WHERE comic_directory_id = :mangaId")
-    fun observeReadChaptersByDirectoryId(mangaId: Long): Flow<List<Long>>
+    @Query("SELECT chapter_sort FROM chapter_read WHERE comic_directory_id = :comicId")
+    fun observeReadChaptersByDirectoryId(comicId: Long): Flow<List<String>>
 
-    @Query("DELETE FROM chapter_read WHERE chapter_archive_id = :chapterId")
-    suspend fun deleteChapterRead(chapterId: Long)
+    @Query("DELETE FROM chapter_read WHERE comic_directory_id = :comicId AND chapter_sort = :chapterSort")
+    suspend fun deleteChapterRead(
+        comicId: Long,
+        chapterSort: String,
+    )
 }

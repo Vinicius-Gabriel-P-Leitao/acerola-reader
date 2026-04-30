@@ -5,6 +5,7 @@ import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
+import br.acerola.comic.local.entity.archive.VolumeArchive
 import br.acerola.comic.util.FastFileMetadata
 
 fun ComicDirectoryDto.toEntity(): ComicDirectory =
@@ -25,6 +26,8 @@ fun ChapterFileDto.toEntity(folderId: Long): ChapterArchive =
         path = path,
         chapterSort = chapterSort,
         folderPathFk = folderId,
+        volumeIdFk = volumeId,
+        isSpecial = isSpecial,
     )
 
 fun DocumentFile.toMangaDirectoryEntity(
@@ -44,10 +47,12 @@ fun DocumentFile.toMangaDirectoryEntity(
     )
 
 fun FastFileMetadata.toChapterArchiveEntity(
-    mangaId: Long,
+    comicId: Long,
     chapterSort: String,
     fileUri: String,
     fastHash: String,
+    volumeIdFk: Long? = null,
+    isSpecial: Boolean = false,
 ): ChapterArchive =
     ChapterArchive(
         chapter = name,
@@ -55,7 +60,28 @@ fun FastFileMetadata.toChapterArchiveEntity(
         checksum = null,
         fastHash = fastHash,
         chapterSort = chapterSort,
-        folderPathFk = mangaId,
+        folderPathFk = comicId,
+        volumeIdFk = volumeIdFk,
+        isSpecial = isSpecial,
+        lastModified = lastModified,
+    )
+
+fun FastFileMetadata.toVolumeArchiveEntity(
+    comicId: Long,
+    volumeSort: String,
+    folderUri: String,
+    isSpecial: Boolean,
+    coverPath: String? = null,
+    bannerPath: String? = null,
+): VolumeArchive =
+    VolumeArchive(
+        name = name,
+        path = folderUri,
+        volumeSort = volumeSort,
+        isSpecial = isSpecial,
+        cover = coverPath,
+        banner = bannerPath,
+        comicDirectoryFk = comicId,
         lastModified = lastModified,
     )
 
@@ -75,10 +101,12 @@ fun FastFileMetadata.toMangaDirectoryEntity(
     )
 
 fun DocumentFile.toChapterArchiveEntity(
-    mangaId: Long,
+    comicId: Long,
     chapterSort: String,
     checksum: String?,
     fastHash: String?,
+    volumeIdFk: Long? = null,
+    isSpecial: Boolean = false,
 ): ChapterArchive =
     ChapterArchive(
         chapter = name ?: "",
@@ -86,6 +114,8 @@ fun DocumentFile.toChapterArchiveEntity(
         checksum = checksum,
         fastHash = fastHash,
         chapterSort = chapterSort,
-        folderPathFk = mangaId,
+        folderPathFk = comicId,
+        volumeIdFk = volumeIdFk,
+        isSpecial = isSpecial,
         lastModified = lastModified(),
     )

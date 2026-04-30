@@ -7,9 +7,9 @@ import br.acerola.comic.local.entity.metadata.relationship.Banner
 
 @Dao
 interface BannerDao : BaseDao<Banner> {
-    @Query(value = "SELECT * FROM banner WHERE file_name = :fileName AND comic_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT * FROM banner WHERE file_name = :fileName AND comic_metadata_fk = :comicRemoteInfoFk LIMIT 1")
     suspend fun getByFileNameAndMetadataId(
         fileName: String,
-        mangaRemoteInfoFk: Long,
+        comicRemoteInfoFk: Long,
     ): Banner?
 }

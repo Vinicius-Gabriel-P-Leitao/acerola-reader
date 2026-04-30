@@ -7,12 +7,12 @@ import br.acerola.comic.remote.mangadex.dto.chapter.ChapterAttributes
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterPage
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
-import br.acerola.comic.remote.mangadex.dto.manga.MangaAttributes
-import br.acerola.comic.remote.mangadex.dto.manga.MangaMangadexDto
-import br.acerola.comic.remote.mangadex.dto.manga.Relationship
-import br.acerola.comic.remote.mangadex.dto.manga.RelationshipAttributes
-import br.acerola.comic.remote.mangadex.dto.manga.Tag
-import br.acerola.comic.remote.mangadex.dto.manga.TagAttributes
+import br.acerola.comic.remote.mangadex.dto.comic.MangaAttributes
+import br.acerola.comic.remote.mangadex.dto.comic.MangaMangadexDto
+import br.acerola.comic.remote.mangadex.dto.comic.Relationship
+import br.acerola.comic.remote.mangadex.dto.comic.RelationshipAttributes
+import br.acerola.comic.remote.mangadex.dto.comic.Tag
+import br.acerola.comic.remote.mangadex.dto.comic.TagAttributes
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
@@ -23,7 +23,7 @@ class MangadexSourceMapperTest {
     @Test
     fun `MangaMangadexDto toViewDto deve extrair autor e capa das relacoes`() {
         val context = mockk<Context>()
-        every { context.getString(R.string.description_manga_untitled) } returns "Untitled"
+        every { context.getString(R.string.description_comic_untitled) } returns "Untitled"
 
         val attributes =
             MangaAttributes(
@@ -42,9 +42,9 @@ class MangadexSourceMapperTest {
                 Relationship("c1", "cover_art", attributes = RelationshipAttributes(fileName = "cover.jpg")),
             )
 
-        val mangaRaw = MangaMangadexDto("m1", "comic", attributes, relationships)
+        val comicRaw = MangaMangadexDto("m1", "comic", attributes, relationships)
 
-        val dto = mangaRaw.toViewDto(context)
+        val dto = comicRaw.toViewDto(context)
 
         assertEquals("Solo Leveling", dto.title)
         assertEquals("Author Name", dto.authors?.name)

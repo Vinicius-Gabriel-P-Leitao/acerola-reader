@@ -1,4 +1,4 @@
-package br.acerola.comic.repository.adapter.remote.mangadex.manga
+package br.acerola.comic.repository.adapter.remote.mangadex.comic
 
 import android.content.Context
 import br.acerola.comic.adapter.metadata.mangadex.source.MangadexMangaInfoSource
@@ -7,8 +7,8 @@ import br.acerola.comic.error.message.NetworkError
 import br.acerola.comic.pattern.LanguagePattern
 import br.acerola.comic.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.comic.remote.mangadex.dto.MangadexResponseDto
-import br.acerola.comic.remote.mangadex.dto.manga.MangaAttributes
-import br.acerola.comic.remote.mangadex.dto.manga.MangaMangadexDto
+import br.acerola.comic.remote.mangadex.dto.comic.MangaAttributes
+import br.acerola.comic.remote.mangadex.dto.comic.MangaMangadexDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -34,13 +34,13 @@ class MangadexSourceMangaInfoRepositoryTest {
     fun setUp() {
         MockKAnnotations.init(this)
         repository = MangadexMangaInfoSource(context, api)
-        every { context.getString(R.string.description_manga_untitled) } returns "Sem título"
+        every { context.getString(R.string.description_comic_untitled) } returns "Sem título"
         every { context.applicationContext } returns context
         every { context.filesDir } returns File(System.getProperty("java.io.tmpdir"))
     }
 
     @Test
-    fun `searchInfo deve buscar manga e mapear DTO corretamente`() =
+    fun `searchInfo deve buscar comic e mapear DTO corretamente`() =
         runTest {
             val title = "Naruto"
             val languages = listOf(LanguagePattern.PT_BR.code)
@@ -55,7 +55,7 @@ class MangadexSourceMangaInfoRepositoryTest {
                     status = "ongoing",
                 )
 
-            val mangaDto =
+            val comicDto =
                 MangaMangadexDto(
                     id = "1",
                     type = "comic",
@@ -67,7 +67,7 @@ class MangadexSourceMangaInfoRepositoryTest {
                 MangadexResponseDto(
                     result = "ok",
                     response = "collection",
-                    data = listOf(mangaDto),
+                    data = listOf(comicDto),
                     limit = 10,
                     offset = 0,
                     total = 1,
@@ -75,7 +75,7 @@ class MangadexSourceMangaInfoRepositoryTest {
 
             coEvery { api.searchMangaByName(title, 10, 0, any(), languages) } returns response
 
-            val result = repository.searchInfo(manga = title, limit = 10, offset = 0, onProgress = null)
+            val result = repository.searchInfo(comic = title, limit = 10, offset = 0, onProgress = null)
 
             assertTrue(result.isRight())
             result.onRight { list ->

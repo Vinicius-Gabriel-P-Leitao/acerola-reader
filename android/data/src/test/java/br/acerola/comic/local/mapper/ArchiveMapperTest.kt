@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.entity.archive.ChapterArchive
+import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.local.translator.persistence.toMangaDirectoryEntity
 import br.acerola.comic.local.translator.ui.toViewDto
@@ -99,26 +100,34 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `List ChapterArchive toViewPageDto deve criar objeto de paginação correto`() {
+    fun `List ChapterVolumeJoin toViewPageDto deve criar objeto de paginação correto`() {
         val list =
             listOf(
-                ChapterArchive(
-                    id = 1,
-                    chapter = "1",
-                    path = "p1",
-                    chapterSort = "1",
-                    checksum = null,
-                    fastHash = "10",
-                    folderPathFk = 1,
+                ChapterVolumeJoin(
+                    chapter =
+                        ChapterArchive(
+                            id = 1,
+                            chapter = "1",
+                            path = "p1",
+                            chapterSort = "1",
+                            checksum = null,
+                            fastHash = "10",
+                            folderPathFk = 1,
+                        ),
+                    volume = null,
                 ),
-                ChapterArchive(
-                    id = 2,
-                    chapter = "2",
-                    path = "p2",
-                    chapterSort = "2",
-                    checksum = null,
-                    fastHash = "10",
-                    folderPathFk = 1,
+                ChapterVolumeJoin(
+                    chapter =
+                        ChapterArchive(
+                            id = 2,
+                            chapter = "2",
+                            path = "p2",
+                            chapterSort = "2",
+                            checksum = null,
+                            fastHash = "10",
+                            folderPathFk = 1,
+                        ),
+                    volume = null,
                 ),
             )
 

@@ -54,8 +54,8 @@ class HistoryViewModelTest {
         every { getChapterCountUseCase() } returns MutableStateFlow(emptyMap())
 
         observeHistoryUseCase = ObserveHistoryUseCase(historyGateway)
-        mangadexObserve = ObserveLibraryUseCase(mangaRepository = mangadexRepo)
-        directoryObserve = ObserveLibraryUseCase(mangaRepository = directoryRepo)
+        mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
+        directoryObserve = ObserveLibraryUseCase(comicRepository = directoryRepo)
 
         viewModel =
             HistoryViewModel(

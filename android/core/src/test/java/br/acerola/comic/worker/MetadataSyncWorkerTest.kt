@@ -71,7 +71,7 @@ class MetadataSyncWorkerTest {
 
     // Test for directoryId != -1L (Single comic sync)
     @Test
-    fun `doWork should return success when syncFromMangadex for single manga succeeds`() =
+    fun `doWork should return success when syncFromMangadex for single comic succeeds`() =
         runBlocking {
             coEvery { syncComicMetadataUseCase.syncFromMangadex(42L) } returns Either.Right(Unit)
 
@@ -89,7 +89,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork should return failure when syncFromMangadex for single manga fails`() =
+    fun `doWork should return failure when syncFromMangadex for single comic fails`() =
         runBlocking {
             coEvery { syncComicMetadataUseCase.syncFromMangadex(42L) } returns
                 Either.Left(
@@ -110,7 +110,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork should return success when syncFromAnilist for single manga succeeds`() =
+    fun `doWork should return success when syncFromAnilist for single comic succeeds`() =
         runBlocking {
             coEvery { syncComicMetadataUseCase.syncFromAnilist(42L) } returns Either.Right(Unit)
 
@@ -128,7 +128,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork should return success when syncFromComicInfo for single manga succeeds`() =
+    fun `doWork should return success when syncFromComicInfo for single comic succeeds`() =
         runBlocking {
             coEvery { syncComicMetadataUseCase.syncFromComicInfo(42L) } returns Either.Right(Unit)
 

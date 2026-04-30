@@ -40,7 +40,7 @@ class CategoryManager
             if (categoryId != null) {
                 categoryDao.insertComicCategory(
                     ComicCategory(
-                        mangaDirectoryFk = directoryId,
+                        comicDirectoryFk = directoryId,
                         categoryId = categoryId,
                     ),
                 )
@@ -53,7 +53,7 @@ class CategoryManager
         fun getAllMangaCategories(): Flow<Map<Long, CategoryDto>> =
             categoryDao.observeAllComicCategoriesJoined().map { list ->
                 list.associate { result ->
-                    result.mangaDirectoryId to
+                    result.comicDirectoryId to
                         CategoryDto(
                             id = result.categoryId,
                             name = result.name,

@@ -39,7 +39,7 @@ class ReaderScreenTest {
                     ReaderScreen(
                         chapter = chapter,
                         initialPage = 0,
-                        mangaId = 1L,
+                        comicId = 1L,
                         onBackClick = {},
                         viewModel = viewModel,
                     )

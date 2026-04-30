@@ -31,8 +31,8 @@ import coil.request.ImageRequest
 @Composable
 fun Reader.Component.WebtoonReader(
     pageCount: Int,
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     onUiToggle: () -> Unit,
     listState: LazyListState,
     onPageRequest: (Int) -> Unit,
@@ -107,7 +107,7 @@ fun Reader.Component.WebtoonReader(
                     model =
                         ImageRequest
                             .Builder(LocalContext.current)
-                            .data("acerola://page/$mangaId/$chapterId/$index")
+                            .data("acerola://page/$comicId/$chapterId/$index")
                             .build(),
                     contentDescription = null,
                     modifier =

@@ -24,19 +24,19 @@ class ComicLibraryStateEngine
         @param:ApplicationContext private val context: Context,
     ) : ComicLibraryWriteGateway {
         override suspend fun updateMangaSettings(
-            mangaId: Long,
+            comicId: Long,
             externalSyncEnabled: Boolean,
         ): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Updating comic settings: $mangaId (externalSyncEnabled=$externalSyncEnabled)", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Updating comic settings: $comicId (externalSyncEnabled=$externalSyncEnabled)", LogSource.REPOSITORY)
                 try {
                     Either
                         .catch {
-                            val existingManga = directoryDao.getDirectoryById(mangaId) ?: return@catch
+                            val existingManga = directoryDao.getDirectoryById(comicId) ?: return@catch
                             val updatedManga = existingManga.copy(externalSyncEnabled = externalSyncEnabled)
                             directoryDao.update(entity = updatedManga)
                         }.mapLeft { exception ->
-                            AcerolaLogger.e(TAG, "Failed to update comic settings: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                            AcerolaLogger.e(TAG, "Failed to update comic settings: $comicId", LogSource.REPOSITORY, throwable = exception)
                             when (exception) {
                                 is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                                 else -> LibrarySyncError.UnexpectedError(cause = exception)
@@ -47,30 +47,30 @@ class ComicLibraryStateEngine
                 }
             }
 
-        override suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+        override suspend fun hideManga(comicId: Long): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Hiding comic: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Hiding comic: $comicId", LogSource.REPOSITORY)
                 Either
                     .catch {
-                        directoryDao.setDirectoryHidden(mangaId, hidden = true)
+                        directoryDao.setDirectoryHidden(comicId, hidden = true)
                     }.mapLeft { exception ->
-                        AcerolaLogger.e(TAG, "Failed to hide comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                        AcerolaLogger.e(TAG, "Failed to hide comic: $comicId", LogSource.REPOSITORY, throwable = exception)
                         LibrarySyncError.UnexpectedError(cause = exception)
                     }
             }
 
-        override suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit> =
+        override suspend fun deleteManga(comicId: Long): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Deleting comic: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Deleting comic: $comicId", LogSource.REPOSITORY)
                 Either
                     .catch {
-                        val directory = directoryDao.getDirectoryById(mangaId) ?: return@catch
+                        val directory = directoryDao.getDirectoryById(comicId) ?: return@catch
                         val folderUri = directory.path.toUri()
 
                         DocumentFile.fromSingleUri(context, folderUri)?.delete()
                         directoryDao.delete(entity = directory)
                     }.mapLeft { exception ->
-                        AcerolaLogger.e(TAG, "Failed to delete comic: $mangaId", LogSource.REPOSITORY, throwable = exception)
+                        AcerolaLogger.e(TAG, "Failed to delete comic: $comicId", LogSource.REPOSITORY, throwable = exception)
                         LibrarySyncError.UnexpectedError(cause = exception)
                     }
             }

@@ -18,7 +18,7 @@ object LanguageMapper {
             LanguagePattern.KO -> R.string.lang_ko
             LanguagePattern.ZH -> R.string.lang_zh
             LanguagePattern.ID -> R.string.lang_id
-            null -> R.string.manga_header_unknown
+            null -> R.string.comic_header_unknown
         }
 
     fun getAllCodes(): List<String> = LanguagePattern.entries.map { it.code }

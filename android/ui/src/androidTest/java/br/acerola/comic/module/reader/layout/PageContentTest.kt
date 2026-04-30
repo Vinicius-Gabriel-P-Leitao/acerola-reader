@@ -26,7 +26,7 @@ class PageContentTest {
                 onNextClick = {},
                 readingMode = ReadingMode.HORIZONTAL,
                 listState = listState,
-                mangaId = 1L,
+                comicId = 1L,
                 chapterId = 1L,
                 onPageRequest = {},
                 onZoomChange = {},

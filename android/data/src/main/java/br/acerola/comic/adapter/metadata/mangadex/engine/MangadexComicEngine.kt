@@ -68,15 +68,15 @@ class MangadexComicEngine
         override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
         override suspend fun refreshManga(
-            mangaId: Long,
+            comicId: Long,
             baseUri: Uri?,
         ): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Initiating MangaDex sync for comic: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Initiating MangaDex sync for comic: $comicId", LogSource.REPOSITORY)
                 _isIndexing.value = true
                 try {
                     val directory =
-                        directoryDao.getDirectoryById(mangaId)
+                        directoryDao.getDirectoryById(comicId)
                             ?: return@withContext Either.Left(LibrarySyncError.UnexpectedError(Exception("Directory not found")))
 
                     if (!directory.externalSyncEnabled) {
@@ -105,7 +105,7 @@ class MangadexComicEngine
                 try {
                     val allFolders = directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList()
                     val existingRemote = comicMetadataDao.observeAllComics().firstOrNull() ?: emptyList()
-                    val existingDirectoryIds = existingRemote.mapNotNull { it.mangaDirectoryFk }.toSet()
+                    val existingDirectoryIds = existingRemote.mapNotNull { it.comicDirectoryFk }.toSet()
 
                     val foldersToSync =
                         allFolders.filter { folder ->
@@ -176,7 +176,7 @@ class MangadexComicEngine
                     val title = current.name
                     val folderNameNormalized = normalizeName(name = title)
 
-                    val fetchedListResult = mangadexSourceMangaInfoService.searchInfo(manga = title)
+                    val fetchedListResult = mangadexSourceMangaInfoService.searchInfo(comic = title)
                     val fetchedList = fetchedListResult.getOrNull() ?: emptyList()
 
                     val bestMatch =
@@ -188,24 +188,24 @@ class MangadexComicEngine
                     if (bestMatch != null) {
                         AcerolaLogger.v(TAG, "Found best match for '$title' -> '${bestMatch.title}'", LogSource.REPOSITORY)
 
-                        val mangaToSave =
+                        val comicToSave =
                             bestMatch.toEntity().copy(
-                                mangaDirectoryFk = current.id,
+                                comicDirectoryFk = current.id,
                                 syncSource = MetadataSourcePattern.MANGADEX.source,
                             )
 
-                        val mangaId =
+                        val comicId =
                             comicMetadataDao.upsertComicWithRelationsTransaction(
-                                metadata = mangaToSave,
-                                authors = bestMatch.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
-                                genres = bestMatch.genre.map { it.toEntity(mangaId = 0L) },
-                                mangadexSource = bestMatch.toMangadexSourceEntity(mangaRemoteInfoFk = 0L),
+                                metadata = comicToSave,
+                                authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
+                                genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
+                                mangadexSource = bestMatch.toMangadexSourceEntity(comicRemoteInfoFk = 0L),
                                 authorDao = authorDao,
                                 genreDao = genreDao,
                                 mangadexDao = mangadexSourceDao,
                             )
 
-                        if (mangaId != -1L) {
+                        if (comicId != -1L) {
                             bestMatch.cover?.let { dto ->
                                 AcerolaLogger.d(TAG, "Syncing cover for ${current.name}", LogSource.REPOSITORY)
                                 downloadCoverService
@@ -216,8 +216,8 @@ class MangadexComicEngine
                                             folderId = current.id,
                                             bytes = bytes,
                                             coverUrl = dto.url,
-                                            mangaFolderName = current.name,
-                                            mangaRemoteInfoFk = mangaId,
+                                            comicFolderName = current.name,
+                                            comicRemoteInfoFk = comicId,
                                         )
                                     }.onLeft {
                                         AcerolaLogger.e(TAG, "Failed to download cover for ${current.name}", LogSource.REPOSITORY)
@@ -228,7 +228,7 @@ class MangadexComicEngine
                                 TAG,
                                 "Successfully synced MangaDex metadata",
                                 LogSource.REPOSITORY,
-                                mapOf("mangaId" to current.id.toString(), "mangadexId" to (bestMatch.sources?.mangadex?.mangadexId ?: "")),
+                                mapOf("comicId" to current.id.toString(), "mangadexId" to (bestMatch.sources?.mangadex?.mangadexId ?: "")),
                             )
 
                             metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)

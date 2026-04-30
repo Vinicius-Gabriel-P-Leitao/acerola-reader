@@ -40,7 +40,7 @@ fun MetadataRelations.toViewDto(): ComicMetadataDto =
         cover = this.cover.firstOrNull()?.toViewDto(),
         banner = this.banner.firstOrNull()?.toViewDto(),
         genre = this.genre.map { it.toViewDto() },
-        mangaDirectoryFk = this.remoteInfo.mangaDirectoryFk,
+        comicDirectoryFk = this.remoteInfo.comicDirectoryFk,
         syncSource = MetadataSourcePattern.from(this.remoteInfo.syncSource),
         sources =
             ComicSourcesDto(

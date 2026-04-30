@@ -31,8 +31,8 @@ import coil.request.ImageRequest
 
 @Composable
 fun Reader.Gesture.ZoomablePageImage(
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     pageIndex: Int,
     onAreaTap: (TapArea) -> Unit,
     onZoomStatusChange: (Boolean) -> Unit,
@@ -95,7 +95,7 @@ fun Reader.Gesture.ZoomablePageImage(
             model =
                 ImageRequest
                     .Builder(LocalContext.current)
-                    .data("acerola://page/$mangaId/$chapterId/$pageIndex")
+                    .data("acerola://page/$comicId/$chapterId/$pageIndex")
                     .build(),
             contentDescription = null,
             contentScale = ContentScale.Fit,

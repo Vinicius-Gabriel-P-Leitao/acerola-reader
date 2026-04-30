@@ -49,7 +49,7 @@ import coil.request.ImageRequest
 
 @Composable
 fun Main.Common.Component.ComicActionsSheet(
-    manga: ComicDto,
+    comic: ComicDto,
     categories: List<CategoryDto>,
     onHide: () -> Unit,
     onDelete: () -> Unit,
@@ -60,11 +60,11 @@ fun Main.Common.Component.ComicActionsSheet(
     var showHideDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val title = manga.remoteInfo?.title ?: manga.directory.name
-    val currentCategoryName = manga.category?.name
+    val title = comic.remoteInfo?.title ?: comic.directory.name
+    val currentCategoryName = comic.category?.name
 
     val context = LocalContext.current
-    val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
+    val coverUri = comic.directory.coverUri ?: comic.directory.bannerUri
 
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
@@ -81,8 +81,8 @@ fun Main.Common.Component.ComicActionsSheet(
                     ImageRequest
                         .Builder(context)
                         .data(data = coverUri)
-                        .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
-                        .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+                        .memoryCacheKey("${coverUri}_${comic.directory.lastModified}")
+                        .diskCacheKey("${coverUri}_${comic.directory.lastModified}")
                         .build(),
                 contentDescription = null,
                 modifier =
@@ -115,7 +115,7 @@ fun Main.Common.Component.ComicActionsSheet(
         ListItem(
             leadingContent = {
                 Icon(
-                    imageVector = if (manga.category != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
+                    imageVector = if (comic.category != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
                     contentDescription = null,
                 )
             },
@@ -169,7 +169,7 @@ fun Main.Common.Component.ComicActionsSheet(
     if (showCategorySheet) {
         ComicCategorySheet(
             categories = categories,
-            selectedCategoryId = manga.category?.id,
+            selectedCategoryId = comic.category?.id,
             onSelect = { categoryId ->
                 onBookmark(categoryId)
                 showCategorySheet = false

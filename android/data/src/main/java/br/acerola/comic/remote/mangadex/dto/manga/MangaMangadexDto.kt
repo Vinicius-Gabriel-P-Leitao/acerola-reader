@@ -1,4 +1,4 @@
-package br.acerola.comic.remote.mangadex.dto.manga
+package br.acerola.comic.remote.mangadex.dto.comic
 
 import br.acerola.comic.data.BuildConfig
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor

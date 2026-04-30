@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private data class HomeCombinedArgs(
-    val mangaDirectories: List<ComicDirectoryDto>,
+    val comicDirectories: List<ComicDirectoryDto>,
     val remoteMangaInfo: List<ComicMetadataDto>,
     val historyList: List<ReadingHistoryDto>,
     val categoryMap: Map<Long, CategoryDto>,
@@ -107,7 +107,7 @@ class HomeViewModel
                     initialValue = -1,
                 )
 
-        val mangas: StateFlow<List<Triple<ComicDto, ReadingHistoryDto?, Int>>?> =
+        val comics: StateFlow<List<Triple<ComicDto, ReadingHistoryDto?, Int>>?> =
             combine(
                 combine(
                     directoryObserve(),
@@ -123,13 +123,13 @@ class HomeViewModel
             ) { args, sort, filter ->
                 val remoteInfoMap =
                     args.remoteMangaInfo
-                        .filter { it.mangaDirectoryFk != null }
-                        .associateBy { it.mangaDirectoryFk!! }
+                        .filter { it.comicDirectoryFk != null }
+                        .associateBy { it.comicDirectoryFk!! }
 
-                val historyMap = args.historyList.associateBy { it.mangaDirectoryId }
+                val historyMap = args.historyList.associateBy { it.comicDirectoryId }
 
                 val list =
-                    args.mangaDirectories
+                    args.comicDirectories
                         .filter { directory ->
                             val matchesHidden = filter.showHidden || !directory.hidden
                             val matchesCategory =
@@ -145,13 +145,13 @@ class HomeViewModel
 
                             matchesHidden && matchesCategory && matchesSource
                         }.map { directory ->
-                            val manga =
+                            val comic =
                                 ComicDto(
                                     directory = directory,
                                     remoteInfo = remoteInfoMap[directory.id],
                                     category = args.categoryMap[directory.id],
                                 )
-                            Triple(manga, historyMap[directory.id], args.chapterCounts[directory.id] ?: 0)
+                            Triple(comic, historyMap[directory.id], args.chapterCounts[directory.id] ?: 0)
                         }
 
                 // Apply Sorting
@@ -164,7 +164,7 @@ class HomeViewModel
 
                 val finalList = if (sort.direction == SortDirection.DESCENDING) sortedList.reversed() else sortedList
 
-                AcerolaLogger.d(TAG, "Library loaded: ${finalList.size} mangas found", LogSource.VIEWMODEL)
+                AcerolaLogger.d(TAG, "Library loaded: ${finalList.size} comics found", LogSource.VIEWMODEL)
                 finalList
             }.stateIn(
                 viewModelScope,
@@ -178,28 +178,28 @@ class HomeViewModel
             observeFilterSettings()
         }
 
-        fun hideManga(mangaId: Long) {
+        fun hideManga(comicId: Long) {
             viewModelScope.launch {
-                hideComicUseCase(mangaId).onLeft { error ->
+                hideComicUseCase(comicId).onLeft { error ->
                     _uiEvents.send(error)
                 }
             }
         }
 
-        fun deleteComic(mangaId: Long) {
+        fun deleteComic(comicId: Long) {
             viewModelScope.launch {
-                deleteComicUseCase(mangaId).onLeft { error ->
+                deleteComicUseCase(comicId).onLeft { error ->
                     _uiEvents.send(error)
                 }
             }
         }
 
         fun setMangaCategory(
-            mangaId: Long,
+            comicId: Long,
             categoryId: Long?,
         ) {
             viewModelScope.launch {
-                manageCategoriesUseCase.updateMangaCategory(mangaId, categoryId)
+                manageCategoriesUseCase.updateMangaCategory(comicId, categoryId)
             }
         }
 

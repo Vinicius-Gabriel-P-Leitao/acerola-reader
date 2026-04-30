@@ -4,7 +4,7 @@ query MediaSearch($search: String, $page: Int, $perPage: Int) {
       hasNextPage
       currentPage
     }
-    media(search: $search, type: MANGA, sort: POPULARITY_DESC) {
+    media(search: $search, type: Comic, sort: POPULARITY_DESC) {
       id
       title {
         userPreferred

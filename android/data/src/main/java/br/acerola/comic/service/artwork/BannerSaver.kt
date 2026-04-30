@@ -36,25 +36,25 @@ class BannerSaver
             folderId: Long,
             bytes: ByteArray,
             bannerUrl: String,
-            mangaFolderName: String,
-            mangaRemoteInfoFk: Long,
+            comicFolderName: String,
+            comicRemoteInfoFk: Long,
         ): Either<IoError, Long> =
             withContext(Dispatchers.IO) {
                 try {
                     val directory =
-                        directoryDao.getDirectoryById(mangaId = folderId)
+                        directoryDao.getDirectoryById(comicId = folderId)
                             ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
-                    val mangaDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
+                    val comicDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
 
-                    if (mangaDir == null || !mangaDir.isDirectory) {
+                    if (comicDir == null || !comicDir.isDirectory) {
                         AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)
                         return@withContext IoError.FileNotFound("Comic directory not accessible").left()
                     }
 
-                    AcerolaLogger.d(TAG, "Saving banner to directory: ${mangaDir.uri}", LogSource.REPOSITORY)
+                    AcerolaLogger.d(TAG, "Saving banner to directory: ${comicDir.uri}", LogSource.REPOSITORY)
 
-                    mangaDir.listFiles().forEach { file ->
+                    comicDir.listFiles().forEach { file ->
                         val fileName = file.name ?: return@forEach
                         if (MediaFilePattern.isBanner(fileName)) {
                             file.delete()
@@ -65,12 +65,12 @@ class BannerSaver
 
                     fileStorageHandler
                         .saveFile(
-                            folder = mangaDir,
+                            folder = comicDir,
                             fileName = fileName,
                             mimeType = "image/jpeg",
                             bytes = bytes,
                         ).flatMap {
-                            val savedFile = mangaDir.findFile(fileName)
+                            val savedFile = comicDir.findFile(fileName)
                             val savedUriString = savedFile?.uri?.toString()
 
                             if (savedUriString != null) {
@@ -81,7 +81,7 @@ class BannerSaver
                                 Banner(
                                     fileName = fileName,
                                     url = bannerUrl,
-                                    mangaRemoteInfoFk = mangaRemoteInfoFk,
+                                    comicRemoteInfoFk = comicRemoteInfoFk,
                                 )
 
                             val insertedId = bannerDao.insert(entity = bannerEntity)
@@ -92,7 +92,7 @@ class BannerSaver
                                     val existing =
                                         bannerDao.getByFileNameAndMetadataId(
                                             fileName = fileName,
-                                            mangaRemoteInfoFk = mangaRemoteInfoFk,
+                                            comicRemoteInfoFk = comicRemoteInfoFk,
                                         ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
 
                                     bannerDao.update(existing.copy(url = bannerUrl, fileName = fileName))
@@ -103,11 +103,11 @@ class BannerSaver
                 } catch (exception: Exception) {
                     AcerolaLogger.e(
                         TAG,
-                        "Critical error processing banner for $mangaFolderName",
+                        "Critical error processing banner for $comicFolderName",
                         LogSource.REPOSITORY,
                         exception,
                     )
-                    IoError.FileWriteError(mangaFolderName, exception).left()
+                    IoError.FileWriteError(comicFolderName, exception).left()
                 }
             }
 

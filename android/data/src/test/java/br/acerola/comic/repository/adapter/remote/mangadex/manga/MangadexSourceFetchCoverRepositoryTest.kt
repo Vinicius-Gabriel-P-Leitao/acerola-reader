@@ -1,4 +1,4 @@
-package br.acerola.comic.repository.adapter.remote.mangadex.manga
+package br.acerola.comic.repository.adapter.remote.mangadex.comic
 
 import br.acerola.comic.adapter.metadata.mangadex.source.MangadexFetchCoverSource
 import br.acerola.comic.error.message.NetworkError

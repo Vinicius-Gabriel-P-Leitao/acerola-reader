@@ -48,10 +48,10 @@
     <string name="error_metadata_not_found">Nenhum metadado encontrado em %1$s para: %2$s</string>
 
     <!-- Notification Channels -->
-    <string name="error_sync_disabled">A sincronização externa está desativada para este mangá.</string>
+    <string name="error_sync_disabled">A sincronização externa está desativada para este quadrinho.</string>
     <string name="sync_notification_channel_name">Sincronização de Biblioteca</string>
     <string name="sync_notification_channel_description">Notificações de progresso de sincronização
-        de mangás</string>
+        de quadrinhos</string>
 
     <!-- Template Validation Errors -->
     <string name="error_template_malformed_macro">Macro malformada: chave de fechamento ausente.</string>
@@ -66,11 +66,11 @@
     <string name="error_template_duplicate">Já existe um padrão com esse nome.</string>
     <string name="error_template_system_protected">Padrões do sistema não podem ser removidos ou alterados.</string>
 
-    <!-- Manga Status -->
-    <string name="manga_status_ongoing">Em lançamento</string>
-    <string name="manga_status_completed">Finalizado</string>
-    <string name="manga_status_hiatus">Em hiato</string>
-    <string name="manga_status_cancelled">Cancelado</string>
-    <string name="manga_status_not_yet_released">Em breve</string>
-    <string name="manga_status_unknown">Desconhecido</string>
+    <!-- Comic Status -->
+    <string name="comic_status_ongoing">Em lançamento</string>
+    <string name="comic_status_completed">Finalizado</string>
+    <string name="comic_status_hiatus">Em hiato</string>
+    <string name="comic_status_cancelled">Cancelado</string>
+    <string name="comic_status_not_yet_released">Em breve</string>
+    <string name="comic_status_unknown">Desconhecido</string>
 </resources>

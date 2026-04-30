@@ -34,46 +34,46 @@ class ComicScreenTest {
 
     private val comicViewModel = mockk<ComicViewModel>(relaxed = true)
     private val chapterArchiveVM = mockk<ChapterArchiveViewModel>(relaxed = true)
-    private val mangaDirVM = mockk<ComicDirectoryViewModel>(relaxed = true)
-    private val mangaRemoteVM = mockk<ComicMetadataViewModel>(relaxed = true)
+    private val comicDirVM = mockk<ComicDirectoryViewModel>(relaxed = true)
+    private val comicRemoteVM = mockk<ComicMetadataViewModel>(relaxed = true)
     private val chapterRemoteVM = mockk<ChapterMetadataViewModel>(relaxed = true)
 
     @Before
     fun setUp() {
         val emptyEvents = MutableSharedFlow<UserMessage>().asSharedFlow()
 
-        every { comicViewModel.manga } returns MutableStateFlow(null)
+        every { comicViewModel.comic } returns MutableStateFlow(null)
         every { comicViewModel.chapters } returns MutableStateFlow(null)
         every { comicViewModel.chapterIsIndexing } returns MutableStateFlow(false)
         every { comicViewModel.chapterProgress } returns MutableStateFlow(-1)
-        every { comicViewModel.mangaIsIndexing } returns MutableStateFlow(false)
-        every { comicViewModel.mangaProgress } returns MutableStateFlow(-1)
+        every { comicViewModel.comicIsIndexing } returns MutableStateFlow(false)
+        every { comicViewModel.comicProgress } returns MutableStateFlow(-1)
         every { comicViewModel.history } returns MutableStateFlow(null)
-        every { comicViewModel.readChapters } returns MutableStateFlow(emptyList<Long>())
+        every { comicViewModel.readChapters } returns MutableStateFlow(emptyList<String>())
         every { comicViewModel.selectedChapterPerPage } returns MutableStateFlow(ChapterPageSizeType.SHORT)
         every { comicViewModel.uiEvents } returns emptyEvents
         every { comicViewModel.chapterSortSettings } returns
             MutableStateFlow(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
 
-        every { mangaDirVM.uiEvents } returns emptyEvents
+        every { comicDirVM.uiEvents } returns emptyEvents
         every { chapterArchiveVM.uiEvents } returns emptyEvents
 
-        every { mangaRemoteVM.isIndexing } returns MutableStateFlow(false)
-        every { mangaRemoteVM.uiEvents } returns emptyEvents
-        every { mangaRemoteVM.allCategories } returns MutableStateFlow(emptyList())
+        every { comicRemoteVM.isIndexing } returns MutableStateFlow(false)
+        every { comicRemoteVM.uiEvents } returns emptyEvents
+        every { comicRemoteVM.allCategories } returns MutableStateFlow(emptyList())
 
         every { chapterRemoteVM.isIndexing } returns MutableStateFlow(false)
         every { chapterRemoteVM.uiEvents } returns emptyEvents
     }
 
     @Test
-    fun `MangaScreen_deve_exibir_o_titulo_do_manga`() {
-        val manga =
+    fun `MangaScreen_deve_exibir_o_titulo_do_comic`() {
+        val comic =
             ComicDto(
                 directory = ComicDirectoryDto(1L, "Test", "path", null, null, 0L, null, false),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Manga de Teste",
+                        title = "Comic de Teste",
                         description = "Desc",
                         status = "Ongoing",
                     ),
@@ -83,18 +83,18 @@ class ComicScreenTest {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
                     ComicScreen(
-                        manga = manga,
+                        comic = comic,
                         onBackClick = {},
                         comicViewModel = comicViewModel,
                         chapterArchiveViewModel = chapterArchiveVM,
-                        comicDirectoryViewModel = mangaDirVM,
-                        comicMetadataViewModel = mangaRemoteVM,
+                        comicDirectoryViewModel = comicDirVM,
+                        comicMetadataViewModel = comicRemoteVM,
                         chapterMetadataViewModel = chapterRemoteVM,
                     )
                 }
             }
         }
 
-        composeTestRule.onNodeWithText("Manga de Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Comic de Teste").assertIsDisplayed()
     }
 }

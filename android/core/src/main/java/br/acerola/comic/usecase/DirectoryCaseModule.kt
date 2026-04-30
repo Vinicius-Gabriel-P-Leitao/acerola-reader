@@ -35,17 +35,17 @@ object DirectoryCaseModule {
         @DirectoryEngine repository: ComicGateway<ComicDirectoryDto>,
     ): ObserveLibraryUseCase<ComicDirectoryDto> =
         ObserveLibraryUseCase(
-            mangaRepository = repository,
+            comicRepository = repository,
             syncGateway = repository,
         )
 
     @Provides
     @DirectoryCase
     fun provideRescanComicUseCase(
-        @DirectoryEngine mangaOps: ComicGateway<ComicDirectoryDto>,
+        @DirectoryEngine comicOps: ComicGateway<ComicDirectoryDto>,
     ): RescanComicUseCase =
         RescanComicUseCase(
-            mangaRepository = mangaOps,
+            comicRepository = comicOps,
         )
 
     @Provides

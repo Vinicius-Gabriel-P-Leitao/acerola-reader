@@ -30,5 +30,5 @@ data class Cover(
     @ColumnInfo(name = "url")
     val url: String,
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long,
+    val comicRemoteInfoFk: Long,
 )

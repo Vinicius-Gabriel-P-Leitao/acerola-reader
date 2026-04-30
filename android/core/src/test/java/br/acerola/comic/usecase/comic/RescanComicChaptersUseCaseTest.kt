@@ -31,11 +31,11 @@ class RescanComicChaptersUseCaseTest {
     @Test
     fun invokeDeveChamarRefreshMangaChapters() =
         runTest {
-            coEvery { repository.refreshComicChapters(mangaId = 1L) } returns Either.Right(value = Unit)
+            coEvery { repository.refreshComicChapters(comicId = 1L) } returns Either.Right(value = Unit)
 
-            val result = useCase(mangaId = 1L)
+            val result = useCase(comicId = 1L)
 
             assertTrue(result.isRight())
-            coVerify { repository.refreshComicChapters(mangaId = 1L) }
+            coVerify { repository.refreshComicChapters(comicId = 1L) }
         }
 }

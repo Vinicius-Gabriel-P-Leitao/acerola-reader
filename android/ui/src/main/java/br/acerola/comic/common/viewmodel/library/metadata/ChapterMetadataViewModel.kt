@@ -52,11 +52,11 @@ class ChapterMetadataViewModel
         private var total = 0
 
         fun init(
-            mangaId: Long,
+            comicId: Long,
             firstPage: ChapterRemoteInfoPageDto,
         ) {
-            AcerolaLogger.d(TAG, "Initializing with mangaId: $mangaId", LogSource.VIEWMODEL)
-            selectedMangaId.value = mangaId
+            AcerolaLogger.d(TAG, "Initializing with comicId: $comicId", LogSource.VIEWMODEL)
+            selectedMangaId.value = comicId
             total = firstPage.total
             currentPage = firstPage.page
             chapterPage.value = firstPage
@@ -69,7 +69,7 @@ class ChapterMetadataViewModel
 
                 val result: ChapterRemoteInfoPageDto =
                     getMangadexChaptersUseCase.loadPage(
-                        mangaId = selectedMangaId.value!!,
+                        comicId = selectedMangaId.value!!,
                         pageSize = pageSize,
                         total = total,
                         page = page,
@@ -84,14 +84,14 @@ class ChapterMetadataViewModel
             }
         }
 
-        fun syncChaptersByMangadex(mangaId: Long) {
+        fun syncChaptersByMangadex(comicId: Long) {
             AcerolaLogger.audit(
                 TAG,
                 "User requested chapter sync from MangaDex",
                 LogSource.VIEWMODEL,
-                mapOf("mangaId" to mangaId.toString()),
+                mapOf("comicId" to comicId.toString()),
             )
-            enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, mangaId)
+            enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, comicId)
         }
 
         fun syncChaptersByComicInfo(folderId: Long) {

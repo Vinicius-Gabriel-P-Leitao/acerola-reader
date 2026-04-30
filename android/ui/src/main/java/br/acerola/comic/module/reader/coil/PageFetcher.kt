@@ -2,6 +2,7 @@ package br.acerola.comic.module.reader.coil
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import br.acerola.comic.service.reader.ReaderProcessor
+import coil.ImageLoader
 import coil.decode.DataSource
 import coil.fetch.DrawableResult
 import coil.fetch.FetchResult
@@ -10,8 +11,6 @@ import coil.fetch.Fetcher.Factory
 import coil.request.Options
 
 class PageFetcher(
-    private val mangaId: Long,
-    private val chapterId: Long,
     private val pageIndex: Int,
     private val readerProcessor: ReaderProcessor,
 ) : Fetcher {
@@ -36,17 +35,15 @@ class PageFetcherFactory(
     override fun create(
         data: Uri,
         options: Options,
-        imageLoader: coil.ImageLoader,
+        imageLoader: ImageLoader,
     ): Fetcher? {
         if (data.scheme != "acerola" || data.host != "page") return null
 
         val segments = data.pathSegments
         if (segments.size < 3) return null
 
-        val mangaId = segments[0].toLongOrNull() ?: return null
-        val chapterId = segments[1].toLongOrNull() ?: return null
         val pageIndex = segments[2].toIntOrNull() ?: return null
 
-        return PageFetcher(mangaId, chapterId, pageIndex, readerProcessor)
+        return PageFetcher(pageIndex, readerProcessor)
     }
 }

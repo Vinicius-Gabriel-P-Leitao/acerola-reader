@@ -13,11 +13,14 @@ data class FastFileMetadata(
     val name: String,
     val mimeType: String,
     val lastModified: Long,
-)
+) {
+    val isFile: Boolean get() = mimeType != DocumentsContract.Document.MIME_TYPE_DIR
+    val isDirectory: Boolean get() = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+}
 
 fun DocumentFile.toFastMetadata() =
     FastFileMetadata(
-        mimeType = "",
+        mimeType = type ?: "",
         size = length(),
         name = name ?: "",
         lastModified = lastModified(),

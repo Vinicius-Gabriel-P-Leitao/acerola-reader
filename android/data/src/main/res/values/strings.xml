@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">acerola</string>
-    <string name="description_manga_untitled">Sem título</string>
+    <string name="description_comic_untitled">Sem título</string>
     <string name="title_http_error">Erro de Comunicação</string>
     <string name="description_http_error_rate_limit">Muitas requisições. Tente novamente em breve.</string>
     <string name="description_http_error_generic">Erro de comunicação com o MangaDex.</string>
@@ -8,12 +8,12 @@
     <string name="description_remote_info_request_error">Ocorreu um erro ao buscar os metadados no
         MangaDex.</string>
     <string name="title_download_error">Erro ao sincronizar as imagens de cover</string>
-    <string name="description_error_download_failed">Ouve um erro ao buscar cover dos mangas que estão
+    <string name="description_error_download_failed">Ouve um erro ao buscar cover dos comics que estão
         sendo sincronizados.</string>
     <string name="title_genre_dao_insert_error">Erro ao inserir um
-        gênero de mangá.</string>
+        gênero de quadrinho.</string>
     <string name="description_genre_dao_insert_error">Ocorreu um erro ao
-        inserir um gênero de mangá no banco de dados.</string>
+        inserir um gênero de quadrinho no banco de dados.</string>
     <string name="title_remote_info_null_error">Sem metadados para os capitulos no mangadex.</string>
     <string name="description_remote_info_null_error">Não foi possivel encontrar métadados para nenhum
         dos capitulos, dentro do servidor do mangadex</string>
@@ -48,10 +48,10 @@
     <string name="download_chapter_success_message">%1$d de %2$d capítulos baixados com sucesso.</string>
     <string name="download_chapter_error_title">Erro no Download</string>
     <string name="download_chapter_error_no_ids">IDs dos capítulos não fornecidos</string>
-    <string name="download_chapter_error_no_title">Título do mangá não fornecido</string>
+    <string name="download_chapter_error_no_title">Título do quadrinho não fornecido</string>
     <string name="download_chapter_error_no_uri">URI da biblioteca não fornecida</string>
     <string name="download_chapter_error_access_folder">Não foi possível acessar a pasta da biblioteca</string>
-    <string name="download_chapter_error_create_folder">Não foi possível criar a pasta do mangá: %1$s</string>
+    <string name="download_chapter_error_create_folder">Não foi possível criar a pasta do quadrinho: %1$s</string>
     <string name="download_chapter_error_all_failed">Todos os %1$d downloads falharam</string>
     <string name="download_chapter_error_fatal">Erro fatal durante o download</string>
 </resources>

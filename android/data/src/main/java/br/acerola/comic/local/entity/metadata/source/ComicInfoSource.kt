@@ -27,5 +27,5 @@ data class ComicInfoSource(
     @ColumnInfo(name = "local_hash")
     val localHash: String,
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long,
+    val comicRemoteInfoFk: Long,
 )

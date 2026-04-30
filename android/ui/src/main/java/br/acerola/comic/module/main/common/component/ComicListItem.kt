@@ -50,7 +50,7 @@ import coil.size.SizeResolver
 
 @Composable
 fun Main.Common.Component.ComicListItem(
-    manga: ComicDto,
+    comic: ComicDto,
     subtitle: String? = null,
     chapterCount: Int = 0,
     isCompleted: Boolean = false,
@@ -61,8 +61,8 @@ fun Main.Common.Component.ComicListItem(
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
-    val title = manga.remoteInfo?.title ?: manga.directory.name
+    val coverUri = comic.directory.coverUri ?: comic.directory.bannerUri
+    val title = comic.remoteInfo?.title ?: comic.directory.name
 
     val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
 
@@ -71,7 +71,7 @@ fun Main.Common.Component.ComicListItem(
             model =
                 ImageRequest
                     .Builder(context)
-                    .data(data = R.raw.placeholder_manga)
+                    .data(data = R.raw.placeholder_comic)
                     .size(resolver = SizeResolver(imageSize))
                     .build(),
         )
@@ -85,15 +85,15 @@ fun Main.Common.Component.ComicListItem(
                 ImageRequest
                     .Builder(context)
                     .data(data = coverUri)
-                    .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
-                    .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+                    .memoryCacheKey("${coverUri}_${comic.directory.lastModified}")
+                    .diskCacheKey("${coverUri}_${comic.directory.lastModified}")
                     .size(resolver = SizeResolver(imageSize))
                     .build(),
         )
 
-    val categoryColor = manga.category?.color
+    val categoryColor = comic.category?.color
     val score =
-        manga.remoteInfo
+        comic.remoteInfo
             ?.sources
             ?.anilist
             ?.averageScore
@@ -147,7 +147,7 @@ fun Main.Common.Component.ComicListItem(
                 contentAlignment = Alignment.BottomEnd,
             ) {
                 val sourceIcon =
-                    when (manga.remoteInfo?.syncSource) {
+                    when (comic.remoteInfo?.syncSource) {
                         MetadataSourcePattern.MANGADEX -> R.drawable.mangadex_v2
                         MetadataSourcePattern.ANILIST -> R.drawable.anilist
                         else -> null
@@ -209,7 +209,7 @@ fun Main.Common.Component.ComicListItem(
                 // Completed status
                 if (isCompleted) {
                     Text(
-                        text = stringResource(id = R.string.label_manga_status_read),
+                        text = stringResource(id = R.string.label_comic_status_read),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary,
                         modifier =

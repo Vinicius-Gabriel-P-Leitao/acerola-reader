@@ -68,7 +68,7 @@ fun Main.Config.Layout.Screen(
     metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel(),
     fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
     comicDirectoryViewModel: ComicDirectoryViewModel = hiltViewModel(),
-    mangaDexViewModel: ComicMetadataViewModel = hiltViewModel(),
+    comicDexViewModel: ComicMetadataViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
     onNavigateToTemplates: () -> Unit,
 ) {
@@ -88,7 +88,7 @@ fun Main.Config.Layout.Screen(
             }
         }
         launch {
-            mangaDexViewModel.uiEvents.collect { message ->
+            comicDexViewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
@@ -107,7 +107,7 @@ fun Main.Config.Layout.Screen(
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
     val generateComicInfo by metadataSettingsViewModel.generateComicInfo.collectAsState()
     val metadataLanguage by metadataSettingsViewModel.metadataLanguage.collectAsState()
-    val allCategories by mangaDexViewModel.allCategories.collectAsState()
+    val allCategories by comicDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
     val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
 
@@ -128,10 +128,10 @@ fun Main.Config.Layout.Screen(
             is ConfigAction.UpdateMetadataLanguage -> metadataSettingsViewModel.setMetadataLanguage(action.language)
             ConfigAction.DeepScanLibrary -> comicDirectoryViewModel.deepScanLibrary()
             ConfigAction.QuickSyncLibrary -> comicDirectoryViewModel.syncLibrary()
-            ConfigAction.SyncMangadexMetadata -> mangaDexViewModel.rescanMangas()
-            ConfigAction.SyncAnilistMetadata -> mangaDexViewModel.rescanAnilistMangas()
-            is ConfigAction.CreateCategory -> mangaDexViewModel.createCategory(action.name, action.color)
-            is ConfigAction.DeleteCategory -> mangaDexViewModel.deleteCategory(action.id)
+            ConfigAction.SyncMangadexMetadata -> comicDexViewModel.rescanMangas()
+            ConfigAction.SyncAnilistMetadata -> comicDexViewModel.rescanAnilistMangas()
+            is ConfigAction.CreateCategory -> comicDexViewModel.createCategory(action.name, action.color)
+            is ConfigAction.DeleteCategory -> comicDexViewModel.deleteCategory(action.id)
             ConfigAction.NavigateToTemplateConfig -> onNavigateToTemplates()
         }
     }
@@ -315,6 +315,7 @@ private fun SectionHeader(title: String) {
     )
 }
 
+// INFO: Demo code
 @Composable
 fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
     val localId = remember(p2pViewModel) { p2pViewModel.getLocalId() }

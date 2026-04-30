@@ -31,7 +31,7 @@ class MangadexChapterInfoSource
         @param:ApplicationContext private val context: Context,
     ) : MetadataProvider<ChapterMetadataDto, String> {
         override suspend fun searchInfo(
-            manga: String,
+            comic: String,
             limit: Int,
             offset: Int,
             onProgress: ((Int) -> Unit)?,
@@ -41,7 +41,7 @@ class MangadexChapterInfoSource
                 val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
                 val languagesList = listOf(preferredLanguage)
 
-                AcerolaLogger.d(TAG, "GET /comic/$manga/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
+                AcerolaLogger.d(TAG, "GET /comic/$comic/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
 
                 val allChapters = mutableListOf<ChapterMetadataDto>()
                 val semaphore = Semaphore(permits = 3)
@@ -49,7 +49,7 @@ class MangadexChapterInfoSource
                 var error: NetworkError? = null
 
                 val initialResponseResult =
-                    safeApiCall { api.getMangaFeed(mangaId = manga, languages = languagesList, limit = 1, offset = 0) }
+                    safeApiCall { api.getMangaFeed(comicId = comic, languages = languagesList, limit = 1, offset = 0) }
                 val totalChapters = initialResponseResult.getOrNull()?.total ?: 0
 
                 while (true) {
@@ -60,11 +60,11 @@ class MangadexChapterInfoSource
 
                     val responseFeedResult =
                         safeApiCall {
-                            api.getMangaFeed(mangaId = manga, languages = languagesList, limit = limit, offset = currentOffset)
+                            api.getMangaFeed(comicId = comic, languages = languagesList, limit = limit, offset = currentOffset)
                         }
 
                     if (responseFeedResult is Either.Left) {
-                        AcerolaLogger.e(TAG, "Failed to fetch chapter feed for comic: $manga", LogSource.NETWORK)
+                        AcerolaLogger.e(TAG, "Failed to fetch chapter feed for comic: $comic", LogSource.NETWORK)
                         error = responseFeedResult.value
                         break
                     }
@@ -93,13 +93,13 @@ class MangadexChapterInfoSource
                 if (error != null && allChapters.isEmpty()) {
                     Either.Left(value = error)
                 } else {
-                    AcerolaLogger.i(TAG, "Successfully fetched total of ${allChapters.size} chapters for comic $manga", LogSource.NETWORK)
+                    AcerolaLogger.i(TAG, "Successfully fetched total of ${allChapters.size} chapters for comic $comic", LogSource.NETWORK)
                     Either.Right(value = allChapters)
                 }
             }
 
         override suspend fun saveInfo(
-            manga: String,
+            comic: String,
             info: ChapterMetadataDto,
         ): Either<NetworkError, Unit> = Either.Right(Unit)
 
