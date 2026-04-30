@@ -488,7 +488,8 @@ class ChapterArchiveEngine
                     }
                 }
 
-        override suspend fun hasRootChapters(comicId: Long): Boolean = chapterArchiveDao.countRootChaptersByDirectoryId(comicId) > 0
+        override fun observeHasRootChapters(comicId: Long): Flow<Boolean> =
+            chapterArchiveDao.observeRootChaptersCountByDirectoryId(comicId).map { it > 0 }
 
         override suspend fun getChapterPage(
             comicId: Long,

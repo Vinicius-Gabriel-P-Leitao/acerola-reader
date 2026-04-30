@@ -2,6 +2,7 @@ package br.acerola.comic.adapter.contract.gateway
 
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface VolumeChapterGateway {
@@ -21,5 +22,5 @@ interface VolumeChapterGateway {
         isAscending: Boolean = true,
     ): List<ChapterFileDto>
 
-    suspend fun hasRootChapters(comicId: Long): Boolean
+    fun observeHasRootChapters(comicId: Long): Flow<Boolean>
 }

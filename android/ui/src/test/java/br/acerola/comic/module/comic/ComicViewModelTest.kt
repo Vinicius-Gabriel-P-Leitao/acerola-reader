@@ -66,6 +66,7 @@ class ComicViewModelTest {
 
     private val localChaptersFlow = MutableStateFlow(ChapterArchivePageDto(emptyList(), emptyList(), 20, 0, 0))
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
+    private val hasRootChaptersFlow = MutableStateFlow(true)
 
     private lateinit var viewModel: ComicViewModel
 
@@ -148,7 +149,7 @@ class ComicViewModelTest {
         every { mangadexChapterRepo.observeChapters(any(), any(), any()) } returns remoteChaptersFlow
         every { manageCategoriesUseCase.getCategoryByMangaId(any()) } returns flowOf(null)
         every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns MutableStateFlow(emptyList())
-        coEvery { directoryObserveVolumeChapters.hasRootChapters(any()) } returns true
+        every { directoryObserveVolumeChapters.observeHasRootChapters(any()) } returns hasRootChaptersFlow
         coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()
 
         observeComicHistoryUseCase = ObserveComicHistoryUseCase(historyGateway)
@@ -350,7 +351,7 @@ class ComicViewModelTest {
         runTest {
             val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
-            coEvery { directoryObserveVolumeChapters.hasRootChapters(any()) } returns false
+            hasRootChaptersFlow.value = false
             every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
                 MutableStateFlow(
                     listOf(
@@ -411,7 +412,7 @@ class ComicViewModelTest {
         runTest {
             val volume1 = VolumeDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
-            coEvery { directoryObserveVolumeChapters.hasRootChapters(any()) } returns true
+            hasRootChaptersFlow.value = true
 
             localChaptersFlow.value =
                 ChapterArchivePageDto(

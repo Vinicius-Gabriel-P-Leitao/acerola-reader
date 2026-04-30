@@ -233,7 +233,6 @@ class ComicViewModel
                         }
                     }
                 flow<ChapterDto?> {
-                    val hasRootChapters = directoryObserveVolumeChapters.hasRootChapters(folderId)
                     val localFlow = directoryGetChapters.observeByManga(folderId, sort.type.name, sort.direction == SortDirection.ASCENDING)
                     val volumeSectionsFlow =
                         directoryObserveVolumeChapters.observeByComic(
@@ -242,9 +241,10 @@ class ComicViewModel
                             sortType = sort.type.name,
                             isAscending = sort.direction == SortDirection.ASCENDING,
                         )
+                    val hasRootChaptersFlow = directoryObserveVolumeChapters.observeHasRootChapters(folderId)
 
                     emitAll(
-                        combine(localFlow, volumeSectionsFlow, remoteFlow) { localAll, volumeSections, remoteAll ->
+                        combine(localFlow, volumeSectionsFlow, remoteFlow, hasRootChaptersFlow) { localAll, volumeSections, remoteAll, hasRootChapters ->
                             val shouldUseVolumeCards =
                                 sort.type == ChapterSortType.NUMBER &&
                                     !hasRootChapters &&

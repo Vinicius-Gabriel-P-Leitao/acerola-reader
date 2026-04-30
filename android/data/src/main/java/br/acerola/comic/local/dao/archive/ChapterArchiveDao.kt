@@ -29,6 +29,9 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     @Query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = :folderId AND volume_id_fk IS NULL")
     suspend fun countRootChaptersByDirectoryId(folderId: Long): Int
 
+    @Query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = :folderId AND volume_id_fk IS NULL")
+    fun observeRootChaptersCountByDirectoryId(folderId: Long): Flow<Int>
+
     @Transaction
     @Query(
         value = """
