@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
+import br.acerola.comic.common.ux.component.GroupedHeroItem
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
@@ -46,7 +47,7 @@ fun Comic.Component.VolumeCard(
         modifier = modifier,
         onClick = onToggleExpanded,
         action = {
-            GlassButton(
+            Acerola.Component.GlassButton(
                 onClick = onToggleExpanded,
                 icon = {
                     androidx.compose.material3.Icon(

@@ -223,7 +223,7 @@ class ComicViewModel
                 if (folderId == null) return@flatMapLatest flowOf(null)
                 val (sort, page, pageSizeType, _, volumeOverrides) = params
 
-                val remoteFlow =
+                val remoteFlow: Flow<ChapterRemoteInfoPageDto> =
                     comic.flatMapLatest {
                         val comicId = it?.remoteInfo?.id
                         if (comicId != null) {
@@ -232,8 +232,9 @@ class ComicViewModel
                             flowOf(ChapterRemoteInfoPageDto(emptyList(), 0, 0, 0))
                         }
                     }
-                flow {
+                flow<ChapterDto?> {
                     val hasRootChapters = directoryObserveVolumeChapters.hasRootChapters(folderId)
+                    val localFlow = directoryGetChapters.observeByManga(folderId, sort.type.name, sort.direction == SortDirection.ASCENDING)
                     val volumeSectionsFlow =
                         directoryObserveVolumeChapters.observeByComic(
                             comicId = folderId,
@@ -242,16 +243,16 @@ class ComicViewModel
                             isAscending = sort.direction == SortDirection.ASCENDING,
                         )
 
-                    val shouldUseVolumeCards =
-                        sort.type == ChapterSortType.NUMBER &&
-                            !hasRootChapters &&
-                            volumeSectionsFlow.first().size > 1
+                    emitAll(
+                        combine(localFlow, volumeSectionsFlow, remoteFlow) { localAll, volumeSections, remoteAll ->
+                            val shouldUseVolumeCards =
+                                sort.type == ChapterSortType.NUMBER &&
+                                    !hasRootChapters &&
+                                    volumeSections.size > 0
 
-                    if (shouldUseVolumeCards) {
-                        emitAll(
-                            combine(volumeSectionsFlow, remoteFlow) { baseSections, remoteAll ->
+                            if (shouldUseVolumeCards) {
                                 val mergedSections =
-                                    baseSections.map { section ->
+                                    volumeSections.map { section ->
                                         volumeOverrides[section.volume.id]?.let { override ->
                                             section.copy(
                                                 items = override.items,
@@ -281,12 +282,7 @@ class ComicViewModel
                                     remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, VOLUME_PREVIEW_SIZE, 0, visibleItems.size),
                                     showVolumeHeaders = true,
                                 )
-                            },
-                        )
-                    } else {
-                        val localFlow = directoryGetChapters.observeByManga(folderId, sort.type.name, sort.direction == SortDirection.ASCENDING)
-                        emitAll(
-                            combine(localFlow, remoteFlow) { localAll, remoteAll ->
+                            } else {
                                 val items = localAll.items
                                 if (items.isEmpty()) return@combine ChapterDto(localAll, remoteAll)
 
@@ -317,9 +313,9 @@ class ComicViewModel
                                     remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, safePage, total),
                                     showVolumeHeaders = false,
                                 )
-                            },
-                        )
-                    }
+                            }
+                        },
+                    )
                 }
             }.stateIn(
                 initialValue = null,

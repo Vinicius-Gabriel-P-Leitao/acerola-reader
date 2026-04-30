@@ -125,8 +125,7 @@ class ChapterArchiveEngine
                                 if (existing != null) {
                                     volumesToDelete.remove(existing)
                                     volumeMap[subFolderUri] = existing.id
-                                    // Check if we need to update media or metadata
-                                    // For now, we assume volumes don't change much, but could add media check here
+
                                 } else {
                                     // Detect volume media
                                     val subFolderChildren =
@@ -145,6 +144,7 @@ class ChapterArchiveEngine
                                                 DocumentsContract.buildDocumentUriUsingTree(subFolderUri.toUri(), it.id).toString()
                                             }
                                         }
+
                                     val banner =
                                         subFolderChildren.find { MediaFilePattern.isBanner(it.name) }?.let {
                                             if (baseUri != null) {
