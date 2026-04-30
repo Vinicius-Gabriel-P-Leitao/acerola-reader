@@ -33,8 +33,7 @@ class CoverExtractor
         private val fileStorageHandler: FileStorageHandler,
         private val chapterSourceFactory: ChapterSourceFactory,
     ) {
-
-    suspend fun extractFirstPageAsCover(comicId: Long): Either<IoError, Unit> =
+        suspend fun extractFirstPageAsCover(comicId: Long): Either<IoError, Unit> =
             withContext(Dispatchers.IO) {
                 val directory =
                     directoryDao.getDirectoryById(comicId)

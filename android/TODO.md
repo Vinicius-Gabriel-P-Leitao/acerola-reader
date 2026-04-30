@@ -95,16 +95,19 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 
 #### 5. Camada de Dados & UI (Compose)
 
-- [ ] **DTOs & Mappers**:
-    - [ ] Atualizar `ChapterDto` e `ChapterFileDto` para conter informações do Volume pai.
-    - [ ] Atualizar mappers em `ArchivePersistenceMapper.kt`.
-- [ ] **ViewModel (Agrupamento)**:
-    - [ ] Criar lógica para detectar se há múltiplos volumes ativos.
-    - [ ] Adaptar `ComicViewModel` para não desfazer a ordenação do SQL (remover ordenação redundante em Kotlin).
+- [x] **DTOs & Mappers**:
+    - [x] Atualizar `ChapterDto` e `ChapterFileDto` para conter informações do Volume pai.
+    - [x] Atualizar mappers em `ArchivePersistenceMapper.kt`.
+- [x] **ViewModel (Agrupamento)**:
+    - [x] Criar lógica para detectar se há múltiplos volumes ativos.
+    - [x] Adaptar `ComicViewModel` para não desfazer a ordenação do SQL (remover ordenação redundante em Kotlin).
 - [ ] **Interface (Jetpack Compose)**:
     - [ ] Criar `VolumeHeaderComponent`.
     - [ ] Implementar `stickyHeader` na `LazyColumn`.
     - [ ] **Lógica de Visibilidade**: Ocultar o Header se houver apenas 1 volume ou se os capítulos forem "órfãos" (Root).
+- [ ] **Transformar formato de volume em cards colapsáveis**: 
+  - [ ] Quando tiver volumes ao invés de paginar os chapter vai criar cards colapsáveis e validar para ele não buscar todos os chapters por 
+    volume se tiver 2 volumes mas cada um com 500 chapter isso vai explodir a memoria, tem que ser feito de uma forma otimizada visualmente e no sql
 
 ### Adicionar um worker para o conversor de pdf
 

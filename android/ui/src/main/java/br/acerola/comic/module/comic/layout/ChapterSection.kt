@@ -28,11 +28,18 @@ fun Comic.Layout.chapterSection(
     showVolumeHeaders: Boolean = false,
 ) {
     val volumeMap = chapters.archive.volumes.associateBy { it.id }
-    val chapterCountByVolume = chapters.archive.items.mapNotNull { it.volumeId }.groupingBy { it }.eachCount()
+    val chapterCountByVolume =
+        chapters.archive.items
+            .mapNotNull { it.volumeId }
+            .groupingBy { it }
+            .eachCount()
 
     chapters.archive.items.forEachIndexed { index, archiveItem ->
         val volumeId = archiveItem.volumeId
-        val previousVolumeId = chapters.archive.items.getOrNull(index - 1)?.volumeId
+        val previousVolumeId =
+            chapters.archive.items
+                .getOrNull(index - 1)
+                ?.volumeId
         val shouldShowHeader = showVolumeHeaders && volumeId != null && volumeId != previousVolumeId
 
         if (shouldShowHeader) {
@@ -52,7 +59,7 @@ fun Comic.Layout.chapterSection(
             val remoteItem: ChapterFeedDto? =
                 chapters.remoteInfo?.items?.firstOrNull {
                     it.chapter.normalizeChapter() ==
-                            archiveItem.chapterSort.normalizeChapter()
+                        archiveItem.chapterSort.normalizeChapter()
                 }
 
             Comic.Component.ChapterItem(

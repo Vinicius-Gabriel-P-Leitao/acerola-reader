@@ -89,13 +89,14 @@ class ChapterArchiveEngineVolumeTest {
         mockkObject(SortNormalizer)
 
         every { context.contentResolver } returns mockk(relaxed = true)
-        coEvery { templateService.getTemplates() } returns listOf(
-            br.acerola.comic.local.entity.archive.ChapterTemplate(
-                id = 1L,
-                label = "Default",
-                pattern = "Ch. {chapter}{decimal}.*.{extension}"
+        coEvery { templateService.getTemplates() } returns
+            listOf(
+                br.acerola.comic.local.entity.archive.ChapterTemplate(
+                    id = 1L,
+                    label = "Default",
+                    pattern = "Ch. {chapter}{decimal}.*.{extension}",
+                ),
             )
-        )
     }
 
     @After
@@ -124,7 +125,7 @@ class ChapterArchiveEngineVolumeTest {
             every { folderDoc.name } returns "Root"
 
             coEvery { directoryDao.getDirectoryById(comicId = comicId) } returns comicDir
-            
+
             // Forçamos o mock de IDs para que o código interno não tente validar a URI "na mão"
             every { DocumentsContract.getDocumentId(folderUri) } returns "primary:root"
             every { DocumentsContract.getTreeDocumentId(folderUri) } returns "primary:root"
@@ -132,13 +133,14 @@ class ChapterArchiveEngineVolumeTest {
             every { DocumentFile.fromTreeUri(context, folderUri) } returns folderDoc
 
             // 1. Detecção de Volumes
-            val volumeMetadata = FastFileMetadata(
-                id = "primary:root/Vol. 01",
-                name = "Vol. 01",
-                size = 0,
-                mimeType = DocumentsContract.Document.MIME_TYPE_DIR,
-                lastModified = 1000L,
-            )
+            val volumeMetadata =
+                FastFileMetadata(
+                    id = "primary:root/Vol. 01",
+                    name = "Vol. 01",
+                    size = 0,
+                    mimeType = DocumentsContract.Document.MIME_TYPE_DIR,
+                    lastModified = 1000L,
+                )
             every { ContentQueryHelper.listFiles(context, baseUri, "primary:root") } returns Either.Right(listOf(volumeMetadata))
             coEvery { volumeArchiveDao.getVolumesListByDirectoryId(comicId) } returns emptyList()
             every { SortNormalizer.normalize("Vol. 01", SortType.VOLUME) } returns SortResult(SortType.VOLUME, 1, 0, false, "1")
@@ -149,29 +151,32 @@ class ChapterArchiveEngineVolumeTest {
             coEvery { volumeArchiveDao.insert(any()) } returns 101L
 
             // 2. Detecção de PDF dentro do volume
-            val pdfMetadata = FastFileMetadata(
-                id = "primary:root/Vol. 01/Ch. 01.pdf",
-                name = "Ch. 01.pdf",
-                size = 1024L,
-                mimeType = "application/pdf",
-                lastModified = 2000L,
-            )
+            val pdfMetadata =
+                FastFileMetadata(
+                    id = "primary:root/Vol. 01/Ch. 01.pdf",
+                    name = "Ch. 01.pdf",
+                    size = 1024L,
+                    mimeType = "application/pdf",
+                    lastModified = 2000L,
+                )
 
-            val cbzMetadata = FastFileMetadata(
-                id = "primary:root/Vol. 01/Ch. 01.cbz",
-                name = "Ch. 01.cbz",
-                size = 1024L,
-                mimeType = "application/x-cbz",
-                lastModified = 3000L,
-            )
+            val cbzMetadata =
+                FastFileMetadata(
+                    id = "primary:root/Vol. 01/Ch. 01.cbz",
+                    name = "Ch. 01.cbz",
+                    size = 1024L,
+                    mimeType = "application/x-cbz",
+                    lastModified = 3000L,
+                )
 
             // O engine lê a subpasta algumas vezes antes da conversão e novamente depois do refresh global.
-            every { ContentQueryHelper.listFiles(context, baseUri, "primary:root/Vol. 01") } returnsMany listOf(
-                Either.Right(listOf(pdfMetadata)), // Step 1: Detect volume media
-                Either.Right(listOf(pdfMetadata)), // Step 2: Determine template
-                Either.Right(listOf(pdfMetadata)), // Step 3: Check conversion
-                Either.Right(listOf(cbzMetadata))  // Step 4: Collect after refresh
-            )
+            every { ContentQueryHelper.listFiles(context, baseUri, "primary:root/Vol. 01") } returnsMany
+                listOf(
+                    Either.Right(listOf(pdfMetadata)), // Step 1: Detect volume media
+                    Either.Right(listOf(pdfMetadata)), // Step 2: Determine template
+                    Either.Right(listOf(pdfMetadata)), // Step 3: Check conversion
+                    Either.Right(listOf(cbzMetadata)), // Step 4: Collect after refresh
+                )
 
             val volDoc = mockk<DocumentFile>()
             every { volDoc.name } returns "Vol. 01"
@@ -181,12 +186,18 @@ class ChapterArchiveEngineVolumeTest {
             // Não precisamos mais mockar templateToRegex pois fornecemos um template que o real templateToRegex entende
             val pdfDoc = mockk<DocumentFile>()
             every { pdfDoc.name } returns "Ch. 01.pdf"
-            val pdfDocUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3Aroot/document/primary%3Aroot%2FVol.01%2FCh.01.pdf")
+            val pdfDocUri =
+                Uri.parse(
+                    "content://com.android.externalstorage.documents/tree/primary%3Aroot/document/primary%3Aroot%2FVol.01%2FCh.01.pdf",
+                )
             every { DocumentsContract.buildDocumentUriUsingTree(baseUri, "primary:root/Vol. 01/Ch. 01.pdf") } returns pdfDocUri
             every { DocumentsContract.getDocumentId(pdfDocUri) } returns "primary:root/Vol. 01/Ch. 01.pdf"
             every { DocumentFile.fromSingleUri(context, pdfDocUri) } returns pdfDoc
 
-            val cbzDocUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3Aroot/document/primary%3Aroot%2FVol.01%2FCh.01.cbz")
+            val cbzDocUri =
+                Uri.parse(
+                    "content://com.android.externalstorage.documents/tree/primary%3Aroot/document/primary%3Aroot%2FVol.01%2FCh.01.cbz",
+                )
             every { DocumentsContract.buildDocumentUriUsingTree(baseUri, "primary:root/Vol. 01/Ch. 01.cbz") } returns cbzDocUri
 
             coEvery { pdfToCbzConverterService.convertPdfToCbz(volDoc, pdfDoc, "Ch. 01.cbz") } returns Either.Right(Unit)
@@ -204,10 +215,11 @@ class ChapterArchiveEngineVolumeTest {
 
             // Verificação
             result.onLeft { error ->
-                val message = when (error) {
-                    is LibrarySyncError.UnexpectedError -> "Unexpected: ${error.cause?.message}"
-                    else -> error.toString()
-                }
+                val message =
+                    when (error) {
+                        is LibrarySyncError.UnexpectedError -> "Unexpected: ${error.cause?.message}"
+                        else -> error.toString()
+                    }
                 throw AssertionError("Deveria ser Right, mas retornou Left: $message")
             }
             assertTrue("Deveria ser Right", result.isRight())

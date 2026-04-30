@@ -86,8 +86,7 @@ class PdfToCbzConverter
                 }
             }
 
-    companion object {
-
-        private const val TAG = "PdfToCbzConverter"
-    }
+        companion object {
+            private const val TAG = "PdfToCbzConverter"
+        }
     }

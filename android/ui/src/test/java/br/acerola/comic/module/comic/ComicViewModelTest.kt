@@ -31,8 +31,11 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -63,6 +66,45 @@ class ComicViewModelTest {
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
 
     private lateinit var viewModel: ComicViewModel
+
+    private fun observedLocalChapters(
+        sortType: String,
+        isAscending: Boolean,
+    ): StateFlow<ChapterArchivePageDto> =
+        object : StateFlow<ChapterArchivePageDto> {
+            override val replayCache: List<ChapterArchivePageDto>
+                get() = listOf(value)
+
+            override val value: ChapterArchivePageDto
+                get() {
+                    val baseList =
+                        if (sortType == "LAST_UPDATE") {
+                            localChaptersFlow.value.items.sortedBy { it.lastModified }
+                        } else {
+                            localChaptersFlow.value.items
+                        }
+
+                    val finalList = if (isAscending) baseList else baseList.reversed()
+                    return localChaptersFlow.value.copy(items = finalList)
+                }
+
+            override suspend fun collect(collector: FlowCollector<ChapterArchivePageDto>): Nothing {
+                localChaptersFlow
+                    .map { pageDto ->
+                        val baseList =
+                            if (sortType == "LAST_UPDATE") {
+                                pageDto.items.sortedBy { it.lastModified }
+                            } else {
+                                pageDto.items
+                            }
+
+                        val finalList = if (isAscending) baseList else baseList.reversed()
+                        pageDto.copy(items = finalList)
+                    }.collect(collector)
+
+                error("StateFlow collection should not complete")
+            }
+        }
 
     @Before
     fun setup() {
@@ -99,16 +141,7 @@ class ComicViewModelTest {
         every { directoryChapterRepo.observeChapters(any(), any(), any()) } answers {
             val sortType = it.invocation.args[1] as String
             val isAscending = it.invocation.args[2] as Boolean
-
-            val baseList =
-                if (sortType == "LAST_UPDATE") {
-                    localChaptersFlow.value.items.sortedBy { it.lastModified }
-                } else {
-                    localChaptersFlow.value.items
-                }
-
-            val finalList = if (isAscending) baseList else baseList.reversed()
-            MutableStateFlow(localChaptersFlow.value.copy(items = finalList))
+            observedLocalChapters(sortType = sortType, isAscending = isAscending)
         }
         every { mangadexChapterRepo.observeChapters(any(), any(), any()) } returns remoteChaptersFlow
         every { manageCategoriesUseCase.getCategoryByMangaId(any()) } returns flowOf(null)
@@ -305,6 +338,7 @@ class ComicViewModelTest {
                 assertThat(item.archive.items[1].id).isEqualTo(1L)
             }
         }
+
     @Test
     fun `deve exibir headers apenas quando houver multiplos volumes reais`() =
         runTest {

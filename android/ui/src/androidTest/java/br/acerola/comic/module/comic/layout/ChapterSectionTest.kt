@@ -1,7 +1,6 @@
 package br.acerola.comic.module.comic.layout
 
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -54,14 +53,15 @@ class ChapterSectionTest {
         val chapters =
             ChapterDto(
                 archive =
-                    ComicFixtures.createChapterArchivePageDto(
-                        items =
-                            listOf(
-                                ChapterFileDto(id = 1L, name = "Cap. 1", path = "", chapterSort = "1", volumeId = 10L),
-                                ChapterFileDto(id = 2L, name = "Cap. 2", path = "", chapterSort = "2", volumeId = 10L),
-                                ChapterFileDto(id = 3L, name = "Cap. 3", path = "", chapterSort = "3", volumeId = 20L),
-                            ),
-                    ).copy(volumes = listOf(volume1, volume2)),
+                    ComicFixtures
+                        .createChapterArchivePageDto(
+                            items =
+                                listOf(
+                                    ChapterFileDto(id = 1L, name = "Cap. 1", path = "", chapterSort = "1", volumeId = 10L),
+                                    ChapterFileDto(id = 2L, name = "Cap. 2", path = "", chapterSort = "2", volumeId = 10L),
+                                    ChapterFileDto(id = 3L, name = "Cap. 3", path = "", chapterSort = "3", volumeId = 20L),
+                                ),
+                        ).copy(volumes = listOf(volume1, volume2)),
                 remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = true,
             )
@@ -94,13 +94,14 @@ class ChapterSectionTest {
         val chapters =
             ChapterDto(
                 archive =
-                    ComicFixtures.createChapterArchivePageDto(
-                        items =
-                            listOf(
-                                ChapterFileDto(id = 1L, name = "Cap. 1", path = "", chapterSort = "1", volumeId = 10L),
-                                ChapterFileDto(id = 2L, name = "Cap. 2", path = "", chapterSort = "2", volumeId = 10L),
-                            ),
-                    ).copy(volumes = listOf(volume1)),
+                    ComicFixtures
+                        .createChapterArchivePageDto(
+                            items =
+                                listOf(
+                                    ChapterFileDto(id = 1L, name = "Cap. 1", path = "", chapterSort = "1", volumeId = 10L),
+                                    ChapterFileDto(id = 2L, name = "Cap. 2", path = "", chapterSort = "2", volumeId = 10L),
+                                ),
+                        ).copy(volumes = listOf(volume1)),
                 remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = false,
             )

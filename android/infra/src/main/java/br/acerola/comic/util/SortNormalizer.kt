@@ -18,7 +18,6 @@ data class SortResult(
 )
 
 object SortNormalizer {
-
     fun normalize(
         name: String,
         type: SortType,
