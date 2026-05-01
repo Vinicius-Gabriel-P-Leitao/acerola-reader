@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 class ObserveVolumeChaptersUseCase(
     private val volumeGateway: VolumeGateway,
 ) {
-
     fun observeByComic(
         comicId: Long,
         previewSize: Int = 5,

@@ -33,23 +33,24 @@ class VolumeArchiveEngine
                     val sortedSummaries = if (isAscending) summaries else summaries.reversed()
 
                     sortedSummaries.map { summary ->
-                        val previewItems = if (isAscending) {
-                            chapterArchiveDao.getChaptersByVolumePaged(
-                                comicId = comicId,
-                                volumeId = summary.id,
-                                pageSize = previewSize,
-                                offset = 0,
-                            )
-                        } else {
-                            chapterArchiveDao.getChaptersByVolumePagedDesc(
-                                comicId = comicId,
-                                volumeId = summary.id,
-                                pageSize = previewSize,
-                                offset = 0,
-                            )
-                        }.let { joins ->
-                            joins.map { it.toViewDto() }
-                        }
+                        val previewItems =
+                            if (isAscending) {
+                                chapterArchiveDao.getChaptersByVolumePaged(
+                                    comicId = comicId,
+                                    volumeId = summary.id,
+                                    pageSize = previewSize,
+                                    offset = 0,
+                                )
+                            } else {
+                                chapterArchiveDao.getChaptersByVolumePagedDesc(
+                                    comicId = comicId,
+                                    volumeId = summary.id,
+                                    pageSize = previewSize,
+                                    offset = 0,
+                                )
+                            }.let { joins ->
+                                joins.map { it.toViewDto() }
+                            }
 
                         summary.toGroupDto(items = previewItems)
                     }
@@ -75,21 +76,22 @@ class VolumeArchiveEngine
             sortType: String,
             isAscending: Boolean,
         ): List<ChapterFileDto> {
-            val joins = if (isAscending) {
-                chapterArchiveDao.getChaptersByVolumePaged(
-                    comicId = comicId,
-                    volumeId = volumeId,
-                    pageSize = pageSize,
-                    offset = offset,
-                )
-            } else {
-                chapterArchiveDao.getChaptersByVolumePagedDesc(
-                    comicId = comicId,
-                    volumeId = volumeId,
-                    pageSize = pageSize,
-                    offset = offset,
-                )
-            }
+            val joins =
+                if (isAscending) {
+                    chapterArchiveDao.getChaptersByVolumePaged(
+                        comicId = comicId,
+                        volumeId = volumeId,
+                        pageSize = pageSize,
+                        offset = offset,
+                    )
+                } else {
+                    chapterArchiveDao.getChaptersByVolumePagedDesc(
+                        comicId = comicId,
+                        volumeId = volumeId,
+                        pageSize = pageSize,
+                        offset = offset,
+                    )
+                }
             return joins.map { it.toViewDto() }
         }
 

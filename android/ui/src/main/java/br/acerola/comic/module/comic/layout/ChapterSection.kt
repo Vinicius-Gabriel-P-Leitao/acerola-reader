@@ -75,7 +75,7 @@ fun Comic.Layout.chapterSection(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 4.dp)
+                            modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 4.dp),
                         )
                     }
                 }
@@ -106,7 +106,8 @@ fun Comic.Layout.chapterSection(
                 }
 
                 scope.item(key = "vol_${group.volume.id}_bottom_spacer") {
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+                    androidx.compose.foundation.layout
+                        .Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }

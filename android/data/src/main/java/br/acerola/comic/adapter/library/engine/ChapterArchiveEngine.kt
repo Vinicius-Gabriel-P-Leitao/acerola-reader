@@ -414,13 +414,14 @@ class ChapterArchiveEngine
                 .getChaptersByDirectoryId(folderId = comicId)
                 .map { list ->
                     AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
-                    val finalList = if (sortType == "LAST_UPDATE") {
-                        val base = list.sortedBy { it.chapter.lastModified }
-                        if (isAscending) base else base.reversed()
-                    } else {
-                        // SQL already handled the hierarchy/number sorting
-                        if (isAscending) list else list.reversed()
-                    }
+                    val finalList =
+                        if (sortType == "LAST_UPDATE") {
+                            val base = list.sortedBy { it.chapter.lastModified }
+                            if (isAscending) base else base.reversed()
+                        } else {
+                            // SQL already handled the hierarchy/number sorting
+                            if (isAscending) list else list.reversed()
+                        }
                     finalList.toViewPageDto()
                 }.stateIn(
                     started = SharingStarted.Lazily,
@@ -441,29 +442,31 @@ class ChapterArchiveEngine
             return if (sortType == "NUMBER") {
                 val offset = page * pageSize
                 val realTotal = if (total > 0) total else chapterArchiveDao.countByDirectoryId(folderId = comicId)
-                val items = if (isAscending) {
-                    chapterArchiveDao.getChaptersByDirectoryPaged(
-                        folderId = comicId,
-                        pageSize = pageSize,
-                        offset = offset,
-                    )
-                } else {
-                    chapterArchiveDao.getChaptersByDirectoryPagedDesc(
-                        folderId = comicId,
-                        pageSize = pageSize,
-                        offset = offset,
-                    )
-                }
+                val items =
+                    if (isAscending) {
+                        chapterArchiveDao.getChaptersByDirectoryPaged(
+                            folderId = comicId,
+                            pageSize = pageSize,
+                            offset = offset,
+                        )
+                    } else {
+                        chapterArchiveDao.getChaptersByDirectoryPagedDesc(
+                            folderId = comicId,
+                            pageSize = pageSize,
+                            offset = offset,
+                        )
+                    }
 
                 items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
             } else {
                 val flowList = chapterArchiveDao.getChaptersByDirectoryId(comicId).first()
-                val sortedList = if (sortType == "LAST_UPDATE") {
-                    val base = flowList.sortedBy { it.chapter.lastModified }
-                    if (isAscending) base else base.reversed()
-                } else {
-                    if (isAscending) flowList else flowList.reversed()
-                }
+                val sortedList =
+                    if (sortType == "LAST_UPDATE") {
+                        val base = flowList.sortedBy { it.chapter.lastModified }
+                        if (isAscending) base else base.reversed()
+                    } else {
+                        if (isAscending) flowList else flowList.reversed()
+                    }
 
                 val realTotal = sortedList.size
                 val start = (page * pageSize).coerceIn(0, realTotal)

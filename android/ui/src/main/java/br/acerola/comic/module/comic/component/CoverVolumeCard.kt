@@ -60,6 +60,6 @@ fun Comic.Component.CoverVolumeCard(
                 )
             }
         },
-        nestedItem = {}
+        nestedItem = {},
     )
 }

@@ -10,7 +10,6 @@ import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.view.ComicSummaryDto
-import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase

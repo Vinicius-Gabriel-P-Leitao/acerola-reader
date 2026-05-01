@@ -3,7 +3,6 @@ package br.acerola.comic.adapter.contract.gateway
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 interface VolumeGateway {
     fun observeVolumeGroups(

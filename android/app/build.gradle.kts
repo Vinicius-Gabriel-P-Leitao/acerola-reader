@@ -22,10 +22,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    val localProps = Properties().apply {
-        val file = rootProject.file("local.properties")
-        if (file.exists()) load(file.inputStream())
-    }
+    val localProps =
+        Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) load(file.inputStream())
+        }
 
     fun localOrEnv(key: String) = localProps.getProperty(key) ?: System.getenv(key)
 

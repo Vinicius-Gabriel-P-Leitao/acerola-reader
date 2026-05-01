@@ -14,7 +14,6 @@ import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
 import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.config.preference.types.SortDirection
-import br.acerola.comic.config.preference.types.VolumeViewType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

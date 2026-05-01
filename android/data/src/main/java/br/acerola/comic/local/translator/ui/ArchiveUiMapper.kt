@@ -108,37 +108,44 @@ fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
     remoteAll: ChapterRemoteInfoPageDto,
     volumeOverrides: Map<Long, VolumeChapterGroupDto>,
 ): ChapterDto {
-    val mergedSections = this.map { section ->
-        val sectionTotalPages = if (section.totalChapters == 0) 1
-        else ceil(section.totalChapters.toDouble() / pageSize).toInt()
+    val mergedSections =
+        this.map { section ->
+            val sectionTotalPages =
+                if (section.totalChapters == 0) {
+                    1
+                } else {
+                    ceil(section.totalChapters.toDouble() / pageSize).toInt()
+                }
 
-        volumeOverrides[section.volume.id]?.let { override ->
-            section.copy(
-                items = override.items,
-                loadedCount = override.items.size,
-                hasMore = override.items.size < section.totalChapters,
-                currentPage = override.currentPage,
-                totalPages = sectionTotalPages,
-            )
-        } ?: section.copy(totalPages = sectionTotalPages)
-    }
+            volumeOverrides[section.volume.id]?.let { override ->
+                section.copy(
+                    items = override.items,
+                    loadedCount = override.items.size,
+                    hasMore = override.items.size < section.totalChapters,
+                    currentPage = override.currentPage,
+                    totalPages = sectionTotalPages,
+                )
+            } ?: section.copy(totalPages = sectionTotalPages)
+        }
 
     val visibleItems = mergedSections.flatMap { it.items }
     val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeSort() }
 
-    val filteredRemoteItems = visibleItems.mapNotNull { local ->
-        remoteMap[local.chapterSort.normalizeSort()]
-    }
+    val filteredRemoteItems =
+        visibleItems.mapNotNull { local ->
+            remoteMap[local.chapterSort.normalizeSort()]
+        }
 
     return ChapterDto(
-        archive = ChapterPageDto(
-            items = visibleItems,
-            volumes = mergedSections.map { it.volume },
-            volumeSections = mergedSections,
-            pageSize = pageSize,
-            total = mergedSections.sumOf { it.totalChapters },
-            page = 0,
-        ),
+        archive =
+            ChapterPageDto(
+                items = visibleItems,
+                volumes = mergedSections.map { it.volume },
+                volumeSections = mergedSections,
+                pageSize = pageSize,
+                total = mergedSections.sumOf { it.totalChapters },
+                page = 0,
+            ),
         remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, 0, visibleItems.size),
         showVolumeHeaders = mergedSections.size > 1,
         hasVolumeStructure = true,
@@ -173,18 +180,20 @@ fun ChapterPageDto.toCombinedRegularDto(
     val pagedLocalItems = items.subList(0, end)
     val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeSort() }
 
-    val filteredRemoteItems = pagedLocalItems.mapNotNull { local ->
-        remoteMap[local.chapterSort.normalizeSort()]
-    }
+    val filteredRemoteItems =
+        pagedLocalItems.mapNotNull { local ->
+            remoteMap[local.chapterSort.normalizeSort()]
+        }
 
     return ChapterDto(
-        archive = ChapterPageDto(
-            items = pagedLocalItems,
-            volumes = this.volumes,
-            pageSize = pageSize,
-            total = total,
-            page = safePage,
-        ),
+        archive =
+            ChapterPageDto(
+                items = pagedLocalItems,
+                volumes = this.volumes,
+                pageSize = pageSize,
+                total = total,
+                page = safePage,
+            ),
         remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, safePage, total),
         showVolumeHeaders = false,
         hasVolumeStructure = hasVolumeStructure,

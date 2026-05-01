@@ -43,6 +43,6 @@ fun Comic.Component.VolumeCard(
                 },
             )
         },
-        nestedItem = {}
+        nestedItem = {},
     )
 }
