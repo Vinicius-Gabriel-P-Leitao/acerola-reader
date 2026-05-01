@@ -161,7 +161,7 @@ object ChapterSortPreference {
     fun sortFlow(context: Context): Flow<ChapterSortPreferenceData> =
         context.dataStore.data.map { prefs ->
             ChapterSortPreferenceData(
-                type = ChapterSortType.Companion.fromKey(key = prefs[CHAPTER_SORT_TYPE_KEY]),
+                type = ChapterSortType.fromKey(key = prefs[CHAPTER_SORT_TYPE_KEY]),
                 direction = SortDirection.fromKey(key = prefs[CHAPTER_SORT_DIRECTION_KEY]),
             )
         }

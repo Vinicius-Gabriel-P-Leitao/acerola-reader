@@ -211,13 +211,12 @@ fun Main.Common.Component.ComicActionsSheet(
     if (showDeleteDialog) {
         Acerola.Component.Dialog(
             show = true,
-            onDismiss = { showDeleteDialog = false },
+            onDismiss = { },
             title = stringResource(id = R.string.dialog_delete_title),
             confirmButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_delete),
                     onClick = {
-                        showDeleteDialog = false
                         onDelete()
                         onDismiss()
                     },
@@ -229,7 +228,7 @@ fun Main.Common.Component.ComicActionsSheet(
             dismissButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_cancel),
-                    onClick = { showDeleteDialog = false },
+                    onClick = { },
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },

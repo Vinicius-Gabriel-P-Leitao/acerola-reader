@@ -16,14 +16,12 @@ import br.acerola.comic.module.reader.state.TapArea
 
 @Composable
 fun Reader.Component.HorizontalPagedReader(
-    pageCount: Int,
     comicId: Long,
     chapterId: Long?,
     pagerState: PagerState,
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
     var isZoomed by remember { mutableStateOf(false) }
@@ -40,7 +38,6 @@ fun Reader.Component.HorizontalPagedReader(
             pageIndex = index,
             orientation = ReadingMode.HORIZONTAL,
             onZoomStatusChange = { zoomed ->
-                isZoomed = zoomed
                 onZoomChange(zoomed)
             },
             onAreaTap = { area ->

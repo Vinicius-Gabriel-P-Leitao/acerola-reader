@@ -14,6 +14,7 @@ import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
 import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.archive.ComicDirectoryDto
+import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.module.main.home.state.FilterSettings
@@ -60,7 +61,7 @@ class HomeViewModelTest {
     private val directoryFlow = MutableStateFlow<List<ComicDirectoryDto>>(emptyList())
     private val metadataFlow = MutableStateFlow<List<ComicMetadataDto>>(emptyList())
     private val chapterCountFlow = MutableStateFlow<Map<Long, Int>>(emptyMap())
-    private val categoryMapFlow = MutableStateFlow<Map<Long, br.acerola.comic.dto.metadata.category.CategoryDto>>(emptyMap())
+    private val categoryMapFlow = MutableStateFlow<Map<Long, CategoryDto>>(emptyMap())
 
     private lateinit var viewModel: HomeViewModel
 
@@ -226,8 +227,7 @@ class HomeViewModelTest {
     fun `deve filtrar por categoria`() =
         runTest {
             val cat1 =
-                br.acerola.comic.dto.metadata.category
-                    .CategoryDto(id = 10L, name = "Cat 1", color = 0)
+                CategoryDto(id = 10L, name = "Cat 1", color = 0)
 
             val comic1 =
                 mockk<ComicDirectoryDto>(relaxed = true) {

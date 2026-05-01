@@ -22,7 +22,6 @@ import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.IntSize
 import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.state.TapArea
@@ -40,7 +39,6 @@ fun Reader.Gesture.ZoomablePageImage(
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(scale) {
         onZoomStatusChange(scale > 1f)
@@ -50,7 +48,7 @@ fun Reader.Gesture.ZoomablePageImage(
         modifier =
             Modifier
                 .fillMaxSize()
-                .onSizeChanged { containerSize = it }
+                .onSizeChanged { }
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)

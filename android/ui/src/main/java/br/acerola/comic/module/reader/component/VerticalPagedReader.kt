@@ -15,22 +15,20 @@ import br.acerola.comic.module.reader.state.TapArea
 
 @Composable
 fun Reader.Component.VerticalPagedReader(
-    pageCount: Int,
     comicId: Long,
     chapterId: Long?,
     pagerState: PagerState,
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
     var isZoomed by remember { mutableStateOf(false) }
 
     VerticalPager(
+        key = { it },
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        key = { it },
         userScrollEnabled = !isZoomed,
     ) { index ->
         Reader.Gesture.ZoomablePageImage(
@@ -39,7 +37,6 @@ fun Reader.Component.VerticalPagedReader(
             pageIndex = index,
             orientation = ReadingMode.VERTICAL,
             onZoomStatusChange = { zoomed ->
-                isZoomed = zoomed
                 onZoomChange(zoomed)
             },
             onAreaTap = { area ->

@@ -1,12 +1,9 @@
 package br.acerola.comic.module.comic.layout
 
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Pagination
@@ -18,7 +15,6 @@ import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
 import br.acerola.comic.module.comic.component.CoverVolumeCard
 import br.acerola.comic.module.comic.component.VolumeCard
-import br.acerola.comic.ui.R
 import br.acerola.comic.util.sort.normalizeSort
 
 fun Comic.Layout.chapterSection(
@@ -33,7 +29,6 @@ fun Comic.Layout.chapterSection(
     onToggleRead: (String) -> Unit,
     onPageChange: (Int) -> Unit,
     onSetActiveVolume: (Long?) -> Unit = {},
-    onUpdateVolumeView: (VolumeViewType) -> Unit = {},
     onLoadVolumeChaptersPage: (Long, Int) -> Unit = { _, _ -> },
     onExtractVolumeCover: (Long) -> Unit = {},
 ) {

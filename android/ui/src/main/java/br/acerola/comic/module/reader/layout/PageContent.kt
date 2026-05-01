@@ -29,7 +29,6 @@ fun Reader.Layout.PageContent(
         when (readingMode) {
             ReadingMode.HORIZONTAL -> {
                 Reader.Component.HorizontalPagedReader(
-                    pageCount = pageCount,
                     comicId = comicId,
                     chapterId = chapterId,
                     onUiToggle = onUiToggle,
@@ -37,13 +36,11 @@ fun Reader.Layout.PageContent(
                     onPrevClick = onPrevClick,
                     onNextClick = onNextClick,
                     onZoomChange = onZoomChange,
-                    onPageRequest = onPageRequest,
                 )
             }
 
             ReadingMode.VERTICAL -> {
                 Reader.Component.VerticalPagedReader(
-                    pageCount = pageCount,
                     comicId = comicId,
                     chapterId = chapterId,
                     onUiToggle = onUiToggle,
@@ -51,7 +48,6 @@ fun Reader.Layout.PageContent(
                     onPrevClick = onPrevClick,
                     onNextClick = onNextClick,
                     onZoomChange = onZoomChange,
-                    onPageRequest = onPageRequest,
                 )
             }
 

@@ -276,7 +276,6 @@ fun ComicScreen(
                                 volumeViewMode = uiState.volumeViewMode,
                                 activeVolumeId = uiState.activeVolumeId,
                                 onSetActiveVolume = comicViewModel::setActiveVolume,
-                                onUpdateVolumeView = { mode -> onAction(ComicAction.UpdateVolumeView(mode)) },
                                 onLoadVolumeChaptersPage = comicViewModel::loadVolumeChaptersPage,
                                 onExtractVolumeCover = comicViewModel::extractVolumeCover,
                             )

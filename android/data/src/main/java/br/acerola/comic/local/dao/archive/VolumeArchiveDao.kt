@@ -27,6 +27,7 @@ interface VolumeArchiveDao : BaseDao<VolumeArchive> {
             volume_archive.is_special AS isSpecial,
             volume_archive.cover AS cover,
             volume_archive.banner AS banner,
+            volume_archive.last_modified AS lastModified,
             COUNT(chapter_archive.id) AS chapterCount
         FROM volume_archive
         LEFT JOIN chapter_archive ON chapter_archive.volume_id_fk = volume_archive.id

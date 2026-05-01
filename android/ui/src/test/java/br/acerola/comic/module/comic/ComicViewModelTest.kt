@@ -33,6 +33,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -68,10 +69,11 @@ class ComicViewModelTest {
     private val localChaptersFlow = MutableStateFlow(ChapterPageDto(emptyList(), emptyList(), 20, 0, 0))
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
     private val hasRootChaptersFlow = MutableStateFlow(true)
-    private val volumeSectionsFlow = MutableStateFlow<List<br.acerola.comic.dto.archive.VolumeChapterGroupDto>>(emptyList())
+    private val volumeSectionsFlow = MutableStateFlow<List<VolumeChapterGroupDto>>(emptyList())
 
     private lateinit var viewModel: ComicViewModel
 
+    @OptIn(ExperimentalForInheritanceCoroutinesApi::class)
     private fun observedLocalChapters(
         sortType: String,
         isAscending: Boolean,

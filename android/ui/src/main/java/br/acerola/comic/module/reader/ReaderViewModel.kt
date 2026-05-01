@@ -294,7 +294,7 @@ class ReaderViewModel
                     LogSource.UI,
                     mapOf("comicId" to comicId.toString(), "nextId" to nextId.toString()),
                 )
-                // We don't have sort here easily, but loadAndOpenChapter handles search by ID if sort is empty
+
                 loadAndOpenChapter(comicId, nextId, "", 0)
             }
         }

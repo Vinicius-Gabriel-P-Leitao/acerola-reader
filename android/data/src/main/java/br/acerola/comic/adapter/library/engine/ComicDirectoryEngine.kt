@@ -89,13 +89,13 @@ class ComicDirectoryEngine
 
                             val rootUri =
                                 baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                                    ?: return@catch
+                                ?: return@catch
 
                             val folderId = DocumentsContract.getDocumentId(folderUri)
                             val folderChildren =
                                 ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
 
-                            val bannerMetadata = folderChildren.firstOrNull { MediaFile.isBanner(it.name) }
+                                    val bannerMetadata = folderChildren.firstOrNull { MediaFile.isBanner(it.name) }
                             val coverMetadata = folderChildren.firstOrNull { MediaFile.isCover(it.name) }
 
                             val firstChapterName =

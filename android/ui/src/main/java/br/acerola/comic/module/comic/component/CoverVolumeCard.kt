@@ -66,8 +66,8 @@ fun Comic.Component.CoverVolumeCard(
                 ImageRequest
                     .Builder(context)
                     .data(data = group.volume.coverUri)
-                    .memoryCacheKey("volume_cover_${group.volume.id}")
-                    .diskCacheKey("volume_cover_${group.volume.id}")
+                    .memoryCacheKey("volume_cover_${group.volume.id}_${group.volume.lastModified}")
+                    .diskCacheKey("volume_cover_${group.volume.id}_${group.volume.lastModified}")
                     .size(resolver = SizeResolver(imageSize))
                     .build(),
         )

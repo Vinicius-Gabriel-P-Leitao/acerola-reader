@@ -19,7 +19,7 @@ import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.translator.persistence.toChapterArchiveEntity
 import br.acerola.comic.local.translator.persistence.toVolumeArchiveEntity
-import br.acerola.comic.local.translator.ui.toViewPageDto
+import br.acerola.comic.local.translator.ui.toChapterPageDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.archive.ArchiveFormat
@@ -423,7 +423,7 @@ class ChapterArchiveEngine
                             // SQL already handled the hierarchy/number sorting
                             if (isAscending) list else list.reversed()
                         }
-                    finalList.toViewPageDto()
+                    finalList.toChapterPageDto()
                 }.stateIn(
                     started = SharingStarted.Lazily,
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
@@ -458,7 +458,7 @@ class ChapterArchiveEngine
                         )
                     }
 
-                items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
+                items.toChapterPageDto(pageSize = pageSize, total = realTotal, page = page)
             } else {
                 val flowList = chapterArchiveDao.getChaptersByDirectoryId(comicId).first()
                 val sortedList =
@@ -474,7 +474,7 @@ class ChapterArchiveEngine
                 val end = (start + pageSize).coerceIn(0, realTotal)
                 val pagedList = if (start < realTotal) sortedList.subList(start, end) else emptyList()
 
-                pagedList.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
+                pagedList.toChapterPageDto(pageSize = pageSize, total = realTotal, page = page)
             }
         }
 

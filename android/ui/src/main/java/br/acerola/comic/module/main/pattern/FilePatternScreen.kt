@@ -183,10 +183,9 @@ private fun FilePatternLayout(
 
     if (showAddDialog) {
         Main.Pattern.Component.AddTemplateDialog(
-            onDismiss = { showAddDialog = false },
+            onDismiss = { },
             onConfirm = { label, pattern, type ->
                 onAction(FilePatternAction.AddTemplate(label, pattern, type))
-                showAddDialog = false
             },
         )
     }
@@ -197,10 +196,9 @@ private fun FilePatternLayout(
             initialLabel = template.label,
             initialPattern = template.pattern,
             initialType = template.type,
-            onDismiss = { editingTemplate = null },
+            onDismiss = { },
             onConfirm = { label, pattern, type ->
                 onAction(FilePatternAction.EditTemplate(template.id, label, pattern, type))
-                editingTemplate = null
             },
         )
     }

@@ -68,6 +68,7 @@ class ComicInfoSource
 
                 if (firstChapter != null) {
                     val chapterDto =
+                        // FIXME: Fazer toDto
                         ChapterFileDto(
                             id = 0,
                             chapterSort = "0",

@@ -79,6 +79,7 @@ class ComicInfoComicEngine
                                 }
 
                             val comicToSave =
+                                // FIXME: Fazer toModel
                                 ComicMetadata(
                                     id = bestMatch.id ?: 0L,
                                     title = bestMatch.title,

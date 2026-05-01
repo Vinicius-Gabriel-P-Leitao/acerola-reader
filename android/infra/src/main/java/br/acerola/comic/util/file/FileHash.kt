@@ -15,7 +15,7 @@ fun DocumentFile.sha256(context: Context): String {
             digest.update(buffer, 0, read)
             read = input.read(buffer)
         }
-    } ?: error("Não foi possível abrir o arquivo")
+    } ?: error("The file could not be opened.")
 
     return digest.digest().joinToString(separator = "") { "%02x".format(it) }
 }

@@ -8,4 +8,5 @@ data class VolumeChapterCount(
     val cover: String?,
     val banner: String?,
     val chapterCount: Int,
+    val lastModified: Long = 0,
 )

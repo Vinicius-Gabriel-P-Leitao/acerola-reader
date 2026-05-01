@@ -97,7 +97,7 @@ class CbrPageResolver
         override fun close() {
             try {
                 archive?.close()
-            } catch (exception: Exception) {
+            } catch (_: Exception) {
                 // Ignora erros ao fechar
             } finally {
                 archive = null

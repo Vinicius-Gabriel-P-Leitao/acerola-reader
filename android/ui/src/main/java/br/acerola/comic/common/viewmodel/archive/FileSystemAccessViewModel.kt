@@ -74,7 +74,7 @@ class FileSystemAccessViewModel
                 uri?.let {
                     try {
                         DocumentFile.fromTreeUri(context, it)?.name
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }

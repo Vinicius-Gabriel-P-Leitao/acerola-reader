@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -186,7 +187,7 @@ private fun SyncItem(
     subtitle: String,
     iconVector: ImageVector? = null,
     iconPainter: Painter? = null,
-    iconBackground: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     isActive: Boolean = false,
     onClick: () -> Unit,
 ) {

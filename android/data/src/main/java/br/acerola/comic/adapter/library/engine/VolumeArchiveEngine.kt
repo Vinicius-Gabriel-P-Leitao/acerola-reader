@@ -6,7 +6,8 @@ import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
-import br.acerola.comic.local.translator.ui.toGroupDto
+import br.acerola.comic.local.entity.relation.VolumeChapterCount
+import br.acerola.comic.local.translator.ui.toVolumeGroupDto
 import br.acerola.comic.local.translator.ui.toViewDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -29,7 +30,7 @@ class VolumeArchiveEngine
         ): Flow<List<VolumeChapterGroupDto>> =
             volumeArchiveDao
                 .getVolumeChapterCountsByDirectoryId(comicId)
-                .map { summaries ->
+                .map<List<VolumeChapterCount>, List<VolumeChapterGroupDto>> { summaries ->
                     val sortedSummaries = if (isAscending) summaries else summaries.reversed()
 
                     sortedSummaries.map { summary ->
@@ -52,7 +53,7 @@ class VolumeArchiveEngine
                                 joins.map { it.toViewDto() }
                             }
 
-                        summary.toGroupDto(items = previewItems)
+                        summary.toVolumeGroupDto(items = previewItems)
                     }
                 }.onStart {
                     emit(

@@ -13,4 +13,5 @@ data class VolumeArchiveDto(
     val isSpecial: Boolean,
     val coverUri: String? = null,
     val bannerUri: String? = null,
+    val lastModified: Long = 0,
 ) : Parcelable

@@ -22,7 +22,7 @@ class FileStorageHandler
             fileName: String,
             mimeType: String,
             bytes: ByteArray,
-        ): Either<IoError, Unit> =
+        ): Either<IoError, String> =
             withContext(Dispatchers.IO) {
                 val existingFile = folder.findFile(fileName)
                 val file =
@@ -37,7 +37,7 @@ class FileStorageHandler
                 Either
                     .catch {
                         context.contentResolver.openOutputStream(file.uri, "wt")?.use { it.write(bytes) }
-                        Unit
+                        file.uri.toString()
                     }.mapLeft { cause ->
                         if (existingFile == null) file.delete()
                         IoError.FileWriteError(path = fileName, cause = cause)

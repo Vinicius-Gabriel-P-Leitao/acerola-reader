@@ -40,33 +40,36 @@ class CoverExtractor
     ) {
         suspend fun extractFirstPageAsCover(comicId: Long): Either<IoError, Unit> =
             withContext(Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Starting extraction for comic: $comicId", LogSource.SERVICE)
+                AcerolaLogger.i(TAG, "Extracting comic cover for comic: $comicId", LogSource.SERVICE)
                 val directory =
                     directoryDao.getDirectoryById(comicId)
-                        ?: return@withContext IoError.FileNotFound("Comic directory not found in DB").left().also {
-                            AcerolaLogger.e(TAG, "Comic $comicId not found", LogSource.SERVICE)
-                        }
+                        ?: return@withContext IoError.FileNotFound("Comic directory not found in DB").left()
 
+                // Pega o primeiro capítulo da obra toda (Dao já ordena numericamente Vol ASC -> Ch ASC)
                 val chapters = chapterArchiveDao.getChaptersByDirectoryId(comicId).first()
+                val firstChapterJoin = chapters.firstOrNull()
                 val firstChapter =
-                    chapters.firstOrNull()?.chapter
-                        ?: return@withContext IoError.FileNotFound("No chapters found for this comic").left().also {
-                            AcerolaLogger.e(TAG, "No chapters found for comic $comicId", LogSource.SERVICE)
-                        }
+                    firstChapterJoin?.chapter
+                        ?: return@withContext IoError.FileNotFound("No chapters found for this comic").left()
 
-                val folderUri = directory.path.toUri()
-                val folderDoc =
-                    DocumentFile.fromTreeUri(context, folderUri) ?: DocumentFile.fromSingleUri(context, folderUri)
-                        ?: return@withContext IoError.FileReadError(directory.path, Exception("Could not resolve folder document")).left().also {
-                            AcerolaLogger.e(TAG, "Could not resolve folder: ${directory.path}", LogSource.SERVICE)
-                        }
+                AcerolaLogger.i(TAG, "Selected chapter for COMIC cover: ${firstChapter.chapter} (Volume: ${firstChapterJoin.volume?.name ?: "Root"})", LogSource.SERVICE)
+
+                val rootUri = directory.path.toUri()
+                val rootDoc =
+                    DocumentFile.fromTreeUri(context, rootUri) ?: DocumentFile.fromSingleUri(context, rootUri)
+                        ?: return@withContext IoError.FileReadError(directory.path, Exception("Could not resolve root folder")).left()
 
                 extractAndSaveCover(
                     chapter = firstChapter,
-                    folderDoc = folderDoc,
-                    onSuccess = {
-                        AcerolaLogger.i(TAG, "Comic cover updated successfully", LogSource.SERVICE)
-                        directoryDao.update(directory.copy(lastModified = System.currentTimeMillis()))
+                    folderDoc = rootDoc, // Garante que salva na raiz da comic
+                    onSuccess = { uri ->
+                        AcerolaLogger.i(TAG, "Comic cover saved to root: $uri", LogSource.SERVICE)
+                        directoryDao.update(
+                            directory.copy(
+                                lastModified = System.currentTimeMillis(),
+                                cover = uri,
+                            ),
+                        )
                     },
                 )
             }
@@ -76,13 +79,12 @@ class CoverExtractor
             volumeId: Long,
         ): Either<IoError, Unit> =
             withContext(Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Starting extraction for volume: $volumeId (Comic: $comicId)", LogSource.SERVICE)
+                AcerolaLogger.i(TAG, "Extracting volume cover for vol: $volumeId", LogSource.SERVICE)
                 val volume =
                     volumeArchiveDao.getVolumeById(volumeId)
-                        ?: return@withContext IoError.FileNotFound("Volume not found in DB").left().also {
-                            AcerolaLogger.e(TAG, "Volume $volumeId not found", LogSource.SERVICE)
-                        }
+                        ?: return@withContext IoError.FileNotFound("Volume not found in DB").left()
 
+                // Pega o primeiro capítulo DESTE volume (ordenado numericamente)
                 val chapters =
                     chapterArchiveDao.getChaptersByVolumePaged(
                         comicId = comicId,
@@ -93,23 +95,24 @@ class CoverExtractor
 
                 val firstChapter =
                     chapters.firstOrNull()?.chapter
-                        ?: return@withContext IoError.FileNotFound("No chapters found for this volume").left().also {
-                            AcerolaLogger.e(TAG, "No chapters found for volume $volumeId", LogSource.SERVICE)
-                        }
+                        ?: return@withContext IoError.FileNotFound("No chapters found for this volume").left()
 
-                val folderUri = volume.path.toUri()
-                val folderDoc =
-                    DocumentFile.fromTreeUri(context, folderUri) ?: DocumentFile.fromSingleUri(context, folderUri)
-                        ?: return@withContext IoError.FileReadError(volume.path, Exception("Could not resolve volume folder document")).left().also {
-                            AcerolaLogger.e(TAG, "Could not resolve volume folder: ${volume.path}", LogSource.SERVICE)
-                        }
+                val volumeUri = volume.path.toUri()
+                val volumeDoc =
+                    DocumentFile.fromTreeUri(context, volumeUri) ?: DocumentFile.fromSingleUri(context, volumeUri)
+                        ?: return@withContext IoError.FileReadError(volume.path, Exception("Could not resolve volume folder")).left()
 
                 extractAndSaveCover(
                     chapter = firstChapter,
-                    folderDoc = folderDoc,
-                    onSuccess = {
-                        AcerolaLogger.i(TAG, "Volume cover updated successfully", LogSource.SERVICE)
-                        volumeArchiveDao.update(volume.copy(lastModified = System.currentTimeMillis()))
+                    folderDoc = volumeDoc, // Garante que salva dentro da pasta do volume
+                    onSuccess = { uri ->
+                        AcerolaLogger.i(TAG, "Volume cover saved to volume folder: $uri", LogSource.SERVICE)
+                        volumeArchiveDao.update(
+                            volume.copy(
+                                lastModified = System.currentTimeMillis(),
+                                cover = uri,
+                            ),
+                        )
                     },
                 )
             }
@@ -117,22 +120,20 @@ class CoverExtractor
         private suspend fun extractAndSaveCover(
             chapter: ChapterArchive,
             folderDoc: DocumentFile,
-            onSuccess: suspend () -> Unit,
+            onSuccess: suspend (String) -> Unit,
         ): Either<IoError, Unit> {
             val chapterDto = chapter.toViewDto()
-            AcerolaLogger.d(TAG, "Extracting from chapter: ${chapter.chapter}", LogSource.SERVICE)
+            AcerolaLogger.d(TAG, "Extracting from: ${chapter.chapter}", LogSource.SERVICE)
 
             return chapterSourceFactory
                 .create(chapterDto)
                 .mapLeft {
-                    AcerolaLogger.e(TAG, "Failed to create chapter source", LogSource.SERVICE)
                     IoError.FileReadError(chapterDto.path, Exception(it.toString()))
                 }.flatMap { source ->
                     try {
                         source
                             .openPage(0)
                             .mapLeft {
-                                AcerolaLogger.e(TAG, "Failed to open page 0", LogSource.SERVICE)
                                 IoError.FileReadError(chapterDto.path, Exception(it.toString()))
                             }.flatMap { inputStream ->
                                 val bitmap =
@@ -141,25 +142,20 @@ class CoverExtractor
                                             .FileReadError(
                                                 chapterDto.path,
                                                 Exception("Failed to decode bitmap"),
-                                            ).left().also {
-                                                AcerolaLogger.e(TAG, "Failed to decode bitmap from input stream", LogSource.SERVICE)
-                                            }
+                                            ).left()
 
                                 val outputStream = ByteArrayOutputStream()
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
 
                                 val bytes = outputStream.toByteArray()
                                 bitmap.recycle()
 
+                                // Limpa apenas capas existentes na pasta ALVO (root ou volume)
                                 folderDoc.listFiles().forEach { file ->
-                                    val fileName = file.name ?: return@forEach
-                                    if (MediaFile.isCover(fileName)) {
-                                        AcerolaLogger.d(TAG, "Deleting old cover: $fileName", LogSource.SERVICE)
-                                        file.delete()
-                                    }
+                                    val name = file.name ?: return@forEach
+                                    if (MediaFile.isCover(name)) file.delete()
                                 }
 
-                                AcerolaLogger.i(TAG, "Saving new cover: ${MediaFile.COVER.defaultFileName}", LogSource.SERVICE)
                                 fileStorageHandler
                                     .saveFile(
                                         folder = folderDoc,
@@ -167,12 +163,8 @@ class CoverExtractor
                                         mimeType = "image/jpeg",
                                         bytes = bytes,
                                     ).also { result ->
-                                        if (result.isRight()) {
-                                            onSuccess()
-                                        } else {
-                                            AcerolaLogger.e(TAG, "Failed to save file: $result", LogSource.SERVICE)
-                                        }
-                                    }
+                                        result.onRight { uri -> onSuccess(uri) }
+                                    }.map { Unit }
                             }
                     } finally {
                         source.close()

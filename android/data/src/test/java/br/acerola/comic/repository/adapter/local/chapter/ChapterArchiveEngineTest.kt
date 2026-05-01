@@ -101,12 +101,15 @@ class ChapterArchiveEngineTest {
         every { context.contentResolver } returns mockk(relaxed = true)
         every { DocumentsContract.getDocumentId(any()) } returns "docId"
         every { DocumentsContract.getTreeDocumentId(any()) } returns "treeId"
+
         val mockUri = mockk<Uri>()
         every { mockUri.toString() } returns "uri/mock"
         every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockUri
         every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockUri
+
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
+
         coEvery { templateService.getTemplates() } returns emptyList()
         coEvery { readingHistoryDao.updateHistoryChapterIdBySort(any(), any(), any()) } returns Unit
         coEvery { readingHistoryDao.updateChapterReadIdBySort(any(), any(), any()) } returns Unit

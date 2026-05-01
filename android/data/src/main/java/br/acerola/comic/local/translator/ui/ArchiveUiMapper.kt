@@ -39,6 +39,7 @@ fun VolumeArchive.toViewDto(): VolumeArchiveDto =
         isSpecial = isSpecial,
         coverUri = cover,
         bannerUri = banner,
+        lastModified = lastModified,
     )
 
 fun ChapterArchive.toViewDto(volumeName: String? = null): ChapterFileDto =
@@ -63,50 +64,128 @@ fun VolumeChapterCount.toViewDto(): VolumeArchiveDto =
         isSpecial = isSpecial,
         coverUri = cover,
         bannerUri = banner,
+        lastModified = lastModified,
     )
 
-fun VolumeChapterCount.toGroupDto(items: List<ChapterFileDto>): VolumeChapterGroupDto =
+fun VolumeChapterCount.toVolumeGroupDto(items: List<ChapterFileDto>): VolumeChapterGroupDto =
     VolumeChapterGroupDto(
-        volume = toViewDto(),
+        volume = this.toViewDto(),
         items = items,
-        totalChapters = chapterCount,
+        totalChapters = this.chapterCount,
         loadedCount = items.size,
-        hasMore = items.size < chapterCount,
+        hasMore = this.chapterCount > items.size,
     )
 
-fun List<ChapterVolumeJoin>.toViewPageDto(
-    pageSize: Int = this.size,
-    total: Int = this.size,
-    page: Int = 0,
-): ChapterPageDto {
-    val volumes = this.mapNotNull { it.volume }.distinctBy { it.id }.map { it.toViewDto() }
-    return ChapterPageDto(
-        items = this.map { it.toViewDto() },
-        volumes = volumes,
-        pageSize = pageSize,
-        total = total,
-        page = page,
-    )
-}
-
-// Fallback for cases where we only have chapters
-fun List<ChapterArchive>.toViewPageDtoLegacy(
+fun List<ChapterVolumeJoin>.toChapterPageDto(
     pageSize: Int = this.size,
     total: Int = this.size,
     page: Int = 0,
 ): ChapterPageDto =
     ChapterPageDto(
         items = this.map { it.toViewDto() },
+        volumes = this.mapNotNull { it.volume }.distinctBy { it.id }.map { it.toViewDto() },
         pageSize = pageSize,
         total = total,
         page = page,
     )
 
-fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
+fun List<ChapterVolumeJoin>.toVolumeGroupedDto(
+    volumeViewType: VolumeViewType,
     pageSize: Int,
-    effectiveViewMode: VolumeViewType,
+    chapterRemoteInfo: ChapterRemoteInfoPageDto? = null,
+): ChapterDto {
+    if (volumeViewType == VolumeViewType.CHAPTER || isEmpty()) {
+        return ChapterDto(
+            archive =
+                ChapterPageDto(
+                    items = map { it.toViewDto() },
+                    volumeSections = emptyList(),
+                    pageSize = pageSize,
+                    page = 0,
+                    total = size,
+                ),
+            remoteInfo = chapterRemoteInfo,
+        )
+    }
+
+    val volumeGroups = mutableListOf<VolumeChapterGroupDto>()
+    val currentVolumes = mutableMapOf<Long, VolumeChapterGroupDto>()
+
+    forEach { join ->
+        val volume = join.volume ?: return@forEach
+        val chapterDto = join.toViewDto()
+
+        val group =
+            currentVolumes.getOrPut(volume.id) {
+                val newGroup =
+                    VolumeChapterGroupDto(
+                        volume = volume.toViewDto(),
+                        items = mutableListOf(),
+                        totalChapters = 0,
+                        loadedCount = 0,
+                        currentPage = 0,
+                        hasMore = false,
+                    )
+                volumeGroups.add(newGroup)
+                newGroup
+            }
+
+        val items = group.items as MutableList<ChapterFileDto>
+        items.add(chapterDto)
+
+        // Update counts
+        currentVolumes[volume.id] =
+            group.copy(
+                items = items,
+                loadedCount = items.size,
+                totalChapters = items.size, // In this grouping mode, we only have what's loaded
+            )
+    }
+
+    return ChapterDto(
+        archive =
+            ChapterPageDto(
+                items = emptyList(),
+                volumeSections = volumeGroups,
+                pageSize = pageSize,
+                page = 0,
+                total = size,
+            ),
+        remoteInfo = chapterRemoteInfo,
+    )
+}
+
+fun List<VolumeChapterCount>.toVolumeSectionsDto(chapterRemoteInfo: ChapterRemoteInfoPageDto? = null): ChapterDto {
+    val volumeGroups =
+        map { count ->
+            VolumeChapterGroupDto(
+                volume = count.toViewDto(),
+                items = emptyList(),
+                totalChapters = count.chapterCount,
+                loadedCount = 0,
+                currentPage = 0,
+                hasMore = count.chapterCount > 0,
+            )
+        }
+
+    return ChapterDto(
+        archive =
+            ChapterPageDto(
+                items = emptyList(),
+                volumeSections = volumeGroups,
+                pageSize = volumeGroups.size,
+                page = 0,
+                total = volumeGroups.size,
+            ),
+        remoteInfo = chapterRemoteInfo,
+    )
+}
+
+fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
     remoteAll: ChapterRemoteInfoPageDto,
     volumeOverrides: Map<Long, VolumeChapterGroupDto>,
+    pageSize: Int,
+    effectiveViewMode: VolumeViewType,
 ): ChapterDto {
     val mergedSections =
         this.map { section ->
@@ -187,9 +266,8 @@ fun ChapterPageDto.toCombinedRegularDto(
 
     return ChapterDto(
         archive =
-            ChapterPageDto(
+            this.copy(
                 items = pagedLocalItems,
-                volumes = this.volumes,
                 pageSize = pageSize,
                 total = total,
                 page = safePage,

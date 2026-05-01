@@ -154,11 +154,11 @@ fun Comic.Component.ChapterItem(
         Acerola.Component.Dialog(
             show = true,
             title = mainTitle,
-            onDismiss = { showDetails = false },
+            onDismiss = { },
             confirmButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.label_dialog_close),
-                    onClick = { showDetails = false },
+                    onClick = { },
                 )
             },
             content = {
@@ -192,7 +192,6 @@ fun Comic.Component.ChapterItem(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             onToggleRead()
-                            showDetails = false
                         },
                         colors =
                             ButtonDefaults.textButtonColors(

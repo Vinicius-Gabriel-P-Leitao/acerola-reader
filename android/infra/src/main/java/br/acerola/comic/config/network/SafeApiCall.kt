@@ -30,12 +30,9 @@ suspend fun <T> safeApiCall(
                                         ?.get("Retry-After")
                                         ?.toLongOrNull(),
                             )
-
                         in 500..599 -> NetworkError.ServerError(code = exception.code(), cause = exception)
-
                         401, 403 -> NetworkError.Unauthorized(cause = exception)
                         404 -> NetworkError.NotFound(cause = exception)
-
                         else -> NetworkError.HttpError(code = exception.code(), cause = exception)
                     }
 
