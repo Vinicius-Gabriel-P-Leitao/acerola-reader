@@ -18,10 +18,10 @@ import br.acerola.comic.service.compact.PdfToCbzConverter
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.util.file.ContentQueryHelper
 import br.acerola.comic.util.file.FastFileMetadata
+import br.acerola.comic.util.file.sha256
 import br.acerola.comic.util.sort.SortNormalizer
 import br.acerola.comic.util.sort.SortResult
 import br.acerola.comic.util.sort.SortType
-import br.acerola.comic.util.file.sha256
 import br.acerola.comic.util.template.templateToRegex
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery

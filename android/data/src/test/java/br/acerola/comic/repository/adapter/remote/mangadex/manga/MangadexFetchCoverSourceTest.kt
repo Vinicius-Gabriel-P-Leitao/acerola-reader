@@ -56,4 +56,3 @@ class MangadexFetchCoverSourceTest {
             result.onLeft { assertTrue(it is NetworkError.ConnectionFailed) }
         }
 }
-

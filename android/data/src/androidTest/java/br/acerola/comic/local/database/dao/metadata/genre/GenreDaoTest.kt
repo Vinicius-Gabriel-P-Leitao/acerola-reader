@@ -26,19 +26,22 @@ class GenreDaoTest {
     }
 
     @After
-    fun tearDown() { db.close() }
+    fun tearDown() {
+        db.close()
+    }
 
     @Test
-    fun testGenreDao() = runBlocking {
-        val comicDao = db.comicRemoteInfoDao()
-        val genreDao = db.genreDao()
+    fun testGenreDao() =
+        runBlocking {
+            val comicDao = db.comicRemoteInfoDao()
+            val genreDao = db.genreDao()
 
-        val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val genre = MetadataFixtures.createGenre(comicId = comicId, genre = "Shonen")
+            val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val genre = MetadataFixtures.createGenre(comicId = comicId, genre = "Shonen")
 
-        genreDao.insert(genre)
-        val result = genreDao.getIdByNameAndMetadataId(genre = "Shonen", comicRemoteInfoFk = comicId)
+            genreDao.insert(genre)
+            val result = genreDao.getIdByNameAndMetadataId(genre = "Shonen", comicRemoteInfoFk = comicId)
 
-        assertNotNull(result)
-    }
+            assertNotNull(result)
+        }
 }

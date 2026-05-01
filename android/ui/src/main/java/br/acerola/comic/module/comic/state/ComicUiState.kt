@@ -5,6 +5,7 @@ import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
 import br.acerola.comic.config.preference.types.ChapterSortType
 import br.acerola.comic.config.preference.types.SortDirection
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
@@ -36,6 +37,9 @@ data class ComicUiState(
     val chapterSortSettings: ChapterSortPreferenceData = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING),
     val allCategories: PersistentList<CategoryDto> = persistentListOf(),
     val showVolumeHeaders: Boolean = false,
+    val volumeViewMode: VolumeViewType = VolumeViewType.CHAPTER,
+    val activeVolumeId: Long? = null,
+    val hasVolumeStructure: Boolean = false,
 )
 
 data class ComicConfigUiState(

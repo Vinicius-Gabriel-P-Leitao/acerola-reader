@@ -129,4 +129,3 @@ class ComicInfoSourceTest {
             result.onLeft { assertTrue(it is NetworkError.NotFound) }
         }
 }
-

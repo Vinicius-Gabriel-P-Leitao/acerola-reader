@@ -110,7 +110,9 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
     volume se tiver 2 volumes mas cada um com 500 chapter isso vai explodir a memoria, tem que ser feito de uma forma otimizada visualmente e no sql
 - [ ] **Criar visualização com cover do volume** Essa visualização é simples e dá para extrair a primeira capa do volume como capa da listagem é 
   possível também.
-
+- [ ] **Criar nova UserPreference** A nova preferência vai ser para olhar volumes como capas ou uma lista de cards dropaveis (metodo atual), só 
+  sera feito um novo e dar o direito de escolha.
+ 
 ### Adicionar um worker para o conversor de pdf
 
 - [ ] **Montar um worker:** Criar um worker para quando um pdf for virar cbz, pode demorar muito, ou se melhor como tenho uma lista de pastas e 

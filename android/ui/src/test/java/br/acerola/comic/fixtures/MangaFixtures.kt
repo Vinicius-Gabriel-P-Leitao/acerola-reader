@@ -1,7 +1,7 @@
 package br.acerola.comic.fixtures
 
-import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 

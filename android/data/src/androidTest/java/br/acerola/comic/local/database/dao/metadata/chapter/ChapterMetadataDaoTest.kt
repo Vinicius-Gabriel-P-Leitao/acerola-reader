@@ -27,20 +27,23 @@ class ChapterMetadataDaoTest {
     }
 
     @After
-    fun tearDown() { db.close() }
+    fun tearDown() {
+        db.close()
+    }
 
     @Test
-    fun testChapterMetadataDao() = runBlocking {
-        val comicDao = db.comicRemoteInfoDao()
-        val chapterDao = db.chapterRemoteInfoDao()
+    fun testChapterMetadataDao() =
+        runBlocking {
+            val comicDao = db.comicRemoteInfoDao()
+            val chapterDao = db.chapterRemoteInfoDao()
 
-        val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val chapter = MetadataFixtures.createChapterRemoteInfo(comicRemoteInfoFk = comicId, chapter = "5")
+            val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val chapter = MetadataFixtures.createChapterRemoteInfo(comicRemoteInfoFk = comicId, chapter = "5")
 
-        chapterDao.insert(chapter)
-        val result = chapterDao.observeChaptersByMetadataId(comicId).first()
+            chapterDao.insert(chapter)
+            val result = chapterDao.observeChaptersByMetadataId(comicId).first()
 
-        assertEquals(1, result.size)
-        assertEquals("5", result[0].chapter)
-    }
+            assertEquals(1, result.size)
+            assertEquals("5", result[0].chapter)
+        }
 }

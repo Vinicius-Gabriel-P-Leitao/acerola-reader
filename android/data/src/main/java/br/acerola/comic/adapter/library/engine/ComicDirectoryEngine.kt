@@ -49,6 +49,8 @@ import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// FIXME: Fazer responsabilidade unica nesse engine, separar a lógica de scanner em services para que a busca de arquivos sejam feitas atravez de
+//  interfaces ao invez de direto no código, usando services externos igual aos outros.
 @Singleton
 class ComicDirectoryEngine
     @Inject

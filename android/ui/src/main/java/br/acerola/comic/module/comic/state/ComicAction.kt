@@ -1,5 +1,7 @@
 package br.acerola.comic.module.comic.state
+
 import br.acerola.comic.config.preference.types.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.archive.ChapterFileDto
 
 sealed interface ComicAction {
@@ -19,6 +21,10 @@ sealed interface ComicAction {
 
     data class ToggleExternalSync(
         val enabled: Boolean,
+    ) : ComicAction
+
+    data class UpdateVolumeView(
+        val mode: VolumeViewType,
     ) : ComicAction
 }
 

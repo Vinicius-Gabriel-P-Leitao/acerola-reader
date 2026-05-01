@@ -4,13 +4,12 @@ enum class ArchiveFormat(
     val extension: String,
     val indexable: Boolean = true,
 ) {
-
     CBZ(extension = ".cbz"),
     CBR(extension = ".cbr"),
-    PDF(extension = ".pdf", indexable = false);
+    PDF(extension = ".pdf", indexable = false),
+    ;
 
     companion object {
-
         fun isSupported(ext: String?): Boolean {
             if (ext.isNullOrBlank()) return false
             val cleanExtension = ext.substringAfterLast(delimiter = '.').lowercase()

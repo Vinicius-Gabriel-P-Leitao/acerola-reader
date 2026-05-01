@@ -28,15 +28,18 @@ class ComicDirectoryDaoTest {
     }
 
     @After
-    fun tearDown() { db.close() }
+    fun tearDown() {
+        db.close()
+    }
 
     @Test
-    fun testMangaDirectoryDao() = runBlocking {
-        val dao = db.comicDirectoryDao()
-        val comic = MangaDirectoryFixtures.createMangaDirectory(name = "Test Comic")
-        dao.insert(comic)
-        val result = dao.getAllDirectories().first().find { it.name == "Test Comic" }
-        assertNotNull(result)
-        assertEquals("Test Comic", result?.name)
-    }
+    fun testMangaDirectoryDao() =
+        runBlocking {
+            val dao = db.comicDirectoryDao()
+            val comic = MangaDirectoryFixtures.createMangaDirectory(name = "Test Comic")
+            dao.insert(comic)
+            val result = dao.getAllDirectories().first().find { it.name == "Test Comic" }
+            assertNotNull(result)
+            assertEquals("Test Comic", result?.name)
+        }
 }

@@ -3,8 +3,8 @@ package br.acerola.comic.common.viewmodel.theme
 import android.app.Application
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.config.preference.types.AppTheme
 import br.acerola.comic.config.preference.ThemePreference
+import br.acerola.comic.config.preference.types.AppTheme
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every

@@ -3,8 +3,8 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.comic.config.preference.types.AppTheme
 import br.acerola.comic.config.preference.ThemePreference
+import br.acerola.comic.config.preference.types.AppTheme
 import br.acerola.comic.error.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel

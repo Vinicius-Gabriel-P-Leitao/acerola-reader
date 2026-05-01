@@ -4,11 +4,11 @@ import android.content.Context
 import br.acerola.comic.adapter.metadata.mangadex.source.MangadexMangaInfoSource
 import br.acerola.comic.data.R
 import br.acerola.comic.error.message.NetworkError
-import br.acerola.comic.type.Language
 import br.acerola.comic.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.comic.remote.mangadex.dto.MangadexResponseDto
 import br.acerola.comic.remote.mangadex.dto.comic.MangaAttributes
 import br.acerola.comic.remote.mangadex.dto.comic.MangaMangadexDto
+import br.acerola.comic.type.Language
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every
@@ -100,4 +100,3 @@ class MangadexMangaInfoSourceTest {
             }
         }
 }
-

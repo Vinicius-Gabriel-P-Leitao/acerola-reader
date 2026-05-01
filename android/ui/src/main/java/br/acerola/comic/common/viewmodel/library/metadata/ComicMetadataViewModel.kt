@@ -32,9 +32,9 @@ import javax.inject.Inject
 class ComicMetadataViewModel
     @Inject
     constructor(
-        @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
-        private val manageCategoriesUseCase: ManageCategoriesUseCase,
         private val workManager: WorkManager,
+        private val manageCategoriesUseCase: ManageCategoriesUseCase,
+        @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
     ) : ViewModel() {
         private val _isIndexing = MutableStateFlow(value = false)
         val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -79,7 +79,7 @@ class ComicMetadataViewModel
             categoryId: Long?,
         ) {
             viewModelScope.launch {
-                manageCategoriesUseCase.updateMangaCategory(directoryId, categoryId)
+                manageCategoriesUseCase.updateComicCategory(directoryId, categoryId)
             }
         }
 

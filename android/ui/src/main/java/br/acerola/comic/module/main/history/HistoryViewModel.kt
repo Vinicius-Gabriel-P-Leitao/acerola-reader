@@ -46,7 +46,7 @@ class HistoryViewModel
                     combine(
                         directoryObserve(),
                         mangadexObserve(),
-                        manageCategoriesUseCase.getAllMangaCategories(),
+                        manageCategoriesUseCase.getAllComicCategories(),
                         getChapterCountUseCase(),
                     ) { directories, remoteInfos, categoryMap, chapterCounts ->
                         val list =

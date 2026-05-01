@@ -1,97 +1,147 @@
 package br.acerola.comic.module.comic.layout
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Pagination
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
+import br.acerola.comic.module.comic.component.CoverVolumeCard
 import br.acerola.comic.module.comic.component.VolumeCard
-import br.acerola.comic.module.comic.component.VolumeHeader
+import br.acerola.comic.ui.R
 import br.acerola.comic.util.sort.normalizeSort
 
-// FIXME: Remover scroll forçado para cima quando carrega nova pagina.
-@OptIn(ExperimentalFoundationApi::class)
 fun Comic.Layout.chapterSection(
     scope: LazyListScope,
     chapters: ChapterDto,
     currentPage: Int,
     totalPages: Int,
     readChapters: List<String> = emptyList(),
+    volumeViewMode: VolumeViewType = VolumeViewType.CHAPTER,
+    activeVolumeId: Long? = null,
     onChapterClick: (ChapterFileDto, ChapterFeedDto?) -> Unit,
     onToggleRead: (String) -> Unit,
     onPageChange: (Int) -> Unit,
-    showVolumeHeaders: Boolean = false,
-    expandedVolumeIds: Set<Long> = emptySet(),
-    onToggleVolumeExpanded: (Long) -> Unit = {},
-    onLoadMoreVolume: (Long) -> Unit = {},
+    onSetActiveVolume: (Long?) -> Unit = {},
+    onUpdateVolumeView: (VolumeViewType) -> Unit = {},
+    onLoadVolumeChaptersPage: (Long, Int) -> Unit = { _, _ -> },
 ) {
-    if (showVolumeHeaders && chapters.archive.volumeSections.isNotEmpty()) {
+    if (chapters.hasVolumeStructure) {
+        scope.item(key = "volume_view_selector", contentType = "volume_view_selector") {
+            val toggleEntries = listOf(VolumeViewType.CHAPTER, VolumeViewType.VOLUME)
+            SingleChoiceSegmentedButtonRow(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                toggleEntries.forEachIndexed { index, viewType ->
+                    SegmentedButton(
+                        selected =
+                            if (viewType == VolumeViewType.VOLUME) {
+                                volumeViewMode == VolumeViewType.VOLUME || volumeViewMode == VolumeViewType.COVER_VOLUME
+                            } else {
+                                volumeViewMode == viewType
+                            },
+                        onClick = {
+                            if (viewType == VolumeViewType.CHAPTER) {
+                                onUpdateVolumeView(VolumeViewType.CHAPTER)
+                            } else if (volumeViewMode == VolumeViewType.CHAPTER) {
+                                onUpdateVolumeView(VolumeViewType.VOLUME)
+                            }
+                        },
+                        shape =
+                            SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = toggleEntries.size,
+                            ),
+                    ) {
+                        Text(text = viewTypeLabel(viewType = viewType))
+                    }
+                }
+            }
+        }
+    }
+
+    val useVolumeSections =
+        (volumeViewMode == VolumeViewType.VOLUME || volumeViewMode == VolumeViewType.COVER_VOLUME) &&
+            chapters.archive.volumeSections.isNotEmpty()
+
+    if (useVolumeSections) {
         chapters.archive.volumeSections.forEach { group ->
             scope.item(
                 key = "volume_card_${group.volume.id}",
                 contentType = "volume_card",
             ) {
-                Comic.Component.VolumeCard(
-                    group = group,
-                    expanded = expandedVolumeIds.contains(group.volume.id),
-                    readChapters = readChapters,
-                    onToggleExpanded = { onToggleVolumeExpanded(group.volume.id) },
-                    onLoadMore = { onLoadMoreVolume(group.volume.id) },
-                    onChapterClick = { chapter -> onChapterClick(chapter, null) },
-                    onToggleRead = onToggleRead,
-                    remoteResolver = { chapterSort ->
-                        chapters.remoteInfo?.items?.firstOrNull {
-                            it.chapter.normalizeSort() == chapterSort
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
-                )
+                val isExpanded = activeVolumeId == group.volume.id
+                val onToggleExpanded = { onSetActiveVolume(if (isExpanded) null else group.volume.id) }
+                val remoteResolver: (String) -> ChapterFeedDto? = { chapterSort ->
+                    chapters.remoteInfo?.items?.firstOrNull { it.chapter.normalizeSort() == chapterSort }
+                }
+
+                if (volumeViewMode == VolumeViewType.COVER_VOLUME) {
+                    Comic.Component.CoverVolumeCard(
+                        group = group,
+                        expanded = isExpanded,
+                        readChapters = readChapters,
+                        onToggleExpanded = onToggleExpanded,
+                        onChapterClick = { chapter -> onChapterClick(chapter, null) },
+                        onToggleRead = onToggleRead,
+                        remoteResolver = remoteResolver,
+                        currentPage = group.currentPage,
+                        totalPages = group.totalPages,
+                        onPageChange = { page -> onLoadVolumeChaptersPage(group.volume.id, page) },
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                    )
+                } else {
+                    Comic.Component.VolumeCard(
+                        group = group,
+                        expanded = isExpanded,
+                        readChapters = readChapters,
+                        onToggleExpanded = onToggleExpanded,
+                        onChapterClick = { chapter -> onChapterClick(chapter, null) },
+                        onToggleRead = onToggleRead,
+                        remoteResolver = remoteResolver,
+                        currentPage = group.currentPage,
+                        totalPages = group.totalPages,
+                        onPageChange = { page -> onLoadVolumeChaptersPage(group.volume.id, page) },
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                    )
+                }
             }
         }
         return
     }
 
-    val volumeMap = chapters.archive.volumes.associateBy { it.id }
-    val chapterCountByVolume =
-        chapters.archive.items
-            .mapNotNull { it.volumeId }
-            .groupingBy { it }
-            .eachCount()
-
     chapters.archive.items.forEachIndexed { index, archiveItem ->
-        val volumeId = archiveItem.volumeId
-        val previousVolumeId =
-            chapters.archive.items
-                .getOrNull(index - 1)
-                ?.volumeId
-        val shouldShowHeader = showVolumeHeaders && volumeId != null && volumeId != previousVolumeId
-
-        if (shouldShowHeader) {
-            val volumeDto = volumeMap[volumeId] ?: return@forEachIndexed
-            scope.stickyHeader(key = "vol_$volumeId") {
-                Comic.Component.VolumeHeader(
-                    volume = volumeDto,
-                    chapterCount = chapterCountByVolume[volumeId] ?: 0,
-                )
-            }
-        }
-
         scope.item(
             key = archiveItem.id,
             contentType = "chapter",
         ) {
             val remoteItem: ChapterFeedDto? =
                 chapters.remoteInfo?.items?.firstOrNull {
-                    it.chapter.normalizeSort() ==
-                        archiveItem.chapterSort.normalizeSort()
+                    it.chapter.normalizeSort() == archiveItem.chapterSort.normalizeSort()
                 }
+
+            // Infinite Scroll Trigger
+            if (index >= chapters.archive.items.size - 5 && currentPage < totalPages - 1) {
+                androidx.compose.runtime.LaunchedEffect(key1 = currentPage) {
+                    onPageChange(currentPage + 1)
+                }
+            }
 
             Comic.Component.ChapterItem(
                 chapterFileDto = archiveItem,
@@ -103,17 +153,12 @@ fun Comic.Layout.chapterSection(
             )
         }
     }
-
-    if (totalPages > 1) {
-        scope.item(
-            key = "pagination_footer",
-            contentType = "pagination",
-        ) {
-            Acerola.Component.Pagination(
-                currentPage = currentPage,
-                totalPages = totalPages,
-                onPageChange = onPageChange,
-            )
-        }
-    }
 }
+
+@Composable
+private fun viewTypeLabel(viewType: VolumeViewType): String =
+    when (viewType) {
+        VolumeViewType.CHAPTER -> stringResource(R.string.label_volume_view_chapter)
+        VolumeViewType.VOLUME -> stringResource(R.string.label_volume_view_volume)
+        VolumeViewType.COVER_VOLUME -> stringResource(R.string.label_volume_view_cover)
+    }

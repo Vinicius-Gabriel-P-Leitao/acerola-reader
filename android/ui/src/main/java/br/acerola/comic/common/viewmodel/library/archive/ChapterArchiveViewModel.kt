@@ -13,8 +13,8 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.comic.worker.sync.LibrarySyncWorker
 import br.acerola.comic.worker.contract.WorkerContract
+import br.acerola.comic.worker.sync.LibrarySyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

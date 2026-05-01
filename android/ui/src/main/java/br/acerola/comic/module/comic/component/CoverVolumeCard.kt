@@ -2,6 +2,7 @@ package br.acerola.comic.module.comic.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,9 +28,10 @@ import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 import br.acerola.comic.util.sort.normalizeSort
+import coil.compose.AsyncImage
 
 @Composable
-fun Comic.Component.VolumeCard(
+fun Comic.Component.CoverVolumeCard(
     group: VolumeChapterGroupDto,
     expanded: Boolean,
     readChapters: List<String>,
@@ -44,8 +47,6 @@ fun Comic.Component.VolumeCard(
     Acerola.Component.GroupedHeroItem(
         title = group.volume.name,
         description = stringResource(R.string.label_volume_card_description, group.loadedCount, group.totalChapters),
-        icon = Icons.Default.LibraryBooks,
-        iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
         modifier = modifier,
         onClick = onToggleExpanded,
@@ -60,6 +61,22 @@ fun Comic.Component.VolumeCard(
                     )
                 },
             )
+        },
+        icon = {
+            if (group.volume.coverUri != null) {
+                AsyncImage(
+                    model = group.volume.coverUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.LibraryBooks,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
         },
         nestedItem = {
             if (!expanded) return@GroupedHeroItem

@@ -28,10 +28,10 @@ import br.acerola.comic.service.compact.PdfToCbzConverter
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.util.file.ContentQueryHelper
 import br.acerola.comic.util.file.FastFileMetadata
+import br.acerola.comic.util.file.toFastMetadata
 import br.acerola.comic.util.sort.SortNormalizer
 import br.acerola.comic.util.sort.SortType
 import br.acerola.comic.util.template.templateToRegex
-import br.acerola.comic.util.file.toFastMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

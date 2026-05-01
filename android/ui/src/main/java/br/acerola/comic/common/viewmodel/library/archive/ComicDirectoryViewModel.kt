@@ -9,8 +9,8 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.error.UserMessage
@@ -22,8 +22,8 @@ import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.comic.UpdateComicSettingsUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.sync.LibrarySyncWorker
 import br.acerola.comic.worker.contract.WorkerContract
+import br.acerola.comic.worker.sync.LibrarySyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -81,7 +81,7 @@ class ComicDirectoryViewModel
             selectedDirectoryId
                 .flatMapLatest { id ->
                     id?.let {
-                        observeChaptersUseCase.observeByManga(comicId = it).map { page -> page.items }
+                        observeChaptersUseCase.observeByComic(comicId = it).map { page -> page.items }
                     } ?: flowOf(value = emptyList())
                 }.stateIn(
                     viewModelScope,

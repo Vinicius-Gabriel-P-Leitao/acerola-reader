@@ -7,9 +7,9 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.config.preference.ComicSortPreference
-import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.HomeFilterPreference
 import br.acerola.comic.config.preference.HomeLayoutPreference
+import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
 import br.acerola.comic.config.preference.types.SortDirection
@@ -87,7 +87,7 @@ class HomeViewModelTest {
         every { mangadexRepo.observeLibrary() } returns metadataFlow
         every { directoryRepo.observeLibrary() } returns directoryFlow
         every { getChapterCountUseCase() } returns chapterCountFlow
-        every { manageCategoriesUseCase.getAllMangaCategories() } returns categoryMapFlow
+        every { manageCategoriesUseCase.getAllComicCategories() } returns categoryMapFlow
         every { manageCategoriesUseCase.getAllCategories() } returns MutableStateFlow(emptyList())
 
         observeHistoryUseCase = ObserveHistoryUseCase(historyGateway)

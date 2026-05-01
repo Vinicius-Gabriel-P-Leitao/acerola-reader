@@ -23,6 +23,8 @@ data class VolumeChapterGroupDto(
     val totalChapters: Int,
     val loadedCount: Int,
     val hasMore: Boolean,
+    val currentPage: Int = 0,
+    val totalPages: Int = 1,
 ) : Parcelable
 
 @Parcelize

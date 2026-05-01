@@ -27,20 +27,23 @@ class CoverDaoTest {
     }
 
     @After
-    fun tearDown() { db.close() }
+    fun tearDown() {
+        db.close()
+    }
 
     @Test
-    fun testCoverDao() = runBlocking {
-        val comicDao = db.comicRemoteInfoDao()
-        val coverDao = db.coverDao()
+    fun testCoverDao() =
+        runBlocking {
+            val comicDao = db.comicRemoteInfoDao()
+            val coverDao = db.coverDao()
 
-        val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val cover = MetadataFixtures.createCover(comicId = comicId, fileName = "cover.jpg")
+            val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val cover = MetadataFixtures.createCover(comicId = comicId, fileName = "cover.jpg")
 
-        coverDao.insert(cover)
-        val result = coverDao.getByFileNameAndMetadataId(fileName = "cover.jpg", comicRemoteInfoFk = comicId)
+            coverDao.insert(cover)
+            val result = coverDao.getByFileNameAndMetadataId(fileName = "cover.jpg", comicRemoteInfoFk = comicId)
 
-        assertNotNull(result)
-        assertEquals("cover.jpg", result?.fileName)
-    }
+            assertNotNull(result)
+            assertEquals("cover.jpg", result?.fileName)
+        }
 }

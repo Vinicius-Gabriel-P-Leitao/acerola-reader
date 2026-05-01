@@ -19,8 +19,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -110,6 +108,8 @@ fun ComicScreen(
     val selectedChapterPerPage by comicViewModel.selectedChapterPerPage.collectAsStateWithLifecycle()
     val chapterSortSettings by comicViewModel.chapterSortSettings.collectAsStateWithLifecycle()
     val allCategories by comicMetadataViewModel.allCategories.collectAsStateWithLifecycle()
+    val volumeViewMode by comicViewModel.volumeViewMode.collectAsStateWithLifecycle()
+    val activeVolumeId by comicViewModel.activeVolumeId.collectAsStateWithLifecycle()
 
     val currentManga = comicState ?: comic
     val totalChapters = chapterDto?.archive?.total ?: 0
@@ -141,9 +141,11 @@ fun ComicScreen(
             chapterSortSettings = chapterSortSettings,
             allCategories = allCategories.toPersistentList(),
             showVolumeHeaders = showVolumeHeaders,
+            volumeViewMode = volumeViewMode,
+            activeVolumeId = activeVolumeId,
+            hasVolumeStructure = chapterDto?.hasVolumeStructure ?: false,
         )
 
-    val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
     var showSortSheet by remember { mutableStateOf(false) }
@@ -220,10 +222,9 @@ fun ComicScreen(
                     uiState.comic.directory.id,
                     action.enabled,
                 )
+            is ComicAction.UpdateVolumeView -> comicViewModel.updateVolumeViewMode(action.mode)
         }
     }
-
-    var expandedVolumeIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -271,17 +272,11 @@ fun ComicScreen(
                                 readChapters = uiState.readChapters.toList(),
                                 onToggleRead = { id -> onChapterAction(ComicChapterAction.ToggleReadStatus(id)) },
                                 onChapterClick = { chapter, _ -> onChapterAction(ComicChapterAction.ClickChapter(chapter, 0)) },
-                                showVolumeHeaders = uiState.showVolumeHeaders,
-                                expandedVolumeIds = expandedVolumeIds,
-                                onToggleVolumeExpanded = { volumeId ->
-                                    expandedVolumeIds =
-                                        if (expandedVolumeIds.contains(volumeId)) {
-                                            expandedVolumeIds - volumeId
-                                        } else {
-                                            expandedVolumeIds + volumeId
-                                        }
-                                },
-                                onLoadMoreVolume = comicViewModel::loadMoreVolumeChapters,
+                                volumeViewMode = uiState.volumeViewMode,
+                                activeVolumeId = uiState.activeVolumeId,
+                                onSetActiveVolume = comicViewModel::setActiveVolume,
+                                onUpdateVolumeView = { mode -> onAction(ComicAction.UpdateVolumeView(mode)) },
+                                onLoadVolumeChaptersPage = comicViewModel::loadVolumeChaptersPage,
                             )
                         }
                     }

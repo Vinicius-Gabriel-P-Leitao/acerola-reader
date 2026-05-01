@@ -12,4 +12,5 @@ data class ChapterDto(
     val archive: ChapterPageDto,
     val remoteInfo: ChapterRemoteInfoPageDto?,
     val showVolumeHeaders: Boolean = false,
+    val hasVolumeStructure: Boolean = false,
 ) : Parcelable

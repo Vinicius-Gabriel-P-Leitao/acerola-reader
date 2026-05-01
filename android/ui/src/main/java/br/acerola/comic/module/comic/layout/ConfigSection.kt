@@ -13,12 +13,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ComicCategorySelector
 import br.acerola.comic.module.comic.component.ComicExternalSyncToggle
 import br.acerola.comic.module.comic.component.PaginationPreference
 import br.acerola.comic.module.comic.component.SyncMangaArchive
 import br.acerola.comic.module.comic.component.SyncMetadata
+import br.acerola.comic.module.comic.component.VolumeStylePreference
 import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
@@ -58,8 +60,25 @@ fun Comic.Layout.configSection(
         )
     }
 
+    scope.item { Spacer(modifier = Modifier.height(8.dp)) }
+
+    if (uiState.hasVolumeStructure && uiState.volumeViewMode != VolumeViewType.CHAPTER) {
+        scope.item {
+            Comic.Component.VolumeStylePreference(
+                selected = uiState.volumeViewMode,
+                onSelect = { mode -> onAction(ComicAction.UpdateVolumeView(mode)) },
+                modifier = itemModifier,
+            )
+        }
+    }
+
     scope.item {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
     }
 
     // NOTE: Categorias
@@ -77,7 +96,12 @@ fun Comic.Layout.configSection(
     }
 
     scope.item {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
     }
 
     // NOTE: Arquivos Locais
@@ -95,7 +119,12 @@ fun Comic.Layout.configSection(
     }
 
     scope.item {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
     }
 
     // NOTE: Metadados Externos

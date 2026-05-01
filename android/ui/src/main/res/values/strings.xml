@@ -117,6 +117,12 @@
     <string name="label_volume_header_root">Capítulos Avulsos</string>
     <string name="label_volume_card_description">%1$d de %2$d capítulos carregados</string>
     <string name="action_volume_load_more">Carregar mais capítulos</string>
+    <string name="label_volume_view_chapter">Capítulos</string>
+    <string name="label_volume_view_volume">Volumes</string>
+    <string name="label_volume_view_cover">Capas</string>
+    <string name="title_settings_volume_style">Estilo dos volumes</string>
+    <string name="label_volume_style_normal">Normal</string>
+    <string name="label_volume_style_cover">Capas</string>
 
     <!-- Comic Header -->
     <string name="comic_header_cover_description">Capa do quadrinho</string>

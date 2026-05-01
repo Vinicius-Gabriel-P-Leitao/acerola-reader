@@ -10,8 +10,8 @@ import br.acerola.comic.error.message.NetworkError
 import br.acerola.comic.local.translator.remote.toViewDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.type.Language
 import br.acerola.comic.remote.mangadex.api.MangadexChapterMetadataClient
+import br.acerola.comic.type.Language
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

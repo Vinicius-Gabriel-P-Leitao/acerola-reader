@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import br.acerola.comic.config.preference.ComicSortPreference
-import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.HomeFilterPreference
 import br.acerola.comic.config.preference.HomeLayoutPreference
+import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
 import br.acerola.comic.config.preference.types.SortDirection
@@ -113,7 +113,7 @@ class HomeViewModel
                     directoryObserve(),
                     mangadexObserve(),
                     observeHistoryUseCase.invokeRecent(),
-                    manageCategoriesUseCase.getAllMangaCategories(),
+                    manageCategoriesUseCase.getAllComicCategories(),
                     getChapterCountUseCase(),
                 ) { directories, remote, history, categories, counts ->
                     HomeCombinedArgs(directories, remote, history, categories, counts)
@@ -199,7 +199,7 @@ class HomeViewModel
             categoryId: Long?,
         ) {
             viewModelScope.launch {
-                manageCategoriesUseCase.updateMangaCategory(comicId, categoryId)
+                manageCategoriesUseCase.updateComicCategory(comicId, categoryId)
             }
         }
 

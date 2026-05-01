@@ -27,22 +27,25 @@ class ChapterDownloadSourceDaoTest {
     }
 
     @After
-    fun tearDown() { db.close() }
+    fun tearDown() {
+        db.close()
+    }
 
     @Test
-    fun testChapterDownloadSourceDao() = runBlocking {
-        val comicDao = db.comicRemoteInfoDao()
-        val chapterDao = db.chapterRemoteInfoDao()
-        val sourceDao = db.chapterDownloadSourceDao()
+    fun testChapterDownloadSourceDao() =
+        runBlocking {
+            val comicDao = db.comicRemoteInfoDao()
+            val chapterDao = db.chapterRemoteInfoDao()
+            val sourceDao = db.chapterDownloadSourceDao()
 
-        val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
-        val chapterId = chapterDao.insert(MetadataFixtures.createChapterRemoteInfo(comicRemoteInfoFk = comicId))
-        val source = MetadataFixtures.createChapterDownloadSource(chapterFk = chapterId, pageNumber = 1)
+            val comicId = comicDao.insert(MetadataFixtures.createMangaRemoteInfo())
+            val chapterId = chapterDao.insert(MetadataFixtures.createChapterRemoteInfo(comicRemoteInfoFk = comicId))
+            val source = MetadataFixtures.createChapterDownloadSource(chapterFk = chapterId, pageNumber = 1)
 
-        sourceDao.insert(source)
-        val result = sourceDao.observeChapterDownloadSourcesByChapterIds(listOf(chapterId)).first()
+            sourceDao.insert(source)
+            val result = sourceDao.observeChapterDownloadSourcesByChapterIds(listOf(chapterId)).first()
 
-        assertEquals(1, result.size)
-        assertEquals(1, result[0].pageNumber)
-    }
+            assertEquals(1, result.size)
+            assertEquals(1, result[0].pageNumber)
+        }
 }

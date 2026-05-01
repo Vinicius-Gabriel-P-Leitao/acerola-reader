@@ -7,6 +7,7 @@ import br.acerola.comic.error.message.ChapterError
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Validar se esse arquivo tem uso dentro do projeto caso não tenha, deletar
 @Singleton
 class PageCacheHandler
     @Inject

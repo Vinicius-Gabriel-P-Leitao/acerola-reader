@@ -6,14 +6,14 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
-import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.ChapterPerPagePreference
 import br.acerola.comic.config.preference.ChapterSortPreference
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
 import br.acerola.comic.config.preference.types.ChapterSortType
 import br.acerola.comic.config.preference.types.SortDirection
-import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
@@ -149,7 +149,7 @@ class ComicViewModelTest {
             observedLocalChapters(sortType = sortType, isAscending = isAscending)
         }
         every { mangadexChapterRepo.observeChapters(any(), any(), any()) } returns remoteChaptersFlow
-        every { manageCategoriesUseCase.getCategoryByMangaId(any()) } returns flowOf(null)
+        every { manageCategoriesUseCase.getCategoryByComicId(any()) } returns flowOf(null)
         every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns volumeSectionsFlow
         every { directoryObserveVolumeChapters.observeHasRootChapters(any()) } returns hasRootChaptersFlow
         coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()

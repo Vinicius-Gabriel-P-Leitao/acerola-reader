@@ -13,7 +13,7 @@ class ObserveComicHistoryUseCase
     constructor(
         @param:LocalHistory private val historyRepository: HistoryGateway,
     ) {
-        fun observeByManga(comicId: Long): Flow<ReadingHistoryDto?> = historyRepository.getHistoryByMangaId(comicId)
+        fun observeByComic(comicId: Long): Flow<ReadingHistoryDto?> = historyRepository.getHistoryByMangaId(comicId)
 
         fun observeReadChapters(comicId: Long): Flow<List<String>> = historyRepository.getReadChaptersByMangaId(comicId)
     }

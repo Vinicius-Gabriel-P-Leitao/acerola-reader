@@ -4,13 +4,13 @@ import android.content.Context
 import br.acerola.comic.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.comic.config.preference.MetadataPreference
 import br.acerola.comic.error.message.NetworkError
-import br.acerola.comic.type.Language
 import br.acerola.comic.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.comic.remote.mangadex.dto.MangadexResponseDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterAttributes
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterPage
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
+import br.acerola.comic.type.Language
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -129,4 +129,3 @@ class MangadexChapterInfoSourceTest {
         total = total,
     )
 }
-

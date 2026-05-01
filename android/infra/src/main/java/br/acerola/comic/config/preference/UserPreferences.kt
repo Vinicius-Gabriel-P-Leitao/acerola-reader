@@ -14,6 +14,7 @@ import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
 import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.config.preference.types.SortDirection
+import br.acerola.comic.config.preference.types.VolumeViewType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -164,5 +165,25 @@ object ChapterSortPreference {
                 type = ChapterSortType.Companion.fromKey(key = prefs[CHAPTER_SORT_TYPE_KEY]),
                 direction = SortDirection.fromKey(key = prefs[CHAPTER_SORT_DIRECTION_KEY]),
             )
+        }
+}
+
+object VolumeViewPreference {
+    private val Context.dataStore by preferencesDataStore(name = "volume_view_prefs")
+
+    private val VOLUME_VIEW_KEY = stringPreferencesKey(name = "volume_view_type")
+
+    suspend fun saveVolumeView(
+        context: Context,
+        mode: VolumeViewType,
+    ) {
+        context.dataStore.edit { prefs ->
+            prefs[VOLUME_VIEW_KEY] = mode.key
+        }
+    }
+
+    fun volumeViewFlow(context: Context): Flow<VolumeViewType> =
+        context.dataStore.data.map { prefs ->
+            VolumeViewType.fromKey(prefs[VOLUME_VIEW_KEY])
         }
 }

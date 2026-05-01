@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
-import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.config.preference.ReadingModePreference
-import br.acerola.comic.dto.archive.ChapterPageDto
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.error.message.ChapterError
@@ -38,6 +38,7 @@ import javax.inject.Inject
 class ReaderViewModel
     @Inject
     constructor(
+        // FIXME: Nome errado repository, vazamento de lógica ViewModel não conhece service, mover lógica de Processor para o UseCase.
         private val repository: ReaderProcessor,
         @param:ApplicationContext private val context: Context,
         private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
@@ -89,7 +90,7 @@ class ReaderViewModel
 
             viewModelScope.launch {
                 observeChaptersUseCase
-                    .observeByManga(comicId)
+                    .observeByComic(comicId)
                     .filter { it.items.isNotEmpty() }
                     .take(1)
                     .collect { pageDto ->
@@ -141,7 +142,7 @@ class ReaderViewModel
 
             viewModelScope.launch {
                 observeChaptersUseCase
-                    .observeByManga(comicId)
+                    .observeByComic(comicId)
                     .combine(observeChaptersUseCase.isIndexing) { pageDto, isIndexing ->
                         pageDto to isIndexing
                     }.collect { (pageDto, isIndexing) ->

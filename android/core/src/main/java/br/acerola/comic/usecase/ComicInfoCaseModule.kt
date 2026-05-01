@@ -65,15 +65,6 @@ object ComicInfoCaseModule {
         )
 
     @Provides
-    @ComicInfoCase
-    fun provideGetChaptersUseCase(
-        @ComicInfoEngine chapterOps: ChapterGateway<ChapterRemoteInfoPageDto>,
-    ): ObserveChaptersUseCase<ChapterRemoteInfoPageDto> =
-        ObserveChaptersUseCase(
-            chapterRepository = chapterOps,
-        )
-
-    @Provides
     fun provideSyncComicMetadataUseCase(
         @AnilistEngine anilistMangaRepo: ComicGateway<ComicMetadataDto>,
         @MangadexEngine mangadexMangaRepo: ComicGateway<ComicMetadataDto>,

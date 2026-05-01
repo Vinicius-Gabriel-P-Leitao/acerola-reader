@@ -31,12 +31,12 @@ class ObserveChaptersUseCaseTest {
     }
 
     @Test
-    fun `observeByManga deve delegar para o repositorio`() =
+    fun `observeByComic deve delegar para o repositorio`() =
         runTest {
             val dto = mockk<ChapterPageDto>()
             every { repository.observeChapters(comicId = 1L) } returns MutableStateFlow(value = dto)
 
-            val result = useCase.observeByManga(comicId = 1L).first()
+            val result = useCase.observeByComic(comicId = 1L).first()
 
             assertEquals(dto, result)
             coVerify { repository.observeChapters(comicId = 1L) }

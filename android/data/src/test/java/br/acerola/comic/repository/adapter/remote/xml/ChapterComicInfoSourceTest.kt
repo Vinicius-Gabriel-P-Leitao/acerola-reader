@@ -71,4 +71,3 @@ class ChapterComicInfoSourceTest {
             result.onLeft { assertTrue(it is NetworkError.NotFound) }
         }
 }
-
