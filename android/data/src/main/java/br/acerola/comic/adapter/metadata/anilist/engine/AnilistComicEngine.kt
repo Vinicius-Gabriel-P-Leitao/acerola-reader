@@ -21,7 +21,7 @@ import br.acerola.comic.local.translator.persistence.toAnilistSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.BannerSaver
 import br.acerola.comic.service.artwork.CoverSaver
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -88,7 +88,7 @@ class AnilistComicEngine
                                 } ?: results.firstOrNull()
                                     ?: return@flatMap Either.Left(
                                         LibrarySyncError.MetadataNotFound(
-                                            source = MetadataSourcePattern.ANILIST.source,
+                                            source = MetadataSource.ANILIST.source,
                                             identifier = directory.name,
                                         ),
                                     )
@@ -98,7 +98,7 @@ class AnilistComicEngine
                                     val comicToSave =
                                         dto.toEntity().copy(
                                             comicDirectoryFk = comicId,
-                                            syncSource = MetadataSourcePattern.ANILIST.source,
+                                            syncSource = MetadataSource.ANILIST.source,
                                         )
 
                                     val remoteInfoId =

@@ -26,7 +26,7 @@ import br.acerola.comic.local.translator.ui.toViewPageDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.service.metadata.MetadataExporter
-import br.acerola.comic.util.normalizeChapter
+import br.acerola.comic.util.sort.normalizeSort
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -251,7 +251,7 @@ class MangadexChapterEngine
             val remoteByChapter =
                 remote
                     .mapNotNull { dto ->
-                        val key = dto.chapter?.normalizeChapter()
+                        val key = dto.chapter?.normalizeSort()
                         if (key == null) null else key to dto
                     }.groupBy(keySelector = { it.first }, valueTransform = { it.second })
                     .mapValues { (_, list) ->
@@ -260,7 +260,7 @@ class MangadexChapterEngine
 
             return local.mapNotNull { join ->
                 val archive = join.chapter
-                val chapterKey = archive.chapterSort.normalizeChapter()
+                val chapterKey = archive.chapterSort.normalizeSort()
                 val remoteInfo = remoteByChapter[chapterKey] ?: return@mapNotNull null
 
                 archive to remoteInfo

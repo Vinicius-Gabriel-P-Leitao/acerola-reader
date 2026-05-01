@@ -12,7 +12,7 @@ import br.acerola.comic.error.message.IoError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.translator.ui.toViewDto
-import br.acerola.comic.pattern.MediaFilePattern
+import br.acerola.comic.pattern.media.MediaFile
 import br.acerola.comic.service.file.FileStorageHandler
 import br.acerola.comic.service.reader.ChapterSourceFactory
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -78,7 +78,7 @@ class CoverExtractor
 
                                     folderDoc.listFiles().forEach { file ->
                                         val fileName = file.name ?: return@forEach
-                                        if (MediaFilePattern.isCover(fileName)) {
+                                        if (MediaFile.isCover(fileName)) {
                                             file.delete()
                                         }
                                     }
@@ -86,7 +86,7 @@ class CoverExtractor
                                     fileStorageHandler
                                         .saveFile(
                                             folder = folderDoc,
-                                            fileName = MediaFilePattern.COVER.defaultFileName,
+                                            fileName = MediaFile.COVER.defaultFileName,
                                             mimeType = "image/jpeg",
                                             bytes = bytes,
                                         ).also { result ->

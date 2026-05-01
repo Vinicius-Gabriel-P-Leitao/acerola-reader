@@ -34,13 +34,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
-import br.acerola.comic.config.preference.ComicSortType
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ComicSortType
+import br.acerola.comic.config.preference.types.HomeSortPreference
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.home.state.FilterSettings
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -217,12 +217,12 @@ fun Main.Home.Component.HomeFilterSheet(
                 )
 
                 // Fontes do Enum
-                MetadataSourcePattern.entries.forEach { source ->
+                MetadataSource.entries.forEach { source ->
                     val label =
                         when (source) {
-                            MetadataSourcePattern.MANGADEX -> stringResource(id = R.string.label_source_mangadex)
-                            MetadataSourcePattern.ANILIST -> stringResource(id = R.string.label_source_anilist)
-                            MetadataSourcePattern.COMIC_INFO -> stringResource(id = R.string.label_source_comic_info)
+                            MetadataSource.MANGADEX -> stringResource(id = R.string.label_source_mangadex)
+                            MetadataSource.ANILIST -> stringResource(id = R.string.label_source_anilist)
+                            MetadataSource.COMIC_INFO -> stringResource(id = R.string.label_source_comic_info)
                         }
 
                     FilterChip(

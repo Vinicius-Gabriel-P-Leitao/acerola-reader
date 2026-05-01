@@ -6,15 +6,15 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.library.ComicDirectoryEngine
+import br.acerola.comic.adapter.library.engine.ComicDirectoryEngine
 import br.acerola.comic.config.preference.ComicDirectoryPreference
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.service.template.TemplateMatcher
-import br.acerola.comic.util.ContentQueryHelper
-import br.acerola.comic.util.FastFileMetadata
+import br.acerola.comic.util.file.ContentQueryHelper
+import br.acerola.comic.util.file.FastFileMetadata
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,7 +46,7 @@ class ComicDirectoryEngineTest {
 
     @MockK lateinit var directoryDao: ComicDirectoryDao
 
-    @MockK lateinit var comicDirectoryOps: ChapterGateway<ChapterArchivePageDto>
+    @MockK lateinit var comicDirectoryOps: ChapterGateway<ChapterPageDto>
 
     @MockK lateinit var templateService: ChapterNameProcessor
 

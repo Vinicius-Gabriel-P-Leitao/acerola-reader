@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.gesture.ZoomablePageImage
 import br.acerola.comic.module.reader.state.TapArea

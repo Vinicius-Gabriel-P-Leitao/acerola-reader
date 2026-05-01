@@ -14,8 +14,8 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.comic.util.normalizeChapter
-import br.acerola.comic.worker.MetadataSyncWorker
+import br.acerola.comic.util.sort.normalizeSort
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +77,7 @@ class ChapterMetadataViewModel
 
                 val sortedItems: List<ChapterFeedDto> =
                     result.items.sortedBy {
-                        it.chapter.normalizeChapter().toFloatOrNull() ?: 0f
+                        it.chapter.normalizeSort().toFloatOrNull() ?: 0f
                     }
 
                 chapterPage.value = result.copy(items = sortedItems)

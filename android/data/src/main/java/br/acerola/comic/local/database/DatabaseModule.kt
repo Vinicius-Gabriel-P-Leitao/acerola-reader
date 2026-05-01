@@ -23,8 +23,8 @@ import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.comic.local.dao.view.ComicSummaryDao
-import br.acerola.comic.pattern.TemplateMacro
-import br.acerola.comic.util.SortType
+import br.acerola.comic.pattern.template.TemplateMacro
+import br.acerola.comic.util.sort.SortType
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

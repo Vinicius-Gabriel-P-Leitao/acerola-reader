@@ -14,7 +14,7 @@ import br.acerola.comic.local.dao.metadata.relationship.BannerDao
 import br.acerola.comic.local.entity.metadata.relationship.Banner
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MediaFilePattern
+import br.acerola.comic.pattern.media.MediaFile
 import br.acerola.comic.service.file.FileStorageHandler
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -56,12 +56,12 @@ class BannerSaver
 
                     comicDir.listFiles().forEach { file ->
                         val fileName = file.name ?: return@forEach
-                        if (MediaFilePattern.isBanner(fileName)) {
+                        if (MediaFile.isBanner(fileName)) {
                             file.delete()
                         }
                     }
 
-                    val fileName = MediaFilePattern.BANNER.defaultFileName
+                    val fileName = MediaFile.BANNER.defaultFileName
 
                     fileStorageHandler
                         .saveFile(

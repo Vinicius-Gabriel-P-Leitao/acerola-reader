@@ -1,5 +1,5 @@
 package br.acerola.comic.module.comic.state
-import br.acerola.comic.config.preference.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.dto.archive.ChapterFileDto
 
 sealed interface ComicAction {

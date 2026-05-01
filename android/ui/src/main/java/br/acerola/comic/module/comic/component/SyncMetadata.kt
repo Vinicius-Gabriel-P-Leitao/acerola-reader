@@ -26,7 +26,7 @@ import br.acerola.comic.common.ux.component.HeroItem
 import br.acerola.comic.common.ux.component.HeroNestedItem
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 
 @Composable
@@ -47,7 +47,7 @@ fun Comic.Component.SyncMetadata(
     Column(modifier = modifier) {
         if (externalSyncEnabled) {
             MangadexSection(
-                isActive = syncSource == MetadataSourcePattern.MANGADEX,
+                isActive = syncSource == MetadataSource.MANGADEX,
                 hasChapters = hasMangadexSource && remoteInfo.id != null,
                 onSyncInfo = onSyncMangadexInfo,
                 onSyncChapters = onSyncMangadexChapters,
@@ -56,7 +56,7 @@ fun Comic.Component.SyncMetadata(
             Spacer(modifier = Modifier.height(8.dp))
 
             AnilistSection(
-                isActive = syncSource == MetadataSourcePattern.ANILIST,
+                isActive = syncSource == MetadataSource.ANILIST,
                 onSyncInfo = onSyncAnilistInfo,
             )
 
@@ -64,7 +64,7 @@ fun Comic.Component.SyncMetadata(
         }
 
         ComicInfoSection(
-            isActive = syncSource == MetadataSourcePattern.COMIC_INFO,
+            isActive = syncSource == MetadataSource.COMIC_INFO,
             hasChapters = hasComicInfoSource,
             onSyncInfo = onSyncComicInfo,
             onSyncChapters = onSyncComicInfoChapters,

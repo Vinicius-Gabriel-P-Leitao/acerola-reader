@@ -14,7 +14,7 @@ import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
 import br.acerola.comic.module.comic.component.VolumeCard
 import br.acerola.comic.module.comic.component.VolumeHeader
-import br.acerola.comic.util.normalizeChapter
+import br.acerola.comic.util.sort.normalizeSort
 
 // FIXME: Remover scroll forçado para cima quando carrega nova pagina.
 @OptIn(ExperimentalFoundationApi::class)
@@ -48,7 +48,7 @@ fun Comic.Layout.chapterSection(
                     onToggleRead = onToggleRead,
                     remoteResolver = { chapterSort ->
                         chapters.remoteInfo?.items?.firstOrNull {
-                            it.chapter.normalizeChapter() == chapterSort
+                            it.chapter.normalizeSort() == chapterSort
                         }
                     },
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
@@ -89,8 +89,8 @@ fun Comic.Layout.chapterSection(
         ) {
             val remoteItem: ChapterFeedDto? =
                 chapters.remoteInfo?.items?.firstOrNull {
-                    it.chapter.normalizeChapter() ==
-                        archiveItem.chapterSort.normalizeChapter()
+                    it.chapter.normalizeSort() ==
+                        archiveItem.chapterSort.normalizeSort()
                 }
 
             Comic.Component.ChapterItem(

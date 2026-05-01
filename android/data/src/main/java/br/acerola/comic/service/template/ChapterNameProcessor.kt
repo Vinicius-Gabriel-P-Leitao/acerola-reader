@@ -8,9 +8,9 @@ import br.acerola.comic.error.message.TemplateError
 import br.acerola.comic.local.dao.archive.ArchiveTemplateDao
 import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.translator.persistence.toDto
-import br.acerola.comic.pattern.TemplateMacro
-import br.acerola.comic.pattern.TemplateValidatorPattern
-import br.acerola.comic.util.SortType
+import br.acerola.comic.pattern.template.TemplateMacro
+import br.acerola.comic.pattern.template.TemplateValidator
+import br.acerola.comic.util.sort.SortType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -40,7 +40,7 @@ class ChapterNameProcessor
         ): Either<TemplateError, Unit> {
             val transformedPattern = transformPattern(pattern.trim(), type)
 
-            return TemplateValidatorPattern
+            return TemplateValidator
                 .validateCustomTemplate(transformedPattern)
                 .flatMap {
                     val entity = createCustomTemplate(label.trim(), transformedPattern, type)
@@ -80,7 +80,7 @@ class ChapterNameProcessor
 
             val transformedPattern = transformPattern(pattern.trim(), type)
 
-            return TemplateValidatorPattern
+            return TemplateValidator
                 .validateCustomTemplate(transformedPattern)
                 .flatMap {
                     val updated = existing.copy(label = label.trim(), pattern = transformedPattern, type = type)

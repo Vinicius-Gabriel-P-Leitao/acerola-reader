@@ -13,7 +13,7 @@ import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
-import br.acerola.comic.config.preference.AppTheme
+import br.acerola.comic.config.preference.types.AppTheme
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.module.main.Main
 import io.mockk.every

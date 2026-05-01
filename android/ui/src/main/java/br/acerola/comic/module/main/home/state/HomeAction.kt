@@ -1,5 +1,5 @@
 package br.acerola.comic.module.main.home.state
-import br.acerola.comic.config.preference.HomeLayoutType
+import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 

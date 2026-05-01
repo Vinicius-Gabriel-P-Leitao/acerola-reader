@@ -14,7 +14,7 @@ import br.acerola.comic.local.dao.metadata.relationship.CoverDao
 import br.acerola.comic.local.entity.metadata.relationship.Cover
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MediaFilePattern
+import br.acerola.comic.pattern.media.MediaFile
 import br.acerola.comic.service.file.FileStorageHandler
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -57,12 +57,12 @@ class CoverSaver
                     // Delete existing covers
                     comicDir.listFiles().forEach { file ->
                         val fileName = file.name ?: return@forEach
-                        if (MediaFilePattern.isCover(fileName)) {
+                        if (MediaFile.isCover(fileName)) {
                             file.delete()
                         }
                     }
 
-                    val fileName = MediaFilePattern.COVER.defaultFileName
+                    val fileName = MediaFile.COVER.defaultFileName
 
                     fileStorageHandler
                         .saveFile(

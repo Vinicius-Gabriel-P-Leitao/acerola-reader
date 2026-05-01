@@ -7,12 +7,12 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.config.preference.ComicSortPreference
-import br.acerola.comic.config.preference.ComicSortType
+import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.HomeFilterPreference
 import br.acerola.comic.config.preference.HomeLayoutPreference
-import br.acerola.comic.config.preference.HomeLayoutType
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.HomeLayoutType
+import br.acerola.comic.config.preference.types.HomeSortPreference
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger

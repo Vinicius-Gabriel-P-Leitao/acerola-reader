@@ -10,7 +10,7 @@ import br.acerola.comic.usecase.template.AddTemplateUseCase
 import br.acerola.comic.usecase.template.ObserveTemplatesUseCase
 import br.acerola.comic.usecase.template.RemoveTemplateUseCase
 import br.acerola.comic.usecase.template.UpdateTemplateUseCase
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify

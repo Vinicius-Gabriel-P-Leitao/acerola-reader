@@ -21,7 +21,7 @@ import br.acerola.comic.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,7 +87,7 @@ class ComicInfoComicEngine
                                     status = bestMatch.status,
                                     publication = bestMatch.year ?: 0,
                                     comicDirectoryFk = directory.id,
-                                    syncSource = MetadataSourcePattern.COMIC_INFO.source,
+                                    syncSource = MetadataSource.COMIC_INFO.source,
                                 )
 
                             val remoteId =

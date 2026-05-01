@@ -24,7 +24,7 @@ import br.acerola.comic.local.translator.persistence.toMangadexSourceEntity
 import br.acerola.comic.local.translator.ui.toViewDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.CoverSaver
 import br.acerola.comic.service.metadata.MetadataExporter
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -191,7 +191,7 @@ class MangadexComicEngine
                         val comicToSave =
                             bestMatch.toEntity().copy(
                                 comicDirectoryFk = current.id,
-                                syncSource = MetadataSourcePattern.MANGADEX.source,
+                                syncSource = MetadataSource.MANGADEX.source,
                             )
 
                         val comicId =

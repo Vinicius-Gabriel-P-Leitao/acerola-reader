@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.config.preference.ReadingModePreference
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.error.UserMessage
@@ -41,7 +41,7 @@ class ReaderViewModel
         private val repository: ReaderProcessor,
         @param:ApplicationContext private val context: Context,
         private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
-        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(value = ReaderUiState())
         val uiState: StateFlow<ReaderUiState> = _uiState.asStateFlow()

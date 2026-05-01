@@ -1,6 +1,8 @@
 package br.acerola.comic.util
 
-import br.acerola.comic.pattern.TemplateMacro
+import br.acerola.comic.pattern.template.TemplateMacro
+import br.acerola.comic.util.template.detectArchiveTemplate
+import br.acerola.comic.util.template.templateToRegex
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

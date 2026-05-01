@@ -1,5 +1,5 @@
 package br.acerola.comic.module.reader.state
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 
 sealed interface ReaderAction {
     data object NavigateBack : ReaderAction

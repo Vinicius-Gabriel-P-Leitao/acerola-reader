@@ -41,7 +41,7 @@ import br.acerola.comic.common.ux.component.BookmarkRibbon
 import br.acerola.comic.common.ux.component.ImageCard
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.main.Main
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -148,8 +148,8 @@ fun Main.Common.Component.ComicListItem(
             ) {
                 val sourceIcon =
                     when (comic.remoteInfo?.syncSource) {
-                        MetadataSourcePattern.MANGADEX -> R.drawable.mangadex_v2
-                        MetadataSourcePattern.ANILIST -> R.drawable.anilist
+                        MetadataSource.MANGADEX -> R.drawable.mangadex_v2
+                        MetadataSource.ANILIST -> R.drawable.anilist
                         else -> null
                     }
                 if (sourceIcon != null) {

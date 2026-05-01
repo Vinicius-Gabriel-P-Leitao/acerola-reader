@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.HeroItem
 import br.acerola.comic.common.ux.component.RadioGroup
-import br.acerola.comic.config.preference.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 

@@ -1,7 +1,7 @@
 package br.acerola.comic.local.translator.ui
 
 import androidx.core.net.toUri
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
@@ -72,9 +72,9 @@ fun List<ChapterVolumeJoin>.toViewPageDto(
     pageSize: Int = this.size,
     total: Int = this.size,
     page: Int = 0,
-): ChapterArchivePageDto {
+): ChapterPageDto {
     val volumes = this.mapNotNull { it.volume }.distinctBy { it.id }.map { it.toViewDto() }
-    return ChapterArchivePageDto(
+    return ChapterPageDto(
         items = this.map { it.toViewDto() },
         volumes = volumes,
         pageSize = pageSize,
@@ -88,8 +88,8 @@ fun List<ChapterArchive>.toViewPageDtoLegacy(
     pageSize: Int = this.size,
     total: Int = this.size,
     page: Int = 0,
-): ChapterArchivePageDto =
-    ChapterArchivePageDto(
+): ChapterPageDto =
+    ChapterPageDto(
         items = this.map { it.toViewDto() },
         pageSize = pageSize,
         total = total,

@@ -6,12 +6,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import br.acerola.comic.config.preference.ComicSortPreference
-import br.acerola.comic.config.preference.ComicSortType
+import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.HomeFilterPreference
 import br.acerola.comic.config.preference.HomeLayoutPreference
-import br.acerola.comic.config.preference.HomeLayoutType
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.HomeLayoutType
+import br.acerola.comic.config.preference.types.HomeSortPreference
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
@@ -29,7 +29,7 @@ import br.acerola.comic.usecase.comic.HideComicUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveHistoryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.contract.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel

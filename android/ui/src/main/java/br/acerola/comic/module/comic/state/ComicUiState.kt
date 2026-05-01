@@ -1,10 +1,10 @@
 package br.acerola.comic.module.comic.state
 
 import androidx.annotation.StringRes
-import br.acerola.comic.config.preference.ChapterPageSizeType
-import br.acerola.comic.config.preference.ChapterSortPreferenceData
-import br.acerola.comic.config.preference.ChapterSortType
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
+import br.acerola.comic.config.preference.types.ChapterSortType
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto

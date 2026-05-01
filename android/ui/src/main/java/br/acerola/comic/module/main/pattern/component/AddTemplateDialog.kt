@@ -35,7 +35,7 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 
 @Composable
 fun Main.Pattern.Component.AddTemplateDialog(

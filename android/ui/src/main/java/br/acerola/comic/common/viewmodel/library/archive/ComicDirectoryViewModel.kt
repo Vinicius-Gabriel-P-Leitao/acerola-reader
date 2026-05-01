@@ -9,7 +9,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
@@ -22,8 +22,8 @@ import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.comic.UpdateComicSettingsUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.LibrarySyncWorker
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.sync.LibrarySyncWorker
+import br.acerola.comic.worker.contract.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -51,7 +51,7 @@ class ComicDirectoryViewModel
         private val coverFromChapterUseCase: CoverFromChapterUseCase,
         private val updateComicSettingsUseCase: UpdateComicSettingsUseCase,
         @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>,
-        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
     ) : ViewModel() {
         private val _progress = MutableStateFlow<Int>(value = -1)
         val progress: StateFlow<Int> = _progress.asStateFlow()

@@ -5,7 +5,7 @@ import br.acerola.comic.error.message.TemplateError
 import br.acerola.comic.infra.R
 import br.acerola.comic.local.dao.archive.ArchiveTemplateDao
 import br.acerola.comic.local.entity.archive.ArchiveTemplate
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

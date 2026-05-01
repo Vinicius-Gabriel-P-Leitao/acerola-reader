@@ -1,13 +1,13 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.contract.gateway.VolumeChapterGateway
+import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 class ObserveVolumeChaptersUseCase(
-    private val volumeGateway: VolumeChapterGateway,
+    private val volumeGateway: VolumeGateway,
 ) {
     fun observeByComic(
         comicId: Long,

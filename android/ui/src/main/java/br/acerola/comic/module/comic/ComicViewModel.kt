@@ -3,15 +3,15 @@ package br.acerola.comic.module.comic
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.acerola.comic.config.preference.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.ChapterPerPagePreference
 import br.acerola.comic.config.preference.ChapterSortPreference
-import br.acerola.comic.config.preference.ChapterSortPreferenceData
-import br.acerola.comic.config.preference.ChapterSortType
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
+import br.acerola.comic.config.preference.types.ChapterSortType
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.ComicDto
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
@@ -28,7 +28,7 @@ import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveComicHistoryUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.util.normalizeChapter
+import br.acerola.comic.util.sort.normalizeSort
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -59,7 +59,7 @@ class ComicViewModel
         private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
         @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>,
         @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>,
-        @param:DirectoryCase private val directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val directoryGetChapters: ObserveChaptersUseCase<ChapterPageDto>,
         @param:DirectoryCase private val directoryObserveVolumeChapters: ObserveVolumeChaptersUseCase,
         @param:MangadexCase private val mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
@@ -268,15 +268,15 @@ class ComicViewModel
                                     }
 
                                 val visibleItems = mergedSections.flatMap { it.items }
-                                val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
+                                val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeSort() }
                                 val filteredRemoteItems =
                                     visibleItems.mapNotNull { local ->
-                                        remoteMap[local.chapterSort.normalizeChapter()]
+                                        remoteMap[local.chapterSort.normalizeSort()]
                                     }
 
                                 ChapterDto(
                                     archive =
-                                        ChapterArchivePageDto(
+                                        ChapterPageDto(
                                             items = visibleItems,
                                             volumes = mergedSections.map { it.volume },
                                             volumeSections = mergedSections,
@@ -300,15 +300,15 @@ class ComicViewModel
                                 val end = (start + pageSize).coerceIn(0, total)
 
                                 val pagedLocalItems = if (start < total) items.subList(start, end) else emptyList()
-                                val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeChapter() }
+                                val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeSort() }
                                 val filteredRemoteItems =
                                     pagedLocalItems.mapNotNull { local ->
-                                        remoteMap[local.chapterSort.normalizeChapter()]
+                                        remoteMap[local.chapterSort.normalizeSort()]
                                     }
 
                                 ChapterDto(
                                     archive =
-                                        ChapterArchivePageDto(
+                                        ChapterPageDto(
                                             items = pagedLocalItems,
                                             volumes = localAll.volumes,
                                             pageSize = pageSize,

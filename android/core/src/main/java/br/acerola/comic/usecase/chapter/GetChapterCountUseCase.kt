@@ -1,6 +1,6 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.library.ChapterArchiveEngine
+import br.acerola.comic.adapter.library.engine.ChapterArchiveEngine
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

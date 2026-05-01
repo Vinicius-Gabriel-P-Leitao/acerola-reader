@@ -14,7 +14,7 @@ import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.MetadataSyncWorker
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

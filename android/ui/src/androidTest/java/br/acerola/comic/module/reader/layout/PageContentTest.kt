@@ -3,7 +3,7 @@ package br.acerola.comic.module.reader.layout
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import org.junit.Rule
 import org.junit.Test

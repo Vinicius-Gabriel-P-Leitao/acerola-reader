@@ -2,7 +2,7 @@ package br.acerola.comic.local.converter
 
 import androidx.room.TypeConverter
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 
 class AcerolaTypeConverters {
     @TypeConverter

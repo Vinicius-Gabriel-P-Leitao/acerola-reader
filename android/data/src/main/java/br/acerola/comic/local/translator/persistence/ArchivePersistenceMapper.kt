@@ -6,7 +6,7 @@ import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.entity.archive.VolumeArchive
-import br.acerola.comic.util.FastFileMetadata
+import br.acerola.comic.util.file.FastFileMetadata
 
 fun ComicDirectoryDto.toEntity(): ComicDirectory =
     ComicDirectory(

@@ -5,7 +5,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
-import br.acerola.comic.adapter.library.ChapterArchiveEngine
+import br.acerola.comic.adapter.library.engine.ChapterArchiveEngine
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
@@ -14,12 +14,12 @@ import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.dao.history.ReadingHistoryDao
 import br.acerola.comic.service.compact.PdfToCbzConverter
 import br.acerola.comic.service.template.ChapterNameProcessor
-import br.acerola.comic.util.ContentQueryHelper
-import br.acerola.comic.util.FastFileMetadata
-import br.acerola.comic.util.SortNormalizer
-import br.acerola.comic.util.SortResult
-import br.acerola.comic.util.SortType
-import br.acerola.comic.util.templateToRegex
+import br.acerola.comic.util.file.ContentQueryHelper
+import br.acerola.comic.util.file.FastFileMetadata
+import br.acerola.comic.util.sort.SortNormalizer
+import br.acerola.comic.util.sort.SortResult
+import br.acerola.comic.util.sort.SortType
+import br.acerola.comic.util.template.templateToRegex
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

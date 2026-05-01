@@ -40,7 +40,7 @@ import br.acerola.comic.common.ux.component.Button
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.comic.Comic
-import br.acerola.comic.pattern.ComicStatusPattern
+import br.acerola.comic.pattern.metadata.ComicStatus
 import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -172,7 +172,7 @@ fun Comic.Layout.Header(
                         Spacer(modifier = Modifier.height(height = 8.dp))
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            val status = ComicStatusPattern.fromRawValue(comic.remoteInfo?.status)
+                            val status = ComicStatus.fromRawValue(comic.remoteInfo?.status)
                             StatusBadge(status = stringResource(id = status.stringRes))
                             comic.remoteInfo?.syncSource?.let { source ->
                                 SourceBadge(source = source.displayName)

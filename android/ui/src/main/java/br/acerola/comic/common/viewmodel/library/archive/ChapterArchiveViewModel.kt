@@ -7,14 +7,14 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.comic.worker.LibrarySyncWorker
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.sync.LibrarySyncWorker
+import br.acerola.comic.worker.contract.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +32,7 @@ class ChapterArchiveViewModel
     constructor(
         private val workManager: WorkManager,
         private val manager: FileSystemAccessManager,
-        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
     ) : ViewModel() {
         private val _isIndexing = MutableStateFlow(value = false)
         val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -43,7 +43,7 @@ class ChapterArchiveViewModel
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-        private val chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
+        private val chapterPage = MutableStateFlow<ChapterPageDto?>(value = null)
 
         private val selectedDirectoryId = MutableStateFlow<Long?>(value = null)
 
@@ -53,7 +53,7 @@ class ChapterArchiveViewModel
 
         fun init(
             directoryId: Long,
-            firstPage: ChapterArchivePageDto,
+            firstPage: ChapterPageDto,
         ) {
             AcerolaLogger.d(TAG, "Initializing with directoryId: $directoryId", LogSource.VIEWMODEL)
             selectedDirectoryId.value = directoryId
@@ -67,7 +67,7 @@ class ChapterArchiveViewModel
             viewModelScope.launch {
                 chapterPage.value = null
 
-                val result: ChapterArchivePageDto =
+                val result: ChapterPageDto =
                     observeChaptersUseCase.loadPage(
                         comicId = selectedDirectoryId.value!!,
                         pageSize = pageSize,

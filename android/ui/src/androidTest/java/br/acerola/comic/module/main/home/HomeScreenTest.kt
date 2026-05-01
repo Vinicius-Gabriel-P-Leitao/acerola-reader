@@ -8,10 +8,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.config.preference.ComicSortType
-import br.acerola.comic.config.preference.HomeLayoutType
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ComicSortType
+import br.acerola.comic.config.preference.types.HomeLayoutType
+import br.acerola.comic.config.preference.types.HomeSortPreference
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.home.state.FilterSettings

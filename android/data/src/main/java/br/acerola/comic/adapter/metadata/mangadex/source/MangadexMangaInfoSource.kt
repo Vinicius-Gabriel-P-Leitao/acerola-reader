@@ -10,7 +10,7 @@ import br.acerola.comic.error.message.NetworkError
 import br.acerola.comic.local.translator.remote.toViewDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.LanguagePattern
+import br.acerola.comic.type.Language
 import br.acerola.comic.remote.mangadex.api.MangadexMangaMetadataClient
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +35,7 @@ class MangadexMangaInfoSource
         ): Either<NetworkError, List<ComicMetadataDto>> =
             safeApiCall {
                 withContext(context = Dispatchers.IO) {
-                    val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: LanguagePattern.PT_BR.code
+                    val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: Language.PT_BR.code
                     val languages = listOf(preferredLanguage)
                     AcerolaLogger.d(TAG, "Fetching comic: $comic, languages: $languages", LogSource.NETWORK)
 

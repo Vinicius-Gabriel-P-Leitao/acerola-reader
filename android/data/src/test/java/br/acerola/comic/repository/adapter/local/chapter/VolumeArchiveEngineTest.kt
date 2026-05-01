@@ -1,6 +1,6 @@
 package br.acerola.comic.repository.adapter.local.chapter
 
-import br.acerola.comic.adapter.library.VolumeArchiveEngine
+import br.acerola.comic.adapter.library.engine.VolumeArchiveEngine
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.entity.archive.ChapterArchive

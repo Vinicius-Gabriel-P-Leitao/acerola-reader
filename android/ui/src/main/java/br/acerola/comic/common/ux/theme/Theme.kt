@@ -20,7 +20,7 @@ import br.acerola.comic.common.ux.theme.color.CatppuccinMocha
 import br.acerola.comic.common.ux.theme.color.Dracula
 import br.acerola.comic.common.ux.theme.color.NordDark
 import br.acerola.comic.common.ux.theme.color.NordLight
-import br.acerola.comic.config.preference.AppTheme
+import br.acerola.comic.config.preference.types.AppTheme
 
 private val CatppuccinDarkColorScheme =
     darkColorScheme(

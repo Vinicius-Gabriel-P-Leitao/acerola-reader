@@ -1,7 +1,7 @@
 package br.acerola.comic.service.template
 
 import br.acerola.comic.local.entity.archive.ArchiveTemplate
-import br.acerola.comic.util.templateToRegex
+import br.acerola.comic.util.template.templateToRegex
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton

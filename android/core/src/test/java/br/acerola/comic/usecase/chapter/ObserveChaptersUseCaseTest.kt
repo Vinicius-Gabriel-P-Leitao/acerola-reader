@@ -1,7 +1,7 @@
 package br.acerola.comic.usecase.chapter
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,9 +17,9 @@ import org.junit.Test
 
 class ObserveChaptersUseCaseTest {
     @MockK
-    lateinit var repository: ChapterGateway<ChapterArchivePageDto>
+    lateinit var repository: ChapterGateway<ChapterPageDto>
 
-    private lateinit var useCase: ObserveChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var useCase: ObserveChaptersUseCase<ChapterPageDto>
 
     @Before
     fun setUp() {
@@ -33,7 +33,7 @@ class ObserveChaptersUseCaseTest {
     @Test
     fun `observeByManga deve delegar para o repositorio`() =
         runTest {
-            val dto = mockk<ChapterArchivePageDto>()
+            val dto = mockk<ChapterPageDto>()
             every { repository.observeChapters(comicId = 1L) } returns MutableStateFlow(value = dto)
 
             val result = useCase.observeByManga(comicId = 1L).first()
@@ -45,7 +45,7 @@ class ObserveChaptersUseCaseTest {
     @Test
     fun `loadPage deve delegar para o repositorio com parametros corretos`() =
         runTest {
-            val dto = mockk<ChapterArchivePageDto>()
+            val dto = mockk<ChapterPageDto>()
             coEvery { repository.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) } returns dto
 
             val result = useCase.loadPage(comicId = 1L, total = 100, page = 2)

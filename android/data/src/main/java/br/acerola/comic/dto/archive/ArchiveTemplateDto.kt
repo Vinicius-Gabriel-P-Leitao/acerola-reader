@@ -1,6 +1,6 @@
 package br.acerola.comic.dto.archive
 
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 
 data class ArchiveTemplateDto(
     val id: Long = 0,

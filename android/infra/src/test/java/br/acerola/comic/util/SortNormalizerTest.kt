@@ -1,6 +1,8 @@
 package br.acerola.comic.util
 
-import br.acerola.comic.pattern.TemplateMacro
+import br.acerola.comic.pattern.template.TemplateMacro
+import br.acerola.comic.util.sort.SortNormalizer
+import br.acerola.comic.util.sort.SortType
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

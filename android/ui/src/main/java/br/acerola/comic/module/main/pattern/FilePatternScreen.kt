@@ -45,6 +45,7 @@ import br.acerola.comic.module.main.pattern.component.TemplateItem
 import br.acerola.comic.module.main.pattern.state.FilePatternAction
 import br.acerola.comic.module.main.pattern.state.FilePatternUiState
 import br.acerola.comic.ui.R
+import br.acerola.comic.util.sort.SortType
 
 @Composable
 fun Main.Pattern.Layout.FilePatternScreen(
@@ -153,8 +154,8 @@ private fun FilePatternLayout(
                         item {
                             val headerText =
                                 when (type) {
-                                    br.acerola.comic.util.SortType.CHAPTER -> stringResource(id = R.string.label_sort_type_chapter)
-                                    br.acerola.comic.util.SortType.VOLUME -> stringResource(id = R.string.label_sort_type_volume)
+                                    SortType.CHAPTER -> stringResource(id = R.string.label_sort_type_chapter)
+                                    SortType.VOLUME -> stringResource(id = R.string.label_sort_type_volume)
                                 }
                             Text(
                                 text = headerText,

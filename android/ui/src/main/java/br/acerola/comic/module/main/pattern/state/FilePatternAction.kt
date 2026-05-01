@@ -1,6 +1,6 @@
 package br.acerola.comic.module.main.pattern.state
 
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 
 sealed interface FilePatternAction {
     data class AddTemplate(

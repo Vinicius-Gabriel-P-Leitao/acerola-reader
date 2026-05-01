@@ -2,7 +2,7 @@ package br.acerola.comic.dto.view
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -14,6 +14,6 @@ data class ComicSummaryDto(
     val folderBanner: String?,
     val externalSync: Boolean,
     val metadataTitle: String?,
-    val activeSource: MetadataSourcePattern?,
+    val activeSource: MetadataSource?,
     val metadataId: Long?,
 ) : Parcelable

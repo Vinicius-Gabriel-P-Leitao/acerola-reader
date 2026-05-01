@@ -9,7 +9,7 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
@@ -43,10 +43,10 @@ class ComicDirectoryViewModelTest {
     private val coverFromChapterUseCase = mockk<CoverFromChapterUseCase>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
-    private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
+    private val chapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
     private val comicRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
 
-    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>
     private lateinit var observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>
 
     private lateinit var viewModel: ComicDirectoryViewModel

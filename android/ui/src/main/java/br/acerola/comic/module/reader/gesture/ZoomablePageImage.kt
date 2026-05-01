@@ -23,7 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.state.TapArea
 import coil.compose.AsyncImage

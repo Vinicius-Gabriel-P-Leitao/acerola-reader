@@ -48,7 +48,7 @@ import br.acerola.comic.common.ux.theme.color.CatppuccinLatte
 import br.acerola.comic.common.ux.theme.color.CatppuccinMocha
 import br.acerola.comic.common.ux.theme.color.Dracula
 import br.acerola.comic.common.ux.theme.color.NordDark
-import br.acerola.comic.config.preference.AppTheme
+import br.acerola.comic.config.preference.types.AppTheme
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 

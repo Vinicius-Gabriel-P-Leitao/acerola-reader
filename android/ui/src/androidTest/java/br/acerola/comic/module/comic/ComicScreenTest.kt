@@ -11,10 +11,10 @@ import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
-import br.acerola.comic.config.preference.ChapterPageSizeType
-import br.acerola.comic.config.preference.ChapterSortPreferenceData
-import br.acerola.comic.config.preference.ChapterSortType
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
+import br.acerola.comic.config.preference.types.ChapterSortType
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto

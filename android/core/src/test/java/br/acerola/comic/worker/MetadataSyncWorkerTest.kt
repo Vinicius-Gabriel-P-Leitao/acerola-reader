@@ -12,6 +12,7 @@ import arrow.core.Either
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every

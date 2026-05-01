@@ -14,7 +14,7 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.HeroItem
 import br.acerola.comic.common.ux.layout.LanguageSelector
 import br.acerola.comic.module.main.Main
-import br.acerola.comic.pattern.LanguagePattern
+import br.acerola.comic.type.Language
 import br.acerola.comic.ui.R
 
 @Composable
@@ -23,7 +23,7 @@ fun Main.Config.Component.LanguageSettings(
     onLanguageSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val resolvedLanguage = selectedLanguage ?: LanguagePattern.PT_BR.code
+    val resolvedLanguage = selectedLanguage ?: Language.PT_BR.code
     val languageLabel = stringResource(id = LanguageMapper.getLabelRes(resolvedLanguage))
 
     Acerola.Layout.LanguageSelector(

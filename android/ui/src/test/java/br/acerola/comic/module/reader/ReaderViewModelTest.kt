@@ -4,7 +4,7 @@ import android.content.Context
 import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.service.reader.ReaderProcessor
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
@@ -24,10 +24,10 @@ class ReaderViewModelTest {
     private val readerService = mockk<ReaderProcessor>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
     private val historyGateway = mockk<HistoryGateway>(relaxed = true)
-    private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
+    private val chapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
 
     private lateinit var trackReadingProgressUseCase: TrackReadingProgressUseCase
-    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>
 
     private lateinit var viewModel: ReaderViewModel
 

@@ -12,6 +12,7 @@ import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.error.message.LibrarySyncError
+import br.acerola.comic.worker.sync.LibrarySyncWorker
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.every

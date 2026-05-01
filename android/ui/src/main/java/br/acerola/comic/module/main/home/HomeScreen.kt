@@ -39,7 +39,7 @@ import br.acerola.comic.common.ux.component.SearchBar
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.config.preference.HomeLayoutType
+import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.comic.ComicActivity

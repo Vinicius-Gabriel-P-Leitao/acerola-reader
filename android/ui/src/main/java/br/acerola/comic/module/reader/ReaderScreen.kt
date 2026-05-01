@@ -25,7 +25,7 @@ import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.layout.ProgressIndicator
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.module.reader.layout.BottomControls
 import br.acerola.comic.module.reader.layout.PageContent

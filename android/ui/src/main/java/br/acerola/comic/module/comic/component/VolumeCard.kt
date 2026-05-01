@@ -26,7 +26,7 @@ import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
-import br.acerola.comic.util.normalizeChapter
+import br.acerola.comic.util.sort.normalizeSort
 
 @Composable
 fun Comic.Component.VolumeCard(
@@ -80,7 +80,7 @@ fun Comic.Component.VolumeCard(
                 }
 
                 group.items.forEach { chapter ->
-                    val remoteItem = remoteResolver(chapter.chapterSort.normalizeChapter())
+                    val remoteItem = remoteResolver(chapter.chapterSort.normalizeSort())
                     Comic.Component.ChapterItem(
                         chapterRemoteInfoDto = remoteItem,
                         chapterFileDto = chapter,

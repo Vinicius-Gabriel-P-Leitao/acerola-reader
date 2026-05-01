@@ -13,7 +13,7 @@ import br.acerola.comic.usecase.template.AddTemplateUseCase
 import br.acerola.comic.usecase.template.ObserveTemplatesUseCase
 import br.acerola.comic.usecase.template.RemoveTemplateUseCase
 import br.acerola.comic.usecase.template.UpdateTemplateUseCase
-import br.acerola.comic.util.SortType
+import br.acerola.comic.util.sort.SortType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

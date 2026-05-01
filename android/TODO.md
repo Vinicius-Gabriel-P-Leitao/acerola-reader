@@ -108,6 +108,8 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 - [ ] **Transformar formato de volume em cards colapsáveis**: 
   - [ ] Quando tiver volumes ao invés de paginar os chapter vai criar cards colapsáveis e validar para ele não buscar todos os chapters por 
     volume se tiver 2 volumes mas cada um com 500 chapter isso vai explodir a memoria, tem que ser feito de uma forma otimizada visualmente e no sql
+- [ ] **Criar visualização com cover do volume** Essa visualização é simples e dá para extrair a primeira capa do volume como capa da listagem é 
+  possível também.
 
 ### Adicionar um worker para o conversor de pdf
 

@@ -4,7 +4,7 @@ import android.content.Context
 import br.acerola.comic.adapter.metadata.mangadex.source.MangadexMangaInfoSource
 import br.acerola.comic.data.R
 import br.acerola.comic.error.message.NetworkError
-import br.acerola.comic.pattern.LanguagePattern
+import br.acerola.comic.type.Language
 import br.acerola.comic.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.comic.remote.mangadex.dto.MangadexResponseDto
 import br.acerola.comic.remote.mangadex.dto.comic.MangaAttributes
@@ -43,7 +43,7 @@ class MangadexSourceMangaInfoRepositoryTest {
     fun `searchInfo deve buscar comic e mapear DTO corretamente`() =
         runTest {
             val title = "Naruto"
-            val languages = listOf(LanguagePattern.PT_BR.code)
+            val languages = listOf(Language.PT_BR.code)
 
             val attr =
                 MangaAttributes(
@@ -88,7 +88,7 @@ class MangadexSourceMangaInfoRepositoryTest {
     @Test
     fun `searchInfo deve retornar ConnectionFailed em caso de erro de IO`() =
         runTest {
-            val languages = listOf(LanguagePattern.PT_BR.code)
+            val languages = listOf(Language.PT_BR.code)
             coEvery { api.searchMangaByName(any(), any(), any(), any(), languages) } throws IOException("Connection Reset")
 
             val result = repository.searchInfo("Naruto")

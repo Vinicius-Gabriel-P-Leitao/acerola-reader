@@ -4,7 +4,7 @@ import android.content.Context
 import br.acerola.comic.adapter.metadata.mangadex.source.MangadexChapterInfoSource
 import br.acerola.comic.config.preference.MetadataPreference
 import br.acerola.comic.error.message.NetworkError
-import br.acerola.comic.pattern.LanguagePattern
+import br.acerola.comic.type.Language
 import br.acerola.comic.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.comic.remote.mangadex.dto.MangadexResponseDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterAttributes
@@ -40,7 +40,7 @@ class MangadexSourceChapterInfoRepositoryTest {
     fun setUp() {
         MockKAnnotations.init(this)
         mockkObject(MetadataPreference)
-        every { MetadataPreference.metadataLanguageFlow(context) } returns flowOf(LanguagePattern.PT_BR.code)
+        every { MetadataPreference.metadataLanguageFlow(context) } returns flowOf(Language.PT_BR.code)
         repository = MangadexChapterInfoSource(api, context)
     }
 
@@ -58,7 +58,7 @@ class MangadexSourceChapterInfoRepositoryTest {
             val respA = createResponse(listA, total = 150, offset = 0)
             val respB = createResponse(listB, total = 150, offset = 100)
 
-            val languages = listOf(LanguagePattern.PT_BR.code)
+            val languages = listOf(Language.PT_BR.code)
 
             // Mock inicial
             coEvery { api.getMangaFeed(comicId, languages = languages, limit = 1, offset = 0) } returns
@@ -95,7 +95,7 @@ class MangadexSourceChapterInfoRepositoryTest {
     fun `searchInfo deve retornar ConnectionFailed quando ocorrer erro de IO`() =
         runTest {
             val comicId = "comic-1"
-            val languages = listOf(LanguagePattern.PT_BR.code)
+            val languages = listOf(Language.PT_BR.code)
             // Simula erro de conexão (IOException)
             coEvery { api.getMangaFeed(any(), languages = languages, limit = 1, offset = 0) } throws IOException("Network Failure")
 

@@ -1,6 +1,6 @@
 package br.acerola.comic.fixtures
 
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
@@ -14,7 +14,7 @@ object MangaFixtures {
         pageSize: Int = 20,
         page: Int = 0,
         total: Int = items.size,
-    ) = ChapterArchivePageDto(
+    ) = ChapterPageDto(
         items = items,
         pageSize = pageSize,
         page = page,

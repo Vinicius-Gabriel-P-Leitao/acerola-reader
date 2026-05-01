@@ -2,7 +2,7 @@ package br.acerola.comic.usecase.comic
 
 import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -17,8 +17,8 @@ import org.junit.Test
 
 class RescanComicChaptersUseCaseTest {
     @MockK
-    lateinit var repository: ChapterGateway<ChapterArchivePageDto>
-    private lateinit var useCase: RescanComicChaptersUseCase<ChapterArchivePageDto>
+    lateinit var repository: ChapterGateway<ChapterPageDto>
+    private lateinit var useCase: RescanComicChaptersUseCase<ChapterPageDto>
 
     @Before
     fun setUp() {

@@ -9,7 +9,7 @@ import br.acerola.comic.dto.metadata.comic.source.ComicInfoSourceDto
 import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
 import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
 import br.acerola.comic.module.comic.Comic
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import org.junit.Rule
 import org.junit.Test
 
@@ -64,7 +64,7 @@ class SyncMetadataTest {
                 title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.MANGADEX,
+                syncSource = MetadataSource.MANGADEX,
                 sources =
                     ComicSourcesDto(
                         mangadex = MangadexSourceDto(mangadexId = "abc-123"),
@@ -85,7 +85,7 @@ class SyncMetadataTest {
                 title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.COMIC_INFO,
+                syncSource = MetadataSource.COMIC_INFO,
                 sources =
                     ComicSourcesDto(
                         mangadex = MangadexSourceDto(mangadexId = "abc-123"),
@@ -104,7 +104,7 @@ class SyncMetadataTest {
                 title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.COMIC_INFO,
+                syncSource = MetadataSource.COMIC_INFO,
                 sources =
                     ComicSourcesDto(
                         comicInfo = ComicInfoSourceDto(localHash = "hash-abc"),
@@ -124,7 +124,7 @@ class SyncMetadataTest {
                 title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.COMIC_INFO,
+                syncSource = MetadataSource.COMIC_INFO,
                 sources = ComicSourcesDto(comicInfo = null),
             )
 
