@@ -16,7 +16,7 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
-class MangadexSourceFetchCoverRepositoryTest {
+class MangadexFetchCoverSourceTest {
     @MockK lateinit var api: MangadexMangaDownloadClient
     private lateinit var repository: MangadexFetchCoverSource
 
@@ -56,3 +56,4 @@ class MangadexSourceFetchCoverRepositoryTest {
             result.onLeft { assertTrue(it is NetworkError.ConnectionFailed) }
         }
 }
+

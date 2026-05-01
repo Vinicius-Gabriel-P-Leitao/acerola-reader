@@ -90,7 +90,7 @@ class ChapterArchiveEngineVolumeTest {
         mockkStatic(DocumentFile::class)
         mockkStatic(DocumentsContract::class)
         mockkObject(ContentQueryHelper)
-        mockkStatic("br.acerola.comic.util.TemplateToRegexKt")
+        mockkStatic("br.acerola.comic.util.template.TemplateConverterKt")
         mockkObject(SortNormalizer)
 
         every { context.contentResolver } returns mockk(relaxed = true)

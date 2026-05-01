@@ -26,7 +26,7 @@ class WebtoonReaderTest {
             )
         }
 
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 2000) { requestedIndices.contains(0) }
         assert(requestedIndices.contains(0))
     }
 }

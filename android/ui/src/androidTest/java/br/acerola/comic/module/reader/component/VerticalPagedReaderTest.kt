@@ -28,7 +28,7 @@ class VerticalPagedReaderTest {
             )
         }
 
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 2000) { requestedIndex == 0 }
         assert(requestedIndex == 0)
     }
 }

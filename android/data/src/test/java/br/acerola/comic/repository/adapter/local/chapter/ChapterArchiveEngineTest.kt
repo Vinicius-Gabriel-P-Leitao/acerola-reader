@@ -176,11 +176,11 @@ class ChapterArchiveEngineTest {
             coEvery { directoryDao.update(any()) } returns Unit
 
             // Mock utils
-            mockkStatic("br.acerola.comic.util.DocumentFileHashKt")
+            mockkStatic("br.acerola.comic.util.file.FileHashKt")
             every { ch1.sha256(context) } returns "hash"
 
             // Mock templateToRegex
-            mockkStatic("br.acerola.comic.util.TemplateToRegexKt")
+            mockkStatic("br.acerola.comic.util.template.TemplateConverterKt")
             val regex = Regex("ch(\\d+)\\.cbz")
             every { templateToRegex(any()) } returns regex
 
@@ -196,8 +196,8 @@ class ChapterArchiveEngineTest {
             coVerify { directoryDao.update(match { it.lastModified == 2000L }) }
 
             unmockkObject(SortNormalizer)
-            unmockkStatic("br.acerola.comic.util.DocumentFileHashKt")
-            unmockkStatic("br.acerola.comic.util.TemplateToRegexKt")
+            unmockkStatic("br.acerola.comic.util.file.FileHashKt")
+            unmockkStatic("br.acerola.comic.util.template.TemplateConverterKt")
         }
 
     @Test

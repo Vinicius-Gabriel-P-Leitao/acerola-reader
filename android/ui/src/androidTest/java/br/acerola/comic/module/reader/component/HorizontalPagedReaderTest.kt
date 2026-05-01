@@ -29,7 +29,7 @@ class HorizontalPagedReaderTest {
         }
 
         // Como o initialPage é 0, deve solicitar a página 0
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 2000) { requestedIndex == 0 }
         assert(requestedIndex == 0)
     }
 }

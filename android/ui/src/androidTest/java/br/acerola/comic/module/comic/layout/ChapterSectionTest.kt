@@ -1,8 +1,10 @@
 package br.acerola.comic.module.comic.layout
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
@@ -43,7 +45,7 @@ class ChapterSectionTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Cap", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Cap", substring = true).assertCountEquals(2)
         composeTestRule.onNodeWithText("1 / 5", substring = true).assertIsDisplayed()
     }
 

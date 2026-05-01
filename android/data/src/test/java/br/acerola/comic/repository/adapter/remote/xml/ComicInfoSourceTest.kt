@@ -26,7 +26,7 @@ import org.junit.Before
 import org.junit.Test
 import java.io.InputStream
 
-class ComicInfoSourceRepositoryTest {
+class ComicInfoSourceTest {
     @MockK lateinit var context: Context
 
     @MockK lateinit var parser: ComicInfoParser
@@ -129,3 +129,4 @@ class ComicInfoSourceRepositoryTest {
             result.onLeft { assertTrue(it is NetworkError.NotFound) }
         }
 }
+

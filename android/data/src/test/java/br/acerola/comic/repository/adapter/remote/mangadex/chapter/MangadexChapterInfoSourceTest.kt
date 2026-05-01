@@ -27,7 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
-class MangadexSourceChapterInfoRepositoryTest {
+class MangadexChapterInfoSourceTest {
     @MockK
     lateinit var api: MangadexChapterMetadataClient
 
@@ -129,3 +129,4 @@ class MangadexSourceChapterInfoRepositoryTest {
         total = total,
     )
 }
+

@@ -21,7 +21,7 @@ import org.junit.Test
 import java.io.File
 import java.io.IOException
 
-class MangadexSourceMangaInfoRepositoryTest {
+class MangadexMangaInfoSourceTest {
     @MockK
     lateinit var context: Context
 
@@ -100,3 +100,4 @@ class MangadexSourceMangaInfoRepositoryTest {
             }
         }
 }
+
