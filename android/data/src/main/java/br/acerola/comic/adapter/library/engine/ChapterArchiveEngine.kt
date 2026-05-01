@@ -51,6 +51,7 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Melhorar a responsabilidade unica, ver melhor forma de fazer para essa clase
 @Singleton
 class ChapterArchiveEngine
     @Inject

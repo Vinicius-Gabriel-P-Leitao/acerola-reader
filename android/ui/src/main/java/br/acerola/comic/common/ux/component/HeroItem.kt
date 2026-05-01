@@ -65,6 +65,7 @@ fun Acerola.Component.HeroItem(
     modifier: Modifier = Modifier,
     description: String? = null,
     iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconModifier: Modifier = Modifier.size(48.dp),
     onClick: (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null,
     bottomContent: @Composable (() -> Unit)? = null,
@@ -78,7 +79,7 @@ fun Acerola.Component.HeroItem(
             color = MaterialTheme.colorScheme.surface,
             modifier = modifier.fillMaxWidth(),
         ) {
-            HeroItemContent(title, description, iconBackground, action, bottomContent, icon)
+            HeroItemContent(title, description, iconBackground, iconModifier, action, bottomContent, icon)
         }
     } else {
         Surface(
@@ -87,7 +88,7 @@ fun Acerola.Component.HeroItem(
             color = MaterialTheme.colorScheme.surface,
             modifier = modifier.fillMaxWidth(),
         ) {
-            HeroItemContent(title, description, iconBackground, action, bottomContent, icon)
+            HeroItemContent(title, description, iconBackground, iconModifier, action, bottomContent, icon)
         }
     }
 }
@@ -172,6 +173,7 @@ fun Acerola.Component.GroupedHeroItem(
     modifier: Modifier = Modifier,
     description: String? = null,
     iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconModifier: Modifier = Modifier.size(48.dp),
     onClick: (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null,
     nestedItem: @Composable (() -> Unit)? = null,
@@ -182,6 +184,7 @@ fun Acerola.Component.GroupedHeroItem(
         modifier = modifier,
         description = description,
         iconBackground = iconBackground,
+        iconModifier = iconModifier,
         onClick = onClick,
         action = action,
         bottomContent = nestedItem,
@@ -219,6 +222,7 @@ private fun HeroItemContent(
     title: String,
     description: String?,
     iconBackground: Color,
+    iconModifier: Modifier,
     action: @Composable (() -> Unit)?,
     bottomContent: @Composable (() -> Unit)?,
     icon: @Composable () -> Unit,
@@ -231,7 +235,7 @@ private fun HeroItemContent(
             Surface(
                 shape = IconShape,
                 color = iconBackground,
-                modifier = Modifier.size(48.dp),
+                modifier = iconModifier,
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     icon()

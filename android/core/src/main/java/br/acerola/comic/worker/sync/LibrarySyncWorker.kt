@@ -36,7 +36,6 @@ class LibrarySyncWorker
             const val KEY_SYNC_TYPE = "sync_type"
             const val KEY_BASE_URI = "base_uri"
             const val KEY_MANGA_ID = "comic_id"
-
             const val SYNC_TYPE_REFRESH = "refresh"
             const val SYNC_TYPE_REBUILD = "rebuild"
             const val SYNC_TYPE_SPECIFIC = "specific"
