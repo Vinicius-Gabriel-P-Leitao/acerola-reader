@@ -8,7 +8,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface MangadexMangaMetadataClient {
-    @GET(value = "comic")
+    @GET(value = "manga")
     suspend fun searchMangaByName(
         @Query(value = "title") title: String,
         @Query(value = "limit") limit: Int = 10,
@@ -17,7 +17,7 @@ interface MangadexMangaMetadataClient {
         @Query(value = "availableTranslatedLanguage[]") languages: List<String>,
     ): MangadexResponseDto<MangaMangadexDto>
 
-    @GET(value = "comic/{id}")
+    @GET(value = "manga/{id}")
     suspend fun getMangaById(
         @Path(value = "id") comicId: String,
         @Query(value = "includes[]") includes: List<String> = listOf("author", "artist", "cover_art"),
