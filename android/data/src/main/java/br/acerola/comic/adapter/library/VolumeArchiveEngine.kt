@@ -35,6 +35,7 @@ class VolumeArchiveEngine
                 .getVolumeChapterCountsByDirectoryId(comicId)
                 .map { summaries ->
                     val sortedSummaries = if (isAscending) summaries else summaries.reversed()
+
                     sortedSummaries.map { summary ->
                         val previewItems =
                             chapterArchiveDao
@@ -45,6 +46,7 @@ class VolumeArchiveEngine
                                     offset = 0,
                                 ).let { joins ->
                                     val base = joins.map { it.toViewDto() }
+
                                     if (sortType == "LAST_UPDATE") {
                                         val ordered = base.sortedBy { it.lastModified }
                                         if (isAscending) ordered else ordered.reversed()
@@ -77,6 +79,7 @@ class VolumeArchiveEngine
                     offset = offset,
                 ).let { joins ->
                     val base = joins.map { it.toViewDto() }
+
                     if (sortType == "LAST_UPDATE") {
                         val ordered = base.sortedBy { it.lastModified }
                         if (isAscending) ordered else ordered.reversed()

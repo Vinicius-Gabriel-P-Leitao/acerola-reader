@@ -46,14 +46,11 @@ class VolumeArchiveEngineTest {
                     VolumeChapterCount(
                         id = 101L,
                         name = "Vol 1",
-                        path = "path/1",
                         volumeSort = "1",
                         isSpecial = false,
                         cover = null,
                         banner = null,
-                        comicDirectoryFk = comicId,
-                        lastModified = 0L,
-                        count = 2,
+                        chapterCount = 2,
                     ),
                 )
 

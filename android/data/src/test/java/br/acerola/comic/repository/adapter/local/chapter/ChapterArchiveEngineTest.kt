@@ -11,6 +11,7 @@ import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
+import br.acerola.comic.local.dao.history.ReadingHistoryDao
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
 import br.acerola.comic.service.compact.PdfToCbzConverter
@@ -62,6 +63,9 @@ class ChapterArchiveEngineTest {
     lateinit var volumeArchiveDao: VolumeArchiveDao
 
     @MockK
+    lateinit var readingHistoryDao: ReadingHistoryDao
+
+    @MockK
     lateinit var templateService: ChapterNameProcessor
 
     @MockK
@@ -83,6 +87,7 @@ class ChapterArchiveEngineTest {
                 directoryDao,
                 chapterArchiveDao,
                 volumeArchiveDao,
+                readingHistoryDao,
                 templateService,
                 context,
                 pdfToCbzConverterService,
@@ -103,6 +108,8 @@ class ChapterArchiveEngineTest {
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
         coEvery { templateService.getTemplates() } returns emptyList()
+        coEvery { readingHistoryDao.updateHistoryChapterIdBySort(any(), any(), any()) } returns Unit
+        coEvery { readingHistoryDao.updateChapterReadIdBySort(any(), any(), any()) } returns Unit
     }
 
     @After
@@ -165,7 +172,7 @@ class ChapterArchiveEngineTest {
             every { DocumentsContract.getDocumentId(ch1Uri) } returns "ch1"
 
             coEvery { chapterArchiveDao.delete(any()) } returns Unit
-            coEvery { chapterArchiveDao.insertAll(*anyVararg()) } returns longArrayOf(1)
+            coEvery { chapterArchiveDao.insert(any()) } returns 1L
             coEvery { directoryDao.update(any()) } returns Unit
 
             // Mock utils
@@ -185,7 +192,7 @@ class ChapterArchiveEngineTest {
 
             assertTrue("Expected Right but got $result", result.isRight())
             coVerify { chapterArchiveDao.delete(oldChapter) }
-            coVerify { chapterArchiveDao.insertAll(*anyVararg()) }
+            coVerify { chapterArchiveDao.insert(any()) }
             coVerify { directoryDao.update(match { it.lastModified == 2000L }) }
 
             unmockkObject(SortNormalizer)

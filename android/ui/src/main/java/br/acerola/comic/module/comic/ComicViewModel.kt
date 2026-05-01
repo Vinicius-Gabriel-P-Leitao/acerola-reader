@@ -285,7 +285,7 @@ class ComicViewModel
                                             page = 0,
                                         ),
                                     remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, VOLUME_PREVIEW_SIZE, 0, visibleItems.size),
-                                    showVolumeHeaders = true,
+                                    showVolumeHeaders = mergedSections.size > 1,
                                 )
                             } else {
                                 val items = localAll.items

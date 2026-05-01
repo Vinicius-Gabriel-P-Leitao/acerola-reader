@@ -16,6 +16,7 @@ import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
+import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
@@ -67,6 +68,7 @@ class ComicViewModelTest {
     private val localChaptersFlow = MutableStateFlow(ChapterArchivePageDto(emptyList(), emptyList(), 20, 0, 0))
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
     private val hasRootChaptersFlow = MutableStateFlow(true)
+    private val volumeSectionsFlow = MutableStateFlow<List<br.acerola.comic.dto.archive.VolumeChapterGroupDto>>(emptyList())
 
     private lateinit var viewModel: ComicViewModel
 
@@ -148,7 +150,7 @@ class ComicViewModelTest {
         }
         every { mangadexChapterRepo.observeChapters(any(), any(), any()) } returns remoteChaptersFlow
         every { manageCategoriesUseCase.getCategoryByMangaId(any()) } returns flowOf(null)
-        every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns MutableStateFlow(emptyList())
+        every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns volumeSectionsFlow
         every { directoryObserveVolumeChapters.observeHasRootChapters(any()) } returns hasRootChaptersFlow
         coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()
 
@@ -352,15 +354,13 @@ class ComicViewModelTest {
             val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
             hasRootChaptersFlow.value = false
-            every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
-                MutableStateFlow(
-                    listOf(
-                        br.acerola.comic.dto.archive
-                            .VolumeChapterGroupDto(volume1, listOf(), 1, 0, true),
-                        br.acerola.comic.dto.archive
-                            .VolumeChapterGroupDto(volume2, listOf(), 1, 0, true),
-                    ),
-                )
+            val cap1 = ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L)
+            val cap2 = ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L)
+
+            volumeSectionsFlow.value = listOf(
+                br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume1, listOf(cap1), 1, 1, false),
+                br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume2, listOf(cap2), 1, 1, false),
+            )
 
             localChaptersFlow.value =
                 ChapterArchivePageDto(
@@ -382,25 +382,20 @@ class ComicViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
 
+            val cap3 = ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L)
+            val cap4 = ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 10L)
+
             localChaptersFlow.value =
                 ChapterArchivePageDto(
-                    items =
-                        listOf(
-                            ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L),
-                            ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 10L),
-                        ),
+                    items = listOf(cap3, cap4),
                     volumes = listOf(volume1),
                     pageSize = 20,
                     page = 0,
                     total = 2,
                 )
-            every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns
-                MutableStateFlow(
-                    listOf(
-                        br.acerola.comic.dto.archive
-                            .VolumeChapterGroupDto(volume1, listOf(), 2, 0, true),
-                    ),
-                )
+            volumeSectionsFlow.value = listOf(
+                VolumeChapterGroupDto(volume1, listOf(cap3, cap4), 2, 2, false),
+            )
 
             viewModel.chapters.test {
                 var item = awaitItem()

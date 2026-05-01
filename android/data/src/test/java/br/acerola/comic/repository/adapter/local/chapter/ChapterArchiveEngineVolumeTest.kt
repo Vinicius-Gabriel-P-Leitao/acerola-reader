@@ -11,6 +11,7 @@ import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
+import br.acerola.comic.local.dao.history.ReadingHistoryDao
 import br.acerola.comic.service.compact.PdfToCbzConverter
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.util.ContentQueryHelper
@@ -55,6 +56,9 @@ class ChapterArchiveEngineVolumeTest {
     lateinit var volumeArchiveDao: VolumeArchiveDao
 
     @MockK
+    lateinit var readingHistoryDao: ReadingHistoryDao
+
+    @MockK
     lateinit var templateService: ChapterNameProcessor
 
     @MockK
@@ -76,6 +80,7 @@ class ChapterArchiveEngineVolumeTest {
                 directoryDao,
                 chapterArchiveDao,
                 volumeArchiveDao,
+                readingHistoryDao,
                 templateService,
                 context,
                 pdfToCbzConverterService,
@@ -97,6 +102,8 @@ class ChapterArchiveEngineVolumeTest {
                     pattern = "Ch. {chapter}{decimal}.*.{extension}",
                 ),
             )
+        coEvery { readingHistoryDao.updateHistoryChapterIdBySort(any(), any(), any()) } returns Unit
+        coEvery { readingHistoryDao.updateChapterReadIdBySort(any(), any(), any()) } returns Unit
     }
 
     @After
@@ -207,9 +214,8 @@ class ChapterArchiveEngineVolumeTest {
             every { ContentQueryHelper.listFiles(context, baseUri, "primary:root") } returns Either.Right(listOf(volumeMetadata))
 
             coEvery { chapterArchiveDao.getChaptersListByDirectoryId(folderId = comicId) } returns emptyList()
-            coEvery { chapterArchiveDao.insertAll(*anyVararg()) } returns longArrayOf(1)
+            coEvery { chapterArchiveDao.insert(any()) } returns 1L
             every { SortNormalizer.normalize("Ch. 01.cbz", SortType.CHAPTER) } returns SortResult(SortType.CHAPTER, 1, 0, false, "1")
-
             // Execução
             val result = repository.refreshComicChapters(comicId, baseUri)
 
