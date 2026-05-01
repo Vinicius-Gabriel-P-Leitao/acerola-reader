@@ -204,6 +204,7 @@ fun ComicScreen(
             ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.comic.directory.id)
             ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.comic.directory.id)
             ComicSyncAction.ExtractFirstPageAsCover -> comicDirectoryViewModel.extractCoverFromChapter(uiState.comic.directory.id)
+            ComicSyncAction.ExtractVolumeCovers -> comicViewModel.extractAllVolumeCovers()
         }
     }
 
@@ -277,6 +278,7 @@ fun ComicScreen(
                                 onSetActiveVolume = comicViewModel::setActiveVolume,
                                 onUpdateVolumeView = { mode -> onAction(ComicAction.UpdateVolumeView(mode)) },
                                 onLoadVolumeChaptersPage = comicViewModel::loadVolumeChaptersPage,
+                                onExtractVolumeCover = comicViewModel::extractVolumeCover,
                             )
                         }
                     }

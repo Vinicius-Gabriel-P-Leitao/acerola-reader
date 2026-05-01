@@ -8,6 +8,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.Pagination
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
@@ -33,7 +35,12 @@ fun Comic.Layout.chapterSection(
     onSetActiveVolume: (Long?) -> Unit = {},
     onUpdateVolumeView: (VolumeViewType) -> Unit = {},
     onLoadVolumeChaptersPage: (Long, Int) -> Unit = { _, _ -> },
+    onExtractVolumeCover: (Long) -> Unit = {},
 ) {
+    val remoteResolver: (String) -> ChapterFeedDto? = { chapterSort ->
+        chapters.remoteInfo?.items?.firstOrNull { it.chapter.normalizeSort() == chapterSort }
+    }
+
     val useVolumeSections =
         (volumeViewMode == VolumeViewType.VOLUME || volumeViewMode == VolumeViewType.COVER_VOLUME) &&
             chapters.archive.volumeSections.isNotEmpty()
@@ -42,9 +49,6 @@ fun Comic.Layout.chapterSection(
         chapters.archive.volumeSections.forEach { group ->
             val isExpanded = activeVolumeId == group.volume.id
             val onToggleExpanded = { onSetActiveVolume(if (isExpanded) null else group.volume.id) }
-            val remoteResolver: (String) -> ChapterFeedDto? = { chapterSort ->
-                chapters.remoteInfo?.items?.firstOrNull { it.chapter.normalizeSort() == chapterSort }
-            }
 
             scope.item(
                 key = "vol_${group.volume.id}",
@@ -55,6 +59,7 @@ fun Comic.Layout.chapterSection(
                         group = group,
                         expanded = isExpanded,
                         onToggleExpanded = onToggleExpanded,
+                        onExtractCover = { onExtractVolumeCover(group.volume.id) },
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
                     )
                 } else {
@@ -68,77 +73,58 @@ fun Comic.Layout.chapterSection(
             }
 
             if (isExpanded) {
-                if (group.volume.isSpecial) {
-                    scope.item(key = "vol_${group.volume.id}_special_header") {
-                        androidx.compose.material3.Text(
-                            text = stringResource(id = R.string.label_volume_header_special),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 4.dp),
-                        )
-                    }
-                }
-
-                group.items.forEachIndexed { index, archiveItem ->
+                group.items.forEach { chapter ->
                     scope.item(
-                        key = "vol_${group.volume.id}_ch_${archiveItem.id}",
-                        contentType = "chapter",
+                        key = "ch_${chapter.id}",
+                        contentType = "chapter_item",
                     ) {
-                        val remoteItem = remoteResolver(archiveItem.chapterSort.normalizeSort())
-
-                        // Infinite Scroll Trigger for Volume Chapters
-                        if (index >= group.items.size - 5 && group.currentPage < group.totalPages - 1) {
-                            LaunchedEffect(key1 = Unit) {
-                                onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1)
-                            }
-                        }
-
+                        val remoteInfo = remoteResolver(chapter.chapterSort)
                         Comic.Component.ChapterItem(
-                            chapterFileDto = archiveItem,
-                            chapterRemoteInfoDto = remoteItem,
-                            isRead = readChapters.contains(archiveItem.chapterSort),
-                            onClick = { onChapterClick(archiveItem, remoteItem) },
-                            onToggleRead = { onToggleRead(archiveItem.chapterSort) },
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                            chapterFileDto = chapter,
+                            chapterRemoteInfoDto = remoteInfo,
+                            isRead = readChapters.contains(chapter.chapterSort),
+                            onClick = { onChapterClick(chapter, remoteInfo) },
+                            onToggleRead = { onToggleRead(chapter.chapterSort) },
                         )
                     }
                 }
 
-                scope.item(key = "vol_${group.volume.id}_bottom_spacer") {
-                    androidx.compose.foundation.layout
-                        .Spacer(modifier = Modifier.height(12.dp))
+                if (group.hasMore) {
+                    scope.item(
+                        key = "vol_load_more_${group.volume.id}",
+                    ) {
+                        LaunchedEffect(Unit) {
+                            onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1)
+                        }
+                    }
                 }
             }
         }
-        return
-    }
-
-    chapters.archive.items.forEachIndexed { index, archiveItem ->
-        scope.item(
-            key = "ch_${archiveItem.id}",
-            contentType = "chapter",
-        ) {
-            val remoteItem: ChapterFeedDto? =
-                chapters.remoteInfo?.items?.firstOrNull {
-                    it.chapter.normalizeSort() == archiveItem.chapterSort.normalizeSort()
-                }
-
-            // Infinite Scroll Trigger
-            if (index >= chapters.archive.items.size - 5 && currentPage < totalPages - 1) {
-                LaunchedEffect(key1 = Unit) {
-                    onPageChange(currentPage + 1)
-                }
+    } else {
+        chapters.archive.items.forEach { chapter ->
+            scope.item(
+                key = "ch_${chapter.id}",
+                contentType = "chapter_item",
+            ) {
+                val remoteInfo = remoteResolver(chapter.chapterSort)
+                Comic.Component.ChapterItem(
+                    chapterFileDto = chapter,
+                    chapterRemoteInfoDto = remoteInfo,
+                    isRead = readChapters.contains(chapter.chapterSort),
+                    onClick = { onChapterClick(chapter, remoteInfo) },
+                    onToggleRead = { onToggleRead(chapter.chapterSort) },
+                )
             }
+        }
 
-            Comic.Component.ChapterItem(
-                chapterFileDto = archiveItem,
-                chapterRemoteInfoDto = remoteItem,
-                isRead = readChapters.contains(archiveItem.chapterSort),
-                onClick = { onChapterClick(archiveItem, remoteItem) },
-                onToggleRead = { onToggleRead(archiveItem.chapterSort) },
-                modifier = Modifier.padding(all = 4.dp),
-            )
+        if (totalPages > 1) {
+            scope.item {
+                Acerola.Component.Pagination(
+                    currentPage = currentPage,
+                    totalPages = totalPages,
+                    onPageChange = onPageChange,
+                )
+            }
         }
     }
 }

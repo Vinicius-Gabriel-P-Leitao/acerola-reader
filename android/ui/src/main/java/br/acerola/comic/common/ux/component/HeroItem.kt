@@ -1,6 +1,8 @@
 package br.acerola.comic.common.ux.component
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +40,7 @@ fun Acerola.Component.HeroItem(
     iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null,
     bottomContent: @Composable (() -> Unit)? = null,
 ) {
@@ -46,6 +50,7 @@ fun Acerola.Component.HeroItem(
         description = description,
         iconBackground = iconBackground,
         onClick = onClick,
+        onLongClick = onLongClick,
         action = action,
         bottomContent = bottomContent,
         icon = {
@@ -59,6 +64,7 @@ fun Acerola.Component.HeroItem(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Acerola.Component.HeroItem(
     title: String,
@@ -67,29 +73,30 @@ fun Acerola.Component.HeroItem(
     iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     iconModifier: Modifier = Modifier.size(48.dp),
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null,
     bottomContent: @Composable (() -> Unit)? = null,
     icon: @Composable () -> Unit,
 ) {
-    if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            shape = HeroShape,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = modifier.fillMaxWidth(),
-        ) {
-            HeroItemContent(title, description, iconBackground, iconModifier, action, bottomContent, icon)
-        }
+    val clickableModifier = if (onClick != null || onLongClick != null) {
+        Modifier.combinedClickable(
+            onClick = onClick ?: {},
+            onLongClick = onLongClick
+        )
     } else {
-        Surface(
-            shape = HeroShape,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = modifier.fillMaxWidth(),
-        ) {
-            HeroItemContent(title, description, iconBackground, iconModifier, action, bottomContent, icon)
-        }
+        Modifier
+    }
+
+    Surface(
+        shape = HeroShape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(HeroShape)
+            .then(clickableModifier),
+    ) {
+        HeroItemContent(title, description, iconBackground, iconModifier, action, bottomContent, icon)
     }
 }
 
@@ -175,6 +182,7 @@ fun Acerola.Component.GroupedHeroItem(
     iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     iconModifier: Modifier = Modifier.size(48.dp),
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null,
     nestedItem: @Composable (() -> Unit)? = null,
     icon: @Composable () -> Unit,
@@ -186,6 +194,7 @@ fun Acerola.Component.GroupedHeroItem(
         iconBackground = iconBackground,
         iconModifier = iconModifier,
         onClick = onClick,
+        onLongClick = onLongClick,
         action = action,
         bottomContent = nestedItem,
         icon = icon,
@@ -201,6 +210,7 @@ fun Acerola.Component.GroupedHeroItem(
     iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null,
     nestedItem: @Composable (() -> Unit)? = null,
 ) {
@@ -212,6 +222,7 @@ fun Acerola.Component.GroupedHeroItem(
         iconTint = iconTint,
         iconBackground = iconBackground,
         onClick = onClick,
+        onLongClick = onLongClick,
         action = action,
         bottomContent = nestedItem,
     )

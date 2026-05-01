@@ -99,6 +99,9 @@
     <string name="title_extract_first_page_as_cover">Usar página do capítulo como cover</string>
     <string name="description_extract_first_page_as_cover">Extrai a primeira página do primeiro capítulo para usar como capa</string>
 
+    <string name="title_extract_volume_covers">Gerar capas dos volumes</string>
+    <string name="description_extract_volume_covers">Usa a primeira página do volume como capa</string>
+
     <string name="description_icon_pagination_previous">Página Anterior</string>
     <string name="description_icon_pagination_next">Próxima Página</string>
     <string name="label_pagination_format">%1$d / %2$d</string>

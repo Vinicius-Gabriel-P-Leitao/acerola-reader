@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ComicCategorySelector
 import br.acerola.comic.module.comic.component.ComicExternalSyncToggle
@@ -113,6 +114,9 @@ fun Comic.Layout.configSection(
             onSyncChapters = { onSyncAction(ComicSyncAction.SyncChaptersLocal) },
             onRescanCover = { onSyncAction(ComicSyncAction.RescanComic) },
             onExtractFirstPageAsCover = { onSyncAction(ComicSyncAction.ExtractFirstPageAsCover) },
+            onExtractVolumeCovers = if (uiState.volumeViewMode == VolumeViewType.COVER_VOLUME) {
+                { onSyncAction(ComicSyncAction.ExtractVolumeCovers) }
+            } else null,
             modifier = itemModifier,
         )
     }

@@ -33,6 +33,7 @@ fun Comic.Component.CoverVolumeCard(
     group: VolumeChapterGroupDto,
     expanded: Boolean,
     onToggleExpanded: () -> Unit,
+    onExtractCover: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -78,6 +79,7 @@ fun Comic.Component.CoverVolumeCard(
         iconModifier = Modifier.width(60.dp).height(90.dp),
         modifier = modifier,
         onClick = onToggleExpanded,
+        onLongClick = onExtractCover,
         action = {
             Acerola.Component.GlassButton(
                 onClick = onToggleExpanded,

@@ -20,6 +20,8 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.type.UiText
+import br.acerola.comic.ui.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
@@ -27,6 +29,8 @@ import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveComicHistoryUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
+import br.acerola.comic.usecase.metadata.ExtractAllVolumeCoversUseCase
+import br.acerola.comic.usecase.metadata.ExtractVolumeCoverUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -58,6 +62,8 @@ class ComicViewModel
         private val observeChaptersUseCase: ObserveCombinedChaptersUseCase,
         @param:DirectoryCase private val directoryObserveVolumeChapters: ObserveVolumeChaptersUseCase,
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
+        private val extractVolumeCoverUseCase: ExtractVolumeCoverUseCase,
+        private val extractAllVolumeCoversUseCase: ExtractAllVolumeCoversUseCase,
     ) : ViewModel() {
         private val selectedDirectoryId = MutableStateFlow<Long?>(null)
         private val selectedComicId = MutableStateFlow<Long?>(null)
@@ -369,6 +375,36 @@ class ComicViewModel
                 mapOf("chapterSort" to chapterSort, "newStatus" to (!isRead).toString()),
             )
             viewModelScope.launch { trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId) }
+        }
+
+        fun extractVolumeCover(volumeId: Long) {
+            val comicId = selectedDirectoryId.value ?: return
+            viewModelScope.launch {
+                extractVolumeCoverUseCase(comicId, volumeId).fold(
+                    ifLeft = { error ->
+                        AcerolaLogger.e(TAG, "Failed to extract volume cover: $error", LogSource.VIEWMODEL)
+                        _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.message_path_not_found)))
+                    },
+                    ifRight = {
+                        AcerolaLogger.i(TAG, "Successfully extracted volume cover for volume $volumeId", LogSource.VIEWMODEL)
+                    },
+                )
+            }
+        }
+
+        fun extractAllVolumeCovers() {
+            val comicId = selectedDirectoryId.value ?: return
+            viewModelScope.launch {
+                extractAllVolumeCoversUseCase(comicId).fold(
+                    ifLeft = { error ->
+                        AcerolaLogger.e(TAG, "Failed to extract some volume covers: $error", LogSource.VIEWMODEL)
+                        _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.message_path_not_found)))
+                    },
+                    ifRight = {
+                        AcerolaLogger.i(TAG, "Successfully extracted all volume covers", LogSource.VIEWMODEL)
+                    },
+                )
+            }
         }
 
         private fun String.normalizeKey(): String = this.filter { it.isLetterOrDigit() }.lowercase()

@@ -26,7 +26,7 @@ class FileSystemAccessViewModel
     @Inject
     constructor(
         private val manager: FileSystemAccessManager,
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
     ) : ViewModel() {
         init {
             viewModelScope.launch {

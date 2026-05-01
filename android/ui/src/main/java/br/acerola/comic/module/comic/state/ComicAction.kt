@@ -64,4 +64,6 @@ sealed interface ComicSyncAction {
     data object SyncAnilistInfo : ComicSyncAction
 
     data object ExtractFirstPageAsCover : ComicSyncAction
+
+    data object ExtractVolumeCovers : ComicSyncAction
 }

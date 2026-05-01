@@ -11,7 +11,7 @@ import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 interface MangadexChapterMetadataClient {
-    @GET(value = "comic/{id}/feed")
+    @GET(value = "manga/{id}/feed")
     suspend fun getMangaFeed(
         @Path(value = "id") comicId: String,
         @Query(value = "translatedLanguage[]") languages: List<String>,

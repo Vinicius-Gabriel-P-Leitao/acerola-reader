@@ -41,7 +41,7 @@ class MangadexChapterInfoSource
                 val preferredLanguage = MetadataPreference.metadataLanguageFlow(context).firstOrNull() ?: Language.PT_BR.code
                 val languagesList = listOf(preferredLanguage)
 
-                AcerolaLogger.d(TAG, "GET /comic/$comic/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
+                AcerolaLogger.d(TAG, "GET /manga/$comic/feed initiated (offset: $offset) for languages: $languagesList", LogSource.NETWORK)
 
                 val allChapters = mutableListOf<ChapterMetadataDto>()
                 val semaphore = Semaphore(permits = 3)

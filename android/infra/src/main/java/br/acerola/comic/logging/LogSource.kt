@@ -6,5 +6,6 @@ enum class LogSource {
     USECASE,
     NETWORK,
     UI,
+    SERVICE,
     WORKER,
 }
