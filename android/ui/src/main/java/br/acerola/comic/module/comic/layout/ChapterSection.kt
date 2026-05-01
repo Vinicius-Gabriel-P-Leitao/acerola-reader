@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -53,28 +54,14 @@ fun Comic.Layout.chapterSection(
                     Comic.Component.CoverVolumeCard(
                         group = group,
                         expanded = isExpanded,
-                        readChapters = readChapters,
                         onToggleExpanded = onToggleExpanded,
-                        onChapterClick = { chapter -> onChapterClick(chapter, null) },
-                        onToggleRead = onToggleRead,
-                        remoteResolver = remoteResolver,
-                        currentPage = group.currentPage,
-                        totalPages = group.totalPages,
-                        onPageChange = { page -> onLoadVolumeChaptersPage(group.volume.id, page) },
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
                     )
                 } else {
                     Comic.Component.VolumeCard(
                         group = group,
                         expanded = isExpanded,
-                        readChapters = readChapters,
                         onToggleExpanded = onToggleExpanded,
-                        onChapterClick = { chapter -> onChapterClick(chapter, null) },
-                        onToggleRead = onToggleRead,
-                        remoteResolver = remoteResolver,
-                        currentPage = group.currentPage,
-                        totalPages = group.totalPages,
-                        onPageChange = { page -> onLoadVolumeChaptersPage(group.volume.id, page) },
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
                     )
                 }
@@ -102,7 +89,7 @@ fun Comic.Layout.chapterSection(
 
                         // Infinite Scroll Trigger for Volume Chapters
                         if (index >= group.items.size - 5 && group.currentPage < group.totalPages - 1) {
-                            androidx.compose.runtime.LaunchedEffect(key1 = Unit) {
+                            LaunchedEffect(key1 = Unit) {
                                 onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1)
                             }
                         }
@@ -138,7 +125,7 @@ fun Comic.Layout.chapterSection(
 
             // Infinite Scroll Trigger
             if (index >= chapters.archive.items.size - 5 && currentPage < totalPages - 1) {
-                androidx.compose.runtime.LaunchedEffect(key1 = Unit) {
+                LaunchedEffect(key1 = Unit) {
                     onPageChange(currentPage + 1)
                 }
             }

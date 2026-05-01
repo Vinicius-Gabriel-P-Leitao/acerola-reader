@@ -1,47 +1,29 @@
 package br.acerola.comic.module.comic.component
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.GroupedHeroItem
-import br.acerola.comic.common.ux.component.Pagination
-import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
-import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
-import br.acerola.comic.util.sort.normalizeSort
 import coil.compose.AsyncImage
 
 @Composable
 fun Comic.Component.CoverVolumeCard(
     group: VolumeChapterGroupDto,
     expanded: Boolean,
-    readChapters: List<String>,
     onToggleExpanded: () -> Unit,
-    onChapterClick: (ChapterFileDto) -> Unit,
-    onToggleRead: (String) -> Unit,
-    remoteResolver: (String) -> ChapterFeedDto?,
-    currentPage: Int = 0,
-    totalPages: Int = 1,
-    onPageChange: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Acerola.Component.GroupedHeroItem(
