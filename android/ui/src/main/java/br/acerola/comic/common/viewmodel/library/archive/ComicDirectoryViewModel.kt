@@ -9,8 +9,8 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.error.UserMessage
@@ -22,8 +22,8 @@ import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.comic.UpdateComicSettingsUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.LibrarySyncWorker
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.contract.WorkerContract
+import br.acerola.comic.worker.sync.LibrarySyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -51,7 +51,7 @@ class ComicDirectoryViewModel
         private val coverFromChapterUseCase: CoverFromChapterUseCase,
         private val updateComicSettingsUseCase: UpdateComicSettingsUseCase,
         @param:DirectoryCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>,
-        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
     ) : ViewModel() {
         private val _progress = MutableStateFlow<Int>(value = -1)
         val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -64,7 +64,7 @@ class ComicDirectoryViewModel
 
         private val selectedDirectoryId = MutableStateFlow<Long?>(value = null)
 
-        val mangaDirectories: StateFlow<List<ComicDirectoryDto>> =
+        val comicDirectories: StateFlow<List<ComicDirectoryDto>> =
             observeLibraryUseCase().stateIn(
                 viewModelScope,
                 initialValue = emptyList(),
@@ -81,7 +81,7 @@ class ComicDirectoryViewModel
             selectedDirectoryId
                 .flatMapLatest { id ->
                     id?.let {
-                        observeChaptersUseCase.observeByManga(mangaId = it).map { page -> page.items }
+                        observeChaptersUseCase.observeByComic(comicId = it).map { page -> page.items }
                     } ?: flowOf(value = emptyList())
                 }.stateIn(
                     viewModelScope,
@@ -101,9 +101,9 @@ class ComicDirectoryViewModel
             enqueueSync(LibrarySyncWorker.SYNC_TYPE_REFRESH)
         }
 
-        fun rescanMangaByManga(mangaId: Long) {
-            AcerolaLogger.audit(TAG, "Requesting rescan for comic: $mangaId", LogSource.VIEWMODEL)
-            enqueueSync(LibrarySyncWorker.SYNC_TYPE_SPECIFIC, mangaId)
+        fun rescanMangaByManga(comicId: Long) {
+            AcerolaLogger.audit(TAG, "Requesting rescan for comic: $comicId", LogSource.VIEWMODEL)
+            enqueueSync(LibrarySyncWorker.SYNC_TYPE_SPECIFIC, comicId)
         }
 
         fun deepScanLibrary() {
@@ -112,23 +112,23 @@ class ComicDirectoryViewModel
         }
 
         fun updateExternalSyncEnabled(
-            mangaId: Long,
+            comicId: Long,
             enabled: Boolean,
         ) {
             viewModelScope.launch {
-                updateComicSettingsUseCase(mangaId, enabled)
+                updateComicSettingsUseCase(comicId, enabled)
             }
         }
 
-        fun extractCoverFromChapter(mangaId: Long) {
+        fun extractCoverFromChapter(comicId: Long) {
             viewModelScope.launch {
                 _isIndexing.value = true
-                coverFromChapterUseCase(mangaId).fold(
+                coverFromChapterUseCase(comicId).fold(
                     ifLeft = { error ->
                         _uiEvents.send(error)
                     },
                     ifRight = {
-                        rescanMangaByManga(mangaId)
+                        rescanMangaByManga(comicId)
                     },
                 )
                 _isIndexing.value = false
@@ -137,7 +137,7 @@ class ComicDirectoryViewModel
 
         private fun enqueueSync(
             type: String,
-            mangaId: Long? = null,
+            comicId: Long? = null,
         ) {
             AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
             viewModelScope.launch {
@@ -155,16 +155,16 @@ class ComicDirectoryViewModel
                             workDataOf(
                                 LibrarySyncWorker.KEY_SYNC_TYPE to type,
                                 LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
-                                LibrarySyncWorker.KEY_MANGA_ID to (mangaId ?: -1L),
+                                LibrarySyncWorker.KEY_MANGA_ID to (comicId ?: -1L),
                             ),
                         ).addTag(WorkerContract.TAG_LIBRARY_SYNC)
                         .build()
 
                 val workName =
-                    if (mangaId !=
+                    if (comicId !=
                         null
                     ) {
-                        "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId"
+                        "${WorkerContract.TAG_LIBRARY_SYNC}_$comicId"
                     } else {
                         "${WorkerContract.TAG_LIBRARY_SYNC}_unique"
                     }

@@ -48,7 +48,7 @@ fun Main.Config.Layout.ComicDirectoryAccess(onFolderSelected: (Uri?) -> Unit) {
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = stringResource(R.string.description_icon_select_folder_mangas),
+                        contentDescription = stringResource(R.string.description_icon_select_folder_comics),
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier =
                             Modifier

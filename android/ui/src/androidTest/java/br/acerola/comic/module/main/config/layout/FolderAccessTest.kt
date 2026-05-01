@@ -16,8 +16,8 @@ class FolderAccessTest {
         composeTestRule.setContent {
             Main.Config.Layout.ComicDirectoryAccess(onFolderSelected = {})
         }
-        // No FolderAccess.kt o contentDescription é buscado do strings.xml R.string.description_icon_select_folder_mangas
-        // "Selecionar pasta de mangás"
+        // No FolderAccess.kt o contentDescription é buscado do strings.xml R.string.description_icon_select_folder_comics
+        // "Selecionar pasta de quadrinhos"
         composeTestRule.onNodeWithContentDescription("pasta", substring = true, ignoreCase = true).assertIsDisplayed()
     }
 }

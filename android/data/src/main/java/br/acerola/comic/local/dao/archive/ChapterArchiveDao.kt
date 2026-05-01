@@ -2,8 +2,10 @@ package br.acerola.comic.local.dao.archive
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import br.acerola.comic.local.dao.BaseDao
 import br.acerola.comic.local.entity.archive.ChapterArchive
+import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
 import br.acerola.comic.local.entity.relation.MangaChapterCount
 import kotlinx.coroutines.flow.Flow
 
@@ -24,42 +26,63 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     @Query("SELECT * FROM chapter_archive WHERE comic_directory_fk = :folderId")
     suspend fun getChaptersListByDirectoryId(folderId: Long): List<ChapterArchive>
 
+    @Query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = :folderId AND volume_id_fk IS NULL")
+    suspend fun countRootChaptersByDirectoryId(folderId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = :folderId AND volume_id_fk IS NULL")
+    fun observeRootChaptersCountByDirectoryId(folderId: Long): Flow<Int>
+
+    @Transaction
     @Query(
         value = """
         SELECT *
         FROM chapter_archive
-        WHERE comic_directory_fk = :folderId 
+        LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+        WHERE chapter_archive.comic_directory_fk = :folderId 
         ORDER BY 
-            -- NOTE: Ordena pela parte inteira (antes do ponto)
-            CAST(chapter_sort AS INTEGER) ASC, 
-            -- NOTE: Ordena pela parte decimal (depois do ponto) como um número inteiro
-            CAST(
-                CASE 
-                    WHEN chapter_sort LIKE '%.%' 
-                    THEN SUBSTR(chapter_sort, INSTR(chapter_sort, '.') + 1) 
-                    ELSE 0 
-                END AS INTEGER
-            ) ASC
+            -- 1. Prioridade Máxima: Não-especiais primeiro (0 < 1)
+            (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC,
+            -- 2. Volume: Garante que volumes numéricos venham antes de textos (CAST falha p/ texto -> 0)
+            -- Para evitar que texto 'special' (0) ganhe de 'Volume 1' (1), usamos um peso
+            (CASE WHEN volume_archive.volume_sort GLOB '*[0-9]*' THEN 0 ELSE 1 END) ASC,
+            CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) ASC,
+            -- 3. Chapter: Ordem numérica (1, 2, 10)
+            CAST(chapter_archive.chapter_sort AS INTEGER) ASC, 
+            chapter_archive.chapter_sort ASC
     """,
     )
-    fun getChaptersByDirectoryId(folderId: Long): Flow<List<ChapterArchive>>
+    fun getChaptersByDirectoryId(folderId: Long): Flow<List<ChapterVolumeJoin>>
 
+    @Transaction
     @Query(
         value = """
             SELECT *
             FROM chapter_archive
-            WHERE comic_directory_fk = :folderId
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :folderId
             ORDER BY 
-                -- NOTE: Ordena pela parte inteira (antes do ponto)
-                CAST(chapter_sort AS INTEGER) ASC, 
-                -- NOTE: Ordena pela parte decimal (depois do ponto) como um número inteiro
+                -- 1. Volume Parte Inteira
+                CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) ASC,
+                -- 2. Volume Parte Decimal
                 CAST(
-                    CASE    
-                        WHEN chapter_sort LIKE '%.%' 
-                        THEN SUBSTR(chapter_sort, INSTR(chapter_sort, '.') + 1) 
+                    CASE 
+                        WHEN volume_archive.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(volume_archive.volume_sort, INSTR(volume_archive.volume_sort, '.') + 1) 
                         ELSE 0 
                     END AS INTEGER
-                ) ASC
+                ) ASC,
+                -- 3. Chapter Parte Inteira
+                CAST(chapter_archive.chapter_sort AS INTEGER) ASC, 
+                -- 4. Chapter Parte Decimal
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC,
+                -- 5. Especiais por último como critério de desempate
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
             LIMIT :pageSize OFFSET :offset
         """,
     )
@@ -67,7 +90,102 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
         folderId: Long,
         pageSize: Int,
         offset: Int,
-    ): List<ChapterArchive>
+    ): List<ChapterVolumeJoin>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *
+            FROM chapter_archive
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :folderId
+            ORDER BY 
+                -- 1. Volume Parte Inteira
+                CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) DESC,
+                -- 2. Volume Parte Decimal
+                CAST(
+                    CASE 
+                        WHEN volume_archive.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(volume_archive.volume_sort, INSTR(volume_archive.volume_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                -- 3. Chapter Parte Inteira
+                CAST(chapter_archive.chapter_sort AS INTEGER) DESC, 
+                -- 4. Chapter Parte Decimal
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                -- 5. Especiais por último como critério de desempate
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+            LIMIT :pageSize OFFSET :offset
+        """,
+    )
+    suspend fun getChaptersByDirectoryPagedDesc(
+        folderId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterVolumeJoin>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *
+            FROM chapter_archive
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :comicId
+              AND chapter_archive.volume_id_fk = :volumeId
+            ORDER BY 
+                CAST(chapter_archive.chapter_sort AS INTEGER) ASC,
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC,
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+            LIMIT :pageSize OFFSET :offset
+        """,
+    )
+    suspend fun getChaptersByVolumePaged(
+        comicId: Long,
+        volumeId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterVolumeJoin>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *
+            FROM chapter_archive
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :comicId
+              AND chapter_archive.volume_id_fk = :volumeId
+            ORDER BY 
+                CAST(chapter_archive.chapter_sort AS INTEGER) DESC,
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+            LIMIT :pageSize OFFSET :offset
+        """,
+    )
+    suspend fun getChaptersByVolumePagedDesc(
+        comicId: Long,
+        volumeId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterVolumeJoin>
 
     @Query("SELECT * FROM chapter_archive WHERE comic_directory_fk = :folderId AND chapter_sort IN (:chapters)")
     fun getChaptersByDirectoryAndSorts(

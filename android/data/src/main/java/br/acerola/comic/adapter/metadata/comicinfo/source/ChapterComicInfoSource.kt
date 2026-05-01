@@ -1,6 +1,5 @@
 package br.acerola.comic.adapter.metadata.comicinfo.source
 
-import android.content.Context
 import arrow.core.Either
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.dto.archive.ChapterFileDto
@@ -8,7 +7,6 @@ import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.error.message.NetworkError
 import br.acerola.comic.service.metadata.ComicInfoParser
 import br.acerola.comic.service.reader.ChapterSourceFactory
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -18,12 +16,11 @@ import javax.inject.Singleton
 class ChapterComicInfoSource
     @Inject
     constructor(
-        @param:ApplicationContext private val context: Context,
         private val parser: ComicInfoParser,
         private val chapterSourceFactory: ChapterSourceFactory,
     ) : MetadataProvider<ChapterMetadataDto, String> {
         override suspend fun searchInfo(
-            manga: String,
+            comic: String,
             limit: Int,
             offset: Int,
             onProgress: ((Int) -> Unit)?,
@@ -31,7 +28,7 @@ class ChapterComicInfoSource
         ): Either<NetworkError, List<ChapterMetadataDto>> =
             withContext(context = Dispatchers.IO) {
                 // comic aqui é o URI do arquivo do capítulo
-                val chapterUri = manga
+                val chapterUri = comic
                 val chapterDto = ChapterFileDto(id = 0, name = "Unknown", path = chapterUri, chapterSort = "0")
 
                 val sourceResult = chapterSourceFactory.create(chapterDto)
@@ -63,7 +60,7 @@ class ChapterComicInfoSource
             }
 
         override suspend fun saveInfo(
-            manga: String,
+            comic: String,
             info: ChapterMetadataDto,
         ): Either<NetworkError, Unit> {
             // NOTE: Atualmente não suportamos escrita dentro de CBZ/CBR (re-zipar)

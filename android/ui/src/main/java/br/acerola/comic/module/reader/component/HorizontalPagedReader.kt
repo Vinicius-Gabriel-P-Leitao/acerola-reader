@@ -9,21 +9,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.gesture.ZoomablePageImage
 import br.acerola.comic.module.reader.state.TapArea
 
 @Composable
 fun Reader.Component.HorizontalPagedReader(
-    pageCount: Int,
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     pagerState: PagerState,
     onUiToggle: () -> Unit,
     onPrevClick: () -> Unit,
     onNextClick: () -> Unit,
-    onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
     var isZoomed by remember { mutableStateOf(false) }
@@ -35,12 +33,11 @@ fun Reader.Component.HorizontalPagedReader(
         userScrollEnabled = !isZoomed,
     ) { index ->
         Reader.Gesture.ZoomablePageImage(
-            mangaId = mangaId,
+            comicId = comicId,
             chapterId = chapterId,
             pageIndex = index,
             orientation = ReadingMode.HORIZONTAL,
             onZoomStatusChange = { zoomed ->
-                isZoomed = zoomed
                 onZoomChange(zoomed)
             },
             onAreaTap = { area ->

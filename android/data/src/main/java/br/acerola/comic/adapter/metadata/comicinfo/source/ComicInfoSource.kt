@@ -21,12 +21,12 @@ import javax.inject.Singleton
 class ComicInfoSource
     @Inject
     constructor(
-        @param:ApplicationContext private val context: Context,
         private val parser: ComicInfoParser,
         private val chapterSourceFactory: ChapterSourceFactory,
+        @param:ApplicationContext private val context: Context,
     ) : MetadataProvider<ComicMetadataDto, String> {
         override suspend fun searchInfo(
-            manga: String,
+            comic: String,
             limit: Int,
             offset: Int,
             onProgress: ((Int) -> Unit)?,
@@ -68,6 +68,7 @@ class ComicInfoSource
 
                 if (firstChapter != null) {
                     val chapterDto =
+                        // FIXME: Fazer toDto
                         ChapterFileDto(
                             id = 0,
                             chapterSort = "0",
@@ -106,13 +107,13 @@ class ComicInfoSource
             }
 
         override suspend fun saveInfo(
-            manga: String,
+            comic: String,
             info: ComicMetadataDto,
         ): Either<NetworkError, Unit> =
             withContext(context = Dispatchers.IO) {
                 // NOTE: comic aqui deve ser o URI da pasta pai (root) e info.title o nome da subpasta
-                // Mas por simplicidade, vamos assumir que comic é o URI da pasta do mangá
-                val folderUri = manga.toUri()
+                // Mas por simplicidade, vamos assumir que comic é o URI da pasta do quadrinho
+                val folderUri = comic.toUri()
                 val folderDoc =
                     DocumentFile.fromTreeUri(context, folderUri)
                         ?: return@withContext Either.Left(value = NetworkError.NotFound())

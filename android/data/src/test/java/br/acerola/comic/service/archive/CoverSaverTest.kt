@@ -54,23 +54,23 @@ class CoverSaverTest {
             val rootUri = mockk<Uri>()
             val coverDto = LookupFixtures.createCoverDto()
             val bytes = byteArrayOf(0, 1, 2)
-            val mangaDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
+            val comicDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
 
-            val mangaDoc = mockk<DocumentFile>()
+            val comicDoc = mockk<DocumentFile>()
             val savedFileDoc = mockk<DocumentFile>()
             val fileUri = mockk<Uri>()
             val dirUri = mockk<Uri>()
 
-            every { DocumentFile.fromTreeUri(context, any()) } returns mangaDoc
-            every { mangaDoc.isDirectory } returns true
-            every { mangaDoc.uri } returns dirUri
-            every { mangaDoc.listFiles() } returns emptyArray()
-            every { mangaDoc.findFile(any()) } returns savedFileDoc
+            every { DocumentFile.fromTreeUri(context, any()) } returns comicDoc
+            every { comicDoc.isDirectory } returns true
+            every { comicDoc.uri } returns dirUri
+            every { comicDoc.listFiles() } returns emptyArray()
+            every { comicDoc.findFile(any()) } returns savedFileDoc
             every { savedFileDoc.uri } returns fileUri
             every { fileUri.toString() } returns "content://cover/1"
 
             coEvery { fileStorageHandler.saveFile(any(), any(), any(), any()) } returns Unit.right()
-            coEvery { directoryDao.getDirectoryById(1) } returns mangaDir
+            coEvery { directoryDao.getDirectoryById(1) } returns comicDir
             coEvery { directoryDao.update(any()) } returns Unit
             coEvery { coverDao.insert(any()) } returns 10L
 
@@ -80,7 +80,7 @@ class CoverSaverTest {
             // Assert
             assertTrue(result.isRight())
             result.onRight { assertEquals(10L, it) }
-            coVerify { fileStorageHandler.saveFile(mangaDoc, "cover.jpg", "image/jpeg", bytes) }
+            coVerify { fileStorageHandler.saveFile(comicDoc, "cover.jpg", "image/jpeg", bytes) }
             coVerify { directoryDao.update(match { it.cover == "content://cover/1" }) }
         }
 
@@ -91,9 +91,9 @@ class CoverSaverTest {
             val rootUri = mockk<Uri>()
             val bytes = byteArrayOf(0, 1, 2)
             val coverUrl = "https://mangadex.org/covers/1/a.jpg"
-            val mangaDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
+            val comicDir = MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "One Piece")
 
-            coEvery { directoryDao.getDirectoryById(1) } returns mangaDir
+            coEvery { directoryDao.getDirectoryById(1) } returns comicDir
             every { DocumentFile.fromTreeUri(context, any()) } returns null
 
             // Act

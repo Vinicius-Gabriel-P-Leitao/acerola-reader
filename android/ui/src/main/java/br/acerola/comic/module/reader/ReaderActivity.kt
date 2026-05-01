@@ -20,6 +20,7 @@ class ReaderActivity(
         const val PAGE = "PAGE"
         const val MANGA_ID = "MANGA_ID"
         const val CHAPTER_ID = "CHAPTER_ID"
+        const val CHAPTER_SORT = "CHAPTER_SORT"
         const val INITIAL_PAGE = "INITIAL_PAGE"
     }
 
@@ -44,16 +45,18 @@ class ReaderActivity(
         navController: NavHostController,
     ) {
         composable(route = context.getString(Destination.READER.route)) {
-            val mangaId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
+            val comicId = intent?.getLongExtra(PageExtra.MANGA_ID, -1L) ?: -1L
             val chapterId = intent?.getLongExtra(PageExtra.CHAPTER_ID, -1L) ?: -1L
+            val chapterSort = intent?.getStringExtra(PageExtra.CHAPTER_SORT) ?: ""
             val initialPage = intent?.getIntExtra(PageExtra.INITIAL_PAGE, 0) ?: 0
 
-            AcerolaLogger.d(TAG, "Navigating to ReaderScreen. Manga: $mangaId, Chapter: $chapterId", LogSource.UI)
+            AcerolaLogger.d(TAG, "Navigating to ReaderScreen. Comic: $comicId, ChapterId: $chapterId, ChapterSort: $chapterSort", LogSource.UI)
 
             ReaderScreen(
                 chapter = page,
                 chapterId = chapterId,
-                mangaId = mangaId,
+                chapterSort = chapterSort,
+                comicId = comicId,
                 initialPage = initialPage,
                 onBackClick = { finish() },
             )

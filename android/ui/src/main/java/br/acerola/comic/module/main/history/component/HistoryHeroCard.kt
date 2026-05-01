@@ -42,14 +42,14 @@ import coil.request.ImageRequest
 
 @Composable
 fun Main.History.Component.HistoryHeroCard(
-    manga: ComicDto,
+    comic: ComicDto,
     onClick: () -> Unit,
     onContinueClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val bannerUri = manga.directory.bannerUri ?: manga.directory.coverUri ?: manga.remoteInfo?.banner?.url
-    val title = manga.remoteInfo?.title ?: manga.directory.name
+    val bannerUri = comic.directory.bannerUri ?: comic.directory.coverUri ?: comic.remoteInfo?.banner?.url
+    val title = comic.remoteInfo?.title ?: comic.directory.name
 
     Card(
         onClick = onClick,

@@ -20,6 +20,6 @@ class SelectFolderTest {
             )
         }
         // Texto corrigido conforme strings.xml
-        composeTestRule.onNodeWithText("Pasta dos mangás", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pasta dos quadrinhos", substring = true).assertIsDisplayed()
     }
 }

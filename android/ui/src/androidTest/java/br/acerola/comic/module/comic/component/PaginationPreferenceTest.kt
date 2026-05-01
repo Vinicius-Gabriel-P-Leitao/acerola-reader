@@ -5,7 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import br.acerola.comic.config.preference.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.module.comic.Comic
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +23,7 @@ class PaginationPreferenceTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Capítulos por página", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Capítulos pré-carregados", substring = true).assertIsDisplayed()
         // "25" aparece duas vezes: na descrição do HeroItem (selecionado) e no RadioGroup
         composeTestRule.onAllNodesWithText("25", ignoreCase = true)[0].assertIsDisplayed()
         composeTestRule.onNodeWithText("50", ignoreCase = true).assertIsDisplayed()

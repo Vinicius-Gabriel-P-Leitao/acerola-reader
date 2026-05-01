@@ -18,18 +18,18 @@
     <string name="label_template_config_activity">Padrões de arquivos</string>
 
     <!-- Screen content description -->
-    <string name="description_home_activity">Tela de início que lista os mangás.</string>
+    <string name="description_home_activity">Tela de início que lista os quadrinhos.</string>
     <string name="description_config_activity">Tela de configurações</string>
-    <string name="description_history_activity">Tela de histórico de mangás lidos</string>
+    <string name="description_history_activity">Tela de histórico de quadrinhos lidos</string>
     <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
     <string name="description_reader_activity">Tela de leitura do capítulo</string>
     <string name="description_template_config_activity">Gerencie como o app identifica números de capítulos nos arquivos</string>
 
     <!-- Icons -->
     <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>
-    <string name="description_icon_select_folder_mangas">Selecionar pasta para salvar e ler os mangás.</string>
+    <string name="description_icon_select_folder_comics">Selecionar pasta para salvar e ler os quadrinhos.</string>
     <string name="description_icon_select_preference_saved_file">Selecionar o tipo do arquivo para salvar o quadrinho.</string>
-    <string name="description_icon_sync_comic_directory">Sincronização somente das pastas ou dos mangás completos.</string>
+    <string name="description_icon_sync_comic_directory">Sincronização somente das pastas ou dos quadrinhos completos.</string>
     <string name="description_icon_sync_mangadex">Sincronização de dados do mangadex.</string>
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
@@ -38,7 +38,7 @@
     <!-- Text title -->
     <string name="title_text_archive_configs_in_app">Configuração dos arquivos</string>
     <string name="title_text_mangadex_configs_in_app">Configuração do mangadex</string>
-    <string name="title_text_config_select_path_manga">Pasta dos mangás</string>
+    <string name="title_text_config_select_path_comic">Pasta dos quadrinhos</string>
     <string name="title_preference_file_extension">Tipo do arquivo a ser salvo</string>
     <string name="title_config_sync_mangadex">Sincronizar metadados com mangadex</string>
     <string name="title_chapter_item_chapter_number">Capitulo %1$s</string>
@@ -48,16 +48,16 @@
     <string name="title_chapter_tabs_settings">Configurações</string>
 
     <!-- Text other types -->
-    <string name="description_text_config_select_path_manga">Pasta onde será buscado e salvo.</string>
+    <string name="description_text_config_select_path_comic">Pasta onde será buscado e salvo.</string>
     <string name="description_text_selected_comic_directory">Pasta selecionada: %1$s</string>
-    <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os mangás</string>
-    <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar mangá...</string>
+    <string name="description_text_preference_file_extension_default">Escolha o formato padrão para salvar os quadrinhos</string>
+    <string name="description_text_home_search_placeholder" tools:ignore="TypographyEllipsis">Buscar quadrinho...</string>
     <string name="description_text_home_deep_sync">Sincronização profunda</string>
     <string name="description_text_home_deep_sync_supporting">Verifica todos as pastas. Pode demorar.</string>
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
     <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos e pastas.</string>
-    <string name="description_text_home_empty_state">Nenhum mangá na biblioteca</string>
-    <string name="description_manga_list_item_chapter_count">Capitulos %1$s</string>
+    <string name="description_text_home_empty_state">Nenhum quadrinho na biblioteca</string>
+    <string name="description_comic_list_item_chapter_count">Capitulos %1$s</string>
 
     <string name="label_sync_group">Sincronizar</string>
     <string name="label_mangadex_group">MangaDex</string>
@@ -68,11 +68,11 @@
     <string name="title_preference_metadata_comic_info">Gerar ComicInfo.xml</string>
     <string name="description_preference_metadata_comic_info">Criar arquivo de metadados na pasta ao sincronizar com fontes externas.</string>
 
-    <string name="title_settings_chapters_per_page">Capítulos por página</string>
+    <string name="title_settings_chapters_per_page">Capítulos pré-carregados</string>
     <string name="description_settings_chapters_per_page">Quantidade de itens exibidos na lista</string>
 
     <string name="title_sync_anilist_remote_info">Sincronizar metadados</string>
-    <string name="description_sync_anilist_remote_info">Busca metadados no AniList pelo título do mangá</string>
+    <string name="description_sync_anilist_remote_info">Busca metadados no AniList pelo título do quadrinho</string>
 
     <string name="title_sync_comic_info">Sincronizar ComicInfo.xml</string>
     <string name="description_sync_comic_info">Busca metadados locais no arquivo ou pasta</string>
@@ -99,6 +99,9 @@
     <string name="title_extract_first_page_as_cover">Usar página do capítulo como cover</string>
     <string name="description_extract_first_page_as_cover">Extrai a primeira página do primeiro capítulo para usar como capa</string>
 
+    <string name="title_extract_volume_covers">Gerar capas dos volumes</string>
+    <string name="description_extract_volume_covers">Usa a primeira página do volume como capa</string>
+
     <string name="description_icon_pagination_previous">Página Anterior</string>
     <string name="description_icon_pagination_next">Próxima Página</string>
     <string name="label_pagination_format">%1$d / %2$d</string>
@@ -111,26 +114,35 @@
     <string name="label_chapter_detail_scanlation">Grupo de tradução</string>
     <string name="label_chapter_detail_pages">Páginas</string>
     <string name="label_chapter_scanlation_prefix">Scan: %1$s</string>
+    <string name="label_volume_header_unknown">Volume Desconhecido</string>
+    <string name="label_volume_header_special">Especial</string>
+    <string name="label_volume_header_chapter_count">%1$d capítulos</string>
+    <string name="label_volume_header_root">Capítulos Avulsos</string>
+    <string name="label_volume_card_description">%1$d de %2$d capítulos carregados</string>
+    <string name="action_volume_load_more">Carregar mais capítulos</string>
+    <string name="title_settings_volume_style">Estilo dos volumes</string>
+    <string name="label_volume_style_normal">Normal</string>
+    <string name="label_volume_style_cover">Capas</string>
 
-    <!-- Manga Header -->
-    <string name="manga_header_cover_description">Capa do mangá</string>
-    <string name="manga_header_unknown">Desconhecido</string>
-    <string name="manga_header_synopsis_title">Sinopse</string>
-    <string name="manga_header_no_description">Nenhuma descrição disponível.</string>
-    <string name="manga_header_read_less">Ler menos</string>
-    <string name="manga_header_read_more">Ler mais</string>
-    <string name="manga_header_read_now">Ler agora</string>
+    <!-- Comic Header -->
+    <string name="comic_header_cover_description">Capa do quadrinho</string>
+    <string name="comic_header_unknown">Desconhecido</string>
+    <string name="comic_header_synopsis_title">Sinopse</string>
+    <string name="comic_header_no_description">Nenhuma descrição disponível.</string>
+    <string name="comic_header_read_less">Ler menos</string>
+    <string name="comic_header_read_more">Ler mais</string>
+    <string name="comic_header_read_now">Ler agora</string>
 
     <!-- Reader Modes -->
     <string name="label_reader_mode_horizontal">Paginado</string>
     <string name="label_reader_mode_vertical">Vertical</string>
     <string name="label_reader_mode_webtoon">Webtoon</string>
 
-    <!-- Manga Actions -->
-    <string name="label_manga_action_reread">Reler</string>
-    <string name="label_manga_action_continue">Continuar</string>
-    <string name="label_manga_action_start">Iniciar</string>
-    <string name="label_manga_status_read">Lido</string>
+    <!-- Comic Actions -->
+    <string name="label_comic_action_reread">Reler</string>
+    <string name="label_comic_action_continue">Continuar</string>
+    <string name="label_comic_action_start">Iniciar</string>
+    <string name="label_comic_status_read">Lido</string>
 
     <!-- Actions -->
     <string name="action_mark_as_read">Marcar como lido</string>
@@ -139,7 +151,7 @@
     <string name="description_icon_continue_reading">Continuar leitura</string>
 
     <!-- History & Reader Info -->
-    <string name="description_history_empty_state">Nenhum mangá lido recentemente</string>
+    <string name="description_history_empty_state">Nenhum quadrinho lido recentemente</string>
     <string name="label_chapter_unknown">Capítulo desconhecido</string>
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
     <string name="label_reader_page_format">Página %1$d / %2$d</string>
@@ -175,7 +187,7 @@
     <string name="title_dialog_select_theme">Escolha um Tema</string>
 
     <!-- Search & Download Screen -->
-    <string name="placeholder_search_mangadex">Nome, ID ou URL do mangá…</string>
+    <string name="placeholder_search_mangadex">Nome, ID ou URL do quadrinho…</string>
     <string name="label_search_results">Resultados</string>
 
     <!-- Categories -->
@@ -189,8 +201,8 @@
     <string name="action_delete_category">Excluir Categoria</string>
     <string name="label_category_empty">Nenhuma categoria cadastrada</string>
     <string name="label_category_none_selected">Sem categoria</string>
-    <string name="title_manga_category">Categoria do mangá</string>
-    <string name="placeholder_category_name">Ex: Light Novel, HQ, Manga…</string>
+    <string name="title_comic_category">Categoria do quadrinho</string>
+    <string name="placeholder_category_name">Ex: Light Novel, HQ, Comic…</string>
 
     <string name="label_config_external_sync">Sincronização Externa</string>
     <string name="description_config_external_sync">Permitir busca de metadados via AniList ou MangaDex</string>
@@ -212,7 +224,7 @@
     <string name="action_save">Salvar</string>
     <string name="action_cancel">Cancelar</string>
 
-    <!-- Manga Card Actions -->
+    <!-- Comic Card Actions -->
     <string name="action_bookmark">Bookmark</string>
     <string name="action_hide">Ocultar</string>
     <string name="action_delete">Deletar</string>
@@ -220,10 +232,10 @@
     <string name="label_no_bookmark">Sem bookmark</string>
     <string name="description_hide">Esconde da biblioteca</string>
     <string name="description_delete">Remove do banco e do dispositivo</string>
-    <string name="dialog_hide_title">Ocultar mangá?</string>
-    <string name="dialog_hide_message">Este mangá será ocultado da biblioteca. Você pode usar o filtro para ver mangás ocultos.</string>
-    <string name="dialog_delete_title">Deletar mangá?</string>
-    <string name="dialog_delete_message">Esta ação remove o mangá do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
+    <string name="dialog_hide_title">Ocultar quadrinho?</string>
+    <string name="dialog_hide_message">Este quadrinho será ocultado da biblioteca. Você pode usar o filtro para ver quadrinhos ocultos.</string>
+    <string name="dialog_delete_title">Deletar quadrinho?</string>
+    <string name="dialog_delete_message">Esta ação remove o quadrinho do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
 
     <!-- Dialog Actions -->
     <string name="action_confirm">Confirmar</string>
@@ -252,6 +264,8 @@
     <string name="label_sort_chapter_count">Quantidade de capítulos</string>
     <string name="label_sort_last_update">Última atualização</string>
     <string name="label_sort_number">Número</string>
+    <string name="label_sort_type_chapter">Capítulo</string>
+    <string name="label_sort_type_volume">Volume</string>
 
     <!-- Language names for metadata -->
     <string name="lang_pt_br">Português (BR)</string>
@@ -279,10 +293,10 @@
 
     <!-- Tutorial/Onboarding Strings -->
     <string name="title_tutorial_setup">Bem-vindo ao Acerola!</string>
-    <string name="description_tutorial_setup">Para começar, precisamos configurar sua biblioteca de mangás.</string>
+    <string name="description_tutorial_setup">Para começar, precisamos configurar sua biblioteca de quadrinhos.</string>
     <string name="action_configure_library">Configurar Biblioteca</string>
 
-    <string name="description_tutorial_folder_select">Clique aqui para selecionar a pasta onde seus mangás estão armazenados.</string>
+    <string name="description_tutorial_folder_select">Clique aqui para selecionar a pasta onde seus quadrinhos estão armazenados.</string>
     <string name="description_tutorial_sync_deep">Use a Sincronização Profunda se for a primeira vez ou se precisar verificar arquivos renomeados.</string>
 
 </resources>

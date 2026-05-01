@@ -6,7 +6,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
@@ -31,7 +31,7 @@ class ChapterArchiveViewModelTest {
     val coroutineRule = MainDispatcherRule()
 
     private val workManager = mockk<WorkManager>(relaxed = true)
-    private val observeChaptersUseCase = mockk<ObserveChaptersUseCase<ChapterArchivePageDto>>(relaxed = true)
+    private val observeChaptersUseCase = mockk<ObserveChaptersUseCase<ChapterPageDto>>(relaxed = true)
     private lateinit var viewModel: ChapterArchiveViewModel
 
     @Before

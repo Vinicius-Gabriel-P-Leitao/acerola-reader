@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -20,12 +21,21 @@ android {
         applicationId = "br.acerola.comic"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    val localProps =
+        Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) load(file.inputStream())
+        }
+
+    fun localOrEnv(key: String) = localProps.getProperty(key) ?: System.getenv(key)
+
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "acerola")
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-            keyPassword = System.getenv("KEY_PASSWORD")
-            keyAlias = System.getenv("KEY_ALIAS")
+            storeFile = file(localOrEnv("KEYSTORE_PATH") ?: "acerola")
+            storePassword = localOrEnv("KEYSTORE_PASSWORD")
+            keyPassword = localOrEnv("KEY_PASSWORD")
+            keyAlias = localOrEnv("KEY_ALIAS")
         }
     }
 

@@ -17,7 +17,7 @@ class HeaderTest {
 
     @Test
     fun `MangaHeader_deve_exibir_o_titulo_remoto_quando_disponivel`() {
-        val manga =
+        val comic =
             ComicDto(
                 directory =
                     ComicDirectoryDto(
@@ -27,11 +27,11 @@ class HeaderTest {
                         coverUri = null,
                         bannerUri = null,
                         lastModified = 0L,
-                        chapterTemplateFk = null,
+                        archiveTemplateFk = null,
                     ),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Manga Fantástico",
+                        title = "Comic Fantástico",
                         description = "Uma sinopse qualquer",
                         status = "Lançando",
                     ),
@@ -40,7 +40,7 @@ class HeaderTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Layout.Header(
-                    manga = manga,
+                    comic = comic,
                     history = null,
                     onContinueClick = { _, _ -> },
                 )
@@ -48,7 +48,7 @@ class HeaderTest {
         }
 
         // Verifica se o título remoto é exibido com prioridade
-        composeTestRule.onNodeWithText("Manga Fantástico").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Comic Fantástico").assertIsDisplayed()
 
         // Verifica se a sinopse aparece
         composeTestRule.onNodeWithText("Uma sinopse qualquer").assertIsDisplayed()

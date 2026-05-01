@@ -23,14 +23,14 @@ class ManageCategoriesUseCase
             categoryService.deleteCategory(id)
         }
 
-        suspend fun updateMangaCategory(
+        suspend fun updateComicCategory(
             directoryId: Long,
             categoryId: Long?,
         ) {
-            categoryService.updateMangaCategory(directoryId, categoryId)
+            categoryService.updateComicCategory(directoryId, categoryId)
         }
 
-        fun getCategoryByMangaId(directoryId: Long): Flow<CategoryDto?> = categoryService.getCategoryByMangaId(directoryId)
+        fun getCategoryByComicId(directoryId: Long): Flow<CategoryDto?> = categoryService.getCategoryByComicId(directoryId)
 
-        fun getAllMangaCategories(): Flow<Map<Long, CategoryDto>> = categoryService.getAllMangaCategories()
+        fun getAllComicCategories(): Flow<Map<Long, CategoryDto>> = categoryService.getAllComicCategories()
     }

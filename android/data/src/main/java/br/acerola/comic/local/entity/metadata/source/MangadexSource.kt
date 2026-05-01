@@ -37,5 +37,5 @@ data class MangadexSource(
     @ColumnInfo(name = "engtl_url")
     val engtlUrl: String?,
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long,
+    val comicRemoteInfoFk: Long,
 )

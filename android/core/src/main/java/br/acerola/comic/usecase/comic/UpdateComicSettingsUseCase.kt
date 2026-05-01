@@ -12,7 +12,7 @@ class UpdateComicSettingsUseCase
         @param:DirectoryEngine private val gateway: ComicLibraryWriteGateway,
     ) {
         suspend operator fun invoke(
-            mangaId: Long,
+            comicId: Long,
             externalSyncEnabled: Boolean,
-        ): Either<LibrarySyncError, Unit> = gateway.updateMangaSettings(mangaId, externalSyncEnabled)
+        ): Either<LibrarySyncError, Unit> = gateway.updateMangaSettings(comicId, externalSyncEnabled)
     }

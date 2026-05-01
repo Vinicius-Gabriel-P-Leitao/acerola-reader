@@ -40,7 +40,7 @@ import br.acerola.comic.common.ux.component.ImageCard
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.main.Main
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -49,7 +49,7 @@ import coil.size.SizeResolver
 
 @Composable
 fun Main.Home.Component.ComicGridItem(
-    manga: ComicDto,
+    comic: ComicDto,
     history: ReadingHistoryDto? = null,
     chapterCount: Int = 0,
     onShowActions: () -> Unit = {},
@@ -58,8 +58,8 @@ fun Main.Home.Component.ComicGridItem(
     val context = LocalContext.current
     val density = LocalDensity.current
 
-    val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
-    val title = manga.remoteInfo?.title ?: manga.directory.name
+    val coverUri = comic.directory.coverUri ?: comic.directory.bannerUri
+    val title = comic.remoteInfo?.title ?: comic.directory.name
 
     val imageSize: Size =
         with(receiver = density) {
@@ -74,7 +74,7 @@ fun Main.Home.Component.ComicGridItem(
             model =
                 ImageRequest
                     .Builder(context)
-                    .data(data = R.raw.placeholder_manga)
+                    .data(data = R.raw.placeholder_comic)
                     .size(resolver = SizeResolver(imageSize))
                     .build(),
         )
@@ -88,15 +88,15 @@ fun Main.Home.Component.ComicGridItem(
                 ImageRequest
                     .Builder(context)
                     .data(data = coverUri)
-                    .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
-                    .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+                    .memoryCacheKey("${coverUri}_${comic.directory.lastModified}")
+                    .diskCacheKey("${coverUri}_${comic.directory.lastModified}")
                     .size(resolver = SizeResolver(imageSize))
                     .build(),
         )
 
-    val categoryColor = manga.category?.color
+    val categoryColor = comic.category?.color
     val score =
-        manga.remoteInfo
+        comic.remoteInfo
             ?.sources
             ?.anilist
             ?.averageScore
@@ -146,9 +146,9 @@ fun Main.Home.Component.ComicGridItem(
                 contentAlignment = Alignment.BottomEnd,
             ) {
                 val sourceIcon =
-                    when (manga.remoteInfo?.syncSource) {
-                        MetadataSourcePattern.MANGADEX -> R.drawable.mangadex_v2
-                        MetadataSourcePattern.ANILIST -> R.drawable.anilist
+                    when (comic.remoteInfo?.syncSource) {
+                        MetadataSource.MANGADEX -> R.drawable.mangadex_v2
+                        MetadataSource.ANILIST -> R.drawable.anilist
                         else -> null
                     }
                 if (sourceIcon != null) {

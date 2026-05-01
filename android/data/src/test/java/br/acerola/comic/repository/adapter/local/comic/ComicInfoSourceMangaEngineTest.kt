@@ -67,9 +67,9 @@ class ComicInfoSourceMangaEngineTest {
     @Test
     fun `refreshManga deve buscar info local e salvar no banco`() =
         runTest {
-            val mangaId = 1L
-            val directory = MangaDirectoryFixtures.createMangaDirectory(id = 1L, name = "Local Manga")
-            val infoFound = MetadataFixtures.createMangaRemoteInfoDto(title = "Local Manga")
+            val comicId = 1L
+            val directory = MangaDirectoryFixtures.createMangaDirectory(id = 1L, name = "Local Comic")
+            val infoFound = MetadataFixtures.createMangaRemoteInfoDto(title = "Local Comic")
 
             coEvery { directoryDao.getDirectoryById(1L) } returns directory
             coEvery {
@@ -95,9 +95,9 @@ class ComicInfoSourceMangaEngineTest {
             coEvery { downloadCoverService.searchMedia(any()) } returns Either.Right(byteArrayOf(0, 1, 2))
             coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L.right()
 
-            val result = repository.refreshManga(mangaId)
+            val result = repository.refreshManga(comicId)
 
             assertTrue("Deveria ser sucesso mas foi: $result", result.isRight())
-            coVerify { comicInfoSourceService.searchInfo(eq("Local Manga"), any(), any(), any(), *anyVararg()) }
+            coVerify { comicInfoSourceService.searchInfo(eq("Local Comic"), any(), any(), any(), *anyVararg()) }
         }
 }

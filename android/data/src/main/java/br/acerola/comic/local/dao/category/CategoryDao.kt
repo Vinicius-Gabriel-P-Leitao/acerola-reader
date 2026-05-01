@@ -21,23 +21,23 @@ interface CategoryDao : BaseDao<Category> {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertComicCategory(comicCategory: ComicCategory)
 
-    @Query("DELETE FROM manga_category WHERE comic_directory_fk = :mangaId")
-    suspend fun deleteComicCategoryByDirectoryId(mangaId: Long)
+    @Query("DELETE FROM comic_category WHERE comic_directory_fk = :comicId")
+    suspend fun deleteComicCategoryByDirectoryId(comicId: Long)
 
     @Query(
         """
         SELECT category.* FROM category
-        INNER JOIN manga_category ON category.id = manga_category.category_id
-        WHERE manga_category.comic_directory_fk = :mangaId
-    """,
+        INNER JOIN comic_category ON category.id = comic_category.category_id
+        WHERE comic_category.comic_directory_fk = :comicId
+        """,
     )
-    fun observeCategoryByDirectoryId(mangaId: Long): Flow<Category?>
+    fun observeCategoryByDirectoryId(comicId: Long): Flow<Category?>
 
     @Query(
         """
-        SELECT manga_category.comic_directory_fk, category.* FROM category
-        INNER JOIN manga_category ON category.id = manga_category.category_id
-    """,
+        SELECT comic_category.comic_directory_fk, category.* FROM category
+        INNER JOIN comic_category ON category.id = comic_category.category_id
+        """,
     )
     fun observeAllComicCategoriesJoined(): Flow<List<ComicCategoryJoinResult>>
 }

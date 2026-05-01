@@ -17,6 +17,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,17 +35,20 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
+import br.acerola.comic.util.sort.SortType
 
 @Composable
 fun Main.Pattern.Component.AddTemplateDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, String) -> Unit,
+    onConfirm: (String, String, SortType) -> Unit,
     initialLabel: String = "",
     initialPattern: String = "",
+    initialType: SortType = SortType.CHAPTER,
     isEditMode: Boolean = false,
 ) {
     var label by remember { mutableStateOf(initialLabel) }
     var pattern by remember { mutableStateOf(initialPattern) }
+    var type by remember { mutableStateOf(initialType) }
 
     Acerola.Component.AdaptiveSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
@@ -60,6 +66,28 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp),
             )
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                SortType.entries.forEachIndexed { index, sortType ->
+                    SegmentedButton(
+                        selected = sortType == type,
+                        onClick = { type = sortType },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = SortType.entries.size),
+                    ) {
+                        Text(
+                            text =
+                                when (sortType) {
+                                    SortType.CHAPTER -> stringResource(id = R.string.label_sort_type_chapter)
+                                    SortType.VOLUME -> stringResource(id = R.string.label_sort_type_volume)
+                                },
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = label,
@@ -116,7 +144,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Button(
-                    onClick = { if (label.isNotBlank() && pattern.isNotBlank()) onConfirm(label, pattern) },
+                    onClick = { if (label.isNotBlank() && pattern.isNotBlank()) onConfirm(label, pattern, type) },
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(

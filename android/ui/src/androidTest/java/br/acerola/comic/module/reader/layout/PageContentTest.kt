@@ -3,7 +3,7 @@ package br.acerola.comic.module.reader.layout
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.ui.test.junit4.createComposeRule
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import org.junit.Rule
 import org.junit.Test
@@ -26,7 +26,7 @@ class PageContentTest {
                 onNextClick = {},
                 readingMode = ReadingMode.HORIZONTAL,
                 listState = listState,
-                mangaId = 1L,
+                comicId = 1L,
                 chapterId = 1L,
                 onPageRequest = {},
                 onZoomChange = {},

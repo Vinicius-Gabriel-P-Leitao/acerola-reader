@@ -38,13 +38,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.dto.archive.ChapterTemplateDto
+import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.pattern.component.AddTemplateDialog
 import br.acerola.comic.module.main.pattern.component.TemplateItem
 import br.acerola.comic.module.main.pattern.state.FilePatternAction
 import br.acerola.comic.module.main.pattern.state.FilePatternUiState
 import br.acerola.comic.ui.R
+import br.acerola.comic.util.sort.SortType
 
 @Composable
 fun Main.Pattern.Layout.FilePatternScreen(
@@ -76,7 +77,7 @@ private fun FilePatternLayout(
     onBack: () -> Unit,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
-    var editingTemplate by remember { mutableStateOf<ChapterTemplateDto?>(null) }
+    var editingTemplate by remember { mutableStateOf<ArchiveTemplateDto?>(null) }
 
     Scaffold(
         topBar = {
@@ -138,19 +139,42 @@ private fun FilePatternLayout(
                     )
                 }
             } else {
+                val groupedTemplates = uiState.templates.groupBy { it.type }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding =
+                        PaddingValues(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = 88.dp,
+                        ),
                 ) {
-                    items(
-                        items = uiState.templates,
-                        key = { it.id },
-                    ) { template ->
-                        Main.Pattern.Component.TemplateItem(
-                            template = template,
-                            onEdit = { editingTemplate = template },
-                            onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) },
-                        )
+                    groupedTemplates.forEach { (type, templates) ->
+                        item {
+                            val headerText =
+                                when (type) {
+                                    SortType.CHAPTER -> stringResource(id = R.string.label_sort_type_chapter)
+                                    SortType.VOLUME -> stringResource(id = R.string.label_sort_type_volume)
+                                }
+                            Text(
+                                text = headerText,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                            )
+                        }
+                        items(
+                            items = templates,
+                            key = { it.id },
+                        ) { template ->
+                            Main.Pattern.Component.TemplateItem(
+                                template = template,
+                                onEdit = { editingTemplate = template },
+                                onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) },
+                            )
+                        }
                     }
                 }
             }
@@ -159,10 +183,9 @@ private fun FilePatternLayout(
 
     if (showAddDialog) {
         Main.Pattern.Component.AddTemplateDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { label, pattern ->
-                onAction(FilePatternAction.AddTemplate(label, pattern))
-                showAddDialog = false
+            onDismiss = { },
+            onConfirm = { label, pattern, type ->
+                onAction(FilePatternAction.AddTemplate(label, pattern, type))
             },
         )
     }
@@ -172,10 +195,10 @@ private fun FilePatternLayout(
             isEditMode = true,
             initialLabel = template.label,
             initialPattern = template.pattern,
-            onDismiss = { editingTemplate = null },
-            onConfirm = { label, pattern ->
-                onAction(FilePatternAction.EditTemplate(template.id, label, pattern))
-                editingTemplate = null
+            initialType = template.type,
+            onDismiss = { },
+            onConfirm = { label, pattern, type ->
+                onAction(FilePatternAction.EditTemplate(template.id, label, pattern, type))
             },
         )
     }

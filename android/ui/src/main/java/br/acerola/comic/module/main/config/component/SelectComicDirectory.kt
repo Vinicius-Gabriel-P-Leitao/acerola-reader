@@ -23,11 +23,11 @@ fun Main.Config.Component.SelectComicDirectory(
         if (folderName != null) {
             stringResource(id = R.string.description_text_selected_comic_directory, folderName)
         } else {
-            stringResource(id = R.string.description_text_config_select_path_manga)
+            stringResource(id = R.string.description_text_config_select_path_comic)
         }
 
     Acerola.Component.HeroItem(
-        title = stringResource(id = R.string.title_text_config_select_path_manga),
+        title = stringResource(id = R.string.title_text_config_select_path_comic),
         description = description,
         icon = Icons.Filled.Folder,
         iconTint = MaterialTheme.colorScheme.onPrimaryContainer,

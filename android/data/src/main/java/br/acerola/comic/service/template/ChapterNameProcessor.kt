@@ -3,13 +3,14 @@ package br.acerola.comic.service.template
 import android.database.sqlite.SQLiteConstraintException
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.comic.dto.archive.ChapterTemplateDto
+import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.error.message.TemplateError
-import br.acerola.comic.local.dao.archive.ChapterTemplateDao
-import br.acerola.comic.local.entity.archive.ChapterTemplate
+import br.acerola.comic.local.dao.archive.ArchiveTemplateDao
+import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.translator.persistence.toDto
-import br.acerola.comic.pattern.TemplateMacro
-import br.acerola.comic.pattern.TemplateValidatorPattern
+import br.acerola.comic.pattern.template.TemplateMacro
+import br.acerola.comic.pattern.template.TemplateValidator
+import br.acerola.comic.util.sort.SortType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -19,29 +20,30 @@ import javax.inject.Singleton
 class ChapterNameProcessor
     @Inject
     constructor(
-        private val dao: ChapterTemplateDao,
+        private val dao: ArchiveTemplateDao,
     ) {
-        fun observeTemplates(): Flow<List<ChapterTemplate>> = dao.observeAllTemplates()
+        fun observeTemplates(): Flow<List<ArchiveTemplate>> = dao.observeAllTemplates()
 
-        fun observeTemplatesAsDto(): Flow<List<ChapterTemplateDto>> =
+        fun observeTemplatesAsDto(): Flow<List<ArchiveTemplateDto>> =
             dao
                 .observeAllTemplates()
                 .map { list -> list.map { it.toDto() } }
 
-        suspend fun getTemplates(): List<ChapterTemplate> = dao.getAllTemplates()
+        suspend fun getTemplates(): List<ArchiveTemplate> = dao.getAllTemplates()
 
-        suspend fun getTemplatesAsDto(): List<ChapterTemplateDto> = dao.getAllTemplates().map { it.toDto() }
+        suspend fun getTemplatesAsDto(): List<ArchiveTemplateDto> = dao.getAllTemplates().map { it.toDto() }
 
         suspend fun addTemplate(
             label: String,
             pattern: String,
+            type: SortType,
         ): Either<TemplateError, Unit> {
-            val transformedPattern = transformPattern(pattern.trim())
+            val transformedPattern = transformPattern(pattern.trim(), type)
 
-            return TemplateValidatorPattern
+            return TemplateValidator
                 .validateCustomTemplate(transformedPattern)
                 .flatMap {
-                    val entity = createCustomTemplate(label.trim(), transformedPattern)
+                    val entity = createCustomTemplate(label.trim(), transformedPattern, type)
                     val insertedId = dao.insert(entity)
                     if (insertedId == -1L) {
                         Either.Left(TemplateError.Duplicate)
@@ -54,10 +56,12 @@ class ChapterNameProcessor
         private fun createCustomTemplate(
             label: String,
             pattern: String,
-        ): ChapterTemplate =
-            ChapterTemplate(
+            type: SortType,
+        ): ArchiveTemplate =
+            ArchiveTemplate(
                 label = label,
                 pattern = pattern,
+                type = type,
                 isDefault = false,
                 priority = 1,
             )
@@ -66,6 +70,7 @@ class ChapterNameProcessor
             id: Long,
             label: String,
             pattern: String,
+            type: SortType,
         ): Either<TemplateError, Unit> {
             val existing =
                 dao.getTemplateById(id)
@@ -73,12 +78,12 @@ class ChapterNameProcessor
 
             if (existing.isDefault) return Either.Left(TemplateError.SystemProtected)
 
-            val transformedPattern = transformPattern(pattern.trim())
+            val transformedPattern = transformPattern(pattern.trim(), type)
 
-            return TemplateValidatorPattern
+            return TemplateValidator
                 .validateCustomTemplate(transformedPattern)
                 .flatMap {
-                    val updated = existing.copy(label = label.trim(), pattern = transformedPattern)
+                    val updated = existing.copy(label = label.trim(), pattern = transformedPattern, type = type)
                     try {
                         dao.update(updated)
                         Either.Right(Unit)
@@ -97,7 +102,12 @@ class ChapterNameProcessor
             }
         }
 
-        private fun transformPattern(trimmed: String): String {
+        private fun transformPattern(
+            trimmed: String,
+            type: SortType,
+        ): String {
+            if (type == SortType.VOLUME) return trimmed
+
             val extensionTag = "{${TemplateMacro.EXTENSION.tag}}"
             return when {
                 !trimmed.contains(extensionTag) -> {

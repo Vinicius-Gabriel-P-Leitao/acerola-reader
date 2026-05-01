@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -26,7 +27,7 @@ import br.acerola.comic.common.ux.component.HeroItem
 import br.acerola.comic.common.ux.component.HeroNestedItem
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 
 @Composable
@@ -47,7 +48,7 @@ fun Comic.Component.SyncMetadata(
     Column(modifier = modifier) {
         if (externalSyncEnabled) {
             MangadexSection(
-                isActive = syncSource == MetadataSourcePattern.MANGADEX,
+                isActive = syncSource == MetadataSource.MANGADEX,
                 hasChapters = hasMangadexSource && remoteInfo.id != null,
                 onSyncInfo = onSyncMangadexInfo,
                 onSyncChapters = onSyncMangadexChapters,
@@ -56,7 +57,7 @@ fun Comic.Component.SyncMetadata(
             Spacer(modifier = Modifier.height(8.dp))
 
             AnilistSection(
-                isActive = syncSource == MetadataSourcePattern.ANILIST,
+                isActive = syncSource == MetadataSource.ANILIST,
                 onSyncInfo = onSyncAnilistInfo,
             )
 
@@ -64,7 +65,7 @@ fun Comic.Component.SyncMetadata(
         }
 
         ComicInfoSection(
-            isActive = syncSource == MetadataSourcePattern.COMIC_INFO,
+            isActive = syncSource == MetadataSource.COMIC_INFO,
             hasChapters = hasComicInfoSource,
             onSyncInfo = onSyncComicInfo,
             onSyncChapters = onSyncComicInfoChapters,
@@ -186,7 +187,7 @@ private fun SyncItem(
     subtitle: String,
     iconVector: ImageVector? = null,
     iconPainter: Painter? = null,
-    iconBackground: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     isActive: Boolean = false,
     onClick: () -> Unit,
 ) {

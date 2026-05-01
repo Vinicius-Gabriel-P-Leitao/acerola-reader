@@ -21,7 +21,7 @@ import br.acerola.comic.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,20 +55,20 @@ class ComicInfoComicEngine
         override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
         override suspend fun refreshManga(
-            mangaId: Long,
+            comicId: Long,
             baseUri: Uri?,
         ): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Refreshing comic from ComicInfo.xml: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Refreshing comic from ComicInfo.xml: $comicId", LogSource.REPOSITORY)
                 _isIndexing.value = true
                 try {
                     Either
                         .catch {
-                            val directory = directoryDao.getDirectoryById(mangaId) ?: return@catch
+                            val directory = directoryDao.getDirectoryById(comicId) ?: return@catch
 
                             val fetchedListResult =
                                 comicInfoSourceService.searchInfo(
-                                    manga = directory.name,
+                                    comic = directory.name,
                                     extra = arrayOf(directory.path),
                                 )
 
@@ -78,7 +78,8 @@ class ComicInfoComicEngine
                                     return@catch
                                 }
 
-                            val mangaToSave =
+                            val comicToSave =
+                                // FIXME: Fazer toModel
                                 ComicMetadata(
                                     id = bestMatch.id ?: 0L,
                                     title = bestMatch.title,
@@ -86,16 +87,16 @@ class ComicInfoComicEngine
                                     romanji = bestMatch.romanji.orEmpty(),
                                     status = bestMatch.status,
                                     publication = bestMatch.year ?: 0,
-                                    mangaDirectoryFk = directory.id,
-                                    syncSource = MetadataSourcePattern.COMIC_INFO.source,
+                                    comicDirectoryFk = directory.id,
+                                    syncSource = MetadataSource.COMIC_INFO.source,
                                 )
 
                             val remoteId =
                                 comicMetadataDao.upsertComicWithRelationsTransaction(
-                                    metadata = mangaToSave,
-                                    authors = bestMatch.authors?.let { listOf(it.toEntity(mangaId = 0L)) } ?: emptyList(),
-                                    genres = bestMatch.genre.map { it.toEntity(mangaId = 0L) },
-                                    comicInfoSource = bestMatch.toComicInfoSourceEntity(mangaRemoteInfoFk = 0L),
+                                    metadata = comicToSave,
+                                    authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
+                                    genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
+                                    comicInfoSource = bestMatch.toComicInfoSourceEntity(comicRemoteInfoFk = 0L),
                                     authorDao = authorDao,
                                     genreDao = genreDao,
                                     comicInfoDao = comicInfoSourceDao,
@@ -109,8 +110,8 @@ class ComicInfoComicEngine
                                             folderId = directory.id,
                                             bytes = bytes,
                                             coverUrl = dto.url,
-                                            mangaFolderName = directory.name,
-                                            mangaRemoteInfoFk = remoteId,
+                                            comicFolderName = directory.name,
+                                            comicRemoteInfoFk = remoteId,
                                         )
                                     }
                                 }
@@ -123,7 +124,7 @@ class ComicInfoComicEngine
                         }.mapLeft { exception ->
                             AcerolaLogger.e(
                                 TAG,
-                                "Error processing ComicInfo for comic: $mangaId",
+                                "Error processing ComicInfo for comic: $comicId",
                                 LogSource.REPOSITORY,
                                 throwable = exception,
                             )
@@ -139,6 +140,6 @@ class ComicInfoComicEngine
             }
 
         companion object {
-            private const val TAG = "ComicInfoMangaRepository"
+            private const val TAG = "ComicInfoComicEngine"
         }
     }

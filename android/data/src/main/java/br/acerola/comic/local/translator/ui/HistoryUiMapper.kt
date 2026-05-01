@@ -7,8 +7,9 @@ import br.acerola.comic.local.entity.relation.ReadingHistoryWithChapter
 
 fun ReadingHistory.toViewDto() =
     ReadingHistoryDto(
-        mangaDirectoryId = mangaDirectoryId,
+        comicDirectoryId = comicDirectoryId,
         chapterArchiveId = chapterArchiveId,
+        chapterSort = chapterSort,
         lastPage = lastPage,
         isCompleted = isCompleted,
         updatedAt = updatedAt,
@@ -16,8 +17,9 @@ fun ReadingHistory.toViewDto() =
 
 fun ReadingHistoryWithChapter.toViewDto() =
     ReadingHistoryWithChapterDto(
-        mangaDirectoryId = mangaDirectoryId,
+        comicDirectoryId = comicDirectoryId,
         chapterArchiveId = chapterArchiveId,
+        chapterSort = chapterSort,
         lastPage = lastPage,
         updatedAt = updatedAt,
         chapterName = chapterName,

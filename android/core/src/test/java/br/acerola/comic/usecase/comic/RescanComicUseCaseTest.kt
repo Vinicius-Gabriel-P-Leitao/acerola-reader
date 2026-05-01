@@ -27,17 +27,17 @@ class RescanComicUseCaseTest {
         every { repository.progress } returns MutableStateFlow(value = 0)
         every { repository.isIndexing } returns MutableStateFlow(value = false)
 
-        useCase = RescanComicUseCase(mangaRepository = repository)
+        useCase = RescanComicUseCase(comicRepository = repository)
     }
 
     @Test
     fun invokeDeveChamarRefreshManga() =
         runTest {
-            coEvery { repository.refreshManga(mangaId = 1L) } returns Either.Right(value = Unit)
+            coEvery { repository.refreshManga(comicId = 1L) } returns Either.Right(value = Unit)
 
-            val result = useCase(mangaId = 1L)
+            val result = useCase(comicId = 1L)
 
             assertTrue(result.isRight())
-            coVerify { repository.refreshManga(mangaId = 1L) }
+            coVerify { repository.refreshManga(comicId = 1L) }
         }
 }

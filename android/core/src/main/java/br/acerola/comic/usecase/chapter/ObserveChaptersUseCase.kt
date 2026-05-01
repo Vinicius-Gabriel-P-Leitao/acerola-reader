@@ -4,7 +4,8 @@ import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * UseCase unificado para operações de leitura de capítulos (paginação, fluxo contínuo ou lista específica).
+ * UseCase genérico para operações simples de capítulos.
+ * Mantido para compatibilidade com Reader e outras ViewModels.
  */
 open class ObserveChaptersUseCase<T>(
     private val chapterRepository: ChapterGateway<T>,
@@ -12,18 +13,19 @@ open class ObserveChaptersUseCase<T>(
     val progress: StateFlow<Int> get() = chapterRepository.progress
     val isIndexing: StateFlow<Boolean> get() = chapterRepository.isIndexing
 
-    /**
-     * Retorna o fluxo principal de capítulos para um mangá.
-     */
-    fun observeByManga(mangaId: Long): StateFlow<T> = chapterRepository.observeChapters(mangaId)
+    fun observeByComic(
+        comicId: Long,
+        sortType: String = "NUMBER",
+        isAscending: Boolean = true,
+    ): StateFlow<T> = chapterRepository.observeChapters(comicId, sortType, isAscending)
 
-    /**
-     * Carrega uma página específica de capítulos sob demanda.
-     */
     suspend fun loadPage(
-        mangaId: Long,
+        comicId: Long,
         total: Int,
         page: Int,
         pageSize: Int = 20,
-    ): T = chapterRepository.getChapterPage(mangaId, total, page, pageSize)
+        sortType: String = "NUMBER",
+        isAscending: Boolean = true,
+    ): T = chapterRepository.getChapterPage(comicId, total, page, pageSize, sortType, isAscending)
 }
+

@@ -11,5 +11,5 @@ class DeleteComicUseCase
     constructor(
         @param:DirectoryEngine private val gateway: ComicLibraryWriteGateway,
     ) {
-        suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> = gateway.deleteManga(mangaId)
+        suspend operator fun invoke(comicId: Long): Either<LibrarySyncError, Unit> = gateway.deleteManga(comicId)
     }

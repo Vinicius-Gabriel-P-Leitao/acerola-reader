@@ -17,7 +17,7 @@ class HorizontalPagedReaderTest {
             val pagerState = rememberPagerState(pageCount = { 10 })
             Reader.Component.HorizontalPagedReader(
                 pageCount = 10,
-                mangaId = 1L,
+                comicId = 1L,
                 chapterId = 1L,
                 pagerState = pagerState,
                 onUiToggle = {},
@@ -29,7 +29,7 @@ class HorizontalPagedReaderTest {
         }
 
         // Como o initialPage é 0, deve solicitar a página 0
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 2000) { requestedIndex == 0 }
         assert(requestedIndex == 0)
     }
 }

@@ -1,0 +1,50 @@
+package br.acerola.comic.module.comic.component
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.RadioGroup
+import br.acerola.comic.config.preference.types.VolumeViewType
+import br.acerola.comic.module.comic.Comic
+import br.acerola.comic.ui.R
+
+@Composable
+fun Comic.Component.VolumeStylePreference(
+    selected: VolumeViewType,
+    onSelect: (VolumeViewType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val options = listOf(VolumeViewType.VOLUME, VolumeViewType.COVER_VOLUME)
+    val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
+
+    Acerola.Component.HeroItem(
+        title = stringResource(id = R.string.title_settings_volume_style),
+        description = volumeStyleLabel(selected),
+        icon = Icons.Default.LibraryBooks,
+        iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
+        iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
+        modifier = modifier,
+        bottomContent = {
+            Acerola.Component.RadioGroup(
+                selectedIndex = selectedIndex,
+                options = options.map { volumeStyleLabel(it) },
+                onSelect = { index -> onSelect(options[index]) },
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun volumeStyleLabel(viewType: VolumeViewType): String =
+    when (viewType) {
+        VolumeViewType.COVER_VOLUME -> stringResource(R.string.label_volume_style_cover)
+        else -> stringResource(R.string.label_volume_style_normal)
+    }

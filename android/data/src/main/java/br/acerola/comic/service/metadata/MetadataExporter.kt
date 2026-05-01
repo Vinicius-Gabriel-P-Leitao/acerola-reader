@@ -30,13 +30,13 @@ class MetadataExporter
     ) {
         suspend fun exportFull(
             directoryId: Long,
-            mangaInfo: ComicMetadataDto,
+            comicInfo: ComicMetadataDto,
         ): Either<LibrarySyncError, Unit> =
             withContext(Dispatchers.IO) {
                 val shouldGenerate = MetadataPreference.generateComicInfoFlow(context).first()
                 if (!shouldGenerate) return@withContext Unit.right()
 
-                exportMangaMetadata(directoryId, mangaInfo)
+                exportMangaMetadata(directoryId, comicInfo)
             }
 
         suspend fun exportMangaMetadata(

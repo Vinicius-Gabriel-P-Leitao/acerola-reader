@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 import br.acerola.comic.local.entity.archive.ComicDirectory
 
 @Entity(
-    tableName = "manga_category",
+    tableName = "comic_category",
     indices = [
         Index(value = ["comic_directory_fk"], unique = true),
         Index(value = ["category_id"]),
@@ -32,7 +32,7 @@ data class ComicCategory(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     @ColumnInfo(name = "comic_directory_fk")
-    val mangaDirectoryFk: Long,
+    val comicDirectoryFk: Long,
     @ColumnInfo(name = "category_id")
     val categoryId: Long,
 )

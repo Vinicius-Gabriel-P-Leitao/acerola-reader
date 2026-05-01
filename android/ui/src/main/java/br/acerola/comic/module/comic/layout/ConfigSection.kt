@@ -13,12 +13,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ComicCategorySelector
 import br.acerola.comic.module.comic.component.ComicExternalSyncToggle
 import br.acerola.comic.module.comic.component.PaginationPreference
 import br.acerola.comic.module.comic.component.SyncMangaArchive
 import br.acerola.comic.module.comic.component.SyncMetadata
+import br.acerola.comic.module.comic.component.VolumeStylePreference
 import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
@@ -58,8 +60,25 @@ fun Comic.Layout.configSection(
         )
     }
 
+    scope.item { Spacer(modifier = Modifier.height(8.dp)) }
+
+    if (uiState.hasVolumeStructure) {
+        scope.item {
+            Comic.Component.VolumeStylePreference(
+                selected = uiState.volumeViewMode,
+                onSelect = { mode -> onAction(ComicAction.UpdateVolumeView(mode)) },
+                modifier = itemModifier,
+            )
+        }
+    }
+
     scope.item {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
     }
 
     // NOTE: Categorias
@@ -69,7 +88,7 @@ fun Comic.Layout.configSection(
 
     scope.item {
         Comic.Component.ComicCategorySelector(
-            selectedCategory = uiState.manga.category,
+            selectedCategory = uiState.comic.category,
             allCategories = uiState.allCategories,
             onUpdateMangaCategory = { id -> onAction(ComicAction.UpdateCategory(id)) },
             modifier = itemModifier,
@@ -77,7 +96,12 @@ fun Comic.Layout.configSection(
     }
 
     scope.item {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
     }
 
     // NOTE: Arquivos Locais
@@ -90,12 +114,20 @@ fun Comic.Layout.configSection(
             onSyncChapters = { onSyncAction(ComicSyncAction.SyncChaptersLocal) },
             onRescanCover = { onSyncAction(ComicSyncAction.RescanComic) },
             onExtractFirstPageAsCover = { onSyncAction(ComicSyncAction.ExtractFirstPageAsCover) },
+            onExtractVolumeCovers = if (uiState.volumeViewMode == VolumeViewType.COVER_VOLUME) {
+                { onSyncAction(ComicSyncAction.ExtractVolumeCovers) }
+            } else null,
             modifier = itemModifier,
         )
     }
 
     scope.item {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp).alpha(0.3f))
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
     }
 
     // NOTE: Metadados Externos
@@ -105,7 +137,7 @@ fun Comic.Layout.configSection(
 
     scope.item {
         Comic.Component.ComicExternalSyncToggle(
-            enabled = uiState.manga.directory.externalSyncEnabled,
+            enabled = uiState.comic.directory.externalSyncEnabled,
             onToggle = { onAction(ComicAction.ToggleExternalSync(it)) },
             modifier = itemModifier,
         )
@@ -115,8 +147,8 @@ fun Comic.Layout.configSection(
 
     scope.item {
         Comic.Component.SyncMetadata(
-            remoteInfo = uiState.manga.remoteInfo,
-            externalSyncEnabled = uiState.manga.directory.externalSyncEnabled,
+            remoteInfo = uiState.comic.remoteInfo,
+            externalSyncEnabled = uiState.comic.directory.externalSyncEnabled,
             onSyncMangadexInfo = { onSyncAction(ComicSyncAction.SyncMangadexInfo) },
             onSyncMangadexChapters = { onSyncAction(ComicSyncAction.SyncMangadexChapters) },
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },

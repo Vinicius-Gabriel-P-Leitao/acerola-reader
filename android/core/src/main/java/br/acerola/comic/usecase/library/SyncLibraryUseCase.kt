@@ -7,7 +7,7 @@ import br.acerola.comic.error.message.LibrarySyncError
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * UseCase responsável pela sincronização e reindexação da biblioteca de mangás.
+ * UseCase responsável pela sincronização e reindexação da biblioteca de quadrinhos.
  * Pode ser injetado com qualificadores para operar em diferentes fontes (Local/Remoto).
  *
  * Agora depende diretamente de [ComicSyncGateway].

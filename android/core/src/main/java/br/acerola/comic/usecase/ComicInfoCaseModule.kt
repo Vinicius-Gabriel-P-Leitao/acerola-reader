@@ -10,7 +10,6 @@ import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.view.ComicSummaryDto
-import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase
@@ -38,11 +37,11 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideObserveLibraryUseCase(
-        @br.acerola.comic.adapter.library.SummaryEngine summaryRepo: ComicReadOnlyGateway<br.acerola.comic.dto.view.ComicSummaryDto>,
+        @br.acerola.comic.adapter.library.SummaryEngine summaryRepo: ComicReadOnlyGateway<ComicSummaryDto>,
         @ComicInfoEngine syncOps: ComicSyncGateway,
     ): ObserveLibraryUseCase<ComicSummaryDto> =
         ObserveLibraryUseCase(
-            mangaRepository = summaryRepo,
+            comicRepository = summaryRepo,
             syncGateway = syncOps,
         )
 
@@ -52,7 +51,7 @@ object ComicInfoCaseModule {
         @ComicInfoEngine syncOps: ComicSyncGateway,
     ): RescanComicUseCase =
         RescanComicUseCase(
-            mangaRepository = syncOps,
+            comicRepository = syncOps,
         )
 
     @Provides
@@ -61,15 +60,6 @@ object ComicInfoCaseModule {
         @ComicInfoEngine chapterOps: ChapterGateway<ChapterRemoteInfoPageDto>,
     ): RescanComicChaptersUseCase<ChapterRemoteInfoPageDto> =
         RescanComicChaptersUseCase(
-            chapterRepository = chapterOps,
-        )
-
-    @Provides
-    @ComicInfoCase
-    fun provideGetChaptersUseCase(
-        @ComicInfoEngine chapterOps: ChapterGateway<ChapterRemoteInfoPageDto>,
-    ): ObserveChaptersUseCase<ChapterRemoteInfoPageDto> =
-        ObserveChaptersUseCase(
             chapterRepository = chapterOps,
         )
 

@@ -2,9 +2,10 @@ package br.acerola.comic.local.entity.relation
 
 import androidx.room.ColumnInfo
 
+// TODO: Pensar em nome melhor
 data class ComicCategoryJoinResult(
     @ColumnInfo(name = "comic_directory_fk")
-    val mangaDirectoryId: Long,
+    val comicDirectoryId: Long,
     @ColumnInfo(name = "id")
     val categoryId: Long,
     @ColumnInfo(name = "name")

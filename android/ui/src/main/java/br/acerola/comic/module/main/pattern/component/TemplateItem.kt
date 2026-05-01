@@ -20,13 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.comic.dto.archive.ChapterTemplateDto
+import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
 @Composable
 fun Main.Pattern.Component.TemplateItem(
-    template: ChapterTemplateDto,
+    template: ArchiveTemplateDto,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {

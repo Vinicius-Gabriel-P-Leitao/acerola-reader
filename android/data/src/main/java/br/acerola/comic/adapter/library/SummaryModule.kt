@@ -1,6 +1,7 @@
 package br.acerola.comic.adapter.library
 
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.library.engine.ComicSummaryEngine
 import br.acerola.comic.dto.view.ComicSummaryDto
 import dagger.Binds
 import dagger.Module

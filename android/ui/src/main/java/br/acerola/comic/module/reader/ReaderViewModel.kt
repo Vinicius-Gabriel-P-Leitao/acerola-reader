@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
-import br.acerola.comic.config.preference.ReadingMode
 import br.acerola.comic.config.preference.ReadingModePreference
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.error.message.ChapterError
@@ -38,10 +38,11 @@ import javax.inject.Inject
 class ReaderViewModel
     @Inject
     constructor(
+        // FIXME: Nome errado repository, vazamento de lógica ViewModel não conhece service, mover lógica de Processor para o UseCase.
         private val repository: ReaderProcessor,
         @param:ApplicationContext private val context: Context,
         private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
-        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(value = ReaderUiState())
         val uiState: StateFlow<ReaderUiState> = _uiState.asStateFlow()
@@ -49,9 +50,9 @@ class ReaderViewModel
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-        private val historyUpdates = Channel<Triple<Long, Long, Int>>(Channel.BUFFERED)
+        private val historyUpdates = Channel<Triple<Long, String, Int>>(Channel.BUFFERED)
         private val seenPages = mutableSetOf<Int>()
-        private val markedAsReadInSession = mutableSetOf<Long>()
+        private val markedAsReadInSession = mutableSetOf<String>()
 
         init {
             viewModelScope.launch {
@@ -63,18 +64,18 @@ class ReaderViewModel
             viewModelScope.launch {
                 historyUpdates
                     .receiveAsFlow()
-                    .collect { (mId, cId, idx) ->
-                        persistHistory(mId, cId, idx)
+                    .collect { (mId, cSort, idx) ->
+                        persistHistory(mId, cSort, idx)
                     }
             }
         }
 
         fun openChapter(
-            mangaId: Long,
+            comicId: Long,
             chapter: ChapterFileDto,
             initialPage: Int = 0,
         ) {
-            AcerolaLogger.i(TAG, "Opening chapter: ${chapter.name} | ID: ${chapter.id}", LogSource.VIEWMODEL)
+            AcerolaLogger.i(TAG, "Opening chapter: ${chapter.name} | Sort: ${chapter.chapterSort}", LogSource.VIEWMODEL)
             _uiState.update {
                 it.copy(
                     currentChapter = chapter,
@@ -89,12 +90,12 @@ class ReaderViewModel
 
             viewModelScope.launch {
                 observeChaptersUseCase
-                    .observeByManga(mangaId)
+                    .observeByComic(comicId)
                     .filter { it.items.isNotEmpty() }
                     .take(1)
                     .collect { pageDto ->
-                        val chapters = pageDto.items.sortedBy { it.chapterSort.toDoubleOrNull() ?: 0.0 }
-                        val currentIndex = chapters.indexOfFirst { it.id == chapter.id }
+                        val chapters = pageDto.items
+                        val currentIndex = chapters.indexOfFirst { it.chapterSort == chapter.chapterSort }
 
                         if (currentIndex != -1) {
                             val prevChapter = if (currentIndex > 0) chapters[currentIndex - 1] else null
@@ -126,8 +127,9 @@ class ReaderViewModel
         }
 
         fun loadAndOpenChapter(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterId: Long?,
+            chapterSort: String,
             initialPage: Int = 0,
         ) {
             if (_uiState.value.isLoading) {
@@ -135,25 +137,32 @@ class ReaderViewModel
                 return
             }
 
-            AcerolaLogger.i(TAG, "Fetching metadata for chapter ID: $chapterId", LogSource.VIEWMODEL)
+            AcerolaLogger.i(TAG, "Fetching metadata for chapter Sort: $chapterSort", LogSource.VIEWMODEL)
             _uiState.update { it.copy(isLoading = true) }
 
             viewModelScope.launch {
                 observeChaptersUseCase
-                    .observeByManga(mangaId)
+                    .observeByComic(comicId)
                     .combine(observeChaptersUseCase.isIndexing) { pageDto, isIndexing ->
                         pageDto to isIndexing
                     }.collect { (pageDto, isIndexing) ->
-                        val chapter = pageDto.items.find { it.id == chapterId }
+                        val chapter =
+                            pageDto.items.find {
+                                if (chapterId != null && it.id == chapterId) {
+                                    true
+                                } else {
+                                    it.chapterSort == chapterSort
+                                }
+                            }
                         if (chapter != null) {
                             AcerolaLogger.d(TAG, "Chapter metadata found. Opening...", LogSource.VIEWMODEL)
-                            openChapter(mangaId, chapter, initialPage)
+                            openChapter(comicId, chapter, initialPage)
                             this@launch.coroutineContext.cancelChildren()
                             return@collect
                         }
 
                         if (!isIndexing && pageDto.items.isNotEmpty()) {
-                            AcerolaLogger.e(TAG, "Chapter ID $chapterId not found locally.", LogSource.VIEWMODEL)
+                            AcerolaLogger.e(TAG, "Chapter $chapterSort not found locally.", LogSource.VIEWMODEL)
                             _uiEvents.send(ChapterError.UnexpectedError(Throwable("Capítulo não encontrado localmente")))
                             _uiState.update { it.copy(isLoading = false) }
                             this@launch.coroutineContext.cancelChildren()
@@ -164,16 +173,18 @@ class ReaderViewModel
         }
 
         fun onPageVisible(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
+            chapterId: Long?,
             index: Int,
         ) {
-            markPageAsSeen(mangaId, chapterId, index)
+            markPageAsSeen(comicId, chapterSort, chapterId, index)
         }
 
         private fun markPageAsSeen(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
+            chapterId: Long?,
             index: Int,
         ) {
             if (seenPages.add(index)) {
@@ -186,14 +197,14 @@ class ReaderViewModel
                             tag = TAG,
                             msg = "Chapter reached 70% completion",
                             source = LogSource.VIEWMODEL,
-                            extras = mapOf("mangaId" to mangaId.toString(), "chapterId" to chapterId.toString()),
+                            extras = mapOf("comicId" to comicId.toString(), "chapterSort" to chapterSort),
                         )
                         _uiState.update { it.copy(isChapterRead = true) }
                     }
 
-                    if (markedAsReadInSession.add(chapterId)) {
+                    if (markedAsReadInSession.add(chapterSort)) {
                         viewModelScope.launch {
-                            trackReadingProgressUseCase.markChapterAsRead(mangaId, chapterId)
+                            trackReadingProgressUseCase.markChapterAsRead(comicId, chapterSort, chapterId)
                         }
                     }
                 }
@@ -201,11 +212,12 @@ class ReaderViewModel
         }
 
         fun onCurrentPageChanged(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
+            chapterId: Long?,
             index: Int,
         ) {
-            markPageAsSeen(mangaId, chapterId, index)
+            markPageAsSeen(comicId, chapterSort, chapterId, index)
 
             _uiState.update { it.copy(currentPage = index) }
 
@@ -218,36 +230,39 @@ class ReaderViewModel
                         tag = TAG,
                         source = LogSource.VIEWMODEL,
                         msg = "Chapter fully read (reached end)",
-                        extras = mapOf("mangaId" to mangaId.toString(), "chapterId" to chapterId.toString()),
+                        extras = mapOf("comicId" to comicId.toString(), "chapterSort" to chapterSort),
                     )
                     _uiState.update { it.copy(isChapterRead = true) }
                 }
                 viewModelScope.launch {
-                    persistHistory(mangaId, chapterId, index)
+                    persistHistory(comicId, chapterSort, index)
                 }
             } else {
-                historyUpdates.trySend(Triple(mangaId, chapterId, index))
+                historyUpdates.trySend(Triple(comicId, chapterSort, index))
             }
 
             repository.prefetchWindow(center = index, total = uiState.value.pageCount)
         }
 
         private suspend fun persistHistory(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
             page: Int,
         ) {
             val pageCount = _uiState.value.pageCount
             val isLastPage = pageCount > 0 && page >= pageCount - 1
 
-            if (isLastPage && markedAsReadInSession.add(chapterId)) {
-                trackReadingProgressUseCase.markChapterAsRead(mangaId, chapterId)
+            val chapterId = _uiState.value.currentChapter?.id
+
+            if (isLastPage && markedAsReadInSession.add(chapterSort)) {
+                trackReadingProgressUseCase.markChapterAsRead(comicId, chapterSort, chapterId)
             }
 
             trackReadingProgressUseCase.saveProgress(
                 ReadingHistoryDto(
-                    mangaDirectoryId = mangaId,
+                    comicDirectoryId = comicId,
                     chapterArchiveId = chapterId,
+                    chapterSort = chapterSort,
                     lastPage = page,
                     isCompleted = isLastPage,
                     updatedAt = System.currentTimeMillis(),
@@ -270,29 +285,30 @@ class ReaderViewModel
             }
         }
 
-        fun loadNextChapter(mangaId: Long) {
+        fun loadNextChapter(comicId: Long) {
             val nextId = uiState.value.nextChapterId
             if (nextId != null) {
                 AcerolaLogger.audit(
                     TAG,
                     "Transitioning to next chapter",
                     LogSource.UI,
-                    mapOf("mangaId" to mangaId.toString(), "nextId" to nextId.toString()),
+                    mapOf("comicId" to comicId.toString(), "nextId" to nextId.toString()),
                 )
-                loadAndOpenChapter(mangaId, nextId, 0)
+
+                loadAndOpenChapter(comicId, nextId, "", 0)
             }
         }
 
-        fun loadPreviousChapter(mangaId: Long) {
+        fun loadPreviousChapter(comicId: Long) {
             val prevId = uiState.value.previousChapterId
             if (prevId != null) {
                 AcerolaLogger.audit(
                     TAG,
                     "Transitioning to previous chapter",
                     LogSource.UI,
-                    mapOf("mangaId" to mangaId.toString(), "prevId" to prevId.toString()),
+                    mapOf("comicId" to comicId.toString(), "prevId" to prevId.toString()),
                 )
-                loadAndOpenChapter(mangaId, prevId, 0)
+                loadAndOpenChapter(comicId, prevId, "", 0)
             }
         }
 

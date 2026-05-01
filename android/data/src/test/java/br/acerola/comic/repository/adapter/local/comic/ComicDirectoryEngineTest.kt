@@ -6,15 +6,15 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.library.ComicDirectoryEngine
+import br.acerola.comic.adapter.library.engine.ComicDirectoryEngine
 import br.acerola.comic.config.preference.ComicDirectoryPreference
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.service.template.TemplateMatcher
-import br.acerola.comic.util.ContentQueryHelper
-import br.acerola.comic.util.FastFileMetadata
+import br.acerola.comic.util.file.ContentQueryHelper
+import br.acerola.comic.util.file.FastFileMetadata
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,7 +46,7 @@ class ComicDirectoryEngineTest {
 
     @MockK lateinit var directoryDao: ComicDirectoryDao
 
-    @MockK lateinit var mangaDirectoryOps: ChapterGateway<ChapterArchivePageDto>
+    @MockK lateinit var comicDirectoryOps: ChapterGateway<ChapterPageDto>
 
     @MockK lateinit var templateService: ChapterNameProcessor
 
@@ -61,7 +61,7 @@ class ComicDirectoryEngineTest {
         Dispatchers.setMain(testDispatcher)
 
         repository = ComicDirectoryEngine(directoryDao, templateMatcher, templateService, context)
-        repository.mangaDirectoryOps = mangaDirectoryOps
+        repository.comicDirectoryOps = comicDirectoryOps
 
         mockkStatic(Uri::class)
         mockkStatic(DocumentFile::class)
@@ -78,7 +78,7 @@ class ComicDirectoryEngineTest {
 
         every { directoryDao.getVisibleDirectories() } returns flowOf(emptyList())
         every { directoryDao.getAllDirectories() } returns flowOf(emptyList())
-        coEvery { mangaDirectoryOps.refreshComicChapters(any(), any()) } returns Either.Right(Unit)
+        coEvery { comicDirectoryOps.refreshComicChapters(any(), any()) } returns Either.Right(Unit)
         every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
         every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
         every { ComicDirectoryPreference.folderUriFlow(any()) } returns flowOf("content://root")
@@ -99,17 +99,17 @@ class ComicDirectoryEngineTest {
     @Test
     fun `refreshManga deve atualizar metadados quando pasta foi modificada`() =
         runTest {
-            val mangaId = 1L
-            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, lastModified = 1000L)
+            val comicId = 1L
+            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId, lastModified = 1000L)
             val uriMock = mockk<Uri>()
             val folderDocMock = mockk<DocumentFile>()
 
-            coEvery { directoryDao.getDirectoryById(mangaId) } returns existingManga
+            coEvery { directoryDao.getDirectoryById(comicId) } returns existingManga
             every { Uri.parse(any()) } returns uriMock
             every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
 
             every { folderDocMock.lastModified() } returns 90000000L
-            every { folderDocMock.name } returns "Manga Folder"
+            every { folderDocMock.name } returns "Comic Folder"
             every { folderDocMock.uri } returns mockk(relaxed = true)
             every { folderDocMock.isDirectory } returns true
 
@@ -119,14 +119,14 @@ class ComicDirectoryEngineTest {
 
             coEvery { directoryDao.update(any()) } returns Unit
 
-            val result = repository.refreshManga(mangaId)
+            val result = repository.refreshManga(comicId)
 
             assertTrue("Esperado Right, mas foi $result", result.isRight())
             coVerify(exactly = 1) { directoryDao.update(any()) }
         }
 
     @Test
-    fun `deve realizar scan recursivo e encontrar mangas em subpastas`() =
+    fun `deve realizar scan recursivo e encontrar comics em subpastas`() =
         runTest {
             val rootUri = mockk<Uri>()
 
@@ -153,9 +153,9 @@ class ComicDirectoryEngineTest {
             every { ContentQueryHelper.listFiles(context, rootUri, "hellboy_id") } returns Either.Right(listOf(targetDirMetadata))
 
             // "BPRD" tem arquivos .cbz
-            val mangaFileMetadata =
-                FastFileMetadata(id = "manga_file", name = "issue1.cbz", size = 1000, lastModified = 300, mimeType = "application/zip")
-            every { ContentQueryHelper.listFiles(context, rootUri, "bprd_id") } returns Either.Right(listOf(mangaFileMetadata))
+            val comicFileMetadata =
+                FastFileMetadata(id = "comic_file", name = "issue1.cbz", size = 1000, lastModified = 300, mimeType = "application/zip")
+            every { ContentQueryHelper.listFiles(context, rootUri, "bprd_id") } returns Either.Right(listOf(comicFileMetadata))
 
             // Mock do DocumentFile para a pasta final
             val bprdUri = mockk<Uri>()
@@ -179,13 +179,13 @@ class ComicDirectoryEngineTest {
     @Test
     fun `observeLibrary deve emitir lista de DTOs corretamente`() =
         runTest {
-            val entityList = listOf(MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "Manga A"))
+            val entityList = listOf(MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "Comic A"))
             every { directoryDao.getAllDirectories() } returns flowOf(entityList)
             every { Uri.parse(any()) } returns mockk(relaxed = true)
 
             val result = repository.observeLibrary().first { it.isNotEmpty() }
 
             assertEquals(1, result.size)
-            assertEquals("Manga A", result[0].name)
+            assertEquals("Comic A", result[0].name)
         }
 }

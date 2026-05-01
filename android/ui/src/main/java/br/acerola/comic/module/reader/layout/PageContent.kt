@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.component.HorizontalPagedReader
 import br.acerola.comic.module.reader.component.VerticalPagedReader
@@ -20,8 +20,8 @@ fun Reader.Layout.PageContent(
     onNextClick: () -> Unit,
     readingMode: ReadingMode,
     listState: LazyListState,
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     onPageRequest: (Int) -> Unit,
     onZoomChange: (Boolean) -> Unit,
 ) {
@@ -29,36 +29,32 @@ fun Reader.Layout.PageContent(
         when (readingMode) {
             ReadingMode.HORIZONTAL -> {
                 Reader.Component.HorizontalPagedReader(
-                    pageCount = pageCount,
-                    mangaId = mangaId,
+                    comicId = comicId,
                     chapterId = chapterId,
                     onUiToggle = onUiToggle,
                     pagerState = pagerState,
                     onPrevClick = onPrevClick,
                     onNextClick = onNextClick,
                     onZoomChange = onZoomChange,
-                    onPageRequest = onPageRequest,
                 )
             }
 
             ReadingMode.VERTICAL -> {
                 Reader.Component.VerticalPagedReader(
-                    pageCount = pageCount,
-                    mangaId = mangaId,
+                    comicId = comicId,
                     chapterId = chapterId,
                     onUiToggle = onUiToggle,
                     pagerState = pagerState,
                     onPrevClick = onPrevClick,
                     onNextClick = onNextClick,
                     onZoomChange = onZoomChange,
-                    onPageRequest = onPageRequest,
                 )
             }
 
             ReadingMode.WEBTOON -> {
                 Reader.Component.WebtoonReader(
                     pageCount = pageCount,
-                    mangaId = mangaId,
+                    comicId = comicId,
                     chapterId = chapterId,
                     listState = listState,
                     onPageRequest = onPageRequest,

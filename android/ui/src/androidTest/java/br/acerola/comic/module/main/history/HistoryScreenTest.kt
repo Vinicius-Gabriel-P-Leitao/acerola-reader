@@ -40,6 +40,6 @@ class HistoryScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Nenhum mangá lido recentemente").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nenhum quadrinho lido recentemente").assertIsDisplayed()
     }
 }

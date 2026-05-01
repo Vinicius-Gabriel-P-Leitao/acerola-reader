@@ -8,10 +8,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.config.preference.ComicSortType
-import br.acerola.comic.config.preference.HomeLayoutType
-import br.acerola.comic.config.preference.HomeSortPreference
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ComicSortType
+import br.acerola.comic.config.preference.types.HomeLayoutType
+import br.acerola.comic.config.preference.types.HomeSortPreference
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.home.state.FilterSettings
@@ -35,7 +35,7 @@ class HomeScreenTest {
         every { viewModel.selectedHomeLayout } returns MutableStateFlow(HomeLayoutType.LIST)
         every { viewModel.isIndexing } returns MutableStateFlow(false)
         every { viewModel.progress } returns MutableStateFlow(-1)
-        every { viewModel.mangas } returns MutableStateFlow(emptyList())
+        every { viewModel.comics } returns MutableStateFlow(emptyList())
         every { viewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
         every { viewModel.allCategories } returns MutableStateFlow(emptyList())
 
@@ -55,7 +55,7 @@ class HomeScreenTest {
         }
 
         // Verifica se o placeholder da busca aparece
-        composeTestRule.onNodeWithText("Buscar mangá...", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Buscar quadrinho...", substring = true).assertIsDisplayed()
 
         // Verifica se o FloatingTool (HUB) está presente
         composeTestRule.onNodeWithContentDescription("hub", substring = true).assertIsDisplayed()

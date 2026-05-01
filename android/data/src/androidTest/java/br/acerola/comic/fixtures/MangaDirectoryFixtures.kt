@@ -7,12 +7,12 @@ import br.acerola.comic.local.entity.archive.ComicDirectory
 object MangaDirectoryFixtures {
     fun createMangaDirectory(
         id: Long = 0L,
-        name: String = "Manga Test",
+        name: String = "Comic Test",
         path: String = "content://path/test",
         cover: String? = null,
         banner: String? = null,
         lastModified: Long = 1000L,
-        chapterTemplateFk: Long? = null,
+        archiveTemplateFk: Long? = null,
     ) = ComicDirectory(
         id = id,
         name = name,
@@ -20,17 +20,17 @@ object MangaDirectoryFixtures {
         cover = cover,
         banner = banner,
         lastModified = lastModified,
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
     )
 
     fun createMangaDirectoryDto(
         id: Long = 1L,
-        name: String = "Manga Test",
+        name: String = "Comic Test",
         path: String = "content://path/test",
         coverUri: Uri? = null,
         bannerUri: Uri? = null,
         lastModified: Long = 1000L,
-        chapterTemplateFk: Long? = null,
+        archiveTemplateFk: Long? = null,
     ) = ComicDirectoryDto(
         id = id,
         name = name,
@@ -38,6 +38,6 @@ object MangaDirectoryFixtures {
         coverUri = coverUri,
         bannerUri = bannerUri,
         lastModified = lastModified,
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
     )
 }

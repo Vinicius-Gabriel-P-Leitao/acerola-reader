@@ -7,16 +7,14 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
-import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
-import br.acerola.comic.util.normalizeChapter
-import br.acerola.comic.worker.LibrarySyncWorker
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.contract.WorkerContract
+import br.acerola.comic.worker.sync.LibrarySyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +32,7 @@ class ChapterArchiveViewModel
     constructor(
         private val workManager: WorkManager,
         private val manager: FileSystemAccessManager,
-        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>,
+        @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
     ) : ViewModel() {
         private val _isIndexing = MutableStateFlow(value = false)
         val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -45,7 +43,7 @@ class ChapterArchiveViewModel
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
-        private val chapterPage = MutableStateFlow<ChapterArchivePageDto?>(value = null)
+        private val chapterPage = MutableStateFlow<ChapterPageDto?>(value = null)
 
         private val selectedDirectoryId = MutableStateFlow<Long?>(value = null)
 
@@ -55,7 +53,7 @@ class ChapterArchiveViewModel
 
         fun init(
             directoryId: Long,
-            firstPage: ChapterArchivePageDto,
+            firstPage: ChapterPageDto,
         ) {
             AcerolaLogger.d(TAG, "Initializing with directoryId: $directoryId", LogSource.VIEWMODEL)
             selectedDirectoryId.value = directoryId
@@ -69,20 +67,15 @@ class ChapterArchiveViewModel
             viewModelScope.launch {
                 chapterPage.value = null
 
-                val result: ChapterArchivePageDto =
+                val result: ChapterPageDto =
                     observeChaptersUseCase.loadPage(
-                        mangaId = selectedDirectoryId.value!!,
+                        comicId = selectedDirectoryId.value!!,
                         pageSize = pageSize,
                         total = total,
                         page = page,
                     )
 
-                val sortedItems: List<ChapterFileDto> =
-                    result.items.sortedBy {
-                        it.chapterSort.normalizeChapter().toFloatOrNull() ?: 0f
-                    }
-
-                chapterPage.value = result.copy(items = sortedItems)
+                chapterPage.value = result
             }
         }
 
@@ -98,11 +91,11 @@ class ChapterArchiveViewModel
 
         private fun enqueueSync(
             type: String,
-            mangaId: Long,
+            comicId: Long,
         ) {
             AcerolaLogger.d(
                 TAG,
-                "Enqueuing local sync from ChapterViewModel: $type, mangaId: $mangaId",
+                "Enqueuing local sync from ChapterViewModel: $type, comicId: $comicId",
                 LogSource.VIEWMODEL,
             )
             viewModelScope.launch {
@@ -115,13 +108,13 @@ class ChapterArchiveViewModel
                             workDataOf(
                                 LibrarySyncWorker.KEY_SYNC_TYPE to type,
                                 LibrarySyncWorker.KEY_BASE_URI to uri?.toString(),
-                                LibrarySyncWorker.KEY_MANGA_ID to mangaId,
+                                LibrarySyncWorker.KEY_MANGA_ID to comicId,
                             ),
                         ).addTag(WorkerContract.TAG_LIBRARY_SYNC)
                         .build()
 
                 workManager.enqueueUniqueWork(
-                    "${WorkerContract.TAG_LIBRARY_SYNC}_$mangaId",
+                    "${WorkerContract.TAG_LIBRARY_SYNC}_$comicId",
                     ExistingWorkPolicy.KEEP,
                     syncRequest,
                 )

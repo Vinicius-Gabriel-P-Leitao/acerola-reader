@@ -2,7 +2,7 @@ package br.acerola.comic.common.viewmodel.progress
 import androidx.lifecycle.ViewModel
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.contract.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

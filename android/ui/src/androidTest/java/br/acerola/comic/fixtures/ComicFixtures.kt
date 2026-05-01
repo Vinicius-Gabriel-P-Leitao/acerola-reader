@@ -1,10 +1,10 @@
 package br.acerola.comic.fixtures
 
-import br.acerola.comic.config.preference.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.ComicDto
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
@@ -16,22 +16,22 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
 /**
- * Fixtures reutilizáveis para testes de Mangá na camada de apresentação.
+ * Fixtures reutilizáveis para testes de Quadrinhos na camada de apresentação.
  */
 object ComicFixtures {
     fun createMangaUiState(
-        manga: ComicDto = ComicDto(directory = createMangaDirectoryDto(), remoteInfo = null),
+        comic: ComicDto = ComicDto(directory = createMangaDirectoryDto(), remoteInfo = null),
         chapters: ChapterDto? = null,
         selectedTab: MainTab = MainTab.CHAPTERS,
         history: ReadingHistoryDto? = null,
-        readChapters: PersistentSet<Long> = persistentSetOf(),
+        readChapters: PersistentSet<String> = persistentSetOf(),
         totalChapters: Int = 0,
         currentPage: Int = 0,
         totalPages: Int = 0,
         selectedChapterPerPage: ChapterPageSizeType = ChapterPageSizeType.SHORT,
         allCategories: PersistentList<CategoryDto> = persistentListOf(),
     ) = ComicUiState(
-        manga = manga,
+        comic = comic,
         chapters = chapters,
         selectedTab = selectedTab,
         history = history,
@@ -48,7 +48,7 @@ object ComicFixtures {
         pageSize: Int = 20,
         page: Int = 0,
         total: Int = items.size,
-    ) = ChapterArchivePageDto(
+    ) = ChapterPageDto(
         items = items,
         pageSize = pageSize,
         page = page,
@@ -57,7 +57,7 @@ object ComicFixtures {
 
     fun createMangaDirectoryDto(
         id: Long = 1L,
-        name: String = "Test Manga",
+        name: String = "Test Comic",
         path: String = "/path/to/comic",
     ) = ComicDirectoryDto(
         id = id,
@@ -66,16 +66,18 @@ object ComicFixtures {
         coverUri = null,
         bannerUri = null,
         lastModified = 0L,
-        chapterTemplateFk = null,
+        archiveTemplateFk = null,
     )
 
     fun createReadingHistoryDto(
-        mangaDirectoryId: Long = 1L,
+        comicDirectoryId: Long = 1L,
         chapterArchiveId: Long = 10L,
+        chapterSort: String = "0001",
         lastPage: Int = 5,
     ) = ReadingHistoryDto(
-        mangaDirectoryId = mangaDirectoryId,
+        comicDirectoryId = comicDirectoryId,
         chapterArchiveId = chapterArchiveId,
+        chapterSort = chapterSort,
         lastPage = lastPage,
         isCompleted = false,
         updatedAt = 123456L,
