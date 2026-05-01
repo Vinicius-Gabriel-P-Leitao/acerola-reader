@@ -78,44 +78,6 @@ fun Comic.Component.CoverVolumeCard(
                 )
             }
         },
-        nestedItem = {
-            if (!expanded) return@GroupedHeroItem
-
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (group.volume.isSpecial) {
-                    Text(
-                        text = stringResource(id = R.string.label_volume_header_special),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-
-                group.items.forEachIndexed { index, chapter ->
-                    val remoteItem = remoteResolver(chapter.chapterSort.normalizeSort())
-
-                    // Infinite Scroll Trigger for Volume
-                    if (index >= group.items.size - 3 && currentPage < totalPages - 1) {
-                        androidx.compose.runtime.LaunchedEffect(key1 = Unit) {
-                            onPageChange(currentPage + 1)
-                        }
-                    }
-
-                    Comic.Component.ChapterItem(
-                        chapterRemoteInfoDto = remoteItem,
-                        chapterFileDto = chapter,
-                        isRead = readChapters.contains(chapter.chapterSort),
-                        onClick = { onChapterClick(chapter) },
-                        onToggleRead = { onToggleRead(chapter.chapterSort) },
-                    )
-                }
-            }
-        },
+        nestedItem = {}
     )
 }
