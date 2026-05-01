@@ -138,19 +138,36 @@ private fun FilePatternLayout(
                     )
                 }
             } else {
+                val groupedTemplates = uiState.templates.groupBy { it.type }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                 ) {
-                    items(
-                        items = uiState.templates,
-                        key = { it.id },
-                    ) { template ->
-                        Main.Pattern.Component.TemplateItem(
-                            template = template,
-                            onEdit = { editingTemplate = template },
-                            onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) },
-                        )
+                    groupedTemplates.forEach { (type, templates) ->
+                        item {
+                            val headerText =
+                                when (type) {
+                                    br.acerola.comic.util.SortType.CHAPTER -> stringResource(id = R.string.label_sort_type_chapter)
+                                    br.acerola.comic.util.SortType.VOLUME -> stringResource(id = R.string.label_sort_type_volume)
+                                }
+                            Text(
+                                text = headerText,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                            )
+                        }
+                        items(
+                            items = templates,
+                            key = { it.id },
+                        ) { template ->
+                            Main.Pattern.Component.TemplateItem(
+                                template = template,
+                                onEdit = { editingTemplate = template },
+                                onDelete = { onAction(FilePatternAction.DeleteTemplate(template.id)) },
+                            )
+                        }
                     }
                 }
             }

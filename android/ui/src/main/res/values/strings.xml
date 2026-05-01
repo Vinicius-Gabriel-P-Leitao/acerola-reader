@@ -258,6 +258,8 @@
     <string name="label_sort_chapter_count">Quantidade de capítulos</string>
     <string name="label_sort_last_update">Última atualização</string>
     <string name="label_sort_number">Número</string>
+    <string name="label_sort_type_chapter">Capítulo</string>
+    <string name="label_sort_type_volume">Volume</string>
 
     <!-- Language names for metadata -->
     <string name="lang_pt_br">Português (BR)</string>

@@ -76,7 +76,13 @@ fun Main.Pattern.Component.AddTemplateDialog(
                         onClick = { type = sortType },
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = SortType.entries.size),
                     ) {
-                        Text(text = sortType.name)
+                        Text(
+                            text =
+                                when (sortType) {
+                                    SortType.CHAPTER -> stringResource(id = R.string.label_sort_type_chapter)
+                                    SortType.VOLUME -> stringResource(id = R.string.label_sort_type_volume)
+                                },
+                        )
                     }
                 }
             }
