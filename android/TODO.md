@@ -105,12 +105,12 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
     - [x] Criar `VolumeHeaderComponent`.
     - [x] Implementar `stickyHeader` na `LazyColumn`.
     - [x] **Lógica de Visibilidade**: Ocultar o Header se houver apenas 1 volume ou se os capítulos forem "órfãos" (Root).
-- [ ] **Transformar formato de volume em cards colapsáveis**: 
-  - [ ] Quando tiver volumes ao invés de paginar os chapter vai criar cards colapsáveis e validar para ele não buscar todos os chapters por 
+- [x] **Transformar formato de volume em cards colapsáveis**: 
+  - [x] Quando tiver volumes ao invés de paginar os chapter vai criar cards colapsáveis e validar para ele não buscar todos os chapters por 
     volume se tiver 2 volumes mas cada um com 500 chapter isso vai explodir a memoria, tem que ser feito de uma forma otimizada visualmente e no sql
-- [ ] **Criar visualização com cover do volume** Essa visualização é simples e dá para extrair a primeira capa do volume como capa da listagem é 
+- [x] **Criar visualização com cover do volume** Essa visualização é simples e dá para extrair a primeira capa do volume como capa da listagem é 
   possível também.
-- [ ] **Criar nova UserPreference** A nova preferência vai ser para olhar volumes como capas ou uma lista de cards dropaveis (metodo atual), só 
+- [x] **Criar nova UserPreference** A nova preferência vai ser para olhar volumes como capas ou uma lista de cards dropaveis (metodo atual), só 
   sera feito um novo e dar o direito de escolha.
  
 ### Adicionar um worker para o conversor de pdf
