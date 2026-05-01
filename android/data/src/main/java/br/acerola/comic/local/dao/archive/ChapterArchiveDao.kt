@@ -111,6 +111,45 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
             SELECT *
             FROM chapter_archive
             LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :folderId
+            ORDER BY 
+                -- 1. Volume Parte Inteira
+                CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) DESC,
+                -- 2. Volume Parte Decimal
+                CAST(
+                    CASE 
+                        WHEN volume_archive.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(volume_archive.volume_sort, INSTR(volume_archive.volume_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                -- 3. Chapter Parte Inteira
+                CAST(chapter_archive.chapter_sort AS INTEGER) DESC, 
+                -- 4. Chapter Parte Decimal
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                -- 5. Especiais por último como critério de desempate
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+            LIMIT :pageSize OFFSET :offset
+        """,
+    )
+    suspend fun getChaptersByDirectoryPagedDesc(
+        folderId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterVolumeJoin>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *
+            FROM chapter_archive
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
             WHERE chapter_archive.comic_directory_fk = :comicId
               AND chapter_archive.volume_id_fk = :volumeId
             ORDER BY 
@@ -127,6 +166,34 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
         """,
     )
     suspend fun getChaptersByVolumePaged(
+        comicId: Long,
+        volumeId: Long,
+        pageSize: Int,
+        offset: Int,
+    ): List<ChapterVolumeJoin>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *
+            FROM chapter_archive
+            LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+            WHERE chapter_archive.comic_directory_fk = :comicId
+              AND chapter_archive.volume_id_fk = :volumeId
+            ORDER BY 
+                CAST(chapter_archive.chapter_sort AS INTEGER) DESC,
+                CAST(
+                    CASE 
+                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+            LIMIT :pageSize OFFSET :offset
+        """,
+    )
+    suspend fun getChaptersByVolumePagedDesc(
         comicId: Long,
         volumeId: Long,
         pageSize: Int,

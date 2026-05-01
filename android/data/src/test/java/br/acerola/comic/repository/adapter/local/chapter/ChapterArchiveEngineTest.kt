@@ -234,7 +234,7 @@ class ChapterArchiveEngineTest {
         }
 
     @Test
-    fun `getChapterPage deve calcular total e offset corretamente`() =
+    fun `getChapterPage deve calcular total e offset corretamente para ordem ascendente`() =
         runTest {
             val comicId = 1L
             coEvery { chapterArchiveDao.countByDirectoryId(comicId) } returns 10
@@ -246,10 +246,32 @@ class ChapterArchiveEngineTest {
                     ),
                 )
 
-            // page 1, size 5 -> offset 5
+            // page 1, size 5 -> offset 5, isAscending = true (default)
             val result = repository.getChapterPage(comicId, total = 0, page = 1, pageSize = 5)
 
             assertEquals(10, result.total)
             assertEquals(1, result.items.size)
+            coVerify { chapterArchiveDao.getChaptersByDirectoryPaged(comicId, 5, 5) }
+        }
+
+    @Test
+    fun `getChapterPage deve chamar query descendente quando isAscending for falso`() =
+        runTest {
+            val comicId = 1L
+            coEvery { chapterArchiveDao.countByDirectoryId(comicId) } returns 10
+            coEvery { chapterArchiveDao.getChaptersByDirectoryPagedDesc(comicId, 5, 0) } returns
+                listOf(
+                    ChapterVolumeJoin(
+                        chapter = ChapterArchive(id = 10, chapter = "10", path = "path", chapterSort = "10", folderPathFk = comicId),
+                        volume = null,
+                    ),
+                )
+
+            // page 0, size 5, isAscending = false
+            val result = repository.getChapterPage(comicId, total = 0, page = 0, pageSize = 5, isAscending = false)
+
+            assertEquals(1, result.items.size)
+            assertEquals("10", result.items[0].name)
+            coVerify { chapterArchiveDao.getChaptersByDirectoryPagedDesc(comicId, 5, 0) }
         }
 }

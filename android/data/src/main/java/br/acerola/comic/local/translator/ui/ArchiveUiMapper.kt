@@ -1,6 +1,7 @@
 package br.acerola.comic.local.translator.ui
 
 import androidx.core.net.toUri
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ChapterPageDto
@@ -102,9 +103,10 @@ fun List<ChapterArchive>.toViewPageDtoLegacy(
     )
 
 fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
+    pageSize: Int,
+    effectiveViewMode: VolumeViewType,
     remoteAll: ChapterRemoteInfoPageDto,
     volumeOverrides: Map<Long, VolumeChapterGroupDto>,
-    pageSize: Int,
 ): ChapterDto {
     val mergedSections = this.map { section ->
         val sectionTotalPages = if (section.totalChapters == 0) 1
@@ -140,6 +142,7 @@ fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
         remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, 0, visibleItems.size),
         showVolumeHeaders = mergedSections.size > 1,
         hasVolumeStructure = true,
+        effectiveViewMode = effectiveViewMode,
     )
 }
 
@@ -148,6 +151,7 @@ fun ChapterPageDto.toCombinedRegularDto(
     page: Int,
     pageSize: Int,
     hasVolumeStructure: Boolean,
+    effectiveViewMode: VolumeViewType,
 ): ChapterDto {
     val items = this.items
     if (items.isEmpty()) {
@@ -155,6 +159,7 @@ fun ChapterPageDto.toCombinedRegularDto(
             archive = this,
             remoteInfo = remoteAll,
             hasVolumeStructure = hasVolumeStructure,
+            effectiveViewMode = effectiveViewMode,
         )
     }
 
@@ -183,5 +188,6 @@ fun ChapterPageDto.toCombinedRegularDto(
         remoteInfo = ChapterRemoteInfoPageDto(filteredRemoteItems, pageSize, safePage, total),
         showVolumeHeaders = false,
         hasVolumeStructure = hasVolumeStructure,
+        effectiveViewMode = effectiveViewMode,
     )
 }

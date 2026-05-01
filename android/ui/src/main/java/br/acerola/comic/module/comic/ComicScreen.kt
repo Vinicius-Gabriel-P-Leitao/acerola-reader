@@ -141,7 +141,7 @@ fun ComicScreen(
             chapterSortSettings = chapterSortSettings,
             allCategories = allCategories.toPersistentList(),
             showVolumeHeaders = showVolumeHeaders,
-            volumeViewMode = volumeViewMode,
+            volumeViewMode = chapterDto?.effectiveViewMode ?: volumeViewMode,
             activeVolumeId = activeVolumeId,
             hasVolumeStructure = chapterDto?.hasVolumeStructure ?: false,
         )
@@ -239,7 +239,7 @@ fun ComicScreen(
                         .padding(bottom = paddingValues.calculateBottomPadding()),
             ) {
                 item(
-                    key = "header_${uiState.comic.remoteInfo?.title}",
+                    key = "comic_header",
                     contentType = "header",
                 ) {
                     Comic.Layout.Header(
@@ -250,7 +250,7 @@ fun ComicScreen(
                 }
 
                 item(
-                    key = "tabs_${uiState.comic.remoteInfo?.title}",
+                    key = "comic_tabs",
                     contentType = "tabs",
                 ) {
                     Comic.Layout.Tabs(
@@ -292,7 +292,7 @@ fun ComicScreen(
                 }
 
                 item(
-                    key = "spacer_${uiState.comic.remoteInfo?.title}",
+                    key = "comic_bottom_spacer",
                     contentType = "tabs",
                 ) {
                     Spacer(modifier = Modifier.height(height = 24.dp))

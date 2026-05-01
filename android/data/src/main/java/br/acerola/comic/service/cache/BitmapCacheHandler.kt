@@ -5,6 +5,7 @@ import androidx.collection.LruCache
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Escrever testes
 @Singleton
 class BitmapCacheHandler
     @Inject

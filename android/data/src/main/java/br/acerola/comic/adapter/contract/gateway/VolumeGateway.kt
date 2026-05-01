@@ -11,7 +11,7 @@ interface VolumeGateway {
         previewSize: Int = 5,
         sortType: String = "NUMBER",
         isAscending: Boolean = true,
-    ): StateFlow<List<VolumeChapterGroupDto>>
+    ): Flow<List<VolumeChapterGroupDto>>
 
     suspend fun getVolumeChapterPage(
         comicId: Long,

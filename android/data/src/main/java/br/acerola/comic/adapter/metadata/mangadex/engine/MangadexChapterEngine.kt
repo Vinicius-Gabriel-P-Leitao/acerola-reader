@@ -191,7 +191,7 @@ class MangadexChapterEngine
                 }.stateIn(
                     started = SharingStarted.Lazily,
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-                    initialValue = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, total = 0, page = 0),
+                    initialValue = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = -1, total = 0, page = 0),
                 )
 
         override suspend fun getChapterPage(

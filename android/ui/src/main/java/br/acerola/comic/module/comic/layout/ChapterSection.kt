@@ -39,43 +39,6 @@ fun Comic.Layout.chapterSection(
     onUpdateVolumeView: (VolumeViewType) -> Unit = {},
     onLoadVolumeChaptersPage: (Long, Int) -> Unit = { _, _ -> },
 ) {
-    if (chapters.hasVolumeStructure) {
-        scope.item(key = "volume_view_selector", contentType = "volume_view_selector") {
-            val toggleEntries = listOf(VolumeViewType.CHAPTER, VolumeViewType.VOLUME)
-            SingleChoiceSegmentedButtonRow(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-            ) {
-                toggleEntries.forEachIndexed { index, viewType ->
-                    SegmentedButton(
-                        selected =
-                            if (viewType == VolumeViewType.VOLUME) {
-                                volumeViewMode == VolumeViewType.VOLUME || volumeViewMode == VolumeViewType.COVER_VOLUME
-                            } else {
-                                volumeViewMode == viewType
-                            },
-                        onClick = {
-                            if (viewType == VolumeViewType.CHAPTER) {
-                                onUpdateVolumeView(VolumeViewType.CHAPTER)
-                            } else if (volumeViewMode == VolumeViewType.CHAPTER) {
-                                onUpdateVolumeView(VolumeViewType.VOLUME)
-                            }
-                        },
-                        shape =
-                            SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = toggleEntries.size,
-                            ),
-                    ) {
-                        Text(text = viewTypeLabel(viewType = viewType))
-                    }
-                }
-            }
-        }
-    }
-
     val useVolumeSections =
         (volumeViewMode == VolumeViewType.VOLUME || volumeViewMode == VolumeViewType.COVER_VOLUME) &&
             chapters.archive.volumeSections.isNotEmpty()
@@ -83,7 +46,7 @@ fun Comic.Layout.chapterSection(
     if (useVolumeSections) {
         chapters.archive.volumeSections.forEach { group ->
             scope.item(
-                key = "volume_card_${group.volume.id}",
+                key = "vol_${group.volume.id}",
                 contentType = "volume_card",
             ) {
                 val isExpanded = activeVolumeId == group.volume.id
@@ -128,7 +91,7 @@ fun Comic.Layout.chapterSection(
 
     chapters.archive.items.forEachIndexed { index, archiveItem ->
         scope.item(
-            key = archiveItem.id,
+            key = "ch_${archiveItem.id}",
             contentType = "chapter",
         ) {
             val remoteItem: ChapterFeedDto? =
@@ -138,7 +101,7 @@ fun Comic.Layout.chapterSection(
 
             // Infinite Scroll Trigger
             if (index >= chapters.archive.items.size - 5 && currentPage < totalPages - 1) {
-                androidx.compose.runtime.LaunchedEffect(key1 = currentPage) {
+                androidx.compose.runtime.LaunchedEffect(key1 = Unit) {
                     onPageChange(currentPage + 1)
                 }
             }
@@ -154,11 +117,3 @@ fun Comic.Layout.chapterSection(
         }
     }
 }
-
-@Composable
-private fun viewTypeLabel(viewType: VolumeViewType): String =
-    when (viewType) {
-        VolumeViewType.CHAPTER -> stringResource(R.string.label_volume_view_chapter)
-        VolumeViewType.VOLUME -> stringResource(R.string.label_volume_view_volume)
-        VolumeViewType.COVER_VOLUME -> stringResource(R.string.label_volume_view_cover)
-    }

@@ -102,7 +102,7 @@ fun Comic.Component.CoverVolumeCard(
 
                     // Infinite Scroll Trigger for Volume
                     if (index >= group.items.size - 3 && currentPage < totalPages - 1) {
-                        androidx.compose.runtime.LaunchedEffect(key1 = currentPage) {
+                        androidx.compose.runtime.LaunchedEffect(key1 = Unit) {
                             onPageChange(currentPage + 1)
                         }
                     }

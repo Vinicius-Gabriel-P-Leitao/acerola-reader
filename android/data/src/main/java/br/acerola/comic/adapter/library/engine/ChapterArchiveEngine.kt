@@ -414,19 +414,18 @@ class ChapterArchiveEngine
                 .getChaptersByDirectoryId(folderId = comicId)
                 .map { list ->
                     AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
-                    val baseList =
-                        if (sortType == "LAST_UPDATE") {
-                            list.sortedBy { it.chapter.lastModified }
-                        } else {
-                            list
-                        }
-
-                    val finalList = if (isAscending) baseList else baseList.reversed()
+                    val finalList = if (sortType == "LAST_UPDATE") {
+                        val base = list.sortedBy { it.chapter.lastModified }
+                        if (isAscending) base else base.reversed()
+                    } else {
+                        // SQL already handled the hierarchy/number sorting
+                        if (isAscending) list else list.reversed()
+                    }
                     finalList.toViewPageDto()
                 }.stateIn(
                     started = SharingStarted.Lazily,
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-                    initialValue = ChapterPageDto(items = emptyList(), pageSize = 0, total = 0, page = 0),
+                    initialValue = ChapterPageDto(items = emptyList(), pageSize = -1, total = 0, page = 0),
                 )
 
         override suspend fun getChapterPage(
@@ -439,34 +438,32 @@ class ChapterArchiveEngine
         ): ChapterPageDto {
             AcerolaLogger.d(TAG, "Retrieving chapter page: $page (pageSize: $pageSize, sort: $sortType, asc: $isAscending)", LogSource.REPOSITORY)
 
-            // Por enquanto, se a ordenação for NUMBER ASC, podemos usar o método Paged do banco de dados diretamente.
-            // Se for qualquer outra coisa, precisamos buscar todos os registros, ordenar/inverter e, em seguida, paginar.
-            // Isso ainda é melhor do que fazer no ViewModel, pois centraliza a lógica.
-            return if (sortType == "NUMBER" && isAscending) {
+            return if (sortType == "NUMBER") {
                 val offset = page * pageSize
                 val realTotal = if (total > 0) total else chapterArchiveDao.countByDirectoryId(folderId = comicId)
-                val items =
+                val items = if (isAscending) {
                     chapterArchiveDao.getChaptersByDirectoryPaged(
-                        pageSize = pageSize,
                         folderId = comicId,
+                        pageSize = pageSize,
                         offset = offset,
                     )
+                } else {
+                    chapterArchiveDao.getChaptersByDirectoryPagedDesc(
+                        folderId = comicId,
+                        pageSize = pageSize,
+                        offset = offset,
+                    )
+                }
 
                 items.toViewPageDto(pageSize = pageSize, total = realTotal, page = page)
             } else {
-                // NOTE: getChaptersListByDirectoryId não faz a junção com o volume; precisamos de uma versão com junção se quisermos ordenação hierárquica aqui também.
-                // Para simplificar, vamos usar a lógica da versão do Flow ou adicionar um novo método Dao.
-                // Mas observeChapters já lida com isso.
                 val flowList = chapterArchiveDao.getChaptersByDirectoryId(comicId).first()
-
-                val baseList =
-                    if (sortType == "LAST_UPDATE") {
-                        flowList.sortedBy { it.chapter.lastModified }
-                    } else {
-                        flowList
-                    }
-
-                val sortedList = if (isAscending) baseList else baseList.reversed()
+                val sortedList = if (sortType == "LAST_UPDATE") {
+                    val base = flowList.sortedBy { it.chapter.lastModified }
+                    if (isAscending) base else base.reversed()
+                } else {
+                    if (isAscending) flowList else flowList.reversed()
+                }
 
                 val realTotal = sortedList.size
                 val start = (page * pageSize).coerceIn(0, realTotal)

@@ -5,8 +5,30 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import br.acerola.comic.config.preference.types.VolumeViewType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+
+object VolumeViewPreference {
+    private val Context.dataStore by preferencesDataStore(name = "volume_view_prefs")
+
+    private val VOLUME_VIEW_KEY = stringPreferencesKey(name = "volume_view_type")
+
+    suspend fun saveVolumeView(
+        context: Context,
+        mode: VolumeViewType,
+    ) {
+        context.dataStore.edit { prefs ->
+            prefs[VOLUME_VIEW_KEY] = mode.key
+        }
+    }
+
+    fun volumeViewFlow(context: Context): Flow<VolumeViewType> =
+        context.dataStore.data.map { prefs ->
+            val saved = VolumeViewType.fromKey(prefs[VOLUME_VIEW_KEY])
+            if (saved == VolumeViewType.CHAPTER) VolumeViewType.VOLUME else saved
+        }
+}
 
 object MetadataPreference {
     private val Context.dataStore by preferencesDataStore(name = "metadata_prefs")

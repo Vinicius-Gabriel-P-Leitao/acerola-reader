@@ -9,6 +9,6 @@ enum class VolumeViewType(
     ;
 
     companion object {
-        fun fromKey(key: String?): VolumeViewType = entries.firstOrNull { it.key == key } ?: CHAPTER
+        fun fromKey(key: String?): VolumeViewType = entries.firstOrNull { it.key == key } ?: VOLUME
     }
 }

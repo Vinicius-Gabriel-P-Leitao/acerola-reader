@@ -62,7 +62,7 @@ fun Comic.Layout.configSection(
 
     scope.item { Spacer(modifier = Modifier.height(8.dp)) }
 
-    if (uiState.hasVolumeStructure && uiState.volumeViewMode != VolumeViewType.CHAPTER) {
+    if (uiState.hasVolumeStructure) {
         scope.item {
             Comic.Component.VolumeStylePreference(
                 selected = uiState.volumeViewMode,

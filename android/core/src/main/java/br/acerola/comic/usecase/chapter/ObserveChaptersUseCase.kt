@@ -17,6 +17,7 @@ import br.acerola.comic.service.cache.ChapterCacheHandler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
@@ -80,30 +81,59 @@ class ObserveCombinedChaptersUseCase @Inject constructor(
         )
 
         val localFlow = localRepository.observeChapters(comicId, sort.type.name, sort.direction == SortDirection.ASCENDING)
+            .filter { it.pageSize != -1 }
+
+        val volumeFlow = volumeGateway.observeVolumeGroups(comicId, pageSize, sort.type.name, sort.direction == SortDirection.ASCENDING)
+            .filter { it.firstOrNull()?.totalChapters != -1 }
+
         val remoteFlow = if (remoteId != null) {
             remoteRepository.observeChapters(remoteId, sort.type.name, sort.direction == SortDirection.ASCENDING)
+                .filter { it.pageSize != -1 }
         } else {
             flowOf(ChapterRemoteInfoPageDto(emptyList(), 0, 0, 0))
         }
 
         return combine(
             localFlow,
-            volumeGateway.observeVolumeGroups(comicId, pageSize, sort.type.name, sort.direction == SortDirection.ASCENDING),
+            volumeFlow,
             remoteFlow,
             volumeGateway.observeHasRootChapters(comicId)
         ) { localAll, volumeSections, remoteAll, hasRootChapters ->
-            val cached = cacheHandler.get(cacheKey)
-            if (cached != null) return@combine cached
+            val isInitialState = localAll.pageSize == 0 && localAll.items.isEmpty()
 
-            val result = if ((viewMode == VolumeViewType.VOLUME || viewMode == VolumeViewType.COVER_VOLUME) &&
-                volumeSections.isNotEmpty()
-            ) {
-                volumeSections.toCombinedVolumeDto(remoteAll, volumeOverrides, pageSize)
-            } else {
-                localAll.toCombinedRegularDto(remoteAll, page, pageSize, volumeSections.isNotEmpty())
+            if (!isInitialState) {
+                val cached = cacheHandler.get(cacheKey)
+
+                if (cached != null) {
+                    if (cached.archive.items.isNotEmpty() || localAll.items.isEmpty()) {
+                        return@combine cached
+                    }
+                }
             }
 
-            cacheHandler.put(cacheKey, result)
+            val hasSubfolders = volumeSections.isNotEmpty()
+
+            val effectiveViewMode = if (hasSubfolders) {
+                if (viewMode == VolumeViewType.COVER_VOLUME) VolumeViewType.COVER_VOLUME else VolumeViewType.VOLUME
+            } else {
+                VolumeViewType.CHAPTER
+            }
+
+            val result = if (effectiveViewMode != VolumeViewType.CHAPTER) {
+                volumeSections.toCombinedVolumeDto(
+                    remoteAll = remoteAll, volumeOverrides = volumeOverrides, pageSize = pageSize, effectiveViewMode = effectiveViewMode
+                )
+            } else {
+                localAll.toCombinedRegularDto(
+                    remoteAll = remoteAll, page = page, pageSize = pageSize, hasVolumeStructure = hasSubfolders,
+                    effectiveViewMode = effectiveViewMode
+                )
+            }
+
+            // Only cache valid results
+            if (!isInitialState) {
+                cacheHandler.put(cacheKey, result)
+            }
             result
         }
     }

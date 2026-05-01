@@ -21,6 +21,7 @@ import java.util.concurrent.Executors
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Escrever testes
 @Singleton
 class ReaderProcessor
     @Inject

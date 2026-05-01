@@ -85,6 +85,27 @@ class ChapterArchiveDaoTest {
         }
 
     @Test
+    fun getChaptersByDirectoryPagedDesc_deve_retornar_itens_em_ordem_inversa() =
+        runBlocking {
+            // Arrange
+            val folderId = directoryDao.insert(MangaDirectoryFixtures.createMangaDirectory(id = 0L))
+            val chapters =
+                listOf(
+                    ChapterArchive(chapter = "1", path = "p1", chapterSort = "1", folderPathFk = folderId),
+                    ChapterArchive(chapter = "2", path = "p2", chapterSort = "2", folderPathFk = folderId),
+                    ChapterArchive(chapter = "3", path = "p3", chapterSort = "3", folderPathFk = folderId),
+                )
+            dao.insertAll(*chapters.toTypedArray())
+
+            // Act: Pega o primeiro item na ordem DESC
+            val result = dao.getChaptersByDirectoryPagedDesc(folderId, pageSize = 1, offset = 0)
+
+            // Assert: Deve ser o capítulo "3"
+            assertEquals(1, result.size)
+            assertEquals("3", result[0].chapter.chapterSort)
+        }
+
+    @Test
     fun deleteChaptersByMangaDirectoryId_deve_remover_apenas_capitulos_daquele_comic() =
         runBlocking {
             // Arrange

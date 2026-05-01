@@ -22,12 +22,11 @@ fun Comic.Component.VolumeStylePreference(
     modifier: Modifier = Modifier,
 ) {
     val options = listOf(VolumeViewType.VOLUME, VolumeViewType.COVER_VOLUME)
-    val safeSelected = if (selected == VolumeViewType.CHAPTER) VolumeViewType.VOLUME else selected
-    val selectedIndex = options.indexOf(safeSelected).takeIf { it >= 0 } ?: 0
+    val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
 
     Acerola.Component.HeroItem(
         title = stringResource(id = R.string.title_settings_volume_style),
-        description = volumeStyleLabel(safeSelected),
+        description = volumeStyleLabel(selected),
         icon = Icons.Default.LibraryBooks,
         iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,

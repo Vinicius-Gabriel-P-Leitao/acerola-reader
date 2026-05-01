@@ -2,19 +2,15 @@ package br.acerola.comic.adapter.library.engine
 
 import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.translator.ui.toGroupDto
 import br.acerola.comic.local.translator.ui.toViewDto
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,38 +26,46 @@ class VolumeArchiveEngine
             previewSize: Int,
             sortType: String,
             isAscending: Boolean,
-        ): StateFlow<List<VolumeChapterGroupDto>> =
+        ): Flow<List<VolumeChapterGroupDto>> =
             volumeArchiveDao
                 .getVolumeChapterCountsByDirectoryId(comicId)
                 .map { summaries ->
                     val sortedSummaries = if (isAscending) summaries else summaries.reversed()
 
                     sortedSummaries.map { summary ->
-                        val previewItems =
-                            chapterArchiveDao
-                                .getChaptersByVolumePaged(
-                                    comicId = comicId,
-                                    volumeId = summary.id,
-                                    pageSize = previewSize,
-                                    offset = 0,
-                                ).let { joins ->
-                                    val base = joins.map { it.toViewDto() }
-
-                                    if (sortType == "LAST_UPDATE") {
-                                        val ordered = base.sortedBy { it.lastModified }
-                                        if (isAscending) ordered else ordered.reversed()
-                                    } else {
-                                        if (isAscending) base else base.reversed()
-                                    }
-                                }
+                        val previewItems = if (isAscending) {
+                            chapterArchiveDao.getChaptersByVolumePaged(
+                                comicId = comicId,
+                                volumeId = summary.id,
+                                pageSize = previewSize,
+                                offset = 0,
+                            )
+                        } else {
+                            chapterArchiveDao.getChaptersByVolumePagedDesc(
+                                comicId = comicId,
+                                volumeId = summary.id,
+                                pageSize = previewSize,
+                                offset = 0,
+                            )
+                        }.let { joins ->
+                            joins.map { it.toViewDto() }
+                        }
 
                         summary.toGroupDto(items = previewItems)
                     }
-                }.stateIn(
-                    started = SharingStarted.Lazily,
-                    scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-                    initialValue = emptyList(),
-                )
+                }.onStart {
+                    emit(
+                        listOf(
+                            VolumeChapterGroupDto(
+                                volume = VolumeArchiveDto(-1, "", "", false),
+                                items = emptyList(),
+                                totalChapters = -1,
+                                loadedCount = 0,
+                                hasMore = false,
+                            ),
+                        ),
+                    )
+                }
 
         override suspend fun getVolumeChapterPage(
             comicId: Long,
@@ -70,23 +74,24 @@ class VolumeArchiveEngine
             pageSize: Int,
             sortType: String,
             isAscending: Boolean,
-        ): List<ChapterFileDto> =
-            chapterArchiveDao
-                .getChaptersByVolumePaged(
+        ): List<ChapterFileDto> {
+            val joins = if (isAscending) {
+                chapterArchiveDao.getChaptersByVolumePaged(
                     comicId = comicId,
                     volumeId = volumeId,
                     pageSize = pageSize,
                     offset = offset,
-                ).let { joins ->
-                    val base = joins.map { it.toViewDto() }
-
-                    if (sortType == "LAST_UPDATE") {
-                        val ordered = base.sortedBy { it.lastModified }
-                        if (isAscending) ordered else ordered.reversed()
-                    } else {
-                        if (isAscending) base else base.reversed()
-                    }
-                }
+                )
+            } else {
+                chapterArchiveDao.getChaptersByVolumePagedDesc(
+                    comicId = comicId,
+                    volumeId = volumeId,
+                    pageSize = pageSize,
+                    offset = offset,
+                )
+            }
+            return joins.map { it.toViewDto() }
+        }
 
         override fun observeHasRootChapters(comicId: Long): Flow<Boolean> =
             chapterArchiveDao.observeRootChaptersCountByDirectoryId(comicId).map { it > 0 }

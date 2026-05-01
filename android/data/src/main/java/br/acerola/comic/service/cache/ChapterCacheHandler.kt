@@ -5,11 +5,13 @@ import br.acerola.comic.dto.ChapterDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO: Escrever testes
 @Singleton
 class ChapterCacheHandler
-@Inject constructor() {
+@Inject
+constructor() {
 
-    private val cacheSize = 15
+    private val cacheSize = 8
     private val cache = LruCache<String, ChapterDto>(cacheSize)
 
     fun get(key: String): ChapterDto? = cache[key]
@@ -18,7 +20,10 @@ class ChapterCacheHandler
         key: String,
         data: ChapterDto
     ) {
-        cache.put(key, data)
+        // Only cache if there's actual data to avoid caching loading/empty states
+        if (data.archive.items.isNotEmpty() || data.archive.volumeSections.isNotEmpty()) {
+            cache.put(key, data)
+        }
     }
 
     fun remove(key: String) {

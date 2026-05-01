@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -108,9 +109,7 @@ class ComicViewModel @Inject constructor(
 
     val chapterProgress: StateFlow<Int> = observeChaptersUseCase.progress
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1)
-    // endregion
 
-    // region Main Data Flows (Comic, History, Chapters)
     @OptIn(ExperimentalCoroutinesApi::class)
     val comic: StateFlow<ComicDto?> = combine(
         selectedDirectoryId,
@@ -163,7 +162,7 @@ class ComicViewModel @Inject constructor(
         val sort = params[2] as ChapterSortPreferenceData
         val page = params[3] as Int
         val pageSizeType = params[4] as ChapterPageSizeType
-        val viewMode = params[5] as VolumeViewType
+        var viewMode = params[5] as VolumeViewType
 
         @Suppress("UNCHECKED_CAST")
         val volumeOverrides = params[6] as Map<Long, VolumeChapterGroupDto>
@@ -181,11 +180,31 @@ class ComicViewModel @Inject constructor(
             pageSize = params.pageSizeType.key.toInt(),
             viewMode = params.viewMode,
             volumeOverrides = params.volumeOverrides
-        )
+        ).map { dto ->
+            if (dto == null) return@map null
+            
+            val comicName = comic.value?.directory?.name ?: "Unknown"
+            val viewMode = params.viewMode
+            
+            AcerolaLogger.i(TAG, "Comic Loaded: $comicName", LogSource.VIEWMODEL)
+            AcerolaLogger.d(TAG, "Mode: ${dto.effectiveViewMode.name} | HasVolumeStructure: ${dto.hasVolumeStructure} | Sections: ${dto.archive.volumeSections.size}", LogSource.VIEWMODEL)
+            
+            if (dto.hasVolumeStructure) {
+                dto.archive.volumeSections.forEach { section ->
+                    AcerolaLogger.v(
+                        TAG, 
+                        "  > Volume: ${section.volume.name} | Chapters: ${section.items.size}/${section.totalChapters}", 
+                        LogSource.VIEWMODEL
+                    )
+                }
+            } else {
+                AcerolaLogger.v(TAG, "  > Total Chapters: ${dto.archive.items.size}/${dto.archive.total}", LogSource.VIEWMODEL)
+            }
+            
+            dto
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-    // endregion
 
-    // region Lifecycle & Initialization
     fun init(
         folderId: Long,
         comicId: Long?
@@ -217,9 +236,7 @@ class ComicViewModel @Inject constructor(
             }
         }
     }
-    // endregion
 
-    // region Public Actions
     fun updateChapterPerPage(size: ChapterPageSizeType) {
         if (_selectedChapterPerPage.value == size) return
         AcerolaLogger.d(TAG, "Changing chapter page size to: ${size.name}", LogSource.VIEWMODEL)
@@ -301,6 +318,7 @@ class ComicViewModel @Inject constructor(
     }
 
     fun loadPageAsync(page: Int) {
+        if (page <= _currentPage.value) return
         AcerolaLogger.d(TAG, "Loading chapter list page: $page", LogSource.VIEWMODEL)
         _currentPage.value = page
     }
@@ -315,9 +333,7 @@ class ComicViewModel @Inject constructor(
         )
         viewModelScope.launch { trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId) }
     }
-    // endregion
 
-    // region Helper Methods & Classes
     private fun String.normalizeKey(): String = this.filter { it.isLetterOrDigit() }.lowercase()
 
     private data class ChapterParams(
@@ -334,5 +350,4 @@ class ComicViewModel @Inject constructor(
 
         private const val TAG = "ComicViewModel"
     }
-    // endregion
 }

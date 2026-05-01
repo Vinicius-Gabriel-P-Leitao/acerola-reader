@@ -4,7 +4,6 @@ import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 class ObserveVolumeChaptersUseCase(
     private val volumeGateway: VolumeGateway,
@@ -15,7 +14,7 @@ class ObserveVolumeChaptersUseCase(
         previewSize: Int = 5,
         sortType: String = "NUMBER",
         isAscending: Boolean = true,
-    ): StateFlow<List<VolumeChapterGroupDto>> =
+    ): Flow<List<VolumeChapterGroupDto>> =
         volumeGateway.observeVolumeGroups(
             comicId = comicId,
             previewSize = previewSize,
