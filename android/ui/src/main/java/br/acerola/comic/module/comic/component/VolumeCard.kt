@@ -80,22 +80,22 @@ fun Comic.Component.VolumeCard(
                     )
                 }
 
-                group.items.forEach { chapter ->
+                group.items.forEachIndexed { index, chapter ->
                     val remoteItem = remoteResolver(chapter.chapterSort.normalizeSort())
+
+                    // Infinite Scroll Trigger for Volume
+                    if (index >= group.items.size - 3 && currentPage < totalPages - 1) {
+                        androidx.compose.runtime.LaunchedEffect(key1 = currentPage) {
+                            onPageChange(currentPage + 1)
+                        }
+                    }
+
                     Comic.Component.ChapterItem(
                         chapterRemoteInfoDto = remoteItem,
                         chapterFileDto = chapter,
                         isRead = readChapters.contains(chapter.chapterSort),
                         onClick = { onChapterClick(chapter) },
                         onToggleRead = { onToggleRead(chapter.chapterSort) },
-                    )
-                }
-
-                if (totalPages > 1) {
-                    Acerola.Component.Pagination(
-                        currentPage = currentPage,
-                        totalPages = totalPages,
-                        onPageChange = onPageChange,
                     )
                 }
             }
