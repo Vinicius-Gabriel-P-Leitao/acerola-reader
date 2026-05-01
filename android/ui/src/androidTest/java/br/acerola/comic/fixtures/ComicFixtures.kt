@@ -66,7 +66,7 @@ object ComicFixtures {
         coverUri = null,
         bannerUri = null,
         lastModified = 0L,
-        chapterTemplateFk = null,
+        archiveTemplateFk = null,
     )
 
     fun createReadingHistoryDto(

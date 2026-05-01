@@ -15,15 +15,14 @@ import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.dao.history.ReadingHistoryDao
+import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ChapterArchive
-import br.acerola.comic.local.entity.archive.ChapterTemplate
 import br.acerola.comic.local.translator.persistence.toChapterArchiveEntity
 import br.acerola.comic.local.translator.persistence.toVolumeArchiveEntity
 import br.acerola.comic.local.translator.ui.toViewPageDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.ArchiveFormatPattern
-import br.acerola.comic.pattern.ChapterTemplatePattern
 import br.acerola.comic.pattern.MediaFilePattern
 import br.acerola.comic.service.compact.PdfToCbzConverter
 import br.acerola.comic.service.template.ChapterNameProcessor
@@ -99,6 +98,10 @@ class ChapterArchiveEngine
                                 rootChildren = folderDoc.listFiles().map { it.toFastMetadata() }
                             }
 
+                            val allTemplates = templateService.getTemplates()
+                            val volumeTemplates = allTemplates.filter { it.type == SortType.VOLUME }.map { it.pattern }
+                            val chapterTemplates = allTemplates.filter { it.type == SortType.CHAPTER }.map { it.pattern }
+
                             // 1. Detect and Sync Volumes
                             val subFolders = rootChildren.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
                             val volumeMap = mutableMapOf<String, Long>() // Path -> VolumeId
@@ -108,7 +111,7 @@ class ChapterArchiveEngine
                             val volumesToDelete = existingVolumes.toMutableList()
 
                             subFolders.forEach { subFolder ->
-                                val sortResult = SortNormalizer.normalize(subFolder.name, SortType.VOLUME)
+                                val sortResult = SortNormalizer.normalize(subFolder.name, SortType.VOLUME, volumeTemplates)
 
                                 val subFolderUri =
                                     if (baseUri != null) {
@@ -166,8 +169,7 @@ class ChapterArchiveEngine
                             volumesToDelete.forEach { volumeArchiveDao.delete(it) }
 
                             // 2. Determine Template (needed for PDF conversion check)
-                            val allTemplates = templateService.getTemplates()
-                            var activeTemplate = folder.chapterTemplateFk?.let { id -> allTemplates.find { it.id == id } }
+                            var activeTemplate = folder.archiveTemplateFk?.let { id -> allTemplates.find { it.id == id } }
 
                             val initialFilenames = mutableListOf<String>()
                             initialFilenames.addAll(rootChildren.map { it.name })
@@ -183,10 +185,10 @@ class ChapterArchiveEngine
                                         initialFilenames,
                                         allTemplates,
                                     ) ?: allTemplates.find { it.id == -2L } ?: allTemplates.firstOrNull()
-                                if (activeTemplate != null) directoryDao.update(folder.copy(chapterTemplateFk = activeTemplate.id))
+                                if (activeTemplate != null) directoryDao.update(folder.copy(archiveTemplateFk = activeTemplate.id))
                             }
 
-                            val defaultPattern = ChapterTemplatePattern.presets.values.first()
+                            val defaultPattern = chapterTemplates.firstOrNull() ?: "{chapter}{decimal}.*.{extension}"
                             val chapterRegex = templateToRegex(template = activeTemplate?.pattern ?: defaultPattern)
 
                             // 3. Hierarchical PDF to CBZ conversion
@@ -299,7 +301,7 @@ class ChapterArchiveEngine
 
                             allChapterFiles.forEachIndexed { index, (file, volumeId) ->
                                 val name = file.name
-                                val sortResult = SortNormalizer.normalize(name, SortType.CHAPTER)
+                                val sortResult = SortNormalizer.normalize(name, SortType.CHAPTER, chapterTemplates)
 
                                 // Unique check per comic
                                 if (processedSorts.contains(sortResult.normalizedSort)) {
@@ -378,8 +380,8 @@ class ChapterArchiveEngine
 
         private fun findBestTemplate(
             filenames: List<String>,
-            templates: List<ChapterTemplate>,
-        ): ChapterTemplate? {
+            templates: List<ArchiveTemplate>,
+        ): ArchiveTemplate? {
             if (filenames.isEmpty()) return null
 
             val counts =
@@ -396,7 +398,7 @@ class ChapterArchiveEngine
             return counts.entries
                 .filter { it.value > 0 }
                 .sortedWith(
-                    compareByDescending<Map.Entry<ChapterTemplate, Int>> { it.value }
+                    compareByDescending<Map.Entry<ArchiveTemplate, Int>> { it.value }
                         .thenByDescending { it.key.id > 0 }
                         .thenByDescending { it.key.id },
                 ).firstOrNull()

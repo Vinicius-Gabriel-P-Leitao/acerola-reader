@@ -12,7 +12,7 @@ object MangaDirectoryFixtures {
         cover: String? = null,
         banner: String? = null,
         lastModified: Long = 1000L,
-        chapterTemplateFk: Long? = null,
+        archiveTemplateFk: Long? = null,
     ) = ComicDirectory(
         id = id,
         name = name,
@@ -20,7 +20,7 @@ object MangaDirectoryFixtures {
         cover = cover,
         banner = banner,
         lastModified = lastModified,
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
     )
 
     fun createMangaDirectoryDto(
@@ -30,7 +30,7 @@ object MangaDirectoryFixtures {
         coverUri: Uri? = null,
         bannerUri: Uri? = null,
         lastModified: Long = 1000L,
-        chapterTemplateFk: Long? = null,
+        archiveTemplateFk: Long? = null,
     ) = ComicDirectoryDto(
         id = id,
         name = name,
@@ -38,6 +38,6 @@ object MangaDirectoryFixtures {
         coverUri = coverUri,
         bannerUri = bannerUri,
         lastModified = lastModified,
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
     )
 }

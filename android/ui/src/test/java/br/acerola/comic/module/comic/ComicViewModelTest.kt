@@ -357,10 +357,11 @@ class ComicViewModelTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L)
             val cap2 = ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L)
 
-            volumeSectionsFlow.value = listOf(
-                br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume1, listOf(cap1), 1, 1, false),
-                br.acerola.comic.dto.archive.VolumeChapterGroupDto(volume2, listOf(cap2), 1, 1, false),
-            )
+            volumeSectionsFlow.value =
+                listOf(
+                    VolumeChapterGroupDto(volume1, listOf(cap1), 1, 1, false),
+                    VolumeChapterGroupDto(volume2, listOf(cap2), 1, 1, false),
+                )
 
             localChaptersFlow.value =
                 ChapterArchivePageDto(
@@ -393,9 +394,10 @@ class ComicViewModelTest {
                     page = 0,
                     total = 2,
                 )
-            volumeSectionsFlow.value = listOf(
-                VolumeChapterGroupDto(volume1, listOf(cap3, cap4), 2, 2, false),
-            )
+            volumeSectionsFlow.value =
+                listOf(
+                    VolumeChapterGroupDto(volume1, listOf(cap3, cap4), 2, 2, false),
+                )
 
             viewModel.chapters.test {
                 var item = awaitItem()

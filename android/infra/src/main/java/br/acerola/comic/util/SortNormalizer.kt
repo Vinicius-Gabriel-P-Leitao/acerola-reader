@@ -1,8 +1,6 @@
 package br.acerola.comic.util
 
-import br.acerola.comic.pattern.ChapterTemplatePattern
 import br.acerola.comic.pattern.SpecialArchivePattern
-import br.acerola.comic.pattern.VolumeTemplatePattern
 
 enum class SortType {
     CHAPTER,
@@ -21,16 +19,10 @@ object SortNormalizer {
     fun normalize(
         name: String,
         type: SortType,
+        templates: List<String>,
         fallbackIndex: Int = 0,
     ): SortResult {
-        val presets =
-            if (type == SortType.VOLUME) {
-                VolumeTemplatePattern.presets.values
-            } else {
-                ChapterTemplatePattern.presets.values
-            }
-
-        presets.forEach { template ->
+        templates.forEach { template ->
             val regex = templateToRegex(template)
             val match = regex.find(name)
 

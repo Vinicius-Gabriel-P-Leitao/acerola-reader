@@ -4,21 +4,23 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import br.acerola.comic.util.SortType
 
 @Entity(
-    tableName = "chapter_template",
+    tableName = "archive_template",
     indices = [
         Index(value = ["label"], unique = true),
-        // Removido unique de pattern para permitir presets com labels diferentes e mesmos patterns
     ],
 )
-data class ChapterTemplate(
+data class ArchiveTemplate(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     @ColumnInfo(name = "label")
     val label: String,
     @ColumnInfo(name = "pattern")
     val pattern: String,
+    @ColumnInfo(name = "type")
+    val type: SortType,
     @ColumnInfo(name = "is_default")
     val isDefault: Boolean = false,
     @ColumnInfo(name = "priority")

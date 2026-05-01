@@ -27,7 +27,7 @@ class ComicGridItemTest {
                         coverUri = null,
                         bannerUri = null,
                         lastModified = 0L,
-                        chapterTemplateFk = null,
+                        archiveTemplateFk = null,
                     ),
                 remoteInfo =
                     ComicMetadataDto(

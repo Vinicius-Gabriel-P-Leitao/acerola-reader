@@ -1,9 +1,7 @@
 package br.acerola.comic.util
 
 import br.acerola.comic.pattern.ArchiveFormatPattern
-import br.acerola.comic.pattern.ChapterTemplatePattern
 import br.acerola.comic.pattern.TemplateMacro
-import br.acerola.comic.pattern.VolumeTemplatePattern
 
 fun templateToRegex(template: String): Regex {
     val extensions = ArchiveFormatPattern.entries.joinToString("|") { it.name.lowercase() }
@@ -28,16 +26,10 @@ fun templateToRegex(template: String): Regex {
 
 fun detectArchiveTemplate(
     name: String,
-    type: SortType,
+    templates: List<String>,
+    fallbackTemplate: String,
 ): String {
-    val presets =
-        if (type == SortType.VOLUME) {
-            VolumeTemplatePattern.presets.values
-        } else {
-            ChapterTemplatePattern.presets.values
-        }
-
-    presets.forEach { template ->
+    templates.forEach { template ->
         val regex = templateToRegex(template)
 
         if (regex.matches(input = name)) {
@@ -45,9 +37,5 @@ fun detectArchiveTemplate(
         }
     }
 
-    return if (type == SortType.VOLUME) {
-        VolumeTemplatePattern.getTemplate()
-    } else {
-        ChapterTemplatePattern.getTemplate()
-    }
+    return fallbackTemplate
 }

@@ -96,10 +96,11 @@ class ChapterArchiveEngineVolumeTest {
         every { context.contentResolver } returns mockk(relaxed = true)
         coEvery { templateService.getTemplates() } returns
             listOf(
-                br.acerola.comic.local.entity.archive.ChapterTemplate(
+                br.acerola.comic.local.entity.archive.ArchiveTemplate(
                     id = 1L,
                     label = "Default",
                     pattern = "Ch. {chapter}{decimal}.*.{extension}",
+                    type = SortType.CHAPTER,
                 ),
             )
         coEvery { readingHistoryDao.updateHistoryChapterIdBySort(any(), any(), any()) } returns Unit
@@ -123,7 +124,7 @@ class ChapterArchiveEngineVolumeTest {
             val comicId = 1L
             // URI válida para SAF
             val validPath = "content://com.android.externalstorage.documents/tree/primary%3Aroot/document/primary%3Aroot"
-            val comicDir = MangaDirectoryFixtures.createMangaDirectory(id = comicId, path = validPath).copy(chapterTemplateFk = 1L)
+            val comicDir = MangaDirectoryFixtures.createMangaDirectory(id = comicId, path = validPath).copy(archiveTemplateFk = 1L)
 
             val folderUri = Uri.parse(validPath)
             val baseUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3Aroot")
@@ -150,7 +151,7 @@ class ChapterArchiveEngineVolumeTest {
                 )
             every { ContentQueryHelper.listFiles(context, baseUri, "primary:root") } returns Either.Right(listOf(volumeMetadata))
             coEvery { volumeArchiveDao.getVolumesListByDirectoryId(comicId) } returns emptyList()
-            every { SortNormalizer.normalize("Vol. 01", SortType.VOLUME) } returns SortResult(SortType.VOLUME, 1, 0, false, "1")
+            every { SortNormalizer.normalize("Vol. 01", SortType.VOLUME, any()) } returns SortResult(SortType.VOLUME, 1, 0, false, "1")
 
             val volUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3Aroot/document/primary%3Aroot%2FVol.01")
             every { DocumentsContract.buildDocumentUriUsingTree(baseUri, "primary:root/Vol. 01") } returns volUri
@@ -215,7 +216,7 @@ class ChapterArchiveEngineVolumeTest {
 
             coEvery { chapterArchiveDao.getChaptersListByDirectoryId(folderId = comicId) } returns emptyList()
             coEvery { chapterArchiveDao.insert(any()) } returns 1L
-            every { SortNormalizer.normalize("Ch. 01.cbz", SortType.CHAPTER) } returns SortResult(SortType.CHAPTER, 1, 0, false, "1")
+            every { SortNormalizer.normalize("Ch. 01.cbz", SortType.CHAPTER, any()) } returns SortResult(SortType.CHAPTER, 1, 0, false, "1")
             // Execução
             val result = repository.refreshComicChapters(comicId, baseUri)
 

@@ -1,6 +1,6 @@
 package br.acerola.comic.module.main.pattern.state
-import br.acerola.comic.dto.archive.ChapterTemplateDto
+import br.acerola.comic.dto.archive.ArchiveTemplateDto
 
 data class FilePatternUiState(
-    val templates: List<ChapterTemplateDto> = emptyList(),
+    val templates: List<ArchiveTemplateDto> = emptyList(),
 )

@@ -1,11 +1,20 @@
 package br.acerola.comic.util
 
+import br.acerola.comic.pattern.TemplateMacro
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TemplateToRegexTest {
+    private val chapterTemplates =
+        listOf(
+            "{${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",
+            "Ch. {${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",
+            "Cap. {${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",
+            "chapter {${TemplateMacro.CHAPTER.tag}}{${TemplateMacro.DECIMAL.tag}}.*.{${TemplateMacro.EXTENSION.tag}}",
+        )
+
     @Test
     fun `deve converter um padrao de template para regex corretamente`() {
         val template = "Cap. {chapter}{decimal}*{extension}"
@@ -41,16 +50,18 @@ class TemplateToRegexTest {
 
     @Test
     fun `detectArchiveTemplate deve identificar corretamente o melhor preset`() {
-        val preset = detectArchiveTemplate("Cap. 01 - O Início.cbz", SortType.CHAPTER)
+        val fallback = "{chapter}{decimal}.*.{extension}"
+
+        val preset = detectArchiveTemplate("Cap. 01 - O Início.cbz", chapterTemplates, fallback)
         assertEquals("Cap. {chapter}{decimal}.*.{extension}", preset)
 
-        val preset2 = detectArchiveTemplate("chapter 10.cbz", SortType.CHAPTER)
+        val preset2 = detectArchiveTemplate("chapter 10.cbz", chapterTemplates, fallback)
         assertEquals("chapter {chapter}{decimal}.*.{extension}", preset2)
 
-        val preset3 = detectArchiveTemplate("Ch. 5.5 - Fim.cbz", SortType.CHAPTER)
+        val preset3 = detectArchiveTemplate("Ch. 5.5 - Fim.cbz", chapterTemplates, fallback)
         assertEquals("Ch. {chapter}{decimal}.*.{extension}", preset3)
 
-        val presetFallback = detectArchiveTemplate("FormatoDesconhecido_01.rar", SortType.CHAPTER)
+        val presetFallback = detectArchiveTemplate("FormatoDesconhecido_01.rar", chapterTemplates, fallback)
         assertEquals("{chapter}{decimal}.*.{extension}", presetFallback)
     }
 }

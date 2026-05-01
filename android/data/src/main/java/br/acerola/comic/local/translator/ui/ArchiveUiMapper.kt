@@ -20,7 +20,7 @@ fun ComicDirectory.toViewDto(): ComicDirectoryDto =
         coverUri = cover?.toUri(),
         bannerUri = banner?.toUri(),
         lastModified = lastModified,
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
         externalSyncEnabled = externalSyncEnabled,
         hidden = hidden,
     )

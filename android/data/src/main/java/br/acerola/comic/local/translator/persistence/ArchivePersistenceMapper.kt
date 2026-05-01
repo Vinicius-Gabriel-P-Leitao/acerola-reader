@@ -16,7 +16,7 @@ fun ComicDirectoryDto.toEntity(): ComicDirectory =
         cover = coverUri?.toString(),
         banner = bannerUri?.toString(),
         lastModified = System.currentTimeMillis(),
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
         externalSyncEnabled = externalSyncEnabled,
     )
 
@@ -33,7 +33,7 @@ fun ChapterFileDto.toEntity(folderId: Long): ChapterArchive =
 fun DocumentFile.toMangaDirectoryEntity(
     cover: DocumentFile?,
     banner: DocumentFile?,
-    chapterTemplateFk: Long?,
+    archiveTemplateFk: Long?,
     externalSyncEnabled: Boolean = true,
 ): ComicDirectory =
     ComicDirectory(
@@ -41,7 +41,7 @@ fun DocumentFile.toMangaDirectoryEntity(
         path = uri.toString(),
         cover = cover?.uri?.toString(),
         banner = banner?.uri?.toString(),
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
         lastModified = lastModified(),
         externalSyncEnabled = externalSyncEnabled,
     )
@@ -89,14 +89,14 @@ fun FastFileMetadata.toMangaDirectoryEntity(
     folderUri: String,
     coverPath: String?,
     bannerPath: String?,
-    chapterTemplateFk: Long?,
+    archiveTemplateFk: Long?,
 ): ComicDirectory =
     ComicDirectory(
         name = name,
         path = folderUri,
         cover = coverPath,
         banner = bannerPath,
-        chapterTemplateFk = chapterTemplateFk,
+        archiveTemplateFk = archiveTemplateFk,
         lastModified = lastModified,
     )
 

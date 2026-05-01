@@ -38,7 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.dto.archive.ChapterTemplateDto
+import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.pattern.component.AddTemplateDialog
 import br.acerola.comic.module.main.pattern.component.TemplateItem
@@ -76,7 +76,7 @@ private fun FilePatternLayout(
     onBack: () -> Unit,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
-    var editingTemplate by remember { mutableStateOf<ChapterTemplateDto?>(null) }
+    var editingTemplate by remember { mutableStateOf<ArchiveTemplateDto?>(null) }
 
     Scaffold(
         topBar = {
@@ -160,8 +160,8 @@ private fun FilePatternLayout(
     if (showAddDialog) {
         Main.Pattern.Component.AddTemplateDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { label, pattern ->
-                onAction(FilePatternAction.AddTemplate(label, pattern))
+            onConfirm = { label, pattern, type ->
+                onAction(FilePatternAction.AddTemplate(label, pattern, type))
                 showAddDialog = false
             },
         )
@@ -172,9 +172,10 @@ private fun FilePatternLayout(
             isEditMode = true,
             initialLabel = template.label,
             initialPattern = template.pattern,
+            initialType = template.type,
             onDismiss = { editingTemplate = null },
-            onConfirm = { label, pattern ->
-                onAction(FilePatternAction.EditTemplate(template.id, label, pattern))
+            onConfirm = { label, pattern, type ->
+                onAction(FilePatternAction.EditTemplate(template.id, label, pattern, type))
                 editingTemplate = null
             },
         )

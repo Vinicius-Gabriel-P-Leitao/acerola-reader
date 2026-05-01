@@ -16,7 +16,7 @@ import br.acerola.comic.dto.archive.ChapterArchivePageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.entity.archive.ChapterTemplate
+import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.translator.persistence.toMangaDirectoryEntity
 import br.acerola.comic.local.translator.ui.toViewDto
@@ -27,6 +27,7 @@ import br.acerola.comic.pattern.MediaFilePattern
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.service.template.TemplateMatcher
 import br.acerola.comic.util.ContentQueryHelper
+import br.acerola.comic.util.SortType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -103,7 +104,7 @@ class ComicDirectoryEngine
                             val templates = templateService.getTemplates()
                             val detectedTemplate =
                                 firstChapterName?.let {
-                                    templateMatcher.detect(it, templates)
+                                    templateMatcher.detect(it, templates.filter { t -> t.type == br.acerola.comic.util.SortType.CHAPTER })
                                 }
 
                             val bannerDoc =
@@ -121,7 +122,7 @@ class ComicDirectoryEngine
                                     .toMangaDirectoryEntity(
                                         cover = coverDoc,
                                         banner = bannerDoc,
-                                        chapterTemplateFk = detectedTemplate?.id,
+                                        archiveTemplateFk = detectedTemplate?.id,
                                     ).copy(id = existingManga.id, externalSyncEnabled = existingManga.externalSyncEnabled)
 
                             directoryDao.update(entity = updatedManga)
@@ -391,7 +392,7 @@ class ComicDirectoryEngine
             context: Context,
             rootUri: Uri,
             currentDocId: String,
-            templates: List<ChapterTemplate>,
+            templates: List<ArchiveTemplate>,
             comicDirectories: MutableList<ComicDirectory>,
         ) {
             val children = ContentQueryHelper.listFiles(context, rootUri, currentDocId).getOrElse { return }
@@ -405,7 +406,8 @@ class ComicDirectoryEngine
             val subDirs = children.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
             val hasVolumeSubDirs =
                 subDirs.any { subDir ->
-                    val isVol = isVolumeName(subDir.name)
+                    val volumeTemplates = templates.filter { it.type == SortType.VOLUME }.map { it.pattern }
+                    val isVol = isVolumeName(subDir.name, volumeTemplates)
                     isVol && folderContainsManga(context, rootUri, subDir.id)
                 }
 
@@ -425,7 +427,7 @@ class ComicDirectoryEngine
 
             val detectedTemplate =
                 firstChapterName?.let {
-                    templateMatcher.detect(it, templates)
+                    templateMatcher.detect(it, templates.filter { t -> t.type == br.acerola.comic.util.SortType.CHAPTER })
                 }
 
             val comicDir =
@@ -444,22 +446,23 @@ class ComicDirectoryEngine
                                 DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id),
                             )
                         },
-                    chapterTemplateFk = detectedTemplate?.id,
+                    archiveTemplateFk = detectedTemplate?.id,
                 )
 
             comicDirectories.add(comicDir)
         }
 
-        private fun isVolumeName(name: String): Boolean {
-            val presets = br.acerola.comic.pattern.VolumeTemplatePattern.presets.values
-            return presets.any { template ->
+        private fun isVolumeName(
+            name: String,
+            volumeTemplates: List<String>,
+        ): Boolean =
+            volumeTemplates.any { template ->
                 br.acerola.comic.util
                     .templateToRegex(template)
                     .containsMatchIn(name)
             } ||
                 name.startsWith("Vol", ignoreCase = true) ||
                 name.startsWith("V0", ignoreCase = true)
-        }
 
         private fun folderContainsManga(
             context: Context,

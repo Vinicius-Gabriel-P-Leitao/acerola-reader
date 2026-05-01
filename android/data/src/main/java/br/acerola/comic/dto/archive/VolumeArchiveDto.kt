@@ -4,7 +4,6 @@ import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import kotlinx.parcelize.Parcelize
 
-// FIXME: Nome errado, correto deve ser VolumeArchiveDto
 @Parcelize
 @Immutable
 data class VolumeArchiveDto(

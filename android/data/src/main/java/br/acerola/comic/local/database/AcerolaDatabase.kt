@@ -6,8 +6,8 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import br.acerola.comic.local.converter.AcerolaTypeConverters
+import br.acerola.comic.local.dao.archive.ArchiveTemplateDao
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
-import br.acerola.comic.local.dao.archive.ChapterTemplateDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.dao.category.CategoryDao
@@ -23,8 +23,8 @@ import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.comic.local.dao.view.ComicSummaryDao
+import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ChapterArchive
-import br.acerola.comic.local.entity.archive.ChapterTemplate
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.entity.archive.VolumeArchive
 import br.acerola.comic.local.entity.category.Category
@@ -46,7 +46,7 @@ import br.acerola.comic.local.entity.view.ComicSummaryView
 @Database(
     entities = [
         ComicDirectory::class,
-        ChapterTemplate::class,
+        ArchiveTemplate::class,
         ComicMetadata::class,
         ChapterArchive::class,
         VolumeArchive::class,
@@ -78,7 +78,7 @@ abstract class AcerolaDatabase : RoomDatabase() {
 
     abstract fun comicDirectoryDao(): ComicDirectoryDao
 
-    abstract fun chapterTemplateDao(): ChapterTemplateDao
+    abstract fun archiveTemplateDao(): ArchiveTemplateDao
 
     abstract fun comicRemoteInfoDao(): ComicMetadataDao
 

@@ -186,7 +186,7 @@ class ChapterArchiveEngineTest {
 
             // Mock SortNormalizer
             mockkObject(SortNormalizer)
-            every { SortNormalizer.normalize("ch1.cbz", SortType.CHAPTER) } returns SortResult(SortType.CHAPTER, 1, 0, false, "1")
+            every { SortNormalizer.normalize("ch1.cbz", SortType.CHAPTER, any()) } returns SortResult(SortType.CHAPTER, 1, 0, false, "1")
 
             val result = repository.refreshComicChapters(comicId)
 

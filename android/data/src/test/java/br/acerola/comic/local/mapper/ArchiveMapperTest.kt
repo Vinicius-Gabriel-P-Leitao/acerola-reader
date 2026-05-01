@@ -160,7 +160,7 @@ class ArchiveMapperTest {
         every { banner.uri } returns bannerUri
         every { bannerUri.toString() } returns "uri_banner"
 
-        val entity = folder.toMangaDirectoryEntity(cover, banner, chapterTemplateFk = null)
+        val entity = folder.toMangaDirectoryEntity(cover, banner, archiveTemplateFk = null)
 
         assertEquals("One Piece", entity.name)
         assertEquals("uri_folder", entity.path)

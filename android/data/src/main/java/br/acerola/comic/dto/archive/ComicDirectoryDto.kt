@@ -14,7 +14,7 @@ data class ComicDirectoryDto(
     val coverUri: Uri?,
     val bannerUri: Uri?,
     val lastModified: Long,
-    val chapterTemplateFk: Long?,
+    val archiveTemplateFk: Long?,
     val externalSyncEnabled: Boolean = true,
     val hidden: Boolean = false,
 ) : Parcelable
