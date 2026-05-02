@@ -38,8 +38,8 @@ import javax.inject.Inject
 class ReaderViewModel
     @Inject
     constructor(
-        // FIXME: Nome errado repository, vazamento de lógica ViewModel não conhece service, mover lógica de Processor para o UseCase.
-        private val repository: ReaderProcessor,
+        // FIXME: Nome errado readerUseCase, vazamento de lógica ViewModel não conhece service, mover lógica de Processor para o UseCase.
+        private val readerUseCase: ReaderProcessor,
         @param:ApplicationContext private val context: Context,
         private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
         @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
@@ -112,12 +112,12 @@ class ReaderViewModel
             }
 
             viewModelScope.launch {
-                repository
+                readerUseCase
                     .openChapter(chapter)
                     .map {
                         _uiState.update {
                             it.copy(
-                                pageCount = repository.pageCount(),
+                                pageCount = readerUseCase.pageCount(),
                                 currentPage = initialPage,
                                 isLoading = false,
                             )
@@ -241,7 +241,7 @@ class ReaderViewModel
                 historyUpdates.trySend(Triple(comicId, chapterSort, index))
             }
 
-            repository.prefetchWindow(center = index, total = uiState.value.pageCount)
+            readerUseCase.prefetchWindow(center = index, total = uiState.value.pageCount)
         }
 
         private suspend fun persistHistory(

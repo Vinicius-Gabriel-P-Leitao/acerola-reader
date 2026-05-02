@@ -74,6 +74,7 @@ dependencies {
     // --- Core ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.arrow.core)
 
     // --- UI / Compose ---
     implementation(platform(libs.androidx.compose.bom))

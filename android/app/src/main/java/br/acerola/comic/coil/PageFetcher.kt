@@ -1,4 +1,4 @@
-package br.acerola.comic.module.reader.coil
+package br.acerola.comic.coil
 
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -13,7 +13,6 @@ import coil.request.Options
 
 class PageFetcher(
     private val pageIndex: Int,
-    // FIXME: Isso é vazamento de lógica para UI, remover isso daqui tá totalmente errado isso aqui
     private val readerProcessor: ReaderProcessor,
 ) : Fetcher {
     override suspend fun fetch(): FetchResult? {
