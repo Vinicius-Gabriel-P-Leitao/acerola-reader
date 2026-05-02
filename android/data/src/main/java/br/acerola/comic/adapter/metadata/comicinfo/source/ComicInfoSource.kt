@@ -8,6 +8,7 @@ import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.message.NetworkError
+import br.acerola.comic.local.translator.persistence.toDto
 import br.acerola.comic.service.metadata.ComicInfoParser
 import br.acerola.comic.service.reader.ChapterSourceFactory
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -67,14 +68,7 @@ class ComicInfoSource
                     }
 
                 if (firstChapter != null) {
-                    val chapterDto =
-                        // FIXME: Fazer toDto
-                        ChapterFileDto(
-                            id = 0,
-                            chapterSort = "0",
-                            name = firstChapter.name!!,
-                            path = firstChapter.uri.toString(),
-                        )
+                    val chapterDto = firstChapter.toDto()
                     val sourceResult = chapterSourceFactory.create(chapterDto)
 
                     return@withContext sourceResult.fold(

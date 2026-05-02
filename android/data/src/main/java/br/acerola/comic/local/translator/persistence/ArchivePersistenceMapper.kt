@@ -119,3 +119,12 @@ fun DocumentFile.toChapterArchiveEntity(
         isSpecial = isSpecial,
         lastModified = lastModified(),
     )
+
+fun DocumentFile.toDto(chapterSort: String = "0"): ChapterFileDto =
+    ChapterFileDto(
+        id = 0,
+        name = name ?: "Unknown",
+        path = uri.toString(),
+        chapterSort = chapterSort,
+        lastModified = lastModified(),
+    )
