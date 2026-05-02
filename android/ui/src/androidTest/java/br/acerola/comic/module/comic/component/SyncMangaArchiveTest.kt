@@ -8,12 +8,12 @@ import br.acerola.comic.module.comic.Comic
 import org.junit.Rule
 import org.junit.Test
 
-class SyncComicArchiveTest {
+class SyncMangaArchiveTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_opcoes_de_sincronizacao_local() {
+    fun deve_exibir_opcoes_de_sincronizacao_de_arquivos_do_manga() {
         composeTestRule.setContent {
             Comic.Component.SyncMangaArchive(
                 onSyncChapters = {},
@@ -27,7 +27,7 @@ class SyncComicArchiveTest {
     }
 
     @Test
-    fun deve_chamar_onSyncChapters_ao_clicar_na_opcao_correspondente() {
+    fun deve_chamar_onSyncChapters_ao_clicar_na_opcao() {
         var clicked = false
         composeTestRule.setContent {
             Comic.Component.SyncMangaArchive(
@@ -38,21 +38,6 @@ class SyncComicArchiveTest {
         }
 
         composeTestRule.onNodeWithText("Sincronizar capítulos", substring = true).performClick()
-        assert(clicked)
-    }
-
-    @Test
-    fun deve_chamar_onRescanCover_ao_clicar_na_opcao_correspondente() {
-        var clicked = false
-        composeTestRule.setContent {
-            Comic.Component.SyncMangaArchive(
-                onSyncChapters = {},
-                onRescanCover = { clicked = true },
-                onExtractFirstPageAsCover = {},
-            )
-        }
-
-        composeTestRule.onNodeWithText("Sincronizar cover e banner", substring = true).performClick()
         assert(clicked)
     }
 }

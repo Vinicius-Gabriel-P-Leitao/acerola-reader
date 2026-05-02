@@ -5,12 +5,12 @@ import br.acerola.comic.common.ux.Acerola
 import org.junit.Rule
 import org.junit.Test
 
-class StatusBarProtectionTest {
+class ScrimTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_renderizar_status_bar_protection() {
+    fun deve_renderizar_scrim_sem_falhas() {
         composeTestRule.setContent {
             Acerola.Component.Scrim()
         }

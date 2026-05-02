@@ -13,12 +13,12 @@ import br.acerola.comic.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
-class FloatingToolTest {
+class FabGroupTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `FloatingTool_deve_exibir_itens_ao_ser_clicado`() {
+    fun deve_exibir_itens_do_grupo_ao_expandir_o_fab_principal() {
         var itemClicked = false
         val items =
             listOf(
@@ -38,13 +38,8 @@ class FloatingToolTest {
             }
         }
 
-        // 1. O item não deve estar visível inicialmente
         composeTestRule.onNodeWithText("Ação 1").assertDoesNotExist()
-
-        // 2. Clica no botão principal para expandir
         composeTestRule.onNodeWithContentDescription("Abrir").performClick()
-
-        // 3. Agora o item deve aparecer
         composeTestRule.onNodeWithText("Ação 1").assertIsDisplayed().performClick()
 
         assert(itemClicked)

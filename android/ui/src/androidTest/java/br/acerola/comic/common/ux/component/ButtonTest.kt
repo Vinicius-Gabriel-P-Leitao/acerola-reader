@@ -12,12 +12,12 @@ import br.acerola.comic.common.ux.Acerola
 import org.junit.Rule
 import org.junit.Test
 
-class SmartButtonTest {
+class ButtonTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `botão_do_tipo_texto_deve_exibir_a_label_corretamente`() {
+    fun deve_renderizar_botao_com_label_e_executar_clique() {
         var clicked = false
         composeTestRule.setContent {
             Acerola.Component.Button(
@@ -31,7 +31,7 @@ class SmartButtonTest {
     }
 
     @Test
-    fun `botão_do_tipo_ícone_deve_exibir_a_descrição_de_conteúdo_corretamente`() {
+    fun deve_renderizar_icon_button_com_content_description() {
         composeTestRule.setContent {
             Acerola.Component.IconButton(
                 onClick = {},
@@ -43,7 +43,7 @@ class SmartButtonTest {
     }
 
     @Test
-    fun `botão_do_tipo_misto_deve_exibir_ícone_e_texto_simultaneamente`() {
+    fun deve_exibir_icone_e_texto_no_botao_misto() {
         composeTestRule.setContent {
             Acerola.Component.Button(
                 text = "Salvar",
