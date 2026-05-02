@@ -3,7 +3,7 @@ package br.acerola.comic.local.translator.ui
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.dto.history.ReadingHistoryWithChapterDto
 import br.acerola.comic.local.entity.history.ReadingHistory
-import br.acerola.comic.local.entity.relation.ReadingHistoryWithChapter
+import br.acerola.comic.local.entity.relation.ChapterReadingStatus
 
 fun ReadingHistory.toViewDto() =
     ReadingHistoryDto(
@@ -15,7 +15,7 @@ fun ReadingHistory.toViewDto() =
         updatedAt = updatedAt,
     )
 
-fun ReadingHistoryWithChapter.toViewDto() =
+fun ChapterReadingStatus.toViewDto() =
     ReadingHistoryWithChapterDto(
         comicDirectoryId = comicDirectoryId,
         chapterArchiveId = chapterArchiveId,
