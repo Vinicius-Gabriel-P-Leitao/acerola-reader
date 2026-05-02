@@ -14,10 +14,10 @@ import br.acerola.comic.error.message.ChapterError
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.module.reader.state.ReaderUiState
-import br.acerola.comic.service.reader.ReaderProcessor
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
+import br.acerola.comic.usecase.reader.ReaderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.cancelChildren
@@ -38,8 +38,7 @@ import javax.inject.Inject
 class ReaderViewModel
     @Inject
     constructor(
-        // FIXME: Nome errado readerUseCase, vazamento de lógica ViewModel não conhece service, mover lógica de Processor para o UseCase.
-        private val readerUseCase: ReaderProcessor,
+        private val readerUseCase: ReaderUseCase,
         @param:ApplicationContext private val context: Context,
         private val trackReadingProgressUseCase: TrackReadingProgressUseCase,
         @param:DirectoryCase private val observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,

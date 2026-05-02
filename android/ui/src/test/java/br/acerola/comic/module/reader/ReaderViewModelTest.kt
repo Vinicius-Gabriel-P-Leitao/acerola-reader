@@ -5,7 +5,7 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.dto.archive.ChapterPageDto
-import br.acerola.comic.service.reader.ReaderProcessor
+import br.acerola.comic.usecase.reader.ReaderUseCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
 import io.mockk.every
@@ -21,7 +21,7 @@ class ReaderViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val readerService = mockk<ReaderProcessor>(relaxed = true)
+    private val readerUseCase = mockk<ReaderUseCase>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
     private val historyGateway = mockk<HistoryGateway>(relaxed = true)
     private val chapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
@@ -41,7 +41,7 @@ class ReaderViewModelTest {
 
         viewModel =
             ReaderViewModel(
-                repository = readerService,
+                readerUseCase = readerUseCase,
                 context = context,
                 trackReadingProgressUseCase = trackReadingProgressUseCase,
                 observeChaptersUseCase = observeChaptersUseCase,
