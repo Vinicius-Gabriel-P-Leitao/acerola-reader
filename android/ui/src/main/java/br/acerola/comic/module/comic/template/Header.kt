@@ -15,7 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.BookmarkRibbon
 import br.acerola.comic.common.ux.component.Button
 import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
@@ -43,6 +49,7 @@ import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.pattern.metadata.ComicStatus
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -124,27 +131,43 @@ fun Comic.Template.Header(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    AsyncImage(
-                        contentDescription = stringResource(id = R.string.comic_header_cover_description),
-                        contentScale = ContentScale.Crop,
-                        model =
-                            ImageRequest
-                                .Builder(context = context)
-                                .data(data = comic.directory.coverUri)
-                                .memoryCacheKey("${comic.directory.coverUri}_${comic.directory.lastModified}")
-                                .diskCacheKey("${comic.directory.coverUri}_${comic.directory.lastModified}")
-                                .crossfade(enable = true)
-                                .build(),
-                        placeholder = placeholderPainter,
-                        error = placeholderPainter,
-                        fallback = placeholderPainter,
-                        modifier =
-                            Modifier
-                                .clip(shape = ShapeTokens.Medium)
-                                .width(width = SizeTokens.ComicHeaderCoverWidth)
-                                .height(height = SizeTokens.ComicHeaderCoverHeight)
-                                .background(color = MaterialTheme.colorScheme.surfaceVariant),
-                    )
+                    Box {
+                        AsyncImage(
+                            contentDescription = stringResource(id = R.string.comic_header_cover_description),
+                            contentScale = ContentScale.Crop,
+                            model =
+                                ImageRequest
+                                    .Builder(context = context)
+                                    .data(data = comic.directory.coverUri)
+                                    .memoryCacheKey("${comic.directory.coverUri}_${comic.directory.lastModified}")
+                                    .diskCacheKey("${comic.directory.coverUri}_${comic.directory.lastModified}")
+                                    .crossfade(enable = true)
+                                    .build(),
+                            placeholder = placeholderPainter,
+                            error = placeholderPainter,
+                            fallback = placeholderPainter,
+                            modifier =
+                                Modifier
+                                    .padding(top = SpacingTokens.ExtraSmall)
+                                    .width(width = SizeTokens.ComicHeaderCoverWidth)
+                                    .height(height = SizeTokens.ComicHeaderCoverHeight)
+                                    .clip(shape = ShapeTokens.Medium)
+                                    .background(color = MaterialTheme.colorScheme.surfaceVariant),
+                        )
+
+                        val categoryColor = comic.category?.color
+                        if (categoryColor != null) {
+                            BookmarkRibbon(
+                                color = Color(categoryColor),
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(start = SpacingTokens.Medium)
+                                        .width(SpacingTokens.ExtraLarge)
+                                        .height(SpacingTokens.Giant),
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.width(width = SpacingTokens.Large))
 
@@ -178,7 +201,7 @@ fun Comic.Template.Header(
                             val status = ComicStatus.fromRawValue(comic.remoteInfo?.status)
                             StatusBadge(status = stringResource(id = status.stringRes))
                             comic.remoteInfo?.syncSource?.let { source ->
-                                SourceBadge(source = source.displayName)
+                                SourceBadge(source = source)
                             }
                         }
                     }
@@ -202,69 +225,66 @@ fun Comic.Template.Header(
             }
         }
 
-        Column(
+        Surface(
+            shape = ShapeTokens.Medium,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .animateContentSize()
                     .padding(horizontal = SpacingTokens.ExtraLarge)
+                    .animateContentSize()
                     .clickable {
                         isExpanded = !isExpanded
                     },
         ) {
-            Text(
-                text = stringResource(id = R.string.comic_header_synopsis_title),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            )
+            Column(
+                modifier = Modifier.padding(SpacingTokens.Medium)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.comic_header_synopsis_title),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
 
-            Spacer(modifier = Modifier.height(height = SpacingTokens.Small))
+                Spacer(modifier = Modifier.height(height = SpacingTokens.Small))
 
-            // TODO: Transforma resse texto + "ler mais" em um card simples colapsavel que vai ter uma seta no meio, algo como um retangulo com uma
-            //  seta de drop
-            Text(
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-                text = comic.remoteInfo?.description ?: stringResource(id = R.string.comic_header_no_description),
-            )
+                Text(
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+                    text = comic.remoteInfo?.description ?: stringResource(id = R.string.comic_header_no_description),
+                )
 
-            Text(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = SpacingTokens.ExtraSmall),
-                text =
-                    if (isExpanded) {
-                        stringResource(
-                            id = R.string.comic_header_read_less,
-                        )
-                    } else {
-                        stringResource(id = R.string.comic_header_read_more)
-                    },
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-            )
+                Spacer(modifier = Modifier.height(height = SpacingTokens.Small))
 
-            Spacer(modifier = Modifier.height(height = SpacingTokens.Small))
-
-            // TODO: Tranformar em um Split buttons, ter a função de reler, continuar, iniciar + a de bookmark ai o icone é o que está no comic e
-            //  não tiver nenhum fica um cinza ou adicionar o icone de bookmark  ao AsyncImage que fica melhor igual a quando é na tela de Home
-            Acerola.Component.Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    if (history != null) {
-                        onContinueClick(history.chapterArchiveId, history.lastPage)
-                    } else {
-                        onContinueClick(-1L, 0)
-                    }
-                },
-                text = when {
-                    history?.isCompleted == true -> stringResource(id = R.string.label_comic_action_reread)
-                    history != null -> stringResource(id = R.string.label_comic_action_continue)
-                    else -> stringResource(id = R.string.label_comic_action_start)
-                },
-            )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
+        
+        Spacer(modifier = Modifier.height(height = SpacingTokens.Medium))
+
+        Acerola.Component.Button(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingTokens.ExtraLarge),
+            onClick = {
+                if (history != null) {
+                    onContinueClick(history.chapterArchiveId, history.lastPage)
+                } else {
+                    onContinueClick(-1L, 0)
+                }
+            },
+            text = when {
+                history?.isCompleted == true -> stringResource(id = R.string.label_comic_action_reread)
+                history != null -> stringResource(id = R.string.label_comic_action_continue)
+                else -> stringResource(id = R.string.label_comic_action_start)
+            },
+        )
     }
 }
 
@@ -293,7 +313,7 @@ private fun GenreBadge(
 
 @Composable
 private fun SourceBadge(
-    source: String,
+    source: MetadataSource,
     modifier: Modifier = Modifier,
 ) {
 
@@ -302,13 +322,11 @@ private fun SourceBadge(
             modifier
                 .clip(shape = ShapeTokens.ExtraSmall)
                 .background(
-                    color = // FIXME: FAzer isso derivar do pattern, isso aqui hardcoded tá errado MetadataSource
-                        when (source) {
-                            "COMIC_INFO" -> MaterialTheme.colorScheme.secondaryContainer
-                            "MANGADEX" -> MaterialTheme.colorScheme.tertiaryContainer
-                            "ANILIST" -> MaterialTheme.colorScheme.primaryContainer
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        }
+                    color = when (source) {
+                        MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
+                        MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
+                        MetadataSource.ANILIST -> MaterialTheme.colorScheme.primaryContainer
+                    }
                 )
                 .border(
                     width = SizeTokens.BorderThin,
@@ -318,7 +336,7 @@ private fun SourceBadge(
                 .padding(horizontal = SpacingTokens.Small, vertical = 2.dp),
     ) {
         Text(
-            text = source,
+            text = source.displayName,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
         )
