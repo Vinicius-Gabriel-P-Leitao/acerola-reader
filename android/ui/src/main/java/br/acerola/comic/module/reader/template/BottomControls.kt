@@ -347,7 +347,7 @@ private fun PageNavigationControls(
             },
         )
 
-        Spacer(modifier = Modifier.width(SpacingTokens.Medium),)
+        Spacer(modifier = Modifier.width(SpacingTokens.Medium))
 
         Acerola.Component.GlassButton(
             modifier = Modifier.size(SizeTokens.ClickTargetSmall),

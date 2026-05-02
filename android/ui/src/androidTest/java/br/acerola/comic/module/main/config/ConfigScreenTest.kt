@@ -6,8 +6,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
-import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel

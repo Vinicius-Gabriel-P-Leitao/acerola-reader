@@ -16,7 +16,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
@@ -36,6 +35,7 @@ fun Comic.Component.CoverVolumeCard(
     onToggleExpanded: () -> Unit,
     onExtractCover: () -> Unit,
     modifier: Modifier = Modifier,
+    expandedContent: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -109,6 +109,6 @@ fun Comic.Component.CoverVolumeCard(
                 )
             }
         },
-        nestedItem = {},
+        nestedItem = expandedContent,
     )
 }

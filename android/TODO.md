@@ -124,6 +124,11 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
     - **Causa provável:** A lógica da "regra dos 70%" está sendo disparada erroneamente no momento do pré-carregamento (*preload*) das imagens, e não
       na visualização ativa pelo usuário.
 
+### Aplicar mudanças da lib rust acerola p2p
+
+- [ ] **A lib está a ser feita:** Séra feito um grande refactor no campo de rust para poder montar a FFI atualizada e
+  otimizada para poder salvar chaves de PeerId, DeviceInfo entre outros, poder usar o keystore para salvar dados que devem ser criptografias.
+
 ### Adicionar um worker para o conversor de pdf
 
 - [ ] **Montar um worker:** Criar um worker para quando um pdf for virar cbz, pode demorar muito, ou se melhor como tenho uma lista de pastas e 
@@ -135,10 +140,9 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 - [ ] **Seleção Múltipla (Multi-select):** Permitir a seleção de múltiplos capítulos e quadrinhos segurando (*long press*) o card ou botão
   correspondente.
 
-### Aplicar mudanças da lib rust acerola p2p
+### Modificar tabelas do banco de dados para ter nomes consistentes
 
-- [ ] **A lib está sendo feita e deixando mais robusta:** Será feito um grande refactor no campo de rust para poder montar a FFI atualizada e
-  otimizada para poder salvar chaves de PeerId, DeviceInfo entre outros, poder usar o keystore para salvar dados que devem ser criptografadas.
+- [ ] **Alguns campos que deveriam ser _fk estão com _id:** Será feito refactor e migration, deixa isso para versão do banco 3.
 
 ### 🔧 Refatoração de Arquitetura (Tech Debt Pendente)
 

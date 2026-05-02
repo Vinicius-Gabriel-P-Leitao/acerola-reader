@@ -3,8 +3,6 @@ package br.acerola.comic.local.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import br.acerola.comic.local.converter.AcerolaTypeConverters
 import br.acerola.comic.local.dao.archive.ArchiveTemplateDao
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
@@ -67,7 +65,7 @@ import br.acerola.comic.local.entity.view.ComicSummaryView
     views = [
         ComicSummaryView::class,
     ],
-    exportSchema = false,
+    exportSchema = true,
     version = 2,
 )
 @TypeConverters(AcerolaTypeConverters::class)
@@ -106,86 +104,4 @@ abstract class AcerolaDatabase : RoomDatabase() {
 
     abstract fun comicSummaryDao(): ComicSummaryDao
 
-    companion object {
-        val MIGRATION_1_2 =
-            object : Migration(1, 2) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    // 1. volume_archive
-                    db.execSQL(
-                        """
-                        CREATE TABLE IF NOT EXISTS `volume_archive` (
-                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-                            `name` TEXT NOT NULL, 
-                            `path` TEXT NOT NULL, 
-                            `volume_sort` TEXT NOT NULL, 
-                            `is_special` INTEGER NOT NULL DEFAULT 0, 
-                            `cover` TEXT, 
-                            `banner` TEXT, 
-                            `comic_directory_fk` INTEGER NOT NULL, 
-                            `last_modified` INTEGER NOT NULL DEFAULT 0, 
-                            FOREIGN KEY(`comic_directory_fk`) REFERENCES `comic_directory`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE 
-                        )
-                        """.trimIndent(),
-                    )
-                    db.execSQL(
-                        "CREATE UNIQUE INDEX IF NOT EXISTS `index_volume_archive_comic_directory_fk_volume_sort` ON `volume_archive` (`comic_directory_fk`, `volume_sort`)",
-                    )
-
-                    // 2. chapter_archive updates
-                    db.execSQL("ALTER TABLE `chapter_archive` ADD COLUMN `is_special` INTEGER NOT NULL DEFAULT 0")
-                    db.execSQL("ALTER TABLE `chapter_archive` ADD COLUMN `volume_id_fk` INTEGER")
-                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_chapter_archive_volume_id_fk` ON `chapter_archive` (`volume_id_fk`)")
-
-                    // 3. chapter_read refactor
-                    db.execSQL(
-                        """
-                        CREATE TABLE `chapter_read_new` (
-                            `comic_directory_id` INTEGER NOT NULL, 
-                            `chapter_sort` TEXT NOT NULL, 
-                            `chapter_archive_id` INTEGER, 
-                            `created_at` INTEGER NOT NULL, 
-                            PRIMARY KEY(`comic_directory_id`, `chapter_sort`), 
-                            FOREIGN KEY(`comic_directory_id`) REFERENCES `comic_directory`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE 
-                        )
-                        """.trimIndent(),
-                    )
-                    db.execSQL(
-                        """
-                        INSERT INTO `chapter_read_new` (comic_directory_id, chapter_sort, chapter_archive_id, created_at)
-                        SELECT cr.comic_directory_id, ca.chapter_sort, cr.chapter_archive_id, cr.created_at
-                        FROM chapter_read cr
-                        JOIN chapter_archive ca ON cr.chapter_archive_id = ca.id
-                        """.trimIndent(),
-                    )
-                    db.execSQL("DROP TABLE chapter_read")
-                    db.execSQL("ALTER TABLE chapter_read_new RENAME TO chapter_read")
-
-                    // 4. reading_history refactor
-                    db.execSQL(
-                        """
-                        CREATE TABLE `reading_history_new` (
-                            `comic_directory_id` INTEGER NOT NULL, 
-                            `chapter_sort` TEXT NOT NULL, 
-                            `chapter_archive_id` INTEGER, 
-                            `last_page` INTEGER NOT NULL, 
-                            `is_completed` INTEGER NOT NULL, 
-                            `updated_at` INTEGER NOT NULL, 
-                            PRIMARY KEY(`comic_directory_id`), 
-                            FOREIGN KEY(`comic_directory_id`) REFERENCES `comic_directory`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE 
-                        )
-                        """.trimIndent(),
-                    )
-                    db.execSQL(
-                        """
-                        INSERT INTO `reading_history_new` (comic_directory_id, chapter_sort, chapter_archive_id, last_page, is_completed, updated_at)
-                        SELECT rh.comic_directory_id, ca.chapter_sort, rh.chapter_archive_id, rh.last_page, rh.is_completed, rh.updated_at
-                        FROM reading_history rh
-                        JOIN chapter_archive ca ON rh.chapter_archive_id = ca.id
-                        """.trimIndent(),
-                    )
-                    db.execSQL("DROP TABLE reading_history")
-                    db.execSQL("ALTER TABLE reading_history_new RENAME TO reading_history")
-                }
-            }
-    }
 }

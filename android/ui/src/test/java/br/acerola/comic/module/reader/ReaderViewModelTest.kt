@@ -5,9 +5,9 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.dto.archive.ChapterPageDto
-import br.acerola.comic.usecase.reader.ReaderUseCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
+import br.acerola.comic.usecase.reader.ReaderUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi

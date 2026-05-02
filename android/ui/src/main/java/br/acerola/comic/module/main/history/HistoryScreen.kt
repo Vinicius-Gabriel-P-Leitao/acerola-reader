@@ -23,9 +23,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.module.comic.ComicActivity
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.common.component.ComicListItem

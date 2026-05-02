@@ -1,7 +1,7 @@
 package br.acerola.comic.module.comic.component
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,18 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,20 +30,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Comic.Component.ChapterItem(
     chapterRemoteInfoDto: ChapterFeedDto?,
@@ -62,90 +62,79 @@ fun Comic.Component.ChapterItem(
     val mainTitle = stringResource(id = R.string.title_chapter_item_chapter_number, chapterNumber)
     val subtitle = chapterRemoteInfoDto?.title?.takeIf { it.isNotBlank() } ?: chapterFileDto.name
 
-    ElevatedCard(
-        onClick = stableOnClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors =
-            CardDefaults.elevatedCardColors(
-                containerColor = if (isRead) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
-            ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+    val iconBackground =
+        if (isRead) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
+    val iconTint =
+        if (isRead) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+
+    Surface(
+        color = Color.Transparent,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = stableOnClick,
+                    onLongClick = { showDetails = true },
+                ),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            // Indicador lateral sutil para capítulos lidos
-            if (isRead) {
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.CenterStart)
-                            .width(4.dp)
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
-                            .background(MaterialTheme.colorScheme.primary),
-                )
+        Row(
+            modifier = Modifier.padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = ShapeTokens.MediumLarge,
+                color = iconBackground,
+                modifier = Modifier.size(SizeTokens.ClickTargetSmall),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = if (isRead) Icons.Default.CheckCircle else Icons.Default.MenuBook,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(SizeTokens.IconSmall),
+                    )
+                }
             }
 
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(start = if (isRead) 12.dp else 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = mainTitle,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = if (isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        )
+            Spacer(modifier = Modifier.width(SpacingTokens.Large))
 
-                        if (isRead) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = mainTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (chapterRemoteInfoDto?.scanlation?.isNotBlank() == true) {
                     Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text =
+                            stringResource(
+                                id = R.string.label_chapter_scanlation_prefix,
+                                chapterRemoteInfoDto.scanlation,
+                            ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-
-                    if (chapterRemoteInfoDto?.scanlation?.isNotBlank() == true) {
-                        Text(
-                            text =
-                                stringResource(
-                                    id = R.string.label_chapter_scanlation_prefix,
-                                    chapterRemoteInfoDto.scanlation,
-                                ),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                 }
+            }
 
-                IconButton(
-                    onClick = { showDetails = true },
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+            IconButton(onClick = { showDetails = true }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -184,15 +173,13 @@ fun Comic.Component.ChapterItem(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(SpacingTokens.Large))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
                     TextButton(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            onToggleRead()
-                        },
+                        onClick = { onToggleRead() },
                         colors =
                             ButtonDefaults.textButtonColors(
                                 contentColor = if (isRead) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
@@ -201,9 +188,7 @@ fun Comic.Component.ChapterItem(
                         Text(
                             text =
                                 if (isRead) {
-                                    stringResource(
-                                        id = R.string.action_mark_as_unread,
-                                    )
+                                    stringResource(id = R.string.action_mark_as_unread)
                                 } else {
                                     stringResource(id = R.string.action_mark_as_read)
                                 },
@@ -222,7 +207,7 @@ private fun DetailRow(
     value: String,
 ) {
     if (value.isBlank()) return
-    Column(modifier = Modifier.padding(bottom = 12.dp)) {
+    Column(modifier = Modifier.padding(bottom = SpacingTokens.Medium)) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,

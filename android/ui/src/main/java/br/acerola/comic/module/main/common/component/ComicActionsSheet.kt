@@ -36,13 +36,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.acerola.comic.common.ux.tokens.ShapeTokens
-import br.acerola.comic.common.ux.tokens.SizeTokens
-import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main

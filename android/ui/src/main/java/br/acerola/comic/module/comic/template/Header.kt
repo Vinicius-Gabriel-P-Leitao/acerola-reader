@@ -238,7 +238,7 @@ fun Comic.Template.Header(
                     },
         ) {
             Column(
-                modifier = Modifier.padding(SpacingTokens.Medium)
+                modifier = Modifier.padding(SpacingTokens.Medium),
             ) {
                 Text(
                     text = stringResource(id = R.string.comic_header_synopsis_title),
@@ -263,11 +263,11 @@ fun Comic.Template.Header(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(height = SpacingTokens.Medium))
 
         Acerola.Component.Button(
@@ -279,11 +279,12 @@ fun Comic.Template.Header(
                     onContinueClick(-1L, 0)
                 }
             },
-            text = when {
-                history?.isCompleted == true -> stringResource(id = R.string.label_comic_action_reread)
-                history != null -> stringResource(id = R.string.label_comic_action_continue)
-                else -> stringResource(id = R.string.label_comic_action_start)
-            },
+            text =
+                when {
+                    history?.isCompleted == true -> stringResource(id = R.string.label_comic_action_reread)
+                    history != null -> stringResource(id = R.string.label_comic_action_continue)
+                    else -> stringResource(id = R.string.label_comic_action_start)
+                },
         )
     }
 }
@@ -316,24 +317,22 @@ private fun SourceBadge(
     source: MetadataSource,
     modifier: Modifier = Modifier,
 ) {
-
     Box(
         modifier =
             modifier
                 .clip(shape = ShapeTokens.ExtraSmall)
                 .background(
-                    color = when (source) {
-                        MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
-                        MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
-                        MetadataSource.ANILIST -> MaterialTheme.colorScheme.primaryContainer
-                    }
-                )
-                .border(
+                    color =
+                        when (source) {
+                            MetadataSource.COMIC_INFO -> MaterialTheme.colorScheme.secondaryContainer
+                            MetadataSource.MANGADEX -> MaterialTheme.colorScheme.tertiaryContainer
+                            MetadataSource.ANILIST -> MaterialTheme.colorScheme.primaryContainer
+                        },
+                ).border(
                     width = SizeTokens.BorderThin,
                     color = MaterialTheme.colorScheme.outline,
                     shape = ShapeTokens.ExtraSmall,
-                )
-                .padding(horizontal = SpacingTokens.Small, vertical = 2.dp),
+                ).padding(horizontal = SpacingTokens.Small, vertical = 2.dp),
     ) {
         Text(
             text = source.displayName,
@@ -357,8 +356,7 @@ private fun StatusBadge(
                     width = SizeTokens.BorderThin,
                     color = MaterialTheme.colorScheme.outline,
                     shape = ShapeTokens.ExtraSmall,
-                )
-                .padding(horizontal = SpacingTokens.Small, vertical = 2.dp),
+                ).padding(horizontal = SpacingTokens.Small, vertical = 2.dp),
     ) {
         Text(
             text = status,
