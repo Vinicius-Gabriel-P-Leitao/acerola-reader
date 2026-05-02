@@ -39,4 +39,17 @@ class NavigationBarsTest {
 
         composeTestRule.onNodeWithText("Teste Titulo").assertIsDisplayed()
     }
+
+    @Test
+    fun `SideBar_deve_renderizar_em_modo_paisagem`() {
+        composeTestRule.setContent {
+            val navController = androidx.navigation.compose.rememberNavController()
+            AcerolaTheme {
+                Acerola.Component.SideBar(navController = navController)
+            }
+        }
+
+        // Verifica se ao menos um dos ícones/labels principais está presente na SideBar
+        composeTestRule.onNodeWithText("home", ignoreCase = true).assertIsDisplayed()
+    }
 }

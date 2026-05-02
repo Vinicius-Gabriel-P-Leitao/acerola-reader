@@ -20,7 +20,7 @@ class SelectComicDirectoryTest {
                 onFolderSelected = {},
             )
         }
-        
+
         composeTestRule.onNodeWithText("Pasta dos quadrinhos", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Pasta selecionada: Downloads/Manga").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("pasta", substring = true, ignoreCase = true).assertIsDisplayed()

@@ -42,7 +42,7 @@ class PageFetcher(
         // O ReaderProcessor vai no disco, abre o arquivo (ex: ZIP/CBZ), extrai os bytes
         // da página solicitada e decodifica para um Bitmap (com otimizações).
         val result = readerProcessor.loadPage(pageIndex)
-        
+
         return result.fold(
             ifLeft = { null },
             ifRight = { bitmap ->

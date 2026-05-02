@@ -25,6 +25,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import br.acerola.comic.module.reader.Reader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -40,7 +41,7 @@ fun Reader.Component.WebtoonReader(
     onZoomChange: (Boolean) -> Unit,
 ) {
     var scale by remember { mutableFloatStateOf(value = 1f) }
-    var offset by remember { mutableStateOf(value = Offset.Zero) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
 
     LaunchedEffect(key1 = scale) {
         onZoomChange(scale > 1.0f)
@@ -120,6 +121,7 @@ fun Reader.Component.WebtoonReader(
                         Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
+                            .testTag("webtoon_page_$index")
                             .pointerInput(key1 = Unit) {
                                 detectTapGestures(
                                     onTap = {

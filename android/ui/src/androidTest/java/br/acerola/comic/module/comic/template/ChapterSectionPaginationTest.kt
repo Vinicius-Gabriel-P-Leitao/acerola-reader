@@ -25,25 +25,31 @@ class ChapterSectionPaginationTest {
     fun deve_carregar_paginas_do_volume_uma_por_vez_ao_expandir() {
         val calls = mutableListOf<Int>()
         val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
-        
-        val chapters = ChapterDto(
-            archive = ComicFixtures.createChapterArchivePageDto().copy(
-                volumes = listOf(volume1),
-                volumeSections = listOf(
-                    VolumeChapterGroupDto(
-                        volume = volume1,
-                        items = (1..50).map { i -> ChapterFileDto(id = i.toLong(), name = "Cap. $i", path = "", chapterSort = "$i", volumeId = 10L) },
-                        totalChapters = 100,
-                        loadedCount = 50,
-                        hasMore = true,
-                        currentPage = 0,
-                        totalPages = 4
-                    )
-                )
-            ),
-            remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
-            showVolumeHeaders = true
-        )
+
+        val chapters =
+            ChapterDto(
+                archive =
+                    ComicFixtures.createChapterArchivePageDto().copy(
+                        volumes = listOf(volume1),
+                        volumeSections =
+                            listOf(
+                                VolumeChapterGroupDto(
+                                    volume = volume1,
+                                    items =
+                                        (1..50).map { i ->
+                                            ChapterFileDto(id = i.toLong(), name = "Cap. $i", path = "", chapterSort = "$i", volumeId = 10L)
+                                        },
+                                    totalChapters = 100,
+                                    loadedCount = 50,
+                                    hasMore = true,
+                                    currentPage = 0,
+                                    totalPages = 4,
+                                ),
+                            ),
+                    ),
+                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
+                showVolumeHeaders = true,
+            )
 
         composeTestRule.setContent {
             // Altura pequena para simular que o final NÃO está visível
@@ -58,13 +64,13 @@ class ChapterSectionPaginationTest {
                     onPageChange = {},
                     volumeViewMode = VolumeViewType.VOLUME,
                     activeVolumeId = 10L, // Expandido
-                    onLoadVolumeChaptersPage = { _, page -> calls.add(page) }
+                    onLoadVolumeChaptersPage = { _, page -> calls.add(page) },
                 )
             }
         }
 
         composeTestRule.waitForIdle()
-        
+
         assertTrue("Não deveria carregar a próxima página se o rodapé do volume não estiver visível. Chamadas: ${calls.size}", calls.isEmpty())
     }
 
@@ -72,26 +78,32 @@ class ChapterSectionPaginationTest {
     fun deve_detectar_busca_em_cascata_no_modo_volume() {
         val calls = mutableListOf<Int>()
         val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
-        
+
         // Simula uma lista pequena que cabe na tela
-        val chapters = ChapterDto(
-            archive = ComicFixtures.createChapterArchivePageDto().copy(
-                volumes = listOf(volume1),
-                volumeSections = listOf(
-                    VolumeChapterGroupDto(
-                        volume = volume1,
-                        items = (1..2).map { i -> ChapterFileDto(id = i.toLong(), name = "Cap. $i", path = "", chapterSort = "$i", volumeId = 10L) },
-                        totalChapters = 100,
-                        loadedCount = 2,
-                        hasMore = true,
-                        currentPage = 0,
-                        totalPages = 10
-                    )
-                )
-            ),
-            remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
-            showVolumeHeaders = true
-        )
+        val chapters =
+            ChapterDto(
+                archive =
+                    ComicFixtures.createChapterArchivePageDto().copy(
+                        volumes = listOf(volume1),
+                        volumeSections =
+                            listOf(
+                                VolumeChapterGroupDto(
+                                    volume = volume1,
+                                    items =
+                                        (1..2).map { i ->
+                                            ChapterFileDto(id = i.toLong(), name = "Cap. $i", path = "", chapterSort = "$i", volumeId = 10L)
+                                        },
+                                    totalChapters = 100,
+                                    loadedCount = 2,
+                                    hasMore = true,
+                                    currentPage = 0,
+                                    totalPages = 10,
+                                ),
+                            ),
+                    ),
+                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
+                showVolumeHeaders = true,
+            )
 
         composeTestRule.setContent {
             // Altura grande para garantir que o trigger esteja visível
@@ -106,7 +118,7 @@ class ChapterSectionPaginationTest {
                     onPageChange = {},
                     volumeViewMode = VolumeViewType.VOLUME,
                     activeVolumeId = 10L,
-                    onLoadVolumeChaptersPage = { _, page -> calls.add(page) }
+                    onLoadVolumeChaptersPage = { _, page -> calls.add(page) },
                 )
             }
         }
@@ -117,7 +129,7 @@ class ChapterSectionPaginationTest {
         // ou pelo menos mais de 1 se o estado recompor rápido.
         // No entanto, em um teste unitário/instrumentado, o estado 'chapters' é estático aqui.
         // Para simular a cascata real, o 'onLoadVolumeChaptersPage' teria que atualizar um estado que refaz o compose.
-        
+
         // Mas o teste acima (altura 200dp) já deve pegar se o trigger está sendo composto indevidamente.
     }
 }

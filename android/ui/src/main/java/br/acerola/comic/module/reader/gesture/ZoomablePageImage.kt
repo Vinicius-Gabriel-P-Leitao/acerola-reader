@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.state.TapArea
@@ -100,6 +101,7 @@ fun Reader.Gesture.ZoomablePageImage(
             modifier =
                 Modifier
                     .fillMaxSize()
+                    .testTag("zoomable_image")
                     .graphicsLayer(
                         scaleX = scale,
                         scaleY = scale,
