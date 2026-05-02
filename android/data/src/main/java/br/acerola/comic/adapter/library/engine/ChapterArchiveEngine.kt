@@ -64,7 +64,7 @@ class ChapterArchiveEngine
         @param:ApplicationContext private val context: Context,
         private val pdfToCbzConverterService: PdfToCbzConverter,
     ) : ChapterGateway<ChapterPageDto> {
-        private val semaphore = Semaphore(permits = 3)
+        private val semaphore = Semaphore(permits = SEMAPHORE_PERMITS)
 
         private val _progress = MutableStateFlow(value = -1)
         override val progress: StateFlow<Int> = _progress.asStateFlow()
@@ -499,5 +499,6 @@ class ChapterArchiveEngine
 
         companion object {
             private const val TAG = "ChapterArchiveEngine"
+            private const val SEMAPHORE_PERMITS = 3
         }
     }

@@ -32,8 +32,8 @@ class MetadataSyncWorker
         @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase,
         @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase,
         @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
+        private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
-        private val notificationHelper = NotificationHelper(context)
 
         companion object {
             const val KEY_SYNC_SOURCE = "sync_source"

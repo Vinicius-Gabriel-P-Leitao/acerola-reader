@@ -29,8 +29,8 @@ class LibrarySyncWorker
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
         @param:DirectoryEngine private val repository: ComicGateway<ComicDirectoryDto>,
+        private val notificationHelper: NotificationHelper
     ) : CoroutineWorker(context, workerParams) {
-        private val notificationHelper = NotificationHelper(context)
 
         companion object {
             const val KEY_SYNC_TYPE = "sync_type"

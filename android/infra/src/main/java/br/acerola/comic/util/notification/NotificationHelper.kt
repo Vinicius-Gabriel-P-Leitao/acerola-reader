@@ -5,10 +5,16 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import br.acerola.comic.infra.R
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class NotificationHelper(
-    private val context: Context,
-) {
+@Singleton
+class NotificationHelper
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) {
     companion object {
         const val SYNC_CHANNEL_ID = "sync_channel"
         const val SYNC_NOTIFICATION_ID = 1001

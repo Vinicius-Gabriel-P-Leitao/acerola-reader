@@ -12,13 +12,15 @@ import arrow.core.Either
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
+import br.acerola.comic.util.notification.NotificationHelper
 import br.acerola.comic.worker.sync.MetadataSyncWorker
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -50,8 +52,9 @@ class MetadataSyncWorkerTest {
         every { comicInfoSyncUseCase.progress } returns MutableStateFlow(0)
     }
 
-    private fun buildWorker(inputData: Data): MetadataSyncWorker =
-        TestListenableWorkerBuilder<MetadataSyncWorker>(context)
+    private fun buildWorker(inputData: Data): MetadataSyncWorker {
+        val notificationHelper = NotificationHelper(context)
+        return TestListenableWorkerBuilder<MetadataSyncWorker>(context)
             .setInputData(inputData)
             .setWorkerFactory(
                 object : WorkerFactory() {
@@ -66,14 +69,16 @@ class MetadataSyncWorkerTest {
                         anilistSyncUseCase,
                         mangadexSyncUseCase,
                         comicInfoSyncUseCase,
+                        notificationHelper,
                     )
                 },
             ).build()
+    }
 
     // Test for directoryId != -1L (Single comic sync)
     @Test
     fun `doWork should return success when syncFromMangadex for single comic succeeds`() =
-        runBlocking {
+        runTest {
             coEvery { syncComicMetadataUseCase.syncFromMangadex(42L) } returns Either.Right(Unit)
 
             val worker =
@@ -87,15 +92,14 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { syncComicMetadataUseCase.syncFromMangadex(42L) }
         }
 
     @Test
     fun `doWork should return failure when syncFromMangadex for single comic fails`() =
-        runBlocking {
+        runTest {
             coEvery { syncComicMetadataUseCase.syncFromMangadex(42L) } returns
-                Either.Left(
-                    LibrarySyncError.SyncNetworkError(),
-                )
+                Either.Left(LibrarySyncError.SyncNetworkError())
 
             val worker =
                 buildWorker(
@@ -108,11 +112,12 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { syncComicMetadataUseCase.syncFromMangadex(42L) }
         }
 
     @Test
     fun `doWork should return success when syncFromAnilist for single comic succeeds`() =
-        runBlocking {
+        runTest {
             coEvery { syncComicMetadataUseCase.syncFromAnilist(42L) } returns Either.Right(Unit)
 
             val worker =
@@ -126,11 +131,12 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { syncComicMetadataUseCase.syncFromAnilist(42L) }
         }
 
     @Test
     fun `doWork should return success when syncFromComicInfo for single comic succeeds`() =
-        runBlocking {
+        runTest {
             coEvery { syncComicMetadataUseCase.syncFromComicInfo(42L) } returns Either.Right(Unit)
 
             val worker =
@@ -144,12 +150,13 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { syncComicMetadataUseCase.syncFromComicInfo(42L) }
         }
 
     // Test for Library-wide sync
     @Test
     fun `doWork should return success when mangadex library sync succeeds`() =
-        runBlocking {
+        runTest {
             coEvery { mangadexSyncUseCase.sync(null) } returns Either.Right(Unit)
 
             val worker =
@@ -163,15 +170,14 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { mangadexSyncUseCase.sync(null) }
         }
 
     @Test
     fun `doWork should return failure when mangadex library sync fails`() =
-        runBlocking {
+        runTest {
             coEvery { mangadexSyncUseCase.sync(null) } returns
-                Either.Left(
-                    LibrarySyncError.SyncNetworkError(),
-                )
+                Either.Left(LibrarySyncError.SyncNetworkError())
 
             val worker =
                 buildWorker(
@@ -184,11 +190,12 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { mangadexSyncUseCase.sync(null) }
         }
 
     @Test
     fun `doWork should return success when anilist library rescan succeeds`() =
-        runBlocking {
+        runTest {
             coEvery { anilistSyncUseCase.rescan(null) } returns Either.Right(Unit)
 
             val worker =
@@ -202,11 +209,12 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { anilistSyncUseCase.rescan(null) }
         }
 
     @Test
     fun `doWork should return success when comicInfo library sync succeeds`() =
-        runBlocking {
+        runTest {
             coEvery { comicInfoSyncUseCase.sync(null) } returns Either.Right(Unit)
 
             val worker =
@@ -220,11 +228,12 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { comicInfoSyncUseCase.sync(null) }
         }
 
     @Test
     fun `doWork should handle exceptions gracefully and return failure`() =
-        runBlocking {
+        runTest {
             coEvery { mangadexSyncUseCase.sync(null) } throws RuntimeException("Fatal error")
 
             val worker =
@@ -238,5 +247,6 @@ class MetadataSyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { mangadexSyncUseCase.sync(null) }
         }
 }
