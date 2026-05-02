@@ -302,7 +302,7 @@ private fun SourceBadge(
             modifier
                 .clip(shape = ShapeTokens.ExtraSmall)
                 .background(
-                    color = // FIXME: FAzer isso derivar do pattern, isso aqui hardcoded tá errado
+                    color = // FIXME: FAzer isso derivar do pattern, isso aqui hardcoded tá errado MetadataSource
                         when (source) {
                             "COMIC_INFO" -> MaterialTheme.colorScheme.secondaryContainer
                             "MANGADEX" -> MaterialTheme.colorScheme.tertiaryContainer

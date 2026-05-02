@@ -4,4 +4,9 @@
         <item quantity="one">Busca metadados do comic por titulo.</item>
         <item quantity="other">Busca metadados dos comics por titulos.</item>
     </plurals>
+
+    <plurals name="label_volume_header_chapter_count">
+        <item quantity="one">%1$d capítulo</item>
+        <item quantity="other">%1$d capítulos</item>
+    </plurals>
 </resources>

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
@@ -74,8 +75,7 @@ fun Comic.Component.CoverVolumeCard(
 
     Acerola.Component.GroupedHeroButton(
         title = group.volume.name,
-        // FIXME: Fazer plurals desse texto para capítulo
-        description = stringResource(R.string.label_volume_header_chapter_count, group.totalChapters),
+        description = pluralStringResource(R.plurals.label_volume_header_chapter_count, group.totalChapters, group.totalChapters),
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
         iconModifier = Modifier.width(60.dp).height(90.dp),
         modifier = modifier,
