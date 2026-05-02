@@ -101,7 +101,10 @@ class ComicInfoSourceTest {
             every { folderDoc.listFiles() } returns arrayOf(cbzFile)
             every { cbzFile.isFile } returns true
             every { cbzFile.name } returns "ch1.cbz"
-            every { cbzFile.uri } returns mockk()
+            val cbzUri = mockk<Uri>()
+            every { cbzFile.uri } returns cbzUri
+            every { cbzUri.toString() } returns "content://ch1.cbz"
+            every { cbzFile.lastModified() } returns 0L
 
             coEvery { chapterSourceFactory.create(any()) } returns Either.Right(sourceService)
             coEvery { sourceService.getFileStream("ComicInfo.xml") } returns Either.Right(inputStream)

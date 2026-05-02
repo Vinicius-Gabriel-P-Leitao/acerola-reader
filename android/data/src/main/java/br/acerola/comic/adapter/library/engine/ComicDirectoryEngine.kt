@@ -17,7 +17,6 @@ import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.translator.persistence.toMangaDirectoryEntity
 import br.acerola.comic.local.translator.ui.toViewDto
@@ -25,11 +24,11 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.archive.ArchiveFormat
 import br.acerola.comic.pattern.media.MediaFile
+import br.acerola.comic.service.library.DirectoryScanner
 import br.acerola.comic.service.template.ChapterNameProcessor
 import br.acerola.comic.service.template.TemplateMatcher
 import br.acerola.comic.util.file.ContentQueryHelper
 import br.acerola.comic.util.sort.SortType
-import br.acerola.comic.util.template.templateToRegex
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -49,13 +48,12 @@ import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// FIXME: Fazer responsabilidade unica nesse engine, separar a lógica de scanner em services para que a busca de arquivos sejam feitas atravez de
-//  interfaces ao invez de direto no código, usando services externos igual aos outros.
 @Singleton
 class ComicDirectoryEngine
     @Inject
     constructor(
         private val directoryDao: ComicDirectoryDao,
+        private val directoryScanner: DirectoryScanner,
         private val templateMatcher: TemplateMatcher,
         private val templateService: ChapterNameProcessor,
         @param:ApplicationContext private val context: Context,
@@ -89,13 +87,13 @@ class ComicDirectoryEngine
 
                             val rootUri =
                                 baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                                ?: return@catch
+                                    ?: return@catch
 
                             val folderId = DocumentsContract.getDocumentId(folderUri)
                             val folderChildren =
                                 ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
 
-                                    val bannerMetadata = folderChildren.firstOrNull { MediaFile.isBanner(it.name) }
+                            val bannerMetadata = folderChildren.firstOrNull { MediaFile.isBanner(it.name) }
                             val coverMetadata = folderChildren.firstOrNull { MediaFile.isCover(it.name) }
 
                             val firstChapterName =
@@ -155,7 +153,8 @@ class ComicDirectoryEngine
                         .catch {
                             if (baseUri === null) return@catch
 
-                            val discoveredFolders: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
+                            val templates = templateService.getTemplates()
+                            val discoveredFolders: List<ComicDirectory> = directoryScanner.buildLibrary(baseUri, templates)
                             val databaseFolders: List<ComicDirectory> =
                                 directoryDao.getAllDirectories().firstOrNull() ?: emptyList()
 
@@ -185,9 +184,7 @@ class ComicDirectoryEngine
 
                             if (removedFolders.isNotEmpty()) {
                                 AcerolaLogger.d(TAG, "Removing ${removedFolders.size} stale folders from DB", LogSource.REPOSITORY)
-                                removedFolders.forEach { folder ->
-                                    directoryDao.delete(entity = folder)
-                                }
+                                removedFolders.forEach { folder -> directoryDao.delete(entity = folder) }
                             }
 
                             AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)
@@ -217,7 +214,8 @@ class ComicDirectoryEngine
                         .catch {
                             if (baseUri === null) return@catch
 
-                            val foldersToProcess: List<ComicDirectory> = buildLibrary(context, rootUri = baseUri)
+                            val templates = templateService.getTemplates()
+                            val foldersToProcess: List<ComicDirectory> = directoryScanner.buildLibrary(baseUri, templates)
                             if (foldersToProcess.isEmpty()) {
                                 _progress.value = -1
                                 return@catch
@@ -377,105 +375,6 @@ class ComicDirectoryEngine
                 }
 
             comicDirectoryOps.refreshComicChapters(comicId = finalMangaId, baseUri = baseUri)
-        }
-
-        private suspend fun buildLibrary(
-            context: Context,
-            rootUri: Uri,
-        ): List<ComicDirectory> {
-            val comicDirectories = mutableListOf<ComicDirectory>()
-            val templates = templateService.getTemplates()
-
-            val rootDocId = DocumentsContract.getTreeDocumentId(rootUri)
-            scanRecursive(context, rootUri, rootDocId, templates, comicDirectories)
-
-            return comicDirectories
-        }
-
-        private fun scanRecursive(
-            context: Context,
-            rootUri: Uri,
-            currentDocId: String,
-            templates: List<ArchiveTemplate>,
-            comicDirectories: MutableList<ComicDirectory>,
-        ) {
-            val children = ContentQueryHelper.listFiles(context, rootUri, currentDocId).getOrElse { return }
-
-            val hasMangaFiles =
-                children.any {
-                    it.mimeType != DocumentsContract.Document.MIME_TYPE_DIR &&
-                        ArchiveFormat.isSupported(it.name)
-                }
-
-            val subDirs = children.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }
-            val hasVolumeSubDirs =
-                subDirs.any { subDir ->
-                    val volumeTemplates = templates.filter { it.type == SortType.VOLUME }.map { it.pattern }
-                    val isVol = isVolumeName(subDir.name, volumeTemplates)
-                    isVol && folderContainsManga(context, rootUri, subDir.id)
-                }
-
-            if (!hasMangaFiles && !hasVolumeSubDirs) {
-                subDirs.forEach { subDir ->
-                    scanRecursive(context, rootUri, subDir.id, templates, comicDirectories)
-                }
-                return
-            }
-
-            val currentUri = DocumentsContract.buildDocumentUriUsingTree(rootUri, currentDocId)
-            val folderDoc = DocumentFile.fromSingleUri(context, currentUri) ?: return
-
-            val coverMetadata = children.firstOrNull { MediaFile.isCover(it.name) }
-            val bannerMetadata = children.firstOrNull { MediaFile.isBanner(it.name) }
-            val firstChapterName = children.firstOrNull { ArchiveFormat.isSupported(it.name) }?.name
-
-            val detectedTemplate =
-                firstChapterName?.let {
-                    templateMatcher.detect(it, templates.filter { t -> t.type == SortType.CHAPTER })
-                }
-
-            val comicDir =
-                folderDoc.toMangaDirectoryEntity(
-                    cover =
-                        coverMetadata?.let {
-                            DocumentFile.fromSingleUri(
-                                context,
-                                DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id),
-                            )
-                        },
-                    banner =
-                        bannerMetadata?.let {
-                            DocumentFile.fromSingleUri(
-                                context,
-                                DocumentsContract.buildDocumentUriUsingTree(rootUri, it.id),
-                            )
-                        },
-                    archiveTemplateFk = detectedTemplate?.id,
-                )
-
-            comicDirectories.add(comicDir)
-        }
-
-        private fun isVolumeName(
-            name: String,
-            volumeTemplates: List<String>,
-        ): Boolean =
-            volumeTemplates.any { template ->
-                templateToRegex(template)
-                    .containsMatchIn(name)
-            } ||
-                name.startsWith("Vol", ignoreCase = true) ||
-                name.startsWith("V0", ignoreCase = true)
-
-        private fun folderContainsManga(
-            context: Context,
-            rootUri: Uri,
-            docId: String,
-        ): Boolean {
-            val children = ContentQueryHelper.listFiles(context, rootUri, docId).getOrElse { return false }
-            if (children.any { it.isFile && ArchiveFormat.isSupported(it.name) }) return true
-
-            return children.filter { it.mimeType == DocumentsContract.Document.MIME_TYPE_DIR }.any { folderContainsManga(context, rootUri, it.id) }
         }
 
         private fun normalizeName(name: String): String = name.filter { it.isLetterOrDigit() }.lowercase()

@@ -35,9 +35,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.pattern.component.AddTemplateDialog
@@ -48,7 +51,7 @@ import br.acerola.comic.ui.R
 import br.acerola.comic.util.sort.SortType
 
 @Composable
-fun Main.Pattern.Layout.FilePatternScreen(
+fun Main.Pattern.Template.FilePatternScreen(
     viewModel: FilePatternViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
@@ -128,7 +131,7 @@ private fun FilePatternLayout(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .padding(16.dp),
+                            .padding(SpacingTokens.Large),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -145,9 +148,9 @@ private fun FilePatternLayout(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding =
                         PaddingValues(
-                            start = 16.dp,
-                            top = 16.dp,
-                            end = 16.dp,
+                            start = SpacingTokens.Large,
+                            top = SpacingTokens.Large,
+                            end = SpacingTokens.Large,
                             bottom = 88.dp,
                         ),
                 ) {
@@ -162,7 +165,7 @@ private fun FilePatternLayout(
                                 text = headerText,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                                modifier = Modifier.padding(top = SpacingTokens.Large, bottom = SpacingTokens.Small),
                             )
                         }
                         items(
@@ -183,9 +186,10 @@ private fun FilePatternLayout(
 
     if (showAddDialog) {
         Main.Pattern.Component.AddTemplateDialog(
-            onDismiss = { },
+            onDismiss = { showAddDialog = false },
             onConfirm = { label, pattern, type ->
                 onAction(FilePatternAction.AddTemplate(label, pattern, type))
+                showAddDialog = false
             },
         )
     }
@@ -196,9 +200,10 @@ private fun FilePatternLayout(
             initialLabel = template.label,
             initialPattern = template.pattern,
             initialType = template.type,
-            onDismiss = { },
+            onDismiss = { editingTemplate = null },
             onConfirm = { label, pattern, type ->
                 onAction(FilePatternAction.EditTemplate(template.id, label, pattern, type))
+                editingTemplate = null
             },
         )
     }

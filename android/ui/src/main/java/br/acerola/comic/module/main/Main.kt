@@ -11,30 +11,30 @@ object Main {
     object Config {
         object Component
 
-        object Layout
+        object Template
     }
 
     object History {
         object Component
 
-        object Layout
+        object Template
     }
 
     object Home {
         object Component
 
-        object Layout
+        object Template
     }
 
     object Search {
         object Component
 
-        object Layout
+        object Template
     }
 
     object Pattern {
         object Component
 
-        object Layout
+        object Template
     }
 }

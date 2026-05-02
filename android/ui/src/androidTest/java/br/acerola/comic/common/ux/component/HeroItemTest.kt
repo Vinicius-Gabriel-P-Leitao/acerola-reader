@@ -22,7 +22,7 @@ class HeroItemTest {
     fun deve_exibir_titulo_do_item() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Configurações",
                     icon = Icons.Default.Settings,
                 )
@@ -36,7 +36,7 @@ class HeroItemTest {
     fun deve_exibir_descricao_quando_fornecida() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Configurações",
                     description = "Descrição do item",
                     icon = Icons.Default.Settings,
@@ -51,7 +51,7 @@ class HeroItemTest {
     fun nao_deve_exibir_descricao_quando_nula() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Sem Descrição",
                     description = null,
                     icon = Icons.Default.Settings,
@@ -68,7 +68,7 @@ class HeroItemTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Item Clicável",
                     icon = Icons.Default.Settings,
                     onClick = { clicked = true },
@@ -85,7 +85,7 @@ class HeroItemTest {
     fun deve_renderizar_slot_de_action() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Item com Action",
                     icon = Icons.Default.Settings,
                     action = { Switch(checked = false, onCheckedChange = null) },
@@ -100,7 +100,7 @@ class HeroItemTest {
     fun deve_renderizar_bottomContent_quando_fornecido() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Item com Conteúdo Extra",
                     icon = Icons.Default.Settings,
                     bottomContent = { Text("Conteúdo Inferior") },
@@ -116,7 +116,7 @@ class HeroItemTest {
     fun deve_renderizar_icone_via_slot_composable() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroItem(
+                Acerola.Component.HeroButton(
                     title = "Item com Slot de Ícone",
                     icon = { Text("IC") },
                 )

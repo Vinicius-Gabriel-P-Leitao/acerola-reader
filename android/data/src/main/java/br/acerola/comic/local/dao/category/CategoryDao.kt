@@ -7,7 +7,7 @@ import androidx.room.Query
 import br.acerola.comic.local.dao.BaseDao
 import br.acerola.comic.local.entity.category.Category
 import br.acerola.comic.local.entity.category.ComicCategory
-import br.acerola.comic.local.entity.relation.ComicCategoryJoinResult
+import br.acerola.comic.local.entity.relation.AssignedCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -39,5 +39,5 @@ interface CategoryDao : BaseDao<Category> {
         INNER JOIN comic_category ON category.id = comic_category.category_id
         """,
     )
-    fun observeAllComicCategoriesJoined(): Flow<List<ComicCategoryJoinResult>>
+    fun observeAllComicCategoriesJoined(): Flow<List<AssignedCategory>>
 }

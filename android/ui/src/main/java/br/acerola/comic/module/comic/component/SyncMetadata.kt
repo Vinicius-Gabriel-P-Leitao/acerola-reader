@@ -22,9 +22,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.GroupedHeroItem
-import br.acerola.comic.common.ux.component.HeroItem
-import br.acerola.comic.common.ux.component.HeroNestedItem
+import br.acerola.comic.common.ux.component.GroupedHeroButton
+import br.acerola.comic.common.ux.component.HeroButton
+import br.acerola.comic.common.ux.component.HeroNestedButton
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.pattern.metadata.MetadataSource
@@ -80,7 +80,7 @@ private fun MangadexSection(
     onSyncInfo: () -> Unit,
     onSyncChapters: () -> Unit,
 ) {
-    Acerola.Component.GroupedHeroItem(
+    Acerola.Component.GroupedHeroButton(
         title = stringResource(id = R.string.label_mangadex_group),
         description =
             pluralStringResource(
@@ -105,7 +105,7 @@ private fun MangadexSection(
         nestedItem =
             if (hasChapters && isActive) {
                 {
-                    Acerola.Component.HeroNestedItem(
+                    Acerola.Component.HeroNestedButton(
                         title = stringResource(id = R.string.title_sync_chapters),
                         description = stringResource(id = R.string.description_sync_chapters_remote),
                         icon = Icons.Rounded.AutoAwesome,
@@ -147,7 +147,7 @@ private fun ComicInfoSection(
     onSyncInfo: () -> Unit,
     onSyncChapters: () -> Unit,
 ) {
-    Acerola.Component.GroupedHeroItem(
+    Acerola.Component.GroupedHeroButton(
         title = stringResource(id = R.string.title_sync_comic_info),
         description = stringResource(id = R.string.description_sync_comic_info),
         icon = Icons.Rounded.Description,
@@ -168,7 +168,7 @@ private fun ComicInfoSection(
         nestedItem =
             if (hasChapters && isActive) {
                 {
-                    Acerola.Component.HeroNestedItem(
+                    Acerola.Component.HeroNestedButton(
                         title = stringResource(id = R.string.title_sync_chapters),
                         description = stringResource(id = R.string.description_sync_chapters_internal),
                         icon = Icons.Rounded.AutoStories,
@@ -191,7 +191,7 @@ private fun SyncItem(
     isActive: Boolean = false,
     onClick: () -> Unit,
 ) {
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = title,
         description = subtitle,
         iconBackground = iconBackground,

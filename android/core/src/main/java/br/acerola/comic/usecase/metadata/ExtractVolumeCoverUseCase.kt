@@ -10,7 +10,8 @@ class ExtractVolumeCoverUseCase
     constructor(
         private val coverExtractor: CoverExtractor,
     ) {
-    suspend operator fun invoke(comicId: Long, volumeId: Long): Either<IoError, Unit> {
-        return coverExtractor.extractVolumeCover(comicId, volumeId)
+        suspend operator fun invoke(
+            comicId: Long,
+            volumeId: Long,
+        ): Either<IoError, Unit> = coverExtractor.extractVolumeCover(comicId, volumeId)
     }
-}

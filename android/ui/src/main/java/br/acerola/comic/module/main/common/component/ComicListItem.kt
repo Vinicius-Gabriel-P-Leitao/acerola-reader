@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.AutoStories
@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.BookmarkRibbon
 import br.acerola.comic.common.ux.component.ImageCard
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.pattern.metadata.MetadataSource
@@ -64,7 +67,7 @@ fun Main.Common.Component.ComicListItem(
     val coverUri = comic.directory.coverUri ?: comic.directory.bannerUri
     val title = comic.remoteInfo?.title ?: comic.directory.name
 
-    val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = 120.dp.toPx().toInt()) }
+    val imageSize = with(receiver = density) { Size(width = 80.dp.toPx().toInt(), height = SizeTokens.ComicGridMinSize.toPx().toInt()) }
 
     val placeholderPainter =
         rememberAsyncImagePainter(
@@ -104,7 +107,7 @@ fun Main.Common.Component.ComicListItem(
             Modifier
                 .fillMaxWidth()
                 .height(height = 128.dp)
-                .padding(all = 4.dp),
+                .padding(all = SpacingTokens.ExtraSmall),
     ) {
         // Cover Box (80dp width)
         Box(
@@ -119,7 +122,7 @@ fun Main.Common.Component.ComicListItem(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(top = 4.dp),
+                        .padding(top = SpacingTokens.ExtraSmall),
             )
 
             // Scrim only at the bottom for the source logo visibility
@@ -127,10 +130,10 @@ fun Main.Common.Component.ComicListItem(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(32.dp)
+                        .height(SpacingTokens.Giant)
                         .align(Alignment.BottomCenter)
-                        .padding(top = 4.dp)
-                        .clip(RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                        .padding(top = SpacingTokens.ExtraSmall)
+                        .clip(ShapeTokens.Medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp)))
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
@@ -143,7 +146,7 @@ fun Main.Common.Component.ComicListItem(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(bottom = 4.dp, end = 4.dp),
+                        .padding(bottom = SpacingTokens.ExtraSmall, end = SpacingTokens.ExtraSmall),
                 contentAlignment = Alignment.BottomEnd,
             ) {
                 val sourceIcon =
@@ -157,7 +160,7 @@ fun Main.Common.Component.ComicListItem(
                         painter = painterResource(id = sourceIcon),
                         contentDescription = null,
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(12.dp),
+                        modifier = Modifier.size(SizeTokens.IconExtraSmall),
                     )
                 }
             }
@@ -168,14 +171,14 @@ fun Main.Common.Component.ComicListItem(
                     modifier =
                         Modifier
                             .align(Alignment.TopStart)
-                            .padding(start = 8.dp)
-                            .width(12.dp)
-                            .height(20.dp),
+                            .padding(start = SpacingTokens.Small)
+                            .width(SpacingTokens.Medium)
+                            .height(SpacingTokens.ExtraLarge),
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(width = 12.dp))
+        Spacer(modifier = Modifier.width(width = SpacingTokens.Medium))
 
         // Info Column
         Column(
@@ -203,9 +206,9 @@ fun Main.Common.Component.ComicListItem(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small)) {
                 // Completed status
                 if (isCompleted) {
                     Text(
@@ -217,7 +220,7 @@ fun Main.Common.Component.ComicListItem(
                                 .background(
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     shape = MaterialTheme.shapes.extraSmall,
-                                ).padding(horizontal = 4.dp, vertical = 2.dp),
+                                ).padding(horizontal = SpacingTokens.ExtraSmall, vertical = 2.dp),
                     )
                 }
 
@@ -228,7 +231,7 @@ fun Main.Common.Component.ComicListItem(
                             imageVector = Icons.Rounded.Star,
                             contentDescription = null,
                             tint = Color(0xFFFFC107),
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(SpacingTokens.MediumLarge),
                         )
                         Text(
                             text = score.toString(),
@@ -245,7 +248,7 @@ fun Main.Common.Component.ComicListItem(
                             imageVector = Icons.Rounded.AutoStories,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(SpacingTokens.MediumLarge),
                         )
                         Text(
                             text = chapterCount.toString(),
@@ -263,10 +266,10 @@ fun Main.Common.Component.ComicListItem(
                 modifier =
                     Modifier
                         .align(Alignment.CenterVertically)
-                        .padding(end = 8.dp)
+                        .padding(end = SpacingTokens.Small)
                         .background(
                             color = MaterialTheme.colorScheme.secondaryContainer,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ShapeTokens.Medium,
                         ),
             ) {
                 Icon(
@@ -283,12 +286,12 @@ fun Main.Common.Component.ComicListItem(
                 modifier =
                     Modifier
                         .align(Alignment.CenterVertically)
-                        .size(32.dp),
+                        .size(SpacingTokens.Giant),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.MoreHoriz,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(SizeTokens.IconSmall),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

@@ -52,7 +52,11 @@ class CoverExtractor
                     firstChapterJoin?.chapter
                         ?: return@withContext IoError.FileNotFound("No chapters found for this comic").left()
 
-                AcerolaLogger.i(TAG, "Selected chapter for COMIC cover: ${firstChapter.chapter} (Volume: ${firstChapterJoin.volume?.name ?: "Root"})", LogSource.SERVICE)
+                AcerolaLogger.i(
+                    TAG,
+                    "Selected chapter for COMIC cover: ${firstChapter.chapter} (Volume: ${firstChapterJoin.volume?.name ?: "Root"})",
+                    LogSource.SERVICE,
+                )
 
                 val rootUri = directory.path.toUri()
                 val rootDoc =

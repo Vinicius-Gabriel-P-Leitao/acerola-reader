@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.common.ux.component.RadioGroup
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
@@ -24,7 +24,7 @@ fun Comic.Component.VolumeStylePreference(
     val options = listOf(VolumeViewType.VOLUME, VolumeViewType.COVER_VOLUME)
     val selectedIndex = options.indexOf(selected).takeIf { it >= 0 } ?: 0
 
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = stringResource(id = R.string.title_settings_volume_style),
         description = volumeStyleLabel(selected),
         icon = Icons.Default.LibraryBooks,

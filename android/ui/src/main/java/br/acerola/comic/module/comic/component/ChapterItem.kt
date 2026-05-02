@@ -154,11 +154,11 @@ fun Comic.Component.ChapterItem(
         Acerola.Component.Dialog(
             show = true,
             title = mainTitle,
-            onDismiss = { },
+            onDismiss = { showDetails = false },
             confirmButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.label_dialog_close),
-                    onClick = { },
+                    onClick = { showDetails = false },
                 )
             },
             content = {

@@ -3,7 +3,7 @@ package br.acerola.comic
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import br.acerola.comic.module.reader.coil.PageFetcherFactory
+import br.acerola.comic.coil.PageFetcherFactory
 import br.acerola.comic.service.reader.ReaderProcessor
 import coil.ImageLoader
 import coil.ImageLoaderFactory

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 
@@ -28,7 +28,7 @@ fun Comic.Component.SyncMangaArchive(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Acerola.Component.HeroItem(
+        Acerola.Component.HeroButton(
             title = stringResource(id = R.string.title_sync_chapters),
             description = stringResource(id = R.string.description_sync_chapters_local),
             icon = Icons.Default.SyncAlt,
@@ -39,7 +39,7 @@ fun Comic.Component.SyncMangaArchive(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Acerola.Component.HeroItem(
+        Acerola.Component.HeroButton(
             title = stringResource(id = R.string.title_sync_cover_banner),
             description = stringResource(id = R.string.description_sync_cover_banner),
             icon = Icons.Default.Collections,
@@ -50,7 +50,7 @@ fun Comic.Component.SyncMangaArchive(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Acerola.Component.HeroItem(
+        Acerola.Component.HeroButton(
             title = stringResource(id = R.string.title_extract_first_page_as_cover),
             description = stringResource(id = R.string.description_extract_first_page_as_cover),
             icon = Icons.Default.ImageSearch,
@@ -62,7 +62,7 @@ fun Comic.Component.SyncMangaArchive(
         if (onExtractVolumeCovers != null) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            Acerola.Component.HeroItem(
+            Acerola.Component.HeroButton(
                 title = stringResource(id = R.string.title_extract_volume_covers),
                 description = stringResource(id = R.string.description_extract_volume_covers),
                 icon = Icons.Default.AutoAwesomeMotion,

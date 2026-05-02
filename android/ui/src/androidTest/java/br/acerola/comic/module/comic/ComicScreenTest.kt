@@ -6,7 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewModel
@@ -15,6 +15,7 @@ import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
 import br.acerola.comic.config.preference.types.ChapterSortType
 import br.acerola.comic.config.preference.types.SortDirection
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
@@ -54,6 +55,8 @@ class ComicScreenTest {
         every { comicViewModel.uiEvents } returns emptyEvents
         every { comicViewModel.chapterSortSettings } returns
             MutableStateFlow(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
+        every { comicViewModel.volumeViewMode } returns MutableStateFlow(VolumeViewType.CHAPTER)
+        every { comicViewModel.activeVolumeId } returns MutableStateFlow<Long?>(null)
 
         every { comicDirVM.uiEvents } returns emptyEvents
         every { chapterArchiveVM.uiEvents } returns emptyEvents

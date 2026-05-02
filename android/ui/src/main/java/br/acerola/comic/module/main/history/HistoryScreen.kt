@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.module.comic.ComicActivity
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.common.component.ComicListItem
@@ -36,7 +36,7 @@ import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
 
 @Composable
-fun Main.History.Layout.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
+fun Main.History.Template.Screen(viewModel: HistoryViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val historyItems by viewModel.historyItems.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current

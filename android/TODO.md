@@ -112,7 +112,18 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
   possível também.
 - [x] **Criar nova UserPreference** A nova preferência vai ser para olhar volumes como capas ou uma lista de cards dropaveis (metodo atual), só 
   sera feito um novo e dar o direito de escolha.
- 
+
+### Corrigir problema com zoom e ocultar layout de leitor quando clicar no meio da tela ou pinça ou dois cliques
+
+- [x] **Suposto lugar** Acredito que seja o problema no código de gesture por que funciona somente no método de webtoom, nos outros não funcionam.
+
+### Correções (Bugfixes)
+
+- [x] **Falso-positivo na conclusão de leitura (Android):**
+    - O app está marcando quadrinhos como concluídos automaticamente durante o carregamento das páginas.
+    - **Causa provável:** A lógica da "regra dos 70%" está sendo disparada erroneamente no momento do pré-carregamento (*preload*) das imagens, e não
+      na visualização ativa pelo usuário.
+
 ### Adicionar um worker para o conversor de pdf
 
 - [ ] **Montar um worker:** Criar um worker para quando um pdf for virar cbz, pode demorar muito, ou se melhor como tenho uma lista de pastas e 
@@ -129,15 +140,31 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 - [ ] **A lib está sendo feita e deixando mais robusta:** Será feito um grande refactor no campo de rust para poder montar a FFI atualizada e
   otimizada para poder salvar chaves de PeerId, DeviceInfo entre outros, poder usar o keystore para salvar dados que devem ser criptografadas.
 
-### Corrigir problema com zoom e ocultar layout de leitor quando clicar no meio da tela ou pinça ou dois cliques
+### 🔧 Refatoração de Arquitetura (Tech Debt Pendente)
 
-- [x] **Suposto lugar** Acredito que seja o problema no código de gesture por que funciona somente no método de webtoom, nos outros não funcionam.
+#### P3 — God Objects
 
-### Correções (Bugfixes)
+- [x] `ComicDirectoryEngine` → extrair `DirectoryScanner` (service de IO puro) — **feito**
+- [x] `ChapterArchiveEngine` (503 linhas) → dividir em:
+    - [x] `ArchiveValidator` (interface + `DefaultArchiveValidator`) — valida formato, padrão de nome, duplicata
+    - [x] `ChapterIndexer` (interface + `DefaultChapterIndexer`) — mapeia `FastFileMetadata` → `ChapterArchive`
+    - [x] `ChapterArchiveEngine` — pipeline: injeta validator + indexer, orquestra o fluxo
+- [x] `MangadexChapterMetadataClient` — confirmado como Retrofit interface pura, nenhuma ação necessária
 
-- [x] **Falso-positivo na conclusão de leitura (Android):**
-    - O app está marcando quadrinhos como concluídos automaticamente durante o carregamento das páginas.
-    - **Causa provável:** A lógica da "regra dos 70%" está sendo disparada erroneamente no momento do pré-carregamento (*preload*) das imagens, e não na visualização ativa pelo usuário.
+#### P4 — ViewModel SRP (validar antes de executar — pode quebrar contratos)
+
+- [ ] `ComicDirectoryViewModel` → extrair `GetComicDirectoryUseCase`
+- [ ] `ComicViewModel` → extrair `GetComicDetailsUseCase` *(alto risco — validar FlowStateFlow antes)*
+- [ ] `HomeViewModel` → extrair `GetLibraryUseCase` com parâmetros de filtro explícitos
+- [ ] `ReaderViewModel` → extrair `ReaderPrefetchUseCase` (pré-carregamento / paginação)
+
+``#### P6 — OCP
+
+- [ ] `MetadataSyncWorker` → substituir `when` de sources por `Map<String, MetadataProvider>` (interface + Hilt multibinding)
+- [ ] `MangadexComicEngine` → criar `sealed class MangadexResponse` com `toDomainError()` por subtipo
+- [ ] `AnilistMangaInfoSource` → criar `ApolloExceptionMapper` isolando dependência do Apollo``
+
+---
 
 ## ✅ Histórico de Implementações (Changelog)
 
@@ -184,6 +211,8 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
     - Snackbars customizadas (Vermelho para erros, Verde para sucessos).
     - Ajuste de paddings na Home para evitar que o botão flutuante (FAB) cubra os últimos itens.
 - **Onboarding:** Tutorial introdutório de permissão de pasta e sync inicial.
+
+---
 
 ### ⚙️ Arquitetura, Performance e Refatorações de Código
 - **Coleções Imutáveis:** Migração de `MangaUiState` e `ReaderUiState` para `kotlinx-collections-immutable`, evitando recomposições desnecessárias.

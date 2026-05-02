@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.module.main.Main
@@ -51,7 +54,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
     var type by remember { mutableStateOf(initialType) }
 
     Acerola.Component.AdaptiveSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small)) {
             Text(
                 text =
                     stringResource(
@@ -64,7 +67,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                     ),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp),
+                modifier = Modifier.padding(bottom = SpacingTokens.Large),
             )
 
             SingleChoiceSegmentedButtonRow(
@@ -87,7 +90,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
             OutlinedTextField(
                 value = label,
@@ -95,7 +98,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 label = { Text(stringResource(id = R.string.label_template_label)) },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
             OutlinedTextField(
                 value = pattern,
                 onValueChange = { pattern = it },
@@ -108,23 +111,23 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp),
+                        .padding(top = SpacingTokens.Medium),
                 colors =
                     CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
                     ),
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(SpacingTokens.Medium),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         Icons.Default.Info,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(SizeTokens.IconSmall),
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(SpacingTokens.Medium))
                     Text(
                         text = stringResource(id = R.string.description_template_macros),
                         style = MaterialTheme.typography.labelMedium,
@@ -133,7 +136,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Huge))
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
@@ -142,7 +145,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 ) {
                     Text(stringResource(id = R.string.action_cancel))
                 }
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(SpacingTokens.Medium))
                 Button(
                     onClick = { if (label.isNotBlank() && pattern.isNotBlank()) onConfirm(label, pattern, type) },
                     modifier = Modifier.weight(1f),
@@ -157,7 +160,7 @@ fun Main.Pattern.Component.AddTemplateDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Large))
         }
     }
 }

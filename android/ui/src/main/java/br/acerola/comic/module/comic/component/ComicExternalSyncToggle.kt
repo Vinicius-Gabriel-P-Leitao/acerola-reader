@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 
@@ -18,7 +18,7 @@ fun Comic.Component.ComicExternalSyncToggle(
     onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = stringResource(id = R.string.label_config_external_sync),
         description = stringResource(id = R.string.description_config_external_sync),
         icon = Icons.Default.Sync,

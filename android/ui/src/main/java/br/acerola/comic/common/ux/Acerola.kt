@@ -6,6 +6,4 @@ package br.acerola.comic.common.ux
  */
 object Acerola {
     object Component
-
-    object Layout
 }

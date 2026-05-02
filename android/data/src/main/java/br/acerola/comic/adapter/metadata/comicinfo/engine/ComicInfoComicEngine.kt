@@ -79,18 +79,10 @@ class ComicInfoComicEngine
                                 }
 
                             val comicToSave =
-                                // FIXME: Fazer toModel
-                                ComicMetadata(
-                                    id = bestMatch.id ?: 0L,
-                                    title = bestMatch.title,
-                                    description = bestMatch.description,
-                                    romanji = bestMatch.romanji.orEmpty(),
-                                    status = bestMatch.status,
-                                    publication = bestMatch.year ?: 0,
+                                bestMatch.toEntity(
                                     comicDirectoryFk = directory.id,
                                     syncSource = MetadataSource.COMIC_INFO.source,
                                 )
-
                             val remoteId =
                                 comicMetadataDao.upsertComicWithRelationsTransaction(
                                     metadata = comicToSave,

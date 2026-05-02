@@ -7,7 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
@@ -49,7 +49,7 @@ class HomeScreenTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
-                    Main.Home.Layout.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
+                    Main.Home.Template.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
                 }
             }
         }

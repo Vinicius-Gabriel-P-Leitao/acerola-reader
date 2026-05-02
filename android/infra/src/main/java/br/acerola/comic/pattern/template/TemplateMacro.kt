@@ -1,6 +1,5 @@
 package br.acerola.comic.pattern.template
 
-// TODO: Acho que é valido mover para type/
 enum class TemplateMacro(
     val tag: String,
 ) {

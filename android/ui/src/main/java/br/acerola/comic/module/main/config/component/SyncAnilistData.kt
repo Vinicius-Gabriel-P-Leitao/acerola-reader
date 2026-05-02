@@ -9,7 +9,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
@@ -18,7 +18,7 @@ fun Main.Config.Component.SyncAnilistData(
     onRescan: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = stringResource(id = R.string.title_sync_anilist_remote_info),
         description = stringResource(id = R.string.description_sync_anilist_remote_info),
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,

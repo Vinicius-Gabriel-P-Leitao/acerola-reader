@@ -36,6 +36,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.common.ux.component.Dialog
@@ -73,7 +76,7 @@ fun Main.Common.Component.ComicActionsSheet(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
@@ -91,7 +94,7 @@ fun Main.Common.Component.ComicActionsSheet(
                         .height(84.dp),
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(SpacingTokens.Large))
 
             Column {
                 Text(
@@ -211,13 +214,14 @@ fun Main.Common.Component.ComicActionsSheet(
     if (showDeleteDialog) {
         Acerola.Component.Dialog(
             show = true,
-            onDismiss = { },
+            onDismiss = { showDeleteDialog = false },
             title = stringResource(id = R.string.dialog_delete_title),
             confirmButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_delete),
                     onClick = {
                         onDelete()
+                        showDeleteDialog = false
                         onDismiss()
                     },
                     containerColor = MaterialTheme.colorScheme.error,
@@ -228,7 +232,7 @@ fun Main.Common.Component.ComicActionsSheet(
             dismissButtonContent = {
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_cancel),
-                    onClick = { },
+                    onClick = { showDeleteDialog = false },
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
@@ -250,7 +254,7 @@ private fun ComicCategorySheet(
         Text(
             text = stringResource(id = R.string.action_bookmark),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
         )
 
         HorizontalDivider()
@@ -282,7 +286,7 @@ private fun ComicCategorySheet(
                         Spacer(
                             modifier =
                                 Modifier
-                                    .size(20.dp)
+                                    .size(SizeTokens.IconSmall)
                                     .drawBehind {
                                         drawCircle(color = Color(category.color))
                                     },

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
@@ -32,8 +31,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
@@ -53,11 +54,11 @@ fun Main.History.Component.HistoryHeroCard(
 
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(24.dp),
+        shape = ShapeTokens.Huge,
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(240.dp),
+                .height(SizeTokens.HistoryHeroHeight),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -94,20 +95,20 @@ fun Main.History.Component.HistoryHeroCard(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(20.dp),
+                        .padding(SpacingTokens.ExtraLarge),
                 verticalArrangement = Arrangement.Bottom,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small),
                 ) {
                     Box(
                         modifier =
                             Modifier
                                 .background(
                                     color = Color.White.copy(alpha = 0.2f),
-                                    shape = RoundedCornerShape(16.dp),
-                                ).padding(horizontal = 10.dp, vertical = 4.dp),
+                                    shape = ShapeTokens.Large,
+                                ).padding(horizontal = SpacingTokens.Small, vertical = SpacingTokens.ExtraSmall),
                     ) {
                         Text(
                             text = stringResource(id = R.string.label_history_hero_most_recent),
@@ -121,7 +122,7 @@ fun Main.History.Component.HistoryHeroCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Medium))
 
                 Text(
                     text = title,
@@ -134,15 +135,15 @@ fun Main.History.Component.HistoryHeroCard(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.ExtraLarge))
 
                 Button(
                     onClick = onContinueClick,
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
+                            .height(SizeTokens.FabDefault),
+                    shape = ShapeTokens.Large,
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -161,11 +162,11 @@ fun Main.History.Component.HistoryHeroCard(
                                     letterSpacing = 1.2.sp,
                                 ),
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(SpacingTokens.Small))
                         Icon(
                             imageVector = Icons.Filled.PlayArrow,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(SizeTokens.IconSmall),
                         )
                     }
                 }

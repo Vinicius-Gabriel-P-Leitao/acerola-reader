@@ -65,7 +65,7 @@ class VolumeArchiveEngineTest {
             every { volumeArchiveDao.getVolumeChapterCountsByDirectoryId(comicId) } returns flowOf(summaries)
             coEvery { chapterArchiveDao.getChaptersByVolumePaged(comicId, 101L, 5, 0) } returns chapters
 
-            val result = repository.observeVolumeGroups(comicId).first { it.isNotEmpty() }
+            val result = repository.observeVolumeGroups(comicId).first { it.isNotEmpty() && it[0].volume.id != -1L }
 
             assertEquals(1, result.size)
             assertEquals("Vol 1", result[0].volume.name)

@@ -6,7 +6,7 @@ package br.acerola.comic.module.reader
 object Reader {
     object Component
 
-    object Layout
+    object Template
 
     object Gesture
 }

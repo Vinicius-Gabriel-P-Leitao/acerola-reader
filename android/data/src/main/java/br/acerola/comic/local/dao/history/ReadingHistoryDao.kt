@@ -6,7 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import br.acerola.comic.local.entity.history.ChapterRead
 import br.acerola.comic.local.entity.history.ReadingHistory
-import br.acerola.comic.local.entity.relation.ReadingHistoryWithChapter
+import br.acerola.comic.local.entity.relation.ChapterReadingStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -37,7 +37,7 @@ interface ReadingHistoryDao {
         ORDER BY rh.updated_at DESC;
     """,
     )
-    fun observeAllRecentHistoriesWithChapter(): Flow<List<ReadingHistoryWithChapter>>
+    fun observeAllRecentHistoriesWithChapter(): Flow<List<ChapterReadingStatus>>
 
     @Query("DELETE FROM reading_history WHERE comic_directory_id = :comicId")
     suspend fun deleteHistoryByDirectoryId(comicId: Long)

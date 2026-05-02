@@ -23,14 +23,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.layout.ProgressIndicator
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.ux.component.Progress
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
-import br.acerola.comic.module.reader.layout.BottomControls
-import br.acerola.comic.module.reader.layout.PageContent
-import br.acerola.comic.module.reader.layout.SettingsSheet
-import br.acerola.comic.module.reader.layout.TopBar
+import br.acerola.comic.module.reader.template.BottomControls
+import br.acerola.comic.module.reader.template.PageContent
+import br.acerola.comic.module.reader.template.SettingsSheet
+import br.acerola.comic.module.reader.template.TopBar
 import br.acerola.comic.module.reader.state.ReaderAction
 import br.acerola.comic.ui.R
 import kotlinx.coroutines.flow.collectLatest
@@ -101,7 +101,7 @@ fun ReaderScreen(
     }
 
     if (state.isLoading || state.pageCount == 0) {
-        Acerola.Layout.ProgressIndicator(isLoading = true)
+        Acerola.Component.Progress(isLoading = true)
         return
     }
 
@@ -142,7 +142,7 @@ fun ReaderScreen(
     var showSettings by remember { mutableStateOf(value = false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Reader.Layout.PageContent(
+        Reader.Template.PageContent(
             comicId = comicId,
             chapterId = state.currentChapter?.id ?: (if (chapterId == -1L) null else chapterId),
             listState = listState,
@@ -157,7 +157,7 @@ fun ReaderScreen(
         )
 
         // UI Overlay
-        Reader.Layout.TopBar(
+        Reader.Template.TopBar(
             title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
             subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
             isVisible = state.isUiVisible,
@@ -172,7 +172,7 @@ fun ReaderScreen(
             modifier = Modifier.fillMaxSize(),
         ) {
             Box(contentAlignment = Alignment.BottomCenter) {
-                Reader.Layout.BottomControls(
+                Reader.Template.BottomControls(
                     isLoading = state.isLoading,
                     pageCount = state.pageCount,
                     currentPage = state.currentPage,
@@ -189,7 +189,7 @@ fun ReaderScreen(
         }
 
         if (showSettings) {
-            Reader.Layout.SettingsSheet(
+            Reader.Template.SettingsSheet(
                 onDismissRequest = { showSettings = false },
                 currentMode = state.readingMode,
                 onModeSelected = { mode ->
