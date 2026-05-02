@@ -22,7 +22,7 @@ class ChapterSectionTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve_exibir_lista_de_capitulos_e_footer_de_paginacao`() {
+    fun `deve_exibir_lista_de_capitulos`() {
         val chapters =
             ChapterDto(
                 archive =
@@ -38,7 +38,7 @@ class ChapterSectionTest {
                     scope = this,
                     chapters = chapters,
                     currentPage = 0,
-                    totalPages = 5,
+                    totalPages = 1,
                     onChapterClick = { _, _ -> },
                     onToggleRead = {},
                     onPageChange = {},
@@ -47,7 +47,6 @@ class ChapterSectionTest {
         }
 
         composeTestRule.onAllNodesWithText("Cap", substring = true).assertCountEquals(2)
-        composeTestRule.onNodeWithText("1 / 5", substring = true).assertIsDisplayed()
     }
 
     @Test

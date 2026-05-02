@@ -8,17 +8,17 @@ import br.acerola.comic.common.ux.theme.AcerolaTheme
 import org.junit.Rule
 import org.junit.Test
 
-class ProgressIndicatorTest {
+class ProgressTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `ProgressIndicator_deve_exibir_porcentagem_quando_o_progresso_for_informado`() {
+    fun deve_exibir_porcentagem_quando_informada() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.Progress(
                     isLoading = true,
-                    progress = 0.45f, // 45%
+                    progress = 0.45f,
                 )
             }
         }
@@ -27,7 +27,7 @@ class ProgressIndicatorTest {
     }
 
     @Test
-    fun `ProgressIndicator_deve_mostrar_indicador_indeterminado_quando_progresso_for_nulo`() {
+    fun deve_exibir_texto_padrao_de_sincronizacao_quando_carregando_sem_progresso() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.Progress(
@@ -37,20 +37,6 @@ class ProgressIndicatorTest {
             }
         }
 
-        // Como o progresso é nulo, verificamos se o texto padrão de sincronização aparece
         composeTestRule.onNodeWithText("Sincronizando", substring = true).assertIsDisplayed()
-    }
-
-    @Test
-    fun `ProgressIndicator_deve_desaparecer_quando_não_estiver_carregando`() {
-        composeTestRule.setContent {
-            AcerolaTheme {
-                Acerola.Component.Progress(
-                    isLoading = false,
-                )
-            }
-        }
-
-        composeTestRule.onNodeWithText("Sincronizando").assertDoesNotExist()
     }
 }

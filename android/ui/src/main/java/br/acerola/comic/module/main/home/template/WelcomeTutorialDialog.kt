@@ -8,7 +8,7 @@ import androidx.compose.ui.res.stringResource
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
-// FIXME: Aplicar isso
+// FIXME: Apagar esse componente e transformar em uma tela
 @Composable
 fun Main.Home.Component.WelcomeTutorialDialog(
     onDismiss: () -> Unit,

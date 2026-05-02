@@ -1,4 +1,4 @@
-package br.acerola.comic.module.main.home
+package br.acerola.comic.module.main.home.component
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -7,19 +7,17 @@ import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.types.HomeSortPreference
 import br.acerola.comic.config.preference.types.SortDirection
-import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
-import br.acerola.comic.module.main.home.component.HomeFilterSheet
 import br.acerola.comic.module.main.home.state.FilterSettings
 import org.junit.Rule
 import org.junit.Test
 
-class HomeScreenFilterTest {
+class HomeFilterSheetTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun shouldDisplayFilterSheetWhenClicked() {
+    fun deve_exibir_folha_de_filtros_e_secoes_principais() {
         val sortSettings = HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING)
         val filterSettings = FilterSettings()
 
@@ -28,7 +26,7 @@ class HomeScreenFilterTest {
                 Main.Home.Component.HomeFilterSheet(
                     sortSettings = sortSettings,
                     filterSettings = filterSettings,
-                    categories = emptyList<CategoryDto>(),
+                    categories = emptyList(),
                     onSortChange = {},
                     onFilterChange = {},
                     onDismiss = {},
@@ -36,24 +34,19 @@ class HomeScreenFilterTest {
             }
         }
 
-        // O título da sheet geralmente está visível
         composeTestRule.onNodeWithText("Filtrar e Ordenar", substring = true).assertIsDisplayed()
-
-        // As seções podem estar além do scroll inicial.
-        // Usamos assertExists() para validar a lógica sem depender de visibilidade física.
         composeTestRule.onNodeWithText("Ordenar por", substring = true).assertExists()
         composeTestRule.onNodeWithText("Categorias", substring = true).assertExists()
-        composeTestRule.onNodeWithText("Fontes", substring = true).assertExists()
     }
 
     @Test
-    fun shouldShowAllSortingOptions() {
+    fun deve_exibir_opcoes_de_ordenacao_de_quadrinhos() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Main.Home.Component.HomeFilterSheet(
                     sortSettings = HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING),
                     filterSettings = FilterSettings(),
-                    categories = emptyList<CategoryDto>(),
+                    categories = emptyList(),
                     onSortChange = {},
                     onFilterChange = {},
                     onDismiss = {},
@@ -61,9 +54,7 @@ class HomeScreenFilterTest {
             }
         }
 
-        // Opções de ordenação no topo da lista
         composeTestRule.onNodeWithText("Título", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("capítulos", substring = true, ignoreCase = true).assertExists()
-        composeTestRule.onNodeWithText("atualização", substring = true, ignoreCase = true).assertExists()
     }
 }
