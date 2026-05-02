@@ -2,11 +2,14 @@ package br.acerola.comic.module.comic.layout
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Pagination
+import br.acerola.comic.ui.R
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
@@ -88,8 +91,10 @@ fun Comic.Layout.chapterSection(
                     scope.item(
                         key = "vol_load_more_${group.volume.id}",
                     ) {
-                        LaunchedEffect(Unit) {
-                            onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1)
+                        TextButton(
+                            onClick = { onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1) },
+                        ) {
+                            Text(text = stringResource(R.string.action_volume_load_more))
                         }
                     }
                 }

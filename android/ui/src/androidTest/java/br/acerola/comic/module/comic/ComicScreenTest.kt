@@ -15,6 +15,7 @@ import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
 import br.acerola.comic.config.preference.types.ChapterSortType
 import br.acerola.comic.config.preference.types.SortDirection
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
@@ -54,6 +55,7 @@ class ComicScreenTest {
         every { comicViewModel.uiEvents } returns emptyEvents
         every { comicViewModel.chapterSortSettings } returns
             MutableStateFlow(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
+        every { comicViewModel.volumeViewMode } returns MutableStateFlow(VolumeViewType.CHAPTER)
 
         every { comicDirVM.uiEvents } returns emptyEvents
         every { chapterArchiveVM.uiEvents } returns emptyEvents
