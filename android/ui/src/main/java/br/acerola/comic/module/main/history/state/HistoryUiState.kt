@@ -3,7 +3,7 @@ import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryWithChapterDto
 
 data class HistoryItemState(
-    val manga: ComicDto,
+    val comic: ComicDto,
     val history: ReadingHistoryWithChapterDto,
     val chapterCount: Int = 0,
 )

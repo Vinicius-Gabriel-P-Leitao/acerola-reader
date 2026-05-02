@@ -19,7 +19,7 @@ class ComicMetadataViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val mangaRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
+    private val comicRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
@@ -28,12 +28,12 @@ class ComicMetadataViewModelTest {
 
     @Before
     fun setup() {
-        every { mangaRepo.observeLibrary() } returns MutableStateFlow(emptyList())
-        every { mangaRepo.isIndexing } returns MutableStateFlow(false)
-        every { mangaRepo.progress } returns MutableStateFlow(-1)
+        every { comicRepo.observeLibrary() } returns MutableStateFlow(emptyList())
+        every { comicRepo.isIndexing } returns MutableStateFlow(false)
+        every { comicRepo.progress } returns MutableStateFlow(-1)
 
-        observeLibraryUseCase = ObserveLibraryUseCase(mangaRepository = mangaRepo)
-        viewModel = ComicMetadataViewModel(observeLibraryUseCase, manageCategoriesUseCase, workManager)
+        observeLibraryUseCase = ObserveLibraryUseCase(comicRepository = comicRepo)
+        viewModel = ComicMetadataViewModel(workManager, manageCategoriesUseCase, observeLibraryUseCase)
     }
 
     @Test

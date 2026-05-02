@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -21,12 +22,12 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.GroupedHeroItem
-import br.acerola.comic.common.ux.component.HeroItem
-import br.acerola.comic.common.ux.component.HeroNestedItem
+import br.acerola.comic.common.ux.component.GroupedHeroButton
+import br.acerola.comic.common.ux.component.HeroButton
+import br.acerola.comic.common.ux.component.HeroNestedButton
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
 
 @Composable
@@ -47,7 +48,7 @@ fun Comic.Component.SyncMetadata(
     Column(modifier = modifier) {
         if (externalSyncEnabled) {
             MangadexSection(
-                isActive = syncSource == MetadataSourcePattern.MANGADEX,
+                isActive = syncSource == MetadataSource.MANGADEX,
                 hasChapters = hasMangadexSource && remoteInfo.id != null,
                 onSyncInfo = onSyncMangadexInfo,
                 onSyncChapters = onSyncMangadexChapters,
@@ -56,7 +57,7 @@ fun Comic.Component.SyncMetadata(
             Spacer(modifier = Modifier.height(8.dp))
 
             AnilistSection(
-                isActive = syncSource == MetadataSourcePattern.ANILIST,
+                isActive = syncSource == MetadataSource.ANILIST,
                 onSyncInfo = onSyncAnilistInfo,
             )
 
@@ -64,7 +65,7 @@ fun Comic.Component.SyncMetadata(
         }
 
         ComicInfoSection(
-            isActive = syncSource == MetadataSourcePattern.COMIC_INFO,
+            isActive = syncSource == MetadataSource.COMIC_INFO,
             hasChapters = hasComicInfoSource,
             onSyncInfo = onSyncComicInfo,
             onSyncChapters = onSyncComicInfoChapters,
@@ -79,7 +80,7 @@ private fun MangadexSection(
     onSyncInfo: () -> Unit,
     onSyncChapters: () -> Unit,
 ) {
-    Acerola.Component.GroupedHeroItem(
+    Acerola.Component.GroupedHeroButton(
         title = stringResource(id = R.string.label_mangadex_group),
         description =
             pluralStringResource(
@@ -104,7 +105,7 @@ private fun MangadexSection(
         nestedItem =
             if (hasChapters && isActive) {
                 {
-                    Acerola.Component.HeroNestedItem(
+                    Acerola.Component.HeroNestedButton(
                         title = stringResource(id = R.string.title_sync_chapters),
                         description = stringResource(id = R.string.description_sync_chapters_remote),
                         icon = Icons.Rounded.AutoAwesome,
@@ -146,7 +147,7 @@ private fun ComicInfoSection(
     onSyncInfo: () -> Unit,
     onSyncChapters: () -> Unit,
 ) {
-    Acerola.Component.GroupedHeroItem(
+    Acerola.Component.GroupedHeroButton(
         title = stringResource(id = R.string.title_sync_comic_info),
         description = stringResource(id = R.string.description_sync_comic_info),
         icon = Icons.Rounded.Description,
@@ -167,7 +168,7 @@ private fun ComicInfoSection(
         nestedItem =
             if (hasChapters && isActive) {
                 {
-                    Acerola.Component.HeroNestedItem(
+                    Acerola.Component.HeroNestedButton(
                         title = stringResource(id = R.string.title_sync_chapters),
                         description = stringResource(id = R.string.description_sync_chapters_internal),
                         icon = Icons.Rounded.AutoStories,
@@ -186,11 +187,11 @@ private fun SyncItem(
     subtitle: String,
     iconVector: ImageVector? = null,
     iconPainter: Painter? = null,
-    iconBackground: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
+    iconBackground: Color = MaterialTheme.colorScheme.primaryContainer,
     isActive: Boolean = false,
     onClick: () -> Unit,
 ) {
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = title,
         description = subtitle,
         iconBackground = iconBackground,

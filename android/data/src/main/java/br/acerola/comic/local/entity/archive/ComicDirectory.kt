@@ -11,9 +11,9 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["name"], unique = true)],
     foreignKeys = [
         ForeignKey(
-            entity = ChapterTemplate::class,
+            entity = ArchiveTemplate::class,
             parentColumns = ["id"],
-            childColumns = ["chapter_template_fk"],
+            childColumns = ["archive_template_fk"],
             onDelete = ForeignKey.SET_NULL,
         ),
     ],
@@ -31,8 +31,8 @@ data class ComicDirectory(
     val banner: String?,
     @ColumnInfo(name = "last_modified")
     val lastModified: Long,
-    @ColumnInfo(name = "chapter_template_fk")
-    val chapterTemplateFk: Long?,
+    @ColumnInfo(name = "archive_template_fk")
+    val archiveTemplateFk: Long?,
     @ColumnInfo(name = "external_sync_enabled")
     val externalSyncEnabled: Boolean = true,
     @ColumnInfo(name = "hidden", defaultValue = "0")

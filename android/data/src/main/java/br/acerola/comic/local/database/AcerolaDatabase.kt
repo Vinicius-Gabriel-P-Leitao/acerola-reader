@@ -4,9 +4,10 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import br.acerola.comic.local.converter.AcerolaTypeConverters
+import br.acerola.comic.local.dao.archive.ArchiveTemplateDao
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
-import br.acerola.comic.local.dao.archive.ChapterTemplateDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
+import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.dao.category.CategoryDao
 import br.acerola.comic.local.dao.history.ReadingHistoryDao
 import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
@@ -19,9 +20,11 @@ import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
+import br.acerola.comic.local.dao.view.ComicSummaryDao
+import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ChapterArchive
-import br.acerola.comic.local.entity.archive.ChapterTemplate
 import br.acerola.comic.local.entity.archive.ComicDirectory
+import br.acerola.comic.local.entity.archive.VolumeArchive
 import br.acerola.comic.local.entity.category.Category
 import br.acerola.comic.local.entity.category.ComicCategory
 import br.acerola.comic.local.entity.history.ChapterRead
@@ -36,13 +39,15 @@ import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
 import br.acerola.comic.local.entity.metadata.source.ComicInfoSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
+import br.acerola.comic.local.entity.view.ComicSummaryView
 
 @Database(
     entities = [
         ComicDirectory::class,
-        ChapterTemplate::class,
+        ArchiveTemplate::class,
         ComicMetadata::class,
         ChapterArchive::class,
+        VolumeArchive::class,
         ChapterMetadata::class,
         ChapterDownloadSource::class,
         Author::class,
@@ -58,20 +63,22 @@ import br.acerola.comic.local.entity.metadata.source.MangadexSource
         ComicCategory::class,
     ],
     views = [
-        br.acerola.comic.local.entity.view.ComicSummaryView::class,
+        ComicSummaryView::class,
     ],
-    exportSchema = false,
-    version = 1,
+    exportSchema = true,
+    version = 2,
 )
 @TypeConverters(AcerolaTypeConverters::class)
 abstract class AcerolaDatabase : RoomDatabase() {
     abstract fun chapterArchiveDao(): ChapterArchiveDao
 
-    abstract fun mangaDirectoryDao(): ComicDirectoryDao
+    abstract fun volumeArchiveDao(): VolumeArchiveDao
 
-    abstract fun chapterTemplateDao(): ChapterTemplateDao
+    abstract fun comicDirectoryDao(): ComicDirectoryDao
 
-    abstract fun mangaRemoteInfoDao(): ComicMetadataDao
+    abstract fun archiveTemplateDao(): ArchiveTemplateDao
+
+    abstract fun comicRemoteInfoDao(): ComicMetadataDao
 
     abstract fun chapterRemoteInfoDao(): ChapterMetadataDao
 
@@ -95,5 +102,6 @@ abstract class AcerolaDatabase : RoomDatabase() {
 
     abstract fun categoryDao(): CategoryDao
 
-    abstract fun mangaSummaryDao(): br.acerola.comic.local.dao.view.ComicSummaryDao
+    abstract fun comicSummaryDao(): ComicSummaryDao
+
 }

@@ -23,8 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 
 @Composable
 fun Acerola.Component.ImageCard(
@@ -57,7 +57,7 @@ fun Acerola.Component.ImageCard(
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                             .background(Color.Black.copy(alpha = 0.6f))
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = SpacingTokens.Medium, vertical = SpacingTokens.Small),
                 ) {
                     Text(
                         text = footer,
@@ -90,7 +90,7 @@ fun Acerola.Component.TextCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(all = 16.dp),
+                    .padding(all = SpacingTokens.Large),
         ) {
             if (title != null) {
                 Text(
@@ -98,15 +98,15 @@ fun Acerola.Component.TextCard(
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
             }
 
             Text(text = text, style = MaterialTheme.typography.bodyMedium)
 
             if (footer != null) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Large))
                 HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Large))
                 Text(
                     text = footer,
                     textAlign = TextAlign.End,
@@ -138,7 +138,7 @@ fun Acerola.Component.Card(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(all = 16.dp),
+                    .padding(all = SpacingTokens.Large),
         ) {
             if (title != null) {
                 Text(
@@ -146,15 +146,15 @@ fun Acerola.Component.Card(
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
             }
 
             content()
 
             if (footer != null) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Large))
                 HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Large))
                 Text(
                     text = footer,
                     textAlign = TextAlign.End,

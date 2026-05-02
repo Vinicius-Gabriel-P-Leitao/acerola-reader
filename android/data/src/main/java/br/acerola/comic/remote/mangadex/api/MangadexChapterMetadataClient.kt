@@ -13,7 +13,7 @@ import retrofit2.http.Url
 interface MangadexChapterMetadataClient {
     @GET(value = "manga/{id}/feed")
     suspend fun getMangaFeed(
-        @Path(value = "id") mangaId: String,
+        @Path(value = "id") comicId: String,
         @Query(value = "translatedLanguage[]") languages: List<String>,
         @Query(value = "includes[]") includes: List<String> = listOf("scanlation_group"),
         @Query(value = "order[chapter]") order: String = "asc",

@@ -18,6 +18,7 @@ import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.entity.archive.ChapterArchive
+import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
 import br.acerola.comic.local.translator.persistence.toDownloadSourcesEntities
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.local.translator.ui.toViewDto
@@ -25,7 +26,7 @@ import br.acerola.comic.local.translator.ui.toViewPageDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.service.metadata.MetadataExporter
-import br.acerola.comic.util.normalizeChapter
+import br.acerola.comic.util.sort.normalizeSort
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -64,17 +65,17 @@ class MangadexChapterEngine
         override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
         override suspend fun refreshComicChapters(
-            mangaId: Long,
+            comicId: Long,
             baseUri: Uri?,
         ): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Starting MangaDex chapter metadata sync for comic: $mangaId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Starting MangaDex chapter metadata sync for comic: $comicId", LogSource.REPOSITORY)
                 _isIndexing.value = true
                 _progress.value = 0
 
                 val remoteMangaRelations =
                     try {
-                        comicMetadataDao.observeComicWithRelationsByDirectoryId(mangaId).first()
+                        comicMetadataDao.observeComicWithRelationsByDirectoryId(comicId).first()
                     } catch (exception: Exception) {
                         AcerolaLogger.e(TAG, "Database error while fetching comic relations", LogSource.REPOSITORY, throwable = exception)
                         _isIndexing.value = false
@@ -82,7 +83,7 @@ class MangadexChapterEngine
                     }
 
                 if (remoteMangaRelations == null) {
-                    AcerolaLogger.w(TAG, "Sync aborted: No remote info link for comic $mangaId", LogSource.REPOSITORY)
+                    AcerolaLogger.w(TAG, "Sync aborted: No remote info link for comic $comicId", LogSource.REPOSITORY)
                     _isIndexing.value = false
                     return@withContext Either.Right(value = Unit)
                 }
@@ -96,7 +97,7 @@ class MangadexChapterEngine
                     }
 
                 mangadexSourceChapterInfoService
-                    .searchInfo(manga = mangadexId, limit = 100, onProgress = {
+                    .searchInfo(comic = mangadexId, limit = 100, onProgress = {
                         _progress.value = it
                     })
                     .mapLeft {
@@ -108,8 +109,8 @@ class MangadexChapterEngine
                         Either
                             .catch {
                                 val localDirectory =
-                                    directoryDao.getDirectoryById(mangaId)
-                                        ?: throw Exception("Local directory not found for ID: $mangaId")
+                                    directoryDao.getDirectoryById(comicId)
+                                        ?: throw Exception("Local directory not found for ID: $comicId")
 
                                 val localChapters = chapterArchiveDao.getChaptersByDirectoryId(localDirectory.id).first()
 
@@ -128,7 +129,7 @@ class MangadexChapterEngine
                                 }
 
                                 chapterPairs.forEach { (archive, remote) ->
-                                    val chapterRemoteInfoEntity = remote.toEntity(mangaRemoteInfoFk = remoteManga.id)
+                                    val chapterRemoteInfoEntity = remote.toEntity(comicRemoteInfoFk = remoteManga.id)
                                     val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
 
                                     val downloadSourceEntities = remote.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
@@ -136,8 +137,8 @@ class MangadexChapterEngine
                                 }
 
                                 metadataExportService.exportFull(
-                                    directoryId = mangaId,
-                                    mangaInfo = remoteMangaRelations.toViewDto(),
+                                    directoryId = comicId,
+                                    comicInfo = remoteMangaRelations.toViewDto(),
                                 )
 
                                 AcerolaLogger.i(TAG, "MangaDex chapter sync completed for: ${localDirectory.name}", LogSource.REPOSITORY)
@@ -157,9 +158,13 @@ class MangadexChapterEngine
             }
 
         @OptIn(ExperimentalCoroutinesApi::class)
-        override fun observeChapters(mangaId: Long): StateFlow<ChapterRemoteInfoPageDto> =
+        override fun observeChapters(
+            comicId: Long,
+            sortType: String,
+            isAscending: Boolean,
+        ): StateFlow<ChapterRemoteInfoPageDto> =
             chapterMetadataDao
-                .observeChaptersByMetadataId(mangaId)
+                .observeChaptersByMetadataId(comicId)
                 .flatMapLatest { chapters ->
                     val chapterIds = chapters.map { it.id }
 
@@ -171,19 +176,31 @@ class MangadexChapterEngine
                                     chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
                                 }.orEmpty()
 
-                        emit(value = chapters.toViewPageDto(sources = sources))
+                        // Add simple in-memory sort for remote metadata to match local
+                        val baseList =
+                            if (sortType == "LAST_UPDATE") {
+                                chapters.sortedBy { it.id }
+                            } else {
+                                // Default NUMBER sorting for metadata
+                                chapters.sortedBy { it.chapter.toDoubleOrNull() ?: 0.0 }
+                            }
+
+                        val finalList = if (isAscending) baseList else baseList.reversed()
+                        emit(value = finalList.toViewPageDto(sources = sources))
                     }
                 }.stateIn(
                     started = SharingStarted.Lazily,
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
-                    initialValue = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, total = 0, page = 0),
+                    initialValue = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = -1, total = 0, page = 0),
                 )
 
         override suspend fun getChapterPage(
-            mangaId: Long,
+            comicId: Long,
             total: Int,
             page: Int,
             pageSize: Int,
+            sortType: String,
+            isAscending: Boolean,
         ): ChapterRemoteInfoPageDto {
             val offset = page * pageSize
 
@@ -191,10 +208,25 @@ class MangadexChapterEngine
                 if (total != 0) {
                     total
                 } else {
-                    chapterMetadataDao.countChaptersByMetadataId(mangaId)
+                    chapterMetadataDao.countChaptersByMetadataId(comicId)
                 }
 
-            val chapters = chapterMetadataDao.getChaptersByMetadataPaged(mangaId, pageSize, offset)
+            // Para informações remotas, se for algo além de simples DESC/ASC em id/número, buscamos tudo e classificamos.
+            // Mas geralmente as sincronizações de metadados são pequenas o suficiente para serem gerenciadas.
+            // Seguiremos o mesmo padrão local: NUMBER ASC usa SQL, outros usam memória.
+            val chapters =
+                if (sortType == "NUMBER" && isAscending) {
+                    chapterMetadataDao.getChaptersByMetadataPaged(comicId, pageSize, offset)
+                } else {
+                    val all = chapterMetadataDao.getChaptersListByMetadataId(comicId)
+                    val base = if (sortType == "LAST_UPDATE") all.sortedBy { it.id } else all.sortedBy { it.chapter.toDoubleOrNull() ?: 0.0 }
+                    val sorted = if (isAscending) base else base.reversed()
+
+                    val start = offset.coerceIn(0, sorted.size)
+                    val end = (start + pageSize).coerceIn(0, sorted.size)
+
+                    if (start < sorted.size) sorted.subList(start, end) else emptyList()
+                }
 
             val sources =
                 chapters
@@ -214,21 +246,21 @@ class MangadexChapterEngine
 
         private fun matchRemoteWithArchive(
             remote: List<ChapterMetadataDto>,
-            local: List<ChapterArchive>,
+            local: List<ChapterVolumeJoin>,
         ): List<Pair<ChapterArchive, ChapterMetadataDto>> {
             val remoteByChapter =
                 remote
                     .mapNotNull { dto ->
-                        val key = dto.chapter?.normalizeChapter()
-
+                        val key = dto.chapter?.normalizeSort()
                         if (key == null) null else key to dto
                     }.groupBy(keySelector = { it.first }, valueTransform = { it.second })
                     .mapValues { (_, list) ->
                         list.maxBy { it.mangadexVersion }
                     }
 
-            return local.mapNotNull { archive ->
-                val chapterKey = archive.chapterSort.normalizeChapter()
+            return local.mapNotNull { join ->
+                val archive = join.chapter
+                val chapterKey = archive.chapterSort.normalizeSort()
                 val remoteInfo = remoteByChapter[chapterKey] ?: return@mapNotNull null
 
                 archive to remoteInfo

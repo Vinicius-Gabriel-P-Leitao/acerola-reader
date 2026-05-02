@@ -22,14 +22,14 @@ class SyncComicMetadataUseCase
         @param:ComicInfoEngine private val comicInfoChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>,
     ) {
         suspend fun syncFromMangadex(directoryId: Long): Either<LibrarySyncError, Unit> {
-            // NOTE: mangaId aqui deve ser o ID do diretório local
+            // NOTE: comicId aqui deve ser o ID do diretório local
             return mangadexMangaRepo.refreshManga(directoryId).onRight {
                 mangadexChapterRepo.refreshComicChapters(directoryId)
             }
         }
 
         suspend fun syncFromComicInfo(directoryId: Long): Either<LibrarySyncError, Unit> {
-            // NOTE: mangaId aqui deve ser o ID do diretório local
+            // NOTE: comicId aqui deve ser o ID do diretório local
             return comicInfoMangaRepo.refreshManga(directoryId).onRight {
                 comicInfoChapterRepo.refreshComicChapters(directoryId)
             }

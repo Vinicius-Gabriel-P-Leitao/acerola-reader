@@ -4,11 +4,11 @@ import br.acerola.comic.dto.history.ReadingHistoryWithChapterDto
 
 sealed interface HistoryAction {
     data class ClickManga(
-        val manga: ComicDto,
+        val comic: ComicDto,
     ) : HistoryAction
 
     data class ClickContinue(
-        val manga: ComicDto,
+        val comic: ComicDto,
         val history: ReadingHistoryWithChapterDto,
     ) : HistoryAction
 }

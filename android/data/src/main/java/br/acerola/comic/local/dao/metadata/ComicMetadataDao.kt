@@ -27,15 +27,15 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
     @Query(value = "SELECT * FROM comic_metadata WHERE title = :title")
     fun observeComicByTitle(title: String): Flow<ComicMetadata?>
 
-    @Query(value = "SELECT * FROM comic_metadata WHERE id = :mangaId")
-    fun observeComicById(mangaId: Long): Flow<ComicMetadata?>
+    @Query(value = "SELECT * FROM comic_metadata WHERE id = :comicId")
+    fun observeComicById(comicId: Long): Flow<ComicMetadata?>
 
     @Query(value = "SELECT * FROM comic_metadata WHERE comic_directory_fk = :directoryId")
     fun observeComicByDirectoryId(directoryId: Long): Flow<ComicMetadata?>
 
     @Transaction
-    @Query(value = "SELECT * FROM comic_metadata WHERE id = :mangaId")
-    fun observeComicWithRelationsById(mangaId: Long): Flow<MetadataRelations?>
+    @Query(value = "SELECT * FROM comic_metadata WHERE id = :comicId")
+    fun observeComicWithRelationsById(comicId: Long): Flow<MetadataRelations?>
 
     @Transaction
     @Query(value = "SELECT * FROM comic_metadata WHERE comic_directory_fk = :directoryId")
@@ -59,9 +59,9 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
         anilistDao: AnilistSourceDao? = null,
         comicInfoDao: ComicInfoSourceDao? = null,
     ): Long {
-        val existing = observeComicByDirectoryId(metadata.mangaDirectoryFk!!).firstOrNull()
+        val existing = observeComicByDirectoryId(metadata.comicDirectoryFk!!).firstOrNull()
 
-        val mangaId =
+        val comicId =
             if (existing != null) {
                 update(metadata.copy(id = existing.id))
                 existing.id
@@ -69,18 +69,18 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
                 insert(metadata)
             }
 
-        if (mangaId != -1L) {
-            authorDao.deleteByMetadataId(mangaId)
-            genreDao.deleteByMetadataId(mangaId)
+        if (comicId != -1L) {
+            authorDao.deleteByMetadataId(comicId)
+            genreDao.deleteByMetadataId(comicId)
 
-            authors.forEach { authorDao.insert(it.copy(mangaRemoteInfoFk = mangaId)) }
-            genres.forEach { genreDao.insert(it.copy(mangaRemoteInfoFk = mangaId)) }
+            authors.forEach { authorDao.insert(it.copy(comicRemoteInfoFk = comicId)) }
+            genres.forEach { genreDao.insert(it.copy(comicRemoteInfoFk = comicId)) }
 
-            mangadexSource?.let { mangadexDao?.insert(it.copy(mangaRemoteInfoFk = mangaId)) }
-            anilistSource?.let { anilistDao?.insert(it.copy(mangaRemoteInfoFk = mangaId)) }
-            comicInfoSource?.let { comicInfoDao?.insert(it.copy(mangaRemoteInfoFk = mangaId)) }
+            mangadexSource?.let { mangadexDao?.insert(it.copy(comicRemoteInfoFk = comicId)) }
+            anilistSource?.let { anilistDao?.insert(it.copy(comicRemoteInfoFk = comicId)) }
+            comicInfoSource?.let { comicInfoDao?.insert(it.copy(comicRemoteInfoFk = comicId)) }
         }
 
-        return mangaId
+        return comicId
     }
 }

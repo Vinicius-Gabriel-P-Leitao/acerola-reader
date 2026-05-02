@@ -14,7 +14,7 @@ import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.MetadataSyncWorker
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -32,9 +32,9 @@ import javax.inject.Inject
 class ComicMetadataViewModel
     @Inject
     constructor(
-        @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
-        private val manageCategoriesUseCase: ManageCategoriesUseCase,
         private val workManager: WorkManager,
+        private val manageCategoriesUseCase: ManageCategoriesUseCase,
+        @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
     ) : ViewModel() {
         private val _isIndexing = MutableStateFlow(value = false)
         val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
@@ -79,7 +79,7 @@ class ComicMetadataViewModel
             categoryId: Long?,
         ) {
             viewModelScope.launch {
-                manageCategoriesUseCase.updateMangaCategory(directoryId, categoryId)
+                manageCategoriesUseCase.updateComicCategory(directoryId, categoryId)
             }
         }
 
@@ -98,9 +98,9 @@ class ComicMetadataViewModel
             enqueueMetadataSync(MetadataSyncWorker.SOURCE_ANILIST, -1L, MetadataSyncWorker.SYNC_TYPE_RESCAN)
         }
 
-        fun rescanMangaByManga(mangaId: Long) {
-            AcerolaLogger.audit(TAG, "User requested metadata rescan for comic: $mangaId", LogSource.VIEWMODEL)
-            enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, mangaId, MetadataSyncWorker.SYNC_TYPE_RESCAN)
+        fun rescanMangaByManga(comicId: Long) {
+            AcerolaLogger.audit(TAG, "User requested metadata rescan for comic: $comicId", LogSource.VIEWMODEL)
+            enqueueMetadataSync(MetadataSyncWorker.SOURCE_MANGADEX, comicId, MetadataSyncWorker.SYNC_TYPE_RESCAN)
         }
 
         fun syncFromMangadex(directoryId: Long) {

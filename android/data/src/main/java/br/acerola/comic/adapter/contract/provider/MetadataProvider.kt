@@ -5,7 +5,7 @@ import br.acerola.comic.error.message.NetworkError
 
 interface MetadataProvider<R, P> {
     suspend fun searchInfo(
-        manga: String,
+        comic: String,
         limit: Int = 10,
         offset: Int = 0,
         onProgress: ((Int) -> Unit)? = null,
@@ -13,7 +13,7 @@ interface MetadataProvider<R, P> {
     ): Either<NetworkError, List<R>>
 
     suspend fun saveInfo(
-        manga: String,
+        comic: String,
         info: R,
     ): Either<NetworkError, Unit>
 }

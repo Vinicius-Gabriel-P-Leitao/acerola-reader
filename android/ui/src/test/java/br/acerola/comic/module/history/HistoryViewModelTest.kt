@@ -50,12 +50,12 @@ class HistoryViewModelTest {
         every { historyGateway.getAllRecentHistory() } returns MutableStateFlow(emptyList())
         every { mangadexRepo.observeLibrary() } returns MutableStateFlow(emptyList())
         every { directoryRepo.observeLibrary() } returns MutableStateFlow(emptyList())
-        every { manageCategoriesUseCase.getAllMangaCategories() } returns MutableStateFlow(emptyMap())
+        every { manageCategoriesUseCase.getAllComicCategories() } returns MutableStateFlow(emptyMap())
         every { getChapterCountUseCase() } returns MutableStateFlow(emptyMap())
 
         observeHistoryUseCase = ObserveHistoryUseCase(historyGateway)
-        mangadexObserve = ObserveLibraryUseCase(mangaRepository = mangadexRepo)
-        directoryObserve = ObserveLibraryUseCase(mangaRepository = directoryRepo)
+        mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
+        directoryObserve = ObserveLibraryUseCase(comicRepository = directoryRepo)
 
         viewModel =
             HistoryViewModel(

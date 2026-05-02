@@ -17,22 +17,22 @@ class ComicListItemTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `MangaListItem_deve_exibir_o_título_do_mangá_corretamente`() {
-        val manga =
+    fun `MangaListItem_deve_exibir_o_título_do_quadrinho_corretamente`() {
+        val comic =
             ComicDto(
                 directory =
                     ComicDirectoryDto(
                         id = 1L,
-                        name = "Pasta Manga",
+                        name = "Pasta Comic",
                         path = "",
                         coverUri = null,
                         bannerUri = null,
                         lastModified = 0L,
-                        chapterTemplateFk = null,
+                        archiveTemplateFk = null,
                     ),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Título do Manga",
+                        title = "Título do Comic",
                         description = "",
                         status = "",
                     ),
@@ -40,11 +40,11 @@ class ComicListItemTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                Main.Common.Component.ComicListItem(manga = manga, onClick = {})
+                Main.Common.Component.ComicListItem(comic = comic, onClick = {})
             }
         }
 
         // Valida se o título é renderizado corretamente
-        composeTestRule.onNodeWithText("Título do Manga").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Título do Comic").assertIsDisplayed()
     }
 }

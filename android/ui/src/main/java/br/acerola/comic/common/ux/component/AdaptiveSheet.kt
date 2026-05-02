@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,12 +56,12 @@ fun Acerola.Component.AdaptiveSheet(
                 Surface(
                     modifier =
                         Modifier
-                            .width(360.dp)
+                            .width(SizeTokens.SideSheetWidth)
                             .fillMaxHeight()
                             .align(Alignment.CenterEnd),
                     color = containerColor,
                     contentColor = contentColor,
-                    shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
+                    shape = ShapeTokens.Large.copy(topEnd = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         content()

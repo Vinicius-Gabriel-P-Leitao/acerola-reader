@@ -2,10 +2,12 @@ package br.acerola.comic.usecase
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase
@@ -35,24 +37,24 @@ object DirectoryCaseModule {
         @DirectoryEngine repository: ComicGateway<ComicDirectoryDto>,
     ): ObserveLibraryUseCase<ComicDirectoryDto> =
         ObserveLibraryUseCase(
-            mangaRepository = repository,
+            comicRepository = repository,
             syncGateway = repository,
         )
 
     @Provides
     @DirectoryCase
     fun provideRescanComicUseCase(
-        @DirectoryEngine mangaOps: ComicGateway<ComicDirectoryDto>,
+        @DirectoryEngine comicOps: ComicGateway<ComicDirectoryDto>,
     ): RescanComicUseCase =
         RescanComicUseCase(
-            mangaRepository = mangaOps,
+            comicRepository = comicOps,
         )
 
     @Provides
     @DirectoryCase
     fun provideRescanComicChaptersUseCase(
-        @DirectoryEngine chapterOps: ChapterGateway<ChapterArchivePageDto>,
-    ): RescanComicChaptersUseCase<ChapterArchivePageDto> =
+        @DirectoryEngine chapterOps: ChapterGateway<ChapterPageDto>,
+    ): RescanComicChaptersUseCase<ChapterPageDto> =
         RescanComicChaptersUseCase(
             chapterRepository = chapterOps,
         )
@@ -60,9 +62,18 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideGetChaptersUseCase(
-        @DirectoryEngine chapterOps: ChapterGateway<ChapterArchivePageDto>,
-    ): ObserveChaptersUseCase<ChapterArchivePageDto> =
+        @DirectoryEngine chapterOps: ChapterGateway<ChapterPageDto>,
+    ): ObserveChaptersUseCase<ChapterPageDto> =
         ObserveChaptersUseCase(
             chapterRepository = chapterOps,
+        )
+
+    @Provides
+    @DirectoryCase
+    fun provideObserveVolumeChaptersUseCase(
+        @DirectoryEngine volumeOps: VolumeGateway,
+    ): ObserveVolumeChaptersUseCase =
+        ObserveVolumeChaptersUseCase(
+            volumeGateway = volumeOps,
         )
 }

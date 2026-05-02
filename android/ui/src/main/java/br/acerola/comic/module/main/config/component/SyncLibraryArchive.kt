@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
@@ -24,7 +24,7 @@ fun Main.Config.Component.SyncLibraryArchive(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Acerola.Component.HeroItem(
+        Acerola.Component.HeroButton(
             title = stringResource(id = R.string.description_text_home_deep_sync),
             description = stringResource(id = R.string.description_text_home_deep_sync_supporting),
             icon = Icons.Default.Folder,
@@ -33,7 +33,7 @@ fun Main.Config.Component.SyncLibraryArchive(
             onClick = onDeepScan,
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Acerola.Component.HeroItem(
+        Acerola.Component.HeroButton(
             title = stringResource(id = R.string.description_text_home_quick_sync),
             description = stringResource(id = R.string.description_text_home_quick_sync_supporting),
             icon = Icons.Default.Sync,

@@ -12,12 +12,15 @@ import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.error.message.LibrarySyncError
+import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.sync.LibrarySyncWorker
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -39,8 +42,9 @@ class LibrarySyncWorkerTest {
         every { repository.isIndexing } returns MutableStateFlow(false)
     }
 
-    private fun buildWorker(inputData: Data): LibrarySyncWorker =
-        TestListenableWorkerBuilder<LibrarySyncWorker>(context)
+    private fun buildWorker(inputData: Data): LibrarySyncWorker {
+        val notificationHelper = NotificationHelper(context)
+        return TestListenableWorkerBuilder<LibrarySyncWorker>(context)
             .setInputData(inputData)
             .setWorkerFactory(
                 object : WorkerFactory() {
@@ -48,15 +52,16 @@ class LibrarySyncWorkerTest {
                         appContext: Context,
                         workerClassName: String,
                         workerParameters: WorkerParameters,
-                    ) = LibrarySyncWorker(appContext, workerParameters, repository)
+                    ) = LibrarySyncWorker(appContext, workerParameters, repository, notificationHelper)
                 },
             ).build()
+    }
 
     // SYNC_TYPE_SPECIFIC
 
     @Test
-    fun `doWork deve retornar falha quando mangaId é -1 em SYNC_TYPE_SPECIFIC`() =
-        runBlocking {
+    fun `doWork deve retornar falha quando comicId é -1 em SYNC_TYPE_SPECIFIC`() =
+        runTest {
             val worker =
                 buildWorker(
                     workDataOf(
@@ -71,8 +76,8 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando SYNC_TYPE_SPECIFIC com mangaId válido`() =
-        runBlocking {
+    fun `doWork deve retornar sucesso quando SYNC_TYPE_SPECIFIC com comicId válido`() =
+        runTest {
             coEvery { repository.refreshManga(any(), null) } returns Either.Right(Unit)
 
             val worker =
@@ -86,15 +91,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { repository.refreshManga(42L, null) }
         }
 
     @Test
     fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_SPECIFIC`() =
-        runBlocking {
+        runTest {
             coEvery { repository.refreshManga(any(), null) } returns
-                Either.Left(
-                    LibrarySyncError.DatabaseError(),
-                )
+                Either.Left(LibrarySyncError.DatabaseError())
 
             val worker =
                 buildWorker(
@@ -107,13 +111,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { repository.refreshManga(42L, null) }
         }
 
     // SYNC_TYPE_INCREMENTAL
 
     @Test
     fun `doWork deve retornar sucesso em SYNC_TYPE_INCREMENTAL`() =
-        runBlocking {
+        runTest {
             coEvery { repository.incrementalScan(null) } returns Either.Right(Unit)
 
             val worker =
@@ -124,15 +129,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { repository.incrementalScan(null) }
         }
 
     @Test
     fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_INCREMENTAL`() =
-        runBlocking {
+        runTest {
             coEvery { repository.incrementalScan(null) } returns
-                Either.Left(
-                    LibrarySyncError.FolderAccessDenied(),
-                )
+                Either.Left(LibrarySyncError.FolderAccessDenied())
 
             val worker =
                 buildWorker(
@@ -142,13 +146,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { repository.incrementalScan(null) }
         }
 
     // SYNC_TYPE_REFRESH
 
     @Test
     fun `doWork deve retornar sucesso em SYNC_TYPE_REFRESH`() =
-        runBlocking {
+        runTest {
             coEvery { repository.refreshLibrary(null) } returns Either.Right(Unit)
 
             val worker =
@@ -159,15 +164,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { repository.refreshLibrary(null) }
         }
 
     @Test
     fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_REFRESH`() =
-        runBlocking {
+        runTest {
             coEvery { repository.refreshLibrary(null) } returns
-                Either.Left(
-                    LibrarySyncError.SyncNetworkError(),
-                )
+                Either.Left(LibrarySyncError.SyncNetworkError())
 
             val worker =
                 buildWorker(
@@ -177,13 +181,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { repository.refreshLibrary(null) }
         }
 
     // SYNC_TYPE_REBUILD
 
     @Test
     fun `doWork deve retornar sucesso em SYNC_TYPE_REBUILD`() =
-        runBlocking {
+        runTest {
             coEvery { repository.rebuildLibrary(null) } returns Either.Right(Unit)
 
             val worker =
@@ -194,15 +199,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { repository.rebuildLibrary(null) }
         }
 
     @Test
     fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_REBUILD`() =
-        runBlocking {
+        runTest {
             coEvery { repository.rebuildLibrary(null) } returns
-                Either.Left(
-                    LibrarySyncError.MalformedLibrary(),
-                )
+                Either.Left(LibrarySyncError.MalformedLibrary())
 
             val worker =
                 buildWorker(
@@ -212,13 +216,14 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Failure)
+            coVerify(exactly = 1) { repository.rebuildLibrary(null) }
         }
 
     // Fallback / default sync type
 
     @Test
     fun `doWork deve usar incrementalScan como fallback para tipo desconhecido`() =
-        runBlocking {
+        runTest {
             coEvery { repository.incrementalScan(null) } returns Either.Right(Unit)
 
             val worker =
@@ -229,5 +234,6 @@ class LibrarySyncWorkerTest {
             val result = worker.doWork()
 
             assertTrue(result is Result.Success)
+            coVerify(exactly = 1) { repository.incrementalScan(null) }
         }
 }

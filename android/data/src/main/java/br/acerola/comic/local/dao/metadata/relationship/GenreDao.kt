@@ -9,14 +9,14 @@ import br.acerola.comic.local.entity.metadata.relationship.Genre
 
 @Dao
 interface GenreDao : BaseDao<Genre> {
-    @Query(value = "SELECT id FROM genre WHERE genre = :genre AND comic_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT id FROM genre WHERE genre = :genre AND comic_metadata_fk = :comicRemoteInfoFk LIMIT 1")
     suspend fun getIdByNameAndMetadataId(
         genre: String,
-        mangaRemoteInfoFk: Long,
+        comicRemoteInfoFk: Long,
     ): Long?
 
-    @Query(value = "DELETE FROM genre WHERE comic_metadata_fk = :mangaRemoteInfoFk")
-    suspend fun deleteByMetadataId(mangaRemoteInfoFk: Long)
+    @Query(value = "DELETE FROM genre WHERE comic_metadata_fk = :comicRemoteInfoFk")
+    suspend fun deleteByMetadataId(comicRemoteInfoFk: Long)
 
     @Transaction
     suspend fun upsertAndGetId(entity: Genre): Long {
@@ -25,7 +25,7 @@ interface GenreDao : BaseDao<Genre> {
         return if (id != -1L) {
             id
         } else {
-            getIdByNameAndMetadataId(entity.genre, entity.mangaRemoteInfoFk) ?: throw IntegrityException(
+            getIdByNameAndMetadataId(entity.genre, entity.comicRemoteInfoFk) ?: throw IntegrityException(
                 source = "Genre",
                 key = "genre+fk",
             )

@@ -24,6 +24,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,12 +37,12 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
-// FIXME: Verificar como isso tá chegando no banco de dados, provavelmente o frotend é a verdade e só manda isso para o banco de dados
+// FIXME: Verificar como isso tá chegando no banco de dados, provavelmente o frontend é a verdade e só manda isso para o banco de dados
 val categoryColors =
     listOf(
         0xFFF44336,
@@ -75,7 +76,7 @@ fun Main.Config.Component.GlobalCategoryManager(
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
 
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = stringResource(id = R.string.action_add_category),
         description =
             if (categories.isEmpty()) {
@@ -164,7 +165,7 @@ private fun CreateCategoryDialog(
     onConfirm: (String, Int) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(categoryColors.first()) }
+    var selectedColor by remember { mutableLongStateOf(categoryColors.first()) }
 
     Acerola.Component.Dialog(
         show = true,

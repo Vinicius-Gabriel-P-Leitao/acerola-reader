@@ -26,7 +26,7 @@ class FileSystemAccessViewModel
     @Inject
     constructor(
         private val manager: FileSystemAccessManager,
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
     ) : ViewModel() {
         init {
             viewModelScope.launch {
@@ -74,7 +74,7 @@ class FileSystemAccessViewModel
                 uri?.let {
                     try {
                         DocumentFile.fromTreeUri(context, it)?.name
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }

@@ -20,6 +20,7 @@ import androidx.room.DatabaseView
     """,
 )
 data class ComicSummaryView(
+    // FIXME: Trocar _id por _fk
     @ColumnInfo(name = "directory_id")
     val directoryId: Long,
     @ColumnInfo(name = "folder_name")
@@ -34,6 +35,7 @@ data class ComicSummaryView(
     val metadataTitle: String?,
     @ColumnInfo(name = "active_source")
     val activeSource: String?,
+    // FIXME: Trocar _id por _fk
     @ColumnInfo(name = "metadata_id")
     val metadataId: Long?,
 )

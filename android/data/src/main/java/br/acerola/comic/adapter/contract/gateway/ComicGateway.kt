@@ -21,7 +21,7 @@ interface ComicSyncGateway {
     val isIndexing: StateFlow<Boolean>
 
     suspend fun refreshManga(
-        mangaId: Long,
+        comicId: Long,
         baseUri: Uri? = null,
     ): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 
@@ -44,12 +44,12 @@ interface ComicGateway<T> :
  * Separada de MangaSyncGateway pois não são operações de sincronização.
  */
 interface ComicLibraryWriteGateway {
-    suspend fun hideManga(mangaId: Long): Either<LibrarySyncError, Unit>
+    suspend fun hideManga(comicId: Long): Either<LibrarySyncError, Unit>
 
-    suspend fun deleteManga(mangaId: Long): Either<LibrarySyncError, Unit>
+    suspend fun deleteManga(comicId: Long): Either<LibrarySyncError, Unit>
 
     suspend fun updateMangaSettings(
-        mangaId: Long,
+        comicId: Long,
         externalSyncEnabled: Boolean,
     ): Either<LibrarySyncError, Unit>
 }

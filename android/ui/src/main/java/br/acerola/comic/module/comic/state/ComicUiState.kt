@@ -1,10 +1,11 @@
 package br.acerola.comic.module.comic.state
 
 import androidx.annotation.StringRes
-import br.acerola.comic.config.preference.ChapterPageSizeType
-import br.acerola.comic.config.preference.ChapterSortPreferenceData
-import br.acerola.comic.config.preference.ChapterSortType
-import br.acerola.comic.config.preference.SortDirection
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
+import br.acerola.comic.config.preference.types.ChapterSortType
+import br.acerola.comic.config.preference.types.SortDirection
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
@@ -14,6 +15,7 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.ui.R
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
 
 enum class MainTab(
     @param:StringRes val titleRes: Int,
@@ -23,17 +25,21 @@ enum class MainTab(
 }
 
 data class ComicUiState(
-    val manga: ComicDto,
+    val comic: ComicDto,
     val chapters: ChapterDto?,
     val selectedTab: MainTab,
     val history: ReadingHistoryDto?,
-    val readChapters: PersistentSet<Long>,
+    val readChapters: PersistentSet<String>,
     val totalChapters: Int,
     val currentPage: Int,
     val totalPages: Int,
     val selectedChapterPerPage: ChapterPageSizeType,
     val chapterSortSettings: ChapterSortPreferenceData = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING),
-    val allCategories: PersistentList<CategoryDto> = kotlinx.collections.immutable.persistentListOf(),
+    val allCategories: PersistentList<CategoryDto> = persistentListOf(),
+    val showVolumeHeaders: Boolean = false,
+    val volumeViewMode: VolumeViewType = VolumeViewType.CHAPTER,
+    val activeVolumeId: Long? = null,
+    val hasVolumeStructure: Boolean = false,
 )
 
 data class ComicConfigUiState(

@@ -13,6 +13,7 @@ import br.acerola.comic.usecase.template.AddTemplateUseCase
 import br.acerola.comic.usecase.template.ObserveTemplatesUseCase
 import br.acerola.comic.usecase.template.RemoveTemplateUseCase
 import br.acerola.comic.usecase.template.UpdateTemplateUseCase
+import br.acerola.comic.util.sort.SortType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -47,8 +48,8 @@ class FilePatternViewModel
 
         fun onAction(action: FilePatternAction) {
             when (action) {
-                is FilePatternAction.AddTemplate -> addTemplate(action.label, action.pattern)
-                is FilePatternAction.EditTemplate -> editTemplate(action.id, action.label, action.pattern)
+                is FilePatternAction.AddTemplate -> addTemplate(action.label, action.pattern, action.type)
+                is FilePatternAction.EditTemplate -> editTemplate(action.id, action.label, action.pattern, action.type)
                 is FilePatternAction.DeleteTemplate -> deleteTemplate(action.id)
             }
         }
@@ -56,9 +57,10 @@ class FilePatternViewModel
         private fun addTemplate(
             label: String,
             pattern: String,
+            type: SortType,
         ) {
             viewModelScope.launch {
-                when (val result = addTemplate.invoke(label, pattern)) {
+                when (val result = addTemplate.invoke(label, pattern, type)) {
                     is Either.Left -> _uiEvents.send(UserMessage.Raw(result.value.toUiText()))
                     is Either.Right -> Unit
                 }
@@ -69,9 +71,10 @@ class FilePatternViewModel
             id: Long,
             label: String,
             pattern: String,
+            type: SortType,
         ) {
             viewModelScope.launch {
-                when (val result = updateTemplate.invoke(id, label, pattern)) {
+                when (val result = updateTemplate.invoke(id, label, pattern, type)) {
                     is Either.Left -> _uiEvents.send(UserMessage.Raw(result.value.toUiText()))
                     is Either.Right -> Unit
                 }

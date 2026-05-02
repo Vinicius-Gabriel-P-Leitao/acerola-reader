@@ -42,5 +42,5 @@ data class Author(
     @ColumnInfo(name = "type")
     val type: TypeAuthor,
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long,
+    val comicRemoteInfoFk: Long,
 )

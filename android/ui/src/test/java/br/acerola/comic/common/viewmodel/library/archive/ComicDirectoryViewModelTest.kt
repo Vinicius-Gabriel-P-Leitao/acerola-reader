@@ -9,7 +9,7 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.config.permission.FileSystemAccessManager
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
@@ -43,10 +43,10 @@ class ComicDirectoryViewModelTest {
     private val coverFromChapterUseCase = mockk<CoverFromChapterUseCase>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
-    private val chapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
-    private val mangaRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
+    private val chapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
+    private val comicRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
 
-    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterArchivePageDto>
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>
     private lateinit var observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>
 
     private lateinit var viewModel: ComicDirectoryViewModel
@@ -57,15 +57,15 @@ class ComicDirectoryViewModelTest {
         every { AcerolaLogger.d(any<String>(), any<String>(), any<LogSource>()) } returns Unit
         every { AcerolaLogger.audit(any<String>(), any<String>(), any<LogSource>(), any<Map<String, String>>()) } returns Unit
 
-        every { mangaRepo.observeLibrary() } returns MutableStateFlow(emptyList())
-        every { mangaRepo.isIndexing } returns MutableStateFlow(false)
-        every { mangaRepo.progress } returns MutableStateFlow(-1)
+        every { comicRepo.observeLibrary() } returns MutableStateFlow(emptyList())
+        every { comicRepo.isIndexing } returns MutableStateFlow(false)
+        every { comicRepo.progress } returns MutableStateFlow(-1)
 
         every { chapterRepo.isIndexing } returns MutableStateFlow(false)
         every { chapterRepo.progress } returns MutableStateFlow(-1)
 
         observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
-        observeLibraryUseCase = ObserveLibraryUseCase(mangaRepository = mangaRepo)
+        observeLibraryUseCase = ObserveLibraryUseCase(comicRepository = comicRepo)
 
         viewModel = createViewModel()
     }
@@ -95,11 +95,11 @@ class ComicDirectoryViewModelTest {
     fun `deve emitir lista de diretorios da biblioteca`() =
         runTest {
             val directories = listOf(mockk<ComicDirectoryDto>())
-            every { mangaRepo.observeLibrary() } returns MutableStateFlow(directories)
+            every { comicRepo.observeLibrary() } returns MutableStateFlow(directories)
 
             viewModel = createViewModel()
 
-            viewModel.mangaDirectories.test {
+            viewModel.comicDirectories.test {
                 assertThat(awaitItem()).isEqualTo(directories)
             }
         }

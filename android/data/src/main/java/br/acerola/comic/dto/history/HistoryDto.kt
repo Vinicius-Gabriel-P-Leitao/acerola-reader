@@ -7,8 +7,9 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 @Immutable
 data class ReadingHistoryDto(
-    val mangaDirectoryId: Long,
-    val chapterArchiveId: Long,
+    val comicDirectoryId: Long,
+    val chapterArchiveId: Long? = null,
+    val chapterSort: String,
     val lastPage: Int,
     val isCompleted: Boolean,
     val updatedAt: Long,
@@ -17,8 +18,9 @@ data class ReadingHistoryDto(
 @Parcelize
 @Immutable
 data class ReadingHistoryWithChapterDto(
-    val mangaDirectoryId: Long,
-    val chapterArchiveId: Long,
+    val comicDirectoryId: Long,
+    val chapterArchiveId: Long? = null,
+    val chapterSort: String,
     val lastPage: Int,
     val updatedAt: Long,
     val chapterName: String?,

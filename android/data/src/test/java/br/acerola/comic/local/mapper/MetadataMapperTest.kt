@@ -11,14 +11,14 @@ import org.junit.Test
 class MetadataMapperTest {
     @Test
     fun `MetadataRelations toViewDto deve mapear hierarquia completa`() {
-        val manga = MetadataFixtures.createMangaRemoteInfo(title = "Berserk")
+        val comic = MetadataFixtures.createMangaRemoteInfo(title = "Berserk")
         val author = MetadataFixtures.createAuthor(name = "Kentaro Miura")
         val genre = MetadataFixtures.createGenre(genre = "Seinen")
         val cover = MetadataFixtures.createCover(url = "url_test")
 
         val relations =
             MetadataFixtures.createRemoteInfoRelations(
-                remoteInfo = manga,
+                remoteInfo = comic,
                 authors = listOf(author),
                 genres = listOf(genre),
                 covers = listOf(cover),
@@ -41,10 +41,10 @@ class MetadataMapperTest {
         assertEquals(entity.name, dto.name)
         assertEquals("author", dto.type)
 
-        val backToModel = dto.toEntity(mangaId = 99)
+        val backToModel = dto.toEntity(comicId = 99)
         assertEquals(dto.name, backToModel.name)
         assertEquals(TypeAuthor.AUTHOR, backToModel.type)
-        assertEquals(99L, backToModel.mangaRemoteInfoFk)
+        assertEquals(99L, backToModel.comicRemoteInfoFk)
     }
 
     @Test

@@ -33,5 +33,5 @@ data class ChapterMetadata(
     @ColumnInfo(name = "scanlation")
     val scanlation: String? = null,
     @ColumnInfo(name = "comic_metadata_fk")
-    val mangaRemoteInfoFk: Long,
+    val comicRemoteInfoFk: Long,
 )

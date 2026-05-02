@@ -10,10 +10,13 @@ import android.os.ParcelFileDescriptor
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.comic.error.message.IoError
+import br.acerola.comic.logging.AcerolaLogger
+import br.acerola.comic.logging.LogSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,6 +36,7 @@ class PdfToCbzConverter
                 var fileDescriptor: ParcelFileDescriptor? = null
                 var pdfRenderer: PdfRenderer? = null
                 try {
+                    AcerolaLogger.d(TAG, "Opening PDF: ${pdfFile.name}", LogSource.REPOSITORY)
                     fileDescriptor = context.contentResolver.openFileDescriptor(pdfFile.uri, "r")
                         ?: return@withContext Either.Left(IoError.FileReadError(pdfFile.name ?: "unknown.pdf"))
 
@@ -41,8 +45,9 @@ class PdfToCbzConverter
                     val pageCount = pdfRenderer.pageCount
                     val pageEntries = mutableListOf<Pair<String, ByteArray>>()
 
-                    for (i in 0 until pageCount) {
-                        val page = pdfRenderer.openPage(i)
+                    AcerolaLogger.d(TAG, "PDF has $pageCount pages. Starting rendering...", LogSource.REPOSITORY)
+                    for (it in 0 until pageCount) {
+                        val page = pdfRenderer.openPage(it)
 
                         // Increase scale for better reading quality
                         val width = (page.width * 2.0).toInt()
@@ -58,19 +63,30 @@ class PdfToCbzConverter
 
                         val outputStream = ByteArrayOutputStream()
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+
                         val byteArray = outputStream.toByteArray()
                         bitmap.recycle()
 
-                        val pageName = String.format("%04d.jpg", i + 1)
+                        val pageName = String.format(Locale.ENGLISH, "%04d.jpg", it + 1)
                         pageEntries.add(Pair(pageName, byteArray))
+
+                        if ((it + 1) % 10 == 0 || it + 1 == pageCount) {
+                            AcerolaLogger.v(TAG, "Rendered ${it + 1}/$pageCount pages", LogSource.REPOSITORY)
+                        }
                     }
 
+                    AcerolaLogger.d(TAG, "Rendering complete. Creating CBZ file...", LogSource.REPOSITORY)
                     archiveCompactService.createCbz(folder, cbzFileName, pageEntries)
                 } catch (exception: Exception) {
+                    AcerolaLogger.e(TAG, "PDF conversion failed: ${exception.message}", LogSource.REPOSITORY, throwable = exception)
                     Either.Left(IoError.FileWriteError(cbzFileName, exception))
                 } finally {
                     pdfRenderer?.close()
                     fileDescriptor?.close()
                 }
             }
+
+        companion object {
+            private const val TAG = "PdfToCbzConverter"
+        }
     }

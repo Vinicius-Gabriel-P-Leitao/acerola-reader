@@ -3,7 +3,7 @@ package br.acerola.comic.dto.metadata.comic
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -19,8 +19,8 @@ data class ComicMetadataDto(
     val banner: BannerDto? = null,
     val authors: AuthorDto? = null,
     val genre: List<GenreDto> = emptyList(),
-    val mangaDirectoryFk: Long? = null,
-    val syncSource: MetadataSourcePattern? = null,
+    val comicDirectoryFk: Long? = null,
+    val syncSource: MetadataSource? = null,
     val sources: ComicSourcesDto? = null,
 ) : Parcelable
 

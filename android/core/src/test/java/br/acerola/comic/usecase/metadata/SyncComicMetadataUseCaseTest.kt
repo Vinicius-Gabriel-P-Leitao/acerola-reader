@@ -42,40 +42,40 @@ class SyncComicMetadataUseCaseTest {
     }
 
     @Test
-    fun syncFromMangadex_deve_chamar_manga_e_capitulos_em_sequencia() =
+    fun syncFromMangadex_deve_chamar_comic_e_capitulos_em_sequencia() =
         runTest {
-            val mangaId = 1L
-            coEvery { mangadexMangaRepo.refreshManga(mangaId) } returns Either.Right(Unit)
-            coEvery { mangadexChapterRepo.refreshComicChapters(mangaId) } returns Either.Right(Unit)
+            val comicId = 1L
+            coEvery { mangadexMangaRepo.refreshManga(comicId) } returns Either.Right(Unit)
+            coEvery { mangadexChapterRepo.refreshComicChapters(comicId) } returns Either.Right(Unit)
 
-            val result = useCase.syncFromMangadex(mangaId)
+            val result = useCase.syncFromMangadex(comicId)
 
             assertTrue(result.isRight())
-            coVerify(exactly = 1) { mangadexMangaRepo.refreshManga(mangaId) }
-            coVerify(exactly = 1) { mangadexChapterRepo.refreshComicChapters(mangaId) }
+            coVerify(exactly = 1) { mangadexMangaRepo.refreshManga(comicId) }
+            coVerify(exactly = 1) { mangadexChapterRepo.refreshComicChapters(comicId) }
         }
 
     @Test
-    fun syncFromComicInfo_deve_chamar_manga_e_capitulos_em_sequencia() =
+    fun syncFromComicInfo_deve_chamar_comic_e_capitulos_em_sequencia() =
         runTest {
-            val mangaId = 1L
-            coEvery { comicInfoMangaRepo.refreshManga(mangaId) } returns Either.Right(Unit)
-            coEvery { comicInfoChapterRepo.refreshComicChapters(mangaId) } returns Either.Right(Unit)
+            val comicId = 1L
+            coEvery { comicInfoMangaRepo.refreshManga(comicId) } returns Either.Right(Unit)
+            coEvery { comicInfoChapterRepo.refreshComicChapters(comicId) } returns Either.Right(Unit)
 
-            val result = useCase.syncFromComicInfo(mangaId)
+            val result = useCase.syncFromComicInfo(comicId)
 
             assertTrue(result.isRight())
-            coVerify(exactly = 1) { comicInfoMangaRepo.refreshManga(mangaId) }
-            coVerify(exactly = 1) { comicInfoChapterRepo.refreshComicChapters(mangaId) }
+            coVerify(exactly = 1) { comicInfoMangaRepo.refreshManga(comicId) }
+            coVerify(exactly = 1) { comicInfoChapterRepo.refreshComicChapters(comicId) }
         }
 
     @Test
-    fun syncFromMangadex_deve_interromper_se_manga_falhar() =
+    fun syncFromMangadex_deve_interromper_se_comic_falhar() =
         runTest {
-            val mangaId = 1L
-            coEvery { mangadexMangaRepo.refreshManga(mangaId) } returns Either.Left(mockk())
+            val comicId = 1L
+            coEvery { mangadexMangaRepo.refreshManga(comicId) } returns Either.Left(mockk())
 
-            val result = useCase.syncFromMangadex(mangaId)
+            val result = useCase.syncFromMangadex(comicId)
 
             assertTrue(result.isLeft())
             coVerify(exactly = 0) { mangadexChapterRepo.refreshComicChapters(any()) }
@@ -84,12 +84,12 @@ class SyncComicMetadataUseCaseTest {
     @Test
     fun syncFromAnilist_deve_chamar_refreshManga_no_repositorio_anilist() =
         runTest {
-            val mangaId = 1L
-            coEvery { anilistMangaRepo.refreshManga(mangaId) } returns Either.Right(Unit)
+            val comicId = 1L
+            coEvery { anilistMangaRepo.refreshManga(comicId) } returns Either.Right(Unit)
 
-            val result = useCase.syncFromAnilist(mangaId)
+            val result = useCase.syncFromAnilist(comicId)
 
             assertTrue(result.isRight())
-            coVerify(exactly = 1) { anilistMangaRepo.refreshManga(mangaId) }
+            coVerify(exactly = 1) { anilistMangaRepo.refreshManga(comicId) }
         }
 }

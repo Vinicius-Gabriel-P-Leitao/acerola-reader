@@ -3,6 +3,7 @@ package br.acerola.comic.usecase.template
 import arrow.core.Either
 import br.acerola.comic.error.message.TemplateError
 import br.acerola.comic.service.template.ChapterNameProcessor
+import br.acerola.comic.util.sort.SortType
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,19 +28,19 @@ class UpdateTemplateUseCaseTest {
     @Test
     fun `delega para o service com os parametros corretos`() =
         runTest {
-            coEvery { service.updateTemplate(1L, "Label", "{chapter}") } returns Either.Right(Unit)
+            coEvery { service.updateTemplate(1L, "Label", "{chapter}", SortType.CHAPTER) } returns Either.Right(Unit)
 
-            useCase(1L, "Label", "{chapter}")
+            useCase(1L, "Label", "{chapter}", SortType.CHAPTER)
 
-            coVerify { service.updateTemplate(1L, "Label", "{chapter}") }
+            coVerify { service.updateTemplate(1L, "Label", "{chapter}", SortType.CHAPTER) }
         }
 
     @Test
     fun `retorna Right quando service tem sucesso`() =
         runTest {
-            coEvery { service.updateTemplate(any(), any(), any()) } returns Either.Right(Unit)
+            coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Right(Unit)
 
-            val result = useCase(1L, "Label", "{chapter}")
+            val result = useCase(1L, "Label", "{chapter}", SortType.CHAPTER)
 
             assertTrue(result.isRight())
         }
@@ -47,9 +48,9 @@ class UpdateTemplateUseCaseTest {
     @Test
     fun `propaga Left quando service retorna Duplicate`() =
         runTest {
-            coEvery { service.updateTemplate(any(), any(), any()) } returns Either.Left(TemplateError.Duplicate)
+            coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Left(TemplateError.Duplicate)
 
-            val result = useCase(1L, "Label", "{chapter}")
+            val result = useCase(1L, "Label", "{chapter}", SortType.CHAPTER)
 
             assertTrue(result.isLeft())
             result.onLeft { assertTrue(it is TemplateError.Duplicate) }
@@ -58,9 +59,9 @@ class UpdateTemplateUseCaseTest {
     @Test
     fun `propaga Left quando service retorna SystemProtected`() =
         runTest {
-            coEvery { service.updateTemplate(any(), any(), any()) } returns Either.Left(TemplateError.SystemProtected)
+            coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Left(TemplateError.SystemProtected)
 
-            val result = useCase(99L, "Label", "{chapter}")
+            val result = useCase(99L, "Label", "{chapter}", SortType.CHAPTER)
 
             assertTrue(result.isLeft())
             result.onLeft { assertTrue(it is TemplateError.SystemProtected) }

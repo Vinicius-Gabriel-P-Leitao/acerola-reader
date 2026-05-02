@@ -20,8 +20,8 @@ class LocalHistoryEngine
     constructor(
         private val readingHistoryDao: ReadingHistoryDao,
     ) : HistoryGateway {
-        override fun getHistoryByMangaId(mangaId: Long): Flow<ReadingHistoryDto?> =
-            readingHistoryDao.observeHistoryByDirectoryId(mangaId).map { it?.toViewDto() }
+        override fun getHistoryByMangaId(comicId: Long): Flow<ReadingHistoryDto?> =
+            readingHistoryDao.observeHistoryByDirectoryId(comicId).map { it?.toViewDto() }
 
         override fun getAllRecentHistory(): Flow<List<ReadingHistoryDto>> =
             readingHistoryDao.observeAllRecentHistories().map { list ->
@@ -37,29 +37,48 @@ class LocalHistoryEngine
                 }
             }
 
-        override fun getReadChaptersByMangaId(mangaId: Long): Flow<List<Long>> = readingHistoryDao.observeReadChaptersByDirectoryId(mangaId)
+        override fun getReadChaptersByMangaId(comicId: Long): Flow<List<String>> = readingHistoryDao.observeReadChaptersByDirectoryId(comicId)
 
         override suspend fun upsertHistory(history: ReadingHistoryDto) {
-            AcerolaLogger.d(TAG, "Updating history for mangaId: ${history.mangaDirectoryId}", LogSource.REPOSITORY)
+            AcerolaLogger.d(TAG, "Updating history for comicId: ${history.comicDirectoryId}", LogSource.REPOSITORY)
             readingHistoryDao.upsertHistory(history.toEntity())
         }
 
         override suspend fun markChapterAsRead(
-            mangaId: Long,
-            chapterId: Long,
+            comicId: Long,
+            chapterSort: String,
+            chapterId: Long?,
         ) {
-            AcerolaLogger.d(TAG, "Marking chapter $chapterId as read for comic $mangaId", LogSource.REPOSITORY)
-            readingHistoryDao.upsertChapterRead(ChapterRead(mangaDirectoryId = mangaId, chapterArchiveId = chapterId))
+            AcerolaLogger.d(TAG, "Marking chapter $chapterSort (ID: $chapterId) as read for comic $comicId", LogSource.REPOSITORY)
+            readingHistoryDao.upsertChapterRead(
+                ChapterRead(
+                    comicDirectoryId = comicId,
+                    chapterSort = chapterSort,
+                    chapterArchiveId = chapterId,
+                ),
+            )
         }
 
-        override suspend fun unmarkChapterAsRead(chapterId: Long) {
-            AcerolaLogger.d(TAG, "Unmarking chapter $chapterId as read", LogSource.REPOSITORY)
-            readingHistoryDao.deleteChapterRead(chapterId)
+        override suspend fun unmarkChapterAsRead(
+            comicId: Long,
+            chapterSort: String,
+        ) {
+            AcerolaLogger.d(TAG, "Unmarking chapter $chapterSort as read for comic $comicId", LogSource.REPOSITORY)
+            readingHistoryDao.deleteChapterRead(comicId, chapterSort)
         }
 
-        override suspend fun deleteHistory(mangaId: Long) {
-            AcerolaLogger.audit(TAG, "User deleting reading reading history for comic: $mangaId", LogSource.REPOSITORY)
-            readingHistoryDao.deleteHistoryByDirectoryId(mangaId)
+        override suspend fun updateChapterIdBySort(
+            comicId: Long,
+            chapterSort: String,
+            newId: Long,
+        ) {
+            readingHistoryDao.updateHistoryChapterIdBySort(comicId, chapterSort, newId)
+            readingHistoryDao.updateChapterReadIdBySort(comicId, chapterSort, newId)
+        }
+
+        override suspend fun deleteHistory(comicId: Long) {
+            AcerolaLogger.audit(TAG, "User deleting reading reading history for comic: $comicId", LogSource.REPOSITORY)
+            readingHistoryDao.deleteHistoryByDirectoryId(comicId)
         }
 
         companion object {

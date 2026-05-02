@@ -46,15 +46,15 @@ class HistoryViewModel
                     combine(
                         directoryObserve(),
                         mangadexObserve(),
-                        manageCategoriesUseCase.getAllMangaCategories(),
+                        manageCategoriesUseCase.getAllComicCategories(),
                         getChapterCountUseCase(),
                     ) { directories, remoteInfos, categoryMap, chapterCounts ->
                         val list =
                             historyList.mapNotNull { history ->
-                                val directory = directories.find { it.id == history.mangaDirectoryId } ?: return@mapNotNull null
-                                val remote = remoteInfos.find { it.mangaDirectoryFk == history.mangaDirectoryId }
+                                val directory = directories.find { it.id == history.comicDirectoryId } ?: return@mapNotNull null
+                                val remote = remoteInfos.find { it.comicDirectoryFk == history.comicDirectoryId }
                                 HistoryItemState(
-                                    manga =
+                                    comic =
                                         ComicDto(
                                             directory = directory,
                                             remoteInfo = remote,

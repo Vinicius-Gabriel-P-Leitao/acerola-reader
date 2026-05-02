@@ -11,7 +11,7 @@ import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
 import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterMangadexDto
 import br.acerola.comic.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
-import br.acerola.comic.remote.mangadex.dto.manga.MangaMangadexDto
+import br.acerola.comic.remote.mangadex.dto.comic.MangaMangadexDto
 
 fun MangaMangadexDto.toViewDto(
     context: Context,
@@ -73,7 +73,7 @@ fun MangaMangadexDto.toViewDto(
         )
 
     return ComicMetadataDto(
-        title = attributes.getTitle(preferredLanguage) ?: context.getString(R.string.description_manga_untitled),
+        title = attributes.getTitle(preferredLanguage) ?: context.getString(R.string.description_comic_untitled),
         description = attributes.getDescription(preferredLanguage) ?: "",
         romanji = romanji,
         year = attributes.year,

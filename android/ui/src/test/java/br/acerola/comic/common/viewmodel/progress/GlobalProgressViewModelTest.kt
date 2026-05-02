@@ -4,7 +4,7 @@ import androidx.work.Data
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import br.acerola.comic.worker.WorkerContract
+import br.acerola.comic.worker.contract.WorkerContract
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi

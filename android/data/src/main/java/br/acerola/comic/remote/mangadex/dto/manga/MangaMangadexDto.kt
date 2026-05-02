@@ -1,8 +1,8 @@
-package br.acerola.comic.remote.mangadex.dto.manga
+package br.acerola.comic.remote.mangadex.dto.comic
 
 import br.acerola.comic.data.BuildConfig
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
-import br.acerola.comic.pattern.LanguagePattern
+import br.acerola.comic.type.Language
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -54,12 +54,12 @@ data class MangaAttributes(
     val latestUploadedChapter: String? = null,
 ) {
     fun getTitle(preferredLanguage: String): String? {
-        val pattern = LanguagePattern.from(preferredLanguage)?.code
+        val pattern = Language.from(preferredLanguage)?.code
         return titleMap[pattern] ?: titleMap["en"] ?: titleMap["ja-ro"]
     }
 
     fun getDescription(preferredLanguage: String): String? {
-        val pattern = LanguagePattern.from(preferredLanguage)?.code
+        val pattern = Language.from(preferredLanguage)?.code
         return descriptionMap[pattern] ?: descriptionMap["en"] ?: descriptionMap["ja"]
     }
 }
@@ -91,7 +91,7 @@ data class TagAttributes(
     val version: Int,
 ) {
     fun getName(preferredLanguage: String): String? {
-        val pattern = LanguagePattern.from(preferredLanguage)?.code
+        val pattern = Language.from(preferredLanguage)?.code
         return nameMap[pattern] ?: nameMap["en"] ?: nameMap["ja-ro"]
     }
 }

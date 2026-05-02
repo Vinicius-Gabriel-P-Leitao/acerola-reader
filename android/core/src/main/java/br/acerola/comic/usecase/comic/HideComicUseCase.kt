@@ -11,5 +11,5 @@ class HideComicUseCase
     constructor(
         @param:DirectoryEngine private val gateway: ComicLibraryWriteGateway,
     ) {
-        suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> = gateway.hideManga(mangaId)
+        suspend operator fun invoke(comicId: Long): Either<LibrarySyncError, Unit> = gateway.hideManga(comicId)
     }

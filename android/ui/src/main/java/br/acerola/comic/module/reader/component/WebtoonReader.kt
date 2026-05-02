@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -31,8 +32,8 @@ import coil.request.ImageRequest
 @Composable
 fun Reader.Component.WebtoonReader(
     pageCount: Int,
-    mangaId: Long,
-    chapterId: Long,
+    comicId: Long,
+    chapterId: Long?,
     onUiToggle: () -> Unit,
     listState: LazyListState,
     onPageRequest: (Int) -> Unit,
@@ -43,6 +44,11 @@ fun Reader.Component.WebtoonReader(
 
     LaunchedEffect(key1 = scale) {
         onZoomChange(scale > 1.0f)
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { index -> onPageRequest(index) }
     }
 
     Box(
@@ -107,7 +113,7 @@ fun Reader.Component.WebtoonReader(
                     model =
                         ImageRequest
                             .Builder(LocalContext.current)
-                            .data("acerola://page/$mangaId/$chapterId/$index")
+                            .data("acerola://page/$comicId/$chapterId/$index")
                             .build(),
                     contentDescription = null,
                     modifier =

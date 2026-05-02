@@ -40,6 +40,8 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.AdaptiveSheet
 import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
@@ -49,7 +51,7 @@ import coil.request.ImageRequest
 
 @Composable
 fun Main.Common.Component.ComicActionsSheet(
-    manga: ComicDto,
+    comic: ComicDto,
     categories: List<CategoryDto>,
     onHide: () -> Unit,
     onDelete: () -> Unit,
@@ -60,11 +62,11 @@ fun Main.Common.Component.ComicActionsSheet(
     var showHideDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val title = manga.remoteInfo?.title ?: manga.directory.name
-    val currentCategoryName = manga.category?.name
+    val title = comic.remoteInfo?.title ?: comic.directory.name
+    val currentCategoryName = comic.category?.name
 
     val context = LocalContext.current
-    val coverUri = manga.directory.coverUri ?: manga.directory.bannerUri
+    val coverUri = comic.directory.coverUri ?: comic.directory.bannerUri
 
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
@@ -73,7 +75,7 @@ fun Main.Common.Component.ComicActionsSheet(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
@@ -81,8 +83,8 @@ fun Main.Common.Component.ComicActionsSheet(
                     ImageRequest
                         .Builder(context)
                         .data(data = coverUri)
-                        .memoryCacheKey("${coverUri}_${manga.directory.lastModified}")
-                        .diskCacheKey("${coverUri}_${manga.directory.lastModified}")
+                        .memoryCacheKey("${coverUri}_${comic.directory.lastModified}")
+                        .diskCacheKey("${coverUri}_${comic.directory.lastModified}")
                         .build(),
                 contentDescription = null,
                 modifier =
@@ -91,7 +93,7 @@ fun Main.Common.Component.ComicActionsSheet(
                         .height(84.dp),
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(SpacingTokens.Large))
 
             Column {
                 Text(
@@ -115,7 +117,7 @@ fun Main.Common.Component.ComicActionsSheet(
         ListItem(
             leadingContent = {
                 Icon(
-                    imageVector = if (manga.category != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
+                    imageVector = if (comic.category != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
                     contentDescription = null,
                 )
             },
@@ -169,7 +171,7 @@ fun Main.Common.Component.ComicActionsSheet(
     if (showCategorySheet) {
         ComicCategorySheet(
             categories = categories,
-            selectedCategoryId = manga.category?.id,
+            selectedCategoryId = comic.category?.id,
             onSelect = { categoryId ->
                 onBookmark(categoryId)
                 showCategorySheet = false
@@ -217,8 +219,8 @@ fun Main.Common.Component.ComicActionsSheet(
                 Acerola.Component.DialogButton(
                     text = stringResource(id = R.string.action_delete),
                     onClick = {
-                        showDeleteDialog = false
                         onDelete()
+                        showDeleteDialog = false
                         onDismiss()
                     },
                     containerColor = MaterialTheme.colorScheme.error,
@@ -251,7 +253,7 @@ private fun ComicCategorySheet(
         Text(
             text = stringResource(id = R.string.action_bookmark),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
         )
 
         HorizontalDivider()
@@ -283,7 +285,7 @@ private fun ComicCategorySheet(
                         Spacer(
                             modifier =
                                 Modifier
-                                    .size(20.dp)
+                                    .size(SizeTokens.IconSmall)
                                     .drawBehind {
                                         drawCircle(color = Color(category.color))
                                     },

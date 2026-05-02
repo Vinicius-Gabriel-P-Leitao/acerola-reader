@@ -9,14 +9,14 @@ import br.acerola.comic.local.entity.metadata.relationship.Author
 
 @Dao
 interface AuthorDao : BaseDao<Author> {
-    @Query(value = "SELECT id FROM author WHERE name = :name AND comic_metadata_fk = :mangaRemoteInfoFk LIMIT 1")
+    @Query(value = "SELECT id FROM author WHERE name = :name AND comic_metadata_fk = :comicRemoteInfoFk LIMIT 1")
     suspend fun getIdByNameAndMetadataId(
         name: String,
-        mangaRemoteInfoFk: Long,
+        comicRemoteInfoFk: Long,
     ): Long?
 
-    @Query(value = "DELETE FROM author WHERE comic_metadata_fk = :mangaRemoteInfoFk")
-    suspend fun deleteByMetadataId(mangaRemoteInfoFk: Long)
+    @Query(value = "DELETE FROM author WHERE comic_metadata_fk = :comicRemoteInfoFk")
+    suspend fun deleteByMetadataId(comicRemoteInfoFk: Long)
 
     @Transaction
     suspend fun upsertAndGetId(entity: Author): Long {
@@ -25,7 +25,7 @@ interface AuthorDao : BaseDao<Author> {
         return if (id != -1L) {
             id
         } else {
-            getIdByNameAndMetadataId(entity.name, entity.mangaRemoteInfoFk)
+            getIdByNameAndMetadataId(entity.name, entity.comicRemoteInfoFk)
                 ?: throw IntegrityException(source = "Author", key = "name+fk")
         }
     }

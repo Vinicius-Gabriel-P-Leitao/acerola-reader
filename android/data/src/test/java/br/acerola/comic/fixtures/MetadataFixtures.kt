@@ -26,7 +26,7 @@ object MetadataFixtures {
         romanji: String = "Naruto",
         status: String = "ongoing",
         publication: Int = 1999,
-        mangaDirectoryFk: Long? = null,
+        comicDirectoryFk: Long? = null,
         syncSource: String? = null,
         hasComicInfo: Boolean = false,
     ) = ComicMetadata(
@@ -36,7 +36,7 @@ object MetadataFixtures {
         romanji = romanji,
         status = status,
         publication = publication,
-        mangaDirectoryFk = mangaDirectoryFk,
+        comicDirectoryFk = comicDirectoryFk,
         syncSource = syncSource,
         hasComicInfo = hasComicInfo,
     )
@@ -47,14 +47,14 @@ object MetadataFixtures {
         chapter: String = "1",
         pageCount: Int = 20,
         scanlation: String? = "ScanGroup",
-        mangaRemoteInfoFk: Long = 10,
+        comicRemoteInfoFk: Long = 10,
     ) = ChapterMetadata(
         id = id,
         title = title,
         chapter = chapter,
         pageCount = pageCount,
         scanlation = scanlation,
-        mangaRemoteInfoFk = mangaRemoteInfoFk,
+        comicRemoteInfoFk = comicRemoteInfoFk,
     )
 
     fun createChapterDownloadSource(
@@ -125,19 +125,19 @@ object MetadataFixtures {
         id: Long = 1,
         name: String = "Kishimoto",
         type: TypeAuthor = TypeAuthor.AUTHOR,
-        mangaId: Long = 10,
-    ) = Author(id = id, name = name, type = type, mangaRemoteInfoFk = mangaId)
+        comicId: Long = 10,
+    ) = Author(id = id, name = name, type = type, comicRemoteInfoFk = comicId)
 
     fun createGenre(
         id: Long = 1,
         genre: String = "Shonen",
-        mangaId: Long = 10,
-    ) = Genre(id = id, genre = genre, mangaRemoteInfoFk = mangaId)
+        comicId: Long = 10,
+    ) = Genre(id = id, genre = genre, comicRemoteInfoFk = comicId)
 
     fun createCover(
         id: Long = 1,
         url: String = "http://cover.jpg",
         fileName: String = "cover.jpg",
-        mangaId: Long = 10,
-    ) = Cover(id = id, url = url, fileName = fileName, mangaRemoteInfoFk = mangaId)
+        comicId: Long = 10,
+    ) = Cover(id = id, url = url, fileName = fileName, comicRemoteInfoFk = comicId)
 }

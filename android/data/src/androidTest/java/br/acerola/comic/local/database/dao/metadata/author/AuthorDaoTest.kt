@@ -22,14 +22,14 @@ import java.io.IOException
 class AuthorDaoTest {
     private lateinit var db: AcerolaDatabase
     private lateinit var authorDao: AuthorDao
-    private lateinit var mangaDao: ComicMetadataDao
+    private lateinit var comicDao: ComicMetadataDao
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, AcerolaDatabase::class.java).allowMainThreadQueries().build()
         authorDao = db.authorDao()
-        mangaDao = db.mangaRemoteInfoDao()
+        comicDao = db.comicRemoteInfoDao()
     }
 
     @After
@@ -42,15 +42,15 @@ class AuthorDaoTest {
     fun upsertAndGetId_com_unique_constraint_retorna_mesmo_id() =
         runBlocking {
             // Arrange
-            val manga = MetadataFixtures.createMangaRemoteInfo()
-            val mangaId = mangaDao.insert(manga)
-            val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Kishimoto")
+            val comic = MetadataFixtures.createMangaRemoteInfo()
+            val comicId = comicDao.insert(comic)
+            val author = MetadataFixtures.createAuthor(comicId = comicId, name = "Kishimoto")
 
             // Act — inserting same author twice should return the same ID
             val id1 = authorDao.upsertAndGetId(author)
             val id2 = authorDao.upsertAndGetId(author)
 
-            // Assert — with UNIQUE(name, manga_remote_info_fk), same author returns same ID
+            // Assert — with UNIQUE(name, comic_remote_info_fk), same author returns same ID
             assertEquals(id1, id2)
         }
 }

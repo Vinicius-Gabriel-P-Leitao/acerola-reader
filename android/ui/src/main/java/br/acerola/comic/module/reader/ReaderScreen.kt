@@ -20,18 +20,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.Progress
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.layout.ProgressIndicator
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
-import br.acerola.comic.config.preference.ReadingMode
+import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.dto.archive.ChapterFileDto
-import br.acerola.comic.module.reader.layout.BottomControls
-import br.acerola.comic.module.reader.layout.PageContent
-import br.acerola.comic.module.reader.layout.SettingsSheet
-import br.acerola.comic.module.reader.layout.TopBar
 import br.acerola.comic.module.reader.state.ReaderAction
+import br.acerola.comic.module.reader.template.BottomControls
+import br.acerola.comic.module.reader.template.PageContent
+import br.acerola.comic.module.reader.template.SettingsSheet
+import br.acerola.comic.module.reader.template.TopBar
 import br.acerola.comic.ui.R
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -40,8 +40,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 fun ReaderScreen(
     chapter: ChapterFileDto?,
     chapterId: Long = -1L,
+    chapterSort: String = "",
     initialPage: Int,
-    mangaId: Long,
+    comicId: Long,
     onBackClick: () -> Unit,
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
@@ -50,11 +51,21 @@ fun ReaderScreen(
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current
 
-    LaunchedEffect(chapter, chapterId, mangaId) {
+    val activeChapter = state.currentChapter ?: chapter
+
+    LaunchedEffect(chapter, chapterId, chapterSort, comicId) {
         if (chapter != null) {
-            viewModel.openChapter(mangaId, chapter, initialPage)
-        } else if (chapterId != -1L) {
-            viewModel.loadAndOpenChapter(mangaId, chapterId, initialPage)
+            viewModel.openChapter(comicId, chapter, initialPage)
+            return@LaunchedEffect
+        }
+
+        if (chapterId != -1L || chapterSort.isNotEmpty()) {
+            viewModel.loadAndOpenChapter(
+                comicId = comicId,
+                chapterId = if (chapterId == -1L) null else chapterId,
+                chapterSort = chapterSort,
+                initialPage = initialPage,
+            )
         }
     }
 
@@ -70,20 +81,27 @@ fun ReaderScreen(
             ReaderAction.ToggleUi -> viewModel.toggleUiVisibility()
             is ReaderAction.UpdateReadingMode -> viewModel.updateReadingMode(action.mode)
             is ReaderAction.ChangePage -> viewModel.onSliderChanged(action.index)
-            ReaderAction.LoadNextChapter -> viewModel.loadNextChapter(mangaId)
-            ReaderAction.LoadPreviousChapter -> viewModel.loadPreviousChapter(mangaId)
-            is ReaderAction.PageVisible -> viewModel.onPageVisible(mangaId, state.currentChapter?.id ?: chapterId, action.index)
+            ReaderAction.LoadNextChapter -> viewModel.loadNextChapter(comicId)
+            ReaderAction.LoadPreviousChapter -> viewModel.loadPreviousChapter(comicId)
+            is ReaderAction.PageVisible ->
+                viewModel.onPageVisible(
+                    comicId,
+                    state.currentChapter?.chapterSort ?: chapterSort,
+                    state.currentChapter?.id ?: (if (chapterId == -1L) null else chapterId),
+                    action.index,
+                )
             is ReaderAction.CurrentPageChanged ->
                 viewModel.onCurrentPageChanged(
-                    mangaId,
-                    state.currentChapter?.id ?: chapterId,
+                    comicId,
+                    state.currentChapter?.chapterSort ?: chapterSort,
+                    state.currentChapter?.id ?: (if (chapterId == -1L) null else chapterId),
                     action.index,
                 )
         }
     }
 
     if (state.isLoading || state.pageCount == 0) {
-        Acerola.Layout.ProgressIndicator(isLoading = true)
+        Acerola.Component.Progress(isLoading = true)
         return
     }
 
@@ -97,7 +115,7 @@ fun ReaderScreen(
             initialFirstVisibleItemIndex = initialPage.coerceIn(0, (state.pageCount - 1).coerceAtLeast(0)),
         )
 
-    LaunchedEffect(pagerState, listState, state.readingMode, mangaId, chapter, chapterId) {
+    LaunchedEffect(pagerState, listState, state.readingMode, comicId, chapter, chapterId) {
         snapshotFlow {
             if (state.readingMode == ReadingMode.WEBTOON) {
                 listState.firstVisibleItemIndex
@@ -124,9 +142,9 @@ fun ReaderScreen(
     var showSettings by remember { mutableStateOf(value = false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Reader.Layout.PageContent(
-            mangaId = mangaId,
-            chapterId = state.currentChapter?.id ?: chapterId,
+        Reader.Template.PageContent(
+            comicId = comicId,
+            chapterId = state.currentChapter?.id ?: (if (chapterId == -1L) null else chapterId),
             listState = listState,
             pagerState = pagerState,
             pageCount = state.pageCount,
@@ -139,9 +157,7 @@ fun ReaderScreen(
         )
 
         // UI Overlay
-        val activeChapter = state.currentChapter ?: chapter
-
-        Reader.Layout.TopBar(
+        Reader.Template.TopBar(
             title = activeChapter?.name ?: stringResource(id = R.string.label_reader_activity),
             subtitle = stringResource(id = R.string.label_reader_chapter_order, activeChapter?.chapterSort ?: "-"),
             isVisible = state.isUiVisible,
@@ -156,7 +172,7 @@ fun ReaderScreen(
             modifier = Modifier.fillMaxSize(),
         ) {
             Box(contentAlignment = Alignment.BottomCenter) {
-                Reader.Layout.BottomControls(
+                Reader.Template.BottomControls(
                     isLoading = state.isLoading,
                     pageCount = state.pageCount,
                     currentPage = state.currentPage,
@@ -173,7 +189,7 @@ fun ReaderScreen(
         }
 
         if (showSettings) {
-            Reader.Layout.SettingsSheet(
+            Reader.Template.SettingsSheet(
                 onDismissRequest = { showSettings = false },
                 currentMode = state.readingMode,
                 onModeSelected = { mode ->

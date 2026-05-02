@@ -6,13 +6,13 @@ import br.acerola.comic.error.message.LibrarySyncError
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * UseCase para rescanear mangás da biblioteca.
+ * UseCase para rescanear quadrinhos da biblioteca.
  */
 class RescanComicUseCase(
-    private val mangaRepository: ComicSyncGateway,
+    private val comicRepository: ComicSyncGateway,
 ) {
-    val progress: StateFlow<Int> = mangaRepository.progress
-    val isIndexing: StateFlow<Boolean> = mangaRepository.isIndexing
+    val progress: StateFlow<Int> = comicRepository.progress
+    val isIndexing: StateFlow<Boolean> = comicRepository.isIndexing
 
-    suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> = mangaRepository.refreshManga(mangaId)
+    suspend operator fun invoke(comicId: Long): Either<LibrarySyncError, Unit> = comicRepository.refreshManga(comicId)
 }

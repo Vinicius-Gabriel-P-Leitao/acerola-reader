@@ -26,7 +26,7 @@ import java.io.IOException
 class ComicMetadataDaoTest {
     private lateinit var db: AcerolaDatabase
 
-    private lateinit var mangaDao: ComicMetadataDao
+    private lateinit var comicDao: ComicMetadataDao
     private lateinit var authorDao: AuthorDao
     private lateinit var genreDao: GenreDao
     private lateinit var coverDao: CoverDao
@@ -35,7 +35,7 @@ class ComicMetadataDaoTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, AcerolaDatabase::class.java).allowMainThreadQueries().build()
-        mangaDao = db.mangaRemoteInfoDao()
+        comicDao = db.comicRemoteInfoDao()
         authorDao = db.authorDao()
         genreDao = db.genreDao()
         coverDao = db.coverDao()
@@ -51,25 +51,25 @@ class ComicMetadataDaoTest {
     fun getAllComicsWithRelations_DeveRetornarMangaComAutoresGenerosECapa() =
         runBlocking {
             // Arrange
-            val manga = MetadataFixtures.createMangaRemoteInfo(title = "Manga Test")
-            val mangaId = mangaDao.insert(manga)
+            val comic = MetadataFixtures.createMangaRemoteInfo(title = "Comic Test")
+            val comicId = comicDao.insert(comic)
 
-            val author = MetadataFixtures.createAuthor(mangaId = mangaId, name = "Author 1")
-            val genre = MetadataFixtures.createGenre(mangaId = mangaId, genre = "Action")
-            val cover = MetadataFixtures.createCover(mangaId = mangaId, url = "url")
+            val author = MetadataFixtures.createAuthor(comicId = comicId, name = "Author 1")
+            val genre = MetadataFixtures.createGenre(comicId = comicId, genre = "Action")
+            val cover = MetadataFixtures.createCover(comicId = comicId, url = "url")
 
             authorDao.insert(author)
             genreDao.insert(genre)
             coverDao.insert(cover)
 
             // Act
-            val result = mangaDao.observeAllComicsWithRelations().first()
+            val result = comicDao.observeAllComicsWithRelations().first()
 
             // Assert
             assertTrue(result.isNotEmpty())
             val relations = result[0]
 
-            assertEquals("Manga Test", relations.remoteInfo.title)
+            assertEquals("Comic Test", relations.remoteInfo.title)
 
             assertEquals(1, relations.author.size)
             assertEquals("Author 1", relations.author[0].name)
@@ -85,20 +85,20 @@ class ComicMetadataDaoTest {
     fun deleteManga_DeveRemoverRelacoesEmCascata() =
         runBlocking {
             // Arrange
-            val manga = MetadataFixtures.createMangaRemoteInfo()
-            val mangaId = mangaDao.insert(manga)
+            val comic = MetadataFixtures.createMangaRemoteInfo()
+            val comicId = comicDao.insert(comic)
 
-            val author = MetadataFixtures.createAuthor(mangaId = mangaId)
-            val genre = MetadataFixtures.createGenre(mangaId = mangaId)
+            val author = MetadataFixtures.createAuthor(comicId = comicId)
+            val genre = MetadataFixtures.createGenre(comicId = comicId)
 
             authorDao.insert(author)
             genreDao.insert(genre)
 
             // Act
-            mangaDao.delete(manga.copy(id = mangaId))
+            comicDao.delete(comic.copy(id = comicId))
 
             // Assert
-            val result = mangaDao.observeAllComicsWithRelations().first()
+            val result = comicDao.observeAllComicsWithRelations().first()
             assertTrue(result.isEmpty())
         }
 }

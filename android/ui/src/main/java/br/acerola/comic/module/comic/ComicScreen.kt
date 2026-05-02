@@ -19,8 +19,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,27 +26,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
+import br.acerola.comic.common.ux.component.TopBar
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.layout.TopBar
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.comic.component.ChapterSortSheet
-import br.acerola.comic.module.comic.layout.Header
-import br.acerola.comic.module.comic.layout.Tabs
-import br.acerola.comic.module.comic.layout.chapterSection
-import br.acerola.comic.module.comic.layout.configSection
 import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
 import br.acerola.comic.module.comic.state.MainTab
+import br.acerola.comic.module.comic.template.Header
+import br.acerola.comic.module.comic.template.Tabs
+import br.acerola.comic.module.comic.template.chapterSection
+import br.acerola.comic.module.comic.template.configSection
 import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
 import kotlinx.collections.immutable.toPersistentList
@@ -57,7 +55,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ComicScreen(
-    manga: ComicDto,
+    comic: ComicDto,
     onBackClick: () -> Unit,
     comicViewModel: ComicViewModel = hiltViewModel(),
     comicMetadataViewModel: ComicMetadataViewModel = hiltViewModel(),
@@ -68,8 +66,8 @@ fun ComicScreen(
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
 
-    LaunchedEffect(key1 = manga.directory.id) {
-        comicViewModel.init(mangaId = manga.remoteInfo?.id, folderId = manga.directory.id)
+    LaunchedEffect(key1 = comic.directory.id) {
+        comicViewModel.init(comicId = comic.remoteInfo?.id, folderId = comic.directory.id)
     }
 
     // Coleta de eventos de UI para snackbars
@@ -103,15 +101,17 @@ fun ComicScreen(
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
 
-    val mangaState by comicViewModel.manga.collectAsStateWithLifecycle()
+    val comicState by comicViewModel.comic.collectAsStateWithLifecycle()
     val chapterDto by comicViewModel.chapters.collectAsStateWithLifecycle()
     val history by comicViewModel.history.collectAsStateWithLifecycle()
     val readChapters by comicViewModel.readChapters.collectAsStateWithLifecycle()
     val selectedChapterPerPage by comicViewModel.selectedChapterPerPage.collectAsStateWithLifecycle()
     val chapterSortSettings by comicViewModel.chapterSortSettings.collectAsStateWithLifecycle()
     val allCategories by comicMetadataViewModel.allCategories.collectAsStateWithLifecycle()
+    val volumeViewMode by comicViewModel.volumeViewMode.collectAsStateWithLifecycle()
+    val activeVolumeId by comicViewModel.activeVolumeId.collectAsStateWithLifecycle()
 
-    val currentManga = mangaState ?: manga
+    val currentManga = comicState ?: comic
     val totalChapters = chapterDto?.archive?.total ?: 0
     val currentPage = chapterDto?.archive?.page ?: 0
 
@@ -122,9 +122,14 @@ fun ComicScreen(
             if (total == 0) 0 else kotlin.math.ceil(x = total.toDouble() / size).toInt()
         }
 
+    val showVolumeHeaders =
+        remember(key1 = chapterDto?.showVolumeHeaders) {
+            chapterDto?.showVolumeHeaders ?: false
+        }
+
     val uiState =
         ComicUiState(
-            manga = currentManga,
+            comic = currentManga,
             chapters = chapterDto,
             selectedTab = selectedTab,
             history = history,
@@ -135,9 +140,12 @@ fun ComicScreen(
             selectedChapterPerPage = selectedChapterPerPage,
             chapterSortSettings = chapterSortSettings,
             allCategories = allCategories.toPersistentList(),
+            showVolumeHeaders = showVolumeHeaders,
+            volumeViewMode = chapterDto?.effectiveViewMode ?: volumeViewMode,
+            activeVolumeId = activeVolumeId,
+            hasVolumeStructure = chapterDto?.hasVolumeStructure ?: false,
         )
 
-    val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
     var showSortSheet by remember { mutableStateOf(false) }
@@ -151,7 +159,7 @@ fun ComicScreen(
                 val intent =
                     Intent(context, ReaderActivity::class.java).apply {
                         putExtra(ReaderActivity.PageExtra.PAGE, action.chapter)
-                        putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
+                        putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.comic.directory.id)
                         putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.initialPage)
                     }
                 context.startActivity(intent)
@@ -169,33 +177,34 @@ fun ComicScreen(
                     val intent =
                         Intent(context, ReaderActivity::class.java).apply {
                             putExtra(ReaderActivity.PageExtra.PAGE, it)
-                            putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.manga.directory.id)
+                            putExtra(ReaderActivity.PageExtra.MANGA_ID, uiState.comic.directory.id)
                             putExtra(ReaderActivity.PageExtra.INITIAL_PAGE, action.lastPage)
                         }
                     context.startActivity(intent)
                 }
             }
             is ComicChapterAction.ToggleReadStatus -> {
-                comicViewModel.toggleChapterReadStatus(action.chapterId)
+                comicViewModel.toggleChapterReadStatus(action.chapterSort)
             }
         }
     }
 
     val onSyncAction: (ComicSyncAction) -> Unit = { action ->
         when (action) {
-            ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.manga.directory.id)
-            ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.manga.directory.id)
-            ComicSyncAction.SyncMangadexInfo -> comicMetadataViewModel.syncFromMangadex(uiState.manga.directory.id)
+            ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.comic.directory.id)
+            ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.comic.directory.id)
+            ComicSyncAction.SyncMangadexInfo -> comicMetadataViewModel.syncFromMangadex(uiState.comic.directory.id)
             ComicSyncAction.SyncMangadexChapters ->
-                uiState.manga.remoteInfo?.id?.let {
+                uiState.comic.remoteInfo?.id?.let {
                     chapterMetadataViewModel.syncChaptersByMangadex(
                         it,
                     )
                 }
-            ComicSyncAction.SyncComicInfo -> comicMetadataViewModel.syncFromComicInfo(uiState.manga.directory.id)
-            ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.manga.directory.id)
-            ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.manga.directory.id)
-            ComicSyncAction.ExtractFirstPageAsCover -> comicDirectoryViewModel.extractCoverFromChapter(uiState.manga.directory.id)
+            ComicSyncAction.SyncComicInfo -> comicMetadataViewModel.syncFromComicInfo(uiState.comic.directory.id)
+            ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.comic.directory.id)
+            ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.comic.directory.id)
+            ComicSyncAction.ExtractFirstPageAsCover -> comicDirectoryViewModel.extractCoverFromChapter(uiState.comic.directory.id)
+            ComicSyncAction.ExtractVolumeCovers -> comicViewModel.extractAllVolumeCovers()
         }
     }
 
@@ -206,18 +215,17 @@ fun ComicScreen(
             is ComicAction.UpdatePageSize -> comicViewModel.updateChapterPerPage(action.size)
             is ComicAction.UpdateCategory ->
                 comicMetadataViewModel.updateMangaCategory(
-                    uiState.manga.directory.id,
+                    uiState.comic.directory.id,
                     action.categoryId,
                 )
             is ComicAction.ToggleExternalSync ->
                 comicDirectoryViewModel.updateExternalSyncEnabled(
-                    uiState.manga.directory.id,
+                    uiState.comic.directory.id,
                     action.enabled,
                 )
+            is ComicAction.UpdateVolumeView -> comicViewModel.updateVolumeViewMode(action.mode)
         }
     }
-
-    var expandedCardId by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -232,31 +240,32 @@ fun ComicScreen(
                         .padding(bottom = paddingValues.calculateBottomPadding()),
             ) {
                 item(
-                    key = "header_${uiState.manga.remoteInfo?.title}",
+                    key = "comic_header",
                     contentType = "header",
                 ) {
-                    Comic.Layout.Header(
-                        manga = uiState.manga,
+                    Comic.Template.Header(
+                        comic = uiState.comic,
                         history = uiState.history,
                         onContinueClick = { id, page -> onChapterAction(ComicChapterAction.ClickContinue(id, page)) },
                     )
                 }
 
                 item(
-                    key = "tabs_${uiState.manga.remoteInfo?.title}",
+                    key = "comic_tabs",
                     contentType = "tabs",
                 ) {
-                    Comic.Layout.Tabs(
+                    Comic.Template.Tabs(
                         totalChapters = uiState.totalChapters,
                         activeTab = uiState.selectedTab,
                         onTabSelected = { onAction(ComicAction.SelectTab(it)) },
                     )
                 }
 
+                // TODO: Fazer eles não só trocarem quando clicados, mas com o arrastar do dedo uma troca entre abas com arrastar de dedos.
                 when (uiState.selectedTab) {
                     MainTab.CHAPTERS -> {
                         uiState.chapters?.let {
-                            Comic.Layout.chapterSection(
+                            Comic.Template.chapterSection(
                                 scope = this,
                                 chapters = it,
                                 currentPage = uiState.currentPage,
@@ -265,12 +274,17 @@ fun ComicScreen(
                                 readChapters = uiState.readChapters.toList(),
                                 onToggleRead = { id -> onChapterAction(ComicChapterAction.ToggleReadStatus(id)) },
                                 onChapterClick = { chapter, _ -> onChapterAction(ComicChapterAction.ClickChapter(chapter, 0)) },
+                                volumeViewMode = uiState.volumeViewMode,
+                                activeVolumeId = uiState.activeVolumeId,
+                                onSetActiveVolume = comicViewModel::setActiveVolume,
+                                onLoadVolumeChaptersPage = comicViewModel::loadVolumeChaptersPage,
+                                onExtractVolumeCover = comicViewModel::extractVolumeCover,
                             )
                         }
                     }
 
                     MainTab.SETTINGS -> {
-                        Comic.Layout.configSection(
+                        Comic.Template.configSection(
                             scope = this,
                             uiState = uiState,
                             onAction = onAction,
@@ -280,7 +294,7 @@ fun ComicScreen(
                 }
 
                 item(
-                    key = "spacer_${uiState.manga.remoteInfo?.title}",
+                    key = "comic_bottom_spacer",
                     contentType = "tabs",
                 ) {
                     Spacer(modifier = Modifier.height(height = 24.dp))
@@ -288,7 +302,7 @@ fun ComicScreen(
             }
         }
 
-        Acerola.Layout.TopBar(
+        Acerola.Component.TopBar(
             navigationIcon = {
                 Acerola.Component.GlassButton(
                     onClick = { onAction(ComicAction.NavigateBack) },

@@ -13,7 +13,7 @@ class ZoomablePageImageTest {
     fun deve_renderizar_com_bitmap_fake() {
         composeTestRule.setContent {
             Reader.Gesture.ZoomablePageImage(
-                mangaId = 1L,
+                comicId = 1L,
                 chapterId = 1L,
                 pageIndex = 0,
                 onAreaTap = {},

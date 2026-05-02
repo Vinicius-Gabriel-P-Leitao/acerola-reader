@@ -14,35 +14,38 @@ interface ChapterMetadataDao : BaseDao<ChapterMetadata> {
     @Query(value = "SELECT * FROM chapter_metadata WHERE id = :chapterId")
     fun observeChapterById(chapterId: Long): Flow<ChapterMetadata?>
 
-    @Query(value = "SELECT COUNT(id) FROM chapter_metadata WHERE comic_metadata_fk = :mangaId")
-    suspend fun countChaptersByMetadataId(mangaId: Long): Int
+    @Query(value = "SELECT COUNT(id) FROM chapter_metadata WHERE comic_metadata_fk = :comicId")
+    suspend fun countChaptersByMetadataId(comicId: Long): Int
+
+    @Query("SELECT * FROM chapter_metadata WHERE comic_metadata_fk = :comicId ORDER BY chapter ASC")
+    suspend fun getChaptersListByMetadataId(comicId: Long): List<ChapterMetadata>
 
     @Query(
         value = """
         SELECT * FROM chapter_metadata
-        WHERE comic_metadata_fk = :mangaId 
+        WHERE comic_metadata_fk = :comicId 
         ORDER BY chapter ASC
-    """,
+        """,
     )
-    fun observeChaptersByMetadataId(mangaId: Long): Flow<List<ChapterMetadata>>
+    fun observeChaptersByMetadataId(comicId: Long): Flow<List<ChapterMetadata>>
 
     @Query(
         value = """
         SELECT * FROM chapter_metadata
-        WHERE comic_metadata_fk = :mangaId
+        WHERE comic_metadata_fk = :comicId
         ORDER BY chapter ASC
         LIMIT :pageSize OFFSET :offset
-    """,
+        """,
     )
     suspend fun getChaptersByMetadataPaged(
-        mangaId: Long,
+        comicId: Long,
         pageSize: Int,
         offset: Int,
     ): List<ChapterMetadata>
 
-    @Query("SELECT * FROM chapter_metadata WHERE comic_metadata_fk = :mangaId AND chapter IN (:chapters)")
+    @Query("SELECT * FROM chapter_metadata WHERE comic_metadata_fk = :comicId AND chapter IN (:chapters)")
     fun observeChaptersByMetadataAndNumbers(
-        mangaId: Long,
+        comicId: Long,
         chapters: List<String>,
     ): Flow<List<ChapterMetadata>>
 }

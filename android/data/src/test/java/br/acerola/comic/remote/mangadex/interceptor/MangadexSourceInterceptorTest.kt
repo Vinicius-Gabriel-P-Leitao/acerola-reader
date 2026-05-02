@@ -18,7 +18,7 @@ class MangadexSourceInterceptorTest {
         val request =
             Request
                 .Builder()
-                .url("https://api.mangadex.org/manga")
+                .url("https://api.mangadex.org/comic")
                 .build()
 
         val requestSlot = slot<Request>()

@@ -9,7 +9,7 @@ import br.acerola.comic.dto.metadata.comic.source.ComicInfoSourceDto
 import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
 import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
 import br.acerola.comic.module.comic.Comic
-import br.acerola.comic.pattern.MetadataSourcePattern
+import br.acerola.comic.pattern.metadata.MetadataSource
 import org.junit.Rule
 import org.junit.Test
 
@@ -18,7 +18,7 @@ class SyncMetadataTest {
     val composeTestRule = createComposeRule()
 
     private fun setContent(
-        remoteInfo: ComicMetadataDto? = ComicMetadataDto(title = "Manga Teste", description = "Desc", status = "Ongoing"),
+        remoteInfo: ComicMetadataDto? = ComicMetadataDto(title = "Comic Teste", description = "Desc", status = "Ongoing"),
         externalSyncEnabled: Boolean = true,
         onSyncMangadexChapters: () -> Unit = {},
         onSyncComicInfoChapters: () -> Unit = {},
@@ -61,10 +61,10 @@ class SyncMetadataTest {
         val remoteInfo =
             ComicMetadataDto(
                 id = 1L,
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.MANGADEX,
+                syncSource = MetadataSource.MANGADEX,
                 sources =
                     ComicSourcesDto(
                         mangadex = MangadexSourceDto(mangadexId = "abc-123"),
@@ -82,10 +82,10 @@ class SyncMetadataTest {
         val remoteInfo =
             ComicMetadataDto(
                 id = 1L,
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.COMIC_INFO,
+                syncSource = MetadataSource.COMIC_INFO,
                 sources =
                     ComicSourcesDto(
                         mangadex = MangadexSourceDto(mangadexId = "abc-123"),
@@ -101,10 +101,10 @@ class SyncMetadataTest {
     fun deve_exibir_item_aninhado_de_capitulos_comicinfo_quando_ativo_e_com_fonte() {
         val remoteInfo =
             ComicMetadataDto(
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.COMIC_INFO,
+                syncSource = MetadataSource.COMIC_INFO,
                 sources =
                     ComicSourcesDto(
                         comicInfo = ComicInfoSourceDto(localHash = "hash-abc"),
@@ -121,10 +121,10 @@ class SyncMetadataTest {
     fun nao_deve_exibir_item_aninhado_de_capitulos_comicinfo_quando_sem_fonte() {
         val remoteInfo =
             ComicMetadataDto(
-                title = "Manga Teste",
+                title = "Comic Teste",
                 description = "Desc",
                 status = "Ongoing",
-                syncSource = MetadataSourcePattern.COMIC_INFO,
+                syncSource = MetadataSource.COMIC_INFO,
                 sources = ComicSourcesDto(comicInfo = null),
             )
 

@@ -10,6 +10,8 @@ import br.acerola.comic.remote.anilist.AnilistApollo
 import br.acerola.comic.remote.anilist.MediaSearchQuery
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.exception.ApolloHttpException
+import com.apollographql.apollo.exception.ApolloNetworkException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -22,7 +24,7 @@ class AnilistSearchByTitleSource
         @param:AnilistApollo private val apolloClient: ApolloClient,
     ) : MetadataProvider<ComicMetadataDto, String> {
         override suspend fun searchInfo(
-            manga: String,
+            comic: String,
             limit: Int,
             offset: Int,
             onProgress: ((Int) -> Unit)?,
@@ -37,7 +39,7 @@ class AnilistSearchByTitleSource
                             apolloClient
                                 .query(
                                     MediaSearchQuery(
-                                        search = Optional.present(manga),
+                                        search = Optional.present(comic),
                                         page = Optional.present(page),
                                         perPage = Optional.present(limit),
                                     ),
@@ -59,8 +61,8 @@ class AnilistSearchByTitleSource
                             .mapNotNull { it?.toViewDto() }
                     }.mapLeft { throwable ->
                         when (throwable) {
-                            is com.apollographql.apollo.exception.ApolloNetworkException -> NetworkError.ConnectionFailed(cause = throwable)
-                            is com.apollographql.apollo.exception.ApolloHttpException ->
+                            is ApolloNetworkException -> NetworkError.ConnectionFailed(cause = throwable)
+                            is ApolloHttpException ->
                                 NetworkError.HttpError(
                                     code = throwable.statusCode,
                                     cause = throwable,
@@ -71,7 +73,7 @@ class AnilistSearchByTitleSource
             }
 
         override suspend fun saveInfo(
-            manga: String,
+            comic: String,
             info: ComicMetadataDto,
         ): Either<NetworkError, Unit> = Either.Right(Unit)
     }

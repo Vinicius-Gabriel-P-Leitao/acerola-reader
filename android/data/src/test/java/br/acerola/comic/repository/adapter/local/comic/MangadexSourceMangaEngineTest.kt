@@ -107,13 +107,13 @@ class MangadexSourceMangaEngineTest {
     @Test
     fun `refreshManga deve buscar metadados e atualizar se encontrar match`() =
         runTest {
-            val mangaId = 1L
-            val dir = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, name = "Berserk")
+            val comicId = 1L
+            val dir = MangaDirectoryFixtures.createMangaDirectory(id = comicId, name = "Berserk")
             val fetchResult = listOf(MetadataFixtures.createMangaRemoteInfoDto(title = "Berserk"))
 
-            coEvery { directoryDao.getDirectoryById(mangaId) } returns dir
+            coEvery { directoryDao.getDirectoryById(comicId) } returns dir
             coEvery { mangadexMangaInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) } returns Either.Right(fetchResult)
-            every { comicMetadataDao.observeComicByDirectoryId(mangaId) } returns flowOf(null)
+            every { comicMetadataDao.observeComicByDirectoryId(comicId) } returns flowOf(null)
 
             coEvery { comicMetadataDao.insert(any()) } returns 2L
             coEvery { mangadexSourceDao.insert(any()) } returns 1L
@@ -123,7 +123,7 @@ class MangadexSourceMangaEngineTest {
             coEvery { coverService.processCover(any(), any(), any(), any(), any(), any()) } returns 1L.right()
             coEvery { metadataExportService.exportMangaMetadata(any(), any()) } returns Either.Right(Unit)
 
-            val result = repository.refreshManga(mangaId)
+            val result = repository.refreshManga(comicId)
 
             assertTrue("Refresh falhou: $result", result.isRight())
             coVerify { mangadexMangaInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) }

@@ -14,7 +14,7 @@ import br.acerola.comic.local.dao.metadata.relationship.CoverDao
 import br.acerola.comic.local.entity.metadata.relationship.Cover
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
-import br.acerola.comic.pattern.MediaFilePattern
+import br.acerola.comic.pattern.media.MediaFile
 import br.acerola.comic.service.file.FileStorageHandler
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -36,42 +36,42 @@ class CoverSaver
             folderId: Long,
             bytes: ByteArray,
             coverUrl: String,
-            mangaFolderName: String,
-            mangaRemoteInfoFk: Long,
+            comicFolderName: String,
+            comicRemoteInfoFk: Long,
         ): Either<IoError, Long> =
             withContext(Dispatchers.IO) {
                 try {
                     val directory =
-                        directoryDao.getDirectoryById(mangaId = folderId)
+                        directoryDao.getDirectoryById(comicId = folderId)
                             ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
-                    val mangaDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
+                    val comicDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
 
-                    if (mangaDir == null || !mangaDir.isDirectory) {
+                    if (comicDir == null || !comicDir.isDirectory) {
                         AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)
                         return@withContext IoError.FileNotFound("Cominc directory not accessible").left()
                     }
 
-                    AcerolaLogger.d(TAG, "Saving cover to directory: ${mangaDir.uri}", LogSource.REPOSITORY)
+                    AcerolaLogger.d(TAG, "Saving cover to directory: ${comicDir.uri}", LogSource.REPOSITORY)
 
                     // Delete existing covers
-                    mangaDir.listFiles().forEach { file ->
+                    comicDir.listFiles().forEach { file ->
                         val fileName = file.name ?: return@forEach
-                        if (MediaFilePattern.isCover(fileName)) {
+                        if (MediaFile.isCover(fileName)) {
                             file.delete()
                         }
                     }
 
-                    val fileName = MediaFilePattern.COVER.defaultFileName
+                    val fileName = MediaFile.COVER.defaultFileName
 
                     fileStorageHandler
                         .saveFile(
-                            folder = mangaDir,
+                            folder = comicDir,
                             fileName = fileName,
                             mimeType = "image/jpeg",
                             bytes = bytes,
                         ).flatMap {
-                            val savedFile = mangaDir.findFile(fileName)
+                            val savedFile = comicDir.findFile(fileName)
                             val savedUriString = savedFile?.uri?.toString()
 
                             if (savedUriString != null) {
@@ -81,7 +81,7 @@ class CoverSaver
                             val coverEntity =
                                 Cover(
                                     url = coverUrl,
-                                    mangaRemoteInfoFk = mangaRemoteInfoFk,
+                                    comicRemoteInfoFk = comicRemoteInfoFk,
                                     fileName = fileName,
                                 )
 
@@ -93,7 +93,7 @@ class CoverSaver
                                     val existing =
                                         coverDao.getByFileNameAndMetadataId(
                                             fileName = fileName,
-                                            mangaRemoteInfoFk = mangaRemoteInfoFk,
+                                            comicRemoteInfoFk = comicRemoteInfoFk,
                                         ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
 
                                     coverDao.update(existing.copy(url = coverUrl, fileName = fileName))
@@ -102,8 +102,8 @@ class CoverSaver
                             finalId.right()
                         }
                 } catch (exception: Exception) {
-                    AcerolaLogger.e(TAG, "Critical error processing cover for $mangaFolderName", LogSource.REPOSITORY, exception)
-                    IoError.FileWriteError(mangaFolderName, exception).left()
+                    AcerolaLogger.e(TAG, "Critical error processing cover for $comicFolderName", LogSource.REPOSITORY, exception)
+                    IoError.FileWriteError(comicFolderName, exception).left()
                 }
             }
 

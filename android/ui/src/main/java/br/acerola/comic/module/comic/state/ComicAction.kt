@@ -1,5 +1,7 @@
 package br.acerola.comic.module.comic.state
-import br.acerola.comic.config.preference.ChapterPageSizeType
+
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.archive.ChapterFileDto
 
 sealed interface ComicAction {
@@ -20,6 +22,10 @@ sealed interface ComicAction {
     data class ToggleExternalSync(
         val enabled: Boolean,
     ) : ComicAction
+
+    data class UpdateVolumeView(
+        val mode: VolumeViewType,
+    ) : ComicAction
 }
 
 sealed interface ComicChapterAction {
@@ -33,12 +39,12 @@ sealed interface ComicChapterAction {
     ) : ComicChapterAction
 
     data class ClickContinue(
-        val chapterId: Long,
+        val chapterId: Long?,
         val lastPage: Int,
     ) : ComicChapterAction
 
     data class ToggleReadStatus(
-        val chapterId: Long,
+        val chapterSort: String,
     ) : ComicChapterAction
 }
 
@@ -58,4 +64,6 @@ sealed interface ComicSyncAction {
     data object SyncAnilistInfo : ComicSyncAction
 
     data object ExtractFirstPageAsCover : ComicSyncAction
+
+    data object ExtractVolumeCovers : ComicSyncAction
 }

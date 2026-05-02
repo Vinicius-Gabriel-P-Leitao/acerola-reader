@@ -35,17 +35,17 @@ object MangadexCaseModule {
         @MangadexEngine repository: ComicGateway<ComicMetadataDto>,
     ): ObserveLibraryUseCase<ComicMetadataDto> =
         ObserveLibraryUseCase(
-            mangaRepository = repository,
+            comicRepository = repository,
             syncGateway = repository,
         )
 
     @Provides
     @MangadexCase
     fun provideRescanComicUseCase(
-        @MangadexEngine mangaOps: ComicGateway<ComicMetadataDto>,
+        @MangadexEngine comicOps: ComicGateway<ComicMetadataDto>,
     ): RescanComicUseCase =
         RescanComicUseCase(
-            mangaRepository = mangaOps,
+            comicRepository = comicOps,
         )
 
     @Provides

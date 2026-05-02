@@ -5,22 +5,32 @@ import br.acerola.comic.dto.history.ReadingHistoryWithChapterDto
 import kotlinx.coroutines.flow.Flow
 
 interface HistoryGateway {
-    fun getHistoryByMangaId(mangaId: Long): Flow<ReadingHistoryDto?>
+    fun getHistoryByMangaId(comicId: Long): Flow<ReadingHistoryDto?>
 
     fun getAllRecentHistory(): Flow<List<ReadingHistoryDto>>
 
     fun getAllRecentHistoryWithChapter(): Flow<List<ReadingHistoryWithChapterDto>>
 
-    fun getReadChaptersByMangaId(mangaId: Long): Flow<List<Long>>
+    fun getReadChaptersByMangaId(comicId: Long): Flow<List<String>>
 
     suspend fun upsertHistory(history: ReadingHistoryDto)
 
     suspend fun markChapterAsRead(
-        mangaId: Long,
-        chapterId: Long,
+        comicId: Long,
+        chapterSort: String,
+        chapterId: Long? = null,
     )
 
-    suspend fun unmarkChapterAsRead(chapterId: Long)
+    suspend fun unmarkChapterAsRead(
+        comicId: Long,
+        chapterSort: String,
+    )
 
-    suspend fun deleteHistory(mangaId: Long)
+    suspend fun updateChapterIdBySort(
+        comicId: Long,
+        chapterSort: String,
+        newId: Long,
+    )
+
+    suspend fun deleteHistory(comicId: Long)
 }

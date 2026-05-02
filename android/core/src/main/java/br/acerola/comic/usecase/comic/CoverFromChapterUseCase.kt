@@ -14,11 +14,11 @@ class CoverFromChapterUseCase
     @Inject
     constructor(
         private val coverExtractor: CoverExtractor,
-        @param:DirectoryEngine private val mangaGateway: ComicGateway<ComicDirectoryDto>,
+        @param:DirectoryEngine private val comicGateway: ComicGateway<ComicDirectoryDto>,
     ) {
-        suspend operator fun invoke(mangaId: Long): Either<LibrarySyncError, Unit> =
+        suspend operator fun invoke(comicId: Long): Either<LibrarySyncError, Unit> =
             coverExtractor
-                .extractFirstPageAsCover(mangaId)
+                .extractFirstPageAsCover(comicId)
                 .mapLeft { ioError ->
                     val cause =
                         when (ioError) {
@@ -28,6 +28,6 @@ class CoverFromChapterUseCase
                         }
                     LibrarySyncError.UnexpectedError(cause ?: Exception(ioError.toString()))
                 }.flatMap {
-                    mangaGateway.refreshManga(mangaId)
+                    comicGateway.refreshManga(comicId)
                 }
     }

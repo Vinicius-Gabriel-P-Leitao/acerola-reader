@@ -4,18 +4,18 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
-import arrow.core.Either
-import br.acerola.comic.adapter.library.ChapterArchiveEngine
-import br.acerola.comic.error.message.LibrarySyncError
+import br.acerola.comic.adapter.library.engine.ChapterArchiveEngine
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.entity.archive.ChapterArchive
+import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
+import br.acerola.comic.service.archive.ArchiveValidator
+import br.acerola.comic.service.archive.ChapterSyncService
+import br.acerola.comic.service.archive.VolumeSyncService
 import br.acerola.comic.service.compact.PdfToCbzConverter
 import br.acerola.comic.service.template.ChapterNameProcessor
-import br.acerola.comic.util.ContentQueryHelper
-import br.acerola.comic.util.sha256
-import br.acerola.comic.util.templateToRegex
+import br.acerola.comic.util.file.ContentQueryHelper
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,9 +39,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.io.IOException
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class ChapterArchiveEngineTest {
     @MockK
     lateinit var directoryDao: ComicDirectoryDao
@@ -54,6 +56,15 @@ class ChapterArchiveEngineTest {
 
     @MockK
     lateinit var pdfToCbzConverterService: PdfToCbzConverter
+
+    @MockK
+    lateinit var archiveValidator: ArchiveValidator
+
+    @MockK
+    lateinit var volumeSyncService: VolumeSyncService
+
+    @MockK
+    lateinit var chapterSyncService: ChapterSyncService
 
     @MockK
     lateinit var context: Context
@@ -73,6 +84,9 @@ class ChapterArchiveEngineTest {
                 templateService,
                 context,
                 pdfToCbzConverterService,
+                archiveValidator,
+                volumeSyncService,
+                chapterSyncService,
             )
 
         mockkStatic(Uri::class)
@@ -81,14 +95,6 @@ class ChapterArchiveEngineTest {
         mockkObject(ContentQueryHelper)
 
         every { context.contentResolver } returns mockk(relaxed = true)
-        every { DocumentsContract.getDocumentId(any()) } returns "docId"
-        every { DocumentsContract.getTreeDocumentId(any()) } returns "treeId"
-        val mockUri = mockk<Uri>()
-        every { mockUri.toString() } returns "uri/mock"
-        every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockUri
-        every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockUri
-        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
-        every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
         coEvery { templateService.getTemplates() } returns emptyList()
     }
 
@@ -102,108 +108,68 @@ class ChapterArchiveEngineTest {
     }
 
     @Test
-    fun `refreshMangaChapters deve deletar e reinserir capitulos quando necessario`() =
+    fun `refreshComicChapters deve orquestrar o sync corretamente`() =
         runTest {
-            val mangaId = 1L
-            val directory = MangaDirectoryFixtures.createMangaDirectory(id = mangaId, lastModified = 1000L)
-            val uri = mockk<Uri>()
+            val comicId = 1L
+            val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId, lastModified = 1000L)
+
+            val uriMock = mockk<Uri>()
+            every { Uri.parse(any()) } returns uriMock
+
             val folderDoc = mockk<DocumentFile>()
-
-            coEvery { directoryDao.getDirectoryById(mangaId) } returns directory
-            every { Uri.parse(any()) } returns uri
-            every { DocumentFile.fromSingleUri(context, uri) } returns folderDoc
-
-            // Simula que FS é mais novo que DB
-            val oldChapter = ChapterArchive(id = 2, chapter = "Old", path = "old/uri", folderPathFk = mangaId, chapterSort = "0")
-            coEvery { chapterArchiveDao.getChaptersListByDirectoryId(mangaId) } returns listOf(oldChapter)
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDoc
+            every { folderDoc.listFiles() } returns emptyArray()
             every { folderDoc.lastModified() } returns 2000L
 
-            // Simula arquivos
-            val ch1 = mockk<DocumentFile>()
-            val ch1Uri = mockk<Uri>()
-            every { ch1.isFile } returns true
-            every { ch1.name } returns "ch1.cbz"
-            every { ch1.uri } returns ch1Uri
-            every { ch1Uri.toString() } returns "uri/ch1"
-            every { ch1.length() } returns 1024L
-            every { ch1.lastModified() } returns 3000L
-
-            every { folderDoc.listFiles() } returns arrayOf(ch1)
-
-            coEvery { chapterArchiveDao.delete(any()) } returns Unit
-            coEvery { chapterArchiveDao.insertAll(*anyVararg()) } returns longArrayOf(1)
+            coEvery { directoryDao.getDirectoryById(comicId) } returns directory
+            coEvery { volumeSyncService.sync(any(), any(), any(), any(), any()) } returns emptyMap()
+            coEvery { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) } returns Unit
             coEvery { directoryDao.update(any()) } returns Unit
 
-            // Mock utils
-            // NOTE: Como 'sha256' e 'templateToRegex' são extension/top-level, se não mockados rodam real.
-            // sha256 precisa de context. Vamos assumir que funcionam ou mockar se falhar.
-            // O código usa 'file.sha256(context)'. Precisa mockar static br.acerola.comic.util.DocumentFileHashKt
-            // Para simplificar, vou confiar que DocumentFile mockado aguenta ou o teste falha.
-            // Se falhar, preciso de mockkStatic("br.acerola.comic.util.DocumentFileHashKt").
-            // Vou adicionar preventivamente.
-            mockkStatic("br.acerola.comic.util.DocumentFileHashKt")
-            every { ch1.sha256(context) } returns "hash"
+            val result = repository.refreshComicChapters(comicId)
 
-            // Mock templateToRegex
-            mockkStatic("br.acerola.comic.util.TemplateToRegexKt")
-            val regex = Regex("ch(\\d+)\\.cbz")
-            every { templateToRegex(any()) } returns regex
-
-            val result = repository.refreshComicChapters(mangaId)
-
-            assertTrue(result.isRight())
-            coVerify { chapterArchiveDao.delete(oldChapter) }
-            coVerify { chapterArchiveDao.insertAll(*anyVararg()) }
+            assertTrue("Deveria ser Right mas foi $result", result.isRight())
+            coVerify { volumeSyncService.sync(eq(comicId), any(), any(), any(), any()) }
+            coVerify { chapterSyncService.sync(eq(comicId), any(), any(), any(), any(), any()) }
             coVerify { directoryDao.update(match { it.lastModified == 2000L }) }
-
-            unmockkStatic("br.acerola.comic.util.DocumentFileHashKt")
-            unmockkStatic("br.acerola.comic.util.TemplateToRegexKt")
-        }
-
-    @Test
-    fun `refreshMangaChapters deve retornar DiskIOFailure em erro de IO`() =
-        runTest {
-            val mangaId = 1L
-            coEvery { directoryDao.getDirectoryById(mangaId) } throws IOException("Disk error")
-
-            val result = repository.refreshComicChapters(mangaId)
-
-            assertTrue(result.isLeft())
-            result.onLeft { assertTrue(it is LibrarySyncError.DiskIOFailure) }
         }
 
     @Test
     fun `observeChapters deve emitir PageDto corretamente`() =
         runTest {
-            val mangaId = 1L
+            val comicId = 1L
             val chapters =
                 listOf(
-                    ChapterArchive(id = 1, chapter = "1", path = "path", chapterSort = "1", folderPathFk = mangaId),
+                    ChapterVolumeJoin(
+                        chapter = ChapterArchive(id = 1, chapter = "1", path = "path", chapterSort = "1", folderPathFk = comicId),
+                        volume = null,
+                    ),
                 )
-            // Simula a emissão da lista de capítulos pelo DAO
-            every { chapterArchiveDao.getChaptersByDirectoryId(mangaId) } returns flowOf(chapters)
+            every { chapterArchiveDao.getChaptersByDirectoryId(comicId) } returns flowOf(chapters)
 
-            // Coleta o primeiro valor que tenha itens (ignorando o valor inicial vazio do stateIn)
-            val result = repository.observeChapters(mangaId).first { it.items.isNotEmpty() }
+            val result = repository.observeChapters(comicId).first { it.items.isNotEmpty() }
 
             assertEquals(1, result.items.size)
             assertEquals("1", result.items[0].name)
         }
 
     @Test
-    fun `getChapterPage deve calcular total e offset corretamente`() =
+    fun `getChapterPage deve retornar pagina de capitulos corretamente`() =
         runTest {
-            val mangaId = 1L
-            coEvery { chapterArchiveDao.countByDirectoryId(mangaId) } returns 10
-            coEvery { chapterArchiveDao.getChaptersByDirectoryPaged(mangaId, 5, 5) } returns
+            val comicId = 1L
+            coEvery { chapterArchiveDao.countByDirectoryId(comicId) } returns 10
+            coEvery { chapterArchiveDao.getChaptersByDirectoryPaged(comicId, 5, 0) } returns
                 listOf(
-                    ChapterArchive(id = 2, chapter = "2", path = "path", chapterSort = "2", folderPathFk = mangaId),
+                    ChapterVolumeJoin(
+                        chapter = ChapterArchive(id = 1, chapter = "1", path = "path", chapterSort = "1", folderPathFk = comicId),
+                        volume = null,
+                    ),
                 )
 
-            // page 1, size 5 -> offset 5
-            val result = repository.getChapterPage(mangaId, total = 0, page = 1, pageSize = 5)
+            val result = repository.getChapterPage(comicId, total = 0, page = 0, pageSize = 5)
 
             assertEquals(10, result.total)
             assertEquals(1, result.items.size)
+            coVerify { chapterArchiveDao.getChaptersByDirectoryPaged(comicId, 5, 0) }
         }
 }

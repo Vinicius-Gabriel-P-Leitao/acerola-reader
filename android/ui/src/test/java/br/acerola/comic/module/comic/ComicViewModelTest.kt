@@ -1,44 +1,59 @@
 package br.acerola.comic.module.comic
 
 import android.content.Context
+import android.util.Log
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
-import br.acerola.comic.config.preference.ChapterPageSizeType
 import br.acerola.comic.config.preference.ChapterPerPagePreference
 import br.acerola.comic.config.preference.ChapterSortPreference
-import br.acerola.comic.config.preference.ChapterSortPreferenceData
-import br.acerola.comic.config.preference.ChapterSortType
-import br.acerola.comic.config.preference.SortDirection
-import br.acerola.comic.dto.archive.ChapterArchivePageDto
+import br.acerola.comic.config.preference.VolumeViewPreference
+import br.acerola.comic.config.preference.types.ChapterPageSizeType
+import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
+import br.acerola.comic.config.preference.types.ChapterSortType
+import br.acerola.comic.config.preference.types.SortDirection
+import br.acerola.comic.config.preference.types.VolumeViewType
+import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
+import br.acerola.comic.dto.archive.VolumeArchiveDto
+import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
-import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.comic.logging.LogSource
+import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
+import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveComicHistoryUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
+import br.acerola.comic.usecase.metadata.ExtractAllVolumeCoversUseCase
+import br.acerola.comic.usecase.metadata.ExtractVolumeCoverUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class ComicViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
@@ -48,36 +63,54 @@ class ComicViewModelTest {
     private val context = mockk<Context>(relaxed = true)
     private val mangadexRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
     private val directoryRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
-    private val directoryChapterRepo = mockk<ChapterGateway<ChapterArchivePageDto>>(relaxed = true)
+    private val directoryChapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
     private val mangadexChapterRepo = mockk<ChapterGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
     private lateinit var observeComicHistoryUseCase: ObserveComicHistoryUseCase
     private lateinit var mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>
-    private lateinit var directoryGetChapters: ObserveChaptersUseCase<ChapterArchivePageDto>
-    private lateinit var mangadexGetChapters: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
+    private val observeChaptersUseCase = mockk<ObserveCombinedChaptersUseCase>(relaxed = true)
+    private val directoryObserveVolumeChapters = mockk<ObserveVolumeChaptersUseCase>(relaxed = true)
+    private val extractVolumeCoverUseCase = mockk<ExtractVolumeCoverUseCase>(relaxed = true)
+    private val extractAllVolumeCoversUseCase = mockk<ExtractAllVolumeCoversUseCase>(relaxed = true)
 
-    private val localChaptersFlow = MutableStateFlow(ChapterArchivePageDto(emptyList(), 20, 0, 0))
+    private val localChaptersFlow = MutableStateFlow(ChapterPageDto(emptyList(), emptyList(), 20, 0, 0))
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
+    private val hasRootChaptersFlow = MutableStateFlow(true)
+    private val volumeSectionsFlow = MutableStateFlow<List<VolumeChapterGroupDto>>(emptyList())
 
     private lateinit var viewModel: ComicViewModel
 
     @Before
     fun setup() {
         mockkObject(AcerolaLogger)
+        mockkStatic(Log::class)
         mockkObject(ChapterPerPagePreference)
         mockkObject(ChapterSortPreference)
+        mockkObject(VolumeViewPreference)
 
-        every { AcerolaLogger.d(any(), any(), any()) } returns Unit
-        every { AcerolaLogger.audit(any(), any(), any(), any()) } returns Unit
+        every { Log.v(any(), any()) } returns 0
+        every { Log.d(any(), any()) } returns 0
+        every { Log.i(any(), any()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
+        every { Log.e(any(), any()) } returns 0
+
+        every { AcerolaLogger.d(any<String>(), any<String>(), any<LogSource>()) } returns Unit
+        every { AcerolaLogger.i(any<String>(), any<String>(), any<LogSource>()) } returns Unit
+        every { AcerolaLogger.v(any<String>(), any<String>(), any<LogSource>()) } returns Unit
+        every { AcerolaLogger.w(any<String>(), any<String>(), any<LogSource>(), any()) } returns Unit
+        every { AcerolaLogger.e(any<String>(), any<String>(), any<LogSource>(), any()) } returns Unit
+        every { AcerolaLogger.audit(any<String>(), any<String>(), any<LogSource>(), any()) } returns Unit
 
         every { ChapterPerPagePreference.chapterPerPageFlow(any()) } returns flowOf(ChapterPageSizeType.SHORT)
         every { ChapterSortPreference.sortFlow(any()) } returns
             flowOf(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
+        every { VolumeViewPreference.volumeViewFlow(any()) } returns flowOf(VolumeViewType.CHAPTER)
 
         coEvery { ChapterPerPagePreference.saveChapterPerPage(any(), any()) } returns Unit
         coEvery { ChapterSortPreference.saveSort(any(), any()) } returns Unit
+        coEvery { VolumeViewPreference.saveVolumeView(any(), any()) } returns Unit
 
         every { historyGateway.getHistoryByMangaId(any()) } returns MutableStateFlow(null)
         every { historyGateway.getReadChaptersByMangaId(any()) } returns MutableStateFlow(emptyList())
@@ -90,19 +123,45 @@ class ComicViewModelTest {
         every { mangadexRepo.isIndexing } returns MutableStateFlow(false)
         every { mangadexRepo.progress } returns MutableStateFlow(-1)
 
-        every { directoryChapterRepo.isIndexing } returns MutableStateFlow(false)
-        every { directoryChapterRepo.progress } returns MutableStateFlow(-1)
-        every { mangadexChapterRepo.isIndexing } returns MutableStateFlow(false)
-        every { mangadexChapterRepo.progress } returns MutableStateFlow(-1)
+        every { observeChaptersUseCase.isIndexing } returns MutableStateFlow(false)
+        every { observeChaptersUseCase.progress } returns MutableStateFlow(-1)
+        every { observeChaptersUseCase.observeCombined(any(), any(), any(), any(), any(), any(), any()) } answers {
+            val sort = args[2] as ChapterSortPreferenceData
+            localChaptersFlow.map { page ->
+                val sortedItems =
+                    when (sort.type) {
+                        ChapterSortType.LAST_UPDATE ->
+                            if (sort.direction == SortDirection.DESCENDING) {
+                                page.items.sortedByDescending { it.lastModified }
+                            } else {
+                                page.items.sortedBy { it.lastModified }
+                            }
+                        else ->
+                            if (sort.direction == SortDirection.DESCENDING) {
+                                page.items.reversed()
+                            } else {
+                                page.items
+                            }
+                    }
+                val showHeaders = page.volumes.size > 1 && !hasRootChaptersFlow.value
+                ChapterDto(
+                    archive = page.copy(items = sortedItems),
+                    remoteInfo = remoteChaptersFlow.value,
+                    showVolumeHeaders = showHeaders,
+                    hasVolumeStructure = page.volumes.size > 1,
+                    effectiveViewMode = VolumeViewType.CHAPTER,
+                )
+            }
+        }
 
-        every { directoryChapterRepo.observeChapters(any()) } returns localChaptersFlow
-        every { mangadexChapterRepo.observeChapters(any()) } returns remoteChaptersFlow
+        every { manageCategoriesUseCase.getCategoryByComicId(any()) } returns flowOf(null)
+        every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns volumeSectionsFlow
+        every { directoryObserveVolumeChapters.observeHasRootChapters(any()) } returns hasRootChaptersFlow
+        coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()
 
         observeComicHistoryUseCase = ObserveComicHistoryUseCase(historyGateway)
-        mangadexObserve = ObserveLibraryUseCase(mangaRepository = mangadexRepo)
-        directoryObserve = ObserveLibraryUseCase(mangaRepository = directoryRepo)
-        directoryGetChapters = ObserveChaptersUseCase(directoryChapterRepo)
-        mangadexGetChapters = ObserveChaptersUseCase(mangadexChapterRepo)
+        mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
+        directoryObserve = ObserveLibraryUseCase(comicRepository = directoryRepo)
 
         viewModel = createViewModel()
         viewModel.init(1L, null)
@@ -113,18 +172,21 @@ class ComicViewModelTest {
         unmockkObject(AcerolaLogger)
         unmockkObject(ChapterPerPagePreference)
         unmockkObject(ChapterSortPreference)
+        unmockkObject(VolumeViewPreference)
     }
 
     private fun createViewModel() =
         ComicViewModel(
+            context = context,
             observeComicHistoryUseCase = observeComicHistoryUseCase,
             trackReadingProgressUseCase = trackReadingProgressUseCase,
-            context = context,
             mangadexObserve = mangadexObserve,
             directoryObserve = directoryObserve,
-            directoryGetChapters = directoryGetChapters,
-            mangadexGetChapters = mangadexGetChapters,
+            observeChaptersUseCase = observeChaptersUseCase,
+            directoryObserveVolumeChapters = directoryObserveVolumeChapters,
             manageCategoriesUseCase = manageCategoriesUseCase,
+            extractVolumeCoverUseCase = extractVolumeCoverUseCase,
+            extractAllVolumeCoversUseCase = extractAllVolumeCoversUseCase,
         )
 
     @Test
@@ -133,12 +195,14 @@ class ComicViewModelTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Cap 1", path = "", chapterSort = "1", lastModified = 1000L)
             val cap2 = ChapterFileDto(id = 2L, name = "Cap 2", path = "", chapterSort = "2", lastModified = 500L)
 
-            localChaptersFlow.value = ChapterArchivePageDto(listOf(cap2, cap1), 20, 0, 2)
+            viewModel.init(1L, null)
+            // Providing sorted data as the DB would do
+            localChaptersFlow.value = ChapterPageDto(listOf(cap1, cap2), emptyList(), 20, 0, 2)
             viewModel.updateChapterSort(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
 
             viewModel.chapters.test {
+                // Initial state might be null
                 var item = awaitItem()
-                // Skip initial empty state if needed
                 while (item == null || item.archive.items.isEmpty()) {
                     item = awaitItem()
                 }
@@ -159,9 +223,11 @@ class ComicViewModelTest {
             val ch010 = ChapterFileDto(id = 10L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
             val ch011 = ChapterFileDto(id = 11L, name = "Ch. 0.11", path = "", chapterSort = "0.11")
 
+            // Providing sorted data
             localChaptersFlow.value =
-                ChapterArchivePageDto(
-                    listOf(ch010, ch009, ch001, ch011, ch002),
+                ChapterPageDto(
+                    listOf(ch001, ch002, ch009, ch010, ch011),
+                    emptyList(),
                     20,
                     0,
                     5,
@@ -190,9 +256,11 @@ class ComicViewModelTest {
             val ch11 = ChapterFileDto(id = 11L, name = "Ch. 11", path = "", chapterSort = "11")
             val ch100 = ChapterFileDto(id = 100L, name = "Ch. 100", path = "", chapterSort = "100")
 
+            // Providing sorted data
             localChaptersFlow.value =
-                ChapterArchivePageDto(
-                    listOf(ch100, ch10, ch1, ch11, ch9, ch2),
+                ChapterPageDto(
+                    listOf(ch1, ch2, ch9, ch10, ch11, ch100),
+                    emptyList(),
                     20,
                     0,
                     6,
@@ -218,9 +286,11 @@ class ComicViewModelTest {
             val ch2 = ChapterFileDto(id = 5L, name = "Ch. 2", path = "", chapterSort = "2")
             val ch10 = ChapterFileDto(id = 6L, name = "Ch. 10", path = "", chapterSort = "10")
 
+            // Providing sorted data
             localChaptersFlow.value =
-                ChapterArchivePageDto(
-                    listOf(ch10, ch1dot5, ch010, ch2, ch1, ch001),
+                ChapterPageDto(
+                    listOf(ch001, ch010, ch1, ch1dot5, ch2, ch10),
+                    emptyList(),
                     20,
                     0,
                     6,
@@ -243,9 +313,11 @@ class ComicViewModelTest {
             val ch002 = ChapterFileDto(id = 2L, name = "Ch. 0.02", path = "", chapterSort = "0.2")
             val ch010 = ChapterFileDto(id = 3L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
 
+            // Providing ASCENDING data from DB. ViewModel will reverse it.
             localChaptersFlow.value =
-                ChapterArchivePageDto(
-                    listOf(ch001, ch010, ch002),
+                ChapterPageDto(
+                    listOf(ch001, ch002, ch010),
+                    emptyList(),
                     20,
                     0,
                     3,
@@ -267,7 +339,7 @@ class ComicViewModelTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Cap 1", path = "", chapterSort = "1", lastModified = 1000L)
             val cap2 = ChapterFileDto(id = 2L, name = "Cap 2", path = "", chapterSort = "2", lastModified = 2000L)
 
-            localChaptersFlow.value = ChapterArchivePageDto(listOf(cap1, cap2), 20, 0, 2)
+            localChaptersFlow.value = ChapterPageDto(listOf(cap1, cap2), emptyList(), 20, 0, 2)
             viewModel.updateChapterSort(ChapterSortPreferenceData(ChapterSortType.LAST_UPDATE, SortDirection.DESCENDING))
 
             viewModel.chapters.test {
@@ -278,6 +350,94 @@ class ComicViewModelTest {
 
                 assertThat(item.archive.items[0].id).isEqualTo(2L)
                 assertThat(item.archive.items[1].id).isEqualTo(1L)
+            }
+        }
+
+    @Test
+    fun `deve exibir headers apenas quando houver multiplos volumes reais`() =
+        runTest {
+            val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+            val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+            hasRootChaptersFlow.value = false
+            val cap1 = ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L)
+            val cap2 = ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L)
+
+            volumeSectionsFlow.value =
+                listOf(
+                    VolumeChapterGroupDto(volume1, listOf(cap1), 1, 1, false),
+                    VolumeChapterGroupDto(volume2, listOf(cap2), 1, 1, false),
+                )
+
+            localChaptersFlow.value =
+                ChapterPageDto(
+                    items =
+                        listOf(
+                            ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L),
+                            ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L),
+                        ),
+                    volumes = listOf(volume1, volume2),
+                    pageSize = 20,
+                    page = 0,
+                    total = 2,
+                )
+
+            viewModel.chapters.test {
+                var item = awaitItem()
+                while (item == null || item.archive.items.isEmpty()) item = awaitItem()
+                assertThat(item.showVolumeHeaders).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            val cap3 = ChapterFileDto(id = 1L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L)
+            val cap4 = ChapterFileDto(id = 2L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 10L)
+
+            localChaptersFlow.value =
+                ChapterPageDto(
+                    items = listOf(cap3, cap4),
+                    volumes = listOf(volume1),
+                    pageSize = 20,
+                    page = 0,
+                    total = 2,
+                )
+            volumeSectionsFlow.value =
+                listOf(
+                    VolumeChapterGroupDto(volume1, listOf(cap3, cap4), 2, 2, false),
+                )
+
+            viewModel.chapters.test {
+                var item = awaitItem()
+                while (item == null || item.archive.items.isEmpty()) item = awaitItem()
+                assertThat(item.showVolumeHeaders).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `deve ocultar headers quando houver capitulos root misturados`() =
+        runTest {
+            val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
+            val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
+            hasRootChaptersFlow.value = true
+
+            localChaptersFlow.value =
+                ChapterPageDto(
+                    items =
+                        listOf(
+                            ChapterFileDto(id = 1L, name = "Ch. 0", path = "", chapterSort = "0"),
+                            ChapterFileDto(id = 2L, name = "Ch. 1", path = "", chapterSort = "1", volumeId = 10L),
+                            ChapterFileDto(id = 3L, name = "Ch. 2", path = "", chapterSort = "2", volumeId = 20L),
+                        ),
+                    volumes = listOf(volume1, volume2),
+                    pageSize = 20,
+                    page = 0,
+                    total = 3,
+                )
+
+            viewModel.chapters.test {
+                var item = awaitItem()
+                while (item == null || item.archive.items.isEmpty()) item = awaitItem()
+                assertThat(item.showVolumeHeaders).isFalse()
+                cancelAndIgnoreRemainingEvents()
             }
         }
 }
