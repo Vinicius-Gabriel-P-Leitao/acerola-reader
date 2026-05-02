@@ -56,6 +56,7 @@ class ComicScreenTest {
         every { comicViewModel.chapterSortSettings } returns
             MutableStateFlow(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
         every { comicViewModel.volumeViewMode } returns MutableStateFlow(VolumeViewType.CHAPTER)
+        every { comicViewModel.activeVolumeId } returns MutableStateFlow<Long?>(null)
 
         every { comicDirVM.uiEvents } returns emptyEvents
         every { chapterArchiveVM.uiEvents } returns emptyEvents
