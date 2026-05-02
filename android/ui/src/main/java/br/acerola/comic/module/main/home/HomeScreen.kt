@@ -144,12 +144,13 @@ fun Main.Home.Template.Screen(
                     columns = gridCells,
                     verticalArrangement = Arrangement.spacedBy(space = SpacingTokens.Small),
                     horizontalArrangement = Arrangement.spacedBy(space = SpacingTokens.Small),
-                    contentPadding = PaddingValues(
-                        start = SpacingTokens.Small,
-                        top = 72.dp,
-                        end = SpacingTokens.Small,
-                        bottom = 80.dp
-                    ),
+                    contentPadding =
+                        PaddingValues(
+                            start = SpacingTokens.Small,
+                            top = 72.dp,
+                            end = SpacingTokens.Small,
+                            bottom = 80.dp,
+                        ),
                 ) {
                     items(items = if (searchExpanded) filteredMangas else comicList) { (comic, history, chapterCount) ->
                         when (uiState.layout) {

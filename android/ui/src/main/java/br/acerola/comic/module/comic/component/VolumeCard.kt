@@ -28,7 +28,31 @@ fun Comic.Component.VolumeCard(
     expanded: Boolean,
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier,
+    expandedContent: (@Composable () -> Unit)? = null,
 ) {
+    val nestedItem: (@Composable () -> Unit)? =
+        if (!group.volume.isSpecial && expandedContent == null) {
+            null
+        } else {
+            {
+                if (group.volume.isSpecial) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.ExtraSmall),
+                    ) {
+                        AssistChip(
+                            onClick = {},
+                            enabled = false,
+                            label = { Text(text = stringResource(R.string.label_volume_header_special)) },
+                        )
+                    }
+                }
+                expandedContent?.invoke()
+            }
+        }
+
     Acerola.Component.GroupedHeroButton(
         title = group.volume.name,
         description = stringResource(R.string.label_volume_card_description, group.loadedCount, group.totalChapters),
@@ -49,24 +73,6 @@ fun Comic.Component.VolumeCard(
                 },
             )
         },
-        nestedItem =
-            if (group.volume.isSpecial) {
-                {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.ExtraSmall),
-                    ) {
-                        AssistChip(
-                            onClick = {},
-                            enabled = false,
-                            label = { Text(text = stringResource(R.string.label_volume_header_special)) },
-                        )
-                    }
-                }
-            } else {
-                null
-            },
+        nestedItem = nestedItem,
     )
 }

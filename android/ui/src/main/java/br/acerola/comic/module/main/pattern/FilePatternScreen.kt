@@ -35,12 +35,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import br.acerola.comic.common.ux.tokens.ShapeTokens
-import br.acerola.comic.common.ux.tokens.SizeTokens
-import br.acerola.comic.common.ux.tokens.SpacingTokens
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.pattern.component.AddTemplateDialog

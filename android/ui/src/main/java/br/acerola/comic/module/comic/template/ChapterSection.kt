@@ -1,7 +1,9 @@
 package br.acerola.comic.module.comic.template
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import br.acerola.comic.common.ux.Acerola
@@ -49,12 +51,38 @@ fun Comic.Template.chapterSection(
                 key = "vol_${group.volume.id}",
                 contentType = "volume_card",
             ) {
+                val expandedContent: (@Composable () -> Unit)? =
+                    if (isExpanded) {
+                        {
+                            Column {
+                                group.items.forEach { chapter ->
+                                    val remoteInfo = remoteResolver(chapter.chapterSort)
+                                    Comic.Component.ChapterItem(
+                                        chapterFileDto = chapter,
+                                        chapterRemoteInfoDto = remoteInfo,
+                                        isRead = readChapters.contains(chapter.chapterSort),
+                                        onClick = { onChapterClick(chapter, remoteInfo) },
+                                        onToggleRead = { onToggleRead(chapter.chapterSort) },
+                                    )
+                                }
+                                if (group.hasMore) {
+                                    LaunchedEffect(group.currentPage) {
+                                        onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        null
+                    }
+
                 if (volumeViewMode == VolumeViewType.COVER_VOLUME) {
                     Comic.Component.CoverVolumeCard(
                         group = group,
                         expanded = isExpanded,
                         onToggleExpanded = onToggleExpanded,
                         onExtractCover = { onExtractVolumeCover(group.volume.id) },
+                        expandedContent = expandedContent,
                         modifier = Modifier.padding(horizontal = SpacingTokens.ExtraSmall, vertical = SpacingTokens.Small),
                     )
                 } else {
@@ -62,36 +90,9 @@ fun Comic.Template.chapterSection(
                         group = group,
                         expanded = isExpanded,
                         onToggleExpanded = onToggleExpanded,
+                        expandedContent = expandedContent,
                         modifier = Modifier.padding(horizontal = SpacingTokens.ExtraSmall, vertical = SpacingTokens.Small),
                     )
-                }
-            }
-
-            if (isExpanded) {
-                group.items.forEach { chapter ->
-                    scope.item(
-                        key = "ch_${chapter.id}",
-                        contentType = "chapter_item",
-                    ) {
-                        val remoteInfo = remoteResolver(chapter.chapterSort)
-                        Comic.Component.ChapterItem(
-                            chapterFileDto = chapter,
-                            chapterRemoteInfoDto = remoteInfo,
-                            isRead = readChapters.contains(chapter.chapterSort),
-                            onClick = { onChapterClick(chapter, remoteInfo) },
-                            onToggleRead = { onToggleRead(chapter.chapterSort) },
-                        )
-                    }
-                }
-
-                if (group.hasMore) {
-                    scope.item(
-                        key = "vol_load_more_${group.volume.id}",
-                    ) {
-                        LaunchedEffect(Unit) {
-                            onLoadVolumeChaptersPage(group.volume.id, group.currentPage + 1)
-                        }
-                    }
                 }
             }
         }

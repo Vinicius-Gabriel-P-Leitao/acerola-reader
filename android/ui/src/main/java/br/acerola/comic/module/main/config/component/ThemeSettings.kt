@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Palette
@@ -44,13 +42,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.acerola.comic.common.ux.tokens.ShapeTokens
-import br.acerola.comic.common.ux.tokens.SizeTokens
-import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.ux.theme.color.CatppuccinLatte
 import br.acerola.comic.common.ux.theme.color.CatppuccinMocha
 import br.acerola.comic.common.ux.theme.color.Dracula
 import br.acerola.comic.common.ux.theme.color.NordDark
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.config.preference.types.AppTheme
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R

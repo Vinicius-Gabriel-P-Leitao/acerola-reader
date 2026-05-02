@@ -7,8 +7,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
-import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference

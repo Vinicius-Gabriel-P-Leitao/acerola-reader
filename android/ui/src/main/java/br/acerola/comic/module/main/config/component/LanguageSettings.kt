@@ -55,15 +55,15 @@ fun Main.Config.Component.LanguageSettings(
                                     .clip(CircleShape)
                                     .background(color = MaterialTheme.colorScheme.primary),
                         ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = stringResource(id = R.string.label_select_language),
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier =
-                                Modifier
-                                    .size(size = 40.dp)
-                                    .padding(all = 4.dp),
-                        )
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = stringResource(id = R.string.label_select_language),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier =
+                                    Modifier
+                                        .size(size = 40.dp)
+                                        .padding(all = 4.dp),
+                            )
                         }
                     }
                 },
