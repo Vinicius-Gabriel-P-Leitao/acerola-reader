@@ -6,7 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.module.main.Main
 import io.mockk.every
@@ -35,7 +35,7 @@ class HistoryScreenTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
-                    Main.History.Layout.Screen(viewModel = viewModel)
+                    Main.History.Template.Screen(viewModel = viewModel)
                 }
             }
         }

@@ -6,5 +6,5 @@ package br.acerola.comic.module.comic
 object Comic {
     object Component
 
-    object Layout
+    object Template
 }

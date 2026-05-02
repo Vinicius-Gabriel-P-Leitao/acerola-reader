@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
@@ -33,7 +33,7 @@ fun Comic.Component.ComicCategorySelector(
     onUpdateMangaCategory: (Long?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = stringResource(id = R.string.title_comic_category),
         description = selectedCategory?.name ?: stringResource(id = R.string.label_category_none_selected),
         icon = if (selectedCategory != null) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,

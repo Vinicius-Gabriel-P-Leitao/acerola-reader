@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.HeroItem
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
@@ -16,7 +16,7 @@ fun Main.Config.Component.TemplateManager(
     onManageTemplates: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Acerola.Component.HeroItem(
+    Acerola.Component.HeroButton(
         title = stringResource(id = R.string.title_chapter_naming_templates),
         description = stringResource(id = R.string.description_template_config_activity),
         icon = Icons.Default.SettingsSuggest,

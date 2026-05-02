@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
-import br.acerola.comic.common.ux.component.GroupedHeroItem
+import br.acerola.comic.common.ux.component.GroupedHeroButton
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
@@ -25,7 +25,7 @@ fun Comic.Component.VolumeCard(
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Acerola.Component.GroupedHeroItem(
+    Acerola.Component.GroupedHeroButton(
         title = group.volume.name,
         // FIXME: Trocar por texto label_volume_header_chapter_count, mas fazer plural.xml capítulos e capitulo
         description = stringResource(R.string.label_volume_card_description, group.loadedCount, group.totalChapters),
@@ -46,6 +46,8 @@ fun Comic.Component.VolumeCard(
                 },
             )
         },
+
+        // FIXME: Melhorar visualização, atualmente stá simples e está junto de mais da borda.
         nestedItem =
             if (group.volume.isSpecial) {
                 {

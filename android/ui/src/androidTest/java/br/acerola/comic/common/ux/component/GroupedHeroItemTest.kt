@@ -22,7 +22,7 @@ class GroupedHeroItemTest {
     fun deve_exibir_titulo_do_item_principal() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Configurações",
                     icon = Icons.Default.Settings,
                 )
@@ -36,7 +36,7 @@ class GroupedHeroItemTest {
     fun deve_exibir_descricao_quando_fornecida() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Configurações",
                     description = "Ajuste as preferências",
                     icon = Icons.Default.Settings,
@@ -53,7 +53,7 @@ class GroupedHeroItemTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Item Clicável",
                     icon = Icons.Default.Settings,
                     onClick = { clicked = true },
@@ -70,11 +70,11 @@ class GroupedHeroItemTest {
     fun deve_exibir_item_aninhado_quando_nestedItem_fornecido() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Item Principal",
                     icon = Icons.Default.Settings,
                     nestedItem = {
-                        Acerola.Component.HeroNestedItem(
+                        Acerola.Component.HeroNestedButton(
                             title = "Item Aninhado",
                             icon = Icons.Default.Sync,
                             onClick = {},
@@ -92,7 +92,7 @@ class GroupedHeroItemTest {
     fun nao_deve_exibir_item_aninhado_quando_nestedItem_e_nulo() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Item Sem Aninhado",
                     icon = Icons.Default.Settings,
                     nestedItem = null,
@@ -108,7 +108,7 @@ class GroupedHeroItemTest {
     fun deve_renderizar_slot_de_action() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Item com Action",
                     icon = Icons.Default.Settings,
                     action = { Text("Badge") },
@@ -124,7 +124,7 @@ class GroupedHeroItemTest {
     fun deve_renderizar_icone_via_slot_composable() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.GroupedHeroItem(
+                Acerola.Component.GroupedHeroButton(
                     title = "Item com Slot de Ícone",
                     icon = { Text("IC") },
                 )

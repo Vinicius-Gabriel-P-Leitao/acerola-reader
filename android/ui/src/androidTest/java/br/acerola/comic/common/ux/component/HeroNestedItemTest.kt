@@ -21,7 +21,7 @@ class HeroNestedItemTest {
     fun deve_exibir_titulo_do_item_aninhado() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroNestedItem(
+                Acerola.Component.HeroNestedButton(
                     title = "Sincronizar Capítulos",
                     icon = Icons.Default.Sync,
                     onClick = {},
@@ -36,7 +36,7 @@ class HeroNestedItemTest {
     fun deve_exibir_descricao_quando_fornecida() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroNestedItem(
+                Acerola.Component.HeroNestedButton(
                     title = "Sincronizar Capítulos",
                     description = "Busca capítulos remotos",
                     icon = Icons.Default.Sync,
@@ -52,7 +52,7 @@ class HeroNestedItemTest {
     fun nao_deve_exibir_descricao_quando_nula() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroNestedItem(
+                Acerola.Component.HeroNestedButton(
                     title = "Sem Descrição",
                     description = null,
                     icon = Icons.Default.Sync,
@@ -70,7 +70,7 @@ class HeroNestedItemTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroNestedItem(
+                Acerola.Component.HeroNestedButton(
                     title = "Item Clicável",
                     icon = Icons.Default.Sync,
                     onClick = { clicked = true },
@@ -87,7 +87,7 @@ class HeroNestedItemTest {
     fun deve_renderizar_icone_via_slot_composable() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.HeroNestedItem(
+                Acerola.Component.HeroNestedButton(
                     title = "Item com Slot",
                     onClick = {},
                     icon = { Text("IC") },

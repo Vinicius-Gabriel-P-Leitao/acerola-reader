@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
@@ -39,9 +38,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.viewmodel.archive.FileSystemAccessViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
@@ -64,7 +66,7 @@ import br.acerola.comic.ui.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun Main.Config.Layout.Screen(
+fun Main.Config.Template.Screen(
     metadataSettingsViewModel: MetadataSettingsViewModel = hiltViewModel(),
     fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
     comicDirectoryViewModel: ComicDirectoryViewModel = hiltViewModel(),
@@ -158,28 +160,28 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.SelectComicDirectory(
                     folderName = uiState.folderName,
                     onFolderSelected = { onAction(ConfigAction.SelectFolder(it)) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
                 Main.Config.Component.MetadataExportSettings(
                     enabled = uiState.generateComicInfo,
                     onCheckedChange = { onAction(ConfigAction.UpdateGenerateComicInfo(it)) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
                 Main.Config.Component.TemplateManager(
                     onManageTemplates = { onAction(ConfigAction.NavigateToTemplateConfig) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
                 HorizontalDivider(
                     modifier =
                         Modifier
-                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small)
                             .alpha(0.3f),
                 )
 
@@ -189,13 +191,13 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.SyncLibraryArchive(
                     onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
                     onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
                 HorizontalDivider(
                     modifier =
                         Modifier
-                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small)
                             .alpha(0.3f),
                 )
 
@@ -221,13 +223,13 @@ fun Main.Config.Layout.Screen(
                     categories = allCategories,
                     onCreateCategory = { name, color -> onAction(ConfigAction.CreateCategory(name, color)) },
                     onDeleteCategory = { id -> onAction(ConfigAction.DeleteCategory(id)) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
                 HorizontalDivider(
                     modifier =
                         Modifier
-                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small)
                             .alpha(0.3f),
                 )
 
@@ -237,34 +239,34 @@ fun Main.Config.Layout.Screen(
                 Main.Config.Component.LanguageSettings(
                     selectedLanguage = uiState.metadataLanguage,
                     onLanguageSelected = { onAction(ConfigAction.UpdateMetadataLanguage(it)) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
                 Main.Config.Component.SyncAnilistData(
                     onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
                 HorizontalDivider(
                     modifier =
                         Modifier
-                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small)
                             .alpha(0.3f),
                 )
 
                 // FIXME: Só descomentar quando tiver pronto a função.
                 // P2pDemoSection()
 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(SizeTokens.ClickTarget))
             }
         }
     }
@@ -275,26 +277,26 @@ private fun OnboardingGuideCard() {
     Card(
         modifier =
             Modifier
-                .padding(16.dp)
+                .padding(SpacingTokens.Large)
                 .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        shape = RoundedCornerShape(12.dp),
+        shape = ShapeTokens.Medium,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(SpacingTokens.Large)) {
             Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
             Text(
                 text = stringResource(id = R.string.title_tutorial_setup),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.ExtraSmall))
             Text(
                 text = "1. " + stringResource(id = R.string.description_tutorial_folder_select),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.ExtraSmall))
             Text(
                 text = "2. " + stringResource(id = R.string.description_tutorial_sync_deep),
                 style = MaterialTheme.typography.bodySmall,
@@ -311,7 +313,7 @@ private fun SectionHeader(title: String) {
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.secondary,
-        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
+        modifier = Modifier.padding(start = SpacingTokens.Huge, top = SpacingTokens.Huge, bottom = SpacingTokens.Small),
     )
 }
 
@@ -324,7 +326,7 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
     var remotePeerId by remember { mutableStateOf("") }
 
     SectionHeader("P2P Demo")
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+    Column(modifier = Modifier.padding(horizontal = SpacingTokens.Large)) {
         Row {
             Text(text = "Local ID: $localId", style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.weight(1f))
@@ -332,9 +334,9 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
                 Icon(Icons.Default.ContentCopy, contentDescription = null)
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
         Text(text = "Mode: $mode", style = MaterialTheme.typography.bodySmall)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SpacingTokens.Large))
 
         OutlinedTextField(
             value = remotePeerId,
@@ -343,19 +345,19 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
         Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, byteArrayOf()) }) {
             Text("Connect")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SpacingTokens.Large))
 
         Row {
             Button(onClick = { p2pViewModel.switchToLocal() }) {
                 Text("Switch to Local")
             }
-            Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+            Spacer(modifier = Modifier.padding(horizontal = SpacingTokens.Small))
             Button(onClick = { p2pViewModel.switchToRelay() }) {
                 Text("Switch to Relay")
             }

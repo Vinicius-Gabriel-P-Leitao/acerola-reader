@@ -33,10 +33,10 @@ import br.acerola.comic.common.ux.component.SnackbarSuccess
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.SnackbarWarn
 import br.acerola.comic.common.ux.component.resolveSnackbarVariant
-import br.acerola.comic.common.ux.layout.ProgressIndicator
-import br.acerola.comic.common.ux.layout.Scaffold
+import br.acerola.comic.common.ux.component.Progress
+import br.acerola.comic.common.ux.component.Scaffold
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.viewmodel.progress.GlobalProgressViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -74,7 +74,7 @@ abstract class BaseActivity : ComponentActivity() {
                 CompositionLocalProvider(
                     value = LocalSnackbarHostState provides snackbarHostState,
                 ) {
-                    Acerola.Layout.Scaffold {
+                    Acerola.Component.Scaffold {
                         Scaffold(
                             topBar = { TopBar(navController) },
                             snackbarHost = {
@@ -98,7 +98,7 @@ abstract class BaseActivity : ComponentActivity() {
                                 if (isLandscape) SideBar(navController)
                                 Box(modifier = Modifier.weight(1f)) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
-                                    Acerola.Layout.ProgressIndicator(
+                                    Acerola.Component.Progress(
                                         modifier =
                                             Modifier
                                                 .align(Alignment.BottomStart)

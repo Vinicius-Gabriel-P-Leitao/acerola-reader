@@ -22,7 +22,7 @@ class FloatingToolTest {
         var itemClicked = false
         val items =
             listOf(
-                FloatingToolItem(
+                FabGroupItem(
                     label = "Ação 1",
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     onClick = { itemClicked = true },
@@ -31,7 +31,7 @@ class FloatingToolTest {
 
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.FloatingTool(
+                Acerola.Component.FabGroup(
                     icon = { Icon(Icons.Default.Add, contentDescription = "Abrir") },
                     items = items,
                 )

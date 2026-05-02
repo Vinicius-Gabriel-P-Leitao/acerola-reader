@@ -16,8 +16,8 @@ import androidx.navigation.compose.composable
 import br.acerola.comic.common.activity.BaseActivity
 import br.acerola.comic.common.navigation.Destination
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.layout.BottomBar
-import br.acerola.comic.common.ux.layout.SideBar
+import br.acerola.comic.common.ux.component.BottomBar
+import br.acerola.comic.common.ux.component.SideBar
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.Screen
 import br.acerola.comic.module.main.history.Screen
@@ -41,24 +41,24 @@ class MainActivity(
         navController: NavHostController,
     ) {
         defaultComposable(context, Destination.HOME) {
-            Main.Home.Layout.Screen(
+            Main.Home.Template.Screen(
                 onNavigateToConfig = {
                     navController.navigate(context.getString(Destination.CONFIG.route))
                 },
             )
         }
         defaultComposable(context, Destination.HISTORY) {
-            Main.History.Layout.Screen()
+            Main.History.Template.Screen()
         }
         defaultComposable(context, Destination.CONFIG) {
-            Main.Config.Layout.Screen(
+            Main.Config.Template.Screen(
                 onNavigateToTemplates = {
                     navController.navigate(context.getString(Destination.PATTERN.route))
                 },
             )
         }
         defaultComposable(context, Destination.PATTERN) {
-            Main.Pattern.Layout.FilePatternScreen(
+            Main.Pattern.Template.FilePatternScreen(
                 onBack = { navController.popBackStack() },
             )
         }
@@ -70,12 +70,12 @@ class MainActivity(
 
     @Composable
     override fun BottomBar(navController: NavHostController) {
-        Acerola.Layout.BottomBar(navController)
+        Acerola.Component.BottomBar(navController)
     }
 
     @Composable
     override fun SideBar(navController: NavHostController) {
-        Acerola.Layout.SideBar(navController)
+        Acerola.Component.SideBar(navController)
     }
 
     private fun NavGraphBuilder.defaultComposable(

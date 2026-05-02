@@ -26,27 +26,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
+import br.acerola.comic.common.ux.component.TopBar
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.layout.TopBar
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.comic.component.ChapterSortSheet
-import br.acerola.comic.module.comic.layout.Header
-import br.acerola.comic.module.comic.layout.Tabs
-import br.acerola.comic.module.comic.layout.chapterSection
-import br.acerola.comic.module.comic.layout.configSection
 import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
 import br.acerola.comic.module.comic.state.MainTab
+import br.acerola.comic.module.comic.template.Header
+import br.acerola.comic.module.comic.template.Tabs
+import br.acerola.comic.module.comic.template.chapterSection
+import br.acerola.comic.module.comic.template.configSection
 import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
 import kotlinx.collections.immutable.toPersistentList
@@ -243,7 +243,7 @@ fun ComicScreen(
                     key = "comic_header",
                     contentType = "header",
                 ) {
-                    Comic.Layout.Header(
+                    Comic.Template.Header(
                         comic = uiState.comic,
                         history = uiState.history,
                         onContinueClick = { id, page -> onChapterAction(ComicChapterAction.ClickContinue(id, page)) },
@@ -254,17 +254,18 @@ fun ComicScreen(
                     key = "comic_tabs",
                     contentType = "tabs",
                 ) {
-                    Comic.Layout.Tabs(
+                    Comic.Template.Tabs(
                         totalChapters = uiState.totalChapters,
                         activeTab = uiState.selectedTab,
                         onTabSelected = { onAction(ComicAction.SelectTab(it)) },
                     )
                 }
 
+                // TODO: Fazer eles não só trocarem quando clicados, mas com o arrastar do dedo uma troca entre abas com arrastar de dedos.
                 when (uiState.selectedTab) {
                     MainTab.CHAPTERS -> {
                         uiState.chapters?.let {
-                            Comic.Layout.chapterSection(
+                            Comic.Template.chapterSection(
                                 scope = this,
                                 chapters = it,
                                 currentPage = uiState.currentPage,
@@ -283,7 +284,7 @@ fun ComicScreen(
                     }
 
                     MainTab.SETTINGS -> {
-                        Comic.Layout.configSection(
+                        Comic.Template.configSection(
                             scope = this,
                             uiState = uiState,
                             onAction = onAction,
@@ -301,7 +302,7 @@ fun ComicScreen(
             }
         }
 
-        Acerola.Layout.TopBar(
+        Acerola.Component.TopBar(
             navigationIcon = {
                 Acerola.Component.GlassButton(
                     onClick = { onAction(ComicAction.NavigateBack) },

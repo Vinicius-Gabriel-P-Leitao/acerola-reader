@@ -44,6 +44,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.ux.theme.color.CatppuccinLatte
 import br.acerola.comic.common.ux.theme.color.CatppuccinMocha
 import br.acerola.comic.common.ux.theme.color.Dracula
@@ -80,15 +83,15 @@ fun Main.Config.Component.ThemeSettings(
             },
             leadingContent = {
                 Surface(
-                    shape = CircleShape,
+                    shape = ShapeTokens.Full,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(SizeTokens.ClickTargetSmall),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Filled.Palette,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(SizeTokens.IconSmall),
                             contentDescription = null,
                         )
                     }
@@ -99,8 +102,8 @@ fun Main.Config.Component.ThemeSettings(
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
+            horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Medium),
         ) {
             items(themes) { theme ->
                 ThemeCard(
@@ -229,19 +232,19 @@ private fun ThemeCard(
     OutlinedCard(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = ShapeTokens.Large,
         colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
         border = CardDefaults.outlinedCardBorder().copy(brush = SolidColor(borderColor)),
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(SpacingTokens.Medium),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier =
                     Modifier
                         .size(60.dp)
-                        .padding(4.dp),
+                        .padding(SpacingTokens.ExtraSmall),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
@@ -250,7 +253,7 @@ private fun ThemeCard(
                             .fillMaxSize()
                             .background(
                                 brush = Brush.linearGradient(colors),
-                                shape = CircleShape,
+                                shape = ShapeTokens.Full,
                             ),
                 )
 
@@ -263,15 +266,15 @@ private fun ThemeCard(
                         Box(
                             modifier =
                                 Modifier
-                                    .size(24.dp)
-                                    .background(color, CircleShape)
-                                    .border(1.5.dp, dotBorderColor, CircleShape),
+                                    .size(SpacingTokens.ExtraLarge)
+                                    .background(color, ShapeTokens.Full)
+                                    .border(1.5.dp, dotBorderColor, ShapeTokens.Full),
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
             Text(
                 text = title,
@@ -296,11 +299,11 @@ private fun ThemeCard(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier =
                         Modifier
-                            .padding(top = 4.dp)
-                            .size(16.dp),
+                            .padding(top = SpacingTokens.ExtraSmall)
+                            .size(SizeTokens.IconExtraSmall),
                 )
             } else {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(SpacingTokens.ExtraLarge))
             }
         }
     }

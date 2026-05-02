@@ -6,7 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.ux.theme.local.LocalSnackbarHostState
+import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.pattern.state.FilePatternUiState
@@ -33,7 +33,7 @@ class FilePatternScreenTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
-                    Main.Pattern.Layout.FilePatternScreen(
+                    Main.Pattern.Template.FilePatternScreen(
                         onBack = {},
                         viewModel = viewModel,
                     )

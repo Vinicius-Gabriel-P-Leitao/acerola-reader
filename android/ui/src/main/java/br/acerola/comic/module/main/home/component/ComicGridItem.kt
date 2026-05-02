@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.MoreHoriz
@@ -37,6 +37,9 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.BookmarkRibbon
 import br.acerola.comic.common.ux.component.ImageCard
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.main.Main
@@ -64,8 +67,8 @@ fun Main.Home.Component.ComicGridItem(
     val imageSize: Size =
         with(receiver = density) {
             Size(
-                width = 140.dp.toPx().toInt(),
-                height = 210.dp.toPx().toInt(),
+                width = SizeTokens.ComicCardWidth.toPx().toInt(),
+                height = SizeTokens.ComicCardHeight.toPx().toInt(),
             )
         }
 
@@ -105,8 +108,8 @@ fun Main.Home.Component.ComicGridItem(
     Column(
         modifier =
             Modifier
-                .padding(all = 4.dp)
-                .width(width = 140.dp),
+                .padding(all = SpacingTokens.ExtraSmall)
+                .width(width = SizeTokens.ComicCardWidth),
         horizontalAlignment = Alignment.Start,
     ) {
         Box(
@@ -121,7 +124,7 @@ fun Main.Home.Component.ComicGridItem(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(top = 8.dp),
+                        .padding(top = SpacingTokens.Small),
             )
 
             Box(
@@ -130,7 +133,7 @@ fun Main.Home.Component.ComicGridItem(
                         .fillMaxWidth()
                         .height(40.dp)
                         .align(Alignment.BottomCenter)
-                        .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                        .clip(ShapeTokens.Medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp)))
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
@@ -142,7 +145,7 @@ fun Main.Home.Component.ComicGridItem(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(bottom = 8.dp, end = 8.dp),
+                        .padding(bottom = SpacingTokens.Small, end = SpacingTokens.Small),
                 contentAlignment = Alignment.BottomEnd,
             ) {
                 val sourceIcon =
@@ -156,7 +159,7 @@ fun Main.Home.Component.ComicGridItem(
                         painter = painterResource(id = sourceIcon),
                         contentDescription = null,
                         tint = Color.Unspecified,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(SizeTokens.IconExtraSmall),
                     )
                 }
             }
@@ -167,32 +170,32 @@ fun Main.Home.Component.ComicGridItem(
                     modifier =
                         Modifier
                             .align(Alignment.TopStart)
-                            .padding(start = 12.dp)
+                            .padding(start = SpacingTokens.Medium)
                             .width(18.dp)
-                            .height(32.dp),
+                            .height(SpacingTokens.Giant),
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
         Text(
             text = title,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 4.dp),
+            modifier = Modifier.padding(horizontal = SpacingTokens.ExtraSmall),
             color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(SpacingTokens.ExtraSmall))
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingTokens.ExtraSmall),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(SpacingTokens.ExtraSmall)) {
                 if (score != null) {
                     Icon(
                         imageVector = Icons.Rounded.Star,
@@ -239,7 +242,7 @@ fun Main.Home.Component.ComicGridItem(
 
             IconButton(
                 onClick = onShowActions,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(SizeTokens.IconMedium),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.MoreHoriz,
