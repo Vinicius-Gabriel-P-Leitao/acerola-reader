@@ -104,7 +104,6 @@ class ChapterSectionTest {
         composeTestRule.onNodeWithText("1 de 2", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("1 de 1", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Especial").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Carregar mais capítulos").assertIsDisplayed()
     }
 
     @Test

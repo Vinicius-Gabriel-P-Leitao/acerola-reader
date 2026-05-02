@@ -13,7 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
@@ -32,7 +31,7 @@ fun Comic.Component.VolumeCard(
 ) {
     Acerola.Component.GroupedHeroButton(
         title = group.volume.name,
-        description = pluralStringResource(R.plurals.label_volume_header_chapter_count, group.totalChapters, group.totalChapters),
+        description = stringResource(R.string.label_volume_card_description, group.loadedCount, group.totalChapters),
         icon = Icons.Default.LibraryBooks,
         iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,

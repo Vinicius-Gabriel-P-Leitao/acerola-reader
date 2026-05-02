@@ -158,11 +158,11 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 - [ ] `HomeViewModel` → extrair `GetLibraryUseCase` com parâmetros de filtro explícitos
 - [ ] `ReaderViewModel` → extrair `ReaderPrefetchUseCase` (pré-carregamento / paginação)
 
-#### P6 — OCP
+``#### P6 — OCP
 
 - [ ] `MetadataSyncWorker` → substituir `when` de sources por `Map<String, MetadataProvider>` (interface + Hilt multibinding)
 - [ ] `MangadexComicEngine` → criar `sealed class MangadexResponse` com `toDomainError()` por subtipo
-- [ ] `AnilistMangaInfoSource` → criar `ApolloExceptionMapper` isolando dependência do Apollo
+- [ ] `AnilistMangaInfoSource` → criar `ApolloExceptionMapper` isolando dependência do Apollo``
 
 ---
 
