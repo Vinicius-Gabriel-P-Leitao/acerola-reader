@@ -87,7 +87,7 @@ class ComicDirectoryEngine
 
                             val rootUri =
                                 baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                                ?: return@catch
+                                    ?: return@catch
 
                             val folderId = DocumentsContract.getDocumentId(folderUri)
                             val folderChildren =

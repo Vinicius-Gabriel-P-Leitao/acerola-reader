@@ -11,25 +11,18 @@ class HorizontalPagedReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve_solicitar_pagina_ao_exibir_index_do_pager`() {
-        var requestedIndex = -1
+    fun `deve_renderizar_horizontal_reader_sem_erros`() {
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
             Reader.Component.HorizontalPagedReader(
-                pageCount = 10,
                 comicId = 1L,
                 chapterId = 1L,
                 pagerState = pagerState,
                 onUiToggle = {},
                 onPrevClick = {},
                 onNextClick = {},
-                onPageRequest = { requestedIndex = it },
                 onZoomChange = {},
             )
         }
-
-        // Como o initialPage é 0, deve solicitar a página 0
-        composeTestRule.waitUntil(timeoutMillis = 2000) { requestedIndex == 0 }
-        assert(requestedIndex == 0)
     }
 }

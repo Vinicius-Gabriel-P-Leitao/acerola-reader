@@ -7,8 +7,8 @@ import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.local.translator.persistence.toMangaDirectoryEntity
+import br.acerola.comic.local.translator.ui.toChapterPageDto
 import br.acerola.comic.local.translator.ui.toViewDto
-import br.acerola.comic.local.translator.ui.toViewPageDto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -100,7 +100,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `List ChapterVolumeJoin toViewPageDto deve criar objeto de paginação correto`() {
+    fun `List ChapterVolumeJoin toChapterPageDto deve criar objeto de paginação correto`() {
         val list =
             listOf(
                 ChapterVolumeJoin(
@@ -131,7 +131,7 @@ class ArchiveMapperTest {
                 ),
             )
 
-        val pageDto = list.toViewPageDto(pageSize = 10, total = 100, page = 1)
+        val pageDto = list.toChapterPageDto(pageSize = 10, total = 100, page = 1)
 
         assertEquals(2, pageDto.items.size)
         assertEquals(10, pageDto.pageSize)

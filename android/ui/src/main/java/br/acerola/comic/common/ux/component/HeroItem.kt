@@ -78,23 +78,25 @@ fun Acerola.Component.HeroItem(
     bottomContent: @Composable (() -> Unit)? = null,
     icon: @Composable () -> Unit,
 ) {
-    val clickableModifier = if (onClick != null || onLongClick != null) {
-        Modifier.combinedClickable(
-            onClick = onClick ?: {},
-            onLongClick = onLongClick
-        )
-    } else {
-        Modifier
-    }
+    val clickableModifier =
+        if (onClick != null || onLongClick != null) {
+            Modifier.combinedClickable(
+                onClick = onClick ?: {},
+                onLongClick = onLongClick,
+            )
+        } else {
+            Modifier
+        }
 
     Surface(
         shape = HeroShape,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         color = MaterialTheme.colorScheme.surface,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(HeroShape)
-            .then(clickableModifier),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(HeroShape)
+                .then(clickableModifier),
     ) {
         HeroItemContent(title, description, iconBackground, iconModifier, action, bottomContent, icon)
     }

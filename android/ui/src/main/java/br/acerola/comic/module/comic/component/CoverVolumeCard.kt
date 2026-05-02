@@ -74,6 +74,7 @@ fun Comic.Component.CoverVolumeCard(
 
     Acerola.Component.GroupedHeroItem(
         title = group.volume.name,
+        // FIXME: Fazer plurals desse texto para capítulo
         description = stringResource(R.string.label_volume_header_chapter_count, group.totalChapters),
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
         iconModifier = Modifier.width(60.dp).height(90.dp),

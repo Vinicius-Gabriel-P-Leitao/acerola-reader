@@ -30,10 +30,11 @@ class CoverFromChapterUseCaseTest {
         MockKAnnotations.init(this)
         every { comicGateway.progress } returns MutableStateFlow(0)
         every { comicGateway.isIndexing } returns MutableStateFlow(false)
-        useCase = CoverFromChapterUseCase(
-            coverExtractor = coverExtractor,
-            comicGateway = comicGateway,
-        )
+        useCase =
+            CoverFromChapterUseCase(
+                coverExtractor = coverExtractor,
+                comicGateway = comicGateway,
+            )
     }
 
     // Caminho feliz — extração e refresh funcionam

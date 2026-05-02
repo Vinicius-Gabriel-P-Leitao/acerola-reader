@@ -34,7 +34,6 @@ class MetadataSyncWorker
         @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
-
         companion object {
             const val KEY_SYNC_SOURCE = "sync_source"
             const val KEY_DIRECTORY_ID = "directory_id"

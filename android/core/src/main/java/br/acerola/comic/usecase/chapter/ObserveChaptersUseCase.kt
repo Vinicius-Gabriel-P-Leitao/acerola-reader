@@ -28,4 +28,3 @@ open class ObserveChaptersUseCase<T>(
         isAscending: Boolean = true,
     ): T = chapterRepository.getChapterPage(comicId, total, page, pageSize, sortType, isAscending)
 }
-

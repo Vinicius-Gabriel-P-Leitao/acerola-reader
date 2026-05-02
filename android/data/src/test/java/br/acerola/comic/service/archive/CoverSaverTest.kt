@@ -69,7 +69,7 @@ class CoverSaverTest {
             every { savedFileDoc.uri } returns fileUri
             every { fileUri.toString() } returns "content://cover/1"
 
-            coEvery { fileStorageHandler.saveFile(any(), any(), any(), any()) } returns Unit.right()
+            coEvery { fileStorageHandler.saveFile(any(), any(), any(), any()) } returns "content://cover/1".right()
             coEvery { directoryDao.getDirectoryById(1) } returns comicDir
             coEvery { directoryDao.update(any()) } returns Unit
             coEvery { coverDao.insert(any()) } returns 10L

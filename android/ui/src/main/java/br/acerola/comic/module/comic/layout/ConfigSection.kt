@@ -114,9 +114,12 @@ fun Comic.Layout.configSection(
             onSyncChapters = { onSyncAction(ComicSyncAction.SyncChaptersLocal) },
             onRescanCover = { onSyncAction(ComicSyncAction.RescanComic) },
             onExtractFirstPageAsCover = { onSyncAction(ComicSyncAction.ExtractFirstPageAsCover) },
-            onExtractVolumeCovers = if (uiState.volumeViewMode == VolumeViewType.COVER_VOLUME) {
-                { onSyncAction(ComicSyncAction.ExtractVolumeCovers) }
-            } else null,
+            onExtractVolumeCovers =
+                if (uiState.volumeViewMode == VolumeViewType.COVER_VOLUME) {
+                    { onSyncAction(ComicSyncAction.ExtractVolumeCovers) }
+                } else {
+                    null
+                },
             modifier = itemModifier,
         )
     }

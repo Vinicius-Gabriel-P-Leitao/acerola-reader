@@ -25,6 +25,7 @@ fun Comic.Component.VolumeCard(
 ) {
     Acerola.Component.GroupedHeroItem(
         title = group.volume.name,
+        // FIXME: Trocar por texto label_volume_header_chapter_count, mas fazer plural.xml capítulos e capitulo
         description = stringResource(R.string.label_volume_card_description, group.loadedCount, group.totalChapters),
         icon = Icons.Default.LibraryBooks,
         iconTint = MaterialTheme.colorScheme.onTertiaryContainer,

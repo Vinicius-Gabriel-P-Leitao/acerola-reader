@@ -33,7 +33,7 @@ class ComicMetadataViewModelTest {
         every { comicRepo.progress } returns MutableStateFlow(-1)
 
         observeLibraryUseCase = ObserveLibraryUseCase(comicRepository = comicRepo)
-        viewModel = ComicMetadataViewModel(observeLibraryUseCase, manageCategoriesUseCase, workManager)
+        viewModel = ComicMetadataViewModel(workManager, manageCategoriesUseCase, observeLibraryUseCase)
     }
 
     @Test

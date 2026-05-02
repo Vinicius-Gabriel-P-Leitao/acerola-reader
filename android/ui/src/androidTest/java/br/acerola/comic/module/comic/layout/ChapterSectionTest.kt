@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
@@ -92,8 +93,8 @@ class ChapterSectionTest {
                     onChapterClick = { _, _ -> },
                     onToggleRead = {},
                     onPageChange = {},
-                    showVolumeHeaders = true,
-                    expandedVolumeIds = setOf(10L, 20L),
+                    volumeViewMode = VolumeViewType.VOLUME,
+                    activeVolumeId = 10L,
                 )
             }
         }
@@ -134,7 +135,7 @@ class ChapterSectionTest {
                     onChapterClick = { _, _ -> },
                     onToggleRead = {},
                     onPageChange = {},
-                    showVolumeHeaders = false,
+                    volumeViewMode = VolumeViewType.CHAPTER,
                 )
             }
         }
