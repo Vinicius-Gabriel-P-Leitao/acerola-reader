@@ -28,12 +28,6 @@ class FileSystemAccessViewModel
         private val manager: FileSystemAccessManager,
         @param:ApplicationContext private val context: Context,
     ) : ViewModel() {
-        init {
-            viewModelScope.launch {
-                loadSavedFolder()
-            }
-        }
-
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
@@ -44,6 +38,12 @@ class FileSystemAccessViewModel
         val tutorialShown: StateFlow<Boolean> = _tutorialShown.asStateFlow()
 
         val folderUri get() = manager.folderUri
+
+        init {
+            viewModelScope.launch {
+                loadSavedFolder()
+            }
+        }
 
         fun setTutorialShown(shown: Boolean) {
             viewModelScope.launch {

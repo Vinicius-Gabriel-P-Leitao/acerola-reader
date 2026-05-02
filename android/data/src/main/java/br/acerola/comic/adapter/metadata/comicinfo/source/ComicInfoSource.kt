@@ -5,7 +5,6 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
-import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.message.NetworkError
 import br.acerola.comic.local.translator.persistence.toDto

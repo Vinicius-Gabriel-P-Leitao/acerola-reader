@@ -16,7 +16,6 @@ import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
-import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger

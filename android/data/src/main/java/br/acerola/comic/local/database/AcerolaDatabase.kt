@@ -103,5 +103,4 @@ abstract class AcerolaDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
 
     abstract fun comicSummaryDao(): ComicSummaryDao
-
 }
