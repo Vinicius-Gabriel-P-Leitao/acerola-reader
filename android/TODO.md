@@ -137,8 +137,12 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 
 ### Aplicar mudanças da lib rust acerola p2p
 
-- [ ] **A lib está a ser feita:** Será feito um grande refactor no campo de rust para poder montar a FFI atualizada e
-  otimizada para poder salvar chaves de PeerId, DeviceInfo entre outros, poder usar o keystore para salvar dados que devem ser criptografadas.
+- [ ] **A lib está a ser feita:** Séra feito um grande refactor no campo de rust para poder montar a FFI atualizada e
+  otimizada para poder salvar chaves de PeerId, DeviceInfo entre outros, poder usar o keystore para salvar dados que devem ser criptografias.
+
+### Modificar tabelas do banco de dados para ter nomes consistentes
+
+- [ ] **Alguns campos que deveriam ser _fk estão com _id:** Será feito refactor e migration, deixa isso para versão do banco 3.
 
 ### 🔧 Refatoração de Arquitetura (Tech Debt Pendente)
 
