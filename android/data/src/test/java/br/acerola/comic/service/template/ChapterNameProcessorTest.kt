@@ -64,6 +64,14 @@ class ChapterNameProcessorTest {
         }
 
     @Test
+    fun `deve anexar a extensao automaticamente para volume se o usuario nao a prover`() =
+        runTest {
+            val result = service.addTemplate("Meu Volume", "Vol. {volume}", SortType.VOLUME)
+
+            assertTrue(result.isRight())
+        }
+
+    @Test
     fun `deve remover lixo apos a extensao caso o usuario forneca`() =
         runTest {
             val result = service.addTemplate("Template com Lixo", "Ch. {chapter}{extension} LixoAqui", SortType.CHAPTER)
@@ -80,6 +88,18 @@ class ChapterNameProcessorTest {
             result.onLeft {
                 assertTrue(it is TemplateError.InvalidPattern)
                 assertEquals(R.string.error_template_chapter_required, (it as TemplateError.InvalidPattern).uiMessage.resId)
+            }
+        }
+
+    @Test
+    fun `deve rejeitar padrao de volume invalido sem macro de volume`() =
+        runTest {
+            val result = service.addTemplate("Volume Invalido", "Vol. {chapter}", SortType.VOLUME)
+
+            assertTrue(result.isLeft())
+            result.onLeft {
+                assertTrue(it is TemplateError.InvalidPattern)
+                assertEquals(R.string.error_template_volume_required, (it as TemplateError.InvalidPattern).uiMessage.resId)
             }
         }
 
