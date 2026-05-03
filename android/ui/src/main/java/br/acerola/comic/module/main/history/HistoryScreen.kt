@@ -72,6 +72,7 @@ fun Main.History.Template.Screen(viewModel: HistoryViewModel = hiltViewModel()) 
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         Column(

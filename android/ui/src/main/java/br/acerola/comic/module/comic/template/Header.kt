@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -165,6 +167,23 @@ fun Comic.Template.Header(
                                         .padding(start = SpacingTokens.Medium)
                                         .width(SpacingTokens.ExtraLarge)
                                         .height(SpacingTokens.Giant),
+                            )
+                        }
+
+                        if (comic.directory.hidden) {
+                            Icon(
+                                imageVector = Icons.Rounded.VisibilityOff,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.BottomStart)
+                                        .padding(SpacingTokens.Small)
+                                        .size(SizeTokens.IconSmall)
+                                        .background(
+                                            color = Color.Black.copy(alpha = 0.5f),
+                                            shape = ShapeTokens.ExtraSmall,
+                                        ).padding(2.dp),
                             )
                         }
                     }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -133,12 +134,26 @@ fun Main.Common.Component.ComicActionsSheet(
         ListItem(
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Rounded.VisibilityOff,
+                    imageVector = if (comic.directory.hidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                     contentDescription = null,
                 )
             },
-            headlineContent = { Text(text = stringResource(id = R.string.action_hide)) },
-            supportingContent = { Text(text = stringResource(id = R.string.description_hide)) },
+            headlineContent = {
+                Text(
+                    text =
+                        stringResource(
+                            id = if (comic.directory.hidden) R.string.action_unhide else R.string.action_hide,
+                        ),
+                )
+            },
+            supportingContent = {
+                Text(
+                    text =
+                        stringResource(
+                            id = if (comic.directory.hidden) R.string.description_unhide else R.string.description_hide,
+                        ),
+                )
+            },
             modifier = Modifier.clickable { showHideDialog = true },
         )
 
@@ -185,10 +200,16 @@ fun Main.Common.Component.ComicActionsSheet(
         Acerola.Component.Dialog(
             show = true,
             onDismiss = { showHideDialog = false },
-            title = stringResource(id = R.string.dialog_hide_title),
+            title =
+                stringResource(
+                    id = if (comic.directory.hidden) R.string.dialog_unhide_title else R.string.dialog_hide_title,
+                ),
             confirmButtonContent = {
                 Acerola.Component.DialogButton(
-                    text = stringResource(id = R.string.action_hide),
+                    text =
+                        stringResource(
+                            id = if (comic.directory.hidden) R.string.action_unhide else R.string.action_hide,
+                        ),
                     onClick = {
                         showHideDialog = false
                         onHide()
@@ -206,7 +227,14 @@ fun Main.Common.Component.ComicActionsSheet(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
-            content = { Text(text = stringResource(id = R.string.dialog_hide_message)) },
+            content = {
+                Text(
+                    text =
+                        stringResource(
+                            id = if (comic.directory.hidden) R.string.dialog_unhide_message else R.string.dialog_hide_message,
+                        ),
+                )
+            },
         )
     }
 
@@ -249,6 +277,7 @@ private fun ComicCategorySheet(
 ) {
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
+        isScrollable = false,
     ) {
         Text(
             text = stringResource(id = R.string.action_bookmark),

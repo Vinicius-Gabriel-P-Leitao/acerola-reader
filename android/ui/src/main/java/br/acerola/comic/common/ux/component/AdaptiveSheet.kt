@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
@@ -34,12 +35,19 @@ import br.acerola.comic.common.ux.tokens.SizeTokens
 @Composable
 fun Acerola.Component.AdaptiveSheet(
     onDismissRequest: () -> Unit,
+    isScrollable: Boolean = true,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val scrollModifier = if (isScrollable) {
+        Modifier.verticalScroll(rememberScrollState())
+    } else {
+        Modifier
+    }
 
     if (isLandscape) {
         Dialog(
@@ -70,7 +78,7 @@ fun Acerola.Component.AdaptiveSheet(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .verticalScroll(rememberScrollState()),
+                                .then(scrollModifier),
                     ) {
                         content()
                     }
@@ -88,7 +96,8 @@ fun Acerola.Component.AdaptiveSheet(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                        .heightIn(max = configuration.screenHeightDp.dp)
+                        .then(scrollModifier),
             ) {
                 content()
             }

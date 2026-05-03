@@ -30,6 +30,7 @@ fun Acerola.Component.LanguagePicker(
     if (showSheet) {
         Acerola.Component.AdaptiveSheet(
             onDismissRequest = { showSheet = false },
+            isScrollable = false,
         ) {
             LazyColumn(modifier = Modifier.padding(bottom = 32.dp)) {
                 items(LanguageMapper.getAllCodes()) { code ->
