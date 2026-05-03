@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+// TODO: Esse model pode ser deletado já que o app não vai mais baixar coisas do mangadex
 @Entity(
     tableName = "chapter_page",
     foreignKeys = [
