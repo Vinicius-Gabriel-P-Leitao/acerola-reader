@@ -2,7 +2,11 @@ package br.acerola.comic.adapter.library
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryWriteGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicRebuildGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.adapter.library.engine.ChapterArchiveEngine
 import br.acerola.comic.adapter.library.engine.ComicDirectoryEngine
@@ -28,6 +32,26 @@ abstract class DirectoryModule {
     @Singleton
     @DirectoryEngine
     abstract fun bindMangaDirectoryRepository(impl: ComicDirectoryEngine): ComicGateway<ComicDirectoryDto>
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindMangaDirectorySingleSync(impl: ComicDirectoryEngine): ComicSingleSyncGateway
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindMangaDirectoryLibraryScan(impl: ComicDirectoryEngine): ComicLibraryScanGateway
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindMangaDirectoryRebuild(impl: ComicDirectoryEngine): ComicRebuildGateway
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindMangaDirectoryReadOnly(impl: ComicDirectoryEngine): ComicReadOnlyGateway<ComicDirectoryDto>
 
     @Binds
     @Singleton

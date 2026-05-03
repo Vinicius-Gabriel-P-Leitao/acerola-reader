@@ -52,7 +52,14 @@ class LibrarySyncWorkerTest {
                         appContext: Context,
                         workerClassName: String,
                         workerParameters: WorkerParameters,
-                    ) = LibrarySyncWorker(appContext, workerParameters, repository, notificationHelper)
+                    ) = LibrarySyncWorker(
+                        appContext,
+                        workerParameters,
+                        singleSync = repository,
+                        libraryScan = repository,
+                        rebuildSync = repository,
+                        notificationHelper = notificationHelper,
+                    )
                 },
             ).build()
     }

@@ -28,7 +28,7 @@ class SyncLibraryUseCaseTest {
         every { repository.progress } returns MutableStateFlow(value = 0)
         every { repository.isIndexing } returns MutableStateFlow(value = false)
 
-        useCase = SyncLibraryUseCase(repository)
+        useCase = SyncLibraryUseCase(scanGateway = repository, rebuildGateway = repository)
     }
 
     @Test

@@ -1,6 +1,7 @@
 package br.acerola.comic.adapter.metadata.comicinfo
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.comicinfo.engine.ComicInfoChapterEngine
 import br.acerola.comic.adapter.metadata.comicinfo.engine.ComicInfoComicEngine
@@ -30,7 +31,7 @@ abstract class ComicInfoModule {
     @Binds
     @Singleton
     @ComicInfoEngine
-    abstract fun bindComicInfoMangaRepository(impl: ComicInfoComicEngine): br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
+    abstract fun bindComicInfoMangaRepository(impl: ComicInfoComicEngine): ComicSingleSyncGateway
 
     @Binds
     @Singleton

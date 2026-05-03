@@ -1,9 +1,9 @@
 package br.acerola.comic.usecase
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
-import br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSyncStatusGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
 import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
@@ -30,15 +30,13 @@ annotation class ComicInfoCase
 object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
-    fun provideSyncLibraryUseCase(
-        @ComicInfoEngine repository: ComicSyncGateway,
-    ): SyncLibraryUseCase = SyncLibraryUseCase(repository)
+    fun provideSyncLibraryUseCase(): SyncLibraryUseCase = SyncLibraryUseCase()
 
     @Provides
     @ComicInfoCase
     fun provideObserveLibraryUseCase(
         @br.acerola.comic.adapter.library.SummaryEngine summaryRepo: ComicReadOnlyGateway<ComicSummaryDto>,
-        @ComicInfoEngine syncOps: ComicSyncGateway,
+        @ComicInfoEngine syncOps: ComicSingleSyncGateway,
     ): ObserveLibraryUseCase<ComicSummaryDto> =
         ObserveLibraryUseCase(
             comicRepository = summaryRepo,
@@ -48,7 +46,7 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideRescanComicUseCase(
-        @ComicInfoEngine syncOps: ComicSyncGateway,
+        @ComicInfoEngine syncOps: ComicSingleSyncGateway,
     ): RescanComicUseCase =
         RescanComicUseCase(
             comicRepository = syncOps,
@@ -65,10 +63,10 @@ object ComicInfoCaseModule {
 
     @Provides
     fun provideSyncComicMetadataUseCase(
-        @AnilistEngine anilistMangaRepo: ComicGateway<ComicMetadataDto>,
-        @MangadexEngine mangadexMangaRepo: ComicGateway<ComicMetadataDto>,
+        @AnilistEngine anilistMangaRepo: ComicSingleSyncGateway,
+        @MangadexEngine mangadexMangaRepo: ComicSingleSyncGateway,
         @MangadexEngine mangadexChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>,
-        @ComicInfoEngine comicInfoMangaRepo: ComicSyncGateway,
+        @ComicInfoEngine comicInfoMangaRepo: ComicSingleSyncGateway,
         @ComicInfoEngine comicInfoChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>,
     ): SyncComicMetadataUseCase =
         SyncComicMetadataUseCase(

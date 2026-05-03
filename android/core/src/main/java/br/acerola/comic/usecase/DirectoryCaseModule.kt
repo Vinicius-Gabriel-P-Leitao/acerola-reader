@@ -2,6 +2,10 @@ package br.acerola.comic.usecase
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicRebuildGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.dto.archive.ChapterPageDto
@@ -28,23 +32,25 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideSyncLibraryUseCase(
-        @DirectoryEngine repository: ComicGateway<ComicDirectoryDto>,
-    ): SyncLibraryUseCase = SyncLibraryUseCase(repository)
+        @DirectoryEngine scanGateway: ComicLibraryScanGateway,
+        @DirectoryEngine rebuildGateway: ComicRebuildGateway,
+    ): SyncLibraryUseCase = SyncLibraryUseCase(scanGateway = scanGateway, rebuildGateway = rebuildGateway)
 
     @Provides
     @DirectoryCase
     fun provideObserveDirectoryUseCase(
-        @DirectoryEngine repository: ComicGateway<ComicDirectoryDto>,
+        @DirectoryEngine repository: ComicReadOnlyGateway<ComicDirectoryDto>,
+        @DirectoryEngine syncStatus: ComicSingleSyncGateway,
     ): ObserveLibraryUseCase<ComicDirectoryDto> =
         ObserveLibraryUseCase(
             comicRepository = repository,
-            syncGateway = repository,
+            syncGateway = syncStatus,
         )
 
     @Provides
     @DirectoryCase
     fun provideRescanComicUseCase(
-        @DirectoryEngine comicOps: ComicGateway<ComicDirectoryDto>,
+        @DirectoryEngine comicOps: ComicSingleSyncGateway,
     ): RescanComicUseCase =
         RescanComicUseCase(
             comicRepository = comicOps,

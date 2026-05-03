@@ -1,7 +1,9 @@
 package br.acerola.comic.adapter.metadata.mangadex
 
 import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.mangadex.engine.MangadexChapterEngine
@@ -33,7 +35,17 @@ abstract class MangadexModule {
     @Binds
     @Singleton
     @MangadexEngine
-    abstract fun bindMangadexMangaRepository(impl: MangadexComicEngine): ComicGateway<ComicMetadataDto>
+    abstract fun bindMangadexSingleSync(impl: MangadexComicEngine): ComicSingleSyncGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexLibraryScan(impl: MangadexComicEngine): ComicLibraryScanGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexReadOnly(impl: MangadexComicEngine): ComicReadOnlyGateway<ComicMetadataDto>
 
     @Binds
     @Singleton

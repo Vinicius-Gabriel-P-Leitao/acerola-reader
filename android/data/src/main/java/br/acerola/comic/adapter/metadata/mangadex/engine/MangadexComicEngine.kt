@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.mangadex.MangadexSource
@@ -52,7 +54,9 @@ class MangadexComicEngine
         private val metadataExportService: MetadataExporter,
         @param:ApplicationContext private val context: Context,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
-    ) : ComicGateway<ComicMetadataDto> {
+    ) : ComicSingleSyncGateway,
+    ComicLibraryScanGateway,
+    ComicReadOnlyGateway<ComicMetadataDto> {
         @Inject
         @MangadexSource
         lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>

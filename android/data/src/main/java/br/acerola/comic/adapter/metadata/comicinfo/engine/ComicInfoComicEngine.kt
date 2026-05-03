@@ -4,7 +4,7 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoSourceQualifier
@@ -42,7 +42,7 @@ class ComicInfoComicEngine
         private val comicMetadataDao: ComicMetadataDao,
         private val comicInfoSourceDao: ComicInfoSourceDao,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
-    ) : ComicSyncGateway {
+    ) : ComicSingleSyncGateway {
         @Inject
         @ComicInfoSourceQualifier
         lateinit var comicInfoSourceService: MetadataProvider<ComicMetadataDto, String>
