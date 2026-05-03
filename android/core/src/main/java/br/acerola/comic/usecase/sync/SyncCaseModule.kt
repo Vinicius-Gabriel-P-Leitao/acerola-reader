@@ -1,23 +1,28 @@
 package br.acerola.comic.usecase.sync
 
+import br.acerola.comic.sync.LibrarySyncScheduler
+import br.acerola.comic.sync.LibrarySyncStatusRepository
+import br.acerola.comic.sync.WorkManagerLibrarySyncScheduler
+import br.acerola.comic.sync.WorkManagerLibrarySyncStatusRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object SyncCaseModule {
-    @Provides
-    @Singleton
-    fun provideSyncLibraryUseCase(
-        useCase: SyncLibraryUseCase
-    ): SyncLibraryUseCase = useCase
+abstract class SyncCaseModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideSyncMetadataUseCase(
-        useCase: SyncMetadataUseCase
-    ): SyncMetadataUseCase = useCase
+    abstract fun bindLibrarySyncScheduler(
+        scheduler: WorkManagerLibrarySyncScheduler
+    ): LibrarySyncScheduler
+
+    @Binds
+    @Singleton
+    abstract fun bindLibrarySyncStatusRepository(
+        repository: WorkManagerLibrarySyncStatusRepository
+    ): LibrarySyncStatusRepository
 }
