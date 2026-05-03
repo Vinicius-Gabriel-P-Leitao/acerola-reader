@@ -41,7 +41,7 @@ class ChapterNameProcessor
             val transformedPattern = transformPattern(pattern.trim(), type)
 
             return TemplateValidator
-                .validateCustomTemplate(transformedPattern)
+                .validateCustomTemplate(transformedPattern, type)
                 .flatMap {
                     val entity = createCustomTemplate(label.trim(), transformedPattern, type)
                     val insertedId = dao.insert(entity)
@@ -81,7 +81,7 @@ class ChapterNameProcessor
             val transformedPattern = transformPattern(pattern.trim(), type)
 
             return TemplateValidator
-                .validateCustomTemplate(transformedPattern)
+                .validateCustomTemplate(transformedPattern, type)
                 .flatMap {
                     val updated = existing.copy(label = label.trim(), pattern = transformedPattern, type = type)
                     try {

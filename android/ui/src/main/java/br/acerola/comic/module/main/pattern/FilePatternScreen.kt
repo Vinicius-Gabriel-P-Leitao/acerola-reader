@@ -147,9 +147,9 @@ private fun FilePatternLayout(
                     contentPadding =
                         PaddingValues(
                             start = SpacingTokens.Large,
-                            top = SpacingTokens.Large,
+                            top = SpacingTokens.None,
                             end = SpacingTokens.Large,
-                            bottom = 88.dp,
+                            bottom = SpacingTokens.SuperGiant,
                         ),
                 ) {
                     groupedTemplates.forEach { (type, templates) ->
@@ -163,7 +163,7 @@ private fun FilePatternLayout(
                                 text = headerText,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = SpacingTokens.Large, bottom = SpacingTokens.Small),
+                                modifier = Modifier.padding(top = SpacingTokens.Medium, bottom = SpacingTokens.Small),
                             )
                         }
                         items(

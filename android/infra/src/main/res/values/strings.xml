@@ -57,6 +57,7 @@
     <string name="error_template_malformed_macro">Macro malformada: chave de fechamento ausente.</string>
     <string name="error_template_invalid_macro">Macro inválida: %1$s</string>
     <string name="error_template_chapter_required">Exatamente um {chapter} é obrigatório.</string>
+    <string name="error_template_volume_required">Exatamente um {volume} é obrigatório.</string>
     <string name="error_template_decimal_duplicate">Apenas um {decimal} é permitido.</string>
     <string name="error_template_extension_required">Exatamente um {extension} é obrigatório.</string>
     <string name="error_template_chapter_before_decimal">{chapter} deve vir antes de {decimal}.</string>

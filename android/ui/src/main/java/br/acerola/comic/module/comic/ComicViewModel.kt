@@ -22,6 +22,7 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.type.UiText
 import br.acerola.comic.ui.R
+import br.acerola.comic.service.cache.ChapterCacheHandler
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
@@ -64,6 +65,7 @@ class ComicViewModel
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
         private val extractVolumeCoverUseCase: ExtractVolumeCoverUseCase,
         private val extractAllVolumeCoversUseCase: ExtractAllVolumeCoversUseCase,
+        private val cacheHandler: ChapterCacheHandler,
     ) : ViewModel() {
         private val selectedDirectoryId = MutableStateFlow<Long?>(null)
         private val selectedComicId = MutableStateFlow<Long?>(null)
@@ -395,6 +397,7 @@ class ComicViewModel
                     },
                     ifRight = {
                         AcerolaLogger.i(TAG, "Successfully extracted volume cover for volume $volumeId", LogSource.VIEWMODEL)
+                        cacheHandler.clear()
                     },
                 )
             }
@@ -410,6 +413,7 @@ class ComicViewModel
                     },
                     ifRight = {
                         AcerolaLogger.i(TAG, "Successfully extracted all volume covers", LogSource.VIEWMODEL)
+                        cacheHandler.clear()
                     },
                 )
             }

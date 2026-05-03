@@ -13,4 +13,6 @@ object SpacingTokens {
     val Huge = 24.dp
     val Giant = 32.dp
     val ExtraGiant = 64.dp
+    val SuperGiant = 96.dp
+    val UltraGiant = 128.dp
 }

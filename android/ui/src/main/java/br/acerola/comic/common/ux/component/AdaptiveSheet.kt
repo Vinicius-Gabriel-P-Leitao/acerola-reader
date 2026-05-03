@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -63,7 +66,12 @@ fun Acerola.Component.AdaptiveSheet(
                     contentColor = contentColor,
                     shape = ShapeTokens.Large.copy(topEnd = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
+                    ) {
                         content()
                     }
                 }
@@ -72,11 +80,18 @@ fun Acerola.Component.AdaptiveSheet(
     } else {
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
-            sheetState = rememberModalBottomSheetState(),
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = containerColor,
             contentColor = contentColor,
         ) {
-            content()
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+            ) {
+                content()
+            }
         }
     }
 }

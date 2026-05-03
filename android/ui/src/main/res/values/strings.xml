@@ -222,7 +222,7 @@
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
     <string name="label_template_pattern">Padrão (ex: Cap. {chapter})</string>
     <string name="placeholder_template_pattern">{chapter}, {decimal}</string>
-    <string name="description_template_macros">{volume} representa o número do volume (usado para organização em pastas). {chapter} é o número do capítulo (obrigatório). {decimal} indica variação decimal do capítulo (ex: .5). Utilize * como wildcard para ignorar qualquer trecho de texto.</string>
+    <string name="description_template_macros">{volume} representa o número do volume (obrigatório no modo Volume). {chapter} é o número do capítulo (obrigatório no modo Capítulo). {decimal} indica variação decimal do capítulo (ex: .5). Utilize * como wildcard para ignorar qualquer trecho de texto.</string>
     <string name="action_add">Adicionar</string>
     <string name="action_save">Salvar</string>
     <string name="action_cancel">Cancelar</string>
