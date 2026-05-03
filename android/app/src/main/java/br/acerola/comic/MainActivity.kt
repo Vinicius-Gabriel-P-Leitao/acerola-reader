@@ -94,10 +94,11 @@ class MainActivity(
     override fun BottomBar(navController: NavHostController) {
         val currentEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentEntry?.destination?.route
-        val hiddenRoutes = setOf(
-            getString(R.string.navigation_launcher),
-            getString(Destination.TUTORIAL.route),
-        )
+        val hiddenRoutes =
+            setOf(
+                getString(R.string.navigation_launcher),
+                getString(Destination.TUTORIAL.route),
+            )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.BottomBar(navController)
         }
@@ -107,10 +108,11 @@ class MainActivity(
     override fun SideBar(navController: NavHostController) {
         val currentEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentEntry?.destination?.route
-        val hiddenRoutes = setOf(
-            getString(R.string.navigation_launcher),
-            getString(Destination.TUTORIAL.route),
-        )
+        val hiddenRoutes =
+            setOf(
+                getString(R.string.navigation_launcher),
+                getString(Destination.TUTORIAL.route),
+            )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.SideBar(navController)
         }
@@ -127,11 +129,12 @@ class MainActivity(
 
         LaunchedEffect(isCompleted) {
             val completed = isCompleted ?: return@LaunchedEffect
-            val destination = if (completed) {
-                context.getString(Destination.HOME.route)
-            } else {
-                context.getString(Destination.TUTORIAL.route)
-            }
+            val destination =
+                if (completed) {
+                    context.getString(Destination.HOME.route)
+                } else {
+                    context.getString(Destination.TUTORIAL.route)
+                }
             navController.navigate(destination) {
                 popUpTo(context.getString(R.string.navigation_launcher)) { inclusive = true }
             }

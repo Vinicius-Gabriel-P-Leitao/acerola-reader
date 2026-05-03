@@ -219,7 +219,7 @@ fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
                 chapter = local.chapterSort, // Fallback to local chapter number if no metadata found
                 pageCount = null,
                 scanlation = "",
-                source = emptyList()
+                source = emptyList(),
             )
         }
 
@@ -275,7 +275,7 @@ fun ChapterPageDto.toCombinedRegularDto(
                 chapter = local.chapterSort,
                 pageCount = null,
                 scanlation = "",
-                source = emptyList()
+                source = emptyList(),
             )
         }
 

@@ -226,7 +226,11 @@ class ComicViewModel
                             }
                         } else {
                             val metadataCount = dto.remoteInfo?.items?.size ?: 0
-                            AcerolaLogger.v(TAG, "  > Total Chapters: ${dto.archive.items.size}/${dto.archive.total} | Metadata: $metadataCount/${dto.archive.items.size}", LogSource.VIEWMODEL)
+                            AcerolaLogger.v(
+                                TAG,
+                                "  > Total Chapters: ${dto.archive.items.size}/${dto.archive.total} | Metadata: $metadataCount/${dto.archive.items.size}",
+                                LogSource.VIEWMODEL,
+                            )
                         }
 
                         dto

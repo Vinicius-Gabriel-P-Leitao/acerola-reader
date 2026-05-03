@@ -13,7 +13,6 @@ import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
 import br.acerola.comic.module.comic.component.CoverVolumeCard
 import br.acerola.comic.module.comic.component.VolumeCard
-import br.acerola.comic.util.sort.normalizeSort
 
 fun Comic.Template.chapterSection(
     scope: LazyListScope,
@@ -65,9 +64,13 @@ fun Comic.Template.chapterSection(
 
             if (isExpanded) {
                 group.items.forEachIndexed { index, chapter ->
-                    val remoteInfo = chapters.remoteInfo?.items?.getOrNull(index)?.takeIf { it.id != -1L }
+                    val remoteInfo =
+                        chapters.remoteInfo
+                            ?.items
+                            ?.getOrNull(index)
+                            ?.takeIf { it.id != -1L }
                     scope.item(
-                        key = "vol_${group.volume.id}_ch_${chapter.id}",
+                        key = "vol_${group.volume.id}_ch_${chapter.id}_$index",
                         contentType = "chapter_item",
                     ) {
                         Comic.Component.ChapterItem(
@@ -92,10 +95,14 @@ fun Comic.Template.chapterSection(
     } else {
         chapters.archive.items.forEachIndexed { index, chapter ->
             scope.item(
-                key = "ch_${chapter.id}",
+                key = "ch_${chapter.id}_$index",
                 contentType = "chapter_item",
             ) {
-                val remoteInfo = chapters.remoteInfo?.items?.getOrNull(index)?.takeIf { it.id != -1L }
+                val remoteInfo =
+                    chapters.remoteInfo
+                        ?.items
+                        ?.getOrNull(index)
+                        ?.takeIf { it.id != -1L }
                 Comic.Component.ChapterItem(
                     chapterFileDto = chapter,
                     chapterRemoteInfoDto = remoteInfo,

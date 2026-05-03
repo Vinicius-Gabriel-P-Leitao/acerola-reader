@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -66,12 +65,13 @@ class ObserveCombinedChaptersUseCaseTest {
             Unit
         }
 
-        useCase = ObserveCombinedChaptersUseCase(
-            volumeGateway = volumeGateway,
-            localRepository = localRepository,
-            remoteRepository = remoteRepository,
-            cacheHandler = cacheHandler,
-        )
+        useCase =
+            ObserveCombinedChaptersUseCase(
+                volumeGateway = volumeGateway,
+                localRepository = localRepository,
+                remoteRepository = remoteRepository,
+                cacheHandler = cacheHandler,
+            )
     }
 
     /**
@@ -141,7 +141,13 @@ class ObserveCombinedChaptersUseCaseTest {
 
             assertNotNull(firstResult)
             assertEquals(1, firstResult!!.remoteInfo?.items?.size ?: 0)
-            assertEquals(-1L, firstResult.remoteInfo?.items?.get(0)?.id)
+            assertEquals(
+                -1L,
+                firstResult.remoteInfo
+                    ?.items
+                    ?.get(0)
+                    ?.id,
+            )
 
             // Second call: remoteId=42L → must NOT hit the cache from the first call
             // Bug: the same cache key was generated for both calls, serving empty metadata
@@ -173,8 +179,9 @@ class ObserveCombinedChaptersUseCaseTest {
         runTest {
             val localChapter = ChapterFileDto(id = 1L, name = "Ch 1", path = "/ch1.cbz", chapterSort = "1")
             val localPage = ChapterPageDto(items = listOf(localChapter), pageSize = 20, page = 0, total = 1)
-            
-            val remoteChapter = ChapterFeedDto(id = 10L, title = "Remote Title", chapter = "1", pageCount = 20, scanlation = "Group", source = emptyList())
+
+            val remoteChapter =
+                ChapterFeedDto(id = 10L, title = "Remote Title", chapter = "1", pageCount = 20, scanlation = "Group", source = emptyList())
             val emptyRemotePage = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 20, page = 0, total = 0)
             val fullRemotePage = ChapterRemoteInfoPageDto(items = listOf(remoteChapter), pageSize = 20, page = 0, total = 1)
 
@@ -191,23 +198,32 @@ class ObserveCombinedChaptersUseCaseTest {
 
             // 1. First emission with empty remote metadata
             val results = mutableListOf<ChapterDto?>()
-            val job = launch {
-                useCase.observeCombined(
-                    comicId = 1L,
-                    remoteId = 42L,
-                    sort = sort,
-                    page = 0,
-                    pageSize = 20,
-                    viewMode = VolumeViewType.CHAPTER,
-                    volumeOverrides = emptyMap(),
-                ).collect { results.add(it) }
-            }
+            val job =
+                launch {
+                    useCase
+                        .observeCombined(
+                            comicId = 1L,
+                            remoteId = 42L,
+                            sort = sort,
+                            page = 0,
+                            pageSize = 20,
+                            viewMode = VolumeViewType.CHAPTER,
+                            volumeOverrides = emptyMap(),
+                        ).collect { results.add(it) }
+                }
 
             // Wait for first emission
             runCurrent()
             assertEquals(1, results.size)
             assertEquals(1, results[0]?.remoteInfo?.items?.size ?: 0)
-            assertEquals(-1L, results[0]?.remoteInfo?.items?.get(0)?.id)
+            assertEquals(
+                -1L,
+                results[0]
+                    ?.remoteInfo
+                    ?.items
+                    ?.get(0)
+                    ?.id,
+            )
 
             // 2. Simulate remote sync completion by emitting new data into remoteFlow
             remoteFlow.value = fullRemotePage
@@ -217,8 +233,22 @@ class ObserveCombinedChaptersUseCaseTest {
             // BUT if the cache bug exists, it will return the cached empty result!
             assertEquals(2, results.size)
             assertEquals(1, results[1]?.remoteInfo?.items?.size ?: 0)
-            assertEquals(10L, results[1]?.remoteInfo?.items?.get(0)?.id)
-            assertEquals("Remote Title", results[1]?.remoteInfo?.items?.first()?.title)
+            assertEquals(
+                10L,
+                results[1]
+                    ?.remoteInfo
+                    ?.items
+                    ?.get(0)
+                    ?.id,
+            )
+            assertEquals(
+                "Remote Title",
+                results[1]
+                    ?.remoteInfo
+                    ?.items
+                    ?.first()
+                    ?.title,
+            )
 
             job.cancel()
         }
