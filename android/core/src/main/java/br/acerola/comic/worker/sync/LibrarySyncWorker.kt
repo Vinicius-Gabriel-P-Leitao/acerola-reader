@@ -10,11 +10,13 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicRebuildGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.data.R
-import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.contract.SyncType
 import br.acerola.comic.worker.contract.WorkerContract
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -28,7 +30,8 @@ class LibrarySyncWorker
     constructor(
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
-        @param:DirectoryEngine private val repository: ComicGateway<ComicDirectoryDto>,
+        private val syncLibraryUseCase: br.acerola.comic.usecase.sync.SyncLibraryUseCase,
+        @param:DirectoryEngine private val progressGateway: ComicSingleSyncGateway,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
         companion object {
@@ -44,13 +47,14 @@ class LibrarySyncWorker
         @RequiresApi(Build.VERSION_CODES.Q)
         override suspend fun doWork(): Result =
             coroutineScope {
-                val syncType = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_INCREMENTAL
+                val syncTypeString = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_INCREMENTAL
                 val baseUriString = inputData.getString(KEY_BASE_URI)
                 val comicId = inputData.getLong(KEY_MANGA_ID, -1L)
                 val baseUri = baseUriString?.toUri()
+                val syncType = SyncType.from(syncTypeString)
 
                 val title =
-                    when (syncType) {
+                    when (syncTypeString) {
                         SYNC_TYPE_INCREMENTAL -> context.getString(R.string.sync_library_title_incremental)
                         SYNC_TYPE_REFRESH -> context.getString(R.string.sync_library_title_refresh)
                         SYNC_TYPE_REBUILD -> context.getString(R.string.sync_library_title_rebuild)
@@ -71,29 +75,17 @@ class LibrarySyncWorker
                     ),
                 )
 
+                // Usamos progressGateway para observar o progresso
                 val progressJob =
                     launch {
-                        repository.progress.collectLatest { progress ->
+                        progressGateway.progress.collectLatest { progress ->
                             notificationHelper.updateProgress(builder, progress)
                             setProgress(workDataOf(WorkerContract.KEY_PROGRESS to progress))
                         }
                     }
 
                 try {
-                    val resultEither =
-                        when (syncType) {
-                            SYNC_TYPE_INCREMENTAL -> repository.incrementalScan(baseUri)
-                            SYNC_TYPE_REFRESH -> repository.refreshLibrary(baseUri)
-                            SYNC_TYPE_REBUILD -> repository.rebuildLibrary(baseUri)
-                            SYNC_TYPE_SPECIFIC ->
-                                if (comicId != -1L) {
-                                    repository.refreshManga(comicId, baseUri)
-                                } else {
-                                    progressJob.cancel()
-                                    return@coroutineScope Result.failure(workDataOf(WorkerContract.KEY_ERROR to "Comic ID not found"))
-                                }
-                            else -> repository.incrementalScan(baseUri)
-                        }
+                    val resultEither = syncLibraryUseCase.execute(syncType, comicId, baseUri)
 
                     progressJob.cancel()
 

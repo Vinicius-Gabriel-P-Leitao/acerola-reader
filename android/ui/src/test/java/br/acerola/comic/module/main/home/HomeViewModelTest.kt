@@ -1,7 +1,6 @@
 package br.acerola.comic.module.main.home
 
 import android.content.Context
-import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
@@ -44,7 +43,7 @@ class HomeViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val workManager = mockk<WorkManager>(relaxed = true)
+    private val statusRepository = mockk<br.acerola.comic.sync.LibrarySyncStatusRepository>(relaxed = true)
     private val historyGateway = mockk<HistoryGateway>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
     private val mangadexRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
@@ -108,7 +107,7 @@ class HomeViewModelTest {
 
     private fun createViewModel() =
         HomeViewModel(
-            workManager = workManager,
+            statusRepository = statusRepository,
             observeHistoryUseCase = observeHistoryUseCase,
             context = context,
             mangadexObserve = mangadexObserve,

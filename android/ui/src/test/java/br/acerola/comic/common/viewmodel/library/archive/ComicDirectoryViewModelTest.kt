@@ -6,7 +6,8 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.config.permission.FileSystemAccessManager
 import br.acerola.comic.dto.archive.ChapterPageDto
@@ -43,7 +44,8 @@ class ComicDirectoryViewModelTest {
     private val coverFromChapterUseCase = mockk<CoverFromChapterUseCase>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
-    private val chapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
+    private val readGateway = mockk<ChapterReadGateway<ChapterPageDto>>(relaxed = true)
+    private val statusGateway = mockk<ChapterSyncStatusGateway>(relaxed = true)
     private val comicRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
 
     private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>
@@ -61,10 +63,10 @@ class ComicDirectoryViewModelTest {
         every { comicRepo.isIndexing } returns MutableStateFlow(false)
         every { comicRepo.progress } returns MutableStateFlow(-1)
 
-        every { chapterRepo.isIndexing } returns MutableStateFlow(false)
-        every { chapterRepo.progress } returns MutableStateFlow(-1)
+        every { statusGateway.isIndexing } returns MutableStateFlow(false)
+        every { statusGateway.progress } returns MutableStateFlow(-1)
 
-        observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
+        observeChaptersUseCase = ObserveChaptersUseCase(readGateway = readGateway, syncStatusGateway = statusGateway)
         observeLibraryUseCase = ObserveLibraryUseCase(comicRepository = comicRepo)
 
         viewModel = createViewModel()

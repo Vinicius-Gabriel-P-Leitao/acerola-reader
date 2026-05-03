@@ -1,10 +1,8 @@
 package br.acerola.comic.usecase.metadata
 
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,15 +14,15 @@ import org.junit.Before
 import org.junit.Test
 
 class SyncComicMetadataUseCaseTest {
-    @MockK lateinit var anilistMangaRepo: ComicGateway<ComicMetadataDto>
+    @MockK lateinit var anilistMangaRepo: ComicSingleSyncGateway
 
-    @MockK lateinit var mangadexMangaRepo: ComicGateway<ComicMetadataDto>
+    @MockK lateinit var mangadexMangaRepo: ComicSingleSyncGateway
 
-    @MockK lateinit var mangadexChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>
+    @MockK lateinit var mangadexChapterRepo: ChapterSyncGateway
 
-    @MockK lateinit var comicInfoMangaRepo: ComicGateway<ComicMetadataDto>
+    @MockK lateinit var comicInfoMangaRepo: ComicSingleSyncGateway
 
-    @MockK lateinit var comicInfoChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>
+    @MockK lateinit var comicInfoChapterRepo: ChapterSyncGateway
 
     private lateinit var useCase: SyncComicMetadataUseCase
 

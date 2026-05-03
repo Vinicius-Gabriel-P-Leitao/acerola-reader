@@ -4,7 +4,8 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
@@ -26,17 +27,18 @@ class ChapterMetadataViewModelTest {
     val coroutineRule = MainDispatcherRule()
 
     private val workManager = mockk<WorkManager>(relaxed = true)
-    private val chapterRepo = mockk<ChapterGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
+    private val readGateway = mockk<ChapterReadGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
+    private val statusGateway = mockk<ChapterSyncStatusGateway>(relaxed = true)
 
     private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>
     private lateinit var viewModel: ChapterMetadataViewModel
 
     @Before
     fun setup() {
-        every { chapterRepo.isIndexing } returns MutableStateFlow(false)
-        every { chapterRepo.progress } returns MutableStateFlow(-1)
+        every { statusGateway.isIndexing } returns MutableStateFlow(false)
+        every { statusGateway.progress } returns MutableStateFlow(-1)
 
-        observeChaptersUseCase = ObserveChaptersUseCase(chapterRepo)
+        observeChaptersUseCase = ObserveChaptersUseCase(readGateway = readGateway, syncStatusGateway = statusGateway)
         viewModel = ChapterMetadataViewModel(workManager, observeChaptersUseCase)
     }
 
@@ -67,11 +69,11 @@ class ChapterMetadataViewModelTest {
                     total = 2,
                 )
 
-            coEvery { chapterRepo.getChapterPage(any(), any(), any(), any(), any(), any()) } returns remotePage
+            coEvery { readGateway.getChapterPage(any(), any(), any(), any(), any(), any()) } returns remotePage
 
             viewModel.init(1L, ChapterRemoteInfoPageDto(emptyList(), 20, 0, 2))
             viewModel.loadPage(0)
 
-            coVerify { chapterRepo.getChapterPage(1L, 2, 0, 20, "NUMBER", true) }
+            coVerify { readGateway.getChapterPage(1L, 2, 0, 20, "NUMBER", true) }
         }
 }

@@ -1,6 +1,7 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
@@ -15,7 +16,6 @@ import br.acerola.comic.local.translator.ui.toCombinedRegularDto
 import br.acerola.comic.local.translator.ui.toCombinedVolumeDto
 import br.acerola.comic.service.cache.ChapterCacheHandler
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
@@ -29,12 +29,33 @@ class ObserveCombinedChaptersUseCase
     @Inject
     constructor(
         @param:DirectoryEngine private val volumeGateway: VolumeGateway,
-        @param:DirectoryEngine private val localRepository: ChapterGateway<ChapterPageDto>,
-        @param:MangadexEngine private val remoteRepository: ChapterGateway<ChapterRemoteInfoPageDto>,
+        @param:DirectoryEngine private val localReadGateway: ChapterReadGateway<ChapterPageDto>,
+        @param:DirectoryEngine private val localSyncStatusGateway: ChapterSyncStatusGateway,
+        @param:MangadexEngine private val remoteSyncStatusGateway: ChapterSyncStatusGateway,
+        @param:MangadexEngine private val remoteReadGateway: ChapterReadGateway<ChapterRemoteInfoPageDto>,
         private val cacheHandler: ChapterCacheHandler,
     ) {
-        val progress: StateFlow<Int> get() = localRepository.progress
-        val isIndexing: StateFlow<Boolean> get() = localRepository.isIndexing
+        val progress: Flow<Int> =
+            combine(
+                localSyncStatusGateway.progress,
+                remoteSyncStatusGateway.progress,
+                localSyncStatusGateway.isIndexing,
+                remoteSyncStatusGateway.isIndexing,
+            ) { localProg, remoteProg, localBusy, remoteBusy ->
+                when {
+                    localBusy -> localProg
+                    remoteBusy -> remoteProg
+                    else -> -1
+                }
+            }
+
+        val isIndexing: Flow<Boolean> =
+            combine(
+                localSyncStatusGateway.isIndexing,
+                remoteSyncStatusGateway.isIndexing,
+            ) { localBusy, remoteBusy ->
+                localBusy || remoteBusy
+            }
 
         fun observeCombined(
             comicId: Long,
@@ -57,7 +78,7 @@ class ObserveCombinedChaptersUseCase
                 )
 
             val localFlow =
-                localRepository
+                localReadGateway
                     .observeChapters(comicId, sort.type.name, sort.direction == SortDirection.ASCENDING)
                     .filter { it.pageSize != -1 }
 
@@ -68,7 +89,7 @@ class ObserveCombinedChaptersUseCase
 
             val remoteFlow =
                 if (remoteId != null) {
-                    remoteRepository
+                    remoteReadGateway
                         .observeChapters(remoteId, sort.type.name, sort.direction == SortDirection.ASCENDING)
                         .filter { it.pageSize != -1 }
                 } else {

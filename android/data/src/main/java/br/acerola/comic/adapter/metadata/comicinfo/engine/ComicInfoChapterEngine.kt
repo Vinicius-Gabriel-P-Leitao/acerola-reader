@@ -3,11 +3,10 @@ package br.acerola.comic.adapter.metadata.comicinfo.engine
 import android.database.sqlite.SQLiteException
 import android.net.Uri
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoSourceQualifier
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
@@ -37,7 +36,7 @@ class ComicInfoChapterEngine
         private val comicMetadataDao: ComicMetadataDao,
         private val chapterMetadataDao: ChapterMetadataDao,
         private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
-    ) : ChapterGateway<ChapterRemoteInfoPageDto> {
+    ) : ChapterSyncGateway {
         @Inject
         @ComicInfoSourceQualifier
         lateinit var comicInfoSourceService: MetadataProvider<ChapterMetadataDto, String>
@@ -113,24 +112,6 @@ class ComicInfoChapterEngine
                         _progress.value = -1
                     }
             }
-
-        override fun observeChapters(
-            comicId: Long,
-            sortType: String,
-            isAscending: Boolean,
-        ): StateFlow<ChapterRemoteInfoPageDto> =
-            MutableStateFlow(
-                value = ChapterRemoteInfoPageDto(items = emptyList(), pageSize = 0, page = 0, total = 0),
-            ).asStateFlow()
-
-        override suspend fun getChapterPage(
-            comicId: Long,
-            total: Int,
-            page: Int,
-            pageSize: Int,
-            sortType: String,
-            isAscending: Boolean,
-        ): ChapterRemoteInfoPageDto = ChapterRemoteInfoPageDto(items = emptyList(), pageSize, page, total)
 
         companion object {
             private const val TAG = "ComicInfoChapterEngine"

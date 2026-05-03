@@ -1,6 +1,8 @@
 package br.acerola.comic.adapter.metadata.anilist
 
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.anilist.engine.AnilistComicEngine
@@ -26,7 +28,13 @@ annotation class AnilistEngine
 @InstallIn(SingletonComponent::class)
 abstract class AnilistModule {
     @Binds @Singleton @AnilistEngine
-    abstract fun bindAnilistMangaEngine(impl: AnilistComicEngine): ComicGateway<ComicMetadataDto>
+    abstract fun bindAnilistSingleSync(impl: AnilistComicEngine): ComicSingleSyncGateway
+
+    @Binds @Singleton @AnilistEngine
+    abstract fun bindAnilistLibraryScan(impl: AnilistComicEngine): ComicLibraryScanGateway
+
+    @Binds @Singleton @AnilistEngine
+    abstract fun bindAnilistReadOnly(impl: AnilistComicEngine): ComicReadOnlyGateway<ComicMetadataDto>
 
     @Binds @Singleton @AnilistSource
     abstract fun bindAnilistMangaInfoSource(impl: AnilistMangaInfoSource): MetadataProvider<ComicMetadataDto, String>

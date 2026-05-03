@@ -5,7 +5,9 @@ import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.metadata.anilist.source.AnilistFetchBannerSource
 import br.acerola.comic.adapter.metadata.anilist.source.AnilistFetchCoverSource
 import br.acerola.comic.adapter.metadata.anilist.source.AnilistSearchByTitleSource
@@ -49,7 +51,9 @@ class AnilistComicEngine
         private val bannerFetcher: AnilistFetchBannerSource,
         private val anilistSearchByTitleSource: AnilistSearchByTitleSource,
         @param:ApplicationContext private val context: Context,
-    ) : ComicGateway<ComicMetadataDto> {
+    ) : ComicSingleSyncGateway,
+    ComicLibraryScanGateway,
+    ComicReadOnlyGateway<ComicMetadataDto> {
         private val _progress = MutableStateFlow(value = -1)
         override val progress: StateFlow<Int> = _progress.asStateFlow()
 

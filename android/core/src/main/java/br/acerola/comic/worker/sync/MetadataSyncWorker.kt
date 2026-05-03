@@ -10,12 +10,14 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.comic.data.R
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.AnilistCase
 import br.acerola.comic.usecase.ComicInfoCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.contract.SyncType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
@@ -28,10 +30,10 @@ class MetadataSyncWorker
     constructor(
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
-        private val syncComicMetadataUseCase: SyncComicMetadataUseCase,
-        @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase,
-        @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase,
-        @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
+        private val syncMetadataUseCase: br.acerola.comic.usecase.sync.SyncMetadataUseCase,
+        @param:AnilistCase private val anilistSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
+        @param:MangadexCase private val mangadexSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
+        @param:ComicInfoCase private val comicInfoSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
         companion object {
@@ -50,12 +52,21 @@ class MetadataSyncWorker
         @RequiresApi(Build.VERSION_CODES.Q)
         override suspend fun doWork(): Result =
             coroutineScope {
-                val source = inputData.getString(KEY_SYNC_SOURCE) ?: SOURCE_MANGADEX
+                val sourceString = inputData.getString(KEY_SYNC_SOURCE) ?: SOURCE_MANGADEX
                 val directoryId = inputData.getLong(KEY_DIRECTORY_ID, -1L)
-                val syncType = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_SYNC
+                val syncTypeString = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_SYNC
+
+                val source =
+                    when (sourceString) {
+                        SOURCE_MANGADEX -> MetadataSource.MANGADEX
+                        SOURCE_COMICINFO -> MetadataSource.COMIC_INFO
+                        SOURCE_ANILIST -> MetadataSource.ANILIST
+                        else -> MetadataSource.MANGADEX
+                    }
+                val syncType = SyncType.from(syncTypeString)
 
                 val title =
-                    when (source) {
+                    when (sourceString) {
                         SOURCE_MANGADEX -> context.getString(R.string.sync_metadata_title_mangadex)
                         SOURCE_COMICINFO -> context.getString(R.string.sync_metadata_title_comicinfo)
                         SOURCE_ANILIST -> context.getString(R.string.sync_metadata_title_anilist)
@@ -78,7 +89,7 @@ class MetadataSyncWorker
                 val progressJob =
                     launch {
                         val progressFlow =
-                            when (source) {
+                            when (sourceString) {
                                 SOURCE_MANGADEX -> mangadexSyncUseCase.progress
                                 SOURCE_COMICINFO -> comicInfoSyncUseCase.progress
                                 SOURCE_ANILIST -> anilistSyncUseCase.progress
@@ -92,31 +103,11 @@ class MetadataSyncWorker
                     }
 
                 try {
-                    val result =
-                        if (directoryId != -1L) {
-                            // Single comic sync
-                            when (source) {
-                                SOURCE_MANGADEX -> syncComicMetadataUseCase.syncFromMangadex(directoryId)
-                                SOURCE_COMICINFO -> syncComicMetadataUseCase.syncFromComicInfo(directoryId)
-                                SOURCE_ANILIST -> syncComicMetadataUseCase.syncFromAnilist(directoryId)
-                                else -> syncComicMetadataUseCase.syncFromMangadex(directoryId)
-                            }
-                        } else {
-                            // Library-wide sync
-                            val useCase =
-                                when (source) {
-                                    SOURCE_MANGADEX -> mangadexSyncUseCase
-                                    SOURCE_COMICINFO -> comicInfoSyncUseCase
-                                    SOURCE_ANILIST -> anilistSyncUseCase
-                                    else -> mangadexSyncUseCase
-                                }
-
-                            when (syncType) {
-                                SYNC_TYPE_SYNC -> useCase.sync(baseUri = null)
-                                SYNC_TYPE_RESCAN -> useCase.rescan(baseUri = null)
-                                else -> useCase.sync(baseUri = null)
-                            }
-                        }
+                    val result = syncMetadataUseCase.execute(
+                        source = source,
+                        type = syncType,
+                        directoryId = if (directoryId != -1L) directoryId else null
+                    )
 
                     progressJob.cancel()
 

@@ -3,8 +3,6 @@ package br.acerola.comic.module.main.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import br.acerola.comic.config.preference.ComicSortPreference
 import br.acerola.comic.config.preference.HomeFilterPreference
 import br.acerola.comic.config.preference.HomeLayoutPreference
@@ -29,7 +27,6 @@ import br.acerola.comic.usecase.comic.HideComicUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveHistoryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
-import br.acerola.comic.worker.contract.WorkerContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -39,7 +36,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -57,7 +53,7 @@ private data class HomeCombinedArgs(
 class HomeViewModel
     @Inject
     constructor(
-        workManager: WorkManager,
+        statusRepository: br.acerola.comic.sync.LibrarySyncStatusRepository,
         observeHistoryUseCase: ObserveHistoryUseCase,
         getChapterCountUseCase: GetChapterCountUseCase,
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
@@ -84,28 +80,8 @@ class HomeViewModel
                 .getAllCategories()
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), emptyList())
 
-        val isIndexing: StateFlow<Boolean> =
-            workManager
-                .getWorkInfosByTagFlow(WorkerContract.TAG_LIBRARY_SYNC)
-                .map { workInfos ->
-                    workInfos.any { !it.state.isFinished }
-                }.stateIn(
-                    viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = false,
-                )
-
-        val progress: StateFlow<Int> =
-            workManager
-                .getWorkInfosByTagFlow(WorkerContract.TAG_LIBRARY_SYNC)
-                .map { workInfos ->
-                    val activeWorker = workInfos.firstOrNull { it.state == WorkInfo.State.RUNNING }
-                    activeWorker?.progress?.getInt(WorkerContract.KEY_PROGRESS, -1) ?: -1
-                }.stateIn(
-                    viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = -1,
-                )
+        val isIndexing: StateFlow<Boolean> = statusRepository.isIndexing
+        val progress: StateFlow<Int> = statusRepository.progress
 
         val comics: StateFlow<List<Triple<ComicDto, ReadingHistoryDto?, Int>>?> =
             combine(

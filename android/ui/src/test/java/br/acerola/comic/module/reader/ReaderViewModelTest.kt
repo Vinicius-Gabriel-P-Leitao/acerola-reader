@@ -4,7 +4,8 @@ import android.content.Context
 import app.cash.turbine.test
 import arrow.core.Either
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.config.preference.ReadingModePreference
 import br.acerola.comic.config.preference.types.ReadingMode
@@ -37,7 +38,8 @@ class ReaderViewModelTest {
 
     private val processor = mockk<ReaderProcessor>(relaxed = true)
     private val historyGateway = mockk<HistoryGateway>(relaxed = true)
-    private val chapterGateway = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
+    private val readGateway = mockk<ChapterReadGateway<ChapterPageDto>>(relaxed = true)
+    private val statusGateway = mockk<ChapterSyncStatusGateway>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
 
     private lateinit var readerUseCase: ReaderUseCase
@@ -56,11 +58,11 @@ class ReaderViewModelTest {
 
         readerUseCase = ReaderUseCase(processor)
         trackReadingProgressUseCase = TrackReadingProgressUseCase(historyGateway)
-        observeChaptersUseCase = ObserveChaptersUseCase(chapterGateway)
+        observeChaptersUseCase = ObserveChaptersUseCase(readGateway = readGateway, syncStatusGateway = statusGateway)
 
-        every { chapterGateway.observeChapters(any(), any(), any()) } returns
+        every { readGateway.observeChapters(any(), any(), any()) } returns
             MutableStateFlow(ChapterPageDto(listOf(chapter1, chapter2), emptyList(), 20, 0, 2))
-        every { chapterGateway.isIndexing } returns MutableStateFlow(false)
+        every { statusGateway.isIndexing } returns MutableStateFlow(false)
 
         viewModel =
             ReaderViewModel(
