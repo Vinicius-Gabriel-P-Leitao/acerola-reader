@@ -52,4 +52,10 @@ enum class Destination(
         route = R.string.navigation_template_config_activity,
         contentDescriptionRes = R.string.description_template_config_activity,
     ),
+    TUTORIAL(
+        icon = Icons.Default.Book,
+        label = R.string.label_tutorial_activity,
+        route = R.string.navigation_tutorial_activity,
+        contentDescriptionRes = R.string.description_tutorial_activity,
+    ),
 }

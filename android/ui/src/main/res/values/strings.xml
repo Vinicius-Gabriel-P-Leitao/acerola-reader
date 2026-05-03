@@ -2,6 +2,8 @@
     <string name="app_name">acerola</string>
     <!-- UI description -->
     <!-- Screen navigation -->
+    <string name="navigation_launcher">launcher</string>
+    <string name="navigation_tutorial_activity">tutorial</string>
     <string name="navigation_home_activity">home</string>
     <string name="navigation_config_activity">config</string>
     <string name="navigation_history_activity">history</string>
@@ -10,6 +12,8 @@
     <string name="navigation_template_config_activity">file_pattern</string>
 
     <!-- Screen label -->
+    <string name="label_tutorial_activity">Tutorial</string>
+    <string name="description_tutorial_activity">Tela de tutorial inicial</string>
     <string name="label_home_activity">home</string>
     <string name="label_config_activity">Configurações</string>
     <string name="label_history_activity">Histórico</string>
@@ -218,7 +222,7 @@
     <string name="label_template_label">Nome (ex: Meu Padrão)</string>
     <string name="label_template_pattern">Padrão (ex: Cap. {chapter})</string>
     <string name="placeholder_template_pattern">{chapter}, {decimal}</string>
-    <string name="description_template_macros">{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.</string>
+    <string name="description_template_macros">{volume} representa o número do volume (usado para organização em pastas). {chapter} é o número do capítulo (obrigatório). {decimal} indica variação decimal do capítulo (ex: .5). Utilize * como wildcard para ignorar qualquer trecho de texto.</string>
     <string name="action_add">Adicionar</string>
     <string name="action_save">Salvar</string>
     <string name="action_cancel">Cancelar</string>
@@ -297,5 +301,17 @@
 
     <string name="description_tutorial_folder_select">Clique aqui para selecionar a pasta onde seus quadrinhos estão armazenados.</string>
     <string name="description_tutorial_sync_deep">Use a Sincronização Profunda se for a primeira vez ou se precisar verificar arquivos renomeados.</string>
+
+    <string name="tutorial_title_welcome">Bem-vindo ao Acerola!</string>
+    <string name="tutorial_desc_welcome">Seu leitor de quadrinhos locais. Vamos mostrar como organizar sua biblioteca para o app funcionar perfeitamente.</string>
+    <string name="tutorial_title_folder">Organize suas pastas</string>
+    <string name="tutorial_desc_folder">Crie uma pasta raiz para a biblioteca. Dentro dela, cada quadrinho deve ter sua própria subpasta contendo os capítulos.</string>
+    <string name="tutorial_title_files">Formatos suportados</string>
+    <string name="tutorial_desc_files">O Acerola suporta arquivos .cbz e .cbr. PDFs são convertidos automaticamente para .cbz. Organize os capítulos numericamente dentro da pasta do quadrinho para melhor experiência.</string>
+    <string name="tutorial_action_next">Próximo</string>
+    <string name="tutorial_action_previous">Anterior</string>
+    <string name="tutorial_action_skip">Pular</string>
+    <string name="tutorial_action_finish">Começar</string>
+    <string name="tutorial_content_description_slide">Imagem ilustrativa do tutorial</string>
 
 </resources>
