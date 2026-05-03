@@ -4,16 +4,20 @@ import arrow.core.Either
 import br.acerola.comic.error.message.TemplateError
 import br.acerola.comic.infra.R
 import br.acerola.comic.type.UiText
+import br.acerola.comic.util.sort.SortType
+import br.acerola.comic.pattern.template.TemplateMacro
 
 object TemplateValidator {
-    fun validateCustomTemplate(input: String): Either<TemplateError, Unit> {
-        var valueCount = 0
-        var subCount = 0
-        var extCount = 0
+    fun validateCustomTemplate(input: String, type: SortType): Either<TemplateError, Unit> {
+        var chapterCount = 0
+        var volumeCount = 0
+        var decimalCount = 0
+        var extensionCount = 0
 
-        var valueIdx = -1
-        var subIdx = -1
-        var extIdx = -1
+        var chapterIdx = -1
+        var volumeIdx = -1
+        var decimalIdx = -1
+        var extensionIdx = -1
 
         var cursor = 0
         while (cursor < input.length) {
@@ -24,28 +28,26 @@ object TemplateValidator {
                 }
 
                 val tag = input.substring(cursor + 1, end)
-                val macro =
-                    TemplateMacro.fromTag(tag)
-                        ?: return Either.Left(
-                            TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_invalid_macro, args = listOf(tag))),
-                        )
+                val macro = TemplateMacro.fromTag(tag) ?: return Either.Left(
+                    TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_invalid_macro, args = listOf(tag))),
+                )
 
                 when (macro) {
                     TemplateMacro.CHAPTER -> {
-                        valueCount++
-                        if (valueIdx == -1) valueIdx = cursor
-                    }
-                    TemplateMacro.DECIMAL -> {
-                        subCount++
-                        if (subIdx == -1) subIdx = cursor
-                    }
-                    TemplateMacro.EXTENSION -> {
-                        extCount++
-                        if (extIdx == -1) extIdx = cursor
+                        chapterCount++
+                        if (chapterIdx == -1) chapterIdx = cursor
                     }
                     TemplateMacro.VOLUME -> {
-                        // A macro de volume poderá ser suportada futuramente para capítulos, tipo Ch. {chapter}.{decimal}-{volume}.{extension},
-                        // por enquanto, ignore para satisfazer a condição de exaustivo quando
+                        volumeCount++
+                        if (volumeIdx == -1) volumeIdx = cursor
+                    }
+                    TemplateMacro.DECIMAL -> {
+                        decimalCount++
+                        if (decimalIdx == -1) decimalIdx = cursor
+                    }
+                    TemplateMacro.EXTENSION -> {
+                        extensionCount++
+                        if (extensionIdx == -1) extensionIdx = cursor
                     }
                 }
 
@@ -54,28 +56,34 @@ object TemplateValidator {
             cursor++
         }
 
-        if (valueCount != 1) {
-            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_required)))
+        // Validação do marcador principal obrigatório (Chapter ou Volume)
+        val mainValidation = when (type) {
+            SortType.CHAPTER -> validateChapter(chapterCount, chapterIdx, decimalIdx, extensionIdx, extensionCount, input)
+            SortType.VOLUME -> validateVolume(volumeCount, volumeIdx, extensionIdx)
         }
 
-        if (subCount > 1) {
+        if (mainValidation is Either.Left) return mainValidation
+
+        // Validações comuns
+        if (decimalCount > 1) {
             return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_decimal_duplicate)))
         }
 
-        if (extCount != 1) {
+        return Either.Right(Unit)
+    }
+
+    private fun validateChapter(count: Int, idx: Int, decimalIdx: Int, extensionIdx: Int, extensionCount: Int, input: String): Either<TemplateError, Unit> {
+        if (count != 1) {
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_required)))
+        }
+        if (extensionCount != 1) {
             return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_extension_required)))
         }
-
-        if (subIdx != -1 && subIdx < valueIdx) {
+        if (decimalIdx != -1 && decimalIdx < idx) {
             return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_before_decimal)))
         }
-
-        if (extIdx < valueIdx) {
+        if (extensionIdx != -1 && extensionIdx < idx) {
             return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_before_extension)))
-        }
-
-        if (subIdx != -1 && extIdx < subIdx) {
-            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_decimal_before_extension)))
         }
 
         val trimmed = input.trim()
@@ -83,6 +91,16 @@ object TemplateValidator {
             return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_extension_at_end)))
         }
 
+        return Either.Right(Unit)
+    }
+
+    private fun validateVolume(count: Int, idx: Int, extensionIdx: Int): Either<TemplateError, Unit> {
+        if (count != 1) {
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_volume_required)))
+        }
+        if (extensionIdx != -1 && extensionIdx < idx) {
+            return Either.Left(TemplateError.InvalidPattern(UiText.StringResource(R.string.error_template_chapter_before_extension))) // Reutilizando erro de ordem
+        }
         return Either.Right(Unit)
     }
 }

@@ -52,7 +52,12 @@ fun Main.Pattern.Component.AddTemplateDialog(
     var type by remember { mutableStateOf(initialType) }
 
     Acerola.Component.AdaptiveSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small)) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SpacingTokens.Huge, vertical = SpacingTokens.Small),
+        ) {
             Text(
                 text =
                     stringResource(
