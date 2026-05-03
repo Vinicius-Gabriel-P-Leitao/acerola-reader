@@ -142,6 +142,22 @@ object ChapterPerPagePreference {
         }
 }
 
+object OnboardingPreference {
+    private val Context.dataStore by preferencesDataStore(name = "onboarding_prefs")
+    private val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey(name = "onboarding_completed")
+
+    suspend fun markCompleted(context: Context) {
+        context.dataStore.edit { prefs ->
+            prefs[ONBOARDING_COMPLETED_KEY] = true
+        }
+    }
+
+    fun isCompletedFlow(context: Context): Flow<Boolean> =
+        context.dataStore.data.map { prefs ->
+            prefs[ONBOARDING_COMPLETED_KEY] ?: false
+        }
+}
+
 object ChapterSortPreference {
     private val Context.dataStore by preferencesDataStore(name = "chapter_sort_prefs")
 

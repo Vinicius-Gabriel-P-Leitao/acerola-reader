@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Language
@@ -16,11 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.mapper.LanguageMapper
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.common.ux.component.LanguagePicker
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.type.Language
 import br.acerola.comic.ui.R
@@ -51,8 +52,8 @@ fun Main.Config.Component.LanguageSettings(
                             contentAlignment = Alignment.Center,
                             modifier =
                                 Modifier
-                                    .size(size = 34.dp)
-                                    .clip(CircleShape)
+                                    .size(size = SpacingTokens.Giant)
+                                    .clip(ShapeTokens.Full)
                                     .background(color = MaterialTheme.colorScheme.primary),
                         ) {
                             Icon(
@@ -61,8 +62,8 @@ fun Main.Config.Component.LanguageSettings(
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier =
                                     Modifier
-                                        .size(size = 40.dp)
-                                        .padding(all = 4.dp),
+                                        .size(size = SizeTokens.IconLarge)
+                                        .padding(all = SpacingTokens.ExtraSmall),
                             )
                         }
                     }

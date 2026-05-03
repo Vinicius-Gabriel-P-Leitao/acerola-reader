@@ -63,7 +63,7 @@ fun Main.Config.Component.SelectComicDirectory(
                         contentAlignment = Alignment.Center,
                         modifier =
                             Modifier
-                                .size(size = SpacingTokens.Huge)
+                                .size(size = SpacingTokens.Giant)
                                 .clip(ShapeTokens.Full)
                                 .background(color = MaterialTheme.colorScheme.primary),
                     ) {

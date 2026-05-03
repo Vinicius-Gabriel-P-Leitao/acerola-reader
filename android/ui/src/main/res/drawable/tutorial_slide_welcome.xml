@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="200dp"
+    android:viewportWidth="240"
+    android:viewportHeight="200">
+
+    <!-- Background glow -->
+    <path
+        android:fillColor="#2A1F3D"
+        android:pathData="M40,100 a80,80 0,1 0,160 0 a80,80 0,1 0,-160 0 Z" />
+
+    <!-- Book top bar -->
+    <path
+        android:fillColor="#7C3AED"
+        android:pathData="M50,57 L190,57 L190,64 L50,64 Z" />
+
+    <!-- Left page -->
+    <path
+        android:fillColor="#CBA6F7"
+        android:pathData="M50,64 L118,64 L118,153 L50,153 Z" />
+
+    <!-- Right page -->
+    <path
+        android:fillColor="#B4BEFE"
+        android:pathData="M122,64 L190,64 L190,153 L122,153 Z" />
+
+    <!-- Spine -->
+    <path
+        android:fillColor="#9399B2"
+        android:pathData="M116,57 L124,57 L124,153 L116,153 Z" />
+
+    <!-- Left top panel — pink -->
+    <path
+        android:fillColor="#F5C2E7"
+        android:pathData="M58,71 L111,71 L111,108 L58,108 Z" />
+
+    <!-- Left bottom-left panel — peach -->
+    <path
+        android:fillColor="#FAB387"
+        android:pathData="M58,113 L82,113 L82,146 L58,146 Z" />
+
+    <!-- Left bottom-right panel — green -->
+    <path
+        android:fillColor="#A6E3A1"
+        android:pathData="M87,113 L111,113 L111,146 L87,146 Z" />
+
+    <!-- Left panel borders -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E1E2E"
+        android:strokeWidth="1.5"
+        android:pathData="M58,71 L111,71 L111,108 L58,108 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E1E2E"
+        android:strokeWidth="1.5"
+        android:pathData="M58,113 L111,113 L111,146 L58,146 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E1E2E"
+        android:strokeWidth="1.5"
+        android:pathData="M82,113 L82,146" />
+
+    <!-- Right top-left panel — blue -->
+    <path
+        android:fillColor="#89B4FA"
+        android:pathData="M129,71 L154,71 L154,108 L129,108 Z" />
+
+    <!-- Right top-right panel — yellow -->
+    <path
+        android:fillColor="#F9E2AF"
+        android:pathData="M159,71 L182,71 L182,108 L159,108 Z" />
+
+    <!-- Right bottom panel — sky -->
+    <path
+        android:fillColor="#74C7EC"
+        android:pathData="M129,113 L182,113 L182,146 L129,146 Z" />
+
+    <!-- Right panel borders -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E1E2E"
+        android:strokeWidth="1.5"
+        android:pathData="M129,71 L182,71 L182,108 L129,108 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E1E2E"
+        android:strokeWidth="1.5"
+        android:pathData="M154,71 L154,108" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E1E2E"
+        android:strokeWidth="1.5"
+        android:pathData="M129,113 L182,113 L182,146 L129,146 Z" />
+
+    <!-- Book shadow -->
+    <path
+        android:fillColor="#16121E"
+        android:pathData="M54,153 L186,153 L190,159 L50,159 Z" />
+
+    <!-- 4-pointed star top-left -->
+    <path
+        android:fillColor="#F9E2AF"
+        android:pathData="M30,34 L32.5,27 L35,34 L42,36.5 L35,39 L32.5,46 L30,39 L23,36.5 Z" />
+
+    <!-- 4-pointed star top-right -->
+    <path
+        android:fillColor="#CBA6F7"
+        android:pathData="M202,26 L204,21 L206,26 L211,28 L206,30 L204,35 L202,30 L197,28 Z" />
+
+    <!-- Dot accent right -->
+    <path
+        android:fillColor="#F38BA8"
+        android:pathData="M201,76 a5,5 0,1 0,10 0 a5,5 0,1 0,-10 0 Z" />
+
+    <!-- Dot accent left -->
+    <path
+        android:fillColor="#A6E3A1"
+        android:pathData="M26,82 a4,4 0,1 0,8 0 a4,4 0,1 0,-8 0 Z" />
+
+    <!-- Small star bottom-right -->
+    <path
+        android:fillColor="#89B4FA"
+        android:pathData="M207,158 L208.5,154 L210,158 L214,159.5 L210,161 L208.5,165 L207,161 L203,159.5 Z" />
+
+</vector>
