@@ -215,14 +215,18 @@ class ComicViewModel
 
                         if (dto.hasVolumeStructure) {
                             dto.archive.volumeSections.forEach { section ->
+                                val sectionChapterSorts = section.items.map { it.chapterSort }.toSet()
+                                val metadataCount = dto.remoteInfo?.items?.count { it.chapter in sectionChapterSorts } ?: 0
+
                                 AcerolaLogger.v(
                                     TAG,
-                                    "  > Volume: ${section.volume.name} | Chapters: ${section.items.size}/${section.totalChapters}",
+                                    "  > Volume: ${section.volume.name} | Chapters: ${section.items.size}/${section.totalChapters} | Metadata: $metadataCount/${section.items.size}",
                                     LogSource.VIEWMODEL,
                                 )
                             }
                         } else {
-                            AcerolaLogger.v(TAG, "  > Total Chapters: ${dto.archive.items.size}/${dto.archive.total}", LogSource.VIEWMODEL)
+                            val metadataCount = dto.remoteInfo?.items?.size ?: 0
+                            AcerolaLogger.v(TAG, "  > Total Chapters: ${dto.archive.items.size}/${dto.archive.total} | Metadata: $metadataCount/${dto.archive.items.size}", LogSource.VIEWMODEL)
                         }
 
                         dto
