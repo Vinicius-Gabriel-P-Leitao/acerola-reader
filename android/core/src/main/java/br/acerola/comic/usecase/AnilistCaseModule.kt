@@ -1,6 +1,8 @@
 package br.acerola.comic.usecase
 
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
@@ -22,23 +24,24 @@ object AnilistCaseModule {
     @Provides
     @AnilistCase
     fun provideSyncLibraryUseCase(
-        @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
-    ): SyncLibraryUseCase = SyncLibraryUseCase(repository)
+        @AnilistEngine scanGateway: ComicLibraryScanGateway,
+    ): SyncLibraryUseCase = SyncLibraryUseCase(scanGateway = scanGateway)
 
     @Provides
     @AnilistCase
     fun provideObserveLibraryUseCase(
-        @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
+        @AnilistEngine repository: ComicReadOnlyGateway<ComicMetadataDto>,
+        @AnilistEngine syncStatus: ComicSingleSyncGateway,
     ): ObserveLibraryUseCase<ComicMetadataDto> =
         ObserveLibraryUseCase(
             comicRepository = repository,
-            syncGateway = repository,
+            syncGateway = syncStatus,
         )
 
     @Provides
     @AnilistCase
     fun provideRescanComicUseCase(
-        @AnilistEngine repository: ComicGateway<ComicMetadataDto>,
+        @AnilistEngine repository: ComicSingleSyncGateway,
     ): RescanComicUseCase =
         RescanComicUseCase(
             comicRepository = repository,

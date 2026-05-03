@@ -1,13 +1,14 @@
 package br.acerola.comic.adapter.metadata.comicinfo
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.comicinfo.engine.ComicInfoChapterEngine
 import br.acerola.comic.adapter.metadata.comicinfo.engine.ComicInfoComicEngine
 import br.acerola.comic.adapter.metadata.comicinfo.source.ChapterComicInfoSource
 import br.acerola.comic.adapter.metadata.comicinfo.source.ComicInfoSource
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import dagger.Binds
 import dagger.Module
@@ -30,12 +31,17 @@ abstract class ComicInfoModule {
     @Binds
     @Singleton
     @ComicInfoEngine
-    abstract fun bindComicInfoMangaRepository(impl: ComicInfoComicEngine): br.acerola.comic.adapter.contract.gateway.ComicSyncGateway
+    abstract fun bindComicInfoMangaRepository(impl: ComicInfoComicEngine): ComicSingleSyncGateway
 
     @Binds
     @Singleton
     @ComicInfoEngine
-    abstract fun bindComicInfoChapterRepository(impl: ComicInfoChapterEngine): ChapterGateway<ChapterRemoteInfoPageDto>
+    abstract fun bindComicInfoLibraryScan(impl: ComicInfoComicEngine): ComicLibraryScanGateway
+
+    @Binds
+    @Singleton
+    @ComicInfoEngine
+    abstract fun bindComicInfoChapterRepository(impl: ComicInfoChapterEngine): ChapterSyncGateway
 
     @Binds
     @Singleton

@@ -8,7 +8,8 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.getOrElse
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
@@ -57,7 +58,7 @@ class ChapterArchiveEngine
         private val archiveValidator: ArchiveValidator,
         private val volumeSyncService: VolumeSyncService,
         private val chapterSyncService: ChapterSyncService,
-    ) : ChapterGateway<ChapterPageDto> {
+    ) : ChapterSyncGateway, ChapterReadGateway<ChapterPageDto> {
         private val _progress = MutableStateFlow(value = -1)
         override val progress: StateFlow<Int> = _progress.asStateFlow()
 

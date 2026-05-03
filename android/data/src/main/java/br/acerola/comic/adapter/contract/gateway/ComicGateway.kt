@@ -7,6 +7,43 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
+ * Interface para observação do estado de sincronização.
+ */
+interface ComicSyncStatusGateway {
+    val progress: StateFlow<Int>
+    val isIndexing: StateFlow<Boolean>
+}
+
+/**
+ * Interface para sincronização de um único item.
+ * Todas as Engines implementam isso - refreshManga é universalmente suportado.
+ */
+interface ComicSingleSyncGateway : ComicSyncStatusGateway {
+    suspend fun refreshManga(
+        comicId: Long,
+        baseUri: Uri? = null,
+    ): Either<LibrarySyncError, Unit>
+}
+
+/**
+ * Interface para operações de varredura da biblioteca (Incremental e Completa).
+ * Implementada por Directory, MangaDex e AniList.
+ */
+interface ComicLibraryScanGateway : ComicSyncStatusGateway {
+    suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit>
+
+    suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
+}
+
+/**
+ * Interface para reconstrução profunda da biblioteca.
+ * Implementada apenas pela ComicDirectoryEngine.
+ */
+interface ComicRebuildGateway : ComicSyncStatusGateway {
+    suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit>
+}
+
+/**
  * Interface apenas para observação de dados (Read).
  */
 interface ComicReadOnlyGateway<T> {
@@ -14,23 +51,13 @@ interface ComicReadOnlyGateway<T> {
 }
 
 /**
- * Interface apenas para operações de sincronização e progresso (Write/Sync).
+ * Interface agregada para sincronização completa.
+ * Engines que suportam todas as operações implementam esta interface.
  */
-interface ComicSyncGateway {
-    val progress: StateFlow<Int>
-    val isIndexing: StateFlow<Boolean>
-
-    suspend fun refreshManga(
-        comicId: Long,
-        baseUri: Uri? = null,
-    ): Either<LibrarySyncError, Unit> = Either.Right(Unit)
-
-    suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
-
-    suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
-
-    suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
-}
+interface ComicSyncGateway :
+    ComicSingleSyncGateway,
+    ComicLibraryScanGateway,
+    ComicRebuildGateway
 
 /**
  * Interface completa para Engines que leem e escrevem (Diretórios, MangaDex, AniList).

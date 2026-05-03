@@ -1,7 +1,11 @@
 package br.acerola.comic.adapter.metadata.mangadex
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.mangadex.engine.MangadexChapterEngine
@@ -33,12 +37,32 @@ abstract class MangadexModule {
     @Binds
     @Singleton
     @MangadexEngine
-    abstract fun bindMangadexMangaRepository(impl: MangadexComicEngine): ComicGateway<ComicMetadataDto>
+    abstract fun bindMangadexSingleSync(impl: MangadexComicEngine): ComicSingleSyncGateway
 
     @Binds
     @Singleton
     @MangadexEngine
-    abstract fun bindMangadexChapterRepository(impl: MangadexChapterEngine): ChapterGateway<ChapterRemoteInfoPageDto>
+    abstract fun bindMangadexLibraryScan(impl: MangadexComicEngine): ComicLibraryScanGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexReadOnly(impl: MangadexComicEngine): ComicReadOnlyGateway<ComicMetadataDto>
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexChapterSyncRepository(impl: MangadexChapterEngine): ChapterSyncGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexChapterStatusRepository(impl: MangadexChapterEngine): ChapterSyncStatusGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexChapterReadRepository(impl: MangadexChapterEngine): ChapterReadGateway<ChapterRemoteInfoPageDto>
 
     @Binds
     @Singleton

@@ -5,10 +5,9 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.library.engine.ComicDirectoryEngine
 import br.acerola.comic.config.preference.ComicDirectoryPreference
-import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.service.library.DirectoryScanner
@@ -47,7 +46,7 @@ class ComicDirectoryEngineTest {
 
     @MockK lateinit var directoryDao: ComicDirectoryDao
 
-    @MockK lateinit var comicDirectoryOps: ChapterGateway<ChapterPageDto>
+    @MockK lateinit var comicDirectoryOps: ChapterSyncGateway
 
     @MockK lateinit var templateService: ChapterNameProcessor
 

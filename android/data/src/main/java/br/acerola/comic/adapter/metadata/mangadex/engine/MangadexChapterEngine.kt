@@ -4,7 +4,8 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import arrow.core.Either
 import arrow.core.flatMap
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.mangadex.MangadexSource
 import br.acerola.comic.data.R
@@ -53,7 +54,7 @@ class MangadexChapterEngine
         private val chapterMetadataDao: ChapterMetadataDao,
         private val metadataExportService: MetadataExporter,
         private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
-    ) : ChapterGateway<ChapterRemoteInfoPageDto> {
+    ) : ChapterSyncGateway, ChapterReadGateway<ChapterRemoteInfoPageDto> {
         @Inject
         @MangadexSource
         lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>

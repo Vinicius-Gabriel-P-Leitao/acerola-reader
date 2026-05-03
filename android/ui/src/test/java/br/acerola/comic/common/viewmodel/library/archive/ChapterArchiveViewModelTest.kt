@@ -1,9 +1,5 @@
 package br.acerola.comic.common.viewmodel.library.archive
 
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.dto.archive.ChapterPageDto
@@ -17,20 +13,20 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChapterArchiveViewModelTest {
     @get:Rule
     val coroutineRule = MainDispatcherRule()
 
-    private val workManager = mockk<WorkManager>(relaxed = true)
+    private val scheduler = mockk<br.acerola.comic.sync.LibrarySyncScheduler>(relaxed = true)
+    private val statusRepository = mockk<br.acerola.comic.sync.LibrarySyncStatusRepository>(relaxed = true)
     private val observeChaptersUseCase = mockk<ObserveChaptersUseCase<ChapterPageDto>>(relaxed = true)
     private lateinit var viewModel: ChapterArchiveViewModel
 
@@ -40,7 +36,10 @@ class ChapterArchiveViewModelTest {
         every { AcerolaLogger.d(any<String>(), any<String>(), any<LogSource>()) } returns Unit
         every { AcerolaLogger.audit(any<String>(), any<String>(), any<LogSource>(), any<Map<String, String>>()) } returns Unit
 
-        viewModel = ChapterArchiveViewModel(workManager, mockk(relaxed = true), observeChaptersUseCase)
+        every { statusRepository.isIndexing } returns MutableStateFlow(false)
+        every { statusRepository.progress } returns MutableStateFlow(-1)
+
+        viewModel = ChapterArchiveViewModel(scheduler, statusRepository, mockk(relaxed = true), observeChaptersUseCase)
     }
 
     @After
@@ -53,23 +52,19 @@ class ChapterArchiveViewModelTest {
         runTest {
             viewModel.syncChaptersByMangaDirectory(1L)
 
-            verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
+            verify { scheduler.enqueueSpecific(1L, any()) }
         }
 
     @Test
-    fun `deve refletir progresso do WorkManager`() =
+    fun `deve refletir progresso do repositório`() =
         runTest {
-            val workerId = UUID.randomUUID()
-            val workInfo = mockk<WorkInfo>()
-            every { workInfo.state } returns WorkInfo.State.RUNNING
-            every { workInfo.progress.getInt("progress", -1) } returns 50
+            val progressFlow = MutableStateFlow(50)
+            val isIndexingFlow = MutableStateFlow(true)
+            every { statusRepository.progress } returns progressFlow
+            every { statusRepository.isIndexing } returns isIndexingFlow
 
-            // Mocking observeWorkStatus internally is hard,
-            // but we can mock the flow returned by workManager
-            every { workManager.getWorkInfoByIdFlow(any<UUID>()) } returns flowOf(workInfo)
-
-            // Precisamos disparar o observeWorkStatus através do enqueueSync
-            viewModel.syncChaptersByMangaDirectory(1L)
+            // Reinicializar viewModel para capturar os novos flows
+            viewModel = ChapterArchiveViewModel(scheduler, statusRepository, mockk(relaxed = true), observeChaptersUseCase)
 
             viewModel.progress.test {
                 assertThat(awaitItem()).isEqualTo(50)

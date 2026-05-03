@@ -24,7 +24,7 @@ class ObserveLibraryUseCaseTest {
         MockKAnnotations.init(this)
         every { repository.progress } returns MutableStateFlow(value = 0)
         every { repository.isIndexing } returns MutableStateFlow(value = false)
-        useCase = ObserveLibraryUseCase(comicRepository = repository)
+        useCase = ObserveLibraryUseCase(syncGateway = repository, comicRepository = repository)
     }
 
     @Test
