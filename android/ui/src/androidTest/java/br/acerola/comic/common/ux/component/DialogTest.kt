@@ -99,7 +99,7 @@ class DialogTest {
                 },
             ) {
                 Text(
-                    "{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.",
+                    "{volume} representa o número do volume (usado para organização em pastas). {chapter} é o número do capítulo (obrigatório). {decimal} indica variação decimal do capítulo (ex: .5). Utilize * como wildcard para ignorar qualquer trecho de texto.",
                 )
             }
         }
@@ -107,7 +107,7 @@ class DialogTest {
         composeTestRule.onNodeWithText("Novo Padrão").assertIsDisplayed()
         composeTestRule
             .onNodeWithText(
-                "{chapter} é o número do capítulo (obrigatório). {decimal} é o valor decimal (ex: .5). Use * para ignorar qualquer texto.",
+                "{volume} representa o número do volume (usado para organização em pastas). {chapter} é o número do capítulo (obrigatório). {decimal} indica variação decimal do capítulo (ex: .5). Utilize * como wildcard para ignorar qualquer trecho de texto.",
             ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Adicionar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancelar").assertIsDisplayed()

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="200dp"
+    android:viewportWidth="240"
+    android:viewportHeight="200">
+
+    <!-- Main folder tab -->
+    <path
+        android:fillColor="#EAD08A"
+        android:pathData="M70,48 L115,48 L122,58 L70,58 Z" />
+
+    <!-- Main folder body -->
+    <path
+        android:fillColor="#F9E2AF"
+        android:pathData="M70,58 L170,58 L170,112 L70,112 Z" />
+
+    <!-- Connector vertical -->
+    <path
+        android:fillColor="#6C7086"
+        android:pathData="M119,112 L121,112 L121,130 L119,130 Z" />
+
+    <!-- Connector horizontal -->
+    <path
+        android:fillColor="#6C7086"
+        android:pathData="M78,129 L162,129 L162,131 L78,131 Z" />
+
+    <!-- Left branch down -->
+    <path
+        android:fillColor="#6C7086"
+        android:pathData="M78,130 L80,130 L80,140 L78,140 Z" />
+
+    <!-- Right branch down -->
+    <path
+        android:fillColor="#6C7086"
+        android:pathData="M160,130 L162,130 L162,140 L160,140 Z" />
+
+    <!-- Sub-folder left tab (purple) -->
+    <path
+        android:fillColor="#A680DF"
+        android:pathData="M46,133 L70,133 L76,140 L46,140 Z" />
+
+    <!-- Sub-folder left body (purple) -->
+    <path
+        android:fillColor="#CBA6F7"
+        android:pathData="M46,140 L114,140 L114,185 L46,185 Z" />
+
+    <!-- Sub-folder right tab (blue) -->
+    <path
+        android:fillColor="#6A9FE8"
+        android:pathData="M126,133 L150,133 L156,140 L126,140 Z" />
+
+    <!-- Sub-folder right body (blue) -->
+    <path
+        android:fillColor="#89B4FA"
+        android:pathData="M126,140 L194,140 L194,185 L126,185 Z" />
+
+    <!-- File in left sub-folder (left) -->
+    <path
+        android:fillColor="#CDD6F4"
+        android:pathData="M55,155 L75,155 L80,160 L80,178 L55,178 Z" />
+    <path
+        android:fillColor="#B4BEFE"
+        android:pathData="M75,155 L75,160 L80,160 Z" />
+
+    <!-- File in left sub-folder (right) -->
+    <path
+        android:fillColor="#CDD6F4"
+        android:pathData="M85,155 L105,155 L110,160 L110,178 L85,178 Z" />
+    <path
+        android:fillColor="#B4BEFE"
+        android:pathData="M105,155 L105,160 L110,160 Z" />
+
+    <!-- File in right sub-folder (left) -->
+    <path
+        android:fillColor="#CDD6F4"
+        android:pathData="M135,155 L155,155 L160,160 L160,178 L135,178 Z" />
+    <path
+        android:fillColor="#89B4FA"
+        android:pathData="M155,155 L155,160 L160,160 Z" />
+
+    <!-- File in right sub-folder (right) -->
+    <path
+        android:fillColor="#CDD6F4"
+        android:pathData="M165,155 L185,155 L190,160 L190,178 L165,178 Z" />
+    <path
+        android:fillColor="#89B4FA"
+        android:pathData="M185,155 L185,160 L190,160 Z" />
+
+    <!-- Decorative dots on main folder (simulating files inside) -->
+    <path
+        android:fillColor="#EAD08A"
+        android:pathData="M82,72 L100,72 L100,76 L82,76 Z" />
+    <path
+        android:fillColor="#EAD08A"
+        android:pathData="M82,82 L108,82 L108,86 L82,86 Z" />
+    <path
+        android:fillColor="#EAD08A"
+        android:pathData="M82,92 L95,92 L95,96 L82,96 Z" />
+
+</vector>

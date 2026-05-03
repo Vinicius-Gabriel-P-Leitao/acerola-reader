@@ -37,4 +37,10 @@ object Main {
 
         object Template
     }
+
+    object Tutorial {
+        object Component
+
+        object Template
+    }
 }

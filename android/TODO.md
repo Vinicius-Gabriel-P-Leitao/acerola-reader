@@ -124,6 +124,11 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
     - **Causa provável:** A lógica da "regra dos 70%" está sendo disparada erroneamente no momento do pré-carregamento (*preload*) das imagens, e não
       na visualização ativa pelo usuário.
 
+### Validar se os metadados dos chapters estão sendo carregados
+
+- [ ] **O combine de 7 valores** Acredito ser problema do combine de 7 valores na ComicViewModel que tá fazendo isso de não carregar os métadados 
+  do chapter.
+
 ### Aplicar mudanças da lib rust acerola p2p
 
 - [ ] **A lib está a ser feita:** Séra feito um grande refactor no campo de rust para poder montar a FFI atualizada e
