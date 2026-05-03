@@ -81,6 +81,7 @@ private fun FilePatternLayout(
     var editingTemplate by remember { mutableStateOf<ArchiveTemplateDto?>(null) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {

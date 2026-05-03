@@ -55,6 +55,7 @@ fun Main.Home.Component.HomeFilterSheet(
 ) {
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
+        isScrollable = false,
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {

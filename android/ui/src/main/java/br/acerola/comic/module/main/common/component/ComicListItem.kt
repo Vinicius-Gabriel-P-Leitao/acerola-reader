@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -174,6 +175,23 @@ fun Main.Common.Component.ComicListItem(
                             .padding(start = SpacingTokens.Small)
                             .width(SpacingTokens.Medium)
                             .height(SpacingTokens.ExtraLarge),
+                )
+            }
+
+            if (comic.directory.hidden) {
+                Icon(
+                    imageVector = Icons.Rounded.VisibilityOff,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(bottom = SpacingTokens.ExtraSmall, start = SpacingTokens.ExtraSmall)
+                            .size(SizeTokens.IconExtraSmall)
+                            .background(
+                                color = Color.Black.copy(alpha = 0.5f),
+                                shape = ShapeTokens.ExtraSmall,
+                            ).padding(2.dp),
                 )
             }
         }

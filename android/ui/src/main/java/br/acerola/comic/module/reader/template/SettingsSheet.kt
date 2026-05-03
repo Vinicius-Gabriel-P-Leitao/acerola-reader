@@ -44,6 +44,7 @@ fun Reader.Template.SettingsSheet(
 ) {
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismissRequest,
+        isScrollable = false,
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {

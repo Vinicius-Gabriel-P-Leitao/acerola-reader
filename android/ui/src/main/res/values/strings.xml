@@ -230,13 +230,17 @@
     <!-- Comic Card Actions -->
     <string name="action_bookmark">Bookmark</string>
     <string name="action_hide">Ocultar</string>
+    <string name="action_unhide">Reexibir</string>
     <string name="action_delete">Deletar</string>
     <string name="action_remove_bookmark">Remover bookmark</string>
     <string name="label_no_bookmark">Sem bookmark</string>
     <string name="description_hide">Esconde da biblioteca</string>
+    <string name="description_unhide">Mostra na biblioteca</string>
     <string name="description_delete">Remove do banco e do dispositivo</string>
     <string name="dialog_hide_title">Ocultar quadrinho?</string>
     <string name="dialog_hide_message">Este quadrinho será ocultado da biblioteca. Você pode usar o filtro para ver quadrinhos ocultos.</string>
+    <string name="dialog_unhide_title">Reexibir quadrinho?</string>
+    <string name="dialog_unhide_message">Este quadrinho voltará a ser exibido na biblioteca principal.</string>
     <string name="dialog_delete_title">Deletar quadrinho?</string>
     <string name="dialog_delete_message">Esta ação remove o quadrinho do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
 

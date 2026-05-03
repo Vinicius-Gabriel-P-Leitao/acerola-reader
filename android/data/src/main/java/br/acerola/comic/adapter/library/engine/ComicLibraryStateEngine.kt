@@ -49,12 +49,14 @@ class ComicLibraryStateEngine
 
         override suspend fun hideManga(comicId: Long): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
-                AcerolaLogger.i(TAG, "Hiding comic: $comicId", LogSource.REPOSITORY)
+                AcerolaLogger.i(TAG, "Toggling hidden state for comic: $comicId", LogSource.REPOSITORY)
                 Either
                     .catch {
-                        directoryDao.setDirectoryHidden(comicId, hidden = true)
+                        val current = directoryDao.getDirectoryById(comicId)
+                        val isHidden = current?.hidden ?: false
+                        directoryDao.setDirectoryHidden(comicId, hidden = !isHidden)
                     }.mapLeft { exception ->
-                        AcerolaLogger.e(TAG, "Failed to hide comic: $comicId", LogSource.REPOSITORY, throwable = exception)
+                        AcerolaLogger.e(TAG, "Failed to toggle hidden state for comic: $comicId", LogSource.REPOSITORY, throwable = exception)
                         LibrarySyncError.UnexpectedError(cause = exception)
                     }
             }
