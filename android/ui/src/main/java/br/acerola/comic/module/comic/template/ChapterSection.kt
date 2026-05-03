@@ -13,7 +13,6 @@ import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
 import br.acerola.comic.module.comic.component.CoverVolumeCard
 import br.acerola.comic.module.comic.component.VolumeCard
-import br.acerola.comic.util.sort.normalizeSort
 
 fun Comic.Template.chapterSection(
     scope: LazyListScope,
@@ -30,10 +29,6 @@ fun Comic.Template.chapterSection(
     onLoadVolumeChaptersPage: (Long, Int) -> Unit = { _, _ -> },
     onExtractVolumeCover: (Long) -> Unit = {},
 ) {
-    val remoteResolver: (String) -> ChapterFeedDto? = { chapterSort ->
-        chapters.remoteInfo?.items?.firstOrNull { it.chapter.normalizeSort() == chapterSort }
-    }
-
     val useVolumeSections =
         (volumeViewMode == VolumeViewType.VOLUME || volumeViewMode == VolumeViewType.COVER_VOLUME) &&
             chapters.archive.volumeSections.isNotEmpty()
@@ -68,10 +63,14 @@ fun Comic.Template.chapterSection(
             }
 
             if (isExpanded) {
-                group.items.forEach { chapter ->
-                    val remoteInfo = remoteResolver(chapter.chapterSort)
+                group.items.forEachIndexed { index, chapter ->
+                    val remoteInfo =
+                        chapters.remoteInfo
+                            ?.items
+                            ?.getOrNull(index)
+                            ?.takeIf { it.id != -1L }
                     scope.item(
-                        key = "vol_${group.volume.id}_ch_${chapter.id}",
+                        key = "vol_${group.volume.id}_ch_${chapter.id}_$index",
                         contentType = "chapter_item",
                     ) {
                         Comic.Component.ChapterItem(
@@ -94,12 +93,16 @@ fun Comic.Template.chapterSection(
             }
         }
     } else {
-        chapters.archive.items.forEach { chapter ->
+        chapters.archive.items.forEachIndexed { index, chapter ->
             scope.item(
-                key = "ch_${chapter.id}",
+                key = "ch_${chapter.id}_$index",
                 contentType = "chapter_item",
             ) {
-                val remoteInfo = remoteResolver(chapter.chapterSort)
+                val remoteInfo =
+                    chapters.remoteInfo
+                        ?.items
+                        ?.getOrNull(index)
+                        ?.takeIf { it.id != -1L }
                 Comic.Component.ChapterItem(
                     chapterFileDto = chapter,
                     chapterRemoteInfoDto = remoteInfo,

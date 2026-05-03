@@ -152,7 +152,10 @@ fun Main.Home.Template.Screen(
                             bottom = 80.dp,
                         ),
                 ) {
-                    items(items = if (searchExpanded) filteredMangas else comicList) { (comic, history, chapterCount) ->
+                    items(
+                        items = if (searchExpanded) filteredMangas else comicList,
+                        key = { (comic, _, _) -> "manga_${comic.directory.id}" },
+                    ) { (comic, history, chapterCount) ->
                         when (uiState.layout) {
                             HomeLayoutType.GRID ->
                                 Main.Home.Component.ComicGridItem(

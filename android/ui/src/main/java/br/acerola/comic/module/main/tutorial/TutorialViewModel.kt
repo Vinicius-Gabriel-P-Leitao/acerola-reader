@@ -10,12 +10,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class TutorialViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-) : ViewModel() {
-    fun markOnboardingCompleted() {
-        viewModelScope.launch {
-            OnboardingPreference.markCompleted(context)
+class TutorialViewModel
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) : ViewModel() {
+        fun markOnboardingCompleted() {
+            viewModelScope.launch {
+                OnboardingPreference.markCompleted(context)
+            }
         }
     }
-}
