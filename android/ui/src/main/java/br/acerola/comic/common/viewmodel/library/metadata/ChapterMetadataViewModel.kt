@@ -20,9 +20,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -34,11 +36,13 @@ class ChapterMetadataViewModel
         private val workManager: WorkManager,
         @param:MangadexCase private val getMangadexChaptersUseCase: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
     ) : ViewModel() {
-        private val _isIndexing = MutableStateFlow(value = false)
-        val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+        val isIndexing: StateFlow<Boolean> =
+            getMangadexChaptersUseCase.isIndexing
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-        private val _progress = MutableStateFlow(value = -1)
-        val progress: StateFlow<Int> = _progress.asStateFlow()
+        val progress: StateFlow<Int> =
+            getMangadexChaptersUseCase.progress
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1)
 
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -130,26 +134,6 @@ class ChapterMetadataViewModel
                     ExistingWorkPolicy.KEEP,
                     syncRequest,
                 )
-
-                observeWorkStatus(syncRequest.id)
-            }
-        }
-
-        private fun observeWorkStatus(workerId: UUID) {
-            viewModelScope.launch {
-                workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
-                    if (workInfo != null) {
-                        _isIndexing.value = !workInfo.state.isFinished
-                        _progress.value = workInfo.progress.getInt("progress", -1)
-
-                        if (workInfo.state == WorkInfo.State.FAILED) {
-                            val errorMessage = workInfo.outputData.getString("error")
-                            if (errorMessage != null) {
-                                _uiEvents.send(UserMessage.Raw(errorMessage))
-                            }
-                        }
-                    }
-                }
             }
         }
 

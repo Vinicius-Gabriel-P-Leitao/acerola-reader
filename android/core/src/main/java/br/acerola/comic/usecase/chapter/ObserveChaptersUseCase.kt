@@ -2,6 +2,7 @@ package br.acerola.comic.usecase.chapter
 
 import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
 import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -12,8 +13,8 @@ open class ObserveChaptersUseCase<T>(
     private val readGateway: ChapterReadGateway<T>,
     private val syncStatusGateway: ChapterSyncStatusGateway,
 ) {
-    val progress: StateFlow<Int> get() = syncStatusGateway.progress
-    val isIndexing: StateFlow<Boolean> get() = syncStatusGateway.isIndexing
+    val progress: Flow<Int> get() = syncStatusGateway.progress
+    val isIndexing: Flow<Boolean> get() = syncStatusGateway.isIndexing
 
     fun observeByComic(
         comicId: Long,

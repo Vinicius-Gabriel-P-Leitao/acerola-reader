@@ -1,6 +1,7 @@
 package br.acerola.comic.usecase
 
 import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
@@ -27,7 +28,13 @@ annotation class ComicInfoCase
 object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
-    fun provideSyncLibraryUseCase(): SyncLibraryUseCase = SyncLibraryUseCase()
+    fun provideSyncLibraryUseCase(
+        @ComicInfoEngine scanGateway: ComicLibraryScanGateway,
+        @ComicInfoEngine chapterGateway: ChapterSyncGateway,
+    ): SyncLibraryUseCase = SyncLibraryUseCase(
+        scanGateway = scanGateway,
+        chapterGateway = chapterGateway,
+    )
 
     @Provides
     @ComicInfoCase

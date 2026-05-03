@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
@@ -23,6 +24,7 @@ import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,7 +44,7 @@ class ComicInfoComicEngine
         private val comicMetadataDao: ComicMetadataDao,
         private val comicInfoSourceDao: ComicInfoSourceDao,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
-    ) : ComicSingleSyncGateway {
+    ) : ComicSingleSyncGateway, ComicLibraryScanGateway {
         @Inject
         @ComicInfoSourceQualifier
         lateinit var comicInfoSourceService: MetadataProvider<ComicMetadataDto, String>
@@ -52,6 +54,10 @@ class ComicInfoComicEngine
 
         private val _isIndexing = MutableStateFlow(value = false)
         override val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
+        override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
+
+        override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> = Either.Right(Unit)
 
         override suspend fun refreshManga(
             comicId: Long,

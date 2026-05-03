@@ -4,7 +4,6 @@ import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSyncStatusGateway
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
@@ -14,8 +13,8 @@ open class ObserveLibraryUseCase<T>(
     private val syncGateway: ComicSyncStatusGateway? = null,
     private val comicRepository: ComicReadOnlyGateway<T>,
 ) {
-    val progress: StateFlow<Int> get() = syncGateway?.progress ?: MutableStateFlow(-1).asStateFlow()
-    val isIndexing: StateFlow<Boolean> get() = syncGateway?.isIndexing ?: MutableStateFlow(false).asStateFlow()
+    val progress: Flow<Int> get() = syncGateway?.progress ?: MutableStateFlow(-1).asStateFlow()
+    val isIndexing: Flow<Boolean> get() = syncGateway?.isIndexing ?: MutableStateFlow(false).asStateFlow()
 
     operator fun invoke(): Flow<List<T>> = comicRepository.observeLibrary()
 }

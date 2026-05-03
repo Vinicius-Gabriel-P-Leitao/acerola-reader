@@ -38,6 +38,9 @@ class ObserveCombinedChaptersUseCaseTest {
     lateinit var localSyncStatusGateway: ChapterSyncStatusGateway
 
     @MockK
+    lateinit var remoteSyncStatusGateway: ChapterSyncStatusGateway
+
+    @MockK
     lateinit var remoteReadGateway: ChapterReadGateway<ChapterRemoteInfoPageDto>
 
     @MockK
@@ -54,6 +57,8 @@ class ObserveCombinedChaptersUseCaseTest {
 
         every { localSyncStatusGateway.progress } returns MutableStateFlow(value = 0)
         every { localSyncStatusGateway.isIndexing } returns MutableStateFlow(value = false)
+        every { remoteSyncStatusGateway.progress } returns MutableStateFlow(value = 0)
+        every { remoteSyncStatusGateway.isIndexing } returns MutableStateFlow(value = false)
 
         every { cacheHandler.generateKey(any(), any(), any(), any(), any(), any(), any()) } answers {
             val args = it.invocation.args
@@ -74,6 +79,7 @@ class ObserveCombinedChaptersUseCaseTest {
                 volumeGateway = volumeGateway,
                 localReadGateway = localReadGateway,
                 localSyncStatusGateway = localSyncStatusGateway,
+                remoteSyncStatusGateway = remoteSyncStatusGateway,
                 remoteReadGateway = remoteReadGateway,
                 cacheHandler = cacheHandler,
             )

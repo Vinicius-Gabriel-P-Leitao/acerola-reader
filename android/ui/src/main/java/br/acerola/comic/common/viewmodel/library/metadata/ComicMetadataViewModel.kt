@@ -36,11 +36,13 @@ class ComicMetadataViewModel
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
         @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
     ) : ViewModel() {
-        private val _isIndexing = MutableStateFlow(value = false)
-        val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+        val isIndexing: StateFlow<Boolean> =
+            observeLibraryUseCase.isIndexing
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-        private val _progress = MutableStateFlow(value = -1)
-        val progress: StateFlow<Int> = _progress.asStateFlow()
+        val progress: StateFlow<Int> =
+            observeLibraryUseCase.progress
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1)
 
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -162,36 +164,6 @@ class ComicMetadataViewModel
                     ExistingWorkPolicy.KEEP,
                     syncRequest,
                 )
-
-                observeWorkStatus(syncRequest.id)
-            }
-        }
-
-        private fun observeWorkStatus(workerId: UUID) {
-            viewModelScope.launch {
-                workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
-                    if (workInfo != null) {
-                        val wasIndexing = _isIndexing.value
-                        _isIndexing.value = !workInfo.state.isFinished
-                        _progress.value = workInfo.progress.getInt("progress", -1)
-
-                        if (wasIndexing && workInfo.state.isFinished) {
-                            AcerolaLogger.i(
-                                TAG,
-                                "Metadata sync worker finished: ${workInfo.state.name}",
-                                LogSource.VIEWMODEL,
-                            )
-
-                            if (workInfo.state == WorkInfo.State.FAILED) {
-                                val errorMessage = workInfo.outputData.getString("error")
-                                if (errorMessage != null) {
-                                    // Usando UserMessage.Raw que implementa uiMessage: UiText
-                                    _uiEvents.send(UserMessage.Raw(errorMessage))
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
 

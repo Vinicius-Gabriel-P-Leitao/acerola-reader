@@ -16,7 +16,6 @@ import br.acerola.comic.local.translator.ui.toCombinedRegularDto
 import br.acerola.comic.local.translator.ui.toCombinedVolumeDto
 import br.acerola.comic.service.cache.ChapterCacheHandler
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
@@ -32,11 +31,31 @@ class ObserveCombinedChaptersUseCase
         @param:DirectoryEngine private val volumeGateway: VolumeGateway,
         @param:DirectoryEngine private val localReadGateway: ChapterReadGateway<ChapterPageDto>,
         @param:DirectoryEngine private val localSyncStatusGateway: ChapterSyncStatusGateway,
+        @param:MangadexEngine private val remoteSyncStatusGateway: ChapterSyncStatusGateway,
         @param:MangadexEngine private val remoteReadGateway: ChapterReadGateway<ChapterRemoteInfoPageDto>,
         private val cacheHandler: ChapterCacheHandler,
     ) {
-        val progress: StateFlow<Int> get() = localSyncStatusGateway.progress
-        val isIndexing: StateFlow<Boolean> get() = localSyncStatusGateway.isIndexing
+        val progress: Flow<Int> =
+            combine(
+                localSyncStatusGateway.progress,
+                remoteSyncStatusGateway.progress,
+                localSyncStatusGateway.isIndexing,
+                remoteSyncStatusGateway.isIndexing,
+            ) { localProg, remoteProg, localBusy, remoteBusy ->
+                when {
+                    localBusy -> localProg
+                    remoteBusy -> remoteProg
+                    else -> -1
+                }
+            }
+
+        val isIndexing: Flow<Boolean> =
+            combine(
+                localSyncStatusGateway.isIndexing,
+                remoteSyncStatusGateway.isIndexing,
+            ) { localBusy, remoteBusy ->
+                localBusy || remoteBusy
+            }
 
         fun observeCombined(
             comicId: Long,

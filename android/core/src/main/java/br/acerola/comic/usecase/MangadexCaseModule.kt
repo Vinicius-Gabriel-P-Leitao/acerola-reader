@@ -31,7 +31,11 @@ object MangadexCaseModule {
     @MangadexCase
     fun provideSyncLibraryUseCase(
         @MangadexEngine scanGateway: ComicLibraryScanGateway,
-    ): SyncLibraryUseCase = SyncLibraryUseCase(scanGateway = scanGateway)
+        @MangadexEngine chapterGateway: ChapterSyncStatusGateway,
+    ): SyncLibraryUseCase = SyncLibraryUseCase(
+        scanGateway = scanGateway,
+        chapterGateway = chapterGateway,
+    )
 
     @Provides
     @MangadexCase
