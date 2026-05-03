@@ -29,9 +29,8 @@ class LibrarySyncWorker
     constructor(
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
-        @param:DirectoryEngine private val singleSync: ComicSingleSyncGateway,
-        @param:DirectoryEngine private val libraryScan: ComicLibraryScanGateway,
-        @param:DirectoryEngine private val rebuildSync: ComicRebuildGateway,
+        private val syncLibraryUseCase: br.acerola.comic.usecase.sync.SyncLibraryUseCase,
+        @param:DirectoryEngine private val progressGateway: ComicSingleSyncGateway,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
         companion object {
@@ -47,13 +46,14 @@ class LibrarySyncWorker
         @RequiresApi(Build.VERSION_CODES.Q)
         override suspend fun doWork(): Result =
             coroutineScope {
-                val syncType = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_INCREMENTAL
+                val syncTypeString = inputData.getString(KEY_SYNC_TYPE) ?: SYNC_TYPE_INCREMENTAL
                 val baseUriString = inputData.getString(KEY_BASE_URI)
                 val comicId = inputData.getLong(KEY_MANGA_ID, -1L)
                 val baseUri = baseUriString?.toUri()
+                val syncType = br.acerola.comic.worker.contract.SyncType.from(syncTypeString)
 
                 val title =
-                    when (syncType) {
+                    when (syncTypeString) {
                         SYNC_TYPE_INCREMENTAL -> context.getString(R.string.sync_library_title_incremental)
                         SYNC_TYPE_REFRESH -> context.getString(R.string.sync_library_title_refresh)
                         SYNC_TYPE_REBUILD -> context.getString(R.string.sync_library_title_rebuild)
@@ -74,30 +74,17 @@ class LibrarySyncWorker
                     ),
                 )
 
-                // Usamos singleSync para observar o progresso, pois em ComicDirectoryEngine é o mesmo StateFlow
+                // Usamos progressGateway para observar o progresso
                 val progressJob =
                     launch {
-                        singleSync.progress.collectLatest { progress ->
+                        progressGateway.progress.collectLatest { progress ->
                             notificationHelper.updateProgress(builder, progress)
                             setProgress(workDataOf(WorkerContract.KEY_PROGRESS to progress))
                         }
                     }
 
                 try {
-                    val resultEither =
-                        when (syncType) {
-                            SYNC_TYPE_INCREMENTAL -> libraryScan.incrementalScan(baseUri)
-                            SYNC_TYPE_REFRESH -> libraryScan.refreshLibrary(baseUri)
-                            SYNC_TYPE_REBUILD -> rebuildSync.rebuildLibrary(baseUri)
-                            SYNC_TYPE_SPECIFIC ->
-                                if (comicId != -1L) {
-                                    singleSync.refreshManga(comicId, baseUri)
-                                } else {
-                                    progressJob.cancel()
-                                    return@coroutineScope Result.failure(workDataOf(WorkerContract.KEY_ERROR to "Comic ID not found"))
-                                }
-                            else -> libraryScan.incrementalScan(baseUri)
-                        }
+                    val resultEither = syncLibraryUseCase.execute(syncType, comicId, baseUri)
 
                     progressJob.cancel()
 
