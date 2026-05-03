@@ -126,8 +126,8 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 
 ### Validar se os metadados dos chapters estão sendo carregados
 
-- [ ] **O combine de 7 valores** Acredito ser problema do combine de 7 valores na ComicViewModel que tá fazendo isso de não carregar os métadados 
-  do chapter.
+- [x] **O combine de 7 valores** Acredito ser problema do combine de 7 valores na ComicViewModel que tá fazendo isso de não carregar os métadados 
+  do chapter, problema era de ordem e tratamento com novos dados no cache.
 
 ### Aplicar mudanças da lib rust acerola p2p
 
