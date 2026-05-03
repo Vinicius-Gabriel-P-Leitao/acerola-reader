@@ -5,50 +5,46 @@
     android:viewportWidth="240"
     android:viewportHeight="200">
 
-    <!-- ===== Card 1: PDF (vermelho) x=17..75, y=35..165 ===== -->
+    <!-- ===== Card 1: PDF (vermelho) x=17..75, y=55..125 ===== -->
     <path
         android:fillColor="#E53E3E"
-        android:pathData="M17,35 L63,35 L75,47 L75,165 L17,165 Z" />
+        android:pathData="M17,55 L63,55 L75,67 L75,125 L17,125 Z" />
     <path
         android:fillColor="#B91C1C"
-        android:pathData="M63,35 L63,47 L75,47 Z" />
-    <path android:fillColor="#FECACA" android:pathData="M24,62 L68,62 L68,66 L24,66 Z" />
-    <path android:fillColor="#FECACA" android:pathData="M24,74 L68,74 L68,78 L24,78 Z" />
-    <path android:fillColor="#FECACA" android:pathData="M24,86 L58,86 L58,90 L24,90 Z" />
-    <path android:fillColor="#FECACA" android:pathData="M24,98 L68,98 L68,102 L24,102 Z" />
-    <path android:fillColor="#FECACA" android:pathData="M24,110 L48,110 L48,114 L24,114 Z" />
+        android:pathData="M63,55 L63,67 L75,67 Z" />
+    <path android:fillColor="#FECACA" android:pathData="M24,76 L68,76 L68,80 L24,80 Z" />
+    <path android:fillColor="#FECACA" android:pathData="M24,86 L60,86 L60,90 L24,90 Z" />
+    <path android:fillColor="#FECACA" android:pathData="M24,96 L68,96 L68,100 L24,100 Z" />
     <path
         android:fillColor="#B91C1C"
-        android:pathData="M17,145 L75,145 L75,165 L17,165 Z" />
+        android:pathData="M17,110 L75,110 L75,125 L17,125 Z" />
 
-    <!-- ===== Seta PDF → CBZ (entre x=75 e x=91) ===== -->
+    <!-- ===== Seta PDF → CBZ ===== -->
     <path
         android:fillColor="#CBA6F7"
-        android:pathData="M77,97 L84,97 L84,103 L77,103 Z" />
+        android:pathData="M77,87 L84,87 L84,93 L77,93 Z" />
     <path
         android:fillColor="#CBA6F7"
-        android:pathData="M82,93 L90,100 L82,107 Z" />
+        android:pathData="M82,83 L90,90 L82,97 Z" />
 
     <!-- Sparkle acima da seta -->
     <path
         android:fillColor="#F9E2AF"
-        android:pathData="M83,78 L84.5,73 L86,78 L91,79.5 L86,81 L84.5,86 L83,81 L78,79.5 Z" />
+        android:pathData="M83,68 L84.5,63 L86,68 L91,69.5 L86,71 L84.5,76 L83,71 L78,69.5 Z" />
 
-    <!-- ===== Card 2: CBZ (verde) x=91..149, y=35..165 ===== -->
+    <!-- ===== Card 2: CBZ (verde) x=91..149, y=55..125 ===== -->
     <path
         android:fillColor="#40A02B"
-        android:pathData="M91,35 L137,35 L149,47 L149,165 L91,165 Z" />
+        android:pathData="M91,55 L137,55 L149,67 L149,125 L91,125 Z" />
     <path
         android:fillColor="#2D7A1F"
-        android:pathData="M137,35 L137,47 L149,47 Z" />
-    <path android:fillColor="#A6E3A1" android:pathData="M98,62 L142,62 L142,66 L98,66 Z" />
-    <path android:fillColor="#A6E3A1" android:pathData="M98,74 L142,74 L142,78 L98,78 Z" />
-    <path android:fillColor="#A6E3A1" android:pathData="M98,86 L132,86 L132,90 L98,90 Z" />
-    <path android:fillColor="#A6E3A1" android:pathData="M98,98 L142,98 L142,102 L98,102 Z" />
-    <path android:fillColor="#A6E3A1" android:pathData="M98,110 L122,110 L122,114 L98,114 Z" />
+        android:pathData="M137,55 L137,67 L149,67 Z" />
+    <path android:fillColor="#A6E3A1" android:pathData="M98,76 L142,76 L142,80 L98,80 Z" />
+    <path android:fillColor="#A6E3A1" android:pathData="M98,86 L134,86 L134,90 L98,90 Z" />
+    <path android:fillColor="#A6E3A1" android:pathData="M98,96 L142,96 L142,100 L98,100 Z" />
     <path
         android:fillColor="#2D7A1F"
-        android:pathData="M91,145 L149,145 L149,165 L91,165 Z" />
+        android:pathData="M91,110 L149,110 L149,125 L91,125 Z" />
 
     <!-- Checkmark CBZ -->
     <path
@@ -57,23 +53,21 @@
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M99,50 L106,58 L120,40" />
+        android:pathData="M99,68 L105,76 L118,58" />
 
-    <!-- ===== Card 3: CBR (azul) x=165..223, y=35..165 ===== -->
+    <!-- ===== Card 3: CBR (azul) x=165..223, y=55..125 ===== -->
     <path
         android:fillColor="#1D6FCC"
-        android:pathData="M165,35 L211,35 L223,47 L223,165 L165,165 Z" />
+        android:pathData="M165,55 L211,55 L223,67 L223,125 L165,125 Z" />
     <path
         android:fillColor="#1558A8"
-        android:pathData="M211,35 L211,47 L223,47 Z" />
-    <path android:fillColor="#89B4FA" android:pathData="M172,62 L216,62 L216,66 L172,66 Z" />
-    <path android:fillColor="#89B4FA" android:pathData="M172,74 L216,74 L216,78 L172,78 Z" />
-    <path android:fillColor="#89B4FA" android:pathData="M172,86 L206,86 L206,90 L172,90 Z" />
-    <path android:fillColor="#89B4FA" android:pathData="M172,98 L216,98 L216,102 L172,102 Z" />
-    <path android:fillColor="#89B4FA" android:pathData="M172,110 L196,110 L196,114 L172,114 Z" />
+        android:pathData="M211,55 L211,67 L223,67 Z" />
+    <path android:fillColor="#89B4FA" android:pathData="M172,76 L216,76 L216,80 L172,80 Z" />
+    <path android:fillColor="#89B4FA" android:pathData="M172,86 L208,86 L208,90 L172,90 Z" />
+    <path android:fillColor="#89B4FA" android:pathData="M172,96 L216,96 L216,100 L172,100 Z" />
     <path
         android:fillColor="#1558A8"
-        android:pathData="M165,145 L223,145 L223,165 L165,165 Z" />
+        android:pathData="M165,110 L223,110 L223,125 L165,125 Z" />
 
     <!-- Checkmark CBR -->
     <path
@@ -82,6 +76,6 @@
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M173,50 L180,58 L194,40" />
+        android:pathData="M173,68 L179,76 L192,58" />
 
 </vector>
