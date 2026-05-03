@@ -10,12 +10,14 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.comic.data.R
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.AnilistCase
 import br.acerola.comic.usecase.ComicInfoCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.contract.SyncType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
@@ -56,12 +58,12 @@ class MetadataSyncWorker
 
                 val source =
                     when (sourceString) {
-                        SOURCE_MANGADEX -> br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX
-                        SOURCE_COMICINFO -> br.acerola.comic.pattern.metadata.MetadataSource.COMIC_INFO
-                        SOURCE_ANILIST -> br.acerola.comic.pattern.metadata.MetadataSource.ANILIST
-                        else -> br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX
+                        SOURCE_MANGADEX -> MetadataSource.MANGADEX
+                        SOURCE_COMICINFO -> MetadataSource.COMIC_INFO
+                        SOURCE_ANILIST -> MetadataSource.ANILIST
+                        else -> MetadataSource.MANGADEX
                     }
-                val syncType = br.acerola.comic.worker.contract.SyncType.from(syncTypeString)
+                val syncType = SyncType.from(syncTypeString)
 
                 val title =
                     when (sourceString) {

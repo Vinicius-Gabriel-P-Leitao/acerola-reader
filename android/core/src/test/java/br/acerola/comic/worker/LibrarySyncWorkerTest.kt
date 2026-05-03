@@ -13,6 +13,7 @@ import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.contract.SyncType
 import br.acerola.comic.worker.sync.LibrarySyncWorker
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -73,7 +74,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.SPECIFIC,
+                    SyncType.SPECIFIC,
                     -1L,
                     null
                 )
@@ -97,7 +98,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.SPECIFIC,
+                    SyncType.SPECIFIC,
                     42L,
                     null
                 )
@@ -116,7 +117,7 @@ class LibrarySyncWorkerTest {
             assertTrue(result is Result.Success)
             coVerify(exactly = 1) {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.SPECIFIC,
+                    SyncType.SPECIFIC,
                     42L,
                     null
                 )
@@ -128,7 +129,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.SPECIFIC,
+                    SyncType.SPECIFIC,
                     42L,
                     null
                 )
@@ -154,7 +155,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.INCREMENTAL,
+                    SyncType.INCREMENTAL,
                     -1L,
                     null
                 )
@@ -175,7 +176,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.INCREMENTAL,
+                    SyncType.INCREMENTAL,
                     -1L,
                     null
                 )
@@ -198,7 +199,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.REFRESH,
+                    SyncType.REFRESH,
                     -1L,
                     null
                 )
@@ -219,7 +220,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.REFRESH,
+                    SyncType.REFRESH,
                     -1L,
                     null
                 )
@@ -242,7 +243,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.REBUILD,
+                    SyncType.REBUILD,
                     -1L,
                     null
                 )
@@ -263,7 +264,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.REBUILD,
+                    SyncType.REBUILD,
                     -1L,
                     null
                 )
@@ -286,7 +287,7 @@ class LibrarySyncWorkerTest {
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
-                    br.acerola.comic.worker.contract.SyncType.INCREMENTAL,
+                    SyncType.INCREMENTAL,
                     -1L,
                     null
                 )

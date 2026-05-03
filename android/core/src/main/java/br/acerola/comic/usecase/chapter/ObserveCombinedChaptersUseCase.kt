@@ -1,6 +1,7 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
@@ -29,12 +30,13 @@ class ObserveCombinedChaptersUseCase
     @Inject
     constructor(
         @param:DirectoryEngine private val volumeGateway: VolumeGateway,
-        @param:DirectoryEngine private val localRepository: ChapterGateway<ChapterPageDto>,
-        @param:MangadexEngine private val remoteRepository: ChapterGateway<ChapterRemoteInfoPageDto>,
+        @param:DirectoryEngine private val localReadGateway: ChapterReadGateway<ChapterPageDto>,
+        @param:DirectoryEngine private val localSyncStatusGateway: ChapterSyncStatusGateway,
+        @param:MangadexEngine private val remoteReadGateway: ChapterReadGateway<ChapterRemoteInfoPageDto>,
         private val cacheHandler: ChapterCacheHandler,
     ) {
-        val progress: StateFlow<Int> get() = localRepository.progress
-        val isIndexing: StateFlow<Boolean> get() = localRepository.isIndexing
+        val progress: StateFlow<Int> get() = localSyncStatusGateway.progress
+        val isIndexing: StateFlow<Boolean> get() = localSyncStatusGateway.isIndexing
 
         fun observeCombined(
             comicId: Long,
@@ -57,7 +59,7 @@ class ObserveCombinedChaptersUseCase
                 )
 
             val localFlow =
-                localRepository
+                localReadGateway
                     .observeChapters(comicId, sort.type.name, sort.direction == SortDirection.ASCENDING)
                     .filter { it.pageSize != -1 }
 
@@ -68,7 +70,7 @@ class ObserveCombinedChaptersUseCase
 
             val remoteFlow =
                 if (remoteId != null) {
-                    remoteRepository
+                    remoteReadGateway
                         .observeChapters(remoteId, sort.type.name, sort.direction == SortDirection.ASCENDING)
                         .filter { it.pageSize != -1 }
                 } else {

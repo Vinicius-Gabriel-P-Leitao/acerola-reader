@@ -1,6 +1,7 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -8,16 +9,17 @@ import kotlinx.coroutines.flow.StateFlow
  * Mantido para compatibilidade com Reader e outras ViewModels.
  */
 open class ObserveChaptersUseCase<T>(
-    private val chapterRepository: ChapterGateway<T>,
+    private val readGateway: ChapterReadGateway<T>,
+    private val syncStatusGateway: ChapterSyncStatusGateway,
 ) {
-    val progress: StateFlow<Int> get() = chapterRepository.progress
-    val isIndexing: StateFlow<Boolean> get() = chapterRepository.isIndexing
+    val progress: StateFlow<Int> get() = syncStatusGateway.progress
+    val isIndexing: StateFlow<Boolean> get() = syncStatusGateway.isIndexing
 
     fun observeByComic(
         comicId: Long,
         sortType: String = "NUMBER",
         isAscending: Boolean = true,
-    ): StateFlow<T> = chapterRepository.observeChapters(comicId, sortType, isAscending)
+    ): StateFlow<T> = readGateway.observeChapters(comicId, sortType, isAscending)
 
     suspend fun loadPage(
         comicId: Long,
@@ -26,5 +28,5 @@ open class ObserveChaptersUseCase<T>(
         pageSize: Int = 20,
         sortType: String = "NUMBER",
         isAscending: Boolean = true,
-    ): T = chapterRepository.getChapterPage(comicId, total, page, pageSize, sortType, isAscending)
+    ): T = readGateway.getChapterPage(comicId, total, page, pageSize, sortType, isAscending)
 }

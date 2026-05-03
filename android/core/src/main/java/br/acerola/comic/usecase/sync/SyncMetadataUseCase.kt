@@ -15,9 +15,9 @@ class SyncMetadataUseCase
     @Inject
     constructor(
         private val syncComicMetadataUseCase: SyncComicMetadataUseCase,
-        @AnilistCase private val anilistSyncUseCase: LegacySyncLibraryUseCase,
-        @MangadexCase private val mangadexSyncUseCase: LegacySyncLibraryUseCase,
-        @ComicInfoCase private val comicInfoSyncUseCase: LegacySyncLibraryUseCase,
+        @param:AnilistCase private val anilistSyncUseCase: LegacySyncLibraryUseCase,
+        @param:MangadexCase private val mangadexSyncUseCase: LegacySyncLibraryUseCase,
+        @param:ComicInfoCase private val comicInfoSyncUseCase: LegacySyncLibraryUseCase,
     ) {
         suspend fun execute(
             source: MetadataSource,

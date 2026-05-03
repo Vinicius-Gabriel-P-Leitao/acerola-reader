@@ -16,6 +16,7 @@ import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.data.R
 import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.contract.SyncType
 import br.acerola.comic.worker.contract.WorkerContract
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -50,7 +51,7 @@ class LibrarySyncWorker
                 val baseUriString = inputData.getString(KEY_BASE_URI)
                 val comicId = inputData.getLong(KEY_MANGA_ID, -1L)
                 val baseUri = baseUriString?.toUri()
-                val syncType = br.acerola.comic.worker.contract.SyncType.from(syncTypeString)
+                val syncType = SyncType.from(syncTypeString)
 
                 val title =
                     when (syncTypeString) {

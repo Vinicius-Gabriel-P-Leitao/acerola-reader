@@ -13,9 +13,9 @@ import javax.inject.Inject
 class SyncLibraryUseCase
     @Inject
     constructor(
-        @DirectoryEngine private val singleSync: ComicSingleSyncGateway,
-        @DirectoryEngine private val scanGateway: ComicLibraryScanGateway,
-        @DirectoryEngine private val rebuildGateway: ComicRebuildGateway,
+        @param:DirectoryEngine private val singleSync: ComicSingleSyncGateway,
+        @param:DirectoryEngine private val scanGateway: ComicLibraryScanGateway,
+        @param:DirectoryEngine private val rebuildGateway: ComicRebuildGateway,
     ) {
         suspend fun execute(
             type: SyncType,

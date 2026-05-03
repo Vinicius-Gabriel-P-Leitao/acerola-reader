@@ -1,6 +1,8 @@
 package br.acerola.comic.usecase
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
@@ -59,8 +61,8 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideRescanComicChaptersUseCase(
-        @DirectoryEngine chapterOps: ChapterGateway<ChapterPageDto>,
-    ): RescanComicChaptersUseCase<ChapterPageDto> =
+        @DirectoryEngine chapterOps: ChapterSyncGateway,
+    ): RescanComicChaptersUseCase =
         RescanComicChaptersUseCase(
             chapterRepository = chapterOps,
         )
@@ -68,10 +70,12 @@ object DirectoryCaseModule {
     @Provides
     @DirectoryCase
     fun provideGetChaptersUseCase(
-        @DirectoryEngine chapterOps: ChapterGateway<ChapterPageDto>,
+        @DirectoryEngine readOps: ChapterReadGateway<ChapterPageDto>,
+        @DirectoryEngine statusOps: ChapterSyncStatusGateway,
     ): ObserveChaptersUseCase<ChapterPageDto> =
         ObserveChaptersUseCase(
-            chapterRepository = chapterOps,
+            readGateway = readOps,
+            syncStatusGateway = statusOps,
         )
 
     @Provides

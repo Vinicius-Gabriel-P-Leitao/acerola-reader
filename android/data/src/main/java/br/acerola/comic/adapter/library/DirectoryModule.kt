@@ -1,6 +1,8 @@
 package br.acerola.comic.adapter.library
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryWriteGateway
@@ -56,7 +58,17 @@ abstract class DirectoryModule {
     @Binds
     @Singleton
     @DirectoryEngine
-    abstract fun bindChapterArchiveRepository(int: ChapterArchiveEngine): ChapterGateway<ChapterPageDto>
+    abstract fun bindChapterArchiveSyncRepository(int: ChapterArchiveEngine): ChapterSyncGateway
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindChapterArchiveStatusRepository(int: ChapterArchiveEngine): ChapterSyncStatusGateway
+
+    @Binds
+    @Singleton
+    @DirectoryEngine
+    abstract fun bindChapterArchiveReadRepository(int: ChapterArchiveEngine): ChapterReadGateway<ChapterPageDto>
 
     @Binds
     @Singleton

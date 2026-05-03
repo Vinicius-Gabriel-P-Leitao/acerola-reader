@@ -10,9 +10,11 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.workDataOf
 import arrow.core.Either
 import br.acerola.comic.error.message.LibrarySyncError
+import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
+import br.acerola.comic.worker.contract.SyncType
 import br.acerola.comic.worker.sync.MetadataSyncWorker
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -81,8 +83,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.MANGADEX,
+                    SyncType.SYNC,
                     42L
                 )
             } returns Either.Right(Unit)
@@ -100,8 +102,8 @@ class MetadataSyncWorkerTest {
             assertTrue(result is Result.Success)
             coVerify(exactly = 1) {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.MANGADEX,
+                    SyncType.SYNC,
                     42L
                 )
             }
@@ -112,8 +114,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.MANGADEX,
+                    SyncType.SYNC,
                     42L
                 )
             } returns Either.Left(LibrarySyncError.SyncNetworkError())
@@ -136,8 +138,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.ANILIST,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.ANILIST,
+                    SyncType.SYNC,
                     42L
                 )
             } returns Either.Right(Unit)
@@ -160,8 +162,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.COMIC_INFO,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.COMIC_INFO,
+                    SyncType.SYNC,
                     42L
                 )
             } returns Either.Right(Unit)
@@ -185,8 +187,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.MANGADEX,
+                    SyncType.SYNC,
                     null
                 )
             } returns Either.Right(Unit)
@@ -209,8 +211,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.MANGADEX,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.MANGADEX,
+                    SyncType.SYNC,
                     null
                 )
             } returns Either.Left(LibrarySyncError.SyncNetworkError())
@@ -233,8 +235,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.ANILIST,
-                    br.acerola.comic.worker.contract.SyncType.RESCAN,
+                    MetadataSource.ANILIST,
+                    SyncType.RESCAN,
                     null
                 )
             } returns Either.Right(Unit)
@@ -257,8 +259,8 @@ class MetadataSyncWorkerTest {
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
-                    br.acerola.comic.pattern.metadata.MetadataSource.COMIC_INFO,
-                    br.acerola.comic.worker.contract.SyncType.SYNC,
+                    MetadataSource.COMIC_INFO,
+                    SyncType.SYNC,
                     null
                 )
             } returns Either.Right(Unit)

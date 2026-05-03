@@ -1,6 +1,8 @@
 package br.acerola.comic.adapter.metadata.mangadex
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
@@ -50,7 +52,17 @@ abstract class MangadexModule {
     @Binds
     @Singleton
     @MangadexEngine
-    abstract fun bindMangadexChapterRepository(impl: MangadexChapterEngine): ChapterGateway<ChapterRemoteInfoPageDto>
+    abstract fun bindMangadexChapterSyncRepository(impl: MangadexChapterEngine): ChapterSyncGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexChapterStatusRepository(impl: MangadexChapterEngine): ChapterSyncStatusGateway
+
+    @Binds
+    @Singleton
+    @MangadexEngine
+    abstract fun bindMangadexChapterReadRepository(impl: MangadexChapterEngine): ChapterReadGateway<ChapterRemoteInfoPageDto>
 
     @Binds
     @Singleton

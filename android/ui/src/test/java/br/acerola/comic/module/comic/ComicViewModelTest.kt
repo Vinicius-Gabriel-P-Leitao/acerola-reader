@@ -4,7 +4,8 @@ import android.content.Context
 import android.util.Log
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.config.preference.ChapterPerPagePreference
@@ -64,8 +65,8 @@ class ComicViewModelTest {
     private val context = mockk<Context>(relaxed = true)
     private val mangadexRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
     private val directoryRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
-    private val directoryChapterRepo = mockk<ChapterGateway<ChapterPageDto>>(relaxed = true)
-    private val mangadexChapterRepo = mockk<ChapterGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
+    private val directoryChapterReadRepo = mockk<ChapterReadGateway<ChapterPageDto>>(relaxed = true)
+    private val mangadexChapterReadRepo = mockk<ChapterReadGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
     private lateinit var observeComicHistoryUseCase: ObserveComicHistoryUseCase

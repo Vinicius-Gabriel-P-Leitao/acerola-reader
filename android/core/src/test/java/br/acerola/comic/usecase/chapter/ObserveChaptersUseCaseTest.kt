@@ -1,6 +1,7 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.dto.archive.ChapterPageDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -17,40 +18,43 @@ import org.junit.Test
 
 class ObserveChaptersUseCaseTest {
     @MockK
-    lateinit var repository: ChapterGateway<ChapterPageDto>
+    lateinit var readGateway: ChapterReadGateway<ChapterPageDto>
+
+    @MockK
+    lateinit var statusGateway: ChapterSyncStatusGateway
 
     private lateinit var useCase: ObserveChaptersUseCase<ChapterPageDto>
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        every { repository.progress } returns MutableStateFlow(value = 0)
-        every { repository.isIndexing } returns MutableStateFlow(value = false)
+        every { statusGateway.progress } returns MutableStateFlow(value = 0)
+        every { statusGateway.isIndexing } returns MutableStateFlow(value = false)
 
-        useCase = ObserveChaptersUseCase(chapterRepository = repository)
+        useCase = ObserveChaptersUseCase(readGateway = readGateway, syncStatusGateway = statusGateway)
     }
 
     @Test
     fun `observeByComic deve delegar para o repositorio`() =
         runTest {
             val dto = mockk<ChapterPageDto>()
-            every { repository.observeChapters(comicId = 1L) } returns MutableStateFlow(value = dto)
+            every { readGateway.observeChapters(comicId = 1L) } returns MutableStateFlow(value = dto)
 
             val result = useCase.observeByComic(comicId = 1L).first()
 
             assertEquals(dto, result)
-            coVerify { repository.observeChapters(comicId = 1L) }
+            coVerify { readGateway.observeChapters(comicId = 1L) }
         }
 
     @Test
     fun `loadPage deve delegar para o repositorio com parametros corretos`() =
         runTest {
             val dto = mockk<ChapterPageDto>()
-            coEvery { repository.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) } returns dto
+            coEvery { readGateway.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) } returns dto
 
             val result = useCase.loadPage(comicId = 1L, total = 100, page = 2)
 
             assertEquals(dto, result)
-            coVerify { repository.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) }
+            coVerify { readGateway.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) }
         }
 }

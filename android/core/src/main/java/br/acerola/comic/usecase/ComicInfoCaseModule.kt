@@ -1,14 +1,11 @@
 package br.acerola.comic.usecase
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
-import br.acerola.comic.adapter.contract.gateway.ComicSyncStatusGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
 import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
-import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.view.ComicSummaryDto
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
@@ -55,8 +52,8 @@ object ComicInfoCaseModule {
     @Provides
     @ComicInfoCase
     fun provideRescanComicChaptersUseCase(
-        @ComicInfoEngine chapterOps: ChapterGateway<ChapterRemoteInfoPageDto>,
-    ): RescanComicChaptersUseCase<ChapterRemoteInfoPageDto> =
+        @ComicInfoEngine chapterOps: ChapterSyncGateway,
+    ): RescanComicChaptersUseCase =
         RescanComicChaptersUseCase(
             chapterRepository = chapterOps,
         )
@@ -65,9 +62,9 @@ object ComicInfoCaseModule {
     fun provideSyncComicMetadataUseCase(
         @AnilistEngine anilistMangaRepo: ComicSingleSyncGateway,
         @MangadexEngine mangadexMangaRepo: ComicSingleSyncGateway,
-        @MangadexEngine mangadexChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>,
+        @MangadexEngine mangadexChapterRepo: ChapterSyncGateway,
         @ComicInfoEngine comicInfoMangaRepo: ComicSingleSyncGateway,
-        @ComicInfoEngine comicInfoChapterRepo: ChapterGateway<ChapterRemoteInfoPageDto>,
+        @ComicInfoEngine comicInfoChapterRepo: ChapterSyncGateway,
     ): SyncComicMetadataUseCase =
         SyncComicMetadataUseCase(
             anilistMangaRepo,

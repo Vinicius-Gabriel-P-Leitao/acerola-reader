@@ -1,6 +1,7 @@
 package br.acerola.comic.usecase.chapter
 
-import br.acerola.comic.adapter.contract.gateway.ChapterGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.VolumeGateway
 import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
 import br.acerola.comic.config.preference.types.ChapterSortType
@@ -31,10 +32,13 @@ class ObserveCombinedChaptersUseCaseTest {
     lateinit var volumeGateway: VolumeGateway
 
     @MockK
-    lateinit var localRepository: ChapterGateway<ChapterPageDto>
+    lateinit var localReadGateway: ChapterReadGateway<ChapterPageDto>
 
     @MockK
-    lateinit var remoteRepository: ChapterGateway<ChapterRemoteInfoPageDto>
+    lateinit var localSyncStatusGateway: ChapterSyncStatusGateway
+
+    @MockK
+    lateinit var remoteReadGateway: ChapterReadGateway<ChapterRemoteInfoPageDto>
 
     @MockK
     lateinit var cacheHandler: ChapterCacheHandler
@@ -48,8 +52,8 @@ class ObserveCombinedChaptersUseCaseTest {
         MockKAnnotations.init(this)
         inMemoryCache.clear()
 
-        every { localRepository.progress } returns MutableStateFlow(value = 0)
-        every { localRepository.isIndexing } returns MutableStateFlow(value = false)
+        every { localSyncStatusGateway.progress } returns MutableStateFlow(value = 0)
+        every { localSyncStatusGateway.isIndexing } returns MutableStateFlow(value = false)
 
         every { cacheHandler.generateKey(any(), any(), any(), any(), any(), any(), any()) } answers {
             val args = it.invocation.args
@@ -68,8 +72,9 @@ class ObserveCombinedChaptersUseCaseTest {
         useCase =
             ObserveCombinedChaptersUseCase(
                 volumeGateway = volumeGateway,
-                localRepository = localRepository,
-                remoteRepository = remoteRepository,
+                localReadGateway = localReadGateway,
+                localSyncStatusGateway = localSyncStatusGateway,
+                remoteReadGateway = remoteReadGateway,
                 cacheHandler = cacheHandler,
             )
     }
@@ -121,10 +126,10 @@ class ObserveCombinedChaptersUseCaseTest {
             val remoteFlow = MutableStateFlow(remotePage)
             val hasRootFlow = MutableStateFlow(false)
 
-            every { localRepository.observeChapters(1L, "NUMBER", true) } returns localFlow
+            every { localReadGateway.observeChapters(1L, "NUMBER", true) } returns localFlow
             every { volumeGateway.observeVolumeGroups(1L, 20, "NUMBER", true) } returns volumeGroupsFlow
             every { volumeGateway.observeHasRootChapters(1L) } returns hasRootFlow
-            every { remoteRepository.observeChapters(42L, "NUMBER", true) } returns remoteFlow
+            every { remoteReadGateway.observeChapters(42L, "NUMBER", true) } returns remoteFlow
 
             // First call: remoteId=null → chapters load with dummy remote metadata and are cached
             val firstResult =
@@ -191,10 +196,10 @@ class ObserveCombinedChaptersUseCaseTest {
             val remoteFlow = MutableStateFlow(emptyRemotePage)
             val hasRootFlow = MutableStateFlow(false)
 
-            every { localRepository.observeChapters(1L, "NUMBER", true) } returns localFlow
+            every { localReadGateway.observeChapters(1L, "NUMBER", true) } returns localFlow
             every { volumeGateway.observeVolumeGroups(1L, 20, "NUMBER", true) } returns volumeGroupsFlow
             every { volumeGateway.observeHasRootChapters(1L) } returns hasRootFlow
-            every { remoteRepository.observeChapters(42L, "NUMBER", true) } returns remoteFlow
+            every { remoteReadGateway.observeChapters(42L, "NUMBER", true) } returns remoteFlow
 
             // 1. First emission with empty remote metadata
             val results = mutableListOf<ChapterDto?>()
