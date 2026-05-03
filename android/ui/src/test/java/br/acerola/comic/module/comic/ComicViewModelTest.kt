@@ -25,6 +25,7 @@ import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.service.cache.ChapterCacheHandler
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
@@ -74,6 +75,7 @@ class ComicViewModelTest {
     private val directoryObserveVolumeChapters = mockk<ObserveVolumeChaptersUseCase>(relaxed = true)
     private val extractVolumeCoverUseCase = mockk<ExtractVolumeCoverUseCase>(relaxed = true)
     private val extractAllVolumeCoversUseCase = mockk<ExtractAllVolumeCoversUseCase>(relaxed = true)
+    private val cacheHandler = mockk<ChapterCacheHandler>(relaxed = true)
 
     private val localChaptersFlow = MutableStateFlow(ChapterPageDto(emptyList(), emptyList(), 20, 0, 0))
     private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
@@ -187,6 +189,7 @@ class ComicViewModelTest {
             manageCategoriesUseCase = manageCategoriesUseCase,
             extractVolumeCoverUseCase = extractVolumeCoverUseCase,
             extractAllVolumeCoversUseCase = extractAllVolumeCoversUseCase,
+            cacheHandler = cacheHandler,
         )
 
     @Test
