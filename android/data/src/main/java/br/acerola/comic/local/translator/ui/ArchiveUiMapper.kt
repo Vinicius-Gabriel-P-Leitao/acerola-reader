@@ -8,6 +8,7 @@ import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
+import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
@@ -211,8 +212,15 @@ fun List<VolumeChapterGroupDto>.toCombinedVolumeDto(
     val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeSort() }
 
     val filteredRemoteItems =
-        visibleItems.mapNotNull { local ->
-            remoteMap[local.chapterSort.normalizeSort()]
+        visibleItems.map { local ->
+            remoteMap[local.chapterSort.normalizeSort()] ?: ChapterFeedDto(
+                id = -1,
+                title = "",
+                chapter = local.chapterSort, // Fallback to local chapter number if no metadata found
+                pageCount = null,
+                scanlation = "",
+                source = emptyList(),
+            )
         }
 
     return ChapterDto(
@@ -260,8 +268,15 @@ fun ChapterPageDto.toCombinedRegularDto(
     val remoteMap = remoteAll.items.associateBy { it.chapter.normalizeSort() }
 
     val filteredRemoteItems =
-        pagedLocalItems.mapNotNull { local ->
-            remoteMap[local.chapterSort.normalizeSort()]
+        pagedLocalItems.map { local ->
+            remoteMap[local.chapterSort.normalizeSort()] ?: ChapterFeedDto(
+                id = -1,
+                title = "",
+                chapter = local.chapterSort,
+                pageCount = null,
+                scanlation = "",
+                source = emptyList(),
+            )
         }
 
     return ChapterDto(

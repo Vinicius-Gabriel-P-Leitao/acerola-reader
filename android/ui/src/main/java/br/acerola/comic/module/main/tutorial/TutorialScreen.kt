@@ -55,9 +55,10 @@ fun Main.Tutorial.Template.Screen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = SpacingTokens.Small, vertical = SpacingTokens.ExtraSmall),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SpacingTokens.Small, vertical = SpacingTokens.ExtraSmall),
             horizontalArrangement = Arrangement.End,
         ) {
             if (!isLastPage) {
@@ -75,35 +76,38 @@ fun Main.Tutorial.Template.Screen(
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = SpacingTokens.Large),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = SpacingTokens.Large),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             pages.forEachIndexed { index, _ ->
                 val isSelected = index == pagerState.currentPage
                 Box(
-                    modifier = Modifier
-                        .padding(horizontal = SpacingTokens.ExtraSmall)
-                        .size(if (isSelected) SpacingTokens.Medium else SpacingTokens.Small)
-                        .clip(ShapeTokens.Full)
-                        .background(
-                            if (isSelected) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant
-                            },
-                        ),
+                    modifier =
+                        Modifier
+                            .padding(horizontal = SpacingTokens.ExtraSmall)
+                            .size(if (isSelected) SpacingTokens.Medium else SpacingTokens.Small)
+                            .clip(ShapeTokens.Full)
+                            .background(
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
+                            ),
                 )
             }
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = SpacingTokens.Large)
-                .padding(bottom = SpacingTokens.Large),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SpacingTokens.Large)
+                    .padding(bottom = SpacingTokens.Large),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -140,18 +144,20 @@ fun Main.Tutorial.Template.Screen(
 @Composable
 fun Main.Tutorial.Component.TutorialSlide(page: TutorialPage) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = SpacingTokens.Giant),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = SpacingTokens.Giant),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
             painter = painterResource(id = page.imageRes),
             contentDescription = stringResource(id = R.string.tutorial_content_description_slide),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(SizeTokens.HistoryHeroHeight),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(SizeTokens.HistoryHeroHeight),
             contentScale = ContentScale.Fit,
         )
 

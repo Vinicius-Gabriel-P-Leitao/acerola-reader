@@ -53,7 +53,7 @@ class ObserveCombinedChaptersUseCase
                     pageSize,
                     viewMode.name,
                     page,
-                    volumeOverrides.hashCode().toString(),
+                    "${remoteId}_${volumeOverrides.hashCode()}",
                 )
 
             val localFlow =
@@ -64,7 +64,7 @@ class ObserveCombinedChaptersUseCase
             val volumeFlow =
                 volumeGateway
                     .observeVolumeGroups(comicId, pageSize, sort.type.name, sort.direction == SortDirection.ASCENDING)
-                    .filter { it.firstOrNull()?.totalChapters != -1 }
+                    .filter { it.isEmpty() || it.first().totalChapters != -1 }
 
             val remoteFlow =
                 if (remoteId != null) {
@@ -83,14 +83,11 @@ class ObserveCombinedChaptersUseCase
             ) { localAll, volumeSections, remoteAll, hasRootChapters ->
                 val isInitialState = localAll.pageSize == 0 && localAll.items.isEmpty()
 
-                if (!isInitialState) {
-                    val cached = cacheHandler.get(cacheKey)
+                val cached = if (!isInitialState) cacheHandler.get(cacheKey) else null
 
-                    if (cached != null) {
-                        if (cached.archive.items.isNotEmpty() || localAll.items.isEmpty()) {
-                            return@combine cached
-                        }
-                    }
+                // Fallback para cache apenas se os novos dados remotos estiverem vazios e o cache não
+                if (cached != null && remoteAll.items.isEmpty() && cached.remoteInfo != null && cached.remoteInfo!!.items.isNotEmpty()) {
+                    return@combine cached
                 }
 
                 val hasSubfolders = volumeSections.isNotEmpty()
