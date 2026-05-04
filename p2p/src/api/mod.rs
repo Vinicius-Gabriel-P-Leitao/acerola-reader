@@ -32,6 +32,12 @@ pub mod network {
     pub use crate::core::network::state::NetworkMode;
 }
 
+/// Builder de transports
+pub mod transport {
+    pub use crate::core::transport::{IncomingConnection, P2pTransport, TransportP2pBuilder};
+     pub use crate::core::transport::iroh::IrohTransportBuilder;
+}
+
 /// Entidades dentro de um p2p
 pub mod identity {
     pub use crate::data::identity::device_info::{DeviceInfo, DeviceInfoProvider};
