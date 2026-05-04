@@ -128,6 +128,9 @@ pub enum PatternError {
     #[error("O template deve terminar com {{extension}}.")]
     ExtensionNotAtEnd,
 
+    #[error("O template deve conter exatamente um {{volume}}.")]
+    VolumeRequired,
+
     #[error("Padrão de regex inválido gerado pelo template: {0}")]
     InvalidRegex(String),
 }

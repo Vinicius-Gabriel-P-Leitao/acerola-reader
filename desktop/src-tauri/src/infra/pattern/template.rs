@@ -7,6 +7,7 @@ use crate::infra::{
 #[derive(Debug, PartialEq, Eq)]
 pub enum TemplateMacro {
     Chapter,
+    Volume,
     Decimal,
     Extension,
 }
@@ -15,6 +16,7 @@ impl TemplateMacro {
     pub fn tag(&self) -> &'static str {
         match self {
             Self::Chapter => "chapter",
+            Self::Volume => "volume",
             Self::Decimal => "decimal",
             Self::Extension => "extension",
         }
@@ -23,6 +25,7 @@ impl TemplateMacro {
     pub fn from_tag(tag: &str) -> Result<Self, PatternError> {
         match tag {
             "chapter" => Ok(Self::Chapter),
+            "volume" => Ok(Self::Volume),
             "decimal" => Ok(Self::Decimal),
             "extension" => Ok(Self::Extension),
             _ => Err(PatternError::UnknownMacro(tag.to_string())),
@@ -30,7 +33,7 @@ impl TemplateMacro {
     }
 }
 
-#[rustfmt::skip] 
+#[rustfmt::skip]
 pub fn template_to_regex(
     template: &str,
     validate: impl Fn(&str) -> Result<(), PatternError>,
@@ -46,8 +49,9 @@ pub fn template_to_regex(
                 .replace('[', "\\[")
                 .replace(']', "\\]")
                 .replace("{chapter}", "(\\d+)")
+                .replace("{volume}", "(\\d+)")
                 .replace("{decimal}", "(?:[.,](\\d+))?")
-                .replace( "{extension}", &format!("\\.?({})", ArchiveFormat::extensions_pattern()),)
+                .replace("{extension}", &format!("\\.?({})", ArchiveFormat::extensions_pattern()))
                 .replace('*', ".*?")
                 .replace(' ', "\\s*")
         })
@@ -85,7 +89,7 @@ mod tests {
     use super::*;
     use crate::infra::error::PatternError;
 
-    fn setup_true_validate(_: &str) -> Result<(), PatternError> {
+    fn no_validate(_: &str) -> Result<(), PatternError> {
         Ok(())
     }
 
@@ -94,6 +98,7 @@ mod tests {
     #[test]
     fn macro_tag_retorna_string_correta() {
         assert_eq!(TemplateMacro::Chapter.tag(), "chapter");
+        assert_eq!(TemplateMacro::Volume.tag(), "volume");
         assert_eq!(TemplateMacro::Decimal.tag(), "decimal");
         assert_eq!(TemplateMacro::Extension.tag(), "extension");
     }
@@ -101,6 +106,7 @@ mod tests {
     #[test]
     fn macro_from_tag_valido() {
         assert!(matches!(TemplateMacro::from_tag("chapter"), Ok(TemplateMacro::Chapter)));
+        assert!(matches!(TemplateMacro::from_tag("volume"), Ok(TemplateMacro::Volume)));
         assert!(matches!(TemplateMacro::from_tag("decimal"), Ok(TemplateMacro::Decimal)));
         assert!(matches!(TemplateMacro::from_tag("extension"), Ok(TemplateMacro::Extension)));
     }
@@ -118,8 +124,13 @@ mod tests {
     #[test]
     fn regex_template_valido_compila() {
         assert!(
-            template_to_regex("Ch. {chapter}{decimal}.*.{extension}", setup_true_validate).is_ok()
+            template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).is_ok()
         );
+    }
+
+    #[test]
+    fn regex_volume_compila() {
+        assert!(template_to_regex("Vol. {volume}{decimal}", no_validate).is_ok());
     }
 
     #[test]
@@ -132,7 +143,7 @@ mod tests {
     #[test]
     fn regex_bate_arquivo_ch() {
         let re =
-            template_to_regex("Ch. {chapter}{decimal}.*.{extension}", setup_true_validate).unwrap();
+            template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).unwrap();
         assert!(re.is_match("Ch. 1.cbz"));
         assert!(re.is_match("Ch. 10.5.cbz"));
         assert!(!re.is_match("Oneshot.cbz"));
@@ -149,24 +160,24 @@ mod tests {
 
     #[test]
     fn detecta_preset_ch() {
-        let result = detect_template("Ch. 1.cbz", SEED_PATTERNS, setup_true_validate);
+        let result = detect_template("Ch. 1.cbz", SEED_PATTERNS, no_validate);
         assert_eq!(result, Some("Ch. {chapter}{decimal}.*.{extension}"));
     }
 
     #[test]
     fn detecta_preset_numerico() {
-        let result = detect_template("001.cbz", SEED_PATTERNS, setup_true_validate);
+        let result = detect_template("001.cbz", SEED_PATTERNS, no_validate);
         assert_eq!(result, Some("{chapter}{decimal}.*.{extension}"));
     }
 
     #[test]
     fn nao_detecta_oneshot() {
-        assert!(detect_template("Oneshot.cbz", SEED_PATTERNS, setup_true_validate).is_none());
+        assert!(detect_template("Oneshot.cbz", SEED_PATTERNS, no_validate).is_none());
     }
 
     #[test]
     fn lista_vazia_retorna_none() {
-        assert!(detect_template("Ch. 1.cbz", &[], setup_true_validate).is_none());
+        assert!(detect_template("Ch. 1.cbz", &[], no_validate).is_none());
     }
 
     #[test]
@@ -188,7 +199,7 @@ mod tests {
     fn extrai_chapter_inteiro() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
         assert_eq!(
-            extract_chapter_parts("Ch. 5.cbz", template, setup_true_validate),
+            extract_chapter_parts("Ch. 5.cbz", template, no_validate),
             Some((5, None))
         );
     }
@@ -197,7 +208,7 @@ mod tests {
     fn extrai_chapter_com_decimal() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
         assert_eq!(
-            extract_chapter_parts("Ch. 1.5.cbz", template, setup_true_validate),
+            extract_chapter_parts("Ch. 1.5.cbz", template, no_validate),
             Some((1, Some("5".to_string())))
         );
     }
@@ -206,15 +217,24 @@ mod tests {
     fn extrai_chapter_numerico() {
         let template = "{chapter}{decimal}.*.{extension}";
         assert_eq!(
-            extract_chapter_parts("001.cbz", template, setup_true_validate),
+            extract_chapter_parts("001.cbz", template, no_validate),
             Some((1, None))
+        );
+    }
+
+    #[test]
+    fn extrai_volume_inteiro() {
+        let template = "Vol. {volume}{decimal}";
+        assert_eq!(
+            extract_chapter_parts("Vol. 3", template, no_validate),
+            Some((3, None))
         );
     }
 
     #[test]
     fn nao_extrai_oneshot() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
-        assert!(extract_chapter_parts("Oneshot.cbz", template, setup_true_validate).is_none());
+        assert!(extract_chapter_parts("Oneshot.cbz", template, no_validate).is_none());
     }
 
     #[test]

@@ -67,7 +67,7 @@ mod tests {
             cover: None,
             banner: None,
             last_modified: 1700000000,
-            chapter_template_fk: None,
+            archive_template_fk: None,
             external_sync_enabled: true,
             hidden: false,
         }
@@ -79,8 +79,11 @@ mod tests {
             chapter: format!("Capítulo {}", id),
             path: format!("/quadrinhos/berserk/cap{}", id),
             chapter_sort: chapter_sort.to_string(),
+            is_special: false,
+            checksum: None,
             fast_hash: None,
             comic_directory_fk: 1,
+            volume_id_fk: None,
             last_modified: 123456789,
         }
     }

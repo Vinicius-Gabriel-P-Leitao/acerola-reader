@@ -3,12 +3,12 @@ use std::path::Path;
 use tokio::fs;
 
 use crate::core::services::archive::path_guard::path_hash;
-use crate::data::models::archive::chapter_archive::ChapterArchive;
+use crate::data::models::archive::chapter_archive::{is_special_name, ChapterArchive};
 use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
 use crate::infra::error::ComicError;
 use crate::infra::error::DbError;
-use crate::infra::pattern::chapter_template::extract_chapter_parts;
-use crate::infra::pattern::template_validator::{extract_tags, validate_template};
+use crate::infra::pattern::template::extract_chapter_parts;
+use crate::infra::pattern::template_validator::validate_chapter_template;
 
 /// Responsável por indexar capítulos individuais no banco de dados.
 ///
@@ -37,6 +37,7 @@ impl ChapterScannerService {
         file: &Path,
         index: usize,
         comic_id: i64,
+        volume_id: Option<i64>,
         template: Option<&str>,
     ) -> Result<(), ComicError> {
         let meta = fs::metadata(file).await?;
@@ -54,20 +55,21 @@ impl ChapterScannerService {
 
         let chapter_sort = template
             .and_then(|template| {
-                extract_chapter_parts(file_name, template, |it| {
-                    validate_template(it, extract_tags)
-                })
+                extract_chapter_parts(file_name, template, validate_chapter_template)
             })
             .map(|(chapter, decimal)| ChapterArchive::format_sort(chapter, decimal))
             .unwrap_or_else(|| ChapterArchive::fallback_sort(&chapter_name, index));
 
         let chapter = ChapterArchive {
             id: path_hash(file),
-            chapter: chapter_name,
+            chapter: chapter_name.clone(),
             path: file.to_string_lossy().to_string(),
             chapter_sort,
+            is_special: is_special_name(&chapter_name),
+            checksum: None,
             fast_hash: Some(fast_hash),
             comic_directory_fk: comic_id,
+            volume_id_fk: volume_id,
             last_modified: file_modified,
         };
 
@@ -121,7 +123,7 @@ mod tests {
     async fn scan_chapter_insere_no_banco() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 1.cbz").await;
-        service.scan_chapter(&file, 0, 1, None).await.unwrap();
+        service.scan_chapter(&file, 0, 1, None, None).await.unwrap();
         let all = chapter_repo(&pool).base.find_all().await.unwrap();
         assert_eq!(all.len(), 1);
         assert_eq!(all[0].chapter, "Ch. 1");
@@ -132,7 +134,7 @@ mod tests {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 10.cbz").await;
         service
-            .scan_chapter(&file, 0, 1, Some("Ch. {chapter}{decimal}.*.{extension}"))
+            .scan_chapter(&file, 0, 1, None, Some("Ch. {chapter}{decimal}.*.{extension}"))
             .await
             .unwrap();
         let all = chapter_repo(&pool).base.find_all().await.unwrap();
@@ -143,8 +145,8 @@ mod tests {
     async fn scan_chapter_duplicado_e_ignorado() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 1.cbz").await;
-        service.scan_chapter(&file, 0, 1, None).await.unwrap();
-        service.scan_chapter(&file, 0, 1, None).await.unwrap();
+        service.scan_chapter(&file, 0, 1, None, None).await.unwrap();
+        service.scan_chapter(&file, 0, 1, None, None).await.unwrap();
         assert_eq!(chapter_repo(&pool).base.count().await.unwrap(), 1);
     }
 
@@ -152,6 +154,6 @@ mod tests {
     async fn scan_chapter_arquivo_inexistente_retorna_erro() {
         let (service, _, _) = setup().await;
         let fake = PathBuf::from("/nao/existe/Ch. 1.cbz");
-        assert!(service.scan_chapter(&fake, 0, 1, None).await.is_err());
+        assert!(service.scan_chapter(&fake, 0, 1, None, None).await.is_err());
     }
 }

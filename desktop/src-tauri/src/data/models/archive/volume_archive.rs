@@ -2,31 +2,29 @@ use crate::data::repositories::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
-/// Contrato com o [`crate::data::repositories::Repository`] genérico.
-impl Entity for ComicDirectory {
+impl Entity for VolumeArchive {
     fn columns() -> &'static [&'static str] {
         &[
             "id",
             "name",
             "path",
+            "volume_sort",
+            "is_special",
             "cover",
             "banner",
+            "comic_directory_fk",
             "last_modified",
-            "archive_template_fk",
-            "external_sync_enabled",
-            "hidden",
         ]
     }
     fn table_name() -> &'static str {
-        "comic_directory"
+        "volume_archive"
     }
     fn id(&self) -> i64 {
         self.id
     }
 }
 
-/// Garante que o código consiga serializar o sql para o objeto
-impl Bindable for ComicDirectory {
+impl Bindable for VolumeArchive {
     fn bind_insert<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
@@ -34,12 +32,12 @@ impl Bindable for ComicDirectory {
             .bind(self.id)
             .bind(&self.name)
             .bind(&self.path)
+            .bind(&self.volume_sort)
+            .bind(self.is_special)
             .bind(&self.cover)
             .bind(&self.banner)
+            .bind(self.comic_directory_fk)
             .bind(self.last_modified)
-            .bind(self.archive_template_fk)
-            .bind(self.external_sync_enabled)
-            .bind(self.hidden)
     }
 
     fn bind_update<'query>(
@@ -48,28 +46,25 @@ impl Bindable for ComicDirectory {
         query
             .bind(&self.name)
             .bind(&self.path)
+            .bind(&self.volume_sort)
+            .bind(self.is_special)
             .bind(&self.cover)
             .bind(&self.banner)
+            .bind(self.comic_directory_fk)
             .bind(self.last_modified)
-            .bind(self.archive_template_fk)
-            .bind(self.external_sync_enabled)
-            .bind(self.hidden)
-            .bind(self.id) // <- id pro WHERE id = ?
+            .bind(self.id)
     }
 }
 
-/// Diretório de quadrinhos gerenciado pela aplicação.                                                                                                                                                                                                                                      ///
-/// Equivalente a um `@Entity` do JPA — mapeia para a tabela `comic_directory`.
-/// Migration em `src-tauri/migrations/archive`.
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
-pub struct ComicDirectory {
+pub struct VolumeArchive {
     pub id: i64,
     pub name: String,
     pub path: String,
+    pub volume_sort: String,
+    pub is_special: bool,
     pub cover: Option<String>,
     pub banner: Option<String>,
+    pub comic_directory_fk: i64,
     pub last_modified: i64,
-    pub archive_template_fk: Option<i64>,
-    pub external_sync_enabled: bool,
-    pub hidden: bool,
 }
