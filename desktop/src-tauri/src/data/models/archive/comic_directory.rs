@@ -1,8 +1,8 @@
-use crate::data::repositories::base::{Bindable, Entity};
+use crate::data::repositories::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
-/// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
+/// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ComicDirectory {
     fn columns() -> &'static [&'static str] {
         &[
@@ -28,8 +28,7 @@ impl Entity for ComicDirectory {
 /// Garante que o código consiga serializar o sql para o objeto
 impl Bindable for ComicDirectory {
     fn bind_insert<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(self.id)
@@ -44,8 +43,7 @@ impl Bindable for ComicDirectory {
     }
 
     fn bind_update<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(&self.name)

@@ -14,7 +14,7 @@ pub struct ScannerEngine {
     pub max_depth: Option<usize>,
 }
 
-// FIXME: Colocar tratamento de erros
+// FIXME: Criar um tratamento de erros
 impl ScannerEngine {
     pub fn new() -> Self {
         Self { max_depth: None }
@@ -23,18 +23,13 @@ impl ScannerEngine {
     /// Escaneia `root` recursivamente e emite via channel um [`DirectoryEntry`]
     /// por pasta que contiver arquivos — sem acumular tudo na heap.
     pub async fn scan(
-        &self,
-        root: PathBuf,
-        tx: mpsc::Sender<DirectoryEntry>,
+        &self, root: PathBuf, tx: mpsc::Sender<DirectoryEntry>,
     ) -> Result<(), std::io::Error> {
         self.walk(&root, &tx, 0).await
     }
 
     fn walk<'a>(
-        &'a self,
-        path: &'a PathBuf,
-        tx: &'a mpsc::Sender<DirectoryEntry>,
-        depth: usize,
+        &'a self, path: &'a PathBuf, tx: &'a mpsc::Sender<DirectoryEntry>, depth: usize,
     ) -> Pin<Box<dyn Future<Output = Result<(), std::io::Error>> + Send + 'a>> {
         Box::pin(async move {
             if let Some(max) = self.max_depth {
@@ -63,12 +58,7 @@ impl ScannerEngine {
 
             // Emite esse diretório se tiver arquivos — sem guardar tudo na heap
             if !files.is_empty() {
-                let _ = tx
-                    .send(DirectoryEntry {
-                        directory: path.clone(),
-                        files,
-                    })
-                    .await;
+                let _ = tx.send(DirectoryEntry { directory: path.clone(), files }).await;
             }
 
             // Desce nos subdiretórios depois de emitir — libera a heap do atual
@@ -161,8 +151,8 @@ mod tests {
         let level2 = level1.join("Berserk");
         fs::create_dir_all(&level2).unwrap();
 
-        fs::write(level1.join("cap1.cbz"), b"").unwrap(); // depth 1 — entra
-        fs::write(level2.join("cap2.cbz"), b"").unwrap(); // depth 2 — bloqueado
+        fs::write(level1.join("cap1.cbz"), b"").unwrap();
+        fs::write(level2.join("cap2.cbz"), b"").unwrap();
 
         let (tx, mut rx) = mpsc::channel(32);
         let engine = ScannerEngine { max_depth: Some(1) };

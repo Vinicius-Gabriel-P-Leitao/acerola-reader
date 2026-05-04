@@ -1,8 +1,8 @@
-use crate::data::repositories::base::Entity;
+use crate::data::repositories::Entity;
 use serde::Serialize;
 use sqlx::prelude::FromRow;
 
-/// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
+/// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ComicSummaryView {
     fn columns() -> &'static [&'static str] {
         &[

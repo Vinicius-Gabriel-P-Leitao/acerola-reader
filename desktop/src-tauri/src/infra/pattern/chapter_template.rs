@@ -1,7 +1,7 @@
 use regex::Regex;
 
 use crate::infra::{
-    error::translations::pattern_error::PatternError, pattern::archive_format::ArchiveFormat,
+    error::PatternError, pattern::archive_format::ArchiveFormat,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -27,31 +27,6 @@ impl TemplateMacro {
             "extension" => Ok(Self::Extension),
             _ => Err(PatternError::UnknownMacro(tag.to_string())),
         }
-    }
-}
-
-// FIXME: Deletar isso, já que o seed é direto do sql
-#[derive(Debug, PartialEq, Eq)]
-pub enum PresetTemplate {
-    Numeric,
-    Ch,
-    Cap,
-    Chapter,
-}
-
-// FIXME: Deletar isso, já que o seed é direto do sql
-impl PresetTemplate {
-    pub fn value(&self) -> (&'static str, &'static str) {
-        match self {
-            Self::Numeric => ("01.*.", "{chapter}{decimal}.*.{extension}"),
-            Self::Ch => ("Ch. 01.*.", "Ch. {chapter}{decimal}.*.{extension}"),
-            Self::Cap => ("Cap. 01.*.", "Cap. {chapter}{decimal}.*.{extension}"),
-            Self::Chapter => ("chapter 01.*.", "chapter {chapter}{decimal}.*.{extension}"),
-        }
-    }
-
-    pub fn all() -> &'static [PresetTemplate] {
-        &[Self::Numeric, Self::Ch, Self::Cap, Self::Chapter]
     }
 }
 
@@ -82,9 +57,7 @@ pub fn template_to_regex(
 }
 
 pub fn detect_template<'a>(
-    file_name: &str,
-    templates: &[&'a str],
-    validate: impl Fn(&str) -> Result<(), PatternError>,
+    file_name: &str, templates: &[&'a str], validate: impl Fn(&str) -> Result<(), PatternError>,
 ) -> Option<&'a str> {
     templates.iter().copied().find_map(|template| {
         template_to_regex(template, &validate)
@@ -95,27 +68,22 @@ pub fn detect_template<'a>(
 }
 
 pub fn extract_chapter_parts(
-    file_name: &str,
-    template: &str,
-    validate: impl Fn(&str) -> Result<(), PatternError>,
+    file_name: &str, template: &str, validate: impl Fn(&str) -> Result<(), PatternError>,
 ) -> Option<(u64, Option<String>)> {
-    template_to_regex(template, validate)
-        .ok()
-        .and_then(|regex| regex.captures(file_name))
-        .and_then(|caps| {
-            caps.get(1)
-                .and_then(|it| it.as_str().parse::<u64>().ok())
-                .map(|chapter| {
-                    let decimal = caps.get(2).map(|it| it.as_str().to_string());
-                    (chapter, decimal)
-                })
-        })
+    template_to_regex(template, validate).ok().and_then(|regex| regex.captures(file_name)).and_then(
+        |caps| {
+            caps.get(1).and_then(|it| it.as_str().parse::<u64>().ok()).map(|chapter| {
+                let decimal = caps.get(2).map(|it| it.as_str().to_string());
+                (chapter, decimal)
+            })
+        },
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::infra::error::translations::pattern_error::PatternError;
+    use crate::infra::error::PatternError;
 
     fn setup_true_validate(_: &str) -> Result<(), PatternError> {
         Ok(())
@@ -132,18 +100,9 @@ mod tests {
 
     #[test]
     fn macro_from_tag_valido() {
-        assert!(matches!(
-            TemplateMacro::from_tag("chapter"),
-            Ok(TemplateMacro::Chapter)
-        ));
-        assert!(matches!(
-            TemplateMacro::from_tag("decimal"),
-            Ok(TemplateMacro::Decimal)
-        ));
-        assert!(matches!(
-            TemplateMacro::from_tag("extension"),
-            Ok(TemplateMacro::Extension)
-        ));
+        assert!(matches!(TemplateMacro::from_tag("chapter"), Ok(TemplateMacro::Chapter)));
+        assert!(matches!(TemplateMacro::from_tag("decimal"), Ok(TemplateMacro::Decimal)));
+        assert!(matches!(TemplateMacro::from_tag("extension"), Ok(TemplateMacro::Extension)));
     }
 
     #[test]
@@ -152,27 +111,6 @@ mod tests {
             TemplateMacro::from_tag("titulo"),
             Err(PatternError::UnknownMacro(tag)) if tag == "titulo"
         ));
-    }
-
-    // NOTE: PresetTemplate
-
-    #[test]
-    fn preset_all_retorna_quatro() {
-        assert_eq!(PresetTemplate::all().len(), 4);
-    }
-
-    #[test]
-    fn preset_ch_value() {
-        let (label, pattern) = PresetTemplate::Ch.value();
-        assert_eq!(label, "Ch. 01.*.");
-        assert_eq!(pattern, "Ch. {chapter}{decimal}.*.{extension}");
-    }
-
-    #[test]
-    fn preset_numeric_value() {
-        let (label, pattern) = PresetTemplate::Numeric.value();
-        assert_eq!(label, "01.*.");
-        assert_eq!(pattern, "{chapter}{decimal}.*.{extension}");
     }
 
     // NOTE: template_to_regex
@@ -186,9 +124,8 @@ mod tests {
 
     #[test]
     fn regex_validator_rejeitado_propaga_erro() {
-        let result = template_to_regex("{chapter}.*.{extension}", |_| {
-            Err(PatternError::ChapterRequired)
-        });
+        let result =
+            template_to_regex("{chapter}.*.{extension}", |_| Err(PatternError::ChapterRequired));
         assert!(matches!(result, Err(PatternError::ChapterRequired)));
     }
 
@@ -203,25 +140,28 @@ mod tests {
 
     // NOTE: detect_template
 
-    fn presets_patterns() -> Vec<&'static str> {
-        PresetTemplate::all().iter().map(|p| p.value().1).collect()
-    }
+    const SEED_PATTERNS: &[&str] = &[
+        "{chapter}{decimal}.*.{extension}",
+        "Ch. {chapter}{decimal}.*.{extension}",
+        "Cap. {chapter}{decimal}.*.{extension}",
+        "chapter {chapter}{decimal}.*.{extension}",
+    ];
 
     #[test]
     fn detecta_preset_ch() {
-        let result = detect_template("Ch. 1.cbz", &presets_patterns(), setup_true_validate);
+        let result = detect_template("Ch. 1.cbz", SEED_PATTERNS, setup_true_validate);
         assert_eq!(result, Some("Ch. {chapter}{decimal}.*.{extension}"));
     }
 
     #[test]
     fn detecta_preset_numerico() {
-        let result = detect_template("001.cbz", &presets_patterns(), setup_true_validate);
+        let result = detect_template("001.cbz", SEED_PATTERNS, setup_true_validate);
         assert_eq!(result, Some("{chapter}{decimal}.*.{extension}"));
     }
 
     #[test]
     fn nao_detecta_oneshot() {
-        assert!(detect_template("Oneshot.cbz", &presets_patterns(), setup_true_validate).is_none());
+        assert!(detect_template("Oneshot.cbz", SEED_PATTERNS, setup_true_validate).is_none());
     }
 
     #[test]
@@ -232,8 +172,8 @@ mod tests {
     #[test]
     fn template_invalido_na_lista_e_ignorado() {
         let templates = &["invalido", "Ch. {chapter}{decimal}.*.{extension}"];
-        let result = detect_template("Ch. 1.cbz", templates, |t| {
-            if *t == *"invalido" {
+        let result = detect_template("Ch. 1.cbz", templates, |template| {
+            if *template == *"invalido" {
                 Err(PatternError::ChapterRequired)
             } else {
                 Ok(())

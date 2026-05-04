@@ -4,18 +4,18 @@ use std::path::PathBuf;
 use tokio::fs;
 use tokio::sync::mpsc;
 
-use crate::core::services::chapter_scanner_engine::ChapterScannerService;
+use crate::core::services::archive::chapter_scanner_engine::ChapterScannerService;
+use crate::core::services::archive::files_guard::{
+    ArchiveFileGuard, ArtworkFileGuard, FileGuard, ScannerGuard,
+};
+use crate::core::services::archive::path_guard::{path_hash, PathGuard};
 use crate::data::models::archive::chapter_template::ChapterTemplate;
 use crate::data::models::archive::comic_directory::ComicDirectory;
 use crate::data::repositories::archive::chapter_template_repo::ChapterTemplateRepository;
 use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
-use crate::infra::error::translations::comic_error::ComicError;
-use crate::infra::error::translations::db_error::DbError;
-use crate::infra::filesystem::files_guard::{
-    ArchiveFileGuard, ArtworkFileGuard, FileGuard, ScannerGuard,
-};
-use crate::infra::filesystem::path_guard::{path_hash, PathGuard};
-use crate::infra::filesystem::scanner_engine::{DirectoryEntry, ScannerEngine};
+use crate::infra::error::ComicError;
+use crate::infra::error::DbError;
+use crate::infra::filesystem::{DirectoryEntry, ScannerEngine};
 use crate::infra::pattern::chapter_template::detect_template;
 use crate::infra::pattern::template_validator::{extract_tags, validate_template};
 
@@ -53,12 +53,9 @@ impl ComicScannerService {
     /// Processa todas as pastas encontradas no disco.
     /// INSERT OR IGNORE — pastas já indexadas são ignoradas.
     pub async fn refresh_library(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let entries = self.collect_entries(path).await?;
@@ -72,7 +69,7 @@ impl ComicScannerService {
                 match r.base.insert(&comic).await {
                     Ok(saved) => Ok(saved),
                     Err(DbError::UniqueViolation) => Ok(comic),
-                    Err(e) => Err(ComicError::from(e)),
+                    Err(err) => Err(ComicError::from(err)),
                 }
             })
             .await?;
@@ -86,22 +83,17 @@ impl ComicScannerService {
     /// Compara o disco com o banco e processa apenas pastas novas ou modificadas (upsert).
     /// Remove do banco as pastas que não existem mais no disco.
     pub async fn incremental_scan(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let discovered = self.collect_entries(path).await?;
         let indexed: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
         let repo = self.comic_repo.clone();
 
-        let indexed_map: HashMap<String, &ComicDirectory> = indexed
-            .iter()
-            .map(|comic: &ComicDirectory| (comic.path.clone(), comic))
-            .collect();
+        let indexed_map: HashMap<String, &ComicDirectory> =
+            indexed.iter().map(|comic: &ComicDirectory| (comic.path.clone(), comic)).collect();
 
         let discovered_paths: HashSet<String> = discovered
             .iter()
@@ -133,8 +125,8 @@ impl ComicScannerService {
                         Ok(saved) => Ok(saved),
                         Err(DbError::UniqueViolation) => {
                             r.base.update(&comic).await.map_err(ComicError::from)
-                        }
-                        Err(e) => Err(ComicError::from(e)),
+                        },
+                        Err(err) => Err(ComicError::from(err)),
                     }
                 })
                 .await?;
@@ -147,12 +139,9 @@ impl ComicScannerService {
     /// Sobrescreve todos os comics encontrados no disco, ignorando o estado atual do banco.
     /// DELETE + INSERT — capítulos são removidos via CASCADE e reinseridos.
     pub async fn rebuild_library(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard
-            .execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let entries = self.collect_entries(path).await?;
@@ -161,11 +150,11 @@ impl ComicScannerService {
         for entry in entries {
             let directory = entry.directory.to_string_lossy().to_string();
             on_progress(directory);
-            let r = repo.clone();
+            let repo = repo.clone();
 
             self.process_entry(entry, &templates, |comic| async move {
-                r.base.delete(comic.id).await?;
-                r.base.insert(&comic).await.map_err(ComicError::from)
+                repo.base.delete(comic.id).await?;
+                repo.base.insert(&comic).await.map_err(ComicError::from)
             })
             .await?;
         }
@@ -173,7 +162,6 @@ impl ComicScannerService {
         Ok(())
     }
 
-    /// Dispara o [`ScannerEngine`] e coleta todas as [`DirectoryEntry`] encontradas.
     async fn collect_entries(&self, path: PathBuf) -> Result<Vec<DirectoryEntry>, ComicError> {
         let (tx, mut rx) = mpsc::channel(32);
         let scanner = ScannerEngine::new();
@@ -194,8 +182,6 @@ impl ComicScannerService {
 
     /// Classifica os arquivos de um diretório, monta o [`ComicDirectory`] e delega a
     /// persistência para `persist`. Após persistir, escaneia os capítulos encontrados.
-    ///
-    /// Pastas sem arquivos de quadrinhos são silenciosamente ignoradas.
     ///
     /// `persist` recebe o comic montado e decide a estratégia de escrita no banco:
     /// - `refresh_library` injeta INSERT OR IGNORE
@@ -236,8 +222,6 @@ impl ComicScannerService {
                 banner = Some(file.to_string_lossy().to_string());
                 continue;
             }
-
-            // INFO: ComicInfo.xml, .pdf e outros ignorados por ora
         }
 
         if comic_files.is_empty() {
@@ -277,13 +261,8 @@ impl ComicScannerService {
         Ok(())
     }
 
-    /// Detecta o template de nomenclatura a partir do primeiro arquivo da lista.
-    ///
-    /// Retorna `None` se nenhum template registrado corresponder ao nome do arquivo.
     fn detect_template_for<'a>(
-        &self,
-        files: &[PathBuf],
-        templates: &'a [ChapterTemplate],
+        &self, files: &[PathBuf], templates: &'a [ChapterTemplate],
     ) -> Option<&'a ChapterTemplate> {
         files
             .first()
@@ -291,18 +270,14 @@ impl ComicScannerService {
             .and_then(|name| name.to_str())
             .and_then(|file_str| {
                 let template_strs: Vec<&str> =
-                    templates.iter().map(|t| t.pattern.as_str()).collect();
+                    templates.iter().map(|template| template.pattern.as_str()).collect();
 
-                detect_template(file_str, &template_strs, |t| {
-                    validate_template(t, extract_tags)
-                })
+                detect_template(file_str, &template_strs, |t| validate_template(t, extract_tags))
             })
-            .and_then(|pattern| templates.iter().find(|t| t.pattern == pattern))
+            .and_then(|pattern| templates.iter().find(|template| template.pattern == pattern))
     }
 }
 
-/// Retorna o `last_modified` em segundos desde Unix epoch.
-/// TODO: Verificar se a forma de ver o last_modified é igual em linux e windows
 #[rustfmt::skip]
 fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     meta.modified().map(|time| time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64).unwrap_or(0)
@@ -334,36 +309,20 @@ mod tests {
     }
 
     async fn count_comics(pool: &sqlx::SqlitePool) -> i64 {
-        ComicRepository::new(pool.clone())
-            .base
-            .count()
-            .await
-            .unwrap()
+        ComicRepository::new(pool.clone()).base.count().await.unwrap()
     }
 
     async fn count_chapters(pool: &sqlx::SqlitePool) -> i64 {
-        ChapterRepository::new(pool.clone())
-            .base
-            .count()
-            .await
-            .unwrap()
+        ChapterRepository::new(pool.clone()).base.count().await.unwrap()
     }
-
-    // NOTE: refresh_library
 
     #[tokio::test]
     async fn refresh_library_indexa_todos_comics() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
         create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 2);
     }
 
@@ -371,14 +330,8 @@ mod tests {
     async fn refresh_library_indexa_chapters_de_cada_comic() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz", "Ch. 3.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_chapters(&pool).await, 3);
     }
 
@@ -386,16 +339,10 @@ mod tests {
     async fn refresh_library_ignora_pasta_sem_cbz() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         let empty = root.path().join("SemArquivos");
         fs::create_dir_all(&empty).await.unwrap();
         fs::write(empty.join("cover.jpg"), b"img").await.unwrap();
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 0);
     }
 
@@ -403,37 +350,19 @@ mod tests {
     async fn refresh_library_nao_duplica_ao_rodar_duas_vezes() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 1);
         assert_eq!(count_chapters(&pool).await, 2);
     }
-
-    // NOTE: incremental_scan
 
     #[tokio::test]
     async fn incremental_scan_nao_processa_comic_sem_mudanca() {
         let root = tempfile::tempdir().unwrap();
         let (service, _) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         let mut progress_count = 0usize;
         service
             .incremental_scan(root.path().to_path_buf(), |_| {
@@ -441,7 +370,6 @@ mod tests {
             })
             .await
             .unwrap();
-
         assert_eq!(progress_count, 0, "Nenhuma pasta deveria ser reprocessada");
     }
 
@@ -449,20 +377,10 @@ mod tests {
     async fn incremental_scan_processa_pasta_nova() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
-
-        service
-            .incremental_scan(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.incremental_scan(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 2);
     }
 
@@ -470,29 +388,12 @@ mod tests {
     async fn incremental_scan_remove_pasta_deletada() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
         create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        fs::remove_dir_all(root.path().join("Vinland Saga"))
-            .await
-            .unwrap();
-
-        service
-            .incremental_scan(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        let comics = ComicRepository::new(pool.clone())
-            .base
-            .find_all()
-            .await
-            .unwrap();
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
+        fs::remove_dir_all(root.path().join("Vinland Saga")).await.unwrap();
+        service.incremental_scan(root.path().to_path_buf(), |_| {}).await.unwrap();
+        let comics = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
         assert_eq!(comics.len(), 1);
         assert_eq!(comics[0].name, "Berserk");
     }
@@ -501,61 +402,25 @@ mod tests {
     async fn incremental_scan_atualiza_cover_em_pasta_modificada() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         let dir = create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        let before = ComicRepository::new(pool.clone())
-            .base
-            .find_all()
-            .await
-            .unwrap();
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
+        let before = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
         assert!(before[0].cover.is_none());
-
-        // Força last_modified = 0 para garantir que qualquer mtime real seja maior,
-        // tornando o teste determinístico independente da resolução do relógio.
         reset_comics_last_modified(&pool).await;
-
         fs::write(dir.join("cover.jpg"), b"fake cover").await.unwrap();
-
-        service
-            .incremental_scan(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        let after = ComicRepository::new(pool.clone())
-            .base
-            .find_all()
-            .await
-            .unwrap();
+        service.incremental_scan(root.path().to_path_buf(), |_| {}).await.unwrap();
+        let after = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
         assert!(after[0].cover.is_some(), "cover deveria ter sido atualizado pelo incremental");
     }
-
-    // NOTE: rebuild_library
 
     #[tokio::test]
     async fn rebuild_library_nao_duplica_chapters() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
         create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         let before = count_chapters(&pool).await;
-
-        service
-            .rebuild_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
+        service.rebuild_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_chapters(&pool).await, before);
     }
 
@@ -563,35 +428,13 @@ mod tests {
     async fn rebuild_library_sobrescreve_cover_existente() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-
-        // Scan inicial sem cover
         let dir = create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
-
-        service
-            .refresh_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        let before = ComicRepository::new(pool.clone())
-            .base
-            .find_all()
-            .await
-            .unwrap();
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
+        let before = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
         assert!(before[0].cover.is_none());
-
-        // Adiciona cover e rebuild — deve sobrescrever independente de last_modified
         fs::write(dir.join("cover.jpg"), b"fake cover").await.unwrap();
-
-        service
-            .rebuild_library(root.path().to_path_buf(), |_| {})
-            .await
-            .unwrap();
-
-        let after = ComicRepository::new(pool.clone())
-            .base
-            .find_all()
-            .await
-            .unwrap();
+        service.rebuild_library(root.path().to_path_buf(), |_| {}).await.unwrap();
+        let after = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
         assert!(after[0].cover.is_some(), "cover deveria ter sido sobrescrito pelo rebuild");
     }
 }

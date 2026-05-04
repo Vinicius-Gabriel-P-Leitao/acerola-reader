@@ -1,7 +1,7 @@
 use sqlx::SqlitePool;
 
 use crate::data::{
-    models::views::comic_summary_view::ComicSummaryView, repositories::base::Repository,
+    models::views::ComicSummaryView, repositories::Repository,
 };
 
 pub struct HomeRepository {
@@ -11,9 +11,6 @@ pub struct HomeRepository {
 
 impl HomeRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool.clone()),
-            pool,
-        }
+        Self { base: Repository::new(pool.clone()), pool }
     }
 }

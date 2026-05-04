@@ -1,10 +1,8 @@
-use crate::infra::error::translations::path_error::PathError;
+use crate::infra::error::PathError;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-/// Gera um id determinístico baseado no path — mesmo path sempre gera o mesmo id.
-/// Garante que re-escanear o mesmo diretório não crie duplicatas.
 pub fn path_hash(path: &Path) -> i64 {
     let mut hasher = DefaultHasher::new();
     path.hash(&mut hasher);
@@ -17,15 +15,11 @@ pub struct PathGuard {
 
 impl PathGuard {
     pub fn new(root: PathBuf) -> Self {
-        Self {
-            allowed_root: root.canonicalize().unwrap_or(root),
-        }
+        Self { allowed_root: root.canonicalize().unwrap_or(root) }
     }
 
     fn validate(&self, path: &Path) -> Result<(), PathError> {
-        let canonical = path
-            .canonicalize()
-            .map_err(|_| PathError::not_found(path))?;
+        let canonical = path.canonicalize().map_err(|_| PathError::not_found(path))?;
 
         if !canonical.starts_with(&self.allowed_root) {
             return Err(PathError::access_denied(&canonical, &self.allowed_root));
@@ -47,7 +41,7 @@ impl PathGuard {
 #[cfg(test)]
 mod tests {
     use super::PathGuard;
-    use crate::infra::error::translations::path_error::PathError;
+    use crate::infra::error::PathError;
     use std::fs;
     use tempfile::tempdir;
 
@@ -55,12 +49,9 @@ mod tests {
     fn teste_caminho_valido_dentro_do_root() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
-
         let file = root.path().join("arquivo.cbz");
         fs::write(&file, b"").unwrap();
-
         let result = guard.execute(&file, |_| -> Result<(), String> { Ok(()) });
-
         assert!(result.is_ok());
     }
 
@@ -69,12 +60,9 @@ mod tests {
         let root = tempdir().unwrap();
         let outside = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
-
         let file = outside.path().join("arquivo.cbz");
         fs::write(&file, b"").unwrap();
-
         let result = guard.execute(&file, |_| -> Result<(), String> { Ok(()) });
-
         assert!(matches!(result, Err(PathError::AccessDenied)));
     }
 
@@ -82,11 +70,8 @@ mod tests {
     fn teste_caminho_inexistente_e_negado() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
-
         let fake = root.path().join("nao_existe.cbz");
-
         let result = guard.execute(&fake, |_| -> Result<(), String> { Ok(()) });
-
         assert!(matches!(result, Err(PathError::NotFound(_))));
     }
 
@@ -94,29 +79,19 @@ mod tests {
     fn teste_path_traversal_e_negado() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
-
         let traversal = root.path().join("../arquivo_malicioso.cbz");
-
         let result = guard.execute(&traversal, |_| -> Result<(), String> { Ok(()) });
-
-        assert!(matches!(
-            result,
-            Err(PathError::AccessDenied) | Err(PathError::NotFound(_))
-        ));
+        assert!(matches!(result, Err(PathError::AccessDenied) | Err(PathError::NotFound(_))));
     }
 
     #[test]
     fn teste_action_failure_e_propagado() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
-
         let file = root.path().join("arquivo.cbz");
         fs::write(&file, b"").unwrap();
-
-        let result = guard.execute(&file, |_| -> Result<(), String> {
-            Err("falha simulada".to_string())
-        });
-
+        let result =
+            guard.execute(&file, |_| -> Result<(), String> { Err("falha simulada".to_string()) });
         assert!(matches!(result, Err(PathError::ActionFailed(_))));
     }
 }

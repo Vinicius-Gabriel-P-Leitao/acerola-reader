@@ -2,10 +2,10 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::views::comic_summary_view::ComicSummaryView,
-        repositories::views::comic_summary_repo::HomeRepository,
+        models::views::ComicSummaryView,
+        repositories::views::HomeRepository,
     },
-    infra::error::translations::comic_error::ComicError,
+    infra::error::ComicError,
 };
 
 pub struct HomeService {
@@ -14,9 +14,7 @@ pub struct HomeService {
 
 impl HomeService {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            repo: HomeRepository::new(pool),
-        }
+        Self { repo: HomeRepository::new(pool) }
     }
 
     pub async fn get_all(&self) -> Result<Vec<ComicSummaryView>, ComicError> {

@@ -1,5 +1,5 @@
 use crate::data::models::archive::chapter_template::ChapterTemplate;
-use crate::data::repositories::base::Repository;
+use crate::data::repositories::Repository;
 use sqlx::SqlitePool;
 
 pub struct ChapterTemplateRepository {
@@ -8,9 +8,7 @@ pub struct ChapterTemplateRepository {
 
 impl ChapterTemplateRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool),
-        }
+        Self { base: Repository::new(pool) }
     }
 }
 
@@ -18,7 +16,7 @@ impl ChapterTemplateRepository {
 mod tests {
     use super::ChapterTemplateRepository;
     use crate::data::models::archive::chapter_template::ChapterTemplate;
-    use crate::infra::error::translations::db_error::DbError;
+    use crate::infra::error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
 
     fn template() -> ChapterTemplate {
@@ -54,10 +52,7 @@ mod tests {
 
         repo.base.insert(&template()).await.unwrap();
 
-        let updated = ChapterTemplate {
-            label: "Preset Deluxe".to_string(),
-            ..template()
-        };
+        let updated = ChapterTemplate { label: "Preset Deluxe".to_string(), ..template() };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.label, "Preset Deluxe");

@@ -3,16 +3,21 @@ mod core;
 mod data;
 mod infra;
 
-use cmd::features::home::comic_summary_cmd;
+use acerola_p2p::api::guard::open_guard;
 use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
+use cmd::features::network as network_cmd;
+use cmd::features::summary as comic_summary_cmd;
 use tauri::Manager;
 
 #[cfg(test)]
 pub mod tests;
 
 mod app_bootstrap {
+    use crate::core::services::network::NetworkService;
+
     use super::*;
-    use std::path::PathBuf;
+    use std::{path::PathBuf, sync::Arc};
+    use tauri::Emitter;
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();
@@ -23,16 +28,18 @@ mod app_bootstrap {
         let builder = setup_fs(builder);
 
         // INFO: Commands que serão chamados via invoke
-
-        builder
-            .setup(setup_runtime)
-            .invoke_handler(tauri::generate_handler![
-                select_folder_cmd::select_folder,
-                comic_scanner_cmd::incremental_scan,
-                comic_scanner_cmd::refresh_library,
-                comic_scanner_cmd::rebuild_library,
-                comic_summary_cmd::get_comic_summary,
-            ])
+        builder.setup(setup_runtime).invoke_handler(tauri::generate_handler![
+            comic_scanner_cmd::incremental_scan,
+            comic_summary_cmd::get_comic_summary,
+            comic_scanner_cmd::refresh_library,
+            comic_scanner_cmd::rebuild_library,
+            select_folder_cmd::select_folder,
+            network_cmd::get_network_status,
+            network_cmd::switch_to_local,
+            network_cmd::switch_to_relay,
+            network_cmd::connect_to_peer,
+            network_cmd::get_local_id,
+        ])
     }
 
     fn setup_opener(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
@@ -54,12 +61,38 @@ mod app_bootstrap {
     fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         builder.plugin(
             tauri_plugin_sql::Builder::new()
-                .add_migrations(
-                    "sqlite:acerola.db",
-                    crate::infra::db::migrations::get_migrations(),
-                )
+                .add_migrations("sqlite:acerola.db", crate::infra::db::get_migrations())
                 .build(),
         )
+    }
+
+    async fn setup_database(handle: &tauri::AppHandle, db_path: PathBuf) {
+        #[rustfmt::skip]
+        let pool = sqlx::SqlitePool::connect(&format!(
+            "sqlite:{}?mode=rwc",
+            db_path.to_string_lossy()
+        )).await.unwrap();
+
+        handle.manage(pool);
+    }
+
+    async fn setup_network(handle: &tauri::AppHandle) {
+        let app = handle.clone();
+
+        let emit: acerola_p2p::api::protocol::EventEmitter = Arc::new(move |event, data| {
+            app.emit(event, data).ok();
+        });
+
+        let node = acerola_p2p::api::AcerolaP2P::builder(emit)
+            .guard(Box::new(|ctx: &acerola_p2p::api::guard::ConnectionContext<()>| {
+                Box::pin(open_guard(ctx))
+            }))
+            .build()
+            .await
+            .expect("Failed to start the p2p node.");
+
+        let service = NetworkService::new(Arc::new(node));
+        handle.manage(service);
     }
 
     fn setup_runtime(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -91,13 +124,8 @@ mod app_bootstrap {
         )?;
 
         tauri::async_runtime::block_on(async move {
-            let pool = sqlx::SqlitePool::connect(&format!(
-                "sqlite:{}?mode=rwc",
-                db_path.to_string_lossy()
-            ))
-            .await
-            .unwrap();
-            handle.manage(pool);
+            setup_database(&handle, db_path).await;
+            setup_network(&handle).await;
         });
 
         Ok(())

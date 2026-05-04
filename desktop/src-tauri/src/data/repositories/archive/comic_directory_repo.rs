@@ -1,6 +1,6 @@
 use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::base::{Entity, Repository};
-use crate::infra::error::translations::db_error::DbError;
+use crate::data::repositories::{Entity, Repository};
+use crate::infra::error::DbError;
 use sqlx::SqlitePool;
 
 #[derive(Clone)]
@@ -11,17 +11,13 @@ pub struct ComicRepository {
 
 impl ComicRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool.clone()),
-            pool,
-        }
+        Self { base: Repository::new(pool.clone()), pool }
     }
 
     pub async fn find_by_name(&self, name: &str) -> Result<Option<ComicDirectory>, DbError> {
         let table = ComicDirectory::table_name();
         let cols = ComicDirectory::columns().join(", ");
 
-        
         let result = sqlx::query_as::<_, ComicDirectory>(&format!(
             "SELECT {} FROM {} WHERE name = ?",
             cols, table
@@ -38,7 +34,7 @@ impl ComicRepository {
 mod tests {
     use super::ComicRepository;
     use crate::data::models::archive::comic_directory::ComicDirectory;
-    use crate::infra::error::translations::db_error::DbError;
+    use crate::infra::error::DbError;
     use crate::tests::utils::setup_test_db::setup_test_db;
 
     fn berserk() -> ComicDirectory {
@@ -89,10 +85,7 @@ mod tests {
 
         repo.base.insert(&berserk()).await.unwrap();
 
-        let updated = ComicDirectory {
-            name: "Berserk Deluxe".to_string(),
-            ..berserk()
-        };
+        let updated = ComicDirectory { name: "Berserk Deluxe".to_string(), ..berserk() };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.name, "Berserk Deluxe");

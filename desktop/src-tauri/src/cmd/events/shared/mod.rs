@@ -1,4 +1,4 @@
-use crate::infra::error::translations::comic_error::ComicError;
+use crate::infra::error::ComicError;
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]
@@ -10,9 +10,6 @@ pub struct ErrorPayload {
 
 impl From<&ComicError> for ErrorPayload {
     fn from(err: &ComicError) -> Self {
-        ErrorPayload {
-            error_type: format!("{:?}", err),
-            message: err.to_string(),
-        }
+        ErrorPayload { error_type: format!("{:?}", err), message: err.to_string() }
     }
 }
