@@ -19,7 +19,7 @@ async-trait = "0.1.89"
 blake3 = "1.8.5"
 futures = "0.3.32"
 getrandom = "0.4"
-iroh = {version = "0.98.1", features = ["address-lookup-mdns"], optional = true}
+iroh = {version = "0.98.0", features = ["address-lookup-mdns"], optional = true}
 log = "0.4"
 rand = "0.10.1"
 secrecy = "0.10.3"
