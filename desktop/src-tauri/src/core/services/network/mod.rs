@@ -1,44 +1,43 @@
 use acerola_p2p::api::{
-    guard::{open_guard, Guard},
+    guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
+    identity::DeviceInfo,
     network::NetworkMode,
     peer::PeerIdentity,
-    AcerolaP2P,
+    AcerolaP2p,
 };
-
-use crate::data::remote::p2p::token_guard::token_guard;
-use std::{collections::{HashMap, HashSet}, sync::Arc};
-use tokio::sync::RwLock;
+use std::{collections::HashSet, sync::Arc};
 
 pub struct NetworkService {
-    node: Arc<AcerolaP2P>,
-    mode: RwLock<NetworkMode>,
+    node: Arc<AcerolaP2p>,
 }
 
 impl NetworkService {
-    pub fn new(node: Arc<AcerolaP2P>) -> Self {
-        Self { node, mode: RwLock::new(NetworkMode::Local) }
+    pub fn new(node: Arc<AcerolaP2p>) -> Self {
+        Self { node }
     }
 
     pub fn local_id(&self) -> String {
         self.node.local_id().to_string()
     }
 
-    pub async fn connected_peers(&self) -> HashMap<PeerIdentity, HashSet<Vec<u8>>> {
-        self.node.connected_peers().await
+    pub async fn connected_peers_with_info(&self) -> Vec<(PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>)> {
+        self.node.connected_peers_with_info().await
     }
 
     pub async fn switch_to_local(&self) {
-        let validator: Guard = Box::new(|ctx| Box::pin(open_guard(ctx)));
-        let _ = self.node.switch_guard(validator, NetworkMode::Local).await;
+        let store = Arc::new(InMemoryTrustedStore::new());
+        let guard = TofuGuard::new(store as Arc<dyn TrustedPeerStore>).into_validator();
+        let _ = self.node.switch_guard(guard, NetworkMode::Local).await;
     }
 
     pub async fn switch_to_relay(&self) {
-        let validator: Guard = Box::new(|ctx| Box::pin(token_guard(ctx)));
-        let _ = self.node.switch_guard(validator, NetworkMode::Relay).await;
+        let store = Arc::new(InMemoryTrustedStore::new());
+        let guard = TofuGuard::new(store as Arc<dyn TrustedPeerStore>).into_validator();
+        let _ = self.node.switch_guard(guard, NetworkMode::Relay).await;
     }
 
     pub async fn mode(&self) -> NetworkMode {
-        self.mode.read().await.clone()
+        self.node.mode().await
     }
 
     pub async fn connect(&self, peer_id: String, alpn: Vec<u8>) {

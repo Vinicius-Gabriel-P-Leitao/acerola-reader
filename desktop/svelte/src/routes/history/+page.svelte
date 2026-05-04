@@ -3,8 +3,9 @@
   import { listen } from "@tauri-apps/api/event";
   import { onDestroy, onMount } from "svelte";
 
-  type NetworkConnection = { peerId: string; alpn: string };
-  type NetworkStatus = { mode: string; connections: NetworkConnection[] };
+  type DeviceInfo = { name: string; os: string; version: string };
+  type NetworkConnection = { peerId: string; alpn: string; device: DeviceInfo | null };
+  type NetworkStatus = { mode: string; peers: NetworkConnection[] };
   type RpcEvent = { peerId: string; event: string };
 
   let status: NetworkStatus | null = $state(null);
@@ -17,10 +18,12 @@
   onMount(async () => {
     unlisteners.push(
       await listen<NetworkStatus>("network:status", (e) => { status = e.payload; }),
-      await listen<string>("rpc:ping_sent",     (e) => addLog(e.payload, "Ping enviado")),
-      await listen<string>("rpc:ping_received", (e) => addLog(e.payload, "Ping recebido")),
-      await listen<string>("rpc:pong_sent",     (e) => addLog(e.payload, "Pong enviado")),
-      await listen<string>("rpc:pong_received", (e) => addLog(e.payload, "Pong recebido")),
+      await listen<string>("rpc:ping_sent",              (e) => addLog(e.payload, "Ping enviado")),
+      await listen<string>("rpc:ping_received",          (e) => addLog(e.payload, "Ping recebido")),
+      await listen<string>("rpc:pong_sent",              (e) => addLog(e.payload, "Pong enviado")),
+      await listen<string>("rpc:pong_received",          (e) => addLog(e.payload, "Pong recebido")),
+      await listen<string>("rpc:device_info_exchanged",  (e) => { addLog(e.payload, "Info trocada"); refresh(); }),
+      await listen<string>("rpc:device_info_received",   (e) => { addLog(e.payload, "Info recebida"); refresh(); }),
     );
 
     localId = await invoke("get_local_id");
@@ -76,10 +79,22 @@
   </div>
 
   <div>
-    <p class="text-sm font-medium mb-2">Conexões ativas ({status?.connections.length ?? 0})</p>
-    {#if status?.connections.length}
-      {#each status.connections as conn}
-        <div class="text-sm font-mono text-muted-foreground">{conn.peerId} — {conn.alpn}</div>
+    <p class="text-sm font-medium mb-2">Conexões ativas ({status?.peers.length ?? 0})</p>
+    {#if status?.peers.length}
+      {#each status.peers as conn}
+        <div class="border rounded p-3 mb-2 flex flex-col gap-1">
+          <span class="text-sm font-mono break-all">{conn.peerId}</span>
+          <span class="text-xs text-muted-foreground">ALPN: {conn.alpn}</span>
+          {#if conn.device}
+            <div class="text-xs text-muted-foreground flex gap-3 mt-1">
+              <span>{conn.device.name}</span>
+              <span>{conn.device.os}</span>
+              <span>v{conn.device.version}</span>
+            </div>
+          {:else}
+            <span class="text-xs text-muted-foreground italic">Dispositivo desconhecido</span>
+          {/if}
+        </div>
       {/each}
     {:else}
       <p class="text-sm text-muted-foreground">Nenhuma conexão ativa.</p>

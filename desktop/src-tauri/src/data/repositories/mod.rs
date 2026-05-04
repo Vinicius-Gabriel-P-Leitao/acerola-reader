@@ -57,7 +57,8 @@ impl<T: Entity> Repository<T> {
         let table = T::table_name();
 
         let result = query_as::<_, T>(&format!("SELECT {} FROM {}", cols, table))
-            .fetch_all(&self.pool).await?;
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(result)
     }
