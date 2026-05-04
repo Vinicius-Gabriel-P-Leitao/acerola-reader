@@ -71,6 +71,14 @@ impl AcerolaP2p {
         self.state.read().await.peers().clone()
     }
 
+    /// Captura peers conectados junto com suas informações de dispositivo, em lock único.
+    pub async fn connected_peers_with_info(&self) -> Vec<(PeerId, HashSet<Vec<u8>>, Option<DeviceInfo>)> {
+        let state = self.state.read().await;
+        state.peers().iter().map(|(peer, alpns)| {
+            (peer.clone(), alpns.clone(), state.get_device_info(peer).cloned())
+        }).collect()
+    }
+
     /// Extrai o modo da interface (Local/Relay) operando no momento.
     pub async fn mode(&self) -> NetworkMode {
         self.state.read().await.mode().clone()
