@@ -4,10 +4,11 @@ use std::pin::Pin;
 use tokio::fs;
 use tokio::sync::mpsc;
 
-/// Um diretório e os arquivos encontrados diretamente dentro dele.
+/// Um diretório, os arquivos encontrados diretamente dentro dele e seus subdiretórios diretos.
 pub struct DirectoryEntry {
     pub directory: PathBuf,
     pub files: Vec<PathBuf>,
+    pub subdirs: Vec<PathBuf>,
 }
 
 pub struct ScannerEngine {
@@ -56,9 +57,15 @@ impl ScannerEngine {
                 }
             }
 
-            // Emite esse diretório se tiver arquivos — sem guardar tudo na heap
-            if !files.is_empty() {
-                let _ = tx.send(DirectoryEntry { directory: path.clone(), files }).await;
+            // Emite se tiver arquivos, ou subdiretórios (que podem ser volumes)
+            if !files.is_empty() || !subdirs.is_empty() {
+                let _ = tx
+                    .send(DirectoryEntry {
+                        directory: path.clone(),
+                        files,
+                        subdirs: subdirs.clone(),
+                    })
+                    .await;
             }
 
             // Desce nos subdiretórios depois de emitir — libera a heap do atual

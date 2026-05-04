@@ -17,6 +17,11 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
         .await
         .unwrap();
 
+    sqlx::query(include_str!("../../../migrations/models/archive/004_create_volume_archive.sql"))
+        .execute(&pool)
+        .await
+        .unwrap();
+
     // metadata
     sqlx::query(include_str!("../../../migrations/models/metadata/001_create_comic_metadata.sql"))
         .execute(&pool)

@@ -15,7 +15,7 @@ fn archive_migrations() -> Vec<Migration> {
     vec![
         Migration {
             version: 1,
-            description: "create_chapter_template",
+            description: "create_archive_template",
             sql: include_str!("../../../migrations/models/archive/001_create_chapter_template.sql"),
             kind: MigrationKind::Up,
         },
@@ -29,6 +29,12 @@ fn archive_migrations() -> Vec<Migration> {
             version: 3,
             description: "create_chapter_archive",
             sql: include_str!("../../../migrations/models/archive/003_create_chapter_archive.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "create_volume_archive",
+            sql: include_str!("../../../migrations/models/archive/004_create_volume_archive.sql"),
             kind: MigrationKind::Up,
         },
     ]
@@ -160,8 +166,8 @@ fn view_migrations() -> Vec<Migration> {
 
 fn seed_migrations() -> Vec<Migration> {
     vec![Migration {
-        version: 4,
-        description: "seed_chapter_template",
+        version: 20,
+        description: "seed_archive_template",
         sql: include_str!("../../../migrations/seeds/001_seed_chapter_template.sql"),
         kind: MigrationKind::Up,
     }]

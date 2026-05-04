@@ -3,9 +3,17 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
+/// Gera um ID numérico determinístico de 64 bits a partir de um caminho de arquivo.
+///
+/// ### Racional de Design
+/// O Acerola Desktop utiliza hashing de caminho em vez de IDs auto-incrementais do banco por três motivos:
+/// 1. **Determinismo:** O ID de um quadrinho ou capítulo permanece o mesmo entre scans, mesmo se o banco for deletado.
+/// 2. **Performance de Busca:** O SQLite realiza buscas por índices `INTEGER PRIMARY KEY` de forma muito mais rápida do que comparando strings de caminhos longos.
+/// 3. **Desacoplamento e Paralelismo:** O scanner pode gerar IDs para entidades filhas (volumes/capítulos) sem precisar esperar a inserção do pai no banco para obter o ID gerado pelo SQLite.
 pub fn path_hash(path: &Path) -> i64 {
     let mut hasher = DefaultHasher::new();
     path.hash(&mut hasher);
+
     (hasher.finish() & 0x7fff_ffff_ffff_ffff) as i64
 }
 

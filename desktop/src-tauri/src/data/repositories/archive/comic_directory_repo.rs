@@ -45,7 +45,7 @@ mod tests {
             cover: None,
             banner: None,
             last_modified: 1700000000,
-            chapter_template_fk: None,
+            archive_template_fk: None,
             external_sync_enabled: true,
             hidden: false,
         }

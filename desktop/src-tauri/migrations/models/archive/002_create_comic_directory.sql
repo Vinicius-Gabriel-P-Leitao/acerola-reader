@@ -5,10 +5,8 @@ CREATE TABLE IF NOT EXISTS comic_directory (
   cover TEXT,
   banner TEXT,
   last_modified INTEGER NOT NULL,
-  chapter_template_fk INTEGER,
+  archive_template_fk INTEGER,
   external_sync_enabled BOOLEAN NOT NULL DEFAULT 1,
   hidden BOOLEAN NOT NULL DEFAULT 0,
-  FOREIGN KEY(chapter_template_fk) REFERENCES chapter_template(id) ON DELETE
-  SET
-    NULL
+  FOREIGN KEY(archive_template_fk) REFERENCES archive_template(id) ON DELETE SET NULL
 );
