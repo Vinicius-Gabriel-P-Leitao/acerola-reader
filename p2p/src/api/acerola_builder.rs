@@ -79,12 +79,14 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     ///
     /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/handshake/1`.
     pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
-        #[rustfmt::skip]
-        let transport = Arc::new(
-            self.transport.build(
-                self.handlers_inbound.keys().chain(self.handlers_outbound.keys()).cloned().collect(),
-            ).await?,
-        );
+        let alpns: Vec<Vec<u8>> = RESERVED_ALPNS.iter().map(|a| a.to_vec())
+            .chain(self.handlers_inbound.keys().cloned())
+            .chain(self.handlers_outbound.keys().cloned())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+
+        let transport = Arc::new(self.transport.build(alpns).await?);
 
         let local_id = transport.local_id();
 
