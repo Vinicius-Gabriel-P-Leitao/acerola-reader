@@ -164,7 +164,9 @@ impl NetworkManager {
                                         state.write().await.disconnect(&peer_clone, &alpn_clone);
                                     });
                                 }
-                                Err(_) => {} // Pode-se adicionar log para alertar a falha de handshake ativo.
+                                Err(err) => {
+                                    log::warn!("[NetworkManager] connect failed for {}: {:?}", peer.id, err);
+                                }
                             }
                         }
                         NetworkCommand::SwitchGuard { validator, mode } => {
