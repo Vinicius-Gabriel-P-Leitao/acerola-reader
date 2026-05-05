@@ -1,22 +1,20 @@
-pub mod guard {
-    pub use crate::guard::token_guard;
-}
-pub mod mode {
-    pub use crate::mode::FfiNetworkMode;
-}
-pub mod singleton {
-    pub use crate::singleton::TOKIO_RUNTIME;
-}
+use acerola_p2p::api::AcerolaP2p;
+use std::sync::Arc;
+use tokio::runtime::Runtime;
 
+#[cfg(target_os = "android")]
 use acerola_p2p::api::{
-    guard::{open_guard, Guard},
+    guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
+    identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
     network::NetworkMode,
-    AcerolaP2P,
+    transport::IrohTransportBuilder,
 };
 
-use crate::{guard::token_guard, mode::FfiNetworkMode, singleton::TOKIO_RUNTIME};
-use std::{collections::HashMap, sync::Arc};
-use tokio::{runtime::Runtime, sync::RwLock};
+#[cfg(target_os = "android")]
+use crate::{mode::FfiNetworkMode, singleton::TOKIO_RUNTIME};
+
+#[cfg(target_os = "android")]
+use std::collections::HashMap;
 
 #[uniffi::export(with_foreign)]
 pub trait P2PCallback: Send + Sync {
@@ -25,12 +23,12 @@ pub trait P2PCallback: Send + Sync {
 
 #[derive(uniffi::Object)]
 pub struct P2PNode {
-    node: Arc<AcerolaP2P>,
+    node: Arc<AcerolaP2p>,
     runtime: Arc<Runtime>,
-    mode: Arc<RwLock<NetworkMode>>,
 }
 
 #[uniffi::export]
+#[cfg(target_os = "android")]
 impl P2PNode {
     #[uniffi::constructor]
     pub fn new(callback: Arc<dyn P2PCallback>) -> Self {
@@ -43,20 +41,28 @@ impl P2PNode {
                 cb_clone.on_event(event.to_string(), data);
             });
 
+            let store = Arc::new(InMemoryTrustedStore::new());
+
+            let transport = IrohTransportBuilder::default()
+                .relay("https://use1-1.relay.iroh.network/");
+
+            // TODO: Fazer isso mudar junto com a versão do app android, colocar na action de release.
+            let device = DefaultDeviceInfoProvider::new("Android", "0.2.2-beta")
+                .provide()
+                .expect("Failed to read device info");
+ 
             Arc::new(
-                AcerolaP2P::builder(emit)
-                    .guard(Box::new(|ctx| Box::pin(open_guard(ctx))))
+                AcerolaP2p::builder(emit, transport, device)
+                    .guard(
+                        TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator(),
+                    )
                     .build()
                     .await
                     .expect("Failed to start P2P node"),
             )
         });
 
-        Self {
-            node,
-            runtime,
-            mode: Arc::new(RwLock::new(NetworkMode::Local)),
-        }
+        Self { node, runtime }
     }
 
     pub fn get_local_id(&self) -> String {
@@ -79,38 +85,25 @@ impl P2PNode {
 
     pub fn switch_to_local(&self) {
         let node = Arc::clone(&self.node);
-        let mode = Arc::clone(&self.mode);
         self.runtime.spawn(async move {
-            let validator: Guard = Box::new(|ctx| Box::pin(open_guard(ctx)));
-            if node
-                .switch_guard(validator, NetworkMode::Local)
-                .await
-                .is_ok()
-            {
-                *mode.write().await = NetworkMode::Local;
-            }
+            let store = Arc::new(InMemoryTrustedStore::new());
+            let guard = TofuGuard::new(store as Arc<dyn TrustedPeerStore>).into_validator();
+            let _ = node.switch_guard(guard, NetworkMode::Local).await;
         });
     }
 
     pub fn switch_to_relay(&self) {
         let node = Arc::clone(&self.node);
-        let mode = Arc::clone(&self.mode);
-
         self.runtime.spawn(async move {
-            let validator: Guard = Box::new(|ctx| Box::pin(token_guard(ctx)));
-            if node
-                .switch_guard(validator, NetworkMode::Relay)
-                .await
-                .is_ok()
-            {
-                *mode.write().await = NetworkMode::Relay;
-            }
+            let store = Arc::new(InMemoryTrustedStore::new());
+            let guard = TofuGuard::new(store as Arc<dyn TrustedPeerStore>).into_validator();
+            let _ = node.switch_guard(guard, NetworkMode::Relay).await;
         });
     }
 
     pub fn get_mode(&self) -> FfiNetworkMode {
         self.runtime
-            .block_on(async { self.mode.read().await.clone().into() })
+            .block_on(async { self.node.mode().await.into() })
     }
 
     pub fn get_connected_peers(&self) -> HashMap<String, Vec<Vec<u8>>> {
@@ -119,7 +112,7 @@ impl P2PNode {
                 .connected_peers()
                 .await
                 .into_iter()
-                .map(|(peer, alpns)| (peer.to_string(), alpns.into_iter().collect()))
+                .map(|(peer, alpns)| (peer.id.clone(), alpns.into_iter().collect()))
                 .collect()
         })
     }

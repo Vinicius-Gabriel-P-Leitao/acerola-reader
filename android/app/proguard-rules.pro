@@ -35,3 +35,10 @@
     @dagger.hilt.android.AndroidEntryPoint *;
     @javax.inject.Inject *;
 }
+
+-keep class com.sun.jna.** { *; }
+-keepclassmembers class com.sun.jna.** { *; }
+-dontwarn com.sun.jna.**
+
+-keep class p2p.** { *; }
+-keepclassmembers class p2p.** { *; }

@@ -264,7 +264,7 @@ fun Main.Config.Template.Screen(
                 )
 
                 // FIXME: Só descomentar quando tiver pronto a função.
-                // P2pDemoSection()
+                 P2pDemoSection()
 
                 Spacer(modifier = Modifier.height(SizeTokens.ClickTarget))
             }

@@ -19,6 +19,11 @@ class AcerolaApplication :
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    override fun onCreate() {
+        System.loadLibrary("acerola")
+        super.onCreate()
+    }
+
     @Inject
     lateinit var readerProcessor: ReaderProcessor
 
