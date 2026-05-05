@@ -90,9 +90,7 @@ mod app_bootstrap {
 
         let store = Arc::new(InMemoryTrustedStore::new());
 
-        let transport = IrohTransportBuilder::default()
-            .relay("https://use1-1.relay.iroh.network/")
-            .seed([0x42u8; 32]);
+        let transport = IrohTransportBuilder::default().relay("https://use1-1.relay.iroh.network/");
 
         let device = DefaultDeviceInfoProvider::new("0.0.1-beta")
             .provide()
@@ -122,17 +120,9 @@ mod app_bootstrap {
                     #[cfg(debug_assertions)]
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
                 ])
-                .level({
-                    #[cfg(debug_assertions)]
-                    {
-                        tauri_plugin_log::log::LevelFilter::Debug
-                    }
-
-                    #[cfg(not(debug_assertions))]
-                    {
-                        tauri_plugin_log::log::LevelFilter::Info
-                    }
-                })
+                .level(tauri_plugin_log::log::LevelFilter::Warn)
+                .level_for("acerola_p2p", tauri_plugin_log::log::LevelFilter::Debug)
+                .level_for("acerola_lib", tauri_plugin_log::log::LevelFilter::Debug)
                 .build(),
         )?;
 

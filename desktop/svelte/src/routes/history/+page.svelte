@@ -52,7 +52,7 @@
 
   async function connect() {
     if (!targetPeerId.trim()) return;
-    await invoke("connect_to_peer", { peerId: targetPeerId, alpn: "acerola/rpc" });
+    await invoke("connect_to_peer", { peerId: targetPeerId, alpn: "acerola/handshake/1" });
     await refresh();
   }
 </script>
