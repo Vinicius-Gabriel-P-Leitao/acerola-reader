@@ -197,4 +197,49 @@ mod tests {
 
         assert!(result.is_ok());
     }
+
+    fn capture_emitter() -> (EventEmitter, Arc<std::sync::Mutex<Vec<String>>>) {
+        let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let clone = Arc::clone(&events);
+        let emit: EventEmitter = Arc::new(move |event: &str, _: String| {
+            clone.lock().unwrap().push(event.to_string());
+        });
+        (emit, events)
+    }
+
+    #[tokio::test]
+    async fn handshake_reservado_completa_entre_dois_nos() {
+        let (emit_a, events_a) = capture_emitter();
+        let (emit_b, events_b) = capture_emitter();
+
+        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap();
+
+        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap();
+
+        let id_b = node_b.local_id().to_string();
+
+        // Aguarda mDNS descobrir o peer antes de tentar conectar
+        tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+        node_a.connect(&id_b, b"acerola/handshake/1").await.unwrap();
+
+        // Aguarda handshake completar
+        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+
+        let ev_a = events_a.lock().unwrap();
+        let ev_b = events_b.lock().unwrap();
+
+        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"),             "node A: ping enviado");
+        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"),         "node A: pong recebido");
+        assert!(ev_a.iter().any(|e| e == "rpc:device_info_received"),  "node A: device info recebida");
+
+        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"),         "node B: ping recebido");
+        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"),             "node B: pong enviado");
+        assert!(ev_b.iter().any(|e| e == "rpc:device_info_exchanged"), "node B: device info trocada");
+    }
 }
