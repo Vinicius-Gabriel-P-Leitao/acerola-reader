@@ -347,7 +347,7 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
 
         Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
-        Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, byteArrayOf()) }) {
+        Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, "acerola/handshake/1".toByteArray()) }) {
             Text("Connect")
         }
 

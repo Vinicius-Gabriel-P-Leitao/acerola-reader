@@ -44,7 +44,9 @@ impl P2PNode {
             let store = Arc::new(InMemoryTrustedStore::new());
 
             let transport = IrohTransportBuilder::default()
-                .relay("https://use1-1.relay.iroh.network/");
+                .seed(*b"acerola-android-seed-v1-00000000")
+                .relay("https://relay.acerola-comic.com")
+                ;
 
             // TODO: Fazer isso mudar junto com a versão do app android, colocar na action de release.
             let device = DefaultDeviceInfoProvider::new("Android", "0.2.2-beta")
