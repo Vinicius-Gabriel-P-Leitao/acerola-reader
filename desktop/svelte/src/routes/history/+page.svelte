@@ -4,7 +4,11 @@
   import { onDestroy, onMount } from "svelte";
 
   type DeviceInfo = { name: string; os: string; version: string };
-  type NetworkConnection = { peerId: string; alpn: string; device: DeviceInfo | null };
+  type NetworkConnection = {
+    peerId: string;
+    alpn: string;
+    device: DeviceInfo | null;
+  };
   type NetworkStatus = { mode: string; peers: NetworkConnection[] };
   type RpcEvent = { peerId: string; event: string };
 
@@ -17,13 +21,29 @@
 
   onMount(async () => {
     unlisteners.push(
-      await listen<NetworkStatus>("network:status", (e) => { status = e.payload; }),
-      await listen<string>("rpc:ping_sent",              (e) => addLog(e.payload, "Ping enviado")),
-      await listen<string>("rpc:ping_received",          (e) => addLog(e.payload, "Ping recebido")),
-      await listen<string>("rpc:pong_sent",              (e) => addLog(e.payload, "Pong enviado")),
-      await listen<string>("rpc:pong_received",          (e) => addLog(e.payload, "Pong recebido")),
-      await listen<string>("rpc:device_info_exchanged",  (e) => { addLog(e.payload, "Info trocada"); refresh(); }),
-      await listen<string>("rpc:device_info_received",   (e) => { addLog(e.payload, "Info recebida"); refresh(); }),
+      await listen<NetworkStatus>("network:status", (e) => {
+        status = e.payload;
+      }),
+      await listen<string>("rpc:ping_sent", (e) =>
+        addLog(e.payload, "Ping enviado"),
+      ),
+      await listen<string>("rpc:ping_received", (e) =>
+        addLog(e.payload, "Ping recebido"),
+      ),
+      await listen<string>("rpc:pong_sent", (e) =>
+        addLog(e.payload, "Pong enviado"),
+      ),
+      await listen<string>("rpc:pong_received", (e) =>
+        addLog(e.payload, "Pong recebido"),
+      ),
+      await listen<string>("rpc:device_info_exchanged", (e) => {
+        addLog(e.payload, "Info trocada");
+        refresh();
+      }),
+      await listen<string>("rpc:device_info_received", (e) => {
+        addLog(e.payload, "Info recebida");
+        refresh();
+      }),
     );
 
     localId = await invoke("get_local_id");
@@ -52,7 +72,10 @@
 
   async function connect() {
     if (!targetPeerId.trim()) return;
-    await invoke("connect_to_peer", { peerId: targetPeerId, alpn: "acerola/handshake/1" });
+    await invoke("connect_to_peer", {
+      peerId: targetPeerId,
+      alpn: "acerola/handshake/1",
+    });
     await refresh();
   }
 </script>
@@ -60,11 +83,15 @@
 <div class="p-8 flex flex-col gap-6">
   <div class="flex flex-col gap-1">
     <h2 class="text-lg font-semibold">Rede P2P</h2>
-    <span class="text-xs text-muted-foreground font-mono break-all">ID local: {localId || "..."}</span>
+    <span class="text-xs text-muted-foreground font-mono break-all"
+      >ID local: {localId || "..."}</span
+    >
   </div>
 
   <div class="flex items-center gap-4">
-    <span class="text-sm text-muted-foreground">Modo: {status?.mode ?? "..."}</span>
+    <span class="text-sm text-muted-foreground"
+      >Modo: {status?.mode ?? "..."}</span
+    >
     <button onclick={switchLocal} class="text-sm underline">Local</button>
     <button onclick={switchRelay} class="text-sm underline">Relay</button>
   </div>
@@ -75,11 +102,15 @@
       placeholder="Peer ID"
       bind:value={targetPeerId}
     />
-    <button onclick={connect} class="border rounded px-3 py-1 text-sm">Conectar</button>
+    <button onclick={connect} class="border rounded px-3 py-1 text-sm"
+      >Conectar</button
+    >
   </div>
 
   <div>
-    <p class="text-sm font-medium mb-2">Conexões ativas ({status?.peers.length ?? 0})</p>
+    <p class="text-sm font-medium mb-2">
+      Conexões ativas ({status?.peers.length ?? 0})
+    </p>
     {#if status?.peers.length}
       {#each status.peers as conn}
         <div class="border rounded p-3 mb-2 flex flex-col gap-1">
@@ -92,7 +123,9 @@
               <span>v{conn.device.version}</span>
             </div>
           {:else}
-            <span class="text-xs text-muted-foreground italic">Dispositivo desconhecido</span>
+            <span class="text-xs text-muted-foreground italic"
+              >Dispositivo desconhecido</span
+            >
           {/if}
         </div>
       {/each}
