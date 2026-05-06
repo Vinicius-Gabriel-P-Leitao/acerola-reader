@@ -49,7 +49,7 @@ impl RpcClientHandler {
 
         match read_byte(recv).await {
             Ok(PONG) => {
-                log::debug!("[RpcClient] pong from {}", peer.id);
+                tracing::debug!(layer = "rpc_client", peer = %peer.id, "pong received");
                 (self.emit)("rpc:pong_received", peer.id.clone());
                 Ok(())
             },
@@ -66,7 +66,7 @@ impl RpcClientHandler {
 
         match read_device_info(recv).await {
             Ok(device_info) => {
-                log::debug!("[RpcClient] device info from {}", peer.id);
+                tracing::debug!(layer = "rpc_client", peer = %peer.id, "device info received");
                 (self.emit)("rpc:device_info_received", peer.id.clone());
                 self.state.write().await.store_device_info(peer.clone(), device_info);
                 Ok(())

@@ -109,7 +109,7 @@ impl TofuGuard {
 
             Box::pin(async move {
                 if store.is_blocked(&id) {
-                    return Err(ConnectionError::AuthDenied);
+                    return Err(ConnectionError::AuthDenied("peer is blocked".into()));
                 }
 
                 if !store.contains(&id) {
@@ -162,7 +162,7 @@ mod tests {
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
         let result = validator(&make_ctx("peer-malicioso")).await;
-        assert!(matches!(result, Err(ConnectionError::AuthDenied)));
+        assert!(matches!(result, Err(ConnectionError::AuthDenied(_))));
     }
 
     #[tokio::test]

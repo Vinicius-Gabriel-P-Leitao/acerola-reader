@@ -40,10 +40,23 @@ impl TransportP2pBuilder for IrohTransportBuilder {
     type Output = IrohTransport;
 
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
+        tracing::debug!(
+            layer = "iroh_transport",
+            alpns = ?alpns.iter().map(|a| String::from_utf8_lossy(a)).collect::<Vec<_>>(),
+            "building iroh transport"
+        );
+
         let mut builder = self.build_mode(alpns)?;
         builder = self.apply_secret(builder);
 
         let endpoint = builder.bind().await?;
+
+        tracing::info!(
+            layer = "iroh_transport",
+            local_id = %endpoint.id(),
+            "iroh transport bound successfully"
+        );
+
         Ok(IrohTransport::new(endpoint))
     }
 }

@@ -46,7 +46,7 @@ impl RpcServerHandler {
     ) -> Result<(), ConnectionError> {
         match read_byte(recv).await {
             Ok(PING) => {
-                log::debug!("[RpcServer] ping from {}", peer.id);
+                tracing::debug!(layer = "rpc_server", peer = %peer.id, "ping received");
                 (self.emit)("rpc:ping_received", peer.id.clone());
 
                 write_byte(send, PONG).await?;

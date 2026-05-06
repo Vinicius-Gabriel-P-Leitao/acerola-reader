@@ -51,7 +51,7 @@ mod tests {
     #[tokio::test]
     async fn validator_customizado_nega_conexao() {
         let deny: BoxedValidator =
-            Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied) }));
+            Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied("test deny".into())) }));
         let ctx = make_ctx();
         assert!(deny(&ctx).await.is_err());
     }
@@ -64,7 +64,7 @@ mod tests {
                 if allowed {
                     Ok(())
                 } else {
-                    Err(ConnectionError::AuthDenied)
+                    Err(ConnectionError::AuthDenied("not trusted".into()))
                 }
             })
         });

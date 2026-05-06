@@ -35,12 +35,23 @@ impl P2pTransport for IrohTransport {
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
         let incoming = self.endpoint.accept().await.ok_or(ConnectionError::Shutdown)?;
+        tracing::trace!(layer = "iroh_transport", "incoming connection request received");
+
         let conn = incoming.await?;
+        let remote_id = conn.remote_id();
+        let alpn = conn.alpn();
+
+        tracing::debug!(
+            layer = "iroh_transport",
+            peer = %remote_id,
+            alpn = ?String::from_utf8_lossy(alpn),
+            "inbound connection established"
+        );
 
         Ok(Box::new(IrohIncoming::new(
             conn.clone(),
-            PeerId::from_public_key(conn.remote_id().to_string(), conn.remote_id().as_bytes()),
-            conn.alpn().to_vec(),
+            PeerId::from_public_key(remote_id.to_string(), remote_id.as_bytes()),
+            alpn.to_vec(),
         )))
     }
 
@@ -51,9 +62,21 @@ impl P2pTransport for IrohTransport {
         ConnectionError,
     > {
         let addr = self.peer_to_addr(peer)?;
-        let conn = self.endpoint.connect(addr, alpn).await?;
+        tracing::debug!(
+            layer = "iroh_transport",
+            peer = %peer.id,
+            alpn = ?String::from_utf8_lossy(alpn),
+            "initiating outbound connection"
+        );
 
+        let conn = self.endpoint.connect(addr, alpn).await?;
         let (send, recv) = conn.open_bi().await?;
+
+        tracing::trace!(
+            layer = "iroh_transport",
+            peer = %peer.id,
+            "outbound bi-stream opened"
+        );
 
         let shared_conn = Arc::new(conn);
         Ok((

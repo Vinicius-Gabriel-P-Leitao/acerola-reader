@@ -34,8 +34,8 @@ pub mod network {
 
 /// Builder de transports
 pub mod transport {
+    pub use crate::core::transport::iroh::IrohTransportBuilder;
     pub use crate::core::transport::{IncomingConnection, P2pTransport, TransportP2pBuilder};
-     pub use crate::core::transport::iroh::IrohTransportBuilder;
 }
 
 /// Entidades dentro de um p2p
