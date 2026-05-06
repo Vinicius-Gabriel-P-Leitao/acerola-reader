@@ -90,7 +90,10 @@ mod app_bootstrap {
 
         let store = Arc::new(InMemoryTrustedStore::new());
 
-        let transport = IrohTransportBuilder::default().relay("https://use1-1.relay.iroh.network/");
+        let transport = IrohTransportBuilder::default()
+            .seed(*b"acerola-desktop-seed-v1-00000000")
+            .relay("https://relay.acerola-comic.com")
+            ;
 
         let device = DefaultDeviceInfoProvider::new("0.0.1-beta")
             .provide()
