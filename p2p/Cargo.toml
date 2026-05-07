@@ -6,7 +6,7 @@ name = "acerola_p2p"
 authors = ["Vinícius Gabriel Pereira Leitão"]
 description = "Biblioteca central P2P para o Acerola — compartilhada entre desktop e mobile"
 edition = "2021"
-license = "GPL-3.0-only"
+license = "MPL-2.0"
 name = "acerola-p2p"
 version = "0.0.5"
 

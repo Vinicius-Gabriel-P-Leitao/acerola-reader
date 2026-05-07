@@ -101,7 +101,7 @@
   - Adicionar spans e instrumentação nos fluxos críticos (Handshake, RPC, Loop)
   - Critério: logs detalhados e estruturados disponíveis para depuração e monitoramento
 
-- [ ] **Melhoria no Tratamento de Erros** — `infra/error/`
+- [x] **Melhoria no Tratamento de Erros** — `infra/error/`
   - Refinar as variantes de erro para serem mais descritivas
   - Garantir que erros de transporte e protocolo sejam capturados com contexto
   - Critério: diagnóstico claro de falhas sem precisar ler o código fonte
