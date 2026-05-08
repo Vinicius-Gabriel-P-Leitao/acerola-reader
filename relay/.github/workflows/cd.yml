@@ -52,7 +52,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          echo "$SSH_PRIVATE_KEY" | openssl pkey -passin "pass:$SSH_PASSPHRASE" | ssh-add -
+          printf '%s\n' "$SSH_PRIVATE_KEY" > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+          ssh-keygen -p -P "$SSH_PASSPHRASE" -N "" -f /tmp/ssh_key
+          ssh-add /tmp/ssh_key
+          rm -f /tmp/ssh_key
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           SERVER_IP: ${{ secrets.SERVER_IP }}
