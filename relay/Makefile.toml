@@ -32,3 +32,15 @@ workspace = false
 command = "cargo"
 args = ["run", "-p", "iroh-relay", "--features", "server", "--", "--dev"]
 
+[tasks.test]
+description = "Run iroh-relay tests"
+workspace = false
+command = "cargo"
+args = ["test", "-p", "iroh-relay", "--features", "server"]
+
+[tasks.test-all]
+description = "Run all tests in the workspace"
+workspace = false
+command = "cargo"
+args = ["test", "--workspace", "--all-features"]
+
