@@ -1,20 +1,29 @@
 {
-    # Substitua pelo seu domínio
     email {$ACEROLA_EMAIL}
 }
 
 {$ACEROLA_DOMAIN} {
-    # Proxy para o Relay (Websocket Upgrade automático pelo Caddy)
-    reverse_proxy relay:80 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
+    # Headers de Segurança
+    header {
+        Strict-Transport-Security "max-age=31536000;"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        X-Frame-Options "DENY"
     }
 
-    # Habilitar compressão
+    # Proxy para o Relay
+    reverse_proxy relay:80 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+    }
+
+    # Habilitar compressão moderna
     encode zstd gzip
 
-    # Logs
+    # Logs Estruturados (JSON)
     log {
         output file /data/access.log
+        format json
     }
 }
