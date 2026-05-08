@@ -63,6 +63,7 @@ pub struct MockTransport {
 /// A manivela para disparar streams pra dentro do ambiente mockado.
 pub struct MockTransportHandle {
     inbound_tx: mpsc::UnboundedSender<InjectedConnection>,
+    #[allow(dead_code)]
     outbound_tx: mpsc::UnboundedSender<OutboundConnection>,
 }
 
@@ -73,6 +74,7 @@ impl MockTransportHandle {
     }
 
     /// Pré-registra streams que serão devolvidas na próxima chamada a `open_bi`.
+    #[allow(dead_code)]
     pub fn expect_open(&self, client: DuplexStream, server: DuplexStream) {
         let _ = self.outbound_tx.send((Box::new(client), Box::new(server)));
     }

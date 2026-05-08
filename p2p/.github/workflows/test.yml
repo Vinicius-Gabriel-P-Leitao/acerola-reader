@@ -19,6 +19,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install cargo-make
+        uses: davidB/rust-cargo-make@v1
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@cargo-nextest
+
       - name: Cache Cargo
         uses: actions/cache@v4
         with:
@@ -31,7 +37,9 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Build
-        run: cargo build --verbose
+        working-directory: acerola
+        run: cargo make build
 
       - name: Run tests
-        run: cargo test --verbose
+        working-directory: acerola
+        run: cargo make test-ci

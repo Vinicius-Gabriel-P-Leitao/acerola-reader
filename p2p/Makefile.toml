@@ -1,34 +1,85 @@
 # Use cargo-make to run tasks here: https://crates.io/crates/cargo-make
 
 [tasks.format]
-toolchain = "nightly"
-args = [
-  "fmt",
-  "--all",
-  "--",
-  "--config",
-  "unstable_features=true",
-  "--config",
-  "imports_granularity=Crate,group_imports=StdExternalCrate,reorder_imports=true,format_code_in_doc_comments=true",
-]
-command = "cargo"
-description = "Formats the code using unstable features for better import grouping"
+description = "Formats the code with import grouping and doc comment formatting"
 workspace = false
+command = "cargo"
+args = [
+    "fmt",
+    "--all",
+    "--",
+    "--config",
+    "unstable_features=true",
+    "--config",
+    "imports_granularity=Crate,group_imports=StdExternalCrate,reorder_imports=true,format_code_in_doc_comments=true",
+]
 
 [tasks.check]
-args = ["check", "-p", "acerola-p2p"]
-command = "cargo"
-description = "Quickly check if the acerola-p2p compiles"
+description = "Quickly check if the library compiles (including test code)"
 workspace = false
+command = "cargo"
+args = ["check", "--tests"]
 
-[tasks.clippy]
-args = ["clippy", "-p", "acerola-p2p", "--", "-D", "warnings"]
-command = "cargo"
-description = "Runs clippy linter treating warnings as errors"
+[tasks.build]
+description = "Build the library in debug mode"
 workspace = false
+command = "cargo"
+args = ["build", "--verbose"]
+
+[tasks.build-release]
+description = "Build the library in release mode"
+workspace = false
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.lint]
+description = "Run clippy lints"
+workspace = false
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
 
 [tasks.test]
-args = ["test", "-p", "acerola-p2p"]
-command = "cargo"
-description = "Runs the package tests"
+description = "Run all tests using nextest"
 workspace = false
+command = "cargo"
+args = ["nextest", "run"]
+
+[tasks.test-verbose]
+description = "Run all tests using nextest with verbose output"
+workspace = false
+command = "cargo"
+args = ["nextest", "run", "--no-capture"]
+
+[tasks.test-ci]
+description = "Run tests in CI profile (longer timeouts, no fail-fast)"
+workspace = false
+command = "cargo"
+args = ["nextest", "run", "--profile", "ci"]
+
+[tasks.build-android-arm64]
+description = "Cross-compile for Android ARM64 (requires Android NDK)"
+workspace = false
+command = "cargo"
+args = ["build", "--target", "aarch64-linux-android", "--release"]
+
+[tasks.build-android-arm]
+description = "Cross-compile for Android ARMv7 (requires Android NDK)"
+workspace = false
+command = "cargo"
+args = ["build", "--target", "armv7-linux-androideabi", "--release"]
+
+[tasks.build-android-x86_64]
+description = "Cross-compile for Android x86_64 (emulator)"
+workspace = false
+command = "cargo"
+args = ["build", "--target", "x86_64-linux-android", "--release"]
+
+[tasks.build-android-all]
+description = "Cross-compile for all Android targets"
+workspace = false
+dependencies = ["build-android-arm64", "build-android-arm", "build-android-x86_64"]
+
+[tasks.ci]
+description = "Run full CI pipeline: check, lint, test"
+workspace = false
+dependencies = ["check", "lint", "test-ci"]
