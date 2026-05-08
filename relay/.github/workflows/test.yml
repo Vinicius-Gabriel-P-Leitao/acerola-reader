@@ -3,7 +3,6 @@ name: Acerola Relay Tests
 on:
   push:
     branches:
-      - main
       - develop
   workflow_dispatch:
 
@@ -26,8 +25,10 @@ jobs:
       - name: Rust Cache
         uses: swatinem/rust-cache@v2
 
-      - name: Install cargo-make
-        run: cargo install cargo-make --debug
+      - name: Install cargo-make and nextest
+        run: |
+          cargo install cargo-make --debug
+          curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
 
       - name: Check Formatting
         run: cargo make format
