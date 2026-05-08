@@ -1,7 +1,7 @@
 ---
 - name: Deploy Acerola Relay
   hosts: relay_servers
-  become: yes
+  # Removido become: yes pois estamos logando como root
   vars:
     deploy_path: "/opt/acerola-relay"
 
@@ -13,6 +13,7 @@
           - firewalld
           - git
           - curl
+          - rsync
         state: present
 
     - name: Add Docker repository
@@ -57,13 +58,27 @@
         state: directory
         mode: '0755'
 
-    - name: Copy docker-compose files
-      copy:
-        src: "../../.config/docker/"
+    - name: Sync project files to server
+      synchronize:
+        src: "{{ playbook_dir }}/../../"
         dest: "{{ deploy_path }}/"
-        mode: '0644'
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--exclude=target"
+          - "--exclude=.git"
+          - "--exclude=*.user"
+          - "--exclude=.cargo"
+
+    - name: Create .env file for Docker Compose
+      copy:
+        dest: "{{ deploy_path }}/.config/docker/.env"
+        content: |
+          ACEROLA_EMAIL={{ acerola_email }}
+          ACEROLA_DOMAIN={{ acerola_domain }}
+        mode: '0600'
 
     - name: Run docker compose
-      command: docker compose up -d
+      command: docker compose up -d --build
       args:
-        chdir: "{{ deploy_path }}"
+        chdir: "{{ deploy_path }}/.config/docker"
