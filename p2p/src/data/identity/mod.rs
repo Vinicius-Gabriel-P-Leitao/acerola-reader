@@ -1,5 +1,6 @@
 use getrandom::{rand_core::TryRng, SysRng};
 use secrecy::SecretBox;
+
 use crate::infra::error::ConnectionError;
 
 pub mod device_info;

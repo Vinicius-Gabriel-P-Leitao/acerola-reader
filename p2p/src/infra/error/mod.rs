@@ -3,6 +3,7 @@ pub(crate) mod iroh;
 pub(crate) mod rpc;
 
 use thiserror::Error;
+
 use crate::infra::peer::PeerId;
 
 /// Erros relacionados ao ciclo de vida e estabelecimento de conexões P2P.
@@ -57,15 +58,15 @@ pub enum RpcError {
 pub enum DeviceInfoError {
     /// Ao buscar o nome do dispositivo obtemos erro.
     #[error("failed to read device name")]
-    NameUnavailable,
+    Name,
 
     /// Busca de qual SO a applicação está rodando falhou.
     #[error("failed to read operating system")]
-    OsUnavailable,
+    Os,
 
     /// Falaha ao pegar versão do app a qual o dispositivo roda.
     #[error("failed to read app version")]
-    VersionUnavailable,
+    Version,
 }
 
 impl From<getrandom::Error> for ConnectionError {

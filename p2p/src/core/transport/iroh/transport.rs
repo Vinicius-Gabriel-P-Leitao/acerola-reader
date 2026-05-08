@@ -1,12 +1,14 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use iroh::{Endpoint, EndpointAddr, EndpointId};
-use std::sync::Arc;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
-use crate::core::transport::{IncomingConnection, P2pTransport};
+use crate::{
+    core::transport::{IncomingConnection, P2pTransport},
+    infra::{error::ConnectionError, peer::PeerId},
+};
 
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
 pub struct IrohTransport {
@@ -97,9 +99,8 @@ impl P2pTransport for IrohTransport {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::transport::iroh::IrohTransportBuilder;
     use super::*;
-    use crate::core::transport::TransportP2pBuilder;
+    use crate::core::transport::{iroh::IrohTransportBuilder, TransportP2pBuilder};
 
     async fn build_transport() -> IrohTransport {
         IrohTransportBuilder::default().build(vec![b"test/proto".to_vec()]).await.unwrap()

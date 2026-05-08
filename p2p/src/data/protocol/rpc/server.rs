@@ -1,15 +1,21 @@
-use async_trait::async_trait;
 use std::sync::Arc;
-use tokio::io::{AsyncRead, AsyncWrite};
-use tokio::sync::RwLock;
+
+use async_trait::async_trait;
+use tokio::{
+    io::{AsyncRead, AsyncWrite},
+    sync::RwLock,
+};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
 use super::{read_byte, read_device_info, write_byte, write_device_info, Recv, Writer, PING, PONG};
-use crate::core::network::state::NetworkState;
-use crate::data::identity::device_info::DeviceInfo;
-use crate::data::protocol::{EventEmitter, ProtocolHandler};
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
+use crate::{
+    core::network::state::NetworkState,
+    data::{
+        identity::device_info::DeviceInfo,
+        protocol::{EventEmitter, ProtocolHandler},
+    },
+    infra::{error::ConnectionError, peer::PeerId},
+};
 
 pub struct RpcServerHandler {
     emit: EventEmitter,
@@ -88,13 +94,17 @@ impl RpcServerHandler {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::core::network::state::NetworkState;
-    use crate::data::protocol::EventEmitter;
-    use crate::infra::peer::PeerId;
     use std::sync::{Arc, Mutex};
-    use tokio::sync::RwLock;
-    use tokio::time::{sleep, Duration};
+
+    use tokio::{
+        sync::RwLock,
+        time::{sleep, Duration},
+    };
+
+    use super::*;
+    use crate::{
+        core::network::state::NetworkState, data::protocol::EventEmitter, infra::peer::PeerId,
+    };
 
     fn make_peer(id: &str) -> PeerId {
         PeerId { id: id.to_string(), device_id: None }
@@ -133,8 +143,9 @@ mod tests {
         });
 
         let (read, write) = tokio::io::split(client_side);
-        use super::{read_byte, write_byte, write_device_info, PONG};
         use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
+
+        use super::{read_byte, write_byte, write_device_info, PONG};
         let mut recv = FramedRead::new(
             Box::new(read) as Box<dyn tokio::io::AsyncRead + Send + Unpin>,
             LengthDelimitedCodec::new(),
@@ -170,8 +181,9 @@ mod tests {
         });
 
         let (read, write) = tokio::io::split(client_side);
-        use super::{read_byte, write_byte, write_device_info};
         use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
+
+        use super::{read_byte, write_byte, write_device_info};
         let mut recv = FramedRead::new(
             Box::new(read) as Box<dyn tokio::io::AsyncRead + Send + Unpin>,
             LengthDelimitedCodec::new(),

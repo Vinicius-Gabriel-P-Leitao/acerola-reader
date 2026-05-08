@@ -1,8 +1,12 @@
-use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
-use crate::core::guard::{BoxedValidator, ConnectionContext};
-use crate::infra::error::ConnectionError;
+use crate::{
+    core::guard::{BoxedValidator, ConnectionContext},
+    infra::error::ConnectionError,
+};
 
 /// Contrato para armazenamento e consulta de peers confiáveis e bloqueados.
 ///
@@ -82,13 +86,14 @@ impl TrustedPeerStore for InMemoryTrustedStore {
 ///
 /// ```rust
 /// use std::sync::Arc;
-/// use acerola_p2p::api::guard::{TofuGuard, InMemoryTrustedStore, TrustedPeerStore};
+///
+/// use acerola_p2p::api::guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore};
 ///
 /// let store = Arc::new(InMemoryTrustedStore::new());
 /// store.block("peer-malicioso");
 ///
-/// let validator = TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>)
-///     .into_validator();
+/// let validator =
+///     TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 /// ```
 pub struct TofuGuard {
     store: Arc<dyn TrustedPeerStore>,

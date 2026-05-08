@@ -3,8 +3,9 @@
 //! O `NetworkState` consolida informações sobre as topologias de rede ativas,
 //! quais Peers estão atualmente conectados, e os protocolos em que eles estão trafegando.
 
-use crate::{data::identity::device_info::DeviceInfo, infra::peer::PeerId};
 use std::collections::{HashMap, HashSet};
+
+use crate::{data::identity::device_info::DeviceInfo, infra::peer::PeerId};
 
 /// Modos de operação da rede.
 ///
@@ -56,13 +57,15 @@ impl NetworkState {
     }
 
     /// Retorna `true` se o `peer` estiver registrado no mapa (conectado por ao menos 1 protocolo).
+    #[cfg(test)]
     pub fn is_connected(&self, peer: &PeerId) -> bool {
         self.connected_peers.contains_key(peer)
     }
 
     /// Retorna `true` se o nó remoto está conectado por meio de um ALPN específico.
+    #[cfg(test)]
     pub fn is_connected_on(&self, peer: &PeerId, alpn: &[u8]) -> bool {
-        self.connected_peers.get(peer).map_or(false, |alpns| alpns.contains(alpn))
+        self.connected_peers.get(peer).is_some_and(|alpns| alpns.contains(alpn))
     }
 
     /// Alterna explicitamente o modo de topologia da rede (ex: transitando de LAN para WAN/Relay).

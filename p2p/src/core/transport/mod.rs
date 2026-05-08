@@ -9,8 +9,7 @@ pub mod iroh;
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
+use crate::infra::{error::ConnectionError, peer::PeerId};
 
 /// Representa um handshake inicial recebido pelo daemon aguardando conversão em fluxos úteis.
 #[async_trait]

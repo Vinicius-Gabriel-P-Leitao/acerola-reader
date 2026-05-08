@@ -2,22 +2,22 @@ use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
 };
+
 use tokio::sync::{mpsc, RwLock};
 
-use crate::{
-    core::guard::BoxedValidator,
-    core::network::{
-        manager::NetworkCommand,
-        state::{NetworkMode, NetworkState},
-    },
-    core::transport::TransportP2pBuilder,
-    data::identity::device_info::DeviceInfo,
-    data::protocol::EventEmitter,
-    infra::error::ConnectionError,
-    infra::peer::PeerId,
-};
-
 use super::acerola_builder::AcerolaP2pBuilder;
+use crate::{
+    core::{
+        guard::BoxedValidator,
+        network::{
+            manager::NetworkCommand,
+            state::{NetworkMode, NetworkState},
+        },
+        transport::TransportP2pBuilder,
+    },
+    data::{identity::device_info::DeviceInfo, protocol::EventEmitter},
+    infra::{error::ConnectionError, peer::PeerId},
+};
 
 /// A Instância consolidada e o Controlador do Nó rodando em background.
 ///
@@ -72,11 +72,17 @@ impl AcerolaP2p {
     }
 
     /// Captura peers conectados junto com suas informações de dispositivo, em lock único.
-    pub async fn connected_peers_with_info(&self) -> Vec<(PeerId, HashSet<Vec<u8>>, Option<DeviceInfo>)> {
+    pub async fn connected_peers_with_info(
+        &self,
+    ) -> Vec<(PeerId, HashSet<Vec<u8>>, Option<DeviceInfo>)> {
         let state = self.state.read().await;
-        state.peers().iter().map(|(peer, alpns)| {
-            (peer.clone(), alpns.clone(), state.get_device_info(peer).cloned())
-        }).collect()
+        state
+            .peers()
+            .iter()
+            .map(|(peer, alpns)| {
+                (peer.clone(), alpns.clone(), state.get_device_info(peer).cloned())
+            })
+            .collect()
     }
 
     /// Extrai o modo da interface (Local/Relay) operando no momento.
@@ -103,10 +109,12 @@ impl AcerolaP2p {
 
 #[cfg(all(test, feature = "iroh"))]
 mod tests {
-    use super::*;
-    use crate::core::transport::iroh::IrohTransportBuilder;
-    use crate::data::identity::device_info::DeviceInfo;
     use std::sync::Mutex;
+
+    use super::*;
+    use crate::{
+        core::transport::iroh::IrohTransportBuilder, data::identity::device_info::DeviceInfo,
+    };
 
     fn no_op_emitter() -> EventEmitter {
         Arc::new(|_event: &str, _payload: String| {})
@@ -122,7 +130,11 @@ mod tests {
     }
 
     fn test_device_info() -> DeviceInfo {
-        DeviceInfo { name: "test-device".to_string(), os: "linux".to_string(), version: "0.0.1".to_string() }
+        DeviceInfo {
+            name: "test-device".to_string(),
+            os: "linux".to_string(),
+            version: "0.0.1".to_string(),
+        }
     }
 
     async fn build_node() -> AcerolaP2p {
@@ -161,15 +173,17 @@ mod tests {
         let (emit_a, _) = capture_emitter();
         let (emit_b, _) = capture_emitter();
 
-        let node_a = AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
-            .build()
-            .await
-            .unwrap();
+        let node_a =
+            AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
 
-        let node_b = AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
-            .build()
-            .await
-            .unwrap();
+        let node_b =
+            AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
 
         assert_ne!(node_a.local_id(), node_b.local_id());
     }
@@ -230,7 +244,11 @@ mod tests {
 
     #[tokio::test]
     async fn device_info_name_acessivel_apos_build() {
-        let info = DeviceInfo { name: "meu-pc".to_string(), os: "linux".to_string(), version: "1.0.0".to_string() };
+        let info = DeviceInfo {
+            name: "meu-pc".to_string(),
+            os: "linux".to_string(),
+            version: "1.0.0".to_string(),
+        };
         let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
             .build()
             .await
@@ -240,7 +258,11 @@ mod tests {
 
     #[tokio::test]
     async fn device_info_os_acessivel_apos_build() {
-        let info = DeviceInfo { name: "meu-pc".to_string(), os: "windows".to_string(), version: "1.0.0".to_string() };
+        let info = DeviceInfo {
+            name: "meu-pc".to_string(),
+            os: "windows".to_string(),
+            version: "1.0.0".to_string(),
+        };
         let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
             .build()
             .await
@@ -250,7 +272,11 @@ mod tests {
 
     #[tokio::test]
     async fn device_info_version_acessivel_apos_build() {
-        let info = DeviceInfo { name: "meu-pc".to_string(), os: "linux".to_string(), version: "2.3.1".to_string() };
+        let info = DeviceInfo {
+            name: "meu-pc".to_string(),
+            os: "linux".to_string(),
+            version: "2.3.1".to_string(),
+        };
         let node = AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), info)
             .build()
             .await
@@ -266,7 +292,11 @@ mod tests {
         let node_a = AcerolaP2p::builder(
             emit_a,
             IrohTransportBuilder::default(),
-            DeviceInfo { name: "desktop".to_string(), os: "linux".to_string(), version: "1.0.0".to_string() },
+            DeviceInfo {
+                name: "desktop".to_string(),
+                os: "linux".to_string(),
+                version: "1.0.0".to_string(),
+            },
         )
         .build()
         .await
@@ -275,7 +305,11 @@ mod tests {
         let node_b = AcerolaP2p::builder(
             emit_b,
             IrohTransportBuilder::default(),
-            DeviceInfo { name: "android".to_string(), os: "android".to_string(), version: "1.0.0".to_string() },
+            DeviceInfo {
+                name: "android".to_string(),
+                os: "android".to_string(),
+                version: "1.0.0".to_string(),
+            },
         )
         .build()
         .await

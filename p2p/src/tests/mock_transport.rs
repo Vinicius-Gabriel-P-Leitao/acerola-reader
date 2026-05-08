@@ -8,12 +8,15 @@
 //! pré-registrar streams que serão devolvidas ao chamador quando o transporte discar.
 
 use async_trait::async_trait;
-use tokio::io::{AsyncRead, AsyncWrite, DuplexStream};
-use tokio::sync::{mpsc, Mutex};
+use tokio::{
+    io::{AsyncRead, AsyncWrite, DuplexStream},
+    sync::{mpsc, Mutex},
+};
 
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
-use crate::core::transport::{IncomingConnection, P2pTransport};
+use crate::{
+    core::transport::{IncomingConnection, P2pTransport},
+    infra::{error::ConnectionError, peer::PeerId},
+};
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".
 #[rustfmt::skip]

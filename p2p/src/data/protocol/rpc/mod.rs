@@ -2,15 +2,13 @@ pub(crate) mod client;
 pub(crate) mod server;
 
 pub use client::RpcClientHandler;
-pub use server::RpcServerHandler;
-
 use futures::sink::SinkExt;
+pub use server::RpcServerHandler;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use crate::data::identity::device_info::DeviceInfo;
-use crate::infra::error::RpcError;
+use crate::{data::identity::device_info::DeviceInfo, infra::error::RpcError};
 
 pub(crate) const PING: u8 = 0x01;
 pub(crate) const PONG: u8 = 0x02;
@@ -33,7 +31,9 @@ pub(crate) async fn write_byte(send: &mut Writer, byte: u8) -> Result<(), RpcErr
     Ok(())
 }
 
-pub(crate) async fn write_device_info(send: &mut Writer, device: &DeviceInfo) -> Result<(), RpcError> {
+pub(crate) async fn write_device_info(
+    send: &mut Writer, device: &DeviceInfo,
+) -> Result<(), RpcError> {
     let bytes = serde_json::to_vec(device)?;
     send.send(bytes.into()).await?;
     Ok(())

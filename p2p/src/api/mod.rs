@@ -34,21 +34,23 @@ pub mod network {
 
 /// Builder de transports
 pub mod transport {
-    pub use crate::core::transport::iroh::IrohTransportBuilder;
-    pub use crate::core::transport::{IncomingConnection, P2pTransport, TransportP2pBuilder};
+    pub use crate::core::transport::{
+        iroh::IrohTransportBuilder, IncomingConnection, P2pTransport, TransportP2pBuilder,
+    };
 }
 
 /// Entidades dentro de um p2p
 pub mod identity {
-    pub use crate::data::identity::device_info::{DeviceInfo, DeviceInfoProvider};
-    pub use crate::data::identity::generate_seed;
-
     #[cfg(target_os = "android")]
     pub use crate::core::device::android::DefaultDeviceInfoProvider;
     #[cfg(target_os = "linux")]
     pub use crate::core::device::linux::DefaultDeviceInfoProvider;
     #[cfg(target_os = "windows")]
     pub use crate::core::device::windows::DefaultDeviceInfoProvider;
+    pub use crate::data::identity::{
+        device_info::{DeviceInfo, DeviceInfoProvider},
+        generate_seed,
+    };
 }
 
 mod acerola_builder;

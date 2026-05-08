@@ -16,11 +16,7 @@ impl From<IrohBindError> for ConnectionError {
                 ConnectionError::StartupFailed("port unavailable".into())
             },
             IrohBindError::CreateQuicEndpoint { meta, .. } => {
-                tracing::debug!(
-                    layer = "iroh_transport",
-                    ?meta,
-                    "failed to create QUIC endpoint"
-                );
+                tracing::debug!(layer = "iroh_transport", ?meta, "failed to create QUIC endpoint");
                 ConnectionError::StartupFailed("failed to create QUIC endpoint".into())
             },
             IrohBindError::CreateNetmonMonitor { meta, .. } => {
@@ -32,11 +28,7 @@ impl From<IrohBindError> for ConnectionError {
                 ConnectionError::StreamFailed("network monitor unavailable".into())
             },
             IrohBindError::InvalidTransportConfig { meta, .. } => {
-                tracing::debug!(
-                    layer = "iroh_transport",
-                    ?meta,
-                    "invalid transport configuration"
-                );
+                tracing::debug!(layer = "iroh_transport", ?meta, "invalid transport configuration");
                 ConnectionError::StartupFailed("invalid transport configuration".into())
             },
             IrohBindError::InvalidCaRootConfig { meta, .. } => {
@@ -60,11 +52,7 @@ impl From<IrohConnectError> for ConnectionError {
         match err {
             IrohConnectError::Connection { source, .. } => ConnectionError::from(source),
             IrohConnectError::Connect { meta, .. } => {
-                tracing::debug!(
-                    layer = "iroh_transport",
-                    ?meta,
-                    "failed to initiate connection"
-                );
+                tracing::debug!(layer = "iroh_transport", ?meta, "failed to initiate connection");
                 ConnectionError::PeerDisconnected("failed to initiate connection".into())
             },
             IrohConnectError::Connecting { meta, .. } => {
@@ -152,5 +140,3 @@ impl From<RelayUrlParseError> for ConnectionError {
         ConnectionError::StartupFailed("invalid relay URL".into())
     }
 }
-
-
