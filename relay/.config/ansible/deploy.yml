@@ -1,0 +1,69 @@
+---
+- name: Deploy Acerola Relay
+  hosts: relay_servers
+  become: yes
+  vars:
+    deploy_path: "/opt/acerola-relay"
+
+  tasks:
+    - name: Install dependencies (Rocky Linux)
+      dnf:
+        name:
+          - dnf-plugins-core
+          - firewalld
+          - git
+          - curl
+        state: present
+
+    - name: Add Docker repository
+      command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Install Docker
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Start and enable services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - docker
+        - firewalld
+
+    - name: Configure firewall
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - 80/tcp
+        - 443/tcp
+        - 443/udp
+        - 7824/udp
+
+    - name: Create deploy directory
+      file:
+        path: "{{ deploy_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy docker-compose files
+      copy:
+        src: "../../.config/docker/"
+        dest: "{{ deploy_path }}/"
+        mode: '0644'
+
+    - name: Run docker compose
+      command: docker compose up -d
+      args:
+        chdir: "{{ deploy_path }}"
