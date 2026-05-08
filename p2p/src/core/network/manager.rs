@@ -6,14 +6,19 @@
 //! canais I/O recém-chegados e o respectivo `ProtocolHandler` mapeado para o ALPN requisitado.
 
 use std::{collections::HashMap, sync::Arc};
-use tokio::sync::{mpsc, RwLock};
 
-use crate::core::guard::{BoxedValidator, ConnectionContext};
-use crate::core::network::state::{NetworkMode, NetworkState};
-use crate::core::transport::P2pTransport;
-use crate::data::protocol::ProtocolHandler;
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
+use tokio::sync::{mpsc, RwLock};
+use tracing::Instrument;
+
+use crate::{
+    core::{
+        guard::{BoxedValidator, ConnectionContext},
+        network::state::{NetworkMode, NetworkState},
+        transport::P2pTransport,
+    },
+    data::protocol::ProtocolHandler,
+    infra::{error::ConnectionError, peer::PeerId},
+};
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
@@ -39,8 +44,6 @@ pub struct NetworkManager {
     state: Arc<RwLock<NetworkState>>,
     /// Referência do Guard atual ativo para validação no aceite de conexões.
     validator: Arc<RwLock<BoxedValidator>>,
-    /// Produtor de comandos mantido internamente pelo Manager.
-    command_tx: mpsc::Sender<NetworkCommand>,
     /// Fila para consumo dos comandos requisitados externamente.
     command_rx: mpsc::Receiver<NetworkCommand>,
     /// Tabela de protocolos autorizados para quem recebe conexões (Servidor).
@@ -65,18 +68,12 @@ impl NetworkManager {
             transport,
             command_rx,
             state: Arc::clone(&state),
-            command_tx: command_tx.clone(),
             handlers_inbound: HashMap::new(),
             handlers_outbound: HashMap::new(),
             validator: Arc::new(RwLock::new(validator)),
         };
 
         (manager, command_tx, state)
-    }
-
-    /// Retorna um clone de uso seguro da estrutura de Estado da Rede.
-    pub fn state(&self) -> Arc<RwLock<NetworkState>> {
-        Arc::clone(&self.state)
     }
 
     /// Registra um serviço voltado ao recebimento passivo de conexões.
@@ -114,9 +111,16 @@ impl NetworkManager {
                             let validator = Arc::clone(&self.validator);
 
                             // Lança o tratamento da stream em background (Tarefa paralela).
+                            let span = tracing::info_span!(
+                                "inbound",
+                                peer = %incoming.peer().id,
+                                alpn = ?String::from_utf8_lossy(incoming.alpn())
+                            );
+
                             tokio::spawn(async move {
                                 let peer = incoming.peer().clone();
                                 let alpn = incoming.alpn().to_vec();
+
                                 // Exige a promoção da conexão à canais de leitura e escrita.
                                 let Ok((send, recv)) = incoming.accept_bi().await else { return };
 
@@ -127,21 +131,30 @@ impl NetworkManager {
                                     guard(&ctx)
                                 }.await;
 
-                                if allowed.is_err() {
-                                    log::debug!("connection from {} denied by guard", peer.id);
+                                if let Err(err) = allowed {
+                                    tracing::debug!(error = ?err, "connection denied by guard");
                                     return; // O early return mata as streams `send` e `recv`.
                                 }
 
                                 // Promove a conexão a 'Conectada' no tracker central
                                 state.write().await.connect(peer.clone(), alpn.clone());
+                                tracing::debug!("connection accepted");
+
                                 // Bloqueia esta Task na execução do protocolo ALPN assinalado.
-                                let _ = handler.handle(&peer, send, recv).await;
+                                if let Err(err) = handler.handle(&peer, send, recv).await {
+                                    tracing::warn!(error = ?err, "inbound handler failed");
+                                }
+                                tracing::debug!("connection closed");
+
                                 // Protocolo encerrou, retira a tag ALPN do Estado Central.
                                 state.write().await.disconnect(&peer, &alpn);
-                            });
+                            }.instrument(span));
                         }
                         Err(ConnectionError::Shutdown) => break, // Trata finalização programada.
-                        Err(_) => continue, // Permite que a rede tente se recuperar sob outros erros.
+                        Err(err) => {
+                            tracing::debug!(error = ?err, "transport accept failed");
+                            continue; // Permite que a rede tente se recuperar sob outros erros.
+                        }
                     }
                 }
                 // Evento 2: Uma requisição na fila do manager vinda da própria API da biblioteca.
@@ -155,16 +168,30 @@ impl NetworkManager {
                             let peer_clone = peer.clone();
                             let alpn_clone = alpn.clone();
 
+                            let span = tracing::info_span!(
+                                "outbound",
+                                peer = %peer.id,
+                                alpn = ?String::from_utf8_lossy(&alpn)
+                            );
+
                             // Procede abrindo requisição ativa à interface física.
                             match self.transport.open_bi(&alpn, &peer).await {
                                 Ok((send, recv)) => {
                                     state.write().await.connect(peer_clone.clone(), alpn_clone.clone());
+                                    tracing::debug!(parent: &span, "outbound connection established");
+
                                     tokio::spawn(async move {
-                                        let _ = handler.handle(&peer_clone, send, recv).await;
+                                        if let Err(err) = handler.handle(&peer_clone, send, recv).await {
+                                            tracing::warn!(error = ?err, "outbound handler failed");
+                                        }
+
+                                        tracing::debug!("outbound connection closed");
                                         state.write().await.disconnect(&peer_clone, &alpn_clone);
-                                    });
+                                    }.instrument(span));
                                 }
-                                Err(_) => {} // Pode-se adicionar log para alertar a falha de handshake ativo.
+                                Err(err) => {
+                                    tracing::warn!(parent: &span, error = ?err, "connect failed");
+                                }
                             }
                         }
                         NetworkCommand::SwitchGuard { validator, mode } => {
@@ -182,9 +209,10 @@ impl NetworkManager {
 
 #[cfg(test)]
 mod tests {
+    use tokio::time::{sleep, Duration};
+
     use super::*;
     use crate::tests::mock_transport::mock_transport;
-    use tokio::time::{sleep, Duration};
 
     fn open_validator() -> BoxedValidator {
         Box::new(|_ctx| Box::pin(async { Ok(()) }))
@@ -297,8 +325,9 @@ mod tests {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
 
-        let deny_all: BoxedValidator =
-            Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied) }));
+        let deny_all: BoxedValidator = Box::new(|_ctx| {
+            Box::pin(async { Err(ConnectionError::AuthDenied("test deny all".into())) })
+        });
 
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), deny_all);
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));

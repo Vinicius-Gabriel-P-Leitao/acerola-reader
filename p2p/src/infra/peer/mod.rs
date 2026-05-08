@@ -4,6 +4,7 @@
 //! de um nó, sendo a principal forma de referenciar destinos.
 
 use std::fmt;
+
 use uuid::Uuid;
 
 const ACEROLA_DEVICE_NAMESPACE: Uuid = Uuid::from_bytes(*b"acerola-p2p!dev!");

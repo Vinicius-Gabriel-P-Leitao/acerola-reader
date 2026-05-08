@@ -3,6 +3,7 @@ pub(crate) mod iroh;
 pub(crate) mod rpc;
 
 use thiserror::Error;
+
 use crate::infra::peer::PeerId;
 
 /// Erros relacionados ao ciclo de vida e estabelecimento de conexões P2P.
@@ -16,8 +17,8 @@ pub enum ConnectionError {
     PeerNotFound(PeerId),
 
     /// A conexão foi rejeitada pelo Guard customizado da aplicação (falha de autorização).
-    #[error("connection denied by guard")]
-    AuthDenied,
+    #[error("connection denied by guard: {0}")]
+    AuthDenied(String),
 
     /// Ocorreu um erro interno de I/O em uma stream ativa.
     #[error("stream failed: {0}")]
@@ -32,8 +33,8 @@ pub enum ConnectionError {
     Timeout,
 
     /// O par remoto encerrou ou resetou a conexão repentinamente.
-    #[error("peer disconnected")]
-    PeerDisconnected,
+    #[error("peer disconnected: {0}")]
+    PeerDisconnected(String),
 
     /// A conexão falhou pois as partes não suportam a mesma versão do protocolo base.
     #[error("incompatible protocol version")]
@@ -57,20 +58,20 @@ pub enum RpcError {
 pub enum DeviceInfoError {
     /// Ao buscar o nome do dispositivo obtemos erro.
     #[error("failed to read device name")]
-    NameUnavailable,
+    Name,
 
     /// Busca de qual SO a applicação está rodando falhou.
     #[error("failed to read operating system")]
-    OsUnavailable,
+    Os,
 
     /// Falaha ao pegar versão do app a qual o dispositivo roda.
     #[error("failed to read app version")]
-    VersionUnavailable,
+    Version,
 }
 
 impl From<getrandom::Error> for ConnectionError {
     fn from(err: getrandom::Error) -> Self {
-        log::error!("[generate_seed] system failed to provide secure entropy — error: {:?}", err);
+        tracing::error!(layer = "infra", error = ?err, "system failed to provide secure entropy");
         ConnectionError::StartupFailed("system cannot provide secure entropy".into())
     }
 }

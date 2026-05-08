@@ -10,31 +10,47 @@ pub mod error {
 }
 /// Utilitários ligados ao sistema de middlewares (Guards) de rede.
 pub mod guard {
-    pub use crate::core::guard::{open_guard, BoxedValidator as Guard, ConnectionContext};
+    pub use crate::core::guard::{
+        open::OpenGuard,
+        tofu::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
+        BoxedValidator as Guard, ConnectionContext,
+    };
 }
+
 /// Encapsulamento da identificação de instâncias ligadas ao P2p.
 pub mod peer {
     pub use crate::infra::peer::PeerId as PeerIdentity;
 }
+
 /// Interfaces essenciais e contratos que descrevem lógicas customizadas.
 pub mod protocol {
     pub use crate::data::protocol::{EventEmitter, ProtocolHandler as Handler};
 }
+
 /// Enums descritivos de tipologias do protocolo.
 pub mod network {
     pub use crate::core::network::state::NetworkMode;
 }
+
+/// Builder de transports
+pub mod transport {
+    pub use crate::core::transport::{
+        iroh::IrohTransportBuilder, IncomingConnection, P2pTransport, TransportP2pBuilder,
+    };
+}
+
 /// Entidades dentro de um p2p
 pub mod identity {
-    pub use crate::data::identity::device_info::{DeviceInfo, DeviceInfoProvider};
-    pub use crate::data::identity::generate_seed;
-
-    #[cfg(target_os = "windows")]
-    pub use crate::core::device::windows::DefaultDeviceInfoProvider;
-    #[cfg(target_os = "linux")]
-    pub use crate::core::device::linux::DefaultDeviceInfoProvider;
     #[cfg(target_os = "android")]
     pub use crate::core::device::android::DefaultDeviceInfoProvider;
+    #[cfg(target_os = "linux")]
+    pub use crate::core::device::linux::DefaultDeviceInfoProvider;
+    #[cfg(target_os = "windows")]
+    pub use crate::core::device::windows::DefaultDeviceInfoProvider;
+    pub use crate::data::identity::{
+        device_info::{DeviceInfo, DeviceInfoProvider},
+        generate_seed,
+    };
 }
 
 mod acerola_builder;

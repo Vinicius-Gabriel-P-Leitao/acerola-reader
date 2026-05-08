@@ -1,18 +1,21 @@
 use std::{collections::HashMap, sync::Arc};
 
+use super::acerola_p2p::AcerolaP2p;
 use crate::{
-    core::guard::BoxedValidator,
-    core::network::manager::NetworkManager,
-    core::transport::{P2pTransport, TransportP2pBuilder},
-    data::identity::device_info::DeviceInfo,
-    data::protocol::{
-        rpc::{RpcClientHandler, RpcServerHandler},
-        {EventEmitter, ProtocolHandler},
+    core::{
+        guard::BoxedValidator,
+        network::manager::NetworkManager,
+        transport::{P2pTransport, TransportP2pBuilder},
+    },
+    data::{
+        identity::device_info::DeviceInfo,
+        protocol::{
+            rpc::{RpcClientHandler, RpcServerHandler},
+            EventEmitter, ProtocolHandler,
+        },
     },
     infra::error::ConnectionError,
 };
-
-use super::acerola_p2p::AcerolaP2p;
 
 const RESERVED_ALPNS: &[&[u8]] = &[b"acerola/handshake/1"];
 
@@ -79,12 +82,16 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     ///
     /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/handshake/1`.
     pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
-        #[rustfmt::skip]
-        let transport = Arc::new(
-            self.transport.build(
-                self.handlers_inbound.keys().chain(self.handlers_outbound.keys()).cloned().collect(),
-            ).await?,
-        );
+        let alpns: Vec<Vec<u8>> = RESERVED_ALPNS
+            .iter()
+            .map(|a| a.to_vec())
+            .chain(self.handlers_inbound.keys().cloned())
+            .chain(self.handlers_outbound.keys().cloned())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+
+        let transport = Arc::new(self.transport.build(alpns).await?);
 
         let local_id = transport.local_id();
 
@@ -125,11 +132,13 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
 
 #[cfg(all(test, feature = "iroh"))]
 mod tests {
-    use super::*;
-    use crate::core::transport::iroh::IrohTransportBuilder;
-    use crate::data::identity::device_info::DeviceInfo;
-    use crate::infra::peer::PeerId;
     use tokio::io::{AsyncRead, AsyncWrite};
+
+    use super::*;
+    use crate::{
+        core::transport::iroh::IrohTransportBuilder, data::identity::device_info::DeviceInfo,
+        infra::peer::PeerId,
+    };
 
     fn no_op_emitter() -> EventEmitter {
         Arc::new(|_event: &str, _payload: String| {})
@@ -194,5 +203,58 @@ mod tests {
         .await;
 
         assert!(result.is_ok());
+    }
+
+    fn capture_emitter() -> (EventEmitter, Arc<std::sync::Mutex<Vec<String>>>) {
+        let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let clone = Arc::clone(&events);
+        let emit: EventEmitter = Arc::new(move |event: &str, _: String| {
+            clone.lock().unwrap().push(event.to_string());
+        });
+        (emit, events)
+    }
+
+    #[tokio::test]
+    async fn handshake_reservado_completa_entre_dois_nos() {
+        let (emit_a, events_a) = capture_emitter();
+        let (emit_b, events_b) = capture_emitter();
+
+        let node_a =
+            AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
+
+        let node_b =
+            AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
+
+        let id_b = node_b.local_id().to_string();
+
+        // Aguarda mDNS descobrir o peer antes de tentar conectar
+        tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+        node_a.connect(&id_b, b"acerola/handshake/1").await.unwrap();
+
+        // Aguarda handshake completar
+        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+
+        let ev_a = events_a.lock().unwrap();
+        let ev_b = events_b.lock().unwrap();
+
+        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"), "node A: ping enviado");
+        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"), "node A: pong recebido");
+        assert!(
+            ev_a.iter().any(|e| e == "rpc:device_info_received"),
+            "node A: device info recebida"
+        );
+
+        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"), "node B: ping recebido");
+        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"), "node B: pong enviado");
+        assert!(
+            ev_b.iter().any(|e| e == "rpc:device_info_exchanged"),
+            "node B: device info trocada"
+        );
     }
 }

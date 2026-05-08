@@ -5,11 +5,12 @@
 //! permitindo implementar firewalls P2P, whitelists, blacklists ou
 //! verificação de chaves com facilidade.
 
-use std::future::Future;
-use std::pin::Pin;
+use std::{future::Future, pin::Pin};
 
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
+use crate::infra::{error::ConnectionError, peer::PeerId};
+
+pub mod open;
+pub mod tofu;
 
 /// Contexto passado para a função de validação (Guard) ao receber uma conexão.
 ///
@@ -36,31 +37,22 @@ pub type BoxedValidator = Box<
         + Sync,
 >;
 
-/// Guard padrão que aceita de forma permissiva qualquer conexão recebida.
-///
-/// É utilizado caso a aplicação não configure regras estritas usando o método `builder.guard()`.
-pub async fn open_guard<T>(_ctx: &ConnectionContext<T>) -> Result<(), ConnectionError> {
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn make_ctx() -> ConnectionContext<()> {
-        ConnectionContext { peer_id: PeerId { id: "test-peer".to_string(), device_id: None }, data: () }
-    }
-
-    #[tokio::test]
-    async fn open_guard_permite_qualquer_conexao() {
-        let ctx = make_ctx();
-        assert!(open_guard(&ctx).await.is_ok());
+        ConnectionContext {
+            peer_id: PeerId { id: "test-peer".to_string(), device_id: None },
+            data: (),
+        }
     }
 
     #[tokio::test]
     async fn validator_customizado_nega_conexao() {
-        let deny: BoxedValidator =
-            Box::new(|_ctx| Box::pin(async { Err(ConnectionError::AuthDenied) }));
+        let deny: BoxedValidator = Box::new(|_ctx| {
+            Box::pin(async { Err(ConnectionError::AuthDenied("test deny".into())) })
+        });
         let ctx = make_ctx();
         assert!(deny(&ctx).await.is_err());
     }
@@ -73,15 +65,19 @@ mod tests {
                 if allowed {
                     Ok(())
                 } else {
-                    Err(ConnectionError::AuthDenied)
+                    Err(ConnectionError::AuthDenied("not trusted".into()))
                 }
             })
         });
 
-        let trusted =
-            ConnectionContext { peer_id: PeerId { id: "trusted-peer".to_string(), device_id: None }, data: () };
-        let unknown =
-            ConnectionContext { peer_id: PeerId { id: "unknown-peer".to_string(), device_id: None }, data: () };
+        let trusted = ConnectionContext {
+            peer_id: PeerId { id: "trusted-peer".to_string(), device_id: None },
+            data: (),
+        };
+        let unknown = ConnectionContext {
+            peer_id: PeerId { id: "unknown-peer".to_string(), device_id: None },
+            data: (),
+        };
 
         assert!(allow(&trusted).await.is_ok());
         assert!(allow(&unknown).await.is_err());

@@ -1,22 +1,27 @@
+use std::{
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+};
+
 use async_trait::async_trait;
-use std::pin::Pin;
-use std::sync::Arc;
-use std::task::{Context, Poll};
+use iroh::endpoint;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
-use crate::infra::error::ConnectionError;
-use crate::infra::peer::PeerId;
-use crate::core::transport::IncomingConnection;
+use crate::{
+    core::transport::IncomingConnection,
+    infra::{error::ConnectionError, peer::PeerId},
+};
 
 /// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
-    conn: iroh::endpoint::Connection,
-    peer: PeerId,
-    alpn: Vec<u8>,
+    pub(crate) conn: endpoint::Connection,
+    pub(crate) peer: PeerId,
+    pub(crate) alpn: Vec<u8>,
 }
 
 impl IrohIncoming {
-    pub(crate) fn new(conn: iroh::endpoint::Connection, peer: PeerId, alpn: Vec<u8>) -> Self {
+    pub(crate) fn new(conn: endpoint::Connection, peer: PeerId, alpn: Vec<u8>) -> Self {
         Self { conn, peer, alpn }
     }
 }
@@ -40,25 +45,19 @@ impl AsyncWrite for ConnectionWriter {
     fn poll_write(
         mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8],
     ) -> Poll<Result<usize, std::io::Error>> {
-        Pin::new(&mut self.inner).poll_write(cx, buf).map_err(|err| std::io::Error::new(
-            std::io::ErrorKind::Other, err
-        ))
+        Pin::new(&mut self.inner).poll_write(cx, buf).map_err(std::io::Error::other)
     }
 
     fn poll_flush(
         mut self: Pin<&mut Self>, cx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
-        Pin::new(&mut self.inner).poll_flush(cx).map_err(|err| std::io::Error::new(
-            std::io::ErrorKind::Other, err
-        ))
+        Pin::new(&mut self.inner).poll_flush(cx).map_err(std::io::Error::other)
     }
 
     fn poll_shutdown(
         mut self: Pin<&mut Self>, cx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
-        Pin::new(&mut self.inner).poll_shutdown(cx).map_err(|err| std::io::Error::new(
-            std::io::ErrorKind::Other, err
-        ))
+        Pin::new(&mut self.inner).poll_shutdown(cx).map_err(std::io::Error::other)
     }
 }
 
@@ -81,9 +80,7 @@ impl AsyncRead for ConnectionReader {
     fn poll_read(
         mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
-        Pin::new(&mut self.inner).poll_read(cx, buf).map_err(|err| std::io::Error::new(
-            std::io::ErrorKind::Other, err
-        ))
+        Pin::new(&mut self.inner).poll_read(cx, buf).map_err(std::io::Error::other)
     }
 }
 

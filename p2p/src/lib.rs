@@ -1,6 +1,6 @@
-pub(crate) mod infra;
-pub(crate) mod data;
 pub(crate) mod core;
+pub(crate) mod data;
+pub(crate) mod infra;
 
 #[cfg(test)]
 pub(crate) mod tests;

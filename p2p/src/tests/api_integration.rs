@@ -1,3 +1,10 @@
+use std::sync::Arc;
+
+use tokio::{
+    sync::RwLock,
+    time::{sleep, Duration},
+};
+
 use crate::{
     api::identity::DeviceInfo,
     core::network::state::NetworkState,
@@ -7,9 +14,6 @@ use crate::{
     },
     infra::peer::PeerId,
 };
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::time::{sleep, Duration};
 
 fn make_peer(id: &str) -> PeerId {
     PeerId { id: id.into(), device_id: None }
@@ -129,7 +133,7 @@ async fn nenhum_lado_armazena_device_info_se_conexao_cai_antes_do_exchange() {
     let server_task = tokio::spawn(async move {
         server.handle(&make_peer("client"), Box::new(server_write), Box::new(server_read)).await
     });
-    
+
     let client_task = tokio::spawn(async move {
         client.handle(&make_peer("server"), Box::new(client_write), Box::new(client_read)).await
     });

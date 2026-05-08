@@ -83,13 +83,46 @@
 > na camada de aplicação seria redundante. O NodeId que chega no Guard já é autêntico.
 > O modelo SSH-like (Trust On First Use) é suficiente e mais simples.
 
-- [ ] **TofuGuard** — `core/guard/tofu.rs` (novo arquivo)
+- [x] **TofuGuard** — `core/guard/tofu.rs` (novo arquivo)
   - Struct `TofuGuard` com uma store injetável (`Arc<dyn TrustedPeerStore>`)
   - Trait `TrustedPeerStore`: `contains(&str) -> bool` + `insert(&str)`
   - Implementação padrão em memória: `InMemoryTrustedStore` (HashSet protegido por Mutex)
   - Lógica: NodeId conhecido → permite; desconhecido → insere e permite (TOFU); NodeId na blocklist → rejeita
   - Re-exportar via `api::guard::TofuGuard` e `api::guard::InMemoryTrustedStore`
   - Critério: consumidor consegue restringir conexões a peers previamente vistos sem escrever Guard custom
+
+---
+
+## Etapa 3.1 — Observabilidade e Erros (Urgente)
+
+- [x] **Logging com Tracing** — `Cargo.toml` + `lib.rs`
+  - Configurar `tracing` e `tracing-log` para logs estruturados
+  - Fornecer utilitário para facilitar a integração com o `log` padrão do Rust
+  - Adicionar spans e instrumentação nos fluxos críticos (Handshake, RPC, Loop)
+  - Critério: logs detalhados e estruturados disponíveis para depuração e monitoramento
+
+- [x] **Melhoria no Tratamento de Erros** — `infra/error/`
+  - Refinar as variantes de erro para serem mais descritivas
+  - Garantir que erros de transporte e protocolo sejam capturados com contexto
+  - Critério: diagnóstico claro de falhas sem precisar ler o código fonte
+
+---
+
+## Etapa 3.2 — Validação de Transporte
+
+- [ ] **Testes de Estresse e Validação** — `tests/`
+  - Escrever testes que validam se o transporte realmente funciona em diferentes condições
+  - Validar integridade de dados e throughput básico
+  - Critério: `cargo test` garante estabilidade do transporte iroh/mock
+
+---
+
+## Etapa 3.3 — CLI de Diagnóstico (Planejamento)
+
+- [ ] **Viabilidade de CLI Simples**
+  - Planejar uma CLI para transporte de dados e verificação de conectividade
+  - Útil para testes manuais e demonstração de funcionalidades
+  - Critério: Plano de implementação ou protótipo funcional definido
 
 ---
 

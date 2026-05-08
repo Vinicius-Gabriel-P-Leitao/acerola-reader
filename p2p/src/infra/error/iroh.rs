@@ -12,39 +12,35 @@ impl From<IrohBindError> for ConnectionError {
     fn from(err: IrohBindError) -> Self {
         match err {
             IrohBindError::Sockets { meta, .. } => {
-                log::debug!("[IrohTransport::BindError] failed to bind sockets — meta: {:?}", meta);
+                tracing::debug!(layer = "iroh_transport", ?meta, "failed to bind sockets");
                 ConnectionError::StartupFailed("port unavailable".into())
             },
             IrohBindError::CreateQuicEndpoint { meta, .. } => {
-                log::debug!(
-                    "[IrohTransport::BindError] failed to create QUIC endpoint — meta: {:?}",
-                    meta
-                );
+                tracing::debug!(layer = "iroh_transport", ?meta, "failed to create QUIC endpoint");
                 ConnectionError::StartupFailed("failed to create QUIC endpoint".into())
             },
             IrohBindError::CreateNetmonMonitor { meta, .. } => {
-                log::debug!(
-                    "[IrohTransport::BindError] failed to create network monitor — meta: {:?}",
-                    meta
+                tracing::debug!(
+                    layer = "iroh_transport",
+                    ?meta,
+                    "failed to create network monitor"
                 );
                 ConnectionError::StreamFailed("network monitor unavailable".into())
             },
             IrohBindError::InvalidTransportConfig { meta, .. } => {
-                log::debug!(
-                    "[IrohTransport::BindError] invalid transport configuration — meta: {:?}",
-                    meta
-                );
+                tracing::debug!(layer = "iroh_transport", ?meta, "invalid transport configuration");
                 ConnectionError::StartupFailed("invalid transport configuration".into())
             },
             IrohBindError::InvalidCaRootConfig { meta, .. } => {
-                log::debug!(
-                    "[IrohTransport::BindError] invalid CA root configuration — meta: {:?}",
-                    meta
+                tracing::debug!(
+                    layer = "iroh_transport",
+                    ?meta,
+                    "invalid certificate configuration"
                 );
                 ConnectionError::StartupFailed("invalid certificate configuration".into())
             },
             err => {
-                log::debug!("[IrohTransport::BindError] unmapped error: {:?}", err);
+                tracing::debug!(layer = "iroh_transport", error = ?err, "unmapped bind error");
                 ConnectionError::StreamFailed(err.to_string())
             },
         }
@@ -56,18 +52,15 @@ impl From<IrohConnectError> for ConnectionError {
         match err {
             IrohConnectError::Connection { source, .. } => ConnectionError::from(source),
             IrohConnectError::Connect { meta, .. } => {
-                log::debug!(
-                    "[IrohTransport::ConnectError] failed to initiate connection — meta: {:?}",
-                    meta
-                );
-                ConnectionError::PeerDisconnected
+                tracing::debug!(layer = "iroh_transport", ?meta, "failed to initiate connection");
+                ConnectionError::PeerDisconnected("failed to initiate connection".into())
             },
             IrohConnectError::Connecting { meta, .. } => {
-                log::debug!("[IrohTransport::ConnectError] handshake failed — meta: {:?}", meta);
-                ConnectionError::PeerDisconnected
+                tracing::debug!(layer = "iroh_transport", ?meta, "handshake failed");
+                ConnectionError::PeerDisconnected("handshake failed".into())
             },
             err => {
-                log::debug!("[IrohTransport::ConnectError] unmapped error: {:?}", err);
+                tracing::debug!(layer = "iroh_transport", error = ?err, "unmapped connect error");
                 ConnectionError::StreamFailed(err.to_string())
             },
         }
@@ -79,21 +72,22 @@ impl From<IrohConnectingError> for ConnectionError {
         match err {
             IrohConnectingError::ConnectionError { source, .. } => ConnectionError::from(source),
             IrohConnectingError::LocallyRejected { .. } => {
-                log::warn!("[IrohTransport::ConnectingError] connection rejected locally by guard");
-                ConnectionError::AuthDenied
+                tracing::warn!(layer = "iroh_transport", "connection rejected locally by guard");
+                ConnectionError::AuthDenied("rejected locally by guard".into())
             },
             IrohConnectingError::HandshakeFailure { .. } => {
-                log::warn!(
-                    "[IrohTransport::ConnectingError] handshake failed — invalid or untrusted peer"
+                tracing::warn!(
+                    layer = "iroh_transport",
+                    "handshake failed — invalid or untrusted peer"
                 );
-                ConnectionError::AuthDenied
+                ConnectionError::AuthDenied("invalid or untrusted peer".into())
             },
             IrohConnectingError::InternalConsistencyError { .. } => {
-                log::debug!("[IrohTransport::ConnectingError] internal consistency error");
+                tracing::debug!(layer = "iroh_transport", "internal consistency error");
                 ConnectionError::StreamFailed("internal error".into())
             },
             err => {
-                log::debug!("[IrohTransport::ConnectingError] unmapped error: {:?}", err);
+                tracing::debug!(layer = "iroh_transport", error = ?err, "unmapped connecting error");
                 ConnectionError::StreamFailed(err.to_string())
             },
         }
@@ -104,31 +98,31 @@ impl From<IrohConnectionError> for ConnectionError {
     fn from(err: IrohConnectionError) -> Self {
         match err {
             IrohConnectionError::TimedOut => {
-                log::warn!("[IrohTransport::ConnectionError] connection timed out");
+                tracing::warn!(layer = "iroh_transport", "connection timed out");
                 ConnectionError::Timeout
             },
             IrohConnectionError::Reset => {
-                log::warn!("[IrohTransport::ConnectionError] connection reset by peer");
-                ConnectionError::PeerDisconnected
+                tracing::warn!(layer = "iroh_transport", "connection reset by peer");
+                ConnectionError::PeerDisconnected("connection reset by peer".into())
             },
             IrohConnectionError::ConnectionClosed(_) => {
-                log::debug!("[IrohTransport::ConnectionError] connection closed by peer");
-                ConnectionError::PeerDisconnected
+                tracing::debug!(layer = "iroh_transport", "connection closed by peer");
+                ConnectionError::PeerDisconnected("connection closed by peer".into())
             },
             IrohConnectionError::ApplicationClosed(_) => {
-                log::debug!("[IrohTransport::ConnectionError] connection closed by application");
-                ConnectionError::PeerDisconnected
+                tracing::debug!(layer = "iroh_transport", "connection closed by application");
+                ConnectionError::PeerDisconnected("connection closed by application".into())
             },
             IrohConnectionError::VersionMismatch => {
-                log::warn!("[IrohTransport::ConnectionError] incompatible protocol version");
+                tracing::warn!(layer = "iroh_transport", "incompatible protocol version");
                 ConnectionError::IncompatibleVersion
             },
             IrohConnectionError::LocallyClosed => {
-                log::debug!("[IrohTransport::ConnectionError] connection closed locally");
+                tracing::debug!(layer = "iroh_transport", "connection closed locally");
                 ConnectionError::Shutdown
             },
             err => {
-                log::debug!("[IrohTransport::ConnectionError] unmapped error: {:?}", err);
+                tracing::debug!(layer = "iroh_transport", error = ?err, "unmapped connection error");
                 ConnectionError::StreamFailed(err.to_string())
             },
         }
@@ -137,12 +131,12 @@ impl From<IrohConnectionError> for ConnectionError {
 
 impl From<RelayUrlParseError> for ConnectionError {
     fn from(relay_err: RelayUrlParseError) -> Self {
-        log::debug!(
-            "[IrohTransport::RelayUrlParseError] failed to parse relay URL — error: {:?}",
-            relay_err
+        tracing::debug!(
+            layer = "iroh_transport",
+            error = ?relay_err,
+            "failed to parse relay URL"
         );
 
         ConnectionError::StartupFailed("invalid relay URL".into())
     }
 }
-

@@ -1,0 +1,34 @@
+# Use cargo-make to run tasks here: https://crates.io/crates/cargo-make
+
+[tasks.format]
+toolchain = "nightly"
+args = [
+  "fmt",
+  "--all",
+  "--",
+  "--config",
+  "unstable_features=true",
+  "--config",
+  "imports_granularity=Crate,group_imports=StdExternalCrate,reorder_imports=true,format_code_in_doc_comments=true",
+]
+command = "cargo"
+description = "Formats the code using unstable features for better import grouping"
+workspace = false
+
+[tasks.check]
+args = ["check", "-p", "acerola-p2p"]
+command = "cargo"
+description = "Quickly check if the acerola-p2p compiles"
+workspace = false
+
+[tasks.clippy]
+args = ["clippy", "-p", "acerola-p2p", "--", "-D", "warnings"]
+command = "cargo"
+description = "Runs clippy linter treating warnings as errors"
+workspace = false
+
+[tasks.test]
+args = ["test", "-p", "acerola-p2p"]
+command = "cargo"
+description = "Runs the package tests"
+workspace = false

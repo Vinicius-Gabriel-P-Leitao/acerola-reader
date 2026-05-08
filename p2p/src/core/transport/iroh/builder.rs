@@ -1,25 +1,21 @@
 use async_trait::async_trait;
-use iroh::address_lookup::mdns;
-use iroh::endpoint::{self, presets};
-use iroh::{Endpoint, RelayConfig, RelayMap, RelayUrl, SecretKey};
+use iroh::{
+    address_lookup::mdns,
+    endpoint::{self, presets},
+    Endpoint, RelayConfig, RelayMap, RelayUrl, SecretKey,
+};
 use secrecy::{ExposeSecret, SecretBox};
 
 use super::transport::IrohTransport;
-use crate::core::transport::TransportP2pBuilder;
-use crate::infra::error::ConnectionError;
+use crate::{core::transport::TransportP2pBuilder, infra::error::ConnectionError};
 
 const IDENTITY_DERIVE_CONTEXT: &str = "acerola-p2p 2026 node identity";
 
 /// Construtor configurável para o `IrohTransport`.
+#[derive(Default)]
 pub struct IrohTransportBuilder {
     relay_urls: Vec<String>,
     seed: Option<SecretBox<[u8; 32]>>,
-}
-
-impl Default for IrohTransportBuilder {
-    fn default() -> Self {
-        Self { relay_urls: Vec::new(), seed: None }
-    }
 }
 
 impl IrohTransportBuilder {
@@ -40,10 +36,23 @@ impl TransportP2pBuilder for IrohTransportBuilder {
     type Output = IrohTransport;
 
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
+        tracing::debug!(
+            layer = "iroh_transport",
+            alpns = ?alpns.iter().map(|a| String::from_utf8_lossy(a)).collect::<Vec<_>>(),
+            "building iroh transport"
+        );
+
         let mut builder = self.build_mode(alpns)?;
         builder = self.apply_secret(builder);
 
         let endpoint = builder.bind().await?;
+
+        tracing::info!(
+            layer = "iroh_transport",
+            local_id = %endpoint.id(),
+            "iroh transport bound successfully"
+        );
+
         Ok(IrohTransport::new(endpoint))
     }
 }

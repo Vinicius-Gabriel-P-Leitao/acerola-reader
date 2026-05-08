@@ -1,5 +1,6 @@
-use crate::infra::error::DeviceInfoError;
 use serde::{Deserialize, Serialize};
+
+use crate::infra::error::DeviceInfoError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceInfo {

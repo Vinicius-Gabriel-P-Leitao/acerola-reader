@@ -1,5 +1,7 @@
-use crate::data::identity::device_info::{DeviceInfo, DeviceInfoProvider};
-use crate::infra::error::DeviceInfoError;
+use crate::{
+    data::identity::device_info::{DeviceInfo, DeviceInfoProvider},
+    infra::error::DeviceInfoError,
+};
 
 pub struct DefaultDeviceInfoProvider {
     version: String,
