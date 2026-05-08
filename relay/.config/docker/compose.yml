@@ -1,0 +1,68 @@
+services:
+  relay:
+    image: acerola-relay
+    build:
+      context: ../..
+      dockerfile: .config/docker/dockerfile
+    container_name: acerola-relay
+    restart: always
+    environment:
+      - IROH_RELAY_HTTP_BEARER_TOKEN=${RELAY_TOKEN:-}
+    ports:
+      - "7824:7824/udp"
+    networks:
+      - acerola-net
+    volumes:
+      - ./certs:/certs
+    command: ["--config-path", "/config.toml"]
+    healthcheck:
+      # Verifica se a porta 80 está aberta sem enviar um request HTTP completo
+      # Isso evita o erro de "Connection did not reach established state" nos logs
+      test: ["CMD", "nc", "-z", "localhost", "80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:latest
+    container_name: acerola-proxy
+    restart: always
+    environment:
+      - ACEROLA_EMAIL=${ACEROLA_EMAIL}
+      - ACEROLA_DOMAIN=${ACEROLA_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+    networks:
+      - acerola-net
+    depends_on:
+      relay:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "caddy", "api", "http://localhost:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  acerola-net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+        - subnet: fd00:ace:1010::/64
