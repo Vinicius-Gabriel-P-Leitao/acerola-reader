@@ -1,0 +1,32 @@
+---
+- name: Deploy Update Acerola Relay
+  hosts: relay_servers
+  # No deploy de CI/CD, assumimos que o rsync/docker já existem
+  vars:
+    deploy_path: "/opt/acerola-relay"
+
+  tasks:
+    - name: Sync latest code to server
+      synchronize:
+        src: "{{ playbook_dir }}/../../"
+        dest: "{{ deploy_path }}/"
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--exclude=target"
+          - "--exclude=.git"
+          - "--exclude=*.user"
+          - "--exclude=.cargo"
+
+    - name: Update .env file
+      copy:
+        dest: "{{ deploy_path }}/.config/docker/.env"
+        content: |
+          ACEROLA_EMAIL={{ acerola_email }}
+          ACEROLA_DOMAIN={{ acerola_domain }}
+        mode: '0600'
+
+    - name: Rebuild and restart containers
+      command: docker compose up -d --build
+      args:
+        chdir: "{{ deploy_path }}/.config/docker"

@@ -33,14 +33,13 @@ command = "cargo"
 args = ["run", "-p", "iroh-relay", "--features", "server", "--", "--dev"]
 
 [tasks.test]
-description = "Run iroh-relay tests"
+description = "Run iroh-relay tests using nextest"
 workspace = false
 command = "cargo"
-args = ["test", "-p", "iroh-relay", "--features", "server"]
+args = ["nextest", "run", "-p", "iroh-relay", "--features", "server"]
 
 [tasks.test-all]
-description = "Run all tests in the workspace"
+description = "Run all tests in the workspace using nextest"
 workspace = false
 command = "cargo"
-args = ["test", "--workspace", "--all-features"]
-
+args = ["nextest", "run", "--workspace", "--all-features"]

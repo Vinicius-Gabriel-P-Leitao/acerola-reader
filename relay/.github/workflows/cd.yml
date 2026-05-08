@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Run Workspace Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+
+      - name: Install cargo-make and nextest
+        run: |
+          cargo install cargo-make --debug
+          curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
+
+      - name: Check Formatting
+        run: cargo make format
+
+      - name: Run All Tests
+        run: cargo make test-all
+
+  deploy:
+    name: Deploy to VPS
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install Ansible and Rsync
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible rsync
+
+      - name: Create Ansible Inventory
+        run: |
+          echo "[relay_servers]" > .config/ansible/hosts.ini
+          echo "${{ secrets.SERVER_IP }} ansible_user=root" >> .config/ansible/hosts.ini
+
+      - name: Run Deploy Playbook
+        run: |
+          ansible-playbook -i .config/ansible/hosts.ini .config/ansible/sync.yml \
+          -e "acerola_email=${{ secrets.ACEROLA_EMAIL }}" \
+          -e "acerola_domain=${{ secrets.ACEROLA_DOMAIN }}"
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
