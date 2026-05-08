@@ -1,0 +1,36 @@
+name: Acerola Relay Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Run Workspace Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+
+      - name: Install cargo-make
+        run: cargo install cargo-make --debug
+
+      - name: Check Formatting
+        run: cargo make format
+
+      - name: Run All Tests
+        run: cargo make test-all
