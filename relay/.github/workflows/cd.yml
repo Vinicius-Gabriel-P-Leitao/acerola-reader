@@ -42,21 +42,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-
       - name: Install Ansible and Rsync
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible rsync
 
+      - name: Setup SSH Agent and Key (Secure Pipe)
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          echo "$SSH_PRIVATE_KEY" | openssl pkey -passin "pass:$SSH_PASSPHRASE" | ssh-add -
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Create Ansible Inventory
         run: |
           echo "[relay_servers]" > .config/ansible/hosts.ini
-          echo "${{ secrets.SERVER_IP }} ansible_user=root" >> .config/ansible/hosts.ini
+          echo "$SERVER_IP ansible_user=root" >> .config/ansible/hosts.ini
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
 
       - name: Run Deploy Playbook
         run: |
@@ -64,4 +72,4 @@ jobs:
           -e "acerola_email=${{ secrets.ACEROLA_EMAIL }}" \
           -e "acerola_domain=${{ secrets.ACEROLA_DOMAIN }}"
         env:
-          ANSIBLE_HOST_KEY_CHECKING: False
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
