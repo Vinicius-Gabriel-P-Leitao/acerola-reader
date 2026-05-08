@@ -16,16 +16,19 @@ args = [
 
 [tasks.check]
 description = "Quickly check if the relay compiles"
+workspace = false
 command = "cargo"
-args = ["check", "-p", "relay", "--features", "server"]
+args = ["check", "-p", "iroh-relay", "--features", "server"]
 
 [tasks.build-relay]
 description = "Build the relay binary in release mode"
+workspace = false
 command = "cargo"
-args = ["build", "--release", "-p", "relay", "--features", "server"]
+args = ["build", "--release", "-p", "iroh-relay", "--features", "server"]
 
 [tasks.run-relay]
 description = "Run the relay in dev mode"
+workspace = false
 command = "cargo"
-args = ["run", "-p", "relay", "--features", "server", "--", "--dev"]
+args = ["run", "-p", "iroh-relay", "--features", "server", "--", "--dev"]
 

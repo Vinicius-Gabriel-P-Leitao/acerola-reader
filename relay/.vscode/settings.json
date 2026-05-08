@@ -29,8 +29,8 @@
     "mod.rs": "*"
   },
   "material-icon-theme.folders.associations": {
+    "iroh-relay": "connection",
     "iroh-dns": "database",
-    "relay": "connection",
     "iroh": "connection",
     "iroh-base": "core",
     ".cargo": "rust"

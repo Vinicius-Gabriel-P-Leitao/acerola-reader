@@ -13,14 +13,14 @@ use std::{
 use clap::Parser;
 use http::StatusCode;
 use iroh_base::EndpointId;
-use n0_error::{Result, StdResultExt, bail_any};
-use n0_future::FutureExt;
-use relay::{
+use iroh_relay::{
     defaults::{
         DEFAULT_HTTP_PORT, DEFAULT_HTTPS_PORT, DEFAULT_METRICS_PORT, DEFAULT_RELAY_QUIC_PORT,
     },
-    server::{self as relay_server, ClientRateLimit, QuicConfig},
+    server::{self as relay, ClientRateLimit, QuicConfig},
 };
+use n0_error::{Result, StdResultExt, bail_any};
+use n0_future::FutureExt;
 use serde::{Deserialize, Serialize};
 use tokio_rustls_acme::{AcmeConfig, caches::DirCache};
 use tracing::{debug, warn};
@@ -180,19 +180,19 @@ struct HttpAccessConfig {
     bearer_token: Option<String>,
 }
 
-impl From<AccessConfig> for relay::server::AccessConfig {
+impl From<AccessConfig> for iroh_relay::server::AccessConfig {
     fn from(cfg: AccessConfig) -> Self {
         match cfg {
-            AccessConfig::Everyone => relay::server::AccessConfig::Everyone,
+            AccessConfig::Everyone => iroh_relay::server::AccessConfig::Everyone,
             AccessConfig::Allowlist(allow_list) => {
                 let allow_list = Arc::new(allow_list);
-                relay::server::AccessConfig::Restricted(Box::new(move |endpoint_id| {
+                iroh_relay::server::AccessConfig::Restricted(Box::new(move |endpoint_id| {
                     let allow_list = allow_list.clone();
                     async move {
                         if allow_list.contains(&endpoint_id) {
-                            relay::server::Access::Allow
+                            iroh_relay::server::Access::Allow
                         } else {
-                            relay::server::Access::Deny
+                            iroh_relay::server::Access::Deny
                         }
                     }
                     .boxed()
@@ -200,13 +200,13 @@ impl From<AccessConfig> for relay::server::AccessConfig {
             }
             AccessConfig::Denylist(deny_list) => {
                 let deny_list = Arc::new(deny_list);
-                relay::server::AccessConfig::Restricted(Box::new(move |endpoint_id| {
+                iroh_relay::server::AccessConfig::Restricted(Box::new(move |endpoint_id| {
                     let deny_list = deny_list.clone();
                     async move {
                         if deny_list.contains(&endpoint_id) {
-                            relay::server::Access::Deny
+                            iroh_relay::server::Access::Deny
                         } else {
-                            relay::server::Access::Allow
+                            iroh_relay::server::Access::Allow
                         }
                     }
                     .boxed()
@@ -222,7 +222,7 @@ impl From<AccessConfig> for relay::server::AccessConfig {
                     config.bearer_token = Some(token);
                 }
                 let config = Arc::new(config);
-                relay::server::AccessConfig::Restricted(Box::new(move |endpoint_id| {
+                iroh_relay::server::AccessConfig::Restricted(Box::new(move |endpoint_id| {
                     let client = client.clone();
                     let config = config.clone();
                     async move { http_access_check(&client, &config, endpoint_id).await }.boxed()
@@ -237,8 +237,8 @@ async fn http_access_check(
     client: &reqwest::Client,
     config: &HttpAccessConfig,
     endpoint_id: EndpointId,
-) -> relay::server::Access {
-    use relay::server::Access;
+) -> iroh_relay::server::Access {
+    use iroh_relay::server::Access;
     debug!(url=%config.url, "Check relay access via HTTP POST");
 
     match http_access_check_inner(client, config, endpoint_id).await {
