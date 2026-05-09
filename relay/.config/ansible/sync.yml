@@ -4,6 +4,7 @@
   # No deploy de CI/CD, assumimos que o rsync/docker já existem
   vars:
     deploy_path: "/opt/acerola-relay"
+    ansible_ssh_common_args: "-o ServerAliveInterval=30 -o ServerAliveCountMax=20"
 
   tasks:
     - name: Sync latest code to server
@@ -30,8 +31,6 @@
       command: docker compose up -d --build
       args:
         chdir: "{{ deploy_path }}/.config/docker"
-      async: 600
-      poll: 15
 
     - name: Copy Caddy config to proxy container
       command: docker cp {{ deploy_path }}/.config/docker/acerola-relay.caddy acerola-proxy:/etc/caddy/conf.d/acerola-relay.caddy
