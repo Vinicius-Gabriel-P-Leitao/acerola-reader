@@ -22,11 +22,19 @@
       copy:
         dest: "{{ deploy_path }}/.config/docker/.env"
         content: |
-          ACEROLA_EMAIL={{ acerola_email }}
-          ACEROLA_DOMAIN={{ acerola_domain }}
+          EMAIL={{ email }}
+          DOMAIN={{ domain }}
         mode: '0600'
 
     - name: Rebuild and restart containers
       command: docker compose up -d --build
       args:
         chdir: "{{ deploy_path }}/.config/docker"
+
+    - name: Reload Caddy config
+      command: docker exec acerola-proxy caddy reload --config /etc/caddy/Caddyfile
+      register: caddy_reload
+      failed_when:
+        - caddy_reload.rc != 0
+        - '"No such container" not in caddy_reload.stderr'
+      changed_when: caddy_reload.rc == 0
