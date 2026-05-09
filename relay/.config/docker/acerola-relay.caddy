@@ -15,7 +15,7 @@ relay.{$DOMAIN} {
     encode zstd gzip
 
     log {
-        output file /data/access.log
+        output file /data/relay-access.log
         format json
     }
 }
