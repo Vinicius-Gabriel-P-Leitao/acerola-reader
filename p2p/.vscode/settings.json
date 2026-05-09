@@ -41,6 +41,7 @@
     "protocol": "core",
     "summary": "docs",
     "peer": "client",
+    ".cargo": "rust",
     "p2p": "client"
   }
 }

@@ -7,6 +7,7 @@ pub mod api_integration;
 pub mod mock_transport;
 
 #[cfg(test)]
+#[allow(dead_code)]
 pub fn init_tracing() {
     let _ = tracing_subscriber::fmt().with_test_writer().try_init();
 }
