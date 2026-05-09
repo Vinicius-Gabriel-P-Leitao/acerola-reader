@@ -73,7 +73,7 @@ jobs:
       - name: Run Deploy Playbook
         run: |
           ansible-playbook -i .config/ansible/hosts.ini .config/ansible/sync.yml \
-          -e "acerola_email=${{ secrets.ACEROLA_EMAIL }}" \
-          -e "acerola_domain=${{ secrets.ACEROLA_DOMAIN }}"
+          -e "email=${{ secrets.EMAIL }}" \
+          -e "domain=${{ secrets.DOMAIN }}"
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
