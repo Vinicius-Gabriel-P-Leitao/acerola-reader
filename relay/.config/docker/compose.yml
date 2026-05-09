@@ -11,7 +11,7 @@ services:
     ports:
       - "7824:7824/udp"
     networks:
-      - acerola-net
+      - acerola_net
       - proxy
     volumes:
       - ./certs:/certs
@@ -29,7 +29,8 @@ services:
         max-file: "3"
 
 networks:
-  acerola-net:
+  acerola_net:
+    name: acerola_net
     enable_ipv6: true
     ipam:
       config:
