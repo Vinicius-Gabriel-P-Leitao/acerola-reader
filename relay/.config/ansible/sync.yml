@@ -30,6 +30,8 @@
       command: docker compose up -d --build
       args:
         chdir: "{{ deploy_path }}/.config/docker"
+      async: 600
+      poll: 15
 
     - name: Copy Caddy config to proxy container
       command: docker cp {{ deploy_path }}/.config/docker/acerola-relay.caddy acerola-proxy:/etc/caddy/conf.d/acerola-relay.caddy
