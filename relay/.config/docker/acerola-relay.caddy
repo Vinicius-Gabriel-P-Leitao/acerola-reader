@@ -1,9 +1,4 @@
-{
-    email {$ACEROLA_EMAIL}
-}
-
-{$ACEROLA_DOMAIN} {
-    # Headers de Segurança
+relay.{$DOMAIN} {
     header {
         Strict-Transport-Security "max-age=31536000;"
         X-Content-Type-Options "nosniff"
@@ -11,17 +6,14 @@
         X-Frame-Options "DENY"
     }
 
-    # Proxy para o Relay
-    reverse_proxy relay:80 {
+    reverse_proxy acerola-relay:80 {
         header_up Host {host}
         header_up X-Real-IP {remote}
         header_up X-Forwarded-For {remote}
     }
 
-    # Habilitar compressão moderna
     encode zstd gzip
 
-    # Logs Estruturados (JSON)
     log {
         output file /data/access.log
         format json
