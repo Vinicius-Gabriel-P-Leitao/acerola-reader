@@ -31,6 +31,9 @@
       args:
         chdir: "{{ deploy_path }}/.config/docker"
 
+    - name: Copy Caddy config to proxy container
+      command: docker cp {{ deploy_path }}/.config/docker/acerola-relay.caddy acerola-proxy:/etc/caddy/conf.d/acerola-relay.caddy
+
     - name: Reload Caddy config
       command: docker exec acerola-proxy caddy reload --config /etc/caddy/Caddyfile
       register: caddy_reload
