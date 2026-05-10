@@ -84,7 +84,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     pub async fn build(self) -> Result<AcerolaP2p, ConnectionError> {
         let alpns: Vec<Vec<u8>> = RESERVED_ALPNS
             .iter()
-            .map(|a| a.to_vec())
+            .map(|it| it.to_vec())
             .chain(self.handlers_inbound.keys().cloned())
             .chain(self.handlers_outbound.keys().cloned())
             .collect::<std::collections::HashSet<_>>()
@@ -94,6 +94,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
         let transport = Arc::new(self.transport.build(alpns).await?);
 
         let local_id = transport.local_id();
+        let local_addr = transport.local_addr()?;
 
         #[rustfmt::skip]
         let (mut manager, command_tx, state) = NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2pTransport>, self.guard);
@@ -125,8 +126,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
         }
 
         tokio::spawn(manager.run());
-
-        Ok(AcerolaP2p { command_tx, local_id, state, device_info: self.device_info })
+        Ok(AcerolaP2p { command_tx, local_id, local_addr, state, device_info: self.device_info })
     }
 }
 
@@ -231,11 +231,11 @@ mod tests {
                 .await
                 .unwrap();
 
-        let id_b = node_b.local_id().to_string();
+        let addr_b = node_b.local_addr().clone();
 
         // Aguarda mDNS descobrir o peer antes de tentar conectar
         tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
-        node_a.connect(&id_b, b"acerola/handshake/1").await.unwrap();
+        node_a.connect(addr_b, b"acerola/handshake/1").await.unwrap();
 
         // Aguarda handshake completar
         tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
