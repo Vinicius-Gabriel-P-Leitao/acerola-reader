@@ -17,7 +17,7 @@ use crate::{
         transport::P2pTransport,
     },
     data::protocol::ProtocolHandler,
-    infra::{error::ConnectionError, peer::PeerId},
+    infra::{error::ConnectionError, peer::PeerAddr},
 };
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
@@ -31,7 +31,7 @@ pub enum NetworkCommand {
     /// Troca dinâmica da política de validação (Guard) e estado nominal da rede.
     SwitchGuard { validator: BoxedValidator, mode: NetworkMode },
     /// Tenta discar ativamente para outro par através de um protocolo.
-    Connect { peer: PeerId, alpn: Vec<u8> },
+    Connect { addr: PeerAddr, alpn: Vec<u8> },
     /// Provoca a desmontagem e desligamento seguro do daemon P2P.
     Shutdown,
 }
@@ -160,33 +160,33 @@ impl NetworkManager {
                 // Evento 2: Uma requisição na fila do manager vinda da própria API da biblioteca.
                 Some(cmd) = self.command_rx.recv() => {
                     match cmd {
-                        NetworkCommand::Connect { peer, alpn } => {
+                        NetworkCommand::Connect { addr, alpn } => {
                             let Some(handler) = self.handlers_outbound.get(&alpn) else { continue };
 
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
-                            let peer_clone = peer.clone();
+                            let addr_clone = addr.clone();
                             let alpn_clone = alpn.clone();
 
                             let span = tracing::info_span!(
                                 "outbound",
-                                peer = %peer.id,
+                                addr = %addr.id,
                                 alpn = ?String::from_utf8_lossy(&alpn)
                             );
 
                             // Procede abrindo requisição ativa à interface física.
-                            match self.transport.open_bi(&alpn, &peer).await {
+                            match self.transport.open_bi(&alpn, &addr).await {
                                 Ok((send, recv)) => {
-                                    state.write().await.connect(peer_clone.clone(), alpn_clone.clone());
+                                    state.write().await.connect(addr_clone.id.clone(), alpn_clone.clone());
                                     tracing::debug!(parent: &span, "outbound connection established");
 
                                     tokio::spawn(async move {
-                                        if let Err(err) = handler.handle(&peer_clone, send, recv).await {
+                                        if let Err(err) = handler.handle(&addr_clone.id, send, recv).await {
                                             tracing::warn!(error = ?err, "outbound handler failed");
                                         }
 
                                         tracing::debug!("outbound connection closed");
-                                        state.write().await.disconnect(&peer_clone, &alpn_clone);
+                                        state.write().await.disconnect(&addr_clone.id, &alpn_clone);
                                     }.instrument(span));
                                 }
                                 Err(err) => {
@@ -212,7 +212,7 @@ mod tests {
     use tokio::time::{sleep, Duration};
 
     use super::*;
-    use crate::tests::mock_transport::mock_transport;
+    use crate::{infra::peer::PeerId, tests::mock_transport::mock_transport};
 
     fn open_validator() -> BoxedValidator {
         Box::new(|_ctx| Box::pin(async { Ok(()) }))

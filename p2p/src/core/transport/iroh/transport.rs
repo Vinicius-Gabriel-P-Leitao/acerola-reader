@@ -7,7 +7,10 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
 use crate::{
     core::transport::{IncomingConnection, P2pTransport},
-    infra::{error::ConnectionError, peer::PeerId},
+    infra::{
+        error::ConnectionError,
+        peer::{PeerAddr, PeerId},
+    },
 };
 
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
@@ -35,6 +38,14 @@ impl P2pTransport for IrohTransport {
         PeerId::from_public_key(node_id.to_string(), node_id.as_bytes())
     }
 
+    fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
+        let endpoint_addr = self.endpoint.addr();
+        Ok(PeerAddr {
+            id: self.local_id(),
+            addrs: serde_json::to_vec(&endpoint_addr).expect("EndpointAddr serialization failed"),
+        })
+    }
+
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
         let incoming = self.endpoint.accept().await.ok_or(ConnectionError::Shutdown)?;
         tracing::trace!(layer = "iroh_transport", "incoming connection request received");
@@ -44,39 +55,39 @@ impl P2pTransport for IrohTransport {
         let alpn = conn.alpn();
 
         tracing::debug!(
-            layer = "iroh_transport",
             peer = %remote_id,
+            layer = "iroh_transport",
             alpn = ?String::from_utf8_lossy(alpn),
             "inbound connection established"
         );
 
-        Ok(Box::new(IrohIncoming::new(
-            conn.clone(),
-            PeerId::from_public_key(remote_id.to_string(), remote_id.as_bytes()),
-            alpn.to_vec(),
-        )))
+        Ok(Box::new(IrohIncoming::new(conn.clone(), self.local_id(), alpn.to_vec())))
     }
 
     async fn open_bi(
-        &self, alpn: &[u8], peer: &PeerId,
+        &self, alpn: &[u8], peer: &PeerAddr,
     ) -> Result<
         (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     > {
-        let addr = self.peer_to_addr(peer)?;
+        let addr = if peer.addrs.is_empty() {
+            self.peer_to_addr(&peer.id)?
+        } else {
+            serde_json::from_slice(&peer.addrs)
+                .map_err(|_| ConnectionError::PeerNotFound(peer.id.clone()))?
+        };
         tracing::debug!(
-            layer = "iroh_transport",
             peer = %peer.id,
+            layer = "iroh_transport",
             alpn = ?String::from_utf8_lossy(alpn),
             "initiating outbound connection"
         );
 
         let conn = self.endpoint.connect(addr, alpn).await?;
         let (send, recv) = conn.open_bi().await?;
-
         tracing::trace!(
-            layer = "iroh_transport",
             peer = %peer.id,
+            layer = "iroh_transport",
             "outbound bi-stream opened"
         );
 
