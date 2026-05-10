@@ -1,7 +1,6 @@
----
+
 - name: Deploy Update Acerola Relay
   hosts: relay_servers
-  # No deploy de CI/CD, assumimos que o rsync/docker já existem
   vars:
     deploy_path: "/opt/acerola-relay"
     ansible_ssh_common_args: "-o ServerAliveInterval=30 -o ServerAliveCountMax=20"
@@ -32,11 +31,14 @@
       args:
         chdir: "{{ deploy_path }}/.config/docker"
 
-    - name: Copy Caddy config to proxy container
-      command: docker cp {{ deploy_path }}/.config/docker/acerola-relay.caddy acerola-proxy:/etc/caddy/conf.d/acerola-relay.caddy
+    - name: Copy Caddy config to conf.d
+      copy:
+        src: "{{ deploy_path }}/.config/docker/acerola-relay.caddy"
+        dest: "/opt/caddy/conf.d/acerola-relay.caddy"
+        mode: '0644'
 
     - name: Reload Caddy config
-      command: docker exec acerola-proxy caddy reload --config /etc/caddy/Caddyfile
+      command: docker exec caddy caddy reload --config /etc/caddy/Caddyfile
       register: caddy_reload
       failed_when:
         - caddy_reload.rc != 0
