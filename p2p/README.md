@@ -233,3 +233,22 @@ node.shutdown().await?;
 | `rpc:pong_sent` | servidor → cliente |
 
 Não é necessário registrar esse handler — ele sempre está presente.
+
+---
+
+## TofuGuard e autenticação com iroh
+
+O `TofuGuard` implementa a política SSH-like de Trust On First Use: peers desconhecidos são aceitos e registrados na primeira conexão; nas seguintes, basta estar no store para ser permitido.
+
+Ao usar o transport `iroh`, **não é necessário implementar challenge-response na camada de aplicação**. O iroh estabelece conexões via QUIC com TLS 1.3, e durante esse handshake cada peer prova criptograficamente a posse da chave privada correspondente ao seu `NodeId`. O `peer_id` que chega ao Guard já é autêntico — o iroh rejeita conexões onde essa prova falha antes de qualquer código de aplicação ser executado.
+
+Em outras palavras: o TLS do iroh já é o challenge-response. Adicionar uma segunda validação na camada de aplicação seria redundante e não acrescentaria segurança ao modelo de ameaça.
+
+```
+Conexão QUIC (iroh)
+  └── TLS 1.3 handshake          ← prova de posse da chave privada (automático)
+        └── Guard executa         ← TofuGuard decide aceitar ou rejeitar pelo NodeId
+              └── Handler recebe  ← peer_id já verificado
+```
+
+Se o transport subjacente **não** oferecer autenticação no nível de transporte, um Guard customizado com challenge-response pode ser necessário.
