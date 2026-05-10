@@ -67,7 +67,7 @@ jobs:
       - name: Create Ansible Inventory
         run: |
           echo "[relay_servers]" > .config/ansible/hosts.ini
-          echo "$SERVER_IP ansible_user=root" >> .config/ansible/hosts.ini
+          echo "$SERVER_IP ansible_user=admin" >> .config/ansible/hosts.ini
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
 
