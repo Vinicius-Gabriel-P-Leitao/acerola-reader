@@ -36,6 +36,7 @@
         src: "{{ deploy_path }}/.config/docker/acerola-relay.caddy"
         dest: "/opt/caddy/conf.d/acerola-relay.caddy"
         mode: '0644'
+        remote_src: yes
 
     - name: Reload Caddy config
       command: docker exec caddy caddy reload --config /etc/caddy/Caddyfile
