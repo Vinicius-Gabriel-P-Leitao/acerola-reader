@@ -29,6 +29,7 @@ type OutboundConnection = (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead
 struct MockIncoming {
     alpn: Vec<u8>,
     peer: PeerId,
+    addr: PeerAddr,
     send: Box<dyn AsyncWrite + Send + Unpin>,
     recv: Box<dyn AsyncRead + Send + Unpin>,
 }
@@ -41,6 +42,10 @@ impl IncomingConnection for MockIncoming {
 
     fn peer(&self) -> &PeerId {
         &self.peer
+    }
+
+    fn addr(&self) -> &PeerAddr {
+        &self.addr
     }
 
     async fn accept_bi(
@@ -105,7 +110,9 @@ impl P2pTransport for MockTransport {
         let (alpn, peer, send, recv) =
             self.inbound_rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)?;
 
-        Ok(Box::new(MockIncoming { alpn, peer, send, recv }))
+        let addr = PeerAddr { id: peer.clone(), addrs: vec![] };
+
+        Ok(Box::new(MockIncoming { alpn, peer, addr, send, recv }))
     }
 
     #[rustfmt::skip]

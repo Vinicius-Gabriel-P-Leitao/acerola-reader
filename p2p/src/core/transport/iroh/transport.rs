@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use iroh::{Endpoint, EndpointAddr, EndpointId};
+use iroh::{Endpoint, EndpointAddr, EndpointId, endpoint::IncomingAddr};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
@@ -29,30 +29,55 @@ impl IrohTransport {
         let id: EndpointId = peer.id.parse().map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone(), device_id: None }))?;
         Ok(EndpointAddr::from(id))
     }
+
+    /// Converte um ID nativo do Iroh para o PeerId da nossa abstração.
+    fn to_peer_id(&self, node_id: EndpointId) -> PeerId {
+        PeerId::from_public_key(node_id.to_string(), node_id.as_bytes())
+    }
+
+    /// Converte um par ID+Endereço do Iroh para o PeerAddr da nossa abstração.
+    fn to_peer_addr(&self, node_id: EndpointId, addr: EndpointAddr) -> PeerAddr {
+        PeerAddr {
+            id: self.to_peer_id(node_id),
+            addrs: serde_json::to_vec(&addr).expect("EndpointAddr serialization failed"),
+        }
+    }
 }
 
 #[async_trait]
 impl P2pTransport for IrohTransport {
     fn local_id(&self) -> PeerId {
-        let node_id = self.endpoint.id();
-        PeerId::from_public_key(node_id.to_string(), node_id.as_bytes())
+        self.to_peer_id(self.endpoint.id())
     }
 
     fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
-        let endpoint_addr = self.endpoint.addr();
-        Ok(PeerAddr {
-            id: self.local_id(),
-            addrs: serde_json::to_vec(&endpoint_addr).expect("EndpointAddr serialization failed"),
-        })
+        Ok(self.to_peer_addr(self.endpoint.id(), self.endpoint.addr()))
     }
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
         let incoming = self.endpoint.accept().await.ok_or(ConnectionError::Shutdown)?;
+        let incoming_addr = incoming.remote_addr();
+
         tracing::trace!(layer = "iroh_transport", "incoming connection request received");
 
         let conn = incoming.await?;
         let remote_id = conn.remote_id();
         let alpn = conn.alpn();
+
+        let mut endpoint_addr = EndpointAddr::new(remote_id);
+        
+        match incoming_addr {
+            IncomingAddr::Ip(addr) => {
+                endpoint_addr = endpoint_addr.with_ip_addr(addr);
+            },
+            IncomingAddr::Relay { url, .. } => {
+                endpoint_addr = endpoint_addr.with_relay_url(url);
+            },
+            _ => {},
+        }
+
+        let peer = self.to_peer_id(remote_id);
+        let addr = self.to_peer_addr(remote_id, endpoint_addr);
 
         tracing::debug!(
             peer = %remote_id,
@@ -61,7 +86,7 @@ impl P2pTransport for IrohTransport {
             "inbound connection established"
         );
 
-        Ok(Box::new(IrohIncoming::new(conn.clone(), self.local_id(), alpn.to_vec())))
+        Ok(Box::new(IrohIncoming::new(conn.clone(), peer, addr, alpn.to_vec())))
     }
 
     async fn open_bi(
@@ -76,6 +101,7 @@ impl P2pTransport for IrohTransport {
             serde_json::from_slice(&peer.addrs)
                 .map_err(|_| ConnectionError::PeerNotFound(peer.id.clone()))?
         };
+
         tracing::debug!(
             peer = %peer.id,
             layer = "iroh_transport",
@@ -85,6 +111,7 @@ impl P2pTransport for IrohTransport {
 
         let conn = self.endpoint.connect(addr, alpn).await?;
         let (send, recv) = conn.open_bi().await?;
+
         tracing::trace!(
             peer = %peer.id,
             layer = "iroh_transport",
@@ -92,6 +119,7 @@ impl P2pTransport for IrohTransport {
         );
 
         let shared_conn = Arc::new(conn);
+
         Ok((
             Box::new(ConnectionWriter::new(send, Arc::clone(&shared_conn))),
             Box::new(ConnectionReader::new(recv, shared_conn)),

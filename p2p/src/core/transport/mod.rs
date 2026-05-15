@@ -23,6 +23,9 @@ pub trait IncomingConnection: Send {
     /// Os dados brutos do vizinho emitente que efetuou a requisição na porta do host.
     fn peer(&self) -> &PeerId;
 
+    /// O endereço completo para discagem reversa se necessário.
+    fn addr(&self) -> &PeerAddr;
+
     /// Promove de fato o socket entrante convertendo-o nas traits `tokio::io` de Leitura/Escrita.
     ///
     /// Esta chamada pode gerar gargalo, portanto é invocada apenas se a camada ALPN

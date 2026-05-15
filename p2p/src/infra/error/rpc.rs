@@ -6,6 +6,12 @@ impl From<std::io::Error> for RpcError {
     }
 }
 
+impl From<std::io::Error> for ConnectionError {
+    fn from(err: std::io::Error) -> Self {
+        ConnectionError::StreamFailed(err.to_string())
+    }
+}
+
 impl From<serde_json::Error> for RpcError {
     fn from(err: serde_json::Error) -> Self {
         RpcError::Stream(format!("serialization error: {err}"))

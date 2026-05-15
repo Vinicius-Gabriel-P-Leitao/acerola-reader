@@ -5,7 +5,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::{data::identity::device_info::DeviceInfo, infra::peer::PeerId};
+use crate::{
+    data::identity::device_info::DeviceInfo,
+    infra::peer::{PeerAddr, PeerId},
+};
 
 /// Modos de operação da rede.
 ///
@@ -26,6 +29,8 @@ pub enum NetworkMode {
 pub struct NetworkState {
     /// Rastreamento de pares conectados contra seus respectivos protocolos.
     connected_peers: HashMap<PeerId, HashSet<Vec<u8>>>,
+    /// Mapeamento de PeerId para o último endereço conhecido para discagem.
+    peer_addresses: HashMap<PeerId, PeerAddr>,
     /// Campo de informações do dispositivo entrevistado.
     peer_device_info: HashMap<PeerId, DeviceInfo>,
     /// O modo corrente  do ambiente da rede P2P.
@@ -37,6 +42,7 @@ impl NetworkState {
     pub fn new() -> Self {
         Self {
             peer_device_info: HashMap::new(),
+            peer_addresses: HashMap::new(),
             connected_peers: HashMap::new(),
             mode: NetworkMode::Local,
         }
@@ -46,14 +52,21 @@ impl NetworkState {
     ///
     /// # Parâmetros
     /// * `peer` - O `PeerId` remoto que se conectou.
+    /// * `addr` - O `PeerAddr` remoto.
     /// * `alpn` - O array de bytes descrevendo o identificador ALPN da stream ativada.
-    pub fn connect(&mut self, peer: PeerId, alpn: Vec<u8>) {
+    pub fn connect(&mut self, peer: PeerId, addr: PeerAddr, alpn: Vec<u8>) {
+        self.peer_addresses.insert(peer.clone(), addr);
         self.connected_peers.entry(peer).or_default().insert(alpn);
     }
 
     /// Acessa diretamente a tabela imutável de nós conectados.
     pub fn peers(&self) -> &HashMap<PeerId, HashSet<Vec<u8>>> {
         &self.connected_peers
+    }
+
+    /// Retorna o endereço conhecido para um peer.
+    pub fn get_addr(&self, peer: &PeerId) -> Option<&PeerAddr> {
+        self.peer_addresses.get(peer)
     }
 
     /// Retorna `true` se o `peer` estiver registrado no mapa (conectado por ao menos 1 protocolo).
@@ -99,6 +112,7 @@ impl NetworkState {
             if alpns.is_empty() {
                 self.connected_peers.remove(peer);
                 self.peer_device_info.remove(peer);
+                self.peer_addresses.remove(peer);
             }
         }
     }
@@ -112,52 +126,61 @@ mod tests {
         PeerId { id: id.to_string(), device_id: None }
     }
 
+    fn make_addr(id: &str) -> PeerAddr {
+        PeerAddr { id: make_peer(id), addrs: vec![] }
+    }
+
     #[test]
     fn peer_conectado_aparece_no_state() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
-        assert!(state.is_connected(&make_peer("peer-1")));
+        let peer = make_peer("peer-1");
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        assert!(state.is_connected(&peer));
     }
 
     #[test]
     fn peer_desconectado_some_do_state() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
-        state.disconnect(&make_peer("peer-1"), b"acerola/handshake/1");
-        assert!(!state.is_connected(&make_peer("peer-1")));
+        let peer = make_peer("peer-1");
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.disconnect(&peer, b"acerola/handshake/1");
+        assert!(!state.is_connected(&peer));
     }
 
     #[test]
     fn peer_permanece_conectado_apos_remover_um_de_dois_alpns() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
-        state.connect(make_peer("peer-1"), b"acerola/blob/1".to_vec());
+        let peer = make_peer("peer-1");
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/blob/1".to_vec());
 
-        state.disconnect(&make_peer("peer-1"), b"acerola/handshake/1");
+        state.disconnect(&peer, b"acerola/handshake/1");
 
-        assert!(state.is_connected(&make_peer("peer-1")));
-        assert!(!state.is_connected_on(&make_peer("peer-1"), b"acerola/handshake/1"));
-        assert!(state.is_connected_on(&make_peer("peer-1"), b"acerola/blob/1"));
+        assert!(state.is_connected(&peer));
+        assert!(!state.is_connected_on(&peer, b"acerola/handshake/1"));
+        assert!(state.is_connected_on(&peer, b"acerola/blob/1"));
     }
 
     #[test]
     fn peer_removido_quando_todos_alpns_desconectam() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
-        state.connect(make_peer("peer-1"), b"acerola/blob/1".to_vec());
+        let peer = make_peer("peer-1");
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/blob/1".to_vec());
 
-        state.disconnect(&make_peer("peer-1"), b"acerola/handshake/1");
-        state.disconnect(&make_peer("peer-1"), b"acerola/blob/1");
+        state.disconnect(&peer, b"acerola/handshake/1");
+        state.disconnect(&peer, b"acerola/blob/1");
 
-        assert!(!state.is_connected(&make_peer("peer-1")));
+        assert!(!state.is_connected(&peer));
     }
 
     #[test]
     fn disconnect_de_alpn_inexistente_nao_afeta_outros() {
         let mut state = NetworkState::new();
-        state.connect(make_peer("peer-1"), b"acerola/handshake/1".to_vec());
-        state.disconnect(&make_peer("peer-1"), b"acerola/unknown");
-        assert!(state.is_connected(&make_peer("peer-1")));
+        let peer = make_peer("peer-1");
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.disconnect(&peer, b"acerola/unknown");
+        assert!(state.is_connected(&peer));
     }
 
     #[test]
@@ -201,7 +224,7 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
 
@@ -213,8 +236,8 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
-        state.connect(peer.clone(), b"acerola/blob/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/blob/1".to_vec());
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
 
@@ -226,8 +249,8 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
-        state.connect(peer.clone(), b"acerola/blob/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/blob/1".to_vec());
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
         state.disconnect(&peer, b"acerola/blob/1");
@@ -240,7 +263,7 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.connect(peer.clone(), b"acerola/handshake/1".to_vec());
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
         state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(state.get_device_info(&peer).is_none());

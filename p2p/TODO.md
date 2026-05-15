@@ -114,16 +114,7 @@
   - Escrever testes que validam se o transporte realmente funciona em diferentes condições
   - Validar integridade de dados e throughput básico
   - Critério: `cargo test` garante estabilidade do transporte iroh/mock
-
----
-
-## Etapa 3.3 — CLI de Diagnóstico (Planejamento)
-
-- [ ] **Viabilidade de CLI Simples**
-  - Planejar uma CLI para transporte de dados e verificação de conectividade
-  - Útil para testes manuais e demonstração de funcionalidades
-  - Critério: Plano de implementação ou protótipo funcional definido
-
+  - ❗Mudança de lógica para isso funcionar a etapa 4 precisa ser feita.
 ---
 
 ## Etapa 4 — Event Loop Robusto
@@ -138,7 +129,7 @@
   - Emite evento `"network:latency"` com o valor para a UI
   - Critério: evento de latência disparado a cada ~30s por peer ativo
 
-- [ ] **Mensagem Goodbye no shutdown** — `network.rs` + `protocol/rpc.rs`
+- [x] **Mensagem Goodbye no shutdown** — `network.rs` + `protocol/rpc.rs`
   - `NetworkCommand::Shutdown` envia mensagem `0x03 GOODBYE` para todos os peers antes de fechar
   - Peers receptores atualizam status imediatamente
   - Critério: peer remoto detecta desconexão em < 1s após shutdown gracioso

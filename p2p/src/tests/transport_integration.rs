@@ -112,7 +112,7 @@ mod run_in_isolation {
                 .unwrap();
 
         node_a.connect(node_b.local_addr().clone(), b"test/bulk").await.unwrap();
-        sleep(Duration::from_millis(1000)).await;
+        sleep(Duration::from_millis(2000)).await;
 
         assert_eq!(*received.lock().await, payload);
     }

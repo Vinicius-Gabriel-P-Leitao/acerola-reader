@@ -10,19 +10,25 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::{
     core::transport::IncomingConnection,
-    infra::{error::ConnectionError, peer::PeerId},
+    infra::{
+        error::ConnectionError,
+        peer::{PeerAddr, PeerId},
+    },
 };
 
 /// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
 pub struct IrohIncoming {
     pub(crate) conn: endpoint::Connection,
+    pub(crate) addr: PeerAddr,
     pub(crate) peer: PeerId,
     pub(crate) alpn: Vec<u8>,
 }
 
 impl IrohIncoming {
-    pub(crate) fn new(conn: endpoint::Connection, peer: PeerId, alpn: Vec<u8>) -> Self {
-        Self { conn, peer, alpn }
+    pub(crate) fn new(
+        conn: endpoint::Connection, peer: PeerId, addr: PeerAddr, alpn: Vec<u8>,
+    ) -> Self {
+        Self { conn, peer, addr, alpn }
     }
 }
 
@@ -92,6 +98,10 @@ impl IncomingConnection for IrohIncoming {
 
     fn peer(&self) -> &PeerId {
         &self.peer
+    }
+
+    fn addr(&self) -> &PeerAddr {
+        &self.addr
     }
 
     async fn accept_bi(
