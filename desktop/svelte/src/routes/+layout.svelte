@@ -36,6 +36,7 @@
   import { DIRECTORY_SCAN_COMMANDS } from "$lib/contracts/library/library.commands";
   import { useLibraryScanner } from "$lib/hooks/store/use-comic-scanner.svelte";
   import { useSelectFolder } from "$lib/hooks/store/use-select-folder.svelte";
+  import { setComicContext } from "$lib/state/comic-context.svelte";
   import { getLocale, setLocale } from "$lib/paraglide/runtime";
   import { onMount } from "svelte";
 
@@ -48,6 +49,8 @@
   import AcerolaNotification from "$lib/components/acerola-notification/acerola-notification.svelte";
   import "$theme/layout.css";
   import Search from "@lucide/svelte/icons/search";
+
+  setComicContext();
 
   let currentLocale = $state(getLocale());
   let appWindow = $state<any>(null);

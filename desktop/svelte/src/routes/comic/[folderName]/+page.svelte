@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useComicContext } from "$lib/state/comic-context.svelte";
+  import { convertFileSrc } from "@tauri-apps/api/core";
   import { fade, slide, fly } from "svelte/transition";
   import AcerolaButton from "$lib/components/acerola-button/acerola-button.svelte";
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
@@ -41,17 +43,33 @@
     window.history.back();
   };
 
-  // Mock data as requested
-  const manga = $derived({
-    id: "1",
-    title: data.folderName || "Manga Title",
-    author: "Autor Desconhecido",
-    category: "Manga",
-    chaptersCount: 120,
-    description: "Uma jornada épica espera por você.",
-    cover: "https://placehold.co/400x600/2a2a35/a6accd?text=Cover",
-    banner: "https://placehold.co/1200x400/1e1e2e/a6accd?text=Banner",
-    chapters: [
+  const activeComic = useComicContext();
+
+  const resolveBanner = (bannerPath?: string | null) =>
+    bannerPath
+      ? convertFileSrc(bannerPath.replaceAll("\\", "/"))
+      : "https://placehold.co/1200x400/1e1e2e/a6accd?text=Banner";
+
+  // Mapeamento limpo do objeto do banco (Rust) para a UI
+  const manga = $derived.by(() => {
+    const item = activeComic.item;
+
+    return {
+      id: item?.relations.directoryId.toString() || "1",
+      title:
+        item?.metadata.title ||
+        item?.filesystem.folderName ||
+        data.folderName ||
+        "Manga Title",
+      author: "Autor Desconhecido",
+      category: "Manga",
+      chaptersCount: item?.metadata.chapterCount || 0,
+      description: "Uma jornada épica espera por você.",
+      cover:
+        activeComic.coverUrl ||
+        "https://placehold.co/400x600/2a2a35/a6accd?text=Cover",
+      banner: resolveBanner(item?.artwork.banner),
+      chapters: [
       {
         id: "c1",
         title: "Capítulo 1: O Início",
@@ -106,6 +124,7 @@
         ],
       },
     ],
+    };
   });
 </script>
 

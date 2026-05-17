@@ -8,11 +8,13 @@
 
   import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
   import { useComicSummary } from "$lib/hooks/store/use-comic-summary.svelte";
+  import { useComicContext } from "$lib/state/comic-context.svelte";
   import { convertFileSrc } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
   import { onDestroy, onMount } from "svelte";
 
   const summary = useComicSummary();
+  const activeComic = useComicContext();
 
   let unlistenScan: (() => void) | undefined;
 
@@ -54,6 +56,7 @@
           }}
           events={{
             onClick: () => {
+              activeComic.set(comic, cover);
               goto(`/comic/${comic.filesystem.folderName}`);
             },
           }}
