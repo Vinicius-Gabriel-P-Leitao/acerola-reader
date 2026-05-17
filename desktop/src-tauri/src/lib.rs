@@ -36,6 +36,7 @@ mod app_bootstrap {
         builder.setup(setup_runtime).invoke_handler(tauri::generate_handler![
             comic_scanner_cmd::incremental_scan,
             comic_summary_cmd::get_comic_summary,
+            comic_summary_cmd::get_comic_chapters,
             comic_scanner_cmd::refresh_library,
             comic_scanner_cmd::rebuild_library,
             select_folder_cmd::select_folder,

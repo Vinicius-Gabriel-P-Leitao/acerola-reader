@@ -76,10 +76,12 @@
         <AcerolaButton class="w-full py-8 rounded-3xl font-black flex items-center justify-center gap-3">
           <Play size={24} fill="currentColor" /> LER AGORA
         </AcerolaButton>
+        
         <div class="grid grid-cols-2 gap-3">
           <AcerolaButton variant="outline" class="py-6 rounded-2xl font-black flex items-center justify-center gap-2 text-xs">
             <Bookmark size={16} /> SALVAR
           </AcerolaButton>
+
           <AcerolaButton variant="outline" class="py-6 rounded-2xl font-black flex items-center justify-center gap-2 text-xs">
             <RefreshCw size={16} /> SYNC
           </AcerolaButton>
