@@ -28,12 +28,8 @@
     </div>
   {:else}
     <div
-      class="w-full h-full bg-linear-to-br from-primary/20 via-surface to-base flex items-center justify-center"
-    >
-      <div class="opacity-10 scale-[5]">
-        <BookOpen size={100} />
-      </div>
-    </div>
+      class="w-full h-full bg-linear-to-b from-primary/20 via-base/50 to-base"
+    ></div>
   {/if}
 
   <!-- Floating stats on Banner -->

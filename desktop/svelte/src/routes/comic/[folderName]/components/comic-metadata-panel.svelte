@@ -2,6 +2,7 @@
   import AcerolaButton from "$lib/components/acerola-button/acerola-button.svelte";
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
   import AcerolaCardImage from "$lib/components/acerola-card/acerola-card-image.svelte";
+  import PlaceholderManga from "$lib/assets/placeholder/placeholder_manga.svg?component";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import Play from "@lucide/svelte/icons/play";
   import Bookmark from "@lucide/svelte/icons/bookmark";
@@ -21,7 +22,7 @@
     category: string;
     chaptersCount: number;
     description: string;
-    cover: string;
+    cover: string | null;
     onBack: () => void;
   } = $props();
 </script>
@@ -41,7 +42,13 @@
         ui={{
           class: "w-64 shrink-0 [&_.mt-3]:hidden",
         }}
-      />
+      >
+        {#snippet placeholder()}
+          <div class="w-full h-full bg-surface">
+            <PlaceholderManga class="w-full h-full" />
+          </div>
+        {/snippet}
+      </AcerolaCardImage>
 
       <div class="space-y-3 px-4">
         <h1 class="text-4xl font-black tracking-tighter leading-tight">{title}</h1>

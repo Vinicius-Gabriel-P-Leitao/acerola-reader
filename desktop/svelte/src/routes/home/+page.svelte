@@ -9,7 +9,7 @@
   import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
   import { useComicSummary } from "$lib/hooks/store/use-comic-summary.svelte";
   import { useComicContext } from "$lib/state/comic-context.svelte";
-  import { convertFileSrc } from "@tauri-apps/api/core";
+  import { resolveCover } from "$lib/utils/artwork.utils";
   import { listen } from "@tauri-apps/api/event";
   import { onDestroy, onMount } from "svelte";
 
@@ -29,15 +29,6 @@
   onDestroy(() => {
     unlistenScan?.();
   });
-
-  function resolveCover(artwork: {
-    cover: string | null;
-    banner: string | null;
-  }): string | null {
-    const path = artwork.cover ?? artwork.banner ?? null;
-    if (!path) return null;
-    return convertFileSrc(path.replaceAll("\\", "/"));
-  }
 </script>
 
 {#if summary.loading}

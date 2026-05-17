@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useComicContext } from "$lib/state/comic-context.svelte";
-  import { convertFileSrc } from "@tauri-apps/api/core";
+  import { resolveBanner, resolveCover } from "$lib/utils/artwork.utils";
   import { fade } from "svelte/transition";
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
   import AcerolaToggleGroup from "$lib/components/acerola-toggle-group/acerola-toggle-group.svelte";
@@ -15,10 +15,10 @@
 
   let { data } = $props();
 
+  let chaptersPerPage = $state("100");
   let activeTab = $state("chapters");
   let displayMode = $state("Lista");
   let mediaType = $state("Manga");
-  let chaptersPerPage = $state("100");
 
   const onBack = () => {
     window.history.back();
@@ -26,30 +26,20 @@
 
   const activeComic = useComicContext();
 
-  const resolveBanner = (bannerPath?: string | null) =>
-    bannerPath
-      ? convertFileSrc(bannerPath.replaceAll("\\", "/"))
-      : "https://placehold.co/1200x400/1e1e2e/a6accd?text=Banner";
-
   // Mapeamento limpo do objeto do banco (Rust) para a UI
   const manga = $derived.by(() => {
     const item = activeComic.item;
+    const artwork = item?.artwork ?? {};
 
     return {
       id: item?.relations.directoryId.toString() || "1",
-      title:
-        item?.metadata.title ||
-        item?.filesystem.folderName ||
-        data.folderName ||
-        "Manga Title",
+      title:item?.metadata.title ||item?.filesystem.folderName ||data.folderName ||"Manga Title",
       author: "Autor Desconhecido",
       category: "Manga",
       chaptersCount: item?.metadata.chapterCount || 0,
       description: "Uma jornada épica espera por você.",
-      cover:
-        activeComic.coverUrl ||
-        "https://placehold.co/400x600/2a2a35/a6accd?text=Cover",
-      banner: resolveBanner(item?.artwork.banner),
+      cover: resolveCover(artwork),
+      banner: resolveBanner(artwork),
       chapters: [
         {
           id: "c1",
@@ -147,6 +137,7 @@
       <AcerolaButtonIcon onclick={onBack} size="sm">
         <ArrowLeft size={20} />
       </AcerolaButtonIcon>
+
       <span
         class="font-black text-sm uppercase tracking-widest truncate max-w-50"
         >{manga.title}</span
