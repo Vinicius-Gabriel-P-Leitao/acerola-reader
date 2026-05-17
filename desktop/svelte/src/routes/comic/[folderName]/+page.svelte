@@ -19,6 +19,7 @@
   let activeTab = $state("chapters");
   let displayMode = $state("Lista");
   let mediaType = $state("Manga");
+  let searchQuery = $state("");
 
   const onBack = () => {
     window.history.back();
@@ -31,38 +32,39 @@
     const item = activeComic.item;
     const artwork = item?.artwork ?? {};
 
+    const allChapters = Array.from({ length: 50 }, (_, i) => ({
+      id: `c${i + 1}`,
+      title: `Capítulo ${i + 1}: ${i === 0 ? "O Início" : i === 49 ? "O Fim" : "Continuação"}`,
+      date: `${10 + (i % 20)} Out 2023`,
+      fileName: `${(i + 1).toString().padStart(3, "0")}.cbz`,
+      isRead: i < 5,
+    }));
+
+    const filteredChapters = allChapters.filter((chapter) =>
+      chapter.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return {
       id: item?.relations.directoryId.toString() || "1",
-      title:item?.metadata.title ||item?.filesystem.folderName ||data.folderName ||"Manga Title",
-      author: "Autor Desconhecido",
-      category: "Manga",
-      chaptersCount: item?.metadata.chapterCount || 0,
-      description: "Uma jornada épica espera por você.",
+      title:
+        item?.metadata.title ||
+        item?.filesystem.folderName ||
+        data.folderName ||
+        "Manga Title",
+      chaptersCount: item?.metadata.chapterCount || allChapters.length,
       cover: resolveCover(artwork),
       banner: resolveBanner(artwork),
-      chapters: [
-        {
-          id: "c1",
-          title: "Capítulo 1: O Início",
-          date: "12 Out 2023",
-          fileName: "001.cbz",
-          isRead: true,
-        },
-        {
-          id: "c2",
-          title: "Capítulo 2: A Descoberta",
-          date: "19 Out 2023",
-          fileName: "002.cbz",
-          isRead: false,
-        },
-        {
-          id: "c3",
-          title: "Capítulo 3: O Desafio",
-          date: "26 Out 2023",
-          fileName: "003.cbz",
-          isRead: false,
-        },
+      description: "Uma jornada épica espera por você. Guts, o Espadachim Negro, busca vingança contra Griffith e a Mão de Deus em um mundo sombrio repleto de demônios e horror indescritível.",
+      author: "Autor Desconhecido",
+      category: "Manga",
+      status: "Em lançamento",
+      source: "MANGADEX",
+      genres: [
+        "Award Winning", "Monsters", "Action", "Demons", "Psychological", 
+        "Seinen", "Dark Fantasy", "Adventure", "Gore", "Military", 
+        "Supernatural", "Tragedy", "Mystery", "Philosophy", "Epic"
       ],
+      chapters: filteredChapters,
       volumes: [
         {
           id: "v1",
@@ -119,7 +121,8 @@
   <ComicMetadataPanel
     title={manga.title}
     author={manga.author}
-    category={manga.category}
+    status={manga.status}
+    source={manga.source}
     chaptersCount={manga.chaptersCount}
     description={manga.description}
     cover={manga.cover}
@@ -146,12 +149,12 @@
     </div>
 
     <!-- HERO BANNER SECTION -->
-    <ComicHeroBanner banner={manga.banner} />
+    <ComicHeroBanner banner={manga.banner} genres={manga.genres} />
 
     <div class="max-w-5xl w-full mx-auto p-8 lg:p-16 space-y-12">
-      <!-- TAB NAVIGATION -->
+      <!-- TAB NAVIGATION AND FILTER -->
       <div
-        class="sticky top-0 z-40 bg-base/5 backdrop-blur-3xl border-b border-surface/30 px-4 -mx-4"
+        class="sticky top-0 z-40 bg-base/5 backdrop-blur-3xl border-b border-surface/30 px-4 -mx-4 flex items-center justify-between"
       >
         <AcerolaToggleGroup
           type="single"
@@ -199,6 +202,19 @@
             </ToggleGroupItem>
           {/snippet}
         </AcerolaToggleGroup>
+
+        {#if activeTab === "chapters"}
+          <div class="flex items-center gap-2 pr-4">
+            <div class="relative group">
+              <input
+                type="text"
+                bind:value={searchQuery}
+                placeholder="FILTRAR..."
+                class="bg-surface/20 border border-surface/30 rounded-full py-2 px-6 text-[10px] font-black tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all w-40 focus:w-60"
+              />
+            </div>
+          </div>
+        {/if}
       </div>
 
       <div class="min-h-150">
