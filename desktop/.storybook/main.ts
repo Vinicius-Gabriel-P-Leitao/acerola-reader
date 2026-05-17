@@ -45,7 +45,13 @@ const config: StorybookConfig = {
           "bits-ui",
           "mode-watcher",
           "clsx",
-          "@internationalized/date"
+          "@internationalized/date",
+          "aria-query",
+          "axobject-query",
+          "lz-string",
+          "dom-accessibility-api",
+          "pretty-format",
+          "picocolors"
         ],
         exclude: [
           "@lucide/svelte",

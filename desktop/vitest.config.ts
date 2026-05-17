@@ -18,6 +18,16 @@ export default defineConfig({
     }),
     svelteTesting(),
   ],
+  optimizeDeps: {
+    include: [
+      "aria-query",
+      "axobject-query",
+      "lz-string",
+      "dom-accessibility-api",
+      "pretty-format",
+      "picocolors",
+    ],
+  },
   resolve: {
     alias: {
       $lib: path.resolve("./svelte/src/lib"),
