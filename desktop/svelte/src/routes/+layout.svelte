@@ -50,13 +50,14 @@
   import "$theme/layout.css";
   import Search from "@lucide/svelte/icons/search";
 
-  const incrementalScanner = useLibraryScanner(
-    DIRECTORY_SCAN_COMMANDS.incrementalScan,
-  );
-
   let currentLocale = $state(getLocale());
   let appWindow = $state<any>(null);
   const folder = useSelectFolder();
+
+  const incrementalScanner = useLibraryScanner(
+    DIRECTORY_SCAN_COMMANDS.incrementalScan,
+    () => folder.folderPath,
+  );
 
   onMount(async () => {
     // INFO: Importação dinâmica para evitar que quebre durante o SSR (Server-Side Rendering)
@@ -66,7 +67,6 @@
     appWindow = getCurrentWindow();
 
     if (folder.folderPath) {
-      incrementalScanner.init(folder.folderPath);
       incrementalScanner.start();
     }
   });

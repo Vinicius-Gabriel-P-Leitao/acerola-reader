@@ -34,19 +34,16 @@
 
   const refreshScanner = useLibraryScanner(
     DIRECTORY_SCAN_COMMANDS.refreshLibrary,
+    () => folder.folderPath,
   );
 
   const rebuildScanner = useLibraryScanner(
     DIRECTORY_SCAN_COMMANDS.rebuildLibrary,
+    () => folder.folderPath,
   );
 
   onMount(async () => {
     await folder.loadSavedPath();
-
-    if (folder.folderPath) {
-      refreshScanner.init(folder.folderPath);
-      rebuildScanner.init(folder.folderPath);
-    }
   });
 
   $effect(() => {

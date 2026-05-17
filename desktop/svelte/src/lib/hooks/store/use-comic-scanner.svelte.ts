@@ -10,16 +10,16 @@ import { notificationStore } from "$lib/components/acerola-notification/acerola-
 
 const { notify, pop } = notificationStore;
 
-export function useLibraryScanner(command: DirectoryScanCommand) {
-  let path = $state<string | undefined>(undefined);
+export function useLibraryScanner(
+  command: DirectoryScanCommand,
+  getPath: () => string | undefined,
+) {
   let progressId: number | undefined;
   let scanning = $state(false);
 
-  function init(folderPath: string) {
-    path = folderPath;
-  }
-
   async function start() {
+    const path = getPath();
+
     if (!path) {
       toast.error(m["hooks.comic_scanner.no_folder"]());
       return;
@@ -80,7 +80,6 @@ export function useLibraryScanner(command: DirectoryScanCommand) {
   }
 
   return {
-    init,
     start,
     get scanning() {
       return scanning;
