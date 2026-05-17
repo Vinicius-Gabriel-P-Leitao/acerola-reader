@@ -36,6 +36,12 @@ const preview: Preview = {
     },
   ],
   parameters: {
+    docs: {
+      source: {
+        type: 'dynamic',
+        language: 'svelte',
+      },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,
