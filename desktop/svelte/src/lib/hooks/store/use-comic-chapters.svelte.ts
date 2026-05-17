@@ -11,19 +11,43 @@ import { notificationStore } from "$lib/components/acerola-notification/acerola-
 const { notify } = notificationStore;
 
 export function useComicChapters() {
-  let chapters = $state<ChapterDto | undefined>(undefined);
+  let chaptersData = $state<ChapterDto | undefined>(undefined);
   let loading = $state(false);
 
-  async function fetch(comicDirectoryFk: string, page: number, pageSize: number, asc: boolean) {
+  async function fetch(
+    comicDirectoryFk: string,
+    page: number,
+    pageSize: number,
+    asc: boolean,
+    volumeId: string | null = null,
+    append: boolean = false,
+  ) {
     if (loading) return;
-    console.log(`[useComicChapters] Fetching chapters for comic ${comicDirectoryFk}, page ${page}, size ${pageSize}, asc ${asc}`);
     loading = true;
 
     const unlisten = await listen<ChapterDto>(
       LIBRARY_EVENTS.comicChapters,
       (event) => {
-        console.log(`[useComicChapters] Received chapters:`, event.payload);
-        chapters = event.payload;
+        const newData = event.payload;
+
+        if (append && chaptersData) {
+          // Append items and volume sections
+          chaptersData.archive.items = [
+            ...chaptersData.archive.items,
+            ...newData.archive.items,
+          ];
+
+          // Merge volume sections (if they belong to the same volume or represent the same structure)
+          // For infinite scroll within a volume, we mostly care about items.
+          chaptersData.archive.volumeSections = newData.archive.volumeSections;
+
+          // Update pagination info
+          chaptersData.archive.page = newData.archive.page;
+          chaptersData.archive.total = newData.archive.total;
+        } else {
+          chaptersData = newData;
+        }
+
         loading = false;
         unlisten();
         unlistenErr();
@@ -33,13 +57,14 @@ export function useComicChapters() {
     const unlistenErr = await listen<ErrorPayload>(
       LIBRARY_EVENTS.comicChaptersError,
       (event) => {
-        console.error(`[useComicChapters] Received error:`, event.payload);
         const description = resolveErrorMessage(event.payload);
+
         notify.error("Erro ao carregar capítulos", {
           description,
           duration: 0,
         });
         toast.error(description);
+
         loading = false;
         unlisten();
         unlistenErr();
@@ -49,6 +74,7 @@ export function useComicChapters() {
     try {
       await invoke(LIBRARY_COMMANDS.getComicChapters, {
         comicDirectoryFk,
+        volumeId,
         page,
         pageSize,
         asc,
@@ -56,16 +82,22 @@ export function useComicChapters() {
     } catch (err) {
       console.error(`[useComicChapters] Invoke failed:`, err);
       loading = false;
-      
+
       unlisten();
       unlistenErr();
     }
   }
 
+  function clear() {
+    chaptersData = undefined;
+    loading = false;
+  }
+
   return {
     fetch,
+    clear,
     get chapters() {
-      return chapters;
+      return chaptersData;
     },
     get loading() {
       return loading;

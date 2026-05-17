@@ -23,6 +23,7 @@ export type VolumeArchiveDto = {
   coverUri: string | null;
   bannerUri: string | null;
   lastModified: number;
+  chapterCount: number;
 };
 
 export type VolumeChapterGroupDto = {

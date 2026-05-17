@@ -31,6 +31,7 @@ pub struct VolumeArchiveDto {
     pub cover_uri: Option<String>,
     pub banner_uri: Option<String>,
     pub last_modified: i64,
+    pub chapter_count: i64,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -38,11 +39,11 @@ pub struct VolumeArchiveDto {
 pub struct VolumeChapterGroupDto {
     pub volume: VolumeArchiveDto,
     pub items: Vec<ChapterFileDto>,
-    pub total_chapters: i32,
-    pub loaded_count: i32,
+    pub total_chapters: i64,
+    pub loaded_count: i64,
     pub has_more: bool,
-    pub current_page: i32,
-    pub total_pages: i32,
+    pub current_page: i64,
+    pub total_pages: i64,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -50,9 +51,9 @@ pub struct VolumeChapterGroupDto {
 pub struct ChapterPageDto {
     pub items: Vec<ChapterFileDto>,
     pub volumes: Vec<VolumeArchiveDto>,
-    pub page_size: i32,
-    pub page: i32,
-    pub total: i32,
+    pub page_size: i64,
+    pub page: i64,
+    pub total: i64,
     pub volume_sections: Vec<VolumeChapterGroupDto>,
 }
 
@@ -60,7 +61,7 @@ pub struct ChapterPageDto {
 #[serde(rename_all = "camelCase")]
 pub struct ChapterDto {
     pub archive: ChapterPageDto,
-    // TODO: Adicionar métados aqui quando tiver
+    // TODO: Adicionar metadados aqui quando tiver
     pub show_volume_headers: bool,
     pub has_volume_structure: bool,
     pub effective_view_mode: VolumeViewType,

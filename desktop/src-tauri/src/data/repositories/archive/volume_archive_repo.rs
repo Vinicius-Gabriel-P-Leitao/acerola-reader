@@ -8,6 +8,20 @@ pub struct VolumeRepository {
     pub pool: SqlitePool,
 }
 
+#[derive(Debug, sqlx::FromRow, Clone)]
+pub struct VolumeWithCount {
+    pub id: i64,
+    pub name: String,
+    pub path: String,
+    pub volume_sort: String,
+    pub is_special: bool,
+    pub cover: Option<String>,
+    pub banner: Option<String>,
+    pub comic_directory_fk: i64,
+    pub last_modified: i64,
+    pub chapter_count: i64,
+}
+
 impl VolumeRepository {
     pub fn new(pool: SqlitePool) -> Self {
         Self { base: Repository::new(pool.clone()), pool }
@@ -19,6 +33,33 @@ impl VolumeRepository {
             "SELECT {} FROM volume_archive WHERE comic_directory_fk = ? ORDER BY CAST(volume_sort AS INTEGER) ASC",
             cols
         ))
+        .bind(comic_directory_fk)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn find_by_comic_with_counts(&self, comic_directory_fk: i64) -> Result<Vec<VolumeWithCount>, DbError> {
+        let result = sqlx::query_as::<_, VolumeWithCount>(
+            "SELECT 
+                va.*,
+                COUNT(ca.id) as chapter_count
+             FROM volume_archive va
+             LEFT JOIN chapter_archive ca ON ca.volume_id_fk = va.id
+             WHERE va.comic_directory_fk = ?
+             GROUP BY va.id
+             ORDER BY 
+                va.is_special ASC,
+                CAST(va.volume_sort AS INTEGER) ASC,
+                CAST(
+                    CASE 
+                        WHEN va.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC"
+        )
         .bind(comic_directory_fk)
         .fetch_all(&self.pool)
         .await?;

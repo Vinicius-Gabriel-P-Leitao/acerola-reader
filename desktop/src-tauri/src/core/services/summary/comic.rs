@@ -16,10 +16,7 @@ pub struct HomeService {
 
 impl HomeService {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            repo: HomeRepository::new(pool.clone()),
-            chapter_repo: ChapterRepository::new(pool),
-        }
+        Self { repo: HomeRepository::new(pool.clone()), chapter_repo: ChapterRepository::new(pool) }
     }
 
     pub async fn get_all(&self) -> Result<(Vec<ComicSummaryView>, HashMap<i64, i64>), ComicError> {
@@ -28,10 +25,12 @@ impl HomeService {
         Ok((comics, counts))
     }
 
-    pub async fn get_by_folder_name(&self, folder_name: &str) -> Result<Option<(ComicSummaryView, i64)>, ComicError> {
+    pub async fn get_by_folder_name(
+        &self, folder_name: &str,
+    ) -> Result<Option<(ComicSummaryView, i64)>, ComicError> {
         let comics = self.repo.base.find_all().await?;
-        let comic = comics.into_iter().find(|c| c.folder_name == folder_name);
-        
+        let comic = comics.into_iter().find(|comic| comic.folder_name == folder_name);
+
         if let Some(view) = comic {
             let count = self.chapter_repo.count_by_directory_id(view.directory_id).await?;
             Ok(Some((view, count)))

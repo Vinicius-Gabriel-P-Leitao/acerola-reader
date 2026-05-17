@@ -30,6 +30,7 @@
   let displayMode = $state("Lista");
   let mediaType = $state("Manga");
   let searchQuery = $state("");
+  let expandedVolumeId = $state<string | null>(null);
 
   const onBack = () => {
     window.history.back();
@@ -47,9 +48,24 @@
 
   // Se o contexto estiver vazio (ex: refresh), sincroniza com os dados do loader
   onMount(() => {
+    console.log("[ComicPage] Mounting, data from loader:", data);
     if (!activeComic.item && data.comic) {
+      console.log("[ComicPage] Initializing context from loader data");
       activeComic.set(data.comic, resolveCover(data.comic.artwork));
     }
+  });
+
+  // Limpa o estado quando muda de aba ou volume (Exclusive expansion)
+  $effect(() => {
+    activeTab;
+    expandedVolumeId;
+    untrack(() => {
+      console.log("[ComicPage] Tab or Volume changed, resetting pagination");
+      currentPage = 0;
+      if (activeTab === "chapters") {
+        chapterStore.clear();
+      }
+    });
   });
 
   $effect(() => {
@@ -58,15 +74,35 @@
     const page = currentPage;
     const size = parseInt(chaptersPerPage);
     const asc = isAscending;
+    const volumeId = expandedVolumeId;
+    const isVolumeTab = activeTab === "volumes";
 
     if (comicItem) {
-      // Usamos untrack para chamar o fetch sem rastrear estados internos do store (ex: loading)
+      // Se estamos na aba de volumes mas nenhum expandido, buscamos apenas a estrutura inicial
+      if (isVolumeTab && !volumeId) {
+        untrack(() => {
+           console.log("[ComicPage] Fetching volume structure");
+           chapterStore.fetch(
+            comicItem.relations.directoryId,
+            0,
+            1, // Estrutura básica
+            asc,
+            null,
+            false
+          );
+        });
+        return;
+      }
+
       untrack(() => {
+        console.log(`[ComicPage] Triggering fetch: page=${page}, volume=${volumeId}`);
         chapterStore.fetch(
           comicItem.relations.directoryId,
           page,
           size,
           asc,
+          volumeId,
+          page > 0 // Append se não for a primeira página
         );
       });
     } else {
@@ -80,6 +116,21 @@
       });
     }
   });
+
+  function handleScroll(event: Event) {
+    const scrollTarget = event.target as HTMLElement;
+    const isAtBottom = scrollTarget.scrollHeight - scrollTarget.scrollTop <= scrollTarget.clientHeight + 100;
+    
+    if (isAtBottom && !chapterStore.loading) {
+      const currentItemsCount = chapterStore.chapters?.archive.items.length ?? 0;
+      const totalItemsCount = chapterStore.chapters?.archive.total ?? 0;
+      
+      if (currentItemsCount < totalItemsCount) {
+        console.log("[ComicPage] Scroll hit bottom, loading next page");
+        currentPage += 1;
+      }
+    }
+  }
 
   $effect(() => {
     const savePreference = async () => {
@@ -99,31 +150,34 @@
     const chaptersData = chapterStore.chapters;
 
     const chapters = (chaptersData?.archive.items ?? [])
-      .filter((chapterItem) =>
-        chapterItem.name.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+      .filter((chapterItem) => {
+        const matchesSearch = chapterItem.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        // Se estamos em um volume, garante que só mostramos itens desse volume (evita leak de dados antigos enquanto carrega novo)
+        const matchesVolume =
+          !expandedVolumeId || chapterItem.volumeId === expandedVolumeId;
+        return matchesSearch && matchesVolume;
+      })
       .map((chapterFile) => ({
         id: chapterFile.id.toString(),
         title: chapterFile.name, // Será formatado no componente
         fileName: chapterFile.name,
-        isRead: false, // Histórico ainda não implementado
+        isRead: false,
         chapterSort: chapterFile.chapterSort,
         volumeName: chapterFile.volumeName,
       }));
 
-    const volumes = (chaptersData?.archive.volumeSections ?? []).map(
-      (section) => ({
-        id: section.volume.id.toString(),
-        title: section.volume.name,
-        cover: resolveCover({
-          cover: section.volume.coverUri,
-          banner: section.volume.bannerUri,
-        }),
-        chapters: section.items.map((chapterFile) => ({
-          id: chapterFile.id.toString(),
-          title: chapterFile.name,
-          isRead: false,
-        })),
+    const volumes = (chaptersData?.archive.volumes ?? []).map(
+      (volumeArchive) => ({
+        id: volumeArchive.id.toString(),
+        title: volumeArchive.name,
+        totalChapters: volumeArchive.chapterCount,
+        hasMore:
+          expandedVolumeId === volumeArchive.id.toString() &&
+          chapters.length < volumeArchive.chapterCount,
+        chapters:
+          expandedVolumeId === volumeArchive.id.toString() ? chapters : [],
       }),
     );
 
@@ -180,6 +234,7 @@
     <!-- MAIN CONTENT AREA: SCROLLABLE -->
     <div
       class="flex-1 overflow-y-auto scrollbar-hide relative z-10 flex flex-col"
+      onscroll={handleScroll}
     >
       <!-- MOBILE HEADER -->
       <div
@@ -269,7 +324,11 @@
           {#if activeTab === "chapters"}
             <ComicChapterList chapters={manga.chapters} />
           {:else if activeTab === "volumes"}
-            <ComicVolumeList volumes={manga.volumes} />
+            <ComicVolumeList 
+                volumes={manga.volumes} 
+                loading={chapterStore.loading}
+                onexpand={(volumeId) => expandedVolumeId = volumeId} 
+            />
           {:else if activeTab === "preferences"}
             <ComicPreferences
               bind:displayMode
