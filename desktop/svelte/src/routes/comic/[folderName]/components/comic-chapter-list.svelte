@@ -2,9 +2,10 @@
   export type Chapter = {
     id: string;
     title: string;
-    date: string;
     fileName: string;
     isRead: boolean;
+    chapterSort: string;
+    volumeName?: string | null;
   };
 </script>
 
@@ -25,11 +26,11 @@
 
 <div class="space-y-3">
   {#if chapters && chapters.length > 0}
-    {#each chapters as chapter, i}
-      <div in:fly={{ y: 10, delay: i * 20, duration: 200 }}>
+    {#each chapters as chapter, index}
+      <div in:fly={{ y: 10, delay: index * 20, duration: 200 }}>
         <AcerolaHeroButton
-          title={chapter.title}
-          description="{chapter.date} • {chapter.fileName}"
+          title="Capítulo {chapter.chapterSort}"
+          description={chapter.fileName}
           class="bg-mantle/40 border-surface/40 hover:bg-surface/30"
         >
           {#snippet icon()}
@@ -54,7 +55,7 @@
     <div class="py-20 text-center opacity-50 space-y-4">
       <RefreshCw size={48} class="animate-spin mx-auto text-primary" />
       <p class="font-black uppercase tracking-widest text-sm">
-        Sincronizando capítulos...
+        Nenhum capítulo encontrado.
       </p>
     </div>
   {/if}

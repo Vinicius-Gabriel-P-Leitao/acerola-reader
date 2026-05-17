@@ -11,11 +11,11 @@ pub enum VolumeViewType {
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChapterFileDto {
-    pub id: i64,
+    pub id: String,
     pub name: String,
     pub path: String,
     pub chapter_sort: String,
-    pub volume_id: Option<i64>,
+    pub volume_id: Option<String>,
     pub volume_name: Option<String>,
     pub is_special: bool,
     pub last_modified: i64,
@@ -24,7 +24,7 @@ pub struct ChapterFileDto {
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct VolumeArchiveDto {
-    pub id: i64,
+    pub id: String,
     pub name: String,
     pub volume_sort: String,
     pub is_special: bool,
@@ -60,6 +60,7 @@ pub struct ChapterPageDto {
 #[serde(rename_all = "camelCase")]
 pub struct ChapterDto {
     pub archive: ChapterPageDto,
+    // TODO: Adicionar métados aqui quando tiver
     pub show_volume_headers: bool,
     pub has_volume_structure: bool,
     pub effective_view_mode: VolumeViewType,

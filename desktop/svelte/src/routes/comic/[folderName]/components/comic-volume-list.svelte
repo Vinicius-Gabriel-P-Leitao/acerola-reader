@@ -2,7 +2,6 @@
   export type VolumeChapter = {
     id: string;
     title: string;
-    date: string;
     isRead: boolean;
   };
 
@@ -67,7 +66,6 @@
           {#each volume.chapters as chapter}
             <AcerolaHeroButton
               title={chapter.title}
-              description={chapter.date}
               class="bg-base/20 border-transparent hover:bg-surface/30"
             >
               {#snippet icon()}

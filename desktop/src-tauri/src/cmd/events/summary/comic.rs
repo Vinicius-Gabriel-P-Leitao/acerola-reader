@@ -6,8 +6,8 @@ use std::collections::HashMap;
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ComicSummaryRelations {
-    pub directory_id: i64,
-    pub metadata_id: Option<i64>,
+    pub directory_id: String,
+    pub metadata_id: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -72,8 +72,8 @@ impl ComicSummaryItem {
     pub fn from_view(view: ComicSummaryView, chapter_count: i64) -> Self {
         Self {
             relations: ComicSummaryRelations {
-                directory_id: view.directory_id,
-                metadata_id: view.metadata_id,
+                directory_id: view.directory_id.to_string(),
+                metadata_id: view.metadata_id.map(|id| id.to_string()),
             },
             filesystem: ComicSummaryFilesystem { folder_name: view.folder_name },
             metadata: ComicSummaryMetadata {

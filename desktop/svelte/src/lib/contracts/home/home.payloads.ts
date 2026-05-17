@@ -1,6 +1,6 @@
 export type ComicSummaryRelations = {
-  directoryId: number;
-  metadataId: number | null;
+  directoryId: string;
+  metadataId: string | null;
 };
 
 export type ComicSummaryFilesystem = {

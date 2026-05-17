@@ -52,11 +52,11 @@ impl ChapterService {
         // 3. Map to DTOs
         let chapter_items = chapters_with_volume.iter().map(|chapter| {
             ChapterFileDto {
-                id: chapter.id,
+                id: chapter.id.to_string(),
                 name: chapter.chapter.clone(),
                 path: chapter.path.clone(),
                 chapter_sort: chapter.chapter_sort.clone(),
-                volume_id: chapter.volume_id_fk,
+                volume_id: chapter.volume_id_fk.map(|id| id.to_string()),
                 volume_name: chapter.volume_name.clone(),
                 is_special: chapter.is_special,
                 last_modified: chapter.last_modified,
@@ -65,7 +65,7 @@ impl ChapterService {
 
         let volume_dtos = volumes.iter().map(|volume| {
             VolumeArchiveDto {
-                id: volume.id,
+                id: volume.id.to_string(),
                 name: volume.name.clone(),
                 volume_sort: volume.volume_sort.clone(),
                 is_special: volume.is_special,
@@ -82,11 +82,11 @@ impl ChapterService {
                 let items_in_vol = chapters_with_volume.iter()
                     .filter(|chapter| chapter.volume_id_fk == Some(volume.id))
                     .map(|chapter| ChapterFileDto {
-                        id: chapter.id,
+                        id: chapter.id.to_string(),
                         name: chapter.chapter.clone(),
                         path: chapter.path.clone(),
                         chapter_sort: chapter.chapter_sort.clone(),
-                        volume_id: chapter.volume_id_fk,
+                        volume_id: chapter.volume_id_fk.map(|id| id.to_string()),
                         volume_name: chapter.volume_name.clone(),
                         is_special: chapter.is_special,
                         last_modified: chapter.last_modified,
@@ -99,7 +99,7 @@ impl ChapterService {
                     
                     volume_sections.push(VolumeChapterGroupDto {
                         volume: VolumeArchiveDto {
-                            id: volume.id,
+                            id: volume.id.to_string(),
                             name: volume.name.clone(),
                             volume_sort: volume.volume_sort.clone(),
                             is_special: volume.is_special,
@@ -143,7 +143,7 @@ impl ChapterService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::utils::setup_test_db::setup_test_db_with_volumes;
+    use crate::tests::utils::setup_test_db_with_volumes;
     use crate::data::models::archive::chapter_archive::ChapterArchive;
     use crate::data::repositories::Repository;
 

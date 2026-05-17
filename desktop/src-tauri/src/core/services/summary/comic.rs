@@ -27,4 +27,16 @@ impl HomeService {
         let counts = self.chapter_repo.get_all_counts().await?;
         Ok((comics, counts))
     }
+
+    pub async fn get_by_folder_name(&self, folder_name: &str) -> Result<Option<(ComicSummaryView, i64)>, ComicError> {
+        let comics = self.repo.base.find_all().await?;
+        let comic = comics.into_iter().find(|c| c.folder_name == folder_name);
+        
+        if let Some(view) = comic {
+            let count = self.chapter_repo.count_by_directory_id(view.directory_id).await?;
+            Ok(Some((view, count)))
+        } else {
+            Ok(None)
+        }
+    }
 }
