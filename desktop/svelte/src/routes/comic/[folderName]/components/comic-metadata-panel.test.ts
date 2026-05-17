@@ -16,7 +16,7 @@ describe("ComicMetadataPanel", () => {
 
   it("renderiza o título, autor, categoria e contagem de capítulos", () => {
     render(ComicMetadataPanel, defaultProps);
-    expect(screen.getByText("Test Manga")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Test Manga", level: 1 })).toBeInTheDocument();
     expect(screen.getByText("Test Author")).toBeInTheDocument();
     expect(screen.getByText("Manga")).toBeInTheDocument();
     expect(screen.getByText("15 Caps")).toBeInTheDocument();

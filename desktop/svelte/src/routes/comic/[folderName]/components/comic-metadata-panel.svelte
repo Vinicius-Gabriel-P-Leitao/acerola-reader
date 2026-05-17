@@ -1,6 +1,7 @@
 <script lang="ts">
   import AcerolaButton from "$lib/components/acerola-button/acerola-button.svelte";
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
+  import AcerolaCardImage from "$lib/components/acerola-card/acerola-card-image.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import Play from "@lucide/svelte/icons/play";
   import Bookmark from "@lucide/svelte/icons/bookmark";
@@ -32,9 +33,15 @@
     </AcerolaButtonIcon>
 
     <div class="flex-1 flex flex-col items-center text-center space-y-8">
-      <div class="w-64 aspect-2/3 rounded-huge overflow-hidden shadow-2xl border-4 border-surface shrink-0">
-        <img src={cover} alt={title} class="w-full h-full object-cover" referrerpolicy="no-referrer" />
-      </div>
+      <AcerolaCardImage
+        data={{
+          title: title,
+          cover: cover,
+        }}
+        ui={{
+          class: "w-64 shrink-0 [&_.mt-3]:hidden",
+        }}
+      />
 
       <div class="space-y-3 px-4">
         <h1 class="text-4xl font-black tracking-tighter leading-tight">{title}</h1>

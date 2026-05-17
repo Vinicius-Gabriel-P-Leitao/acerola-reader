@@ -51,60 +51,60 @@
         "https://placehold.co/400x600/2a2a35/a6accd?text=Cover",
       banner: resolveBanner(item?.artwork.banner),
       chapters: [
-      {
-        id: "c1",
-        title: "Capítulo 1: O Início",
-        date: "12 Out 2023",
-        fileName: "001.cbz",
-        isRead: true,
-      },
-      {
-        id: "c2",
-        title: "Capítulo 2: A Descoberta",
-        date: "19 Out 2023",
-        fileName: "002.cbz",
-        isRead: false,
-      },
-      {
-        id: "c3",
-        title: "Capítulo 3: O Desafio",
-        date: "26 Out 2023",
-        fileName: "003.cbz",
-        isRead: false,
-      },
-    ],
-    volumes: [
-      {
-        id: "v1",
-        title: "Volume 1",
-        chapters: [
-          {
-            id: "c1",
-            title: "Capítulo 1: O Início",
-            date: "12 Out 2023",
-            isRead: true,
-          },
-          {
-            id: "c2",
-            title: "Capítulo 2: A Descoberta",
-            date: "19 Out 2023",
-            isRead: false,
-          },
-        ],
-      },
-      {
-        id: "v2",
-        title: "Volume 2",
-        chapters: [
-          {
-            id: "c3",
-            title: "Capítulo 3: O Desafio",
-            date: "26 Out 2023",
-            isRead: false,
-          },
-        ],
-      },
-    ],
+        {
+          id: "c1",
+          title: "Capítulo 1: O Início",
+          date: "12 Out 2023",
+          fileName: "001.cbz",
+          isRead: true,
+        },
+        {
+          id: "c2",
+          title: "Capítulo 2: A Descoberta",
+          date: "19 Out 2023",
+          fileName: "002.cbz",
+          isRead: false,
+        },
+        {
+          id: "c3",
+          title: "Capítulo 3: O Desafio",
+          date: "26 Out 2023",
+          fileName: "003.cbz",
+          isRead: false,
+        },
+      ],
+      volumes: [
+        {
+          id: "v1",
+          title: "Volume 1",
+          chapters: [
+            {
+              id: "c1",
+              title: "Capítulo 1: O Início",
+              date: "12 Out 2023",
+              isRead: true,
+            },
+            {
+              id: "c2",
+              title: "Capítulo 2: A Descoberta",
+              date: "19 Out 2023",
+              isRead: false,
+            },
+          ],
+        },
+        {
+          id: "v2",
+          title: "Volume 2",
+          chapters: [
+            {
+              id: "c3",
+              title: "Capítulo 3: O Desafio",
+              date: "26 Out 2023",
+              isRead: false,
+            },
+          ],
+        },
+      ],
     };
   });
 </script>
@@ -133,17 +133,24 @@
     chaptersCount={manga.chaptersCount}
     description={manga.description}
     cover={manga.cover}
-    onBack={onBack}
+    {onBack}
   />
 
   <!-- MAIN CONTENT AREA: SCROLLABLE -->
-  <div class="flex-1 overflow-y-auto scrollbar-hide relative z-10 flex flex-col">
+  <div
+    class="flex-1 overflow-y-auto scrollbar-hide relative z-10 flex flex-col"
+  >
     <!-- MOBILE HEADER -->
-    <div class="lg:hidden sticky top-0 z-50 flex items-center justify-between px-6 h-20 bg-base/90 backdrop-blur-md border-b border-surface/30">
+    <div
+      class="lg:hidden sticky top-0 z-50 flex items-center justify-between px-6 h-20 bg-base/90 backdrop-blur-md border-b border-surface/30"
+    >
       <AcerolaButtonIcon onclick={onBack} size="sm">
         <ArrowLeft size={20} />
       </AcerolaButtonIcon>
-      <span class="font-black text-sm uppercase tracking-widest truncate max-w-50">{manga.title}</span>
+      <span
+        class="font-black text-sm uppercase tracking-widest truncate max-w-50"
+        >{manga.title}</span
+      >
       <div class="w-10"></div>
     </div>
 
@@ -152,25 +159,51 @@
 
     <div class="max-w-5xl w-full mx-auto p-8 lg:p-16 space-y-12">
       <!-- TAB NAVIGATION -->
-      <div class="sticky top-0 z-40 bg-base/5 backdrop-blur-3xl border-b border-surface/30 px-4 -mx-4">
-        <AcerolaToggleGroup type="single" bind:value={activeTab} class="flex gap-4">
+      <div
+        class="sticky top-0 z-40 bg-base/5 backdrop-blur-3xl border-b border-surface/30 px-4 -mx-4"
+      >
+        <AcerolaToggleGroup
+          type="single"
+          bind:value={activeTab}
+          class="flex gap-4"
+        >
           {#snippet children()}
-            <ToggleGroupItem value="chapters" class="py-6 bg-transparent border-none text-sm font-black uppercase tracking-[0.2em] relative data-[state=on]:text-primary data-[state=on]:bg-transparent">
+            <ToggleGroupItem
+              value="chapters"
+              class="py-6 bg-transparent border-none text-sm font-black uppercase tracking-[0.2em] relative data-[state=on]:text-primary data-[state=on]:bg-transparent"
+            >
               Capítulos
               {#if activeTab === "chapters"}
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" in:fade></div>
+                <div
+                  class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full"
+                  in:fade
+                ></div>
               {/if}
             </ToggleGroupItem>
-            <ToggleGroupItem value="volumes" class="py-6 bg-transparent border-none text-sm font-black uppercase tracking-[0.2em] relative data-[state=on]:text-primary data-[state=on]:bg-transparent">
+
+            <ToggleGroupItem
+              value="volumes"
+              class="py-6 bg-transparent border-none text-sm font-black uppercase tracking-[0.2em] relative data-[state=on]:text-primary data-[state=on]:bg-transparent"
+            >
               Volumes
               {#if activeTab === "volumes"}
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" in:fade></div>
+                <div
+                  class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full"
+                  in:fade
+                ></div>
               {/if}
             </ToggleGroupItem>
-            <ToggleGroupItem value="preferences" class="py-6 bg-transparent border-none text-sm font-black uppercase tracking-[0.2em] relative data-[state=on]:text-primary data-[state=on]:bg-transparent">
+
+            <ToggleGroupItem
+              value="preferences"
+              class="py-6 bg-transparent border-none text-sm font-black uppercase tracking-[0.2em] relative data-[state=on]:text-primary data-[state=on]:bg-transparent"
+            >
               Preferências
               {#if activeTab === "preferences"}
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" in:fade></div>
+                <div
+                  class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full"
+                  in:fade
+                ></div>
               {/if}
             </ToggleGroupItem>
           {/snippet}
@@ -183,7 +216,11 @@
         {:else if activeTab === "volumes"}
           <ComicVolumeList volumes={manga.volumes} />
         {:else if activeTab === "preferences"}
-          <ComicPreferences bind:displayMode bind:chaptersPerPage bind:mediaType />
+          <ComicPreferences
+            bind:displayMode
+            bind:chaptersPerPage
+            bind:mediaType
+          />
         {/if}
       </div>
     </div>

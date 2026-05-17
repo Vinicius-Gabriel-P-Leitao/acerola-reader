@@ -37,6 +37,7 @@
               <BookOpen size={24} />
             </div>
           {/snippet}
+
           {#snippet action()}
             <AcerolaButtonIcon
               variant="ghost"

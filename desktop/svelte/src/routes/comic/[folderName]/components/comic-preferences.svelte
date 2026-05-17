@@ -18,23 +18,35 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
   <section class="space-y-6">
-    <h3 class="flex items-center gap-3 text-overlay uppercase text-[10px] font-black tracking-[0.3em]">
+    <h3
+      class="flex items-center gap-3 text-overlay uppercase text-[10px] font-black tracking-[0.3em]"
+    >
       <Settings2 size={16} /> Leitura
     </h3>
-    <div class="bg-mantle/40 border border-surface/40 rounded-4xl p-8 space-y-6">
+    <div
+      class="bg-mantle/40 border border-surface/40 rounded-4xl p-8 space-y-6"
+    >
       <div class="flex items-center justify-between">
         <span class="font-bold text-sm">Modo de Exibição</span>
         <AcerolaToggleGroup type="single" bind:value={displayMode}>
           {#snippet children()}
-            <ToggleGroupItem value="Lista" class="px-4 py-1.5 text-[10px] font-black uppercase">
+            <ToggleGroupItem
+              value="Lista"
+              class="px-4 py-1.5 text-[10px] font-black uppercase"
+            >
               Lista
             </ToggleGroupItem>
-            <ToggleGroupItem value="Grade" class="px-4 py-1.5 text-[10px] font-black uppercase">
+
+            <ToggleGroupItem
+              value="Grade"
+              class="px-4 py-1.5 text-[10px] font-black uppercase"
+            >
               Grade
             </ToggleGroupItem>
           {/snippet}
         </AcerolaToggleGroup>
       </div>
+
       <div class="flex items-center justify-between">
         <span class="font-bold text-sm">Capítulos por página</span>
         <AcerolaSelect
@@ -50,16 +62,29 @@
   </section>
 
   <section class="space-y-6">
-    <h3 class="flex items-center gap-3 text-overlay uppercase text-[10px] font-black tracking-[0.3em]">
+    <h3
+      class="flex items-center gap-3 text-overlay uppercase text-[10px] font-black tracking-[0.3em]"
+    >
       <Tag size={16} /> Metadados
     </h3>
-    <div class="bg-mantle/40 border border-surface/40 rounded-4xl p-8 space-y-6">
+    <div
+      class="bg-mantle/40 border border-surface/40 rounded-4xl p-8 space-y-6"
+    >
       <div class="flex flex-col gap-4">
-        <span class="font-bold text-sm border-b border-surface pb-3">Tipo de Mídia</span>
-        <AcerolaToggleGroup type="single" bind:value={mediaType} class="flex flex-wrap gap-2">
+        <span class="font-bold text-sm border-b border-surface pb-3"
+          >Tipo de Mídia</span
+        >
+        <AcerolaToggleGroup
+          type="single"
+          bind:value={mediaType}
+          class="flex flex-wrap gap-2"
+        >
           {#snippet children()}
             {#each ["Manga", "Hq", "Novel", "Webtoon"] as cat}
-              <ToggleGroupItem value={cat} class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
+              <ToggleGroupItem
+                value={cat}
+                class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
+              >
                 {cat}
               </ToggleGroupItem>
             {/each}

@@ -19,11 +19,17 @@
         class="w-full h-full object-cover"
         referrerpolicy="no-referrer"
       />
-      <div class="absolute inset-0 bg-linear-to-t from-base via-base/20 to-transparent"></div>
-      <div class="absolute inset-0 bg-linear-to-l from-transparent via-transparent to-base/40 hidden lg:block"></div>
+      <div
+        class="absolute inset-0 bg-linear-to-t from-base via-base/20 to-transparent"
+      ></div>
+      <div
+        class="absolute inset-0 bg-linear-to-l from-transparent via-transparent to-base/40 hidden lg:block"
+      ></div>
     </div>
   {:else}
-    <div class="w-full h-full bg-linear-to-br from-primary/20 via-surface to-base flex items-center justify-center">
+    <div
+      class="w-full h-full bg-linear-to-br from-primary/20 via-surface to-base flex items-center justify-center"
+    >
       <div class="opacity-10 scale-[5]">
         <BookOpen size={100} />
       </div>
@@ -32,11 +38,16 @@
 
   <!-- Floating stats on Banner -->
   <div class="absolute bottom-10 left-10 lg:left-16 flex gap-6">
-    <div class="flex items-center gap-3 bg-surface/20 backdrop-blur-xl border border-surface/30 px-6 py-3 rounded-2xl">
+    <div
+      class="flex items-center gap-3 bg-surface/20 backdrop-blur-xl border border-surface/30 px-6 py-3 rounded-2xl"
+    >
       <Star size={20} class="text-yellow-400 fill-yellow-400" />
       <span class="font-black text-xl tracking-tighter">9.8</span>
     </div>
-    <div class="flex items-center gap-3 bg-surface/20 backdrop-blur-xl border border-surface/30 px-6 py-3 rounded-2xl">
+
+    <div
+      class="flex items-center gap-3 bg-surface/20 backdrop-blur-xl border border-surface/30 px-6 py-3 rounded-2xl"
+    >
       <List size={20} class="text-primary" />
       <span class="font-black text-xl tracking-tighter">Popular</span>
     </div>
