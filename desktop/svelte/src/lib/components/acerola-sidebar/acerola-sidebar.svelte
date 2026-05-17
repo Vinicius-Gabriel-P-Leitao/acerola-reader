@@ -1,7 +1,24 @@
+<script module lang="ts">
+  import type { Snippet } from "svelte";
+  import type { Component } from "svelte";
+
+  export type SidebarItem = {
+    href: string;
+    label: string;
+    icon: Component;
+  };
+
+  export type AcerolaSidebarProps = {
+    items: SidebarItem[];
+    header?: Snippet;
+    footer?: Snippet;
+    class?: string;
+  };
+</script>
+
 <script lang="ts">
   import { page } from "$app/state";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-  import type { AcerolaSidebarProps } from "./acerola-sidebar.types";
 
   let {
     items,

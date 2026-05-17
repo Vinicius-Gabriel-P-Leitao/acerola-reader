@@ -1,6 +1,7 @@
 use crate::data::models::views::ComicSummaryView;
 use chrono::Local;
 use serde::Serialize;
+use std::collections::HashMap;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,6 +22,7 @@ pub struct ComicSummaryMetadata {
     pub title: Option<String>,
     pub external_sync: bool,
     pub active_source: Option<String>,
+    pub chapter_count: i64,
 }
 
 #[derive(Clone, Serialize)]
@@ -48,8 +50,14 @@ pub struct ComicSummaryPayload {
 }
 
 impl ComicSummaryPayload {
-    pub fn from(comics: Vec<ComicSummaryView>) -> Self {
-        let items = comics.into_iter().map(ComicSummaryItem::from).collect::<Vec<_>>();
+    pub fn from(comics: Vec<ComicSummaryView>, counts: HashMap<i64, i64>) -> Self {
+        let items = comics
+            .into_iter()
+            .map(|view| {
+                let count = counts.get(&view.directory_id).cloned().unwrap_or(0);
+                ComicSummaryItem::from_view(view, count)
+            })
+            .collect::<Vec<_>>();
         let total = items.len();
 
         Self {
@@ -60,8 +68,8 @@ impl ComicSummaryPayload {
     }
 }
 
-impl From<ComicSummaryView> for ComicSummaryItem {
-    fn from(view: ComicSummaryView) -> Self {
+impl ComicSummaryItem {
+    pub fn from_view(view: ComicSummaryView, chapter_count: i64) -> Self {
         Self {
             relations: ComicSummaryRelations {
                 directory_id: view.directory_id,
@@ -72,6 +80,7 @@ impl From<ComicSummaryView> for ComicSummaryItem {
                 title: view.metadata_title,
                 external_sync: view.external_sync,
                 active_source: view.active_source,
+                chapter_count,
             },
             artwork: ComicSummaryArtwork { cover: view.folder_cover, banner: view.folder_banner },
         }

@@ -2,6 +2,13 @@
   import MonitorIcon from "@lucide/svelte/icons/monitor";
   import MoonIcon from "@lucide/svelte/icons/moon";
   import SunIcon from "@lucide/svelte/icons/sun";
+  import type { ThemeModeOption } from "$lib/hooks/theme/use-theme.svelte";
+  import type { Component } from "svelte";
+
+  export type ModePickerProps = {
+    icon: Component;
+    next: ThemeModeOption;
+  };
 
   const MODE_CONFIG: Record<ThemeModeOption, ModePickerProps> = {
     light: { icon: SunIcon, next: "dark" },
@@ -12,8 +19,7 @@
 
 <script lang="ts">
   import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
-  import { useTheme, type ThemeModeOption } from "$lib/hooks/theme/use-theme.svelte";
-  import type { ModePickerProps } from "./acerola-mode-picker.types";
+  import { useTheme } from "$lib/hooks/theme/use-theme.svelte";
 
   const themeCtx = useTheme();
 

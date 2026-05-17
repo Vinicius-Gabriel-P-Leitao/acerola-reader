@@ -1,7 +1,9 @@
 use crate::data::models::archive::chapter_archive::ChapterArchive;
 use crate::data::repositories::{Entity, Repository};
 use crate::infra::error::DbError;
-use sqlx::SqlitePool;
+use sqlx::{Row, SqlitePool};
+
+use std::collections::HashMap;
 
 pub struct ChapterRepository {
     pub base: Repository<ChapterArchive>,
@@ -11,6 +13,18 @@ pub struct ChapterRepository {
 impl ChapterRepository {
     pub fn new(pool: SqlitePool) -> Self {
         Self { base: Repository::new(pool.clone()), pool }
+    }
+
+    /// Retorna um mapeamento de `directory_id` para o número total de capítulos.
+    pub async fn get_all_counts(&self) -> Result<HashMap<i64, i64>, DbError> {
+        let counts = sqlx::query("SELECT comic_directory_fk, COUNT(*) as count FROM chapter_archive GROUP BY comic_directory_fk")
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .map(|row| (row.get::<i64, _>("comic_directory_fk"), row.get::<i64, _>("count")))
+            .collect();
+
+        Ok(counts)
     }
 
     /// Retorna capítulos de um diretório paginados, ordenados por `chapter_sort`.

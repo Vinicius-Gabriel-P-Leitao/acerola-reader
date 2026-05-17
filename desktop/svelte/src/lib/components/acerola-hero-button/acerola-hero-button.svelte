@@ -1,8 +1,21 @@
+<script module lang="ts">
+  import type { Snippet } from "svelte";
+
+  export type AcerolaHeroButtonProps = {
+    title?: string;
+    class?: string;
+    description?: string;
+    icon?: Snippet;
+    action?: Snippet;
+    children?: Snippet;
+    onclick?: (event: MouseEvent) => void;
+  };
+</script>
+
 <script lang="ts">
   import { m } from "$lib/paraglide/messages";
   import * as Item from "$lib/components/ui/item/index.js";
   import { cn } from "$lib/utils/cn.utils";
-  import type { AcerolaHeroButtonProps } from "./acerola-hero-button.types";
 
   let {
     title,

@@ -1,6 +1,11 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import PlaceholderManga from "$lib/assets/placeholder/placeholder_manga.svg?component";
+  import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
   import AcerolaCardImage from "$lib/components/acerola-card/acerola-card-image.svelte";
+  import MoreHorizontal from "@lucide/svelte/icons/more-horizontal";
+  import BookOpen from "@lucide/svelte/icons/book-open";
+
   import { LIBRARY_EVENTS } from "$lib/contracts/library/library.events";
   import { useComicSummary } from "$lib/hooks/store/use-comic-summary.svelte";
   import { convertFileSrc } from "@tauri-apps/api/core";
@@ -23,7 +28,10 @@
     unlistenScan?.();
   });
 
-  function resolveCover(artwork: { cover: string | null; banner: string | null }): string | null {
+  function resolveCover(artwork: {
+    cover: string | null;
+    banner: string | null;
+  }): string | null {
     const path = artwork.cover ?? artwork.banner ?? null;
     if (!path) return null;
     return convertFileSrc(path.replaceAll("\\", "/"));
@@ -40,9 +48,35 @@
       {#each summary.comics.comics as comic (comic.relations.directoryId)}
         {@const cover = resolveCover(comic.artwork)}
         <AcerolaCardImage
-          title={comic.metadata.title ?? comic.filesystem.folderName}
-          {cover}
+          data={{
+            title: comic.metadata.title ?? comic.filesystem.folderName,
+            cover,
+          }}
+          events={{
+            onClick: () => {
+              goto(`/comic/${comic.filesystem.folderName}`);
+            },
+          }}
         >
+          {#snippet footer()}
+            <div class="flex items-center justify-between mt-1">
+              <span
+                class="text-[10px] uppercase tracking-wider font-black text-overlay flex items-center gap-1"
+              >
+                <BookOpen size={10} />
+                {comic.metadata.chapterCount}
+              </span>
+            </div>
+          {/snippet}
+
+          {#snippet action()}
+            <AcerolaButtonIcon
+              class="bg-transparent text-overlay hover:text-primary transition-colors"
+            >
+              <MoreHorizontal size={16} />
+            </AcerolaButtonIcon>
+          {/snippet}
+
           {#snippet placeholder()}
             <div class="w-full h-full bg-surface">
               <PlaceholderManga class="w-full h-full" />

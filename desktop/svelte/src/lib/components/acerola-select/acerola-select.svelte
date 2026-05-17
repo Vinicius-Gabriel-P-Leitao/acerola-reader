@@ -1,3 +1,17 @@
+<script module lang="ts">
+  export type AcerolaSelectOption = {
+    value: string;
+    label: string;
+  };
+
+  export type AcerolaSelectProps = {
+    value?: string;
+    class?: string;
+    placeholder?: string;
+    options: AcerolaSelectOption[];
+  };
+</script>
+
 <script lang="ts">
   import {
     Select,
@@ -7,10 +21,6 @@
   } from "$lib/components/ui/select";
   import { m } from "$lib/paraglide/messages";
   import { cn } from "$lib/utils/cn.utils";
-  import {
-    type AcerolaSelectOption,
-    type AcerolaSelectProps,
-  } from "./acerola-select.types";
 
   let {
     options = [],

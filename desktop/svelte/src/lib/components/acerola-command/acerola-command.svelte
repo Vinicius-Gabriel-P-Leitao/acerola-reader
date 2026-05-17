@@ -1,6 +1,15 @@
+<script module lang="ts">
+  import type { Snippet } from "svelte";
+
+  export type AcerolaCommandProps = {
+    children: Snippet;
+    value?: string;
+    onValueChange?: (value: string) => void;
+  };
+</script>
+
 <script lang="ts">
   import * as Command from "$lib/components/ui/command/index.js";
-  import type { AcerolaCommandProps } from "./acerola-command.types.js";
 
   let {
     children,

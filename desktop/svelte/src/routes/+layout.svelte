@@ -1,6 +1,6 @@
 <script lang="ts" module>
-  import type { AcerolaSelectOption } from "$lib/components/acerola-select/acerola-select.types";
-  import type { SidebarItem } from "$lib/components/acerola-sidebar/acerola-sidebar.types";
+  import type { AcerolaSelectOption } from "$lib/components/acerola-select/acerola-select.svelte";
+  import type { SidebarItem } from "$lib/components/acerola-sidebar/acerola-sidebar.svelte";
   import type { Locale } from "$lib/paraglide/runtime.js";
 
   import { m } from "$lib/paraglide/messages";
@@ -10,7 +10,6 @@
   import HouseIcon from "@lucide/svelte/icons/house";
   import SettingsIcon from "@lucide/svelte/icons/settings";
 
-  // Ícones da Titlebar
   import BookOpenIcon from "@lucide/svelte/icons/book-open";
   import MinusIcon from "@lucide/svelte/icons/minus";
   import SquareIcon from "@lucide/svelte/icons/square";

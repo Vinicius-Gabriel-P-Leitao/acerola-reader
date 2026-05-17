@@ -1,6 +1,16 @@
+<script module lang="ts">
+  import type { ToggleGroup as ToggleGroupPrimitive } from "bits-ui";
+  import type { Snippet } from "svelte";
+
+  export type AcerolaToggleGroupProps = ToggleGroupPrimitive.RootProps & {
+    children: Snippet;
+    variant?: "default" | "outline";
+    size?: "default" | "sm" | "lg";
+  };
+</script>
+
 <script lang="ts">
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
-  import type { AcerolaToggleGroupProps } from "./acerola-toggle-group.types.js";
 
   let {
     children,

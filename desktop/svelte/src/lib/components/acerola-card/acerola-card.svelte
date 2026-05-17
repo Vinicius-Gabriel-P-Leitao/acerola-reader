@@ -1,6 +1,18 @@
+<script module lang="ts">
+  import type { Snippet } from "svelte";
+
+  export type AcerolaCardProps = {
+    title: string;
+    description?: string;
+    children?: Snippet;
+    footer?: Snippet;
+    size?: "default" | "sm";
+    class?: string;
+  };
+</script>
+
 <script lang="ts">
   import * as Card from "$lib/components/ui/card";
-  import type { AcerolaCardProps } from "./acerola-card.types";
 
   let {
     title,

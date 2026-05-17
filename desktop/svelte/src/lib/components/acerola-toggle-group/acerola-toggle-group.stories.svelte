@@ -1,7 +1,7 @@
 <script lang="ts" module>
   import { defineMeta } from "@storybook/addon-svelte-csf";
   import AcerolaToggleGroup from "./acerola-toggle-group.svelte";
-  import type { AcerolaToggleGroupProps } from "./acerola-toggle-group.types.js";
+  import type { AcerolaToggleGroupProps } from "./acerola-toggle-group.svelte";
   import { ToggleGroupItem } from "$lib/components/ui/toggle-group/index.js";
 
   const { Story } = defineMeta({
@@ -43,7 +43,7 @@
       <ToggleGroupItem value="a">Opcao A</ToggleGroupItem>
       <ToggleGroupItem value="b">Opcao B</ToggleGroupItem>
       <ToggleGroupItem value="c">Opcao C</ToggleGroupItem>
-      {/snippet}
+    {/snippet}
   </AcerolaToggleGroup>
 {/snippet}
 
@@ -61,7 +61,12 @@
 
 <Story
   name="Multiple Default"
-  args={{ type: "multiple", variant: "default", size: "default", value: ["a", "c"] }}
+  args={{
+    type: "multiple",
+    variant: "default",
+    size: "default",
+    value: ["a", "c"],
+  }}
   {template}
 />
 

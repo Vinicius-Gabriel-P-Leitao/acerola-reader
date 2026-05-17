@@ -11,6 +11,7 @@ export type ComicSummaryMetadata = {
   title: string | null;
   externalSync: boolean;
   activeSource: string | null;
+  chapterCount: number;
 };
 
 export type ComicSummaryArtwork = {

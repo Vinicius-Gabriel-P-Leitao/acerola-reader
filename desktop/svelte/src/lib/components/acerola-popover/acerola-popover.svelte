@@ -1,6 +1,16 @@
+<script module lang="ts">
+  import type { Snippet } from "svelte";
+
+  export type AcerolaPopoverProps = {
+    trigger: Snippet;
+    content: Snippet;
+    open?: boolean;
+    contentClass?: string;
+  };
+</script>
+
 <script lang="ts">
   import * as Popover from "$lib/components/ui/popover/index.js";
-  import type { AcerolaPopoverProps } from "./acerola-popover.types.js";
 
   let {
     trigger,

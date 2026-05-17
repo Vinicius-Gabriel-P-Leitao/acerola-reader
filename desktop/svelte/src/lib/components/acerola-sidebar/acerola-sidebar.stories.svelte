@@ -1,12 +1,12 @@
 <script lang="ts" module>
-  import { defineMeta } from "@storybook/addon-svelte-csf";
   import AcerolaModePicker from "$lib/components/acerola-mode-picker/acerola-mode-picker.svelte";
   import SidebarProvider from "$lib/components/ui/sidebar/sidebar-provider.svelte";
-  import AcerolasSidebar from "./acerola-sidebar.svelte";
+  import HistoryIcon from "@lucide/svelte/icons/history";
   import LibraryIcon from "@lucide/svelte/icons/library";
   import SettingsIcon from "@lucide/svelte/icons/settings";
-  import HistoryIcon from "@lucide/svelte/icons/history";
-  import type { SidebarItem } from "./acerola-sidebar.types";
+  import { defineMeta } from "@storybook/addon-svelte-csf";
+  import type { SidebarItem } from "./acerola-sidebar.svelte";
+  import AcerolasSidebar from "./acerola-sidebar.svelte";
 
   const items: SidebarItem[] = [
     { href: "/home", label: "Biblioteca", icon: LibraryIcon },
@@ -28,7 +28,10 @@
     },
     argTypes: {
       items: { description: "Lista de itens de navegação", control: "object" },
-      footer: { description: "Snippet opcional para o rodapé da sidebar", control: "object" }
+      footer: {
+        description: "Snippet opcional para o rodapé da sidebar",
+        control: "object",
+      },
     },
   });
 </script>

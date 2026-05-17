@@ -9,21 +9,32 @@
     parameters: {
       docs: {
         description: {
-          component: "Seletor de paleta de cores da aplicação. Componente de página.",
+          component:
+            "Seletor de paleta de cores da aplicação. Componente de página.",
         },
       },
     },
     argTypes: {
       theme: { description: "ID do tema selecionado", control: "text" },
-      mode: { description: "Modo de cor (light ou dark)", control: "inline-radio", options: ["light", "dark"] },
-      onselect: { description: "Callback quando um tema é selecionado", action: "selected" }
+      mode: {
+        description: "Modo de cor (light ou dark)",
+        control: "inline-radio",
+        options: ["light", "dark"],
+      },
+      onselect: {
+        description: "Callback quando um tema é selecionado",
+        action: "selected",
+      },
     },
   });
 </script>
 
 <script lang="ts">
   import { THEMES } from "$lib/constants/themes";
-  import type { ThemeColor, ThemeMode } from "$lib/hooks/use-theme.svelte";
+  import type {
+    ThemeColor,
+    ThemeMode,
+  } from "$lib/hooks/theme/use-theme.svelte";
 
   let theme = $state<ThemeColor>("catppuccin");
 
