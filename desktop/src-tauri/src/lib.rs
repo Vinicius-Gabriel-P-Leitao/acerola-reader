@@ -3,7 +3,6 @@ mod core;
 mod data;
 mod infra;
 
-use acerola_p2p::api::guard::open_guard;
 use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
 use cmd::features::network as network_cmd;
 use cmd::features::summary as comic_summary_cmd;
@@ -16,6 +15,12 @@ mod app_bootstrap {
     use crate::core::services::network::NetworkService;
 
     use super::*;
+    use acerola_p2p::api::{
+        guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
+        identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
+        transport::IrohTransportBuilder,
+        AcerolaP2p,
+    };
     use std::{path::PathBuf, sync::Arc};
     use tauri::Emitter;
 
@@ -83,13 +88,22 @@ mod app_bootstrap {
             app.emit(event, data).ok();
         });
 
-        let node = acerola_p2p::api::AcerolaP2P::builder(emit)
-            .guard(Box::new(|ctx: &acerola_p2p::api::guard::ConnectionContext<()>| {
-                Box::pin(open_guard(ctx))
-            }))
+        let store = Arc::new(InMemoryTrustedStore::new());
+
+        let transport = IrohTransportBuilder::default()
+            .seed(*b"acerola-desktop-seed-v1-00000000")
+            .relay("https://acerola-comic.com")
+            ;
+
+        let device = DefaultDeviceInfoProvider::new("0.0.1-beta")
+            .provide()
+            .expect("Failed to read device info");
+
+        let node = AcerolaP2p::builder(emit, transport, device)
+            .guard(TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator())
             .build()
             .await
-            .expect("Failed to start the p2p node.");
+            .expect("Failed to start the p2p node");
 
         let service = NetworkService::new(Arc::new(node));
         handle.manage(service);
@@ -109,17 +123,9 @@ mod app_bootstrap {
                     #[cfg(debug_assertions)]
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
                 ])
-                .level({
-                    #[cfg(debug_assertions)]
-                    {
-                        tauri_plugin_log::log::LevelFilter::Debug
-                    }
-
-                    #[cfg(not(debug_assertions))]
-                    {
-                        tauri_plugin_log::log::LevelFilter::Info
-                    }
-                })
+                .level(tauri_plugin_log::log::LevelFilter::Warn)
+                .level_for("acerola_p2p", tauri_plugin_log::log::LevelFilter::Debug)
+                .level_for("acerola_lib", tauri_plugin_log::log::LevelFilter::Debug)
                 .build(),
         )?;
 
