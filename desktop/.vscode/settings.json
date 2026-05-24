@@ -54,6 +54,7 @@
   "material-icon-theme.folders.associations": {
     "network": "connection",
     "summary": "docs",
+    "comic": "queue",
     "peer": "client",
     "p2p": "client"
   }

@@ -15,8 +15,10 @@ export default defineConfig({
   plugins: [
     svelte({
       hot: false,
+      compilerOptions: {
+        dev: true,
+      },
     }),
-    svelteTesting(),
   ],
   optimizeDeps: {
     include: [
@@ -38,18 +40,40 @@ export default defineConfig({
         "./svelte/tests/mocks/app-environment.ts",
       ),
     },
+    // Crucial for Svelte 5 Browser Mode
+    conditions: ["browser", "svelte", "development"],
   },
   // INFO: Não usar paraglide nos testes.
   test: {
     projects: [
       {
         extends: true,
+        plugins: [svelteTesting()],
         test: {
           name: "unit",
           globals: true,
           environment: "jsdom",
           include: ["svelte/src/**/*.test.ts"],
+          exclude: ["svelte/src/**/*.browser.test.ts"],
           setupFiles: ["svelte/tests/setup.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          setupFiles: ["svelte/tests/setup.browser.ts"],
+          include: ["svelte/src/**/*.browser.test.ts"],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [
+              {
+                browser: "chromium",
+              },
+            ],
+          },
         },
       },
       {
