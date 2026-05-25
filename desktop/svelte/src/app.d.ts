@@ -1,4 +1,4 @@
-import '@poppanator/sveltekit-svg/dist/svg.d.ts'
+import '@poppanator/sveltekit-svg/dist/svg.d.ts';
 
 declare global {
 	namespace App {

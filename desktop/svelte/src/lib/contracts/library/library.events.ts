@@ -1,6 +1,6 @@
 // TODO: Transformar o nome do arquivo para archive.**
 export const LIBRARY_EVENTS = {
-  scanProgress: "scan:progress",
-  scanComplete: "scan:complete",
-  scanError: "scan:error",
+	scanProgress: 'scan:progress',
+	scanComplete: 'scan:complete',
+	scanError: 'scan:error'
 } as const;

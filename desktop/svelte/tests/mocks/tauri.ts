@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi } from 'vitest';
 
 /**
  * Cria um mock do LazyStore com valores iniciais customizados.
@@ -10,10 +10,8 @@ import { vi } from "vitest";
  * }));
  */
 export function mockLazyStore(savedValues: Record<string, unknown> = {}) {
-  return vi.fn().mockImplementation(() => ({
-    get: vi.fn().mockImplementation((key: string) =>
-      Promise.resolve(savedValues[key] ?? null)
-    ),
-    set: vi.fn().mockResolvedValue(undefined),
-  }));
+	return vi.fn().mockImplementation(() => ({
+		get: vi.fn().mockImplementation((key: string) => Promise.resolve(savedValues[key] ?? null)),
+		set: vi.fn().mockResolvedValue(undefined)
+	}));
 }

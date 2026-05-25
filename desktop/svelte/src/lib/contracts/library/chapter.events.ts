@@ -1,4 +1,4 @@
 export const LIBRARY_EVENTS = {
-  comicChapters: "comic:chapters",
-  comicChaptersError: "comic:chapters:error",
+	comicChapters: 'comic:chapters',
+	comicChaptersError: 'comic:chapters:error'
 } as const;

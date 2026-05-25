@@ -1,68 +1,63 @@
 <script module lang="ts">
-  import type { Snippet } from "svelte";
-  import type { Component } from "svelte";
+	import type { Snippet } from 'svelte';
+	import type { Component } from 'svelte';
 
-  export type SidebarItem = {
-    href: string;
-    label: string;
-    icon: Component;
-  };
+	export type SidebarItem = {
+		href: string;
+		label: string;
+		icon: Component;
+	};
 
-  export type AcerolaSidebarProps = {
-    items: SidebarItem[];
-    header?: Snippet;
-    footer?: Snippet;
-    class?: string;
-  };
+	export type AcerolaSidebarProps = {
+		items: SidebarItem[];
+		header?: Snippet;
+		footer?: Snippet;
+		class?: string;
+	};
 </script>
 
 <script lang="ts">
-  import { page } from "$app/state";
-  import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+	import { page } from '$app/state';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
-  let {
-    items,
-    header,
-    footer,
-    class: className,
-  }: AcerolaSidebarProps = $props();
+	let { items, header, footer, class: className }: AcerolaSidebarProps = $props();
 </script>
 
 <Sidebar.Root collapsible="icon" class={className}>
-  {#if header}
-    <Sidebar.Header class="p-6">
-      {@render header()}
-    </Sidebar.Header>
-  {/if}
+	{#if header}
+		<Sidebar.Header class="p-6">
+			{@render header()}
+		</Sidebar.Header>
+	{/if}
 
-  <Sidebar.Content>
-    <Sidebar.Group class="mt-4 px-3">
-      <Sidebar.GroupContent>
-        <Sidebar.Menu class="gap-2">
-          {#each items as item (item.href)}
-            <Sidebar.MenuItem>
-              <Sidebar.MenuButton
-                isActive={page.url.pathname === item.href}
-                tooltipContent={item.label}
-                class="h-12 rounded-xl px-3 [&_svg]:size-6 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-lg hover:bg-surface"
-              >
-                {#snippet child({ props })}
-                  <a href={item.href} {...props}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </a>
-                {/snippet}
-              </Sidebar.MenuButton>
-            </Sidebar.MenuItem>
-          {/each}
-        </Sidebar.Menu>
-      </Sidebar.GroupContent>
-    </Sidebar.Group>
-  </Sidebar.Content>
+	<Sidebar.Content>
+		<Sidebar.Group class="mt-4 px-3">
+			<Sidebar.GroupContent>
+				<Sidebar.Menu class="gap-2">
+					{#each items as item (item.href)}
+						<Sidebar.MenuItem>
+							<Sidebar.MenuButton
+								isActive={page.url.pathname === item.href}
+								tooltipContent={item.label}
+								class="h-12 rounded-xl px-3 hover:bg-surface data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-lg [&_svg]:size-6"
+							>
+								{#snippet child({ props })}
+									<a href={item.href} {...props}>
+										<item.icon />
+										<span>{item.label}</span>
+									</a>
+								{/snippet}
+							</Sidebar.MenuButton>
+						</Sidebar.MenuItem>
+					{/each}
+				</Sidebar.Menu>
+			</Sidebar.GroupContent>
+		</Sidebar.Group>
+	</Sidebar.Content>
 
-  {#if footer}
-    <Sidebar.Footer class="p-4">
-      {@render footer()}
-    </Sidebar.Footer>
-  {/if}
+	{#if footer}
+		<Sidebar.Footer class="p-4">
+			{@render footer()}
+		</Sidebar.Footer>
+	{/if}
 </Sidebar.Root>
