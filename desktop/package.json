@@ -28,7 +28,9 @@
     "test:coverage:unit": "vitest run --project=unit --coverage",
     "test:ui": "vitest --ui",
     "test:tauri": "cargo test --manifest-path ./src-tauri/Cargo.toml",
-    "test:all": "npm run test && npm run test:tauri"
+    "test:all": "npm run test && npm run test:tauri",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
@@ -67,6 +69,9 @@
     "jsdom": "^29.0.1",
     "mode-watcher": "^1.1.0",
     "playwright": "^1.58.2",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.5.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "shadcn-svelte": "^1.2.6",
     "storybook": "^10.4.0",
     "svelte": "^5.0.0",

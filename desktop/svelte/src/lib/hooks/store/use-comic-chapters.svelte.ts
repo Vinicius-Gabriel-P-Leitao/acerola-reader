@@ -6,6 +6,7 @@ import { LIBRARY_EVENTS } from "$lib/contracts/library/chapter.events";
 import type {
   ChapterDto,
   ChapterFileDto,
+  ChapterPageDto,
 } from "$lib/contracts/library/chapter.payloads";
 import type { ErrorPayload } from "$lib/contracts/shared/shared.payloads";
 import { resolveErrorMessage } from "$lib/contracts/errors/errors.i18n";
@@ -37,18 +38,19 @@ export function useComicChapters() {
   let currentRequestPage = $state<number | null>(null);
   let failedPages = new Set<number>();
 
-  // FIXME: Tipagem abstrata sendo que o tipo é exportado ChapterPageDto
   let metadata = $state<
     | (Omit<ChapterDto, "archive"> & {
-        archive: Omit<ChapterDto["archive"], "items">;
+        archive: Omit<ChapterPageDto, "items">;
       })
     | undefined
   >(undefined);
 
-  function clear() {
+  function clear(keepMetadata = false) {
     lruCache.clear();
     failedPages.clear();
-    metadata = undefined;
+    if (!keepMetadata) {
+      metadata = undefined;
+    }
     currentRequestPage = null;
     cacheVersion++;
     loading = false;
@@ -93,6 +95,7 @@ export function useComicChapters() {
 
           if (currentRequestPage !== null) {
             const dist = Math.abs(payload.archive.page - currentRequestPage);
+
             if (dist > STALE_RESPONSE_THRESHOLD) {
               loading = false;
               return;
@@ -154,8 +157,8 @@ export function useComicChapters() {
     isAscending: boolean,
     volumeId: string | null = null,
   ) {
-    if (lruCache.has(pageIndex)) return;
     if (failedPages.has(pageIndex)) return;
+    if (lruCache.has(pageIndex)) return;
     if (loading) return;
 
     const totalItems = metadata?.archive.total ?? 0;
@@ -172,9 +175,13 @@ export function useComicChapters() {
         pageSize,
         asc: isAscending,
       });
-
-      // FIXME: Toast e notify
     } catch (error) {
+      const errorMessage = error as string;
+      notify.error("Erro ao solicitar capítulos", {
+        description: errorMessage,
+      });
+      toast.error(errorMessage);
+
       failedPages.add(pageIndex);
       loading = false;
     }
@@ -197,8 +204,7 @@ export function useComicChapters() {
         ...metadata.archive,
         items: pages.flatMap((p) => p.items),
       },
-      // FIXME: Tirar isso já  existe tipagem
-    } as ChapterDto & { pages: { page: number; items: ChapterFileDto[] }[] };
+    };
   });
 
   return {

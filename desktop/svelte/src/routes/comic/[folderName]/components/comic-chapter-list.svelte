@@ -26,7 +26,7 @@
     pagesData = [],
     totalChapters = 0,
     pageSize = 25,
-    onvisiblepages
+    onvisiblepages,
   }: {
     pagesData: ChapterPage[];
     totalChapters: number;
@@ -38,9 +38,9 @@
    * ITEM_HEIGHT (112px): Altura total do slot (item + gap).
    * BUTTON_HEIGHT (100px): Altura real do botão para caber Title + Description + Padding.
    */
-  const ITEM_HEIGHT = 112; 
+  const ITEM_HEIGHT = 112;
   const BUTTON_HEIGHT = 100;
-  
+
   const totalPages = $derived(Math.ceil(totalChapters / pageSize));
 
   let visiblePages = new Set<number>();
@@ -50,27 +50,30 @@
     observer = new IntersectionObserver(
       (entries) => {
         let changed = false;
-        for (const entry of entries) {
+
+        entries.forEach((entry) => {
           const pageStr = (entry.target as HTMLElement).dataset.page;
-          if (!pageStr) continue;
+          if (!pageStr) return;
+
           const page = parseInt(pageStr, 10);
+          const wasVisible = visiblePages.has(page);
+
           if (entry.isIntersecting) {
-            if (!visiblePages.has(page)) {
-              visiblePages.add(page);
-              changed = true;
-            }
+            visiblePages.add(page);
           } else {
-            if (visiblePages.has(page)) {
-              visiblePages.delete(page);
-              changed = true;
-            }
+            visiblePages.delete(page);
           }
-        }
+
+          if (wasVisible !== entry.isIntersecting) {
+            changed = true;
+          }
+        });
+
         if (changed && onvisiblepages) {
           onvisiblepages(Array.from(visiblePages).sort((a, b) => a - b));
         }
       },
-      { rootMargin: "1200px 0px" }
+      { rootMargin: "1200px 0px" },
     );
     return () => observer?.disconnect();
   });
@@ -78,29 +81,34 @@
   function trackPage(node: HTMLElement, page: number) {
     node.dataset.page = page.toString();
     observer?.observe(node);
-    return { destroy() { observer?.unobserve(node); } };
+    return {
+      destroy() {
+        observer?.unobserve(node);
+      },
+    };
   }
 </script>
 
 <div class="w-full flex flex-col">
   {#if totalPages > 0}
     {#each Array(totalPages) as _, pageIndex}
-      {@const blockData = pagesData.find(p => p.page === pageIndex)}
-      {@const itemsInThisPage = pageIndex === totalPages - 1 ? (totalChapters % pageSize || pageSize) : pageSize}
-      
+      {@const blockData = pagesData.find((page) => page.page === pageIndex)}
+      <!-- prettier-ignore -->
+      {@const itemsInThisPage = pageIndex === totalPages - 1 ? totalChapters % pageSize || pageSize : pageSize}
+
       <!-- 
         PAGE BLOCK (Relative): 
         Ocupa o espaço exato da página no fluxo do documento.
         Items dentro são Absolute para garantir estabilidade visual total.
       -->
-      <div 
+      <div
         use:trackPage={pageIndex}
         class="w-full relative"
         style:height="{itemsInThisPage * ITEM_HEIGHT}px"
       >
         {#if blockData && blockData.items.length > 0}
           {#each blockData.items as chapter, i (chapter.id)}
-            <div 
+            <div
               class="absolute left-0 right-0 animate-in fade-in duration-300"
               style:top="{i * ITEM_HEIGHT}px"
               style:height="{BUTTON_HEIGHT}px"
@@ -116,7 +124,11 @@
                   </div>
                 {/snippet}
                 {#snippet action()}
-                  <AcerolaButtonIcon variant="ghost" size="sm" class="text-overlay hover:text-primary">
+                  <AcerolaButtonIcon
+                    variant="ghost"
+                    size="sm"
+                    class="text-overlay hover:text-primary"
+                  >
                     <MoreVertical size={20} />
                   </AcerolaButtonIcon>
                 {/snippet}

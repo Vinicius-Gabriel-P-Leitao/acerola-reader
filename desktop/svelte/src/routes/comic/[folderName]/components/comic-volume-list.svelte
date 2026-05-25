@@ -17,7 +17,7 @@
   export type VolumePage = {
     page: number;
     items: VolumeChapter[];
-  }
+  };
 </script>
 
 <script lang="ts">
@@ -51,7 +51,7 @@
   let visiblePages = new Set<number>();
   let observer: IntersectionObserver | null = null;
 
-  const ITEM_HEIGHT = 112; 
+  const ITEM_HEIGHT = 112;
   const BUTTON_HEIGHT = 100;
 
   const toggleVolume = (volumeId: string) => {
@@ -69,27 +69,30 @@
     observer = new IntersectionObserver(
       (entries) => {
         let changed = false;
-        for (const entry of entries) {
+
+        entries.forEach((entry) => {
           const pageStr = (entry.target as HTMLElement).dataset.page;
-          if (!pageStr) continue;
+          if (!pageStr) return;
+
           const page = parseInt(pageStr, 10);
+          const wasVisible = visiblePages.has(page);
+
           if (entry.isIntersecting) {
-            if (!visiblePages.has(page)) {
-              visiblePages.add(page);
-              changed = true;
-            }
+            visiblePages.add(page);
           } else {
-            if (visiblePages.has(page)) {
-              visiblePages.delete(page);
-              changed = true;
-            }
+            visiblePages.delete(page);
           }
-        }
+
+          if (wasVisible !== entry.isIntersecting) {
+            changed = true;
+          }
+        });
+
         if (changed && onvisiblepages) {
           onvisiblepages(Array.from(visiblePages).sort((a, b) => a - b));
         }
       },
-      { rootMargin: "1200px 0px" }
+      { rootMargin: "1200px 0px" },
     );
     return () => observer?.disconnect();
   });
@@ -97,7 +100,11 @@
   function trackPage(node: HTMLElement, page: number) {
     node.dataset.page = page.toString();
     observer?.observe(node);
-    return { destroy() { observer?.unobserve(node); } };
+    return {
+      destroy() {
+        observer?.unobserve(node);
+      },
+    };
   }
 </script>
 
@@ -113,8 +120,14 @@
         {#snippet icon()}
           <Folder size={28} />
         {/snippet}
+
         {#snippet action()}
-          <div class="transition-transform duration-300 {expandedVolumeId === volume.id ? 'rotate-180' : ''}">
+          <div
+            class="transition-transform duration-300 {expandedVolumeId ===
+            volume.id
+              ? 'rotate-180'
+              : ''}"
+          >
             <ChevronDown size={20} />
           </div>
         {/snippet}
@@ -122,24 +135,27 @@
 
       {#if expandedVolumeId === volume.id}
         {@const totalPages = Math.ceil(volume.totalChapters / pageSize)}
-        
+
         <div transition:slide class="ml-10 border-l border-surface/30 p-4 pt-0">
           <div class="w-full flex flex-col">
             {#if volume.totalChapters > 0}
               {#each Array(totalPages) as _, pageIndex}
-                {@const blockData = pagesData.find(p => p.page === pageIndex)}
-                {@const itemsInThisPage = pageIndex === totalPages - 1 ? (volume.totalChapters % pageSize || pageSize) : pageSize}
-                
-                <div 
+                {@const blockData = pagesData.find((p) => p.page === pageIndex)}
+                {@const itemsInThisPage =
+                  pageIndex === totalPages - 1
+                    ? volume.totalChapters % pageSize || pageSize
+                    : pageSize}
+
+                <div
                   use:trackPage={pageIndex}
                   class="w-full relative"
                   style:height="{itemsInThisPage * ITEM_HEIGHT}px"
                 >
                   {#if blockData && blockData.items.length > 0}
-                    {#each blockData.items as chapter, i (chapter.id)}
-                      <div 
+                    {#each blockData.items as chapter, index (chapter.id)}
+                      <div
                         class="absolute left-0 right-0 animate-in fade-in duration-300"
-                        style:top="{i * ITEM_HEIGHT}px"
+                        style:top="{index * ITEM_HEIGHT}px"
                         style:height="{BUTTON_HEIGHT}px"
                       >
                         <AcerolaHeroButton
@@ -148,12 +164,21 @@
                           class="bg-mantle/40 border-surface/40 hover:bg-surface/30 h-full flex-nowrap overflow-hidden"
                         >
                           {#snippet icon()}
-                            <div class={chapter.isRead ? "text-overlay" : "text-primary"}>
+                            <div
+                              class={chapter.isRead
+                                ? "text-overlay"
+                                : "text-primary"}
+                            >
                               <BookOpen size={24} />
                             </div>
                           {/snippet}
+
                           {#snippet action()}
-                            <AcerolaButtonIcon variant="ghost" size="sm" class="text-overlay hover:text-primary">
+                            <AcerolaButtonIcon
+                              variant="ghost"
+                              size="sm"
+                              class="text-overlay hover:text-primary"
+                            >
                               <MoreVertical size={20} />
                             </AcerolaButtonIcon>
                           {/snippet}
@@ -170,10 +195,12 @@
                 <RefreshCw size={24} class="animate-spin text-primary" />
               </div>
             {/if}
-            
+
             {#if volume.totalChapters === 0 && !loading}
-              <p class="py-4 text-center text-xs opacity-50 uppercase font-black tracking-widest">
-                  Nenhum capítulo disponível.
+              <p
+                class="py-4 text-center text-xs opacity-50 uppercase font-black tracking-widest"
+              >
+                Nenhum capítulo disponível.
               </p>
             {/if}
           </div>
@@ -181,9 +208,13 @@
       {/if}
     {/each}
   {:else}
-    <div class="py-20 text-center opacity-50 space-y-4 border-2 border-dashed border-surface rounded-3xl">
+    <div
+      class="py-20 text-center opacity-50 space-y-4 border-2 border-dashed border-surface rounded-3xl"
+    >
       <RefreshCw size={48} class="animate-spin text-primary" />
-      <p class="font-black uppercase tracking-widest text-sm">Nenhum volume indexado ainda.</p>
+      <p class="font-black uppercase tracking-widest text-sm">
+        Nenhum volume indexado ainda.
+      </p>
     </div>
   {/if}
 </div>
