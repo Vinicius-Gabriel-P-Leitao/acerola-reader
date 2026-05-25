@@ -10,7 +10,7 @@
 	import { LANGUAGES } from '$lib/constants/languages';
 	import { m } from '$lib/paraglide/messages';
 
-	import { useComicInfoPreference } from '$lib/hooks/store/use-comic-info-preference.svelte';
+	import { useComicInfoPreference } from '$lib/hooks/preferences/use-comic-info.svelte';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';

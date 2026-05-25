@@ -1,17 +1,23 @@
 <script lang="ts">
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
+
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
-	import { STORE_FILE, STORE_KEYS } from '$lib/constants/store-plugin';
+
+	import { useChaptersPerPage } from '$lib/hooks/preferences/use-chapters-per-page.svelte';
+	import { useVolumeViewMode } from '$lib/hooks/preferences/use-volume-view-mode.svelte';
 	import { useComicChapters } from '$lib/hooks/store/use-comic-chapters.svelte';
+
 	import { useComicContext } from '$lib/state/comic-context.svelte';
+
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
+
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import { load } from '@tauri-apps/plugin-store';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+
 	import { onMount, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import ComicChapterList from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
 	import ComicMetadataPanel from './components/comic-metadata-panel.svelte';
@@ -20,74 +26,65 @@
 
 	let { data } = $props();
 
+	const activeComic = useComicContext();
+	const chapterStore = useComicChapters();
+
+	const chaptersPreference = useChaptersPerPage();
+	const volumeViewPreference = useVolumeViewMode();
+
 	let expandedVolumeId = $state<string | null>(null);
-	let chaptersPerPage = $state(data.initialChaptersPerPage || '25');
+
 	let activeTab = $state('content');
 	let displayMode = $state('Lista');
-	let volumeViewMode = $state<'cover' | 'banner'>(data.initialVolumeViewMode || 'cover');
 	let mediaType = $state('Manga');
 	let isAscending = $state(true);
 	let searchQuery = $state('');
 
+	let visiblePages = $state<number[]>([]);
+
 	const onBack = () => window.history.back();
 
-	const activeComic = useComicContext();
-	const chapterStore = useComicChapters();
-
-	onMount(() => {
+	onMount(async () => {
 		if (!activeComic.item && data.comic) {
 			activeComic.set(data.comic, resolveCover(data.comic.artwork));
 		}
+
+		await Promise.all([
+			chaptersPreference.loadChaptersPerPage(),
+			volumeViewPreference.loadVolumeViewMode()
+		]);
 	});
 
 	$effect(() => {
-		const vol = expandedVolumeId;
-		const comic = activeComic.item ?? data.comic;
-		untrack(() => {
-			visiblePages = [];
+		const value = chaptersPreference.chaptersPerPage;
 
-			// Se apenas mudamos de volume no mesmo mangá, mantemos metadados para não dar flicker
-			chapterStore.clear(true);
-			if (comic) {
-				chapterStore.fetch(
-					comic.relations.directoryId,
-					0,
-					parseInt(chaptersPerPage),
-					isAscending,
-					vol
-				);
-			}
+		untrack(() => {
+			chaptersPreference.saveChaptersPerPage(value);
 		});
 	});
 
 	$effect(() => {
-		const savePreference = async () => {
-			const store = await load(STORE_FILE);
+		const value = volumeViewPreference.volumeViewMode;
 
-			// Somente salva se realmente houve mudança para não causar loops ou acessos de UI desnecessários
-			const savedChapters = await store.get<string>(STORE_KEYS.chaptersPerPage);
-			const savedVolumeView = await store.get<'cover' | 'banner'>(STORE_KEYS.volumeViewMode);
-
-			let shouldSave = false;
-
-			if (savedChapters !== chaptersPerPage) {
-				await store.set(STORE_KEYS.chaptersPerPage, chaptersPerPage);
-				shouldSave = true;
-			}
-
-			if (savedVolumeView !== volumeViewMode) {
-				await store.set(STORE_KEYS.volumeViewMode, volumeViewMode);
-				shouldSave = true;
-			}
-
-			if (shouldSave) {
-				await store.save();
-			}
-		};
-		savePreference();
+		untrack(() => {
+			volumeViewPreference.saveVolumeViewMode(value);
+		});
 	});
 
-	let visiblePages = $state<number[]>([]);
+	$effect(() => {
+		const volumeId = expandedVolumeId;
+
+		const comic = activeComic.item ?? data.comic;
+		if (!comic) return;
+
+		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
+
+		untrack(() => {
+			visiblePages = [];
+			chapterStore.clear(true);
+			chapterStore.fetch(comic.relations.directoryId, 0, pageSize, isAscending, volumeId);
+		});
+	});
 
 	$effect(() => {
 		if (chapterStore.loading || visiblePages.length === 0) return;
@@ -96,59 +93,58 @@
 		if (!comic) return;
 
 		for (const page of visiblePages) {
-			if (chapterStore.lruKeys.includes(page)) chapterStore.touch(page);
+			if (chapterStore.lruKeys.includes(page)) {
+				chapterStore.touch(page);
+			}
 		}
 
 		const missingPages = visiblePages.filter((page) => !chapterStore.lruKeys.includes(page));
 
-		if (missingPages.length > 0) {
-			untrack(() => {
-				chapterStore.fetch(
-					comic.relations.directoryId,
-					missingPages[0],
+		if (missingPages.length === 0) return;
 
-					parseInt(chaptersPerPage),
-
-					isAscending,
-					expandedVolumeId
-				);
-			});
-		}
+		untrack(() => {
+			chapterStore.fetch(
+				comic.relations.directoryId,
+				missingPages[0],
+				parseInt(chaptersPreference.chaptersPerPage),
+				isAscending,
+				expandedVolumeId
+			);
+		});
 	});
 
 	const manga = $derived.by(() => {
 		const item = activeComic.item ?? data.comic;
 		if (!item) return null;
 
-		const pageSize = parseInt(chaptersPerPage);
 		const chaptersData = chapterStore.chapters;
 		const totalItems = chaptersData?.archive.total ?? 0;
+		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
 
 		const pagesData = (chaptersData?.pages ?? []).map((it) => ({
 			page: it.page,
+
 			items: it.items
 				.filter((comic) => {
-					// prettier-ignore
 					const matchesSearch = comic.name.toLowerCase().includes(searchQuery.toLowerCase());
-					// prettier-ignore
 					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
-
 					return matchesSearch && matchesVolume;
 				})
+
 				.map((comic) => ({
 					id: comic.id.toString(),
 					title: comic.name,
 					fileName: comic.name,
-					isRead: false, // TODO: Isso vai vim do historico
+					isRead: false,
 					chapterSort: comic.chapterSort,
 					volumeName: comic.volumeName
 				}))
 		}));
 
-		// Mantemos volumes com info básica, mas chapters reais virão de pagesData filtrado por volume
 		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
 			const volCover = volume.coverUri ? resolveArtworkPath(volume.coverUri) : null;
 			const volBanner = volume.bannerUri ? resolveArtworkPath(volume.bannerUri) : null;
+
 			const fallbackCover = resolveCover(item.artwork);
 			const fallbackBanner = resolveBanner(item.artwork);
 
@@ -167,14 +163,15 @@
 
 		return {
 			id: item.relations.directoryId.toString(),
-			chaptersCount: totalItems,
 			title: item.metadata.title || item.filesystem.folderName,
+			chaptersCount: totalItems,
 			cover: resolveCover(item.artwork),
 			banner: resolveBanner(item.artwork),
 			pagesData,
 			volumes,
 			pageSize,
 			metadata: {
+				// FIXME: Gerar tradução.
 				description: 'Descrição indisponível.',
 				author: 'Autor Desconhecido',
 				status: 'Desconhecido',
@@ -198,6 +195,8 @@
 				referrerpolicy="no-referrer"
 				class="h-full w-full scale-150 object-cover opacity-20 blur-[120px]"
 			/>
+
+			<!-- NOTE: Aqui é onde os dados são injetados no banner -->
 			<div class="absolute inset-0 bg-base/40"></div>
 		</div>
 
@@ -211,6 +210,7 @@
 			cover={manga.cover}
 			{onBack}
 		/>
+
 		<div
 			class="scrollbar-hide relative z-10 flex flex-1 flex-col overflow-y-auto [overflow-anchor:none]"
 		>
@@ -220,6 +220,7 @@
 				<AcerolaButtonIcon onclick={onBack} size="sm">
 					<ArrowLeft size={20} />
 				</AcerolaButtonIcon>
+
 				<span class="max-w-50 truncate text-sm font-black tracking-widest uppercase">
 					{manga.title}
 				</span>
@@ -240,6 +241,7 @@
 								class="relative border-none bg-transparent py-6 text-sm font-black tracking-[0.2em] uppercase data-[state=on]:bg-transparent data-[state=on]:text-primary"
 							>
 								{chapterStore.chapters?.hasVolumeStructure ? 'Volumes' : 'Capítulos'}
+
 								{#if activeTab === 'content'}
 									<div
 										class="absolute right-0 bottom-0 left-0 h-1 rounded-full bg-primary"
@@ -253,13 +255,17 @@
 								class="relative border-none bg-transparent py-6 text-sm font-black tracking-[0.2em] uppercase data-[state=on]:bg-transparent data-[state=on]:text-primary"
 							>
 								Preferências
-								{#if activeTab === 'preferences'}<div
+
+								{#if activeTab === 'preferences'}
+									<div
 										class="absolute right-0 bottom-0 left-0 h-1 rounded-full bg-primary"
 										in:fade
-									></div>{/if}
+									></div>
+								{/if}
 							</ToggleGroupItem>
 						{/snippet}
 					</AcerolaToggleGroup>
+
 					{#if activeTab === 'content' && !chapterStore.chapters?.hasVolumeStructure}
 						<div class="flex items-center gap-2 pr-4">
 							<input
@@ -271,6 +277,7 @@
 						</div>
 					{/if}
 				</div>
+
 				<div class="min-h-150">
 					{#if activeTab === 'content'}
 						{#if chapterStore.chapters?.hasVolumeStructure}
@@ -279,7 +286,7 @@
 								pagesData={manga.pagesData}
 								loading={chapterStore.loading}
 								pageSize={manga.pageSize}
-								viewMode={volumeViewMode}
+								viewMode={volumeViewPreference.volumeViewMode}
 								onexpand={(v) => (expandedVolumeId = v)}
 								onvisiblepages={(p) => (visiblePages = p)}
 							/>
@@ -294,9 +301,9 @@
 					{:else if activeTab === 'preferences'}
 						<ComicPreferences
 							bind:displayMode
-							bind:chaptersPerPage
 							bind:mediaType
-							bind:volumeViewMode
+							bind:chaptersPerPage={chaptersPreference.chaptersPerPage}
+							bind:volumeViewMode={volumeViewPreference.volumeViewMode}
 							hasVolumeStructure={chapterStore.chapters?.hasVolumeStructure ?? false}
 						/>
 					{/if}

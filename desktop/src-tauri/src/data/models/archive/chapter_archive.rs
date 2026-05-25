@@ -75,15 +75,16 @@ impl ChapterArchive {
             .map(|start_index| {
                 file_name[start_index..]
                     .chars()
-                    .scan(false, |has_decimal_separator, current_char| {
-                        match current_char {
-                            digit if digit.is_ascii_digit() => Some(digit),
-                            separator if (separator == '.' || separator == ',') && !*has_decimal_separator => {
-                                *has_decimal_separator = true;
-                                Some('.')
-                            }
-                            _ => None,
-                        }
+                    .scan(false, |has_decimal_separator, current_char| match current_char {
+                        digit if digit.is_ascii_digit() => Some(digit),
+                        separator
+                            if (separator == '.' || separator == ',')
+                                && !*has_decimal_separator =>
+                        {
+                            *has_decimal_separator = true;
+                            Some('.')
+                        },
+                        _ => None,
                     })
                     .collect::<String>()
                     .trim_end_matches('.')

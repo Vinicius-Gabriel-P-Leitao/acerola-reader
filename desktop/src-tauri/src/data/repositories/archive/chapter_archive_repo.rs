@@ -46,10 +46,11 @@ impl ChapterRepository {
     }
 
     pub async fn count_by_directory_id(&self, comic_directory_fk: i64) -> Result<i64, DbError> {
-        let result = sqlx::query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = ?")
-            .bind(comic_directory_fk)
-            .fetch_one(&self.pool)
-            .await?;
+        let result =
+            sqlx::query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = ?")
+                .bind(comic_directory_fk)
+                .fetch_one(&self.pool)
+                .await?;
         Ok(result.get(0))
     }
 
@@ -99,7 +100,7 @@ impl ChapterRepository {
                     END AS INTEGER
                 ) ASC,
                 (ca.is_special OR COALESCE(va.is_special, 0)) ASC
-             LIMIT ? OFFSET ?"
+             LIMIT ? OFFSET ?",
         )
         .bind(comic_directory_fk)
         .bind(page_size)
@@ -140,7 +141,7 @@ impl ChapterRepository {
                     END AS INTEGER
                 ) DESC,
                 (ca.is_special OR COALESCE(va.is_special, 0)) ASC
-             LIMIT ? OFFSET ?"
+             LIMIT ? OFFSET ?",
         )
         .bind(comic_directory_fk)
         .bind(page_size)
@@ -173,7 +174,7 @@ impl ChapterRepository {
                     END AS INTEGER
                 ) ASC,
                 (ca.is_special OR COALESCE(va.is_special, 0)) ASC
-             LIMIT ? OFFSET ?"
+             LIMIT ? OFFSET ?",
         )
         .bind(comic_directory_fk)
         .bind(volume_id_fk)
@@ -207,7 +208,7 @@ impl ChapterRepository {
                     END AS INTEGER
                 ) DESC,
                 (ca.is_special OR COALESCE(va.is_special, 0)) ASC
-             LIMIT ? OFFSET ?"
+             LIMIT ? OFFSET ?",
         )
         .bind(comic_directory_fk)
         .bind(volume_id_fk)
@@ -258,7 +259,9 @@ impl ChapterRepository {
 mod tests {
     use super::{ChapterArchive, ChapterRepository};
     use crate::infra::error::DbError;
-    use crate::tests::utils::setup_test_db::{setup_test_db_with_comic, setup_test_db_with_volumes};
+    use crate::tests::utils::setup_test_db::{
+        setup_test_db_with_comic, setup_test_db_with_volumes,
+    };
 
     fn chapter(id: i64, chapter_sort: &str) -> ChapterArchive {
         ChapterArchive {
@@ -358,7 +361,10 @@ mod tests {
         let repo = ChapterRepository::new(pool);
         repo.base.insert(&chapter(1, "1")).await.unwrap();
         repo.base.insert(&chapter(2, "2")).await.unwrap();
-        repo.base.insert(&ChapterArchive { id: 3, volume_id_fk: Some(1), ..chapter(3, "3") }).await.unwrap();
+        repo.base
+            .insert(&ChapterArchive { id: 3, volume_id_fk: Some(1), ..chapter(3, "3") })
+            .await
+            .unwrap();
 
         assert_eq!(repo.count_by_directory_id(1).await.unwrap(), 3);
         assert_eq!(repo.count_root_chapters(1).await.unwrap(), 2);
@@ -369,10 +375,19 @@ mod tests {
     async fn teste_get_chapters_by_directory_paged_com_volumes() {
         let pool = setup_test_db_with_volumes().await;
         let repo = ChapterRepository::new(pool);
-        
-        repo.base.insert(&ChapterArchive { id: 1, volume_id_fk: Some(2), ..chapter(1, "1") }).await.unwrap();
-        repo.base.insert(&ChapterArchive { id: 2, volume_id_fk: Some(1), ..chapter(2, "2") }).await.unwrap();
-        repo.base.insert(&ChapterArchive { id: 3, volume_id_fk: None, ..chapter(3, "0.5") }).await.unwrap();
+
+        repo.base
+            .insert(&ChapterArchive { id: 1, volume_id_fk: Some(2), ..chapter(1, "1") })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&ChapterArchive { id: 2, volume_id_fk: Some(1), ..chapter(2, "2") })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&ChapterArchive { id: 3, volume_id_fk: None, ..chapter(3, "0.5") })
+            .await
+            .unwrap();
 
         // Ordem ASC: Volume NULL (sort '0') -> Volume 1 -> Volume 2
         let result = repo.get_chapters_by_directory_paged(1, 10, 0).await.unwrap();
@@ -392,10 +407,19 @@ mod tests {
     async fn teste_get_chapters_by_volume_paged() {
         let pool = setup_test_db_with_volumes().await;
         let repo = ChapterRepository::new(pool);
-        
-        repo.base.insert(&ChapterArchive { id: 1, volume_id_fk: Some(1), ..chapter(1, "1") }).await.unwrap();
-        repo.base.insert(&ChapterArchive { id: 2, volume_id_fk: Some(1), ..chapter(2, "2") }).await.unwrap();
-        repo.base.insert(&ChapterArchive { id: 3, volume_id_fk: Some(2), ..chapter(3, "3") }).await.unwrap();
+
+        repo.base
+            .insert(&ChapterArchive { id: 1, volume_id_fk: Some(1), ..chapter(1, "1") })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&ChapterArchive { id: 2, volume_id_fk: Some(1), ..chapter(2, "2") })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&ChapterArchive { id: 3, volume_id_fk: Some(2), ..chapter(3, "3") })
+            .await
+            .unwrap();
 
         let result = repo.get_chapters_by_volume_paged(1, 1, 10, 0).await.unwrap();
         assert_eq!(result.len(), 2);
@@ -421,7 +445,7 @@ mod tests {
         repo.base.insert(&chapter(1, "001")).await.unwrap();
         let result = repo.base.insert(&chapter(1, "001")).await;
 
-        assert!(    
+        assert!(
             matches!(result, Err(DbError::UniqueViolation)),
             "Deveria ter retornado UniqueViolation, mas veio: {:?}",
             result

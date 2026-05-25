@@ -34,11 +34,11 @@
 >
 	<div class="flex h-full flex-col p-10">
 		<AcerolaButtonIcon onclick={onBack} class="group mb-10 shadow-lg">
-			<ArrowLeft size={24} class="transition-transform group-hover:-translate-x-1" />
+			<ArrowLeft size={24} />
 		</AcerolaButtonIcon>
 
 		<div
-			class="scrollbar-hide flex flex-1 flex-col items-center space-y-6 overflow-y-auto text-center"
+			class="scrollbar-hide flex flex-1 flex-col items-center space-y-6 overflow-y-auto pt-3 text-center"
 		>
 			<AcerolaCardImage
 				data={{

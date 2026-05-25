@@ -124,9 +124,7 @@ mod tests {
 
     #[test]
     fn regex_template_valido_compila() {
-        assert!(
-            template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).is_ok()
-        );
+        assert!(template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).is_ok());
     }
 
     #[test]
@@ -154,8 +152,7 @@ mod tests {
 
     #[test]
     fn regex_bate_arquivo_ch() {
-        let re =
-            template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).unwrap();
+        let re = template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).unwrap();
         assert!(re.is_match("Ch. 1.cbz"));
         assert!(re.is_match("Ch. 10.5.cbz"));
         assert!(!re.is_match("Oneshot.cbz"));
@@ -210,10 +207,7 @@ mod tests {
     #[test]
     fn extrai_chapter_inteiro() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
-        assert_eq!(
-            extract_chapter_parts("Ch. 5.cbz", template, no_validate),
-            Some((5, None))
-        );
+        assert_eq!(extract_chapter_parts("Ch. 5.cbz", template, no_validate), Some((5, None)));
     }
 
     #[test]
@@ -228,19 +222,13 @@ mod tests {
     #[test]
     fn extrai_chapter_numerico() {
         let template = "{chapter}{decimal}.*.{extension}";
-        assert_eq!(
-            extract_chapter_parts("001.cbz", template, no_validate),
-            Some((1, None))
-        );
+        assert_eq!(extract_chapter_parts("001.cbz", template, no_validate), Some((1, None)));
     }
 
     #[test]
     fn extrai_volume_inteiro() {
         let template = "Vol. {volume}{decimal}";
-        assert_eq!(
-            extract_chapter_parts("Vol. 3", template, no_validate),
-            Some((3, None))
-        );
+        assert_eq!(extract_chapter_parts("Vol. 3", template, no_validate), Some((3, None)));
     }
 
     #[test]

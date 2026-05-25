@@ -27,7 +27,9 @@ impl VolumeRepository {
         Self { base: Repository::new(pool.clone()), pool }
     }
 
-    pub async fn find_by_comic(&self, comic_directory_fk: i64) -> Result<Vec<VolumeArchive>, DbError> {
+    pub async fn find_by_comic(
+        &self, comic_directory_fk: i64,
+    ) -> Result<Vec<VolumeArchive>, DbError> {
         let cols = VolumeArchive::columns().join(", ");
         let result = sqlx::query_as::<_, VolumeArchive>(&format!(
             "SELECT {} FROM volume_archive WHERE comic_directory_fk = ? ORDER BY CAST(volume_sort AS INTEGER) ASC",
@@ -40,7 +42,9 @@ impl VolumeRepository {
         Ok(result)
     }
 
-    pub async fn find_by_comic_with_counts(&self, comic_directory_fk: i64) -> Result<Vec<VolumeWithCount>, DbError> {
+    pub async fn find_by_comic_with_counts(
+        &self, comic_directory_fk: i64,
+    ) -> Result<Vec<VolumeWithCount>, DbError> {
         let result = sqlx::query_as::<_, VolumeWithCount>(
             "SELECT 
                 va.*,
@@ -58,7 +62,7 @@ impl VolumeRepository {
                         THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
                         ELSE 0 
                     END AS INTEGER
-                ) ASC"
+                ) ASC",
         )
         .bind(comic_directory_fk)
         .fetch_all(&self.pool)
@@ -125,8 +129,16 @@ mod tests {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
-        repo.base.insert(&VolumeArchive { id: 2, name: "Vol. 02".to_string(), volume_sort: "2".to_string(), ..vol1() }).await.unwrap();
-        
+        repo.base
+            .insert(&VolumeArchive {
+                id: 2,
+                name: "Vol. 02".to_string(),
+                volume_sort: "2".to_string(),
+                ..vol1()
+            })
+            .await
+            .unwrap();
+
         let volumes = repo.find_by_comic(1).await.unwrap();
         assert_eq!(volumes.len(), 2);
         assert_eq!(volumes[0].volume_sort, "1");

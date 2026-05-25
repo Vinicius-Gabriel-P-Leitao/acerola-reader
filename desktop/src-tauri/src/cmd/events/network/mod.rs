@@ -34,8 +34,7 @@ pub struct NetworkStatusPayload {
 
 impl NetworkStatusPayload {
     pub fn from(
-        mode: NetworkMode,
-        peers: Vec<(peer::PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>)>,
+        mode: NetworkMode, peers: Vec<(peer::PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>)>,
     ) -> Self {
         let mode_str = match mode {
             NetworkMode::Local => "local",

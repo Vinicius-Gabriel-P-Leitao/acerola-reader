@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Folder from '@lucide/svelte/icons/folder';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+
 	import { cn } from '$lib/utils/cn.utils';
+	import { AspectRatio } from '$lib/components/ui/aspect-ratio';
 
 	let {
 		title,
@@ -22,40 +24,50 @@
 	} = $props();
 
 	const activeBanner = $derived(viewMode === 'banner' ? bannerUri || coverUri : null);
-	const activeCover = $derived(viewMode === 'cover' ? coverUri || bannerUri : null);
+	const activeCover = $derived(coverUri || bannerUri);
 </script>
 
 <button
 	{onclick}
-	class="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-3xl border border-surface/40 bg-mantle/40 p-6 text-left transition-colors hover:border-primary/50"
+	class="group relative flex w-full items-center justify-between overflow-hidden rounded-3xl border border-surface/40 bg-mantle/50 p-5 text-left transition-all duration-300 hover:border-primary/50 hover:bg-mantle/70"
 >
 	{#if activeBanner}
-		<div class="pointer-events-none absolute inset-0 z-0">
+		<div class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
 			<img
 				src={activeBanner}
 				alt={title}
-				class="h-full w-full object-cover opacity-30 transition-opacity group-hover:opacity-50"
+				class="h-full w-full scale-105 object-cover opacity-20 blur-[2px] transition-all duration-300 group-hover:scale-110 group-hover:opacity-30"
 			/>
-			<div class="absolute inset-0 bg-linear-to-r from-mantle via-mantle/80 to-transparent"></div>
+
+			<div class="absolute inset-0 bg-linear-to-r from-mantle via-mantle/90 to-transparent"></div>
 		</div>
 	{/if}
 
-	<div class="relative z-10 flex items-center gap-4">
-		{#if viewMode === 'cover' || (viewMode === 'banner' && !activeBanner)}
-			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-foreground transition-colors group-hover:text-primary"
-			>
+	<div class="relative z-10 flex min-w-0 items-center gap-4">
+		<div class="w-18 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-muted">
+			<AspectRatio ratio={2 / 3}>
 				{#if activeCover}
-					<img src={activeCover} alt={title} class="h-full w-full object-cover" />
+					<img
+						src={activeCover}
+						alt={title}
+						class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+					/>
 				{:else}
-					<Folder size={28} />
+					<div class="flex h-full w-full items-center justify-center">
+						<Folder size={28} />
+					</div>
 				{/if}
-			</div>
-		{/if}
+			</AspectRatio>
+		</div>
 
-		<div>
-			<h3 class="text-lg font-bold text-foreground">{title}</h3>
-			<p class="text-sm text-muted-foreground">{totalChapters} Capítulos inclusos</p>
+		<div class="min-w-0">
+			<h3 class="line-clamp-1 text-lg font-bold text-foreground">
+				{title}
+			</h3>
+
+			<p class="text-sm text-muted-foreground">
+				{totalChapters} capítulos inclusos
+			</p>
 		</div>
 	</div>
 

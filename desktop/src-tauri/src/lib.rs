@@ -94,8 +94,7 @@ mod app_bootstrap {
 
         let transport = IrohTransportBuilder::default()
             .seed(*b"acerola-desktop-seed-v1-00000000")
-            .relay("https://relay.acerola-comic.com")
-            ;
+            .relay("https://relay.acerola-comic.com");
 
         let device = DefaultDeviceInfoProvider::new("0.0.1-beta")
             .provide()

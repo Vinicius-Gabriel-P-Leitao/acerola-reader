@@ -67,13 +67,7 @@ impl ScannerEngine {
             let should_emit = !files.is_empty() || child_found;
 
             if should_emit {
-                let _ = tx
-                    .send(DirectoryEntry {
-                        directory: path.clone(),
-                        files,
-                        subdirs,
-                    })
-                    .await;
+                let _ = tx.send(DirectoryEntry { directory: path.clone(), files, subdirs }).await;
             }
 
             Ok(should_emit)
@@ -135,7 +129,7 @@ mod tests {
         // Esperamos 3 entradas: root, Berserk e HQ
         // root é emitido porque seus filhos têm arquivos.
         assert_eq!(entries.len(), 3);
-        
+
         let paths: Vec<_> = entries.iter().map(|e| e.directory.clone()).collect();
         assert!(paths.contains(&root.path().to_path_buf()));
         assert!(paths.contains(&berserk));

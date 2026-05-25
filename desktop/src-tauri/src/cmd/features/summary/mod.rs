@@ -1,6 +1,9 @@
 use crate::{
-    cmd::events::{shared::ErrorPayload, summary::{ComicSummaryPayload, ComicSummaryItem}},
-    core::services::summary::{HomeService, ChapterService},
+    cmd::events::{
+        shared::ErrorPayload,
+        summary::{ComicSummaryItem, ComicSummaryPayload},
+    },
+    core::services::summary::{ChapterService, HomeService},
 };
 
 use sqlx::SqlitePool;
@@ -26,11 +29,10 @@ pub async fn get_comic_summary(app: AppHandle, pool: State<'_, SqlitePool>) -> R
 
 #[tauri::command]
 pub async fn get_comic_by_folder_name(
-    folder_name: String,
-    pool: State<'_, SqlitePool>
+    folder_name: String, pool: State<'_, SqlitePool>,
 ) -> Result<Option<ComicSummaryItem>, String> {
     let service = HomeService::new(pool.inner().clone());
-    
+
     match service.get_by_folder_name(&folder_name).await {
         Ok(Some((view, count))) => Ok(Some(ComicSummaryItem::from_view(view, count))),
         Ok(None) => Ok(None),
@@ -40,18 +42,14 @@ pub async fn get_comic_by_folder_name(
 
 #[tauri::command]
 pub async fn get_comic_chapters(
-    comic_directory_fk: String, 
-    volume_id: Option<String>,
-    page: i32, 
-    page_size: i32, 
-    asc: bool,
-    app: AppHandle, 
-    pool: State<'_, SqlitePool>,
+    comic_directory_fk: String, volume_id: Option<String>, page: i32, page_size: i32, asc: bool,
+    app: AppHandle, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
     tracing::info!("[get_comic_chapters] Called for comic_directory_fk={}, volume_id={:?}, page={}, page_size={}, asc={}", comic_directory_fk, volume_id, page, page_size, asc);
 
-    let comic_directory_id = comic_directory_fk.parse::<i64>().map_err(|error| error.to_string())?;
+    let comic_directory_id =
+        comic_directory_fk.parse::<i64>().map_err(|error| error.to_string())?;
     let volume_id_filter = if let Some(vid) = volume_id {
         Some(vid.parse::<i64>().map_err(|error| error.to_string())?)
     } else {
@@ -61,9 +59,15 @@ pub async fn get_comic_chapters(
     tokio::spawn(async move {
         let service = ChapterService::new(pool);
 
-        match service.get_comic_chapters(comic_directory_id, volume_id_filter, page, page_size, asc).await {
+        match service
+            .get_comic_chapters(comic_directory_id, volume_id_filter, page, page_size, asc)
+            .await
+        {
             Ok(data) => {
-                tracing::info!("[get_comic_chapters] Success, emitting comic:chapters with {} items", data.archive.items.len());
+                tracing::info!(
+                    "[get_comic_chapters] Success, emitting comic:chapters with {} items",
+                    data.archive.items.len()
+                );
                 app.emit("comic:chapters", data).unwrap();
             },
             Err(err) => {

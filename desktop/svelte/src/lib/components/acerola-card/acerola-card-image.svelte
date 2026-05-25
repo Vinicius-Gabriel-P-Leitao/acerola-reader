@@ -48,52 +48,54 @@
 >
 	<AspectRatio
 		ratio={2 / 3}
-		class="overflow-hidden rounded-xl bg-surface shadow-lg transition-shadow duration-300 group-hover:shadow-2xl group-hover:shadow-primary/20"
+		class="rounded-xl bg-surface shadow-lg transition-shadow duration-300 group-hover:shadow-2xl group-hover:shadow-primary/20"
 	>
-		<button
-			type="button"
-			class="relative h-full w-full cursor-pointer text-left"
-			onclick={events?.onClick}
-		>
-			{#if data.cover}
-				<img
-					src={data.cover}
-					alt={data.title}
-					class="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
-				/>
-			{:else if placeholder}
-				{@render placeholder()}
-			{:else}
-				<div
-					class="flex h-full w-full items-center justify-center bg-surface text-muted-foreground"
-				>
-					<BookOpenIcon size={40} />
-				</div>
-			{/if}
-
-			<div
-				class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-crust via-crust/30 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+		<div class="h-full w-full overflow-hidden rounded-xl">
+			<button
+				type="button"
+				class="relative h-full w-full cursor-pointer text-left"
+				onclick={events?.onClick}
 			>
-				{#if overlay}
-					{@render overlay()}
-				{:else if data.description}
-					<p
-						class="line-clamp-3 translate-y-2 text-xs text-foreground transition-transform duration-300 group-hover:translate-y-0"
-					>
-						{data.description}
-					</p>
-				{/if}
-			</div>
-
-			{#if data.progress !== undefined}
-				<div class="absolute bottom-0 left-0 h-1 w-full bg-surface">
+				{#if data.cover}
+					<img
+						src={data.cover}
+						alt={data.title}
+						class="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+					/>
+				{:else if placeholder}
+					{@render placeholder()}
+				{:else}
 					<div
-						class="h-full bg-primary transition-all duration-500"
-						style={`width:${Math.min(100, Math.max(0, data.progress))}%`}
-					></div>
+						class="flex h-full w-full items-center justify-center bg-surface text-muted-foreground"
+					>
+						<BookOpenIcon size={40} />
+					</div>
+				{/if}
+
+				<div
+					class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-crust via-crust/30 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+				>
+					{#if overlay}
+						{@render overlay()}
+					{:else if data.description}
+						<p
+							class="line-clamp-3 translate-y-2 text-xs text-foreground transition-transform duration-300 group-hover:translate-y-0"
+						>
+							{data.description}
+						</p>
+					{/if}
 				</div>
-			{/if}
-		</button>
+
+				{#if data.progress !== undefined}
+					<div class="absolute bottom-0 left-0 h-1 w-full bg-surface">
+						<div
+							class="h-full bg-primary transition-all duration-500"
+							style={`width:${Math.min(100, Math.max(0, data.progress))}%`}
+						></div>
+					</div>
+				{/if}
+			</button>
+		</div>
 	</AspectRatio>
 
 	<div class="mt-3 flex items-start justify-between gap-2 px-1">

@@ -1,8 +1,6 @@
 use std::path::Path;
 
-use crate::infra::{
-    error::FileError, pattern::archive_format::ArchiveFormat,
-};
+use crate::infra::{error::FileError, pattern::archive_format::ArchiveFormat};
 
 pub struct SupportedFileGuard;
 pub struct ArchiveFileGuard;
@@ -67,7 +65,7 @@ impl ArtworkFileGuard {
         if self.is_allowed(path).is_err() {
             return false;
         }
-        
+
         let name = path.file_name().and_then(|file_name| file_name.to_str()).unwrap_or("");
         matches!(name, "cover.png" | "cover.jpg" | "cover.jpeg")
     }
