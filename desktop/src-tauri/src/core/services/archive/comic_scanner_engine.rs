@@ -74,7 +74,7 @@ impl ComicScannerService {
             let directory = entry.directory.to_string_lossy().to_string();
 
             // Pula se o diretório atual for subdiretório de algum já processado como comic
-            if processed_paths.iter().any(|p| directory.starts_with(p) && directory != *p) {
+            if processed_paths.iter().any(|it| directory.starts_with(it) && directory != *it) {
                 continue;
             }
 
@@ -146,12 +146,12 @@ impl ComicScannerService {
             };
 
             let is_comic = if needs_processing {
-                let r = repo.clone();
+                let repository = repo.clone();
                 let was_processed = self.process_entry(entry, &templates, |comic| async move {
-                    match r.base.insert(&comic).await {
+                    match repository.base.insert(&comic).await {
                         Ok(saved) => Ok(saved),
                         Err(DbError::UniqueViolation) => {
-                            r.base.update(&comic).await.map_err(ComicError::from)
+                            repository.base.update(&comic).await.map_err(ComicError::from)
                         },
                         Err(err) => Err(ComicError::from(err)),
                     }
@@ -184,7 +184,7 @@ impl ComicScannerService {
 
         let templates = self.template_repo.base.find_all().await?;
         let mut entries = self.collect_entries(path).await?;
-        entries.sort_by_key(|e| e.directory.clone());
+        entries.sort_by_key(|entry| entry.directory.clone());
 
         let repo = self.comic_repo.clone();
         let mut processed_paths: Vec<String> = vec![];
@@ -261,28 +261,20 @@ impl ComicScannerService {
         let volume_templates: Vec<&ArchiveTemplate> =
             templates.iter().filter(|template| template.sort_type == SortType::Volume).collect();
 
-        let mut comic_files: Vec<PathBuf> = vec![];
-        let mut banner: Option<String> = None;
-        let mut cover: Option<String> = None;
+        let comic_cover = entry.files
+            .iter()
+            .find(|file| artwork_guard.is_cover(file))
+            .map(|file| file.to_string_lossy().to_string());
 
-        for file in entry.files {
-            let name = file.file_name().and_then(|name| name.to_str()).unwrap_or("");
+        let comic_banner = entry.files
+            .iter()
+            .find(|file| artwork_guard.is_banner(file))
+            .map(|file| file.to_string_lossy().to_string());
 
-            if archive_guard.is_allowed(&file).is_ok() {
-                comic_files.push(file);
-                continue;
-            }
-
-            if artwork_guard.is_allowed(&file).is_ok() && name.starts_with("cover.") {
-                cover = Some(file.to_string_lossy().to_string());
-                continue;
-            }
-
-            if artwork_guard.is_allowed(&file).is_ok() && name.starts_with("banner.") {
-                banner = Some(file.to_string_lossy().to_string());
-                continue;
-            }
-        }
+        let comic_files: Vec<PathBuf> = entry.files
+            .into_iter()
+            .filter(|file| archive_guard.is_allowed(file).is_ok())
+            .collect();
 
         // Subdiretórios candidatos a volume
         let volume_pattern_strs: Vec<&str> =
@@ -290,7 +282,7 @@ impl ComicScannerService {
 
         let mut matched_volumes = vec![];
         for subdir in &entry.subdirs {
-            let dir_name = subdir.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            let dir_name = subdir.file_name().and_then(|name| name.to_str()).unwrap_or("");
             if let Some(pattern) = detect_template(dir_name, &volume_pattern_strs, |_| Ok(())) {
                 matched_volumes.push((subdir, pattern));
             }
@@ -302,8 +294,8 @@ impl ComicScannerService {
         }
 
         let detected = self.detect_template_for(&comic_files, &chapter_templates);
-        let template_fk = detected.map(|t| t.id);
-        let template_pattern = detected.map(|t| t.pattern.as_str());
+        let template_fk = detected.map(|template| template.id);
+        let template_pattern = detected.map(|template| template.pattern.as_str());
 
         let dir_meta = fs::metadata(&entry.directory).await?;
         let dir_name = entry
@@ -317,8 +309,8 @@ impl ComicScannerService {
             id: path_hash(&entry.directory),
             name: dir_name,
             path: entry.directory.to_string_lossy().to_string(),
-            cover,
-            banner,
+            cover: comic_cover,
+            banner: comic_banner,
             last_modified: modified_secs(&dir_meta),
             archive_template_fk: template_fk,
             external_sync_enabled: false,
@@ -335,7 +327,7 @@ impl ComicScannerService {
         }
 
         for (subdir, pattern) in matched_volumes {
-            let dir_name = subdir.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            let dir_name = subdir.file_name().and_then(|name| name.to_str()).unwrap_or("");
 
             let volume_sort = extract_chapter_parts(dir_name, pattern, |_| Ok(()))
                 .map(|(vol, dec)| ChapterArchive::format_sort(vol, dec))
@@ -344,6 +336,23 @@ impl ComicScannerService {
             let subdir_meta = fs::metadata(subdir).await?;
             let is_special = crate::data::models::archive::chapter_archive::is_special_name(dir_name);
 
+            let volume_files = self.collect_files(subdir).await.unwrap_or_default();
+
+            let vol_cover = volume_files
+                .iter()
+                .find(|file| artwork_guard.is_cover(file))
+                .map(|file| file.to_string_lossy().to_string());
+
+            let vol_banner = volume_files
+                .iter()
+                .find(|file| artwork_guard.is_banner(file))
+                .map(|file| file.to_string_lossy().to_string());
+
+            let mut vol_archives: Vec<PathBuf> = volume_files
+                .into_iter()
+                .filter(|file| archive_guard.is_allowed(file).is_ok())
+                .collect();
+
             let volume_id = path_hash(subdir);
             let volume = VolumeArchive {
                 id: volume_id,
@@ -351,8 +360,8 @@ impl ComicScannerService {
                 path: subdir.to_string_lossy().to_string(),
                 volume_sort,
                 is_special,
-                cover: None,
-                banner: None,
+                cover: vol_cover,
+                banner: vol_banner,
                 comic_directory_fk: saved.id,
                 last_modified: modified_secs(&subdir_meta),
             };
@@ -362,8 +371,9 @@ impl ComicScannerService {
                 Err(err) => return Err(ComicError::from(err)),
             }
 
-            let vol_files = self.collect_archive_files(subdir).await?;
-            for (index, file) in vol_files.iter().enumerate() {
+            vol_archives.sort();
+
+            for (index, file) in vol_archives.iter().enumerate() {
                 self.chapter_scanner
                     .scan_chapter(file, index, saved.id, Some(volume_id), template_pattern)
                     .await?;
@@ -373,22 +383,18 @@ impl ComicScannerService {
         Ok(true)
     }
 
-    /// Coleta todos os arquivos de quadrinho dentro de um subdiretório de volume.
-    async fn collect_archive_files(&self, dir: &PathBuf) -> Result<Vec<PathBuf>, ComicError> {
-        let archive_guard = ArchiveFileGuard;
+    /// Coleta todos os arquivos dentro de um diretório.
+    async fn collect_files(&self, dir: &PathBuf) -> Result<Vec<PathBuf>, ComicError> {
         let mut entries = fs::read_dir(dir).await?;
         let mut files = vec![];
 
         while let Ok(Some(entry)) = entries.next_entry().await {
             let path = entry.path();
-            if entry.metadata().await.map(|meta| meta.is_file()).unwrap_or(false)
-                && archive_guard.is_allowed(&path).is_ok()
-            {
+            if entry.metadata().await.map(|meta| meta.is_file()).unwrap_or(false) {
                 files.push(path);
             }
         }
 
-        files.sort();
         Ok(files)
     }
 

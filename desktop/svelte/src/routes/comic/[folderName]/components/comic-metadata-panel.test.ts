@@ -7,7 +7,8 @@ describe('ComicMetadataPanel', () => {
 	const defaultProps = {
 		title: 'Test Manga',
 		author: 'Test Author',
-		category: 'Manga',
+		status: 'Ongoing',
+		source: 'LOCAL',
 		chaptersCount: 15,
 		description: 'Test description',
 		cover: 'https://test.com/cover.jpg',
@@ -18,7 +19,8 @@ describe('ComicMetadataPanel', () => {
 		render(ComicMetadataPanel, defaultProps);
 		expect(screen.getByRole('heading', { name: 'Test Manga', level: 1 })).toBeInTheDocument();
 		expect(screen.getByText('Test Author')).toBeInTheDocument();
-		expect(screen.getByText('Manga')).toBeInTheDocument();
+		expect(screen.getByText('Ongoing')).toBeInTheDocument();
+		expect(screen.getByText('LOCAL')).toBeInTheDocument();
 		expect(screen.getByText('15 Caps')).toBeInTheDocument();
 		expect(screen.getByText('Test description')).toBeInTheDocument();
 	});

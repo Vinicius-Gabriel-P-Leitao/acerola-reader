@@ -12,6 +12,8 @@
 		chapters: VolumeChapter[];
 		totalChapters: number;
 		hasMore: boolean;
+		coverUri?: string | null;
+		bannerUri?: string | null;
 	};
 
 	export type VolumePage = {
@@ -25,6 +27,7 @@
 	import { slide } from 'svelte/transition';
 	import AcerolaHeroButton from '$lib/components/acerola-hero-button/acerola-hero-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import ComicVolumeButton from './comic-volume-button.svelte';
 	import Folder from '@lucide/svelte/icons/folder';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import BookOpen from '@lucide/svelte/icons/book-open';
@@ -37,6 +40,7 @@
 		pagesData = [],
 		loading = false,
 		pageSize = 25,
+		viewMode = 'cover',
 		onexpand,
 		onvisiblepages
 	}: {
@@ -44,6 +48,7 @@
 		pagesData?: VolumePage[];
 		loading?: boolean;
 		pageSize?: number;
+		viewMode?: 'cover' | 'banner';
 		onexpand: (volumeId: string | null) => void;
 		onvisiblepages?: (pages: number[]) => void;
 	} = $props();
@@ -114,27 +119,15 @@
 <div class="space-y-4">
 	{#if volumes && volumes.length > 0}
 		{#each volumes as volume}
-			<AcerolaHeroButton
+			<ComicVolumeButton
 				title={volume.title}
-				description="{volume.totalChapters} Capítulos inclusos"
+				totalChapters={volume.totalChapters}
+				{viewMode}
+				coverUri={volume.coverUri}
+				bannerUri={volume.bannerUri}
+				isExpanded={expandedVolumeId === volume.id}
 				onclick={() => toggleVolume(volume.id)}
-				class="border-surface/40 bg-mantle/40"
-			>
-				{#snippet icon()}
-					<Folder size={28} />
-				{/snippet}
-
-				{#snippet action()}
-					<div
-						class={cn(
-							'transition-transform duration-300',
-							expandedVolumeId === volume.id && 'rotate-180'
-						)}
-					>
-						<ChevronDown size={20} />
-					</div>
-				{/snippet}
-			</AcerolaHeroButton>
+			/>
 
 			{#if expandedVolumeId === volume.id}
 				{@const totalPages = Math.ceil(volume.totalChapters / pageSize)}

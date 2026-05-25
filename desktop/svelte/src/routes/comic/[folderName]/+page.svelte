@@ -5,7 +5,7 @@
 	import { STORE_FILE, STORE_KEYS } from '$lib/constants/store-plugin';
 	import { useComicChapters } from '$lib/hooks/store/use-comic-chapters.svelte';
 	import { useComicContext } from '$lib/state/comic-context.svelte';
-	import { resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
+	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import { load } from '@tauri-apps/plugin-store';
 	import { onMount, untrack } from 'svelte';
@@ -21,9 +21,10 @@
 	let { data } = $props();
 
 	let expandedVolumeId = $state<string | null>(null);
-	let chaptersPerPage = $state('25');
+	let chaptersPerPage = $state(data.initialChaptersPerPage || '25');
 	let activeTab = $state('content');
 	let displayMode = $state('Lista');
+	let volumeViewMode = $state<'cover' | 'banner'>(data.initialVolumeViewMode || 'cover');
 	let mediaType = $state('Manga');
 	let isAscending = $state(true);
 	let searchQuery = $state('');
@@ -32,10 +33,6 @@
 
 	const activeComic = useComicContext();
 	const chapterStore = useComicChapters();
-
-	$effect(() => {
-		if (data.initialChaptersPerPage) chaptersPerPage = data.initialChaptersPerPage;
-	});
 
 	onMount(() => {
 		if (!activeComic.item && data.comic) {
@@ -67,8 +64,25 @@
 		const savePreference = async () => {
 			const store = await load(STORE_FILE);
 
-			await store.set(STORE_KEYS.chaptersPerPage, chaptersPerPage);
-			await store.save();
+			// Somente salva se realmente houve mudança para não causar loops ou acessos de UI desnecessários
+			const savedChapters = await store.get<string>(STORE_KEYS.chaptersPerPage);
+			const savedVolumeView = await store.get<'cover' | 'banner'>(STORE_KEYS.volumeViewMode);
+
+			let shouldSave = false;
+
+			if (savedChapters !== chaptersPerPage) {
+				await store.set(STORE_KEYS.chaptersPerPage, chaptersPerPage);
+				shouldSave = true;
+			}
+
+			if (savedVolumeView !== volumeViewMode) {
+				await store.set(STORE_KEYS.volumeViewMode, volumeViewMode);
+				shouldSave = true;
+			}
+
+			if (shouldSave) {
+				await store.save();
+			}
 		};
 		savePreference();
 	});
@@ -92,7 +106,9 @@
 				chapterStore.fetch(
 					comic.relations.directoryId,
 					missingPages[0],
+
 					parseInt(chaptersPerPage),
+
 					isAscending,
 					expandedVolumeId
 				);
@@ -130,15 +146,24 @@
 		}));
 
 		// Mantemos volumes com info básica, mas chapters reais virão de pagesData filtrado por volume
-		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => ({
-			id: volume.id.toString(),
-			title: volume.name,
-			totalChapters: volume.chapterCount,
-			hasMore:
-				expandedVolumeId === volume.id.toString() &&
-				pagesData.flatMap((page) => page.items).length < volume.chapterCount,
-			chapters: []
-		}));
+		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
+			const volCover = volume.coverUri ? resolveArtworkPath(volume.coverUri) : null;
+			const volBanner = volume.bannerUri ? resolveArtworkPath(volume.bannerUri) : null;
+			const fallbackCover = resolveCover(item.artwork);
+			const fallbackBanner = resolveBanner(item.artwork);
+
+			return {
+				id: volume.id.toString(),
+				title: volume.name,
+				totalChapters: volume.chapterCount,
+				coverUri: volCover || fallbackCover,
+				bannerUri: volBanner || fallbackBanner || fallbackCover,
+				hasMore:
+					expandedVolumeId === volume.id.toString() &&
+					pagesData.flatMap((page) => page.items).length < volume.chapterCount,
+				chapters: []
+			};
+		});
 
 		return {
 			id: item.relations.directoryId.toString(),
@@ -254,6 +279,7 @@
 								pagesData={manga.pagesData}
 								loading={chapterStore.loading}
 								pageSize={manga.pageSize}
+								viewMode={volumeViewMode}
 								onexpand={(v) => (expandedVolumeId = v)}
 								onvisiblepages={(p) => (visiblePages = p)}
 							/>
@@ -266,7 +292,13 @@
 							/>
 						{/if}
 					{:else if activeTab === 'preferences'}
-						<ComicPreferences bind:displayMode bind:chaptersPerPage bind:mediaType />
+						<ComicPreferences
+							bind:displayMode
+							bind:chaptersPerPage
+							bind:mediaType
+							bind:volumeViewMode
+							hasVolumeStructure={chapterStore.chapters?.hasVolumeStructure ?? false}
+						/>
 					{/if}
 				</div>
 			</div>

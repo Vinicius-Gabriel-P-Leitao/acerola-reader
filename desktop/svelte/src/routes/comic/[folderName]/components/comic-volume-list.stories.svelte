@@ -21,23 +21,27 @@
 		{
 			id: 'v1',
 			title: 'Volume 1',
+			totalChapters: 2,
+			hasMore: false,
 			chapters: [
-				{ id: 'c1', title: 'Capítulo 1: O Início', date: '12 Out 2023', isRead: true },
-				{ id: 'c2', title: 'Capítulo 2: A Descoberta', date: '19 Out 2023', isRead: false }
+				{ id: 'c1', title: 'Capítulo 1: O Início', fileName: '001.cbz', isRead: true },
+				{ id: 'c2', title: 'Capítulo 2: A Descoberta', fileName: '002.cbz', isRead: false }
 			]
 		},
 		{
 			id: 'v2',
 			title: 'Volume 2',
-			chapters: [{ id: 'c3', title: 'Capítulo 3: O Desafio', date: '26 Out 2023', isRead: false }]
+			totalChapters: 1,
+			hasMore: false,
+			chapters: [{ id: 'c3', title: 'Capítulo 3: O Desafio', fileName: '003.cbz', isRead: false }]
 		}
 	];
 </script>
 
 <Story name="With Volumes" asChild>
-	<ComicVolumeList {volumes} />
+	<ComicVolumeList {volumes} onexpand={() => {}} />
 </Story>
 
 <Story name="Empty" asChild>
-	<ComicVolumeList volumes={[]} />
+	<ComicVolumeList volumes={[]} onexpand={() => {}} />
 </Story>

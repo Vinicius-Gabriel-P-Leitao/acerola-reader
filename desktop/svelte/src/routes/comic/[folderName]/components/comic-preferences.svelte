@@ -8,11 +8,15 @@
 	let {
 		displayMode = $bindable(),
 		chaptersPerPage = $bindable(),
-		mediaType = $bindable()
+		mediaType = $bindable(),
+		volumeViewMode = $bindable(),
+		hasVolumeStructure = false
 	}: {
 		displayMode: string;
 		chaptersPerPage: string;
 		mediaType: string;
+		volumeViewMode: 'cover' | 'banner';
+		hasVolumeStructure?: boolean;
 	} = $props();
 </script>
 
@@ -39,7 +43,24 @@
 				</AcerolaToggleGroup>
 			</div>
 
-			<div class="flex items-center justify-between">
+			{#if hasVolumeStructure}
+				<div class="flex items-center justify-between border-t border-surface/20 pt-6">
+					<span class="text-sm font-bold">Destaque do Volume</span>
+					<AcerolaToggleGroup type="single" bind:value={volumeViewMode}>
+						{#snippet children()}
+							<ToggleGroupItem value="cover" class="px-4 py-1.5 text-[10px] font-black uppercase">
+								Capa
+							</ToggleGroupItem>
+
+							<ToggleGroupItem value="banner" class="px-4 py-1.5 text-[10px] font-black uppercase">
+								Banner
+							</ToggleGroupItem>
+						{/snippet}
+					</AcerolaToggleGroup>
+				</div>
+			{/if}
+
+			<div class="flex items-center justify-between border-t border-surface/20 pt-6">
 				<span class="text-sm font-bold">Capítulos por página</span>
 				<AcerolaSelect
 					bind:value={chaptersPerPage}

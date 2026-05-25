@@ -20,8 +20,15 @@
 	let displayMode = $state('Lista');
 	let chaptersPerPage = $state('100');
 	let mediaType = $state('Manga');
+	let volumeViewMode = $state<'cover' | 'banner'>('cover');
 </script>
 
 <Story name="Default" asChild>
-	<ComicPreferences bind:displayMode bind:chaptersPerPage bind:mediaType />
+	<ComicPreferences
+		bind:displayMode
+		bind:chaptersPerPage
+		bind:mediaType
+		bind:volumeViewMode
+		hasVolumeStructure={true}
+	/>
 </Story>

@@ -62,6 +62,26 @@ impl FileGuard for ArtworkFileGuard {
     }
 }
 
+impl ArtworkFileGuard {
+    pub fn is_cover(&self, path: &Path) -> bool {
+        if self.is_allowed(path).is_err() {
+            return false;
+        }
+        
+        let name = path.file_name().and_then(|file_name| file_name.to_str()).unwrap_or("");
+        matches!(name, "cover.png" | "cover.jpg" | "cover.jpeg")
+    }
+
+    pub fn is_banner(&self, path: &Path) -> bool {
+        if self.is_allowed(path).is_err() {
+            return false;
+        }
+
+        let name = path.file_name().and_then(|file_name| file_name.to_str()).unwrap_or("");
+        matches!(name, "banner.png" | "banner.jpg" | "banner.jpeg")
+    }
+}
+
 pub struct ScannerGuard {
     guards: Vec<Box<dyn FileGuard>>,
 }

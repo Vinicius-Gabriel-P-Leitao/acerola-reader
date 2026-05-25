@@ -91,7 +91,8 @@ describe('ComicPage Scroll Integration', () => {
 			},
 			artwork: { cover: null, banner: null }
 		},
-		initialChaptersPerPage: '25'
+		initialChaptersPerPage: '25',
+		initialVolumeViewMode: 'cover' as 'cover' | 'banner'
 	};
 
 	it('should maintain scroll stability with virtual spacers during LRU eviction', async () => {

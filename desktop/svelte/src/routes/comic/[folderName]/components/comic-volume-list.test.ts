@@ -21,12 +21,21 @@ describe('ComicVolumeList', () => {
 		{
 			id: 'v1',
 			title: 'Volume 1',
-			chapters: [{ id: 'c1', title: 'Capítulo 1', date: '12 Out', isRead: true }]
+			totalChapters: 1,
+			hasMore: false,
+			chapters: [{ id: 'c1', title: 'Capítulo 1', fileName: '001.cbz', isRead: true }]
+		}
+	];
+
+	const pagesData = [
+		{
+			page: 0,
+			items: [{ id: 'c1', title: 'Capítulo 1', fileName: '001.cbz', isRead: true }]
 		}
 	];
 
 	it('renderiza a lista de volumes quando fornecida', () => {
-		render(ComicVolumeList, { volumes });
+		render(ComicVolumeList, { volumes, pagesData, onexpand: vi.fn() });
 
 		expect(screen.getByText('Volume 1')).toBeInTheDocument();
 		expect(screen.getByText('1 Capítulos inclusos')).toBeInTheDocument();
@@ -34,9 +43,9 @@ describe('ComicVolumeList', () => {
 
 	it('expande o volume ao clicar para mostrar os capítulos', async () => {
 		const user = userEvent.setup();
-		render(ComicVolumeList, { volumes });
+		render(ComicVolumeList, { volumes, pagesData, onexpand: vi.fn() });
 
-		const volumeBtn = screen.getByText('Volume 1').closest("[data-slot='item']");
+		const volumeBtn = screen.getByRole('button', { name: /Volume 1/i });
 		expect(volumeBtn).toBeInTheDocument();
 
 		if (volumeBtn) {
@@ -46,7 +55,7 @@ describe('ComicVolumeList', () => {
 	});
 
 	it('renderiza empty state quando a lista está vazia', () => {
-		render(ComicVolumeList, { volumes: [] });
+		render(ComicVolumeList, { volumes: [], onexpand: vi.fn() });
 
 		expect(screen.getByText('Nenhum volume indexado ainda.')).toBeInTheDocument();
 	});

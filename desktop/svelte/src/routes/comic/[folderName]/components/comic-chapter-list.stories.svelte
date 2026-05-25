@@ -17,28 +17,33 @@
 </script>
 
 <script lang="ts">
-	const chapters: Chapter[] = [
+	const pagesData = [
 		{
-			id: 'c1',
-			title: 'Capítulo 1: O Início',
-			date: '12 Out 2023',
-			fileName: '001.cbz',
-			isRead: true
-		},
-		{
-			id: 'c2',
-			title: 'Capítulo 2: A Descoberta',
-			date: '19 Out 2023',
-			fileName: '002.cbz',
-			isRead: false
+			page: 0,
+			items: [
+				{
+					id: 'c1',
+					title: 'Capítulo 1: O Início',
+					chapterSort: '1',
+					fileName: '001.cbz',
+					isRead: true
+				},
+				{
+					id: 'c2',
+					title: 'Capítulo 2: A Descoberta',
+					chapterSort: '2',
+					fileName: '002.cbz',
+					isRead: false
+				}
+			]
 		}
 	];
 </script>
 
 <Story name="With Chapters" asChild>
-	<ComicChapterList {chapters} />
+	<ComicChapterList {pagesData} totalChapters={2} pageSize={25} />
 </Story>
 
 <Story name="Empty" asChild>
-	<ComicChapterList chapters={[]} />
+	<ComicChapterList pagesData={[]} totalChapters={0} pageSize={25} />
 </Story>

@@ -7,7 +7,8 @@ describe('ComicPreferences', () => {
 		render(ComicPreferences, {
 			displayMode: 'Lista',
 			chaptersPerPage: '100',
-			mediaType: 'Manga'
+			mediaType: 'Manga',
+			volumeViewMode: 'cover'
 		});
 
 		expect(screen.getByText('Modo de Exibição')).toBeInTheDocument();
