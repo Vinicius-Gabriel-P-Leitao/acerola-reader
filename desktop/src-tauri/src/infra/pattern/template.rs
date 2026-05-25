@@ -1,7 +1,8 @@
 use regex::Regex;
 
 use crate::infra::{
-    error::PatternError, pattern::archive_format::ArchiveFormat,
+    error::PatternError,
+    pattern::{archive_format::ArchiveFormat, volume_special::special_pattern},
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -49,7 +50,7 @@ pub fn template_to_regex(
                 .replace('[', "\\[")
                 .replace(']', "\\]")
                 .replace("{chapter}", "(\\d+)")
-                .replace("{volume}", "(\\d+)")
+                .replace("{volume}", &format!("(\\d+|{})", special_pattern()))
                 .replace("{decimal}", "(?:[.,](\\d+))?")
                 .replace("{extension}", &format!("\\.?({})", ArchiveFormat::extensions_pattern()))
                 .replace('*', ".*?")
@@ -131,6 +132,17 @@ mod tests {
     #[test]
     fn regex_volume_compila() {
         assert!(template_to_regex("Vol. {volume}{decimal}", no_validate).is_ok());
+    }
+
+    #[test]
+    fn regex_volume_bate_especial() {
+        let re = template_to_regex("Vol. {volume}{decimal}", no_validate).unwrap();
+        assert!(re.is_match("Vol. 1"));
+        assert!(re.is_match("Vol. special"));
+        assert!(re.is_match("Vol. extra"));
+        assert!(re.is_match("Vol. oneshot"));
+        assert!(re.is_match("Vol. especial"));
+        assert!(re.is_match("Vol. 10.5"));
     }
 
     #[test]

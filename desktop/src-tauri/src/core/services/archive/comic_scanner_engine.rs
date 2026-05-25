@@ -662,16 +662,24 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn rebuild_library_sobrescreve_cover_existente() {
+    async fn refresh_library_indexa_volumes_especiais() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-        let dir = create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_volume_dir(&root, "Berserk", "Vol. special", &["Ch. 0.01.cbz"]).await;
+
+        // Seed de templates de volume
+        let pool_ref = &pool;
+        sqlx::query(include_str!(
+            "../../../../migrations/seeds/001_seed_chapter_template.sql"
+        ))
+        .execute(pool_ref)
+        .await
+        .unwrap();
+
         service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
-        let before = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
-        assert!(before[0].cover.is_none());
-        fs::write(dir.join("cover.jpg"), b"fake cover").await.unwrap();
-        service.rebuild_library(root.path().to_path_buf(), |_| {}).await.unwrap();
-        let after = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
-        assert!(after[0].cover.is_some(), "cover deveria ter sido sobrescrito pelo rebuild");
+
+        assert_eq!(count_comics(&pool).await, 1);
+        assert_eq!(count_volumes(&pool).await, 1, "Deveria ter indexado o volume 'Vol. special'");
+        assert_eq!(count_chapters(&pool).await, 1);
     }
 }

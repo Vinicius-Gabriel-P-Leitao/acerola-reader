@@ -109,11 +109,7 @@ pub struct ChapterArchive {
     pub last_modified: i64,
 }
 
-pub fn is_special_name(name: &str) -> bool {
-    const KEYWORDS: &[&str] = &["special", "extra", "oneshot", "especial"];
-    let lower = name.to_lowercase();
-    KEYWORDS.iter().any(|kw| lower.contains(kw))
-}
+pub use crate::infra::pattern::volume_special::is_special_name;
 
 #[cfg(test)]
 mod tests {
