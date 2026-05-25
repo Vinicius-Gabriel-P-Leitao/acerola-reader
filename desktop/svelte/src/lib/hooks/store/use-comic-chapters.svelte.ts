@@ -36,7 +36,8 @@ export function useComicChapters() {
   let loading = $state(false);
   let currentRequestPage = $state<number | null>(null);
   let failedPages = new Set<number>();
-  
+
+  // FIXME: Tipagem abstrata sendo que o tipo é exportado ChapterPageDto
   let metadata = $state<
     | (Omit<ChapterDto, "archive"> & {
         archive: Omit<ChapterDto["archive"], "items">;
@@ -90,29 +91,18 @@ export function useComicChapters() {
         (event) => {
           const payload = event.payload;
 
-          // 1. Descarta respostas de scrolls velhos
           if (currentRequestPage !== null) {
             const dist = Math.abs(payload.archive.page - currentRequestPage);
             if (dist > STALE_RESPONSE_THRESHOLD) {
-              console.log(
-                `[useComicChapters] Stale page ${payload.archive.page} discarded` +
-                  ` (target: ${currentRequestPage}, dist: ${dist})`,
-              );
               loading = false;
               return;
             }
           }
 
-          // 2. Se for um jump distante, quebra o gap resetando o window
           if (hasWindowGap(payload.archive.page)) {
-            console.log(
-              `[useComicChapters] Window gap for page ${payload.archive.page}` +
-                ` (cached: [${lruCache.keys.join(",")}]). Resetting window.`,
-            );
             lruCache.clear();
           }
 
-          // 3. O set insere na MRU position. O próprio lru evicta o + velho se estourar.
           lruCache.set(payload.archive.page, payload.archive.items);
           failedPages.delete(payload.archive.page);
 
@@ -138,10 +128,12 @@ export function useComicChapters() {
         LIBRARY_EVENTS.comicChaptersError,
         (event) => {
           const errorMessage = resolveErrorMessage(event.payload);
+
           notify.error("Erro ao carregar capítulos", {
             description: errorMessage,
           });
           toast.error(errorMessage);
+
           loading = false;
         },
       );
@@ -163,7 +155,7 @@ export function useComicChapters() {
     volumeId: string | null = null,
   ) {
     if (lruCache.has(pageIndex)) return;
-    if (failedPages.has(pageIndex)) return; // Evita infinite loops caso backend falhe
+    if (failedPages.has(pageIndex)) return;
     if (loading) return;
 
     const totalItems = metadata?.archive.total ?? 0;
@@ -180,8 +172,9 @@ export function useComicChapters() {
         pageSize,
         asc: isAscending,
       });
+
+      // FIXME: Toast e notify
     } catch (error) {
-      console.error("[useComicChapters] invoke failed:", error);
       failedPages.add(pageIndex);
       loading = false;
     }
@@ -189,21 +182,23 @@ export function useComicChapters() {
 
   const chapters = $derived.by(() => {
     cacheVersion;
-
     if (!metadata) return undefined;
 
-    // Lemos as páginas em cache sem alterar recência, juntamos, e ordenamos de fato
-    const allSortedItems = lruCache.keys
-      .sort((a, b) => a - b)
-      .flatMap((key) => lruCache.peek(key) || []);
+    const sortedKeys = lruCache.keys.sort((a, b) => a - b);
+    const pages = sortedKeys.map((key) => ({
+      page: key,
+      items: lruCache.peek(key) || [],
+    }));
 
     return {
       ...metadata,
+      pages,
       archive: {
         ...metadata.archive,
-        items: allSortedItems,
+        items: pages.flatMap((p) => p.items),
       },
-    } as ChapterDto;
+      // FIXME: Tirar isso já  existe tipagem
+    } as ChapterDto & { pages: { page: number; items: ChapterFileDto[] }[] };
   });
 
   return {

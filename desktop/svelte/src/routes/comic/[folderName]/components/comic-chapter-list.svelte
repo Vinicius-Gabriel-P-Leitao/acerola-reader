@@ -7,6 +7,11 @@
     chapterSort: string;
     volumeName?: string | null;
   };
+
+  export type ChapterPage = {
+    page: number;
+    items: Chapter[];
+  };
 </script>
 
 <script lang="ts">
@@ -18,20 +23,24 @@
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
 
   let {
-    chapters = [],
+    pagesData = [],
     totalChapters = 0,
-    minPage = 0,
     pageSize = 25,
     onvisiblepages
   }: {
-    chapters: Chapter[];
+    pagesData: ChapterPage[];
     totalChapters: number;
-    minPage: number;
     pageSize: number;
     onvisiblepages?: (pages: number[]) => void;
   } = $props();
 
-  const ITEM_HEIGHT = 92;
+  /**
+   * ITEM_HEIGHT (112px): Altura total do slot (item + gap).
+   * BUTTON_HEIGHT (100px): Altura real do botão para caber Title + Description + Padding.
+   */
+  const ITEM_HEIGHT = 112; 
+  const BUTTON_HEIGHT = 100;
+  
   const totalPages = $derived(Math.ceil(totalChapters / pageSize));
 
   let visiblePages = new Set<number>();
@@ -41,11 +50,9 @@
     observer = new IntersectionObserver(
       (entries) => {
         let changed = false;
-        
         for (const entry of entries) {
           const pageStr = (entry.target as HTMLElement).dataset.page;
           if (!pageStr) continue;
-          
           const page = parseInt(pageStr, 10);
           if (entry.isIntersecting) {
             if (!visiblePages.has(page)) {
@@ -59,86 +66,70 @@
             }
           }
         }
-        
         if (changed && onvisiblepages) {
           onvisiblepages(Array.from(visiblePages).sort((a, b) => a - b));
         }
       },
-      { 
-         rootMargin: "1000px 0px" // Pre-fetch com 1000px de folga na vertical
-      }
+      { rootMargin: "1200px 0px" }
     );
-
-    return () => {
-      observer?.disconnect();
-    };
+    return () => observer?.disconnect();
   });
 
-  function trackPage(node: HTMLElement) {
+  function trackPage(node: HTMLElement, page: number) {
+    node.dataset.page = page.toString();
     observer?.observe(node);
-    return {
-      destroy() {
-        observer?.unobserve(node);
-      }
-    };
+    return { destroy() { observer?.unobserve(node); } };
   }
 </script>
 
-<!-- Container virtual posicionado de forma estrita para evitar reflow -->
-<div 
-  class="relative w-full overflow-hidden" 
-  style:height="{totalChapters * ITEM_HEIGHT}px"
->
+<div class="w-full flex flex-col">
   {#if totalPages > 0}
-    <!-- Sentinelas de página. O IntersectionObserver vigia quem entra em foco -->
-    {#each Array(totalPages) as _, page}
+    {#each Array(totalPages) as _, pageIndex}
+      {@const blockData = pagesData.find(p => p.page === pageIndex)}
+      {@const itemsInThisPage = pageIndex === totalPages - 1 ? (totalChapters % pageSize || pageSize) : pageSize}
+      
+      <!-- 
+        PAGE BLOCK (Relative): 
+        Ocupa o espaço exato da página no fluxo do documento.
+        Items dentro são Absolute para garantir estabilidade visual total.
+      -->
       <div 
-        use:trackPage
-        data-page={page}
-        class="absolute w-full pointer-events-none"
-        style:top="{page * pageSize * ITEM_HEIGHT}px"
-        style:height="{pageSize * ITEM_HEIGHT}px"
-      ></div>
-    {/each}
-  {/if}
-
-  {#if chapters && chapters.length > 0}
-    {#each chapters as chapter, i (chapter.id)}
-      {@const globalIndex = (minPage * pageSize) + i}
-      <div 
-        class="absolute left-0 right-0 animate-in fade-in duration-300"
-        style:top="{globalIndex * ITEM_HEIGHT}px"
-        style:height="80px"
+        use:trackPage={pageIndex}
+        class="w-full relative"
+        style:height="{itemsInThisPage * ITEM_HEIGHT}px"
       >
-        <AcerolaHeroButton
-          title={chapter.title}
-          description={chapter.fileName}
-          class="bg-mantle/40 border-surface/40 hover:bg-surface/30 h-full"
-        >
-          {#snippet icon()}
-            <div class={chapter.isRead ? "text-overlay" : "text-primary"}>
-              <BookOpen size={24} />
-            </div>
-          {/snippet}
-
-          {#snippet action()}
-            <AcerolaButtonIcon
-              variant="ghost"
-              size="sm"
-              class="text-overlay hover:text-primary"
+        {#if blockData && blockData.items.length > 0}
+          {#each blockData.items as chapter, i (chapter.id)}
+            <div 
+              class="absolute left-0 right-0 animate-in fade-in duration-300"
+              style:top="{i * ITEM_HEIGHT}px"
+              style:height="{BUTTON_HEIGHT}px"
             >
-              <MoreVertical size={20} />
-            </AcerolaButtonIcon>
-          {/snippet}
-        </AcerolaHeroButton>
+              <AcerolaHeroButton
+                title={chapter.title}
+                description={chapter.fileName}
+                class="bg-mantle/40 border-surface/40 hover:bg-surface/30 h-full flex-nowrap overflow-hidden"
+              >
+                {#snippet icon()}
+                  <div class={chapter.isRead ? "text-overlay" : "text-primary"}>
+                    <BookOpen size={24} />
+                  </div>
+                {/snippet}
+                {#snippet action()}
+                  <AcerolaButtonIcon variant="ghost" size="sm" class="text-overlay hover:text-primary">
+                    <MoreVertical size={20} />
+                  </AcerolaButtonIcon>
+                {/snippet}
+              </AcerolaHeroButton>
+            </div>
+          {/each}
+        {/if}
       </div>
     {/each}
   {:else}
-    <div class="absolute inset-x-0 top-20 text-center opacity-50 space-y-4">
+    <div class="py-20 text-center opacity-50 space-y-4">
       <RefreshCw size={48} class="animate-spin mx-auto text-primary" />
-      <p class="font-black uppercase tracking-widest text-sm">
-        Carregando...
-      </p>
+      <p class="font-black uppercase tracking-widest text-sm">Carregando...</p>
     </div>
   {/if}
 </div>

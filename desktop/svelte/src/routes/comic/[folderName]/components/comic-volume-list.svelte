@@ -2,6 +2,7 @@
   export type VolumeChapter = {
     id: string;
     title: string;
+    fileName: string;
     isRead: boolean;
   };
 
@@ -12,39 +13,46 @@
     totalChapters: number;
     hasMore: boolean;
   };
+
+  export type VolumePage = {
+    page: number;
+    items: VolumeChapter[];
+  };
 </script>
 
 <script lang="ts">
   import { slide } from "svelte/transition";
   import AcerolaHeroButton from "$lib/components/acerola-hero-button/acerola-hero-button.svelte";
+  import AcerolaButtonIcon from "$lib/components/acerola-button/acerola-button-icon.svelte";
   import Folder from "@lucide/svelte/icons/folder";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
-  import FileText from "@lucide/svelte/icons/file-text";
+  import BookOpen from "@lucide/svelte/icons/book-open";
+  import MoreVertical from "@lucide/svelte/icons/more-vertical";
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
   import { onMount } from "svelte";
 
   let {
     volumes = [],
+    pagesData = [],
     loading = false,
-    minPage = 0,
     pageSize = 25,
     onexpand,
     onvisiblepages,
   }: {
     volumes: Volume[];
+    pagesData?: VolumePage[];
     loading?: boolean;
-    minPage?: number;
     pageSize?: number;
     onexpand: (volumeId: string | null) => void;
     onvisiblepages?: (pages: number[]) => void;
   } = $props();
 
   let expandedVolumeId = $state<string | null>(null);
-
   let visiblePages = new Set<number>();
   let observer: IntersectionObserver | null = null;
 
   const toggleVolume = (volumeId: string) => {
+    // FIXME: Imperativo porco cheio de coisa que dá pra melhorar
     if (expandedVolumeId === volumeId) {
       expandedVolumeId = null;
       visiblePages.clear();
@@ -55,17 +63,17 @@
     onexpand(expandedVolumeId);
   };
 
-  const ITEM_HEIGHT = 72; // 64px (h-16) + 8px gap (space-y-2)
+  const ITEM_HEIGHT = 92;
 
   onMount(() => {
     observer = new IntersectionObserver(
       (entries) => {
         let changed = false;
-        
+
+        // FIXME: Imperativo porco cheio de coisa que dá pra melhorar
         for (const entry of entries) {
           const pageStr = (entry.target as HTMLElement).dataset.page;
           if (!pageStr) continue;
-          
           const page = parseInt(pageStr, 10);
           if (entry.isIntersecting) {
             if (!visiblePages.has(page)) {
@@ -79,19 +87,13 @@
             }
           }
         }
-        
         if (changed && onvisiblepages) {
           onvisiblepages(Array.from(visiblePages).sort((a, b) => a - b));
         }
       },
-      { 
-         rootMargin: "1000px 0px" // Pre-fetch com 1000px de folga na vertical
-      }
+      { rootMargin: "1000px 0px" },
     );
-
-    return () => {
-      observer?.disconnect();
-    };
+    return () => observer?.disconnect();
   });
 
   function trackPage(node: HTMLElement, page: number) {
@@ -100,7 +102,7 @@
     return {
       destroy() {
         observer?.unobserve(node);
-      }
+      },
     };
   }
 </script>
@@ -119,7 +121,10 @@
         {/snippet}
         {#snippet action()}
           <div
-            class="transition-transform duration-300 {expandedVolumeId === volume.id ? 'rotate-180' : ''}"
+            class="transition-transform duration-300 {expandedVolumeId ===
+            volume.id
+              ? 'rotate-180'
+              : ''}"
           >
             <ChevronDown size={20} />
           </div>
@@ -127,63 +132,70 @@
       </AcerolaHeroButton>
 
       {#if expandedVolumeId === volume.id}
-        {@const paddingTop = minPage * pageSize * ITEM_HEIGHT}
-        {@const paddingBottom = Math.max(0, volume.totalChapters - (minPage * pageSize + volume.chapters.length)) * ITEM_HEIGHT}
-        <div
-          transition:slide
-          class="ml-10 border-l border-surface/30 p-4 pt-0 relative"
-        >
-          <!-- Sentinelas de Página para Interseção -->
-          {#if volume.totalChapters > 0}
-            {@const totalPages = Math.ceil(volume.totalChapters / pageSize)}
-            <div class="absolute inset-x-0 top-0 pointer-events-none" style="z-index: -1;">
-              {#each Array(totalPages) as _, page}
-                <div 
-                  use:trackPage={page}
-                  class="absolute w-full"
-                  style:top="{page * pageSize * ITEM_HEIGHT}px"
-                  style:height="{pageSize * ITEM_HEIGHT}px"
-                ></div>
-              {/each}
-            </div>
-          {/if}
+        {@const totalPages = Math.ceil(volume.totalChapters / pageSize)}
 
-          <div 
-            class="space-y-2 w-full" 
-            style:padding-top="{paddingTop}px"
-            style:padding-bottom="{paddingBottom}px"
-          >
-            {#if volume.chapters.length > 0}
-              {#each volume.chapters as chapter}
-                <div style="height: 64px" class="w-full">
-                  <AcerolaHeroButton
-                    title={chapter.title}
-                    class="bg-base/20 border-transparent hover:bg-surface/30 h-full"
-                  >
-                    {#snippet icon()}
-                      <div
-                        class="w-10 h-10 rounded-lg flex items-center justify-center {chapter.isRead ? 'bg-surface/50 text-overlay' : 'bg-primary/10 text-primary'}"
-                      >
-                        <FileText size={18} />
-                      </div>
-                    {/snippet}
-                  </AcerolaHeroButton>
+        <div transition:slide class="ml-10 border-l border-surface/30 p-4 pt-0">
+          <div class="space-y-0 w-full flex flex-col">
+            {#if volume.totalChapters > 0}
+              {#each Array(totalPages) as _, pageIndex}
+                {@const blockData = pagesData.find((p) => p.page === pageIndex)}
+                {@const itemsInThisPage =
+                  pageIndex === totalPages - 1
+                    ? volume.totalChapters % pageSize || pageSize
+                    : pageSize}
+
+                <div
+                  use:trackPage={pageIndex}
+                  class="w-full flex flex-col"
+                  style:min-height="{itemsInThisPage * ITEM_HEIGHT}px"
+                >
+                  {#if blockData && blockData.items.length > 0}
+                    <div class="flex flex-col space-y-3 pt-3">
+                      {#each blockData.items as chapter (chapter.id)}
+                        <div style:height="80px" class="w-full">
+                          <AcerolaHeroButton
+                            title={chapter.title}
+                            description={chapter.fileName}
+                            class="bg-mantle/40 border-surface/40 hover:bg-surface/30 h-full"
+                          >
+                            {#snippet icon()}
+                              <div
+                                class={chapter.isRead
+                                  ? "text-overlay"
+                                  : "text-primary"}
+                              >
+                                <BookOpen size={24} />
+                              </div>
+                            {/snippet}
+                            {#snippet action()}
+                              <AcerolaButtonIcon
+                                variant="ghost"
+                                size="sm"
+                                class="text-overlay hover:text-primary"
+                              >
+                                <MoreVertical size={20} />
+                              </AcerolaButtonIcon>
+                            {/snippet}
+                          </AcerolaHeroButton>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
                 </div>
               {/each}
+            {/if}
 
-              {#if loading}
-                <div class="flex items-center justify-center py-4 relative z-10">
-                  <RefreshCw size={24} class="animate-spin text-primary" />
-                </div>
-              {/if}
-            {:else if loading}
-              <div class="flex flex-col items-center justify-center py-10 space-y-4 opacity-50 relative z-10">
-                  <RefreshCw size={32} class="animate-spin text-primary" />
-                  <p class="font-black uppercase tracking-widest text-[10px]">Carregando capítulos...</p>
+            {#if loading}
+              <div class="flex items-center justify-center py-4">
+                <RefreshCw size={24} class="animate-spin text-primary" />
               </div>
-            {:else}
-              <p class="py-4 text-center text-xs opacity-50 uppercase font-black tracking-widest relative z-10">
-                  Nenhum capítulo disponível.
+            {/if}
+
+            {#if volume.totalChapters === 0 && !loading}
+              <p
+                class="py-4 text-center text-xs opacity-50 uppercase font-black tracking-widest"
+              >
+                Nenhum capítulo disponível.
               </p>
             {/if}
           </div>
@@ -191,7 +203,9 @@
       {/if}
     {/each}
   {:else}
-    <div class="py-20 text-center opacity-50 space-y-4 border-2 border-dashed border-surface rounded-3xl">
+    <div
+      class="py-20 text-center opacity-50 space-y-4 border-2 border-dashed border-surface rounded-3xl"
+    >
       <RefreshCw size={48} class="animate-spin text-primary" />
       <p class="font-black uppercase tracking-widest text-sm">
         Nenhum volume indexado ainda.
