@@ -107,10 +107,10 @@
 				style:height="{itemsInThisPage * ITEM_HEIGHT}px"
 			>
 				{#if blockData && blockData.items.length > 0}
-					{#each blockData.items as chapter, i (chapter.id)}
+					{#each blockData.items as chapter, index (chapter.id)}
 						<div
 							class="absolute right-0 left-0 animate-in duration-300 fade-in"
-							style:top="{i * ITEM_HEIGHT}px"
+							style:top="{index * ITEM_HEIGHT}px"
 							style:height="{BUTTON_HEIGHT}px"
 						>
 							<AcerolaHeroButton
