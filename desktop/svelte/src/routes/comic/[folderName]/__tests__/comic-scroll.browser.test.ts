@@ -97,15 +97,15 @@ describe("ComicPage Scroll Integration", () => {
     rustEventEmitter({ payload: generatePagePayload(0) });
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    // 2. Load up to LRU limit (12 pages)
-    await Array.from({ length: 12 }).reduce(async (promise, _, index) => {
+    // 2. Load up to LRU limit (6 pages: 0, 1, 2, 3, 4, 5)
+    await Array.from({ length: 6 }).reduce(async (promise, _, index) => {
         await promise;
         rustEventEmitter({ payload: generatePagePayload(index) });
         return new Promise(resolve => setTimeout(resolve, 10));
     }, Promise.resolve());
 
-    // 3. Evict Page 0 by loading Page 12
-    rustEventEmitter({ payload: generatePagePayload(12) });
+    // 3. Evict Page 0 by loading Page 6
+    rustEventEmitter({ payload: generatePagePayload(6) });
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // 4. Verify Virtual Padding Top (Page 0 is gone, so minPage=1)
@@ -116,22 +116,59 @@ describe("ComicPage Scroll Integration", () => {
     expect(listContainer.style.paddingTop).toBe("2300px");
   });
 
+  it("should clear the cache when a non-adjacent page is received (Window Continuity)", async () => {
+    const { container } = render(ComicPage, { data: loaderDataMock });
+
+    await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
+
+    // 1. Load Page 0
+    rustEventEmitter({ payload: generatePagePayload(0) });
+    await vi.waitFor(() => {
+        const items = container.querySelectorAll('[data-slot="item-title"]');
+        expect(items.length).toBe(PAGE_SIZE);
+    });
+
+    // 2. Receive Page 10 (Non-adjacent to Page 0)
+    rustEventEmitter({ payload: generatePagePayload(10) });
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 3. Verification: Page 0 should be GONE, and only Page 10 should be present
+    const items = container.querySelectorAll('[data-slot="item-title"]');
+    expect(items.length).toBe(PAGE_SIZE); // Only 25 items, not 50
+    expect(items[0].textContent?.trim()).toBe("Chapter 251"); // Page 10 starts at item 250 (Chapter 251)
+
+    // 4. Verify paddingTop is adjusted for Page 10
+    const listContainer = container.querySelector(".relative[style*='padding-top']") as HTMLElement;
+    // minPage (10) * pageSize (25) * itemHeight (92) = 23000px
+    expect(listContainer.style.paddingTop).toBe("23000px");
+  });
+
   it("should fetch the correct next page when scrolling down (Bidirectional Flow)", async () => {
     const { container } = render(ComicPage, { data: loaderDataMock });
 
     // 1. Initial State: Load Page 0
     await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
     rustEventEmitter({ payload: generatePagePayload(0) });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Ensure Page 0 is rendered
+    await vi.waitFor(() => {
+        const items = container.querySelectorAll('[data-slot="item-title"]');
+        expect(items.length).toBe(PAGE_SIZE);
+    });
 
     const scrollableElement = container.querySelector(".overflow-y-auto") as HTMLElement;
     expect(scrollableElement).toBeDefined();
+    
+    // Set explicit dimensions for the test environment
+    Object.defineProperty(scrollableElement, 'clientHeight', { value: 800 });
+    Object.defineProperty(scrollableElement, 'scrollHeight', { value: 92000 }); // 1000 items * 92px
 
     // 2. Simulate Scroll Down: Trigger Edge DOWN for Page 1
     // DISTANCE_THRESHOLD is 1500px. 
-    // totalItems=1000. pageSize=25. itemHeight=92. Total physical height = 92000px.
-    // Setting scrollTop to 80000px will definitely hit the bottom edge.
-    scrollableElement.scrollTop = 80000;
+    // pageSize=25. itemHeight=92. Page 0 ends at 2300px.
+    // distanceFromContentBottom = (scrollHeight - paddingBottom) - (scrollTop + clientHeight)
+    // (92000 - 89700) - (2000 + 800) = 2300 - 2800 = -500px (Trigger!)
+    scrollableElement.scrollTop = 2000;
     scrollableElement.dispatchEvent(new Event("scroll"));
 
     // 3. Verification: System should request Page 1
@@ -148,6 +185,7 @@ describe("ComicPage Scroll Integration", () => {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // 5. Simulate Scroll Up: Trigger Edge UP for Page 0 (Already cached)
+    // distanceFromContentTop = scrollTop - paddingTop = 100 - 0 = 100 (Trigger!)
     scrollableElement.scrollTop = 100;
     scrollableElement.dispatchEvent(new Event("scroll"));
 

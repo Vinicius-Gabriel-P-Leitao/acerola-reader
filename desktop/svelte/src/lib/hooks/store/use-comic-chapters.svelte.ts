@@ -3,7 +3,10 @@ import { listen } from "@tauri-apps/api/event";
 import { toast } from "svelte-sonner";
 import { LIBRARY_COMMANDS } from "$lib/contracts/library/chapter.commands";
 import { LIBRARY_EVENTS } from "$lib/contracts/library/chapter.events";
-import type { ChapterDto, ChapterFileDto } from "$lib/contracts/library/chapter.payloads";
+import type {
+  ChapterDto,
+  ChapterFileDto,
+} from "$lib/contracts/library/chapter.payloads";
 import type { ErrorPayload } from "$lib/contracts/shared/shared.payloads";
 import { resolveErrorMessage } from "$lib/contracts/errors/errors.i18n";
 import { notificationStore } from "$lib/components/acerola-notification/acerola-notification.svelte";
@@ -13,43 +16,70 @@ import { onMount } from "svelte";
 const { notify } = notificationStore;
 
 /**
- * Production-ready hook for managing comic chapters with a sliding window LRU cache.
- * Implements a continuous memory window to prevent list fragmentation.
+ * Tamanho fixo do sliding window em páginas.
+ * O LRU mantém no máximo 6 páginas em RAM a qualquer momento.
  */
+const LRU_WINDOW_SIZE = 6;
+
+/**
+ * Distância máxima (em páginas) entre a página recebida e o target atual
+ * antes de descartar a resposta como stale.
+ */
+const STALE_RESPONSE_THRESHOLD = 5;
+
 export function useComicChapters() {
-  // Configured for 12 pages (~300 items) to keep RAM usage low
-  const lruCache = new LRUService<number, ChapterFileDto[]>({ max: 12 });
+  const lruCache = new LRUService<number, ChapterFileDto[]>({
+    max: LRU_WINDOW_SIZE,
+  });
 
   let cacheVersion = $state(0);
   let loading = $state(false);
+  let currentRequestPage = $state<number | null>(null);
+  let failedPages = new Set<number>();
   
-  // Metadata stores top-level DTO info, items are handled by LRU
-  let metadata = $state<Omit<ChapterDto, "archive"> & { archive: Omit<ChapterDto["archive"], "items"> } | undefined>(undefined);
+  let metadata = $state<
+    | (Omit<ChapterDto, "archive"> & {
+        archive: Omit<ChapterDto["archive"], "items">;
+      })
+    | undefined
+  >(undefined);
 
-  /**
-   * Clears all cached data and resets the state.
-   */
   function clear() {
     lruCache.clear();
+    failedPages.clear();
     metadata = undefined;
+    currentRequestPage = null;
     cacheVersion++;
     loading = false;
   }
 
   /**
-   * Marks a page as recently used to prevent its eviction from the LRU.
+   * Promove a recência de uma página no cache, impedindo que ela seja evictada
+   * se ela ainda estiver sendo visualizada no Viewport.
    */
   function touch(pageIndex: number) {
-    const hasPage = lruCache.has(pageIndex);
-    if (hasPage) {
-      lruCache.get(pageIndex); // Updates LRU order
-      cacheVersion++;
+    if (lruCache.has(pageIndex)) {
+      lruCache.get(pageIndex);
     }
   }
 
   /**
-   * Sets up a permanent event listener for chapter data from the backend.
+   * Verifica se uma página recebida cria um gap no window contíguo atual.
+   * Gaps geralmente ocorrem quando a pessoa salta bruscamente usando o scroll.
    */
+  function hasWindowGap(incomingPage: number): boolean {
+    const cachedKeys = lruCache.keys;
+    if (cachedKeys.length === 0) return false;
+
+    const currentMin = Math.min(...cachedKeys);
+    const currentMax = Math.max(...cachedKeys);
+
+    const gapAbove = incomingPage - (currentMax + 1);
+    const gapBelow = currentMin - (incomingPage + 1);
+
+    return gapAbove > 0 || gapBelow > 0;
+  }
+
   onMount(() => {
     let unlistenChapters: (() => void) | undefined;
     let unlistenError: (() => void) | undefined;
@@ -59,25 +89,33 @@ export function useComicChapters() {
         LIBRARY_EVENTS.comicChapters,
         (event) => {
           const payload = event.payload;
-          
-          // Continuous Window Enforcement:
-          // We only allow the cache to grow if the new page is a direct neighbor.
-          // This prevents gaps that break the physical scroll logic.
-          const cachedPageIndices = lruCache.keys;
-          if (cachedPageIndices.length > 0) {
-              const currentMin = Math.min(...cachedPageIndices);
-              const currentMax = Math.max(...cachedPageIndices);
-              const isAdjacent = payload.archive.page >= currentMin - 1 && payload.archive.page <= currentMax + 1;
-              
-              if (!isAdjacent) {
-                  console.log(`[useComicChapters] Window continuity broken (Received: ${payload.archive.page}, Window: ${currentMin}-${currentMax}). Resetting to page ${payload.archive.page}`);
-                  lruCache.clear();
-              }
+
+          // 1. Descarta respostas de scrolls velhos
+          if (currentRequestPage !== null) {
+            const dist = Math.abs(payload.archive.page - currentRequestPage);
+            if (dist > STALE_RESPONSE_THRESHOLD) {
+              console.log(
+                `[useComicChapters] Stale page ${payload.archive.page} discarded` +
+                  ` (target: ${currentRequestPage}, dist: ${dist})`,
+              );
+              loading = false;
+              return;
+            }
           }
 
+          // 2. Se for um jump distante, quebra o gap resetando o window
+          if (hasWindowGap(payload.archive.page)) {
+            console.log(
+              `[useComicChapters] Window gap for page ${payload.archive.page}` +
+                ` (cached: [${lruCache.keys.join(",")}]). Resetting window.`,
+            );
+            lruCache.clear();
+          }
+
+          // 3. O set insere na MRU position. O próprio lru evicta o + velho se estourar.
           lruCache.set(payload.archive.page, payload.archive.items);
-          console.log(`[useComicChapters] SET page ${payload.archive.page}. Cache window: ${Math.min(...lruCache.keys)}-${Math.max(...lruCache.keys)}`);
-          
+          failedPages.delete(payload.archive.page);
+
           metadata = {
             showVolumeHeaders: payload.showVolumeHeaders,
             hasVolumeStructure: payload.hasVolumeStructure,
@@ -93,17 +131,19 @@ export function useComicChapters() {
 
           cacheVersion++;
           loading = false;
-        }
+        },
       );
 
       unlistenError = await listen<ErrorPayload>(
         LIBRARY_EVENTS.comicChaptersError,
         (event) => {
           const errorMessage = resolveErrorMessage(event.payload);
-          notify.error("Erro ao carregar capítulos", { description: errorMessage });
+          notify.error("Erro ao carregar capítulos", {
+            description: errorMessage,
+          });
           toast.error(errorMessage);
           loading = false;
-        }
+        },
       );
     };
 
@@ -115,25 +155,22 @@ export function useComicChapters() {
     };
   });
 
-  /**
-   * Fetches a specific page of chapters from the backend.
-   */
   async function fetch(
     comicDirectoryId: string,
     pageIndex: number,
     pageSize: number,
     isAscending: boolean,
-    volumeId: string | null = null
+    volumeId: string | null = null,
   ) {
-    const isAlreadyCached = lruCache.has(pageIndex);
-    if (loading || isAlreadyCached) return;
+    if (lruCache.has(pageIndex)) return;
+    if (failedPages.has(pageIndex)) return; // Evita infinite loops caso backend falhe
+    if (loading) return;
 
-    // Boundary check
     const totalItems = metadata?.archive.total ?? 0;
-    const isAtEnd = metadata && pageIndex * pageSize >= totalItems && pageIndex > 0;
-    if (isAtEnd) return;
+    if (totalItems > 0 && pageIndex * pageSize >= totalItems) return;
 
     loading = true;
+    currentRequestPage = pageIndex;
 
     try {
       await invoke(LIBRARY_COMMANDS.getComicChapters, {
@@ -144,19 +181,20 @@ export function useComicChapters() {
         asc: isAscending,
       });
     } catch (error) {
-      console.error("[useComicChapters] Backend invoke failed:", error);
+      console.error("[useComicChapters] invoke failed:", error);
+      failedPages.add(pageIndex);
       loading = false;
     }
   }
 
-  // Derived state reconstructs the ChapterDto from LRU and Metadata
   const chapters = $derived.by(() => {
-    cacheVersion; // Re-calculate when LRU changes
-    
+    cacheVersion;
+
     if (!metadata) return undefined;
 
+    // Lemos as páginas em cache sem alterar recência, juntamos, e ordenamos de fato
     const allSortedItems = lruCache.keys
-      .sort((indexA, indexB) => indexA - indexB)
+      .sort((a, b) => a - b)
       .flatMap((key) => lruCache.peek(key) || []);
 
     return {
@@ -172,8 +210,14 @@ export function useComicChapters() {
     fetch,
     clear,
     touch,
-    get chapters() { return chapters; },
-    get loading() { return loading; },
-    get lruKeys() { return lruCache.keys; }
+    get chapters() {
+      return chapters;
+    },
+    get loading() {
+      return loading;
+    },
+    get lruKeys() {
+      return lruCache.keys;
+    },
   };
 }

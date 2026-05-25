@@ -2,18 +2,15 @@ import { LRUCache } from "lru-cache";
 
 export interface LRUConfig {
   /**
-   * Número máximo de itens para manter no cache.
+   * Número máximo estrito de itens mantidos em memória.
    */
   max: number;
-  /**
-   * Tempo de vida em milissegundos.
-   */
-  ttl?: number;
 }
 
 /**
  * Uma abstração genérica de serviço LRU (Least Recently Used).
- * Usada para gerenciar estruturas de dados eficientes em memória, especialmente para scrolls infinitos.
+ * Funciona de forma estrita baseada em capacidade máxima, evictando o item
+ * usado há mais tempo quando o limite é excedido.
  */
 export class LRUService<KeyType extends string | number, ValueType extends {}> {
   private cache: LRUCache<KeyType, ValueType>;
@@ -21,7 +18,9 @@ export class LRUService<KeyType extends string | number, ValueType extends {}> {
   constructor(config: LRUConfig) {
     this.cache = new LRUCache({
       max: config.max,
-      ttl: config.ttl || 1000 * 60 * 60, // Padrão: 1 hora
+      dispose: (value, key) => {
+        console.log(`[LRUService] 🗑️ EVICTING page ${key} (Cache limit reached)`);
+      }
     });
   }
 
@@ -33,15 +32,15 @@ export class LRUService<KeyType extends string | number, ValueType extends {}> {
   }
 
   /**
-   * Recupera um item do cache e atualiza o status de "recentemente usado".
+   * Recupera um item do cache e atualiza seu status para mais recentemente usado (MRU).
    */
   get(key: KeyType): ValueType | undefined {
     return this.cache.get(key);
   }
 
   /**
-   * Define um item no cache.
-   * Se o cache exceder o 'max', o item menos recentemente usado é removido.
+   * Define um item no cache e o torna o mais recentemente usado (MRU).
+   * Se o limite for excedido, o LRU mais antigo será removido.
    */
   set(key: KeyType, value: ValueType): void {
     const isNew = !this.cache.has(key);
@@ -50,28 +49,28 @@ export class LRUService<KeyType extends string | number, ValueType extends {}> {
   }
 
   /**
-   * Retorna se uma chave existe no cache sem atualizar seu status.
+   * Verifica a existência de um item no cache sem alterar sua recência.
    */
   has(key: KeyType): boolean {
     return this.cache.has(key);
   }
 
   /**
-   * Retorna todas as chaves atuais no cache, ordenadas da mais recentemente usada para a menos.
+   * Retorna as chaves presentes, ordenadas internamente pela recência de inserção (LRU order no lru-cache).
    */
   get keys(): KeyType[] {
     return Array.from(this.cache.keys());
   }
 
   /**
-   * Retorna todos os valores atuais no cache.
+   * Retorna todos os valores no cache.
    */
   get values(): ValueType[] {
     return Array.from(this.cache.values());
   }
 
   /**
-   * Remove um item específico do cache.
+   * Remove ativamente uma chave do cache.
    */
   delete(key: KeyType): void {
     console.log(`[LRUService] DELETE key=${key}`);
@@ -79,16 +78,15 @@ export class LRUService<KeyType extends string | number, ValueType extends {}> {
   }
 
   /**
-   * Limpa todo o cache.
+   * Limpa o cache inteiramente.
    */
   clear(): void {
-    console.log(`[LRUService] CLEAR cache (prev size: ${this.cache.size})`);
-    this.cache.clear();
+    if (this.cache.size > 0) {
+      console.log(`[LRUService] CLEAR cache (prev size: ${this.cache.size})`);
+      this.cache.clear();
+    }
   }
 
-  /**
-   * Tamanho atual do cache.
-   */
   get size(): number {
     return this.cache.size;
   }
