@@ -1,45 +1,89 @@
 use crate::data::models::archive::volume_archive::VolumeArchive;
-use crate::data::repositories::Repository;
+use crate::data::repositories::{Entity, Repository};
+use crate::infra::error::DbError;
 use sqlx::SqlitePool;
 
 pub struct VolumeRepository {
     pub base: Repository<VolumeArchive>,
+    pub pool: SqlitePool,
+}
+
+#[derive(Debug, sqlx::FromRow, Clone)]
+pub struct VolumeWithCount {
+    pub id: i64,
+    pub name: String,
+    pub path: String,
+    pub volume_sort: String,
+    pub is_special: bool,
+    pub cover: Option<String>,
+    pub banner: Option<String>,
+    pub comic_directory_fk: i64,
+    pub last_modified: i64,
+    pub chapter_count: i64,
 }
 
 impl VolumeRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self { base: Repository::new(pool) }
+        Self { base: Repository::new(pool.clone()), pool }
+    }
+
+    pub async fn find_by_comic(
+        &self, comic_directory_fk: i64,
+    ) -> Result<Vec<VolumeArchive>, DbError> {
+        let cols = VolumeArchive::columns().join(", ");
+        let result = sqlx::query_as::<_, VolumeArchive>(&format!(
+            "SELECT {} FROM volume_archive WHERE comic_directory_fk = ? ORDER BY CAST(volume_sort AS INTEGER) ASC",
+            cols
+        ))
+        .bind(comic_directory_fk)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn find_by_comic_with_counts(
+        &self, comic_directory_fk: i64,
+    ) -> Result<Vec<VolumeWithCount>, DbError> {
+        let result = sqlx::query_as::<_, VolumeWithCount>(
+            "SELECT 
+                va.*,
+                COUNT(ca.id) as chapter_count
+             FROM volume_archive va
+             LEFT JOIN chapter_archive ca ON ca.volume_id_fk = va.id
+             WHERE va.comic_directory_fk = ?
+             GROUP BY va.id
+             ORDER BY 
+                va.is_special ASC,
+                CAST(va.volume_sort AS INTEGER) ASC,
+                CAST(
+                    CASE 
+                        WHEN va.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC",
+        )
+        .bind(comic_directory_fk)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::VolumeRepository;
-    use crate::data::models::archive::comic_directory::ComicDirectory;
     use crate::data::models::archive::volume_archive::VolumeArchive;
-    use crate::data::repositories::Repository;
     use crate::infra::error::DbError;
-    use crate::tests::utils::setup_test_db::setup_test_db;
-
-    fn berserk() -> ComicDirectory {
-        ComicDirectory {
-            id: 1,
-            name: "Berserk".to_string(),
-            path: "/quadrinhos/berserk".to_string(),
-            cover: None,
-            banner: None,
-            last_modified: 1700000000,
-            archive_template_fk: None,
-            external_sync_enabled: true,
-            hidden: false,
-        }
-    }
+    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
 
     fn vol1() -> VolumeArchive {
         VolumeArchive {
             id: 1,
             name: "Vol. 01".to_string(),
-            path: "/quadrinhos/berserk/Vol. 01".to_string(),
+            path: "/test/Vol. 01".to_string(),
             volume_sort: "1".to_string(),
             is_special: false,
             cover: None,
@@ -49,15 +93,10 @@ mod tests {
         }
     }
 
-    async fn setup() -> VolumeRepository {
-        let pool = setup_test_db().await;
-        Repository::<ComicDirectory>::new(pool.clone()).insert(&berserk()).await.unwrap();
-        VolumeRepository::new(pool)
-    }
-
     #[tokio::test]
     async fn teste_inserir_e_buscar_todos() {
-        let repo = setup().await;
+        let pool = setup_test_db_with_comic().await;
+        let repo = VolumeRepository::new(pool);
         let inserted = repo.base.insert(&vol1()).await.unwrap();
         assert_eq!(inserted.id, 1);
         assert_eq!(inserted.name, "Vol. 01");
@@ -68,7 +107,8 @@ mod tests {
 
     #[tokio::test]
     async fn teste_atualizar() {
-        let repo = setup().await;
+        let pool = setup_test_db_with_comic().await;
+        let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
         let updated = VolumeArchive { name: "Vol. 001 Special".to_string(), ..vol1() };
         let result = repo.base.update(&updated).await.unwrap();
@@ -77,15 +117,38 @@ mod tests {
 
     #[tokio::test]
     async fn teste_deletar() {
-        let repo = setup().await;
+        let pool = setup_test_db_with_comic().await;
+        let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
         repo.base.delete(1).await.unwrap();
         assert_eq!(repo.base.find_all().await.unwrap().len(), 0);
     }
 
     #[tokio::test]
+    async fn teste_buscar_por_comic() {
+        let pool = setup_test_db_with_comic().await;
+        let repo = VolumeRepository::new(pool);
+        repo.base.insert(&vol1()).await.unwrap();
+        repo.base
+            .insert(&VolumeArchive {
+                id: 2,
+                name: "Vol. 02".to_string(),
+                volume_sort: "2".to_string(),
+                ..vol1()
+            })
+            .await
+            .unwrap();
+
+        let volumes = repo.find_by_comic(1).await.unwrap();
+        assert_eq!(volumes.len(), 2);
+        assert_eq!(volumes[0].volume_sort, "1");
+        assert_eq!(volumes[1].volume_sort, "2");
+    }
+
+    #[tokio::test]
     async fn teste_erro_unique_volume_sort_por_comic() {
-        let repo = setup().await;
+        let pool = setup_test_db_with_comic().await;
+        let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
         let dup = VolumeArchive { id: 2, ..vol1() };
         let result = repo.base.insert(&dup).await;
@@ -94,7 +157,8 @@ mod tests {
 
     #[tokio::test]
     async fn teste_erro_ao_atualizar_inexistente() {
-        let repo = setup().await;
+        let pool = setup_test_db_with_comic().await;
+        let repo = VolumeRepository::new(pool);
         let result = repo.base.update(&vol1()).await;
         assert!(matches!(result, Err(DbError::NotFound)));
     }

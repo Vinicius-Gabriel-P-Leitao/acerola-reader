@@ -3,64 +3,63 @@ import path from 'path';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
-  stories: [
-    "../svelte/src/**/*.mdx",
-    "../svelte/src/**/*.stories.@(js|ts|svelte)",
-  ],
-  addons: [
-    "@storybook/addon-svelte-csf",
-    "@chromatic-com/storybook",
-    "@storybook/addon-vitest",
-    "@storybook/addon-a11y",
-    "@storybook/addon-docs",
-  ],
-  framework: "@storybook/sveltekit",
-  staticDirs: ["../svelte/static"],
-  viteFinal(config) {
-    return mergeConfig(config, {
-      server: {
-        fs: {
-          allow: [path.resolve("svelte/src/theme")],
-        },
-      },
-      optimizeDeps: {
-        include: [
-          "@lucide/svelte/icons/moon",
-          "@lucide/svelte/icons/sun",
-          "@lucide/svelte/icons/settings",
-          "@lucide/svelte/icons/library",
-          "@lucide/svelte/icons/history",
-          "@lucide/svelte/icons/monitor",
-          "@lucide/svelte/icons/alert-triangle",
-          "@lucide/svelte/icons/bell",
-          "@lucide/svelte/icons/check-circle-2",
-          "@lucide/svelte/icons/info",
-          "@lucide/svelte/icons/x",
-          "@lucide/svelte/icons/x-circle",
-          "@lucide/svelte/icons/loader-2",
-          "@lucide/svelte/icons/circle-check",
-          "@lucide/svelte/icons/octagon-x",
-          "@lucide/svelte/icons/triangle-alert",
-          "@lucide/svelte/icons/panel-left",
-          "@lucide/svelte/icons/folder",
-          "@lucide/svelte/icons/play",
-          "@lucide/svelte/icons/check",
-          "@lucide/svelte/icons/chevron-down",
-          "@lucide/svelte/icons/chevron-up",
-          "@lucide/svelte/icons/search",
-          "@lucide/svelte/icons/more-vertical",
-          "@lucide/svelte/icons/book-open",
-          "tailwind-merge",
-          "tailwind-variants",
-          "svelte-sonner",
-          "bits-ui",
-          "mode-watcher",
-          "@tauri-apps/api/window",
-          "@tauri-apps/plugin-store",
-        ],
-      },
-    });
-  },
+	stories: ['../svelte/src/**/*.mdx', '../svelte/src/**/*.stories.@(js|ts|svelte)'],
+	addons: [
+		'@storybook/addon-svelte-csf',
+		'@chromatic-com/storybook',
+		'@storybook/addon-vitest',
+		'@storybook/addon-a11y',
+		'@storybook/addon-docs'
+	],
+	framework: '@storybook/sveltekit',
+	staticDirs: ['../svelte/static'],
+	viteFinal(config) {
+		return mergeConfig(config, {
+			server: {
+				fs: {
+					allow: [path.resolve('svelte/src/theme')]
+				}
+			},
+			optimizeDeps: {
+				entries: ['../svelte/src/**/*.stories.@(js|ts|svelte)', '../svelte/src/**/*.svelte'],
+				holdUntilResolved: true,
+				include: [
+					'svelte',
+					'svelte/internal',
+					'svelte/internal/client',
+					'svelte/internal/disclose-version',
+					'esm-env',
+					'devalue',
+					'@storybook/sveltekit/internal/mocks/app/state.svelte.js',
+					'@storybook/sveltekit/internal/mocks/app/navigation',
+					'@storybook/sveltekit/internal/mocks/app/stores',
+					'tailwind-merge',
+					'tailwind-variants',
+					'svelte-sonner',
+					'bits-ui',
+					'mode-watcher',
+					'clsx',
+					'@internationalized/date',
+					'aria-query',
+					'axobject-query',
+					'lz-string',
+					'dom-accessibility-api',
+					'pretty-format',
+					'picocolors'
+				],
+				exclude: [
+					'@lucide/svelte',
+					'@tauri-apps/api',
+					'@tauri-apps/plugin-store',
+					'@tauri-apps/plugin-dialog',
+					'@tauri-apps/plugin-fs',
+					'@tauri-apps/plugin-log',
+					'@tauri-apps/plugin-opener',
+					'@tauri-apps/plugin-sql'
+				]
+			}
+		});
+	}
 };
 
 export default config;

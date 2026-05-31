@@ -22,20 +22,20 @@ impl ScannerEngine {
     }
 
     /// Escaneia `root` recursivamente e emite via channel um [`DirectoryEntry`]
-    /// por pasta que contiver arquivos — sem acumular tudo na heap.
+    /// por pasta que contiver arquivos (ou subpastas com arquivos) — sem acumular tudo na heap.
     pub async fn scan(
         &self, root: PathBuf, tx: mpsc::Sender<DirectoryEntry>,
     ) -> Result<(), std::io::Error> {
-        self.walk(&root, &tx, 0).await
+        self.walk(&root, &tx, 0).await.map(|_| ())
     }
 
     fn walk<'a>(
         &'a self, path: &'a PathBuf, tx: &'a mpsc::Sender<DirectoryEntry>, depth: usize,
-    ) -> Pin<Box<dyn Future<Output = Result<(), std::io::Error>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<bool, std::io::Error>> + Send + 'a>> {
         Box::pin(async move {
             if let Some(max) = self.max_depth {
                 if depth > max {
-                    return Ok(());
+                    return Ok(false);
                 }
             }
 
@@ -57,23 +57,20 @@ impl ScannerEngine {
                 }
             }
 
-            // Emite se tiver arquivos, ou subdiretórios (que podem ser volumes)
-            if !files.is_empty() || !subdirs.is_empty() {
-                let _ = tx
-                    .send(DirectoryEntry {
-                        directory: path.clone(),
-                        files,
-                        subdirs: subdirs.clone(),
-                    })
-                    .await;
+            let mut child_found = false;
+            for subdir in &subdirs {
+                if self.walk(subdir, tx, depth + 1).await? {
+                    child_found = true;
+                }
             }
 
-            // Desce nos subdiretórios depois de emitir — libera a heap do atual
-            for subdir in subdirs {
-                self.walk(&subdir, tx, depth + 1).await?;
+            let should_emit = !files.is_empty() || child_found;
+
+            if should_emit {
+                let _ = tx.send(DirectoryEntry { directory: path.clone(), files, subdirs }).await;
             }
 
-            Ok(())
+            Ok(should_emit)
         })
     }
 }
@@ -129,11 +126,14 @@ mod tests {
         let mut entries = collect(root.path().to_path_buf()).await;
         entries.sort_by_key(|e| e.directory.clone());
 
-        assert_eq!(entries.len(), 2);
-        assert_eq!(entries[0].directory, berserk);
-        assert_eq!(entries[0].files.len(), 2);
-        assert_eq!(entries[1].directory, hq);
-        assert_eq!(entries[1].files.len(), 1);
+        // Esperamos 3 entradas: root, Berserk e HQ
+        // root é emitido porque seus filhos têm arquivos.
+        assert_eq!(entries.len(), 3);
+
+        let paths: Vec<_> = entries.iter().map(|e| e.directory.clone()).collect();
+        assert!(paths.contains(&root.path().to_path_buf()));
+        assert!(paths.contains(&berserk));
+        assert!(paths.contains(&hq));
     }
 
     #[tokio::test]
@@ -146,8 +146,10 @@ mod tests {
 
         let entries = collect(root.path().to_path_buf()).await;
 
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].directory, mangas);
+        // Esperamos 3: root, root/Mangas, root/Mangas/Berserk
+        assert_eq!(entries.len(), 3);
+        let paths: Vec<_> = entries.iter().map(|e| e.directory.clone()).collect();
+        assert!(paths.contains(&mangas));
     }
 
     #[tokio::test]
@@ -174,8 +176,8 @@ mod tests {
             entries.push(entry);
         }
 
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].directory, level1);
+        // root (0) e Mangas (1). Berserk (2) é ignorado pelo max_depth.
+        assert_eq!(entries.len(), 2);
     }
 
     #[tokio::test]

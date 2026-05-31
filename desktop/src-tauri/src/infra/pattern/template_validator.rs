@@ -1,6 +1,4 @@
-use crate::infra::{
-    error::PatternError, pattern::template::TemplateMacro,
-};
+use crate::infra::{error::PatternError, pattern::template::TemplateMacro};
 
 pub fn validate_chapter_template(input: &str) -> Result<(), PatternError> {
     let tags = extract_tags(input)?;
@@ -271,10 +269,7 @@ mod tests {
 
     #[test]
     fn erro_macro_malformada_chapter() {
-        assert!(matches!(
-            validate_chapter_template("{chapter"),
-            Err(PatternError::MalformedMacro)
-        ));
+        assert!(matches!(validate_chapter_template("{chapter"), Err(PatternError::MalformedMacro)));
     }
 
     // NOTE: validate_volume_template

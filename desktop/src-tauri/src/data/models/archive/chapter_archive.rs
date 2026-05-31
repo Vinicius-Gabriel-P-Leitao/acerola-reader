@@ -70,17 +70,28 @@ impl ChapterArchive {
     }
 
     pub fn fallback_sort(file_name: &str, index: usize) -> String {
-        let filtered = file_name
-            .chars()
-            .filter(|it| it.is_ascii_digit() || *it == '.' || *it == ',')
-            .collect::<String>()
-            .replace(',', ".");
-
-        if filtered.is_empty() {
-            (index + 1).to_string()
-        } else {
-            filtered
-        }
+        file_name
+            .find(|character: char| character.is_ascii_digit())
+            .map(|start_index| {
+                file_name[start_index..]
+                    .chars()
+                    .scan(false, |has_decimal_separator, current_char| match current_char {
+                        digit if digit.is_ascii_digit() => Some(digit),
+                        separator
+                            if (separator == '.' || separator == ',')
+                                && !*has_decimal_separator =>
+                        {
+                            *has_decimal_separator = true;
+                            Some('.')
+                        },
+                        _ => None,
+                    })
+                    .collect::<String>()
+                    .trim_end_matches('.')
+                    .to_string()
+            })
+            .filter(|numeric_sequence| !numeric_sequence.is_empty())
+            .unwrap_or_else(|| (index + 1).to_string())
     }
 }
 
@@ -99,11 +110,7 @@ pub struct ChapterArchive {
     pub last_modified: i64,
 }
 
-pub fn is_special_name(name: &str) -> bool {
-    const KEYWORDS: &[&str] = &["special", "extra", "oneshot", "especial"];
-    let lower = name.to_lowercase();
-    KEYWORDS.iter().any(|kw| lower.contains(kw))
-}
+pub use crate::infra::pattern::volume_special::is_special_name;
 
 #[cfg(test)]
 mod tests {

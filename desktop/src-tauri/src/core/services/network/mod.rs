@@ -20,7 +20,9 @@ impl NetworkService {
         self.node.local_id().to_string()
     }
 
-    pub async fn connected_peers_with_info(&self) -> Vec<(PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>)> {
+    pub async fn connected_peers_with_info(
+        &self,
+    ) -> Vec<(PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>)> {
         self.node.connected_peers_with_info().await
     }
 

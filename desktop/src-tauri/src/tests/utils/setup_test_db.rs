@@ -151,3 +151,19 @@ pub async fn setup_test_db_with_comic() -> sqlx::SqlitePool {
 
     pool
 }
+
+/// Pool com um comic_directory e volumes já inseridos.
+pub async fn setup_test_db_with_volumes() -> sqlx::SqlitePool {
+    let pool = setup_test_db_with_comic().await;
+
+    sqlx::query(
+        "INSERT INTO volume_archive (id, name, path, volume_sort, is_special, comic_directory_fk, last_modified)
+         VALUES (1, 'Vol 01', '/test/v1', '1', 0, 1, 0),
+                (2, 'Vol 02', '/test/v2', '2', 0, 1, 0)",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    pool
+}

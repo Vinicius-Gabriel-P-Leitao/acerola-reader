@@ -1,4 +1,4 @@
 export type ErrorPayload = {
-  errorType: string;
-  message: string;
+	errorType: string;
+	message: string;
 };

@@ -1,14 +1,10 @@
-use crate::{
-    cmd::events::network::NetworkStatusPayload,
-    core::services::network::NetworkService,
-};
+use crate::{cmd::events::network::NetworkStatusPayload, core::services::network::NetworkService};
 
 use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
 pub async fn get_network_status(
-    app: AppHandle,
-    service: State<'_, NetworkService>,
+    app: AppHandle, service: State<'_, NetworkService>,
 ) -> Result<(), String> {
     let mode = service.mode().await;
     let peers = service.connected_peers_with_info().await;
@@ -37,9 +33,7 @@ pub async fn get_local_id(service: State<'_, NetworkService>) -> Result<String, 
 
 #[tauri::command]
 pub async fn connect_to_peer(
-    service: State<'_, NetworkService>,
-    peer_id: String,
-    alpn: String,
+    service: State<'_, NetworkService>, peer_id: String, alpn: String,
 ) -> Result<(), String> {
     service.connect(peer_id, alpn.into_bytes()).await;
     Ok(())

@@ -1,36 +1,36 @@
-import { browser } from "$app/environment";
-import { STORE_FILE, STORE_KEYS } from "$lib/constants/store-plugin";
-import { THEMES } from "$lib/constants/themes";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { browser } from '$app/environment';
+import { STORE_FILE, STORE_KEYS } from '$lib/constants/store-plugin';
+import { THEMES } from '$lib/constants/themes';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { LazyStore } from '@tauri-apps/plugin-store';
 
 export type ThemeColor = keyof typeof THEMES;
 export type ThemeMode = keyof (typeof THEMES)[keyof typeof THEMES];
-export type ThemeModeOption = ThemeMode | "system";
+export type ThemeModeOption = ThemeMode | 'system';
 
 const store = new LazyStore(STORE_FILE);
 
-let theme = $state<ThemeColor>("catppuccin");
-let mode = $state<ThemeModeOption>("dark");
-let resolved = $state<ThemeMode>("dark");
+let theme = $state<ThemeColor>('catppuccin');
+let mode = $state<ThemeModeOption>('dark');
+let resolved = $state<ThemeMode>('dark');
 
 async function applyTheme(color: ThemeColor, modeOption: ThemeModeOption) {
-  if (!browser) return;
+	if (!browser) return;
 
-  const window = getCurrentWindow();
-  let newResolvedMode: ThemeMode = modeOption as ThemeMode;
+	const window = getCurrentWindow();
+	let newResolvedMode: ThemeMode = modeOption as ThemeMode;
 
-  if (modeOption === "system") {
-    newResolvedMode = (await window.theme()) ?? "light";
-  }
+	if (modeOption === 'system') {
+		newResolvedMode = (await window.theme()) ?? 'light';
+	}
 
-  resolved = newResolvedMode;
+	resolved = newResolvedMode;
 
-  const root = document.documentElement;
-  root.setAttribute("data-theme", THEMES[color][resolved]);
-  root.classList.toggle("dark", resolved === "dark");
+	const root = document.documentElement;
+	root.setAttribute('data-theme', THEMES[color][resolved]);
+	root.classList.toggle('dark', resolved === 'dark');
 
-  await window.setTheme(resolved);
+	await window.setTheme(resolved);
 }
 
 // prettier-ignore
@@ -54,29 +54,29 @@ browser && (async () => {
   })();
 
 export function useTheme() {
-  async function setTheme(newTheme: ThemeColor) {
-    theme = newTheme;
-    await store.set(STORE_KEYS.theme, newTheme);
-    applyTheme(theme, mode);
-  }
+	async function setTheme(newTheme: ThemeColor) {
+		theme = newTheme;
+		await store.set(STORE_KEYS.theme, newTheme);
+		applyTheme(theme, mode);
+	}
 
-  async function setMode(newMode: ThemeModeOption) {
-    mode = newMode;
-    await store.set(STORE_KEYS.mode, newMode);
-    applyTheme(theme, mode);
-  }
+	async function setMode(newMode: ThemeModeOption) {
+		mode = newMode;
+		await store.set(STORE_KEYS.mode, newMode);
+		applyTheme(theme, mode);
+	}
 
-  return {
-    setMode,
-    setTheme,
-    get resolved() {
-      return resolved;
-    },
-    get theme() {
-      return theme;
-    },
-    get mode() {
-      return mode;
-    },
-  };
+	return {
+		setMode,
+		setTheme,
+		get resolved() {
+			return resolved;
+		},
+		get theme() {
+			return theme;
+		},
+		get mode() {
+			return mode;
+		}
+	};
 }

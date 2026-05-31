@@ -1,8 +1,6 @@
 use sqlx::SqlitePool;
 
-use crate::data::{
-    models::views::ComicSummaryView, repositories::Repository,
-};
+use crate::data::{models::views::ComicSummaryView, repositories::Repository};
 
 pub struct HomeRepository {
     pub base: Repository<ComicSummaryView>,
