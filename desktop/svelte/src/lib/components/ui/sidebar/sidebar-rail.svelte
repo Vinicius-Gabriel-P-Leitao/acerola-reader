@@ -2,6 +2,7 @@
 	import { cn, type WithElementRef } from '$lib/utils/cn.utils.js';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useSidebar } from './context.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		ref = $bindable(null),
@@ -17,10 +18,10 @@
 	bind:this={ref}
 	data-sidebar="rail"
 	data-slot="sidebar-rail"
-	aria-label="Toggle Sidebar"
+	aria-label={m['sidebar.toggle']()}
 	tabindex={-1}
 	onclick={sidebar.toggle}
-	title="Toggle Sidebar"
+	title={m['sidebar.toggle']()}
 	class={cn(
 		'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex',
 		'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',

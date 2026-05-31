@@ -17,6 +17,7 @@
 
 	import { onMount, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { m } from '$lib/paraglide/messages';
 
 	import ComicChapterList from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
@@ -171,10 +172,9 @@
 			volumes,
 			pageSize,
 			metadata: {
-				// FIXME: Gerar tradução.
-				description: 'Descrição indisponível.',
-				author: 'Autor Desconhecido',
-				status: 'Desconhecido',
+				description: m['pages.comic.metadata.description_unavailable'](),
+				author: m['pages.comic.metadata.unknown_author'](),
+				status: m['pages.comic.metadata.unknown_status'](),
 				source: item.metadata.activeSource || 'LOCAL',
 				genres: []
 			}
@@ -240,7 +240,9 @@
 								value="content"
 								class="relative border-none bg-transparent py-6 text-sm font-black tracking-[0.2em] uppercase data-[state=on]:bg-transparent data-[state=on]:text-primary"
 							>
-								{chapterStore.chapters?.hasVolumeStructure ? 'Volumes' : 'Capítulos'}
+								{chapterStore.chapters?.hasVolumeStructure
+									? m['pages.comic.tabs.volumes']()
+									: m['pages.comic.tabs.chapters']()}
 
 								{#if activeTab === 'content'}
 									<div
@@ -254,7 +256,7 @@
 								value="preferences"
 								class="relative border-none bg-transparent py-6 text-sm font-black tracking-[0.2em] uppercase data-[state=on]:bg-transparent data-[state=on]:text-primary"
 							>
-								Preferências
+								{m['pages.comic.tabs.preferences']()}
 
 								{#if activeTab === 'preferences'}
 									<div
@@ -271,7 +273,7 @@
 							<input
 								type="text"
 								bind:value={searchQuery}
-								placeholder="FILTRAR..."
+								placeholder={m['pages.comic.filter_placeholder']()}
 								class="w-40 rounded-full border border-surface/30 bg-surface/20 px-6 py-2 text-[10px] font-black tracking-widest transition-all focus:w-60 focus:ring-2 focus:ring-primary/50 focus:outline-none"
 							/>
 						</div>
@@ -295,7 +297,7 @@
 								pagesData={manga.pagesData}
 								totalChapters={manga.chaptersCount}
 								pageSize={manga.pageSize}
-								onvisiblepages={(p) => (visiblePages = p)}
+								onvisiblepages={(page: number[]) => (visiblePages = page)}
 							/>
 						{/if}
 					{:else if activeTab === 'preferences'}

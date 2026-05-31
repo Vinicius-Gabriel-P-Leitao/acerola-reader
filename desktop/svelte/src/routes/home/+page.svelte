@@ -12,6 +12,7 @@
 	import { resolveCover } from '$lib/utils/artwork.utils';
 	import { listen } from '@tauri-apps/api/event';
 	import { onDestroy, onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const summary = useComicSummary();
 	const activeComic = useComicContext();
@@ -32,7 +33,7 @@
 </script>
 
 {#if summary.loading}
-	<div class="flex items-center justify-center p-8 text-muted-foreground">Carregando...</div>
+	<div class="flex items-center justify-center p-8 text-muted-foreground">{m['pages.home.loading']()}</div>
 {:else if summary.comics && summary.comics.total > 0}
 	<div class="p-8">
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
@@ -80,6 +81,6 @@
 	</div>
 {:else}
 	<div class="flex items-center justify-center p-8 text-muted-foreground">
-		Nenhum quadrinho encontrado.
+		{m['pages.home.no_comics']()}
 	</div>
 {/if}

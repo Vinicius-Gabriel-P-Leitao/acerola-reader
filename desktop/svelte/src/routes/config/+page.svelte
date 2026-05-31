@@ -124,9 +124,8 @@
 		<div
 			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
 		>
-			<!-- FIXME: Traduzir -->
 			<FolderIcon size={16} />
-			Biblioteca
+			{m['pages.config.library.title']()}
 		</div>
 
 		<div class="grid gap-4">

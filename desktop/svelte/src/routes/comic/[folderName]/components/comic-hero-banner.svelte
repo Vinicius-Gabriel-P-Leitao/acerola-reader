@@ -3,6 +3,7 @@
 	import Star from '@lucide/svelte/icons/star';
 	import List from '@lucide/svelte/icons/list';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		banner,
@@ -45,7 +46,7 @@
 				class="flex items-center gap-3 rounded-2xl border border-surface/30 bg-surface/20 px-6 py-3 backdrop-blur-xl"
 			>
 				<List size={20} class="text-primary" />
-				<span class="text-xl font-black tracking-tighter">Popular</span>
+				<span class="text-xl font-black tracking-tighter">{m['pages.comic.banner.popular']()}</span>
 			</div>
 		</div>
 

@@ -8,6 +8,7 @@ import type { ComicSummaryPayload } from '$lib/contracts/home/home.payloads';
 import type { ErrorPayload } from '$lib/contracts/shared/shared.payloads';
 import { resolveErrorMessage } from '$lib/contracts/errors/errors.i18n';
 import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
+import { m } from '$lib/paraglide/messages';
 
 const { notify } = notificationStore;
 
@@ -34,8 +35,7 @@ export function useComicSummary() {
 		const unlistenErr = await listen<ErrorPayload>(HOME_EVENTS.homeError, (event) => {
 			const description = resolveErrorMessage(event.payload);
 
-			// FIXME: Adicionar chaves i18n para hooks.comic_summary.error_title
-			notify.error('Erro ao carregar biblioteca', {
+			notify.error(m['hooks.comic_summary.error_title'](), {
 				description,
 				duration: 0
 			});

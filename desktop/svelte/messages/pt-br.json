@@ -24,8 +24,23 @@
 		"popover": {
 			"close": "Fechar"
 		},
+		"dialog": {
+			"close": "Fechar"
+		},
+		"sidebar": {
+			"toggle": "Alternar Barra Lateral"
+		},
 		"command": {
-			"placeholder": "Pesquisar..."
+			"placeholder": "Pesquisar...",
+			"title": "Paleta de Comandos",
+			"desc": "Pesquise por um comando para executar..."
+		},
+		"notification": {
+			"empty": "Nenhuma notificação",
+			"clear_all": "Limpar tudo"
+		},
+		"mode_picker": {
+			"title": "Mudar tema"
 		}
 	},
 	"hooks": {
@@ -34,6 +49,16 @@
 			"in_progress": "Scan em andamento...",
 			"success": "Scan concluído!",
 			"error_title": "Falha no scan"
+		},
+		"comic_summary": {
+			"error_title": "Erro ao carregar biblioteca"
+		},
+		"select_folder": {
+			"success": "Pasta salva com sucesso."
+		},
+		"comic_chapters": {
+			"error_load": "Erro ao carregar capítulos",
+			"error_request": "Erro ao solicitar capítulos"
 		}
 	},
 	"tauri_errors": {
@@ -46,12 +71,90 @@
 			"io_error": { "label": "Erro ao acessar o sistema de arquivos." }
 		}
 	},
+	"layout": {
+		"search_placeholder": "Buscar mangá...",
+		"buttons": {
+			"minimize": "Minimizar",
+			"maximize": "Maximizar",
+			"close": "Fechar"
+		}
+	},
 	"routes": {
 		"home": "Início",
 		"history": "Histórico",
 		"config": "Configurações"
 	},
 	"pages": {
+		"home": {
+			"loading": "Carregando...",
+			"no_comics": "Nenhum quadrinho encontrado."
+		},
+		"comic": {
+			"loading": "Carregando...",
+			"tabs": {
+				"volumes": "Volumes",
+				"chapters": "Capítulos",
+				"preferences": "Preferências"
+			},
+			"filter_placeholder": "FILTRAR...",
+			"banner": {
+				"popular": "Popular"
+			},
+			"metadata": {
+				"description_unavailable": "Descrição indisponível.",
+				"unknown_author": "Autor Desconhecido",
+				"unknown_status": "Desconhecido",
+				"synopsis": "Sinopse",
+				"chapters_count": "{count} Caps",
+				"read_now": "LER AGORA",
+				"save": "SALVAR",
+				"sync": "SYNC"
+			},
+			"preferences": {
+				"reading": "Leitura",
+				"display_mode": "Modo de Exibição",
+				"display_mode_list": "Lista",
+				"display_mode_grid": "Grade",
+				"volume_highlight": "Destaque do Volume",
+				"volume_highlight_cover": "Capa",
+				"volume_highlight_banner": "Banner",
+				"chapters_per_page": "Capítulos por página",
+				"metadata": "Metadados",
+				"media_type": "Tipo de Mídia",
+				"media_types": {
+					"manga": "Mangá",
+					"hq": "HQ",
+					"novel": "Novel",
+					"webtoon": "Webtoon"
+				}
+			},
+			"volume": {
+				"chapters_included": "{count} capítulos inclusos",
+				"no_chapters": "Nenhum capítulo disponível.",
+				"no_volumes": "Nenhum volume indexado ainda."
+			}
+		},
+		"history": {
+			"title": "Rede P2P",
+			"local_id": "ID local: {id}",
+			"mode": "Modo: {mode}",
+			"local": "Local",
+			"relay": "Relay",
+			"connect": "Conectar",
+			"active_connections": "Conexões ativas ({count})",
+			"unknown_device": "Dispositivo desconhecido",
+			"no_active_connections": "Nenhuma conexão ativa.",
+			"rpc_log": "Log RPC",
+			"no_events": "Nenhum evento ainda.",
+			"logs": {
+				"ping_sent": "Ping enviado",
+				"ping_received": "Ping recebido",
+				"pong_sent": "Pong enviado",
+				"pong_received": "Pong recebido",
+				"info_exchanged": "Info trocada",
+				"info_received": "Info recebida"
+			}
+		},
 		"config": {
 			"title": "Configurações",
 			"desc": "Personalize sua experiência de leitura.",
@@ -93,6 +196,9 @@
 			},
 			"components": {
 				"theme_piker": "Aparência"
+			},
+			"library": {
+				"title": "Biblioteca"
 			}
 		}
 	}

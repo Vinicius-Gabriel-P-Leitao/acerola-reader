@@ -4,13 +4,14 @@
 	import Command from './command.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { cn, type WithoutChildrenOrChild } from '$lib/utils/cn.utils.js';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		open = $bindable(false),
 		ref = $bindable(null),
 		value = $bindable(''),
-		title = 'Command Palette',
-		description = 'Search for a command to run...',
+		title = m['components.command.title'](),
+		description = m['components.command.desc'](),
 		showCloseButton = false,
 		portalProps,
 		children,

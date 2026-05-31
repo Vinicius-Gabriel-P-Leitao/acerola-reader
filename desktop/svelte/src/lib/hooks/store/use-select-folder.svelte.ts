@@ -4,6 +4,7 @@ import { STORE_FILE, STORE_KEYS } from '$lib/constants/store-plugin';
 import { invoke } from '@tauri-apps/api/core';
 import { load } from '@tauri-apps/plugin-store';
 import { toast } from 'svelte-sonner';
+import { m } from '$lib/paraglide/messages';
 
 const { notify } = notificationStore;
 
@@ -18,9 +19,8 @@ export function useSelectFolder() {
 			await store.set(STORE_KEYS.libraryPath, path);
 			await store.save();
 
-			// FIXME: Traduzir
-			notify.success('Pasta salva com sucesso.', { duration: 5000 });
-			toast.success('Pasta salva com sucesso.');
+			notify.success(m['hooks.select_folder.success'](), { duration: 5000 });
+			toast.success(m['hooks.select_folder.success']());
 			folderPath = path;
 		}
 	}

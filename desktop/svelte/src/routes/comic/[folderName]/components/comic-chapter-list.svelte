@@ -21,6 +21,7 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		pagesData = [],
@@ -142,7 +143,7 @@
 	{:else}
 		<div class="space-y-4 py-20 text-center opacity-50">
 			<RefreshCw size={48} class="mx-auto animate-spin text-primary" />
-			<p class="text-sm font-black tracking-widest uppercase">Carregando...</p>
+			<p class="text-sm font-black tracking-widest uppercase">{m['pages.comic.loading']()}</p>
 		</div>
 	{/if}
 </div>

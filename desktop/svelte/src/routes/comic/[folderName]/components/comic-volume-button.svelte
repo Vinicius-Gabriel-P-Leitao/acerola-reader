@@ -4,6 +4,7 @@
 
 	import { cn } from '$lib/utils/cn.utils';
 	import { AspectRatio } from '$lib/components/ui/aspect-ratio';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		title,

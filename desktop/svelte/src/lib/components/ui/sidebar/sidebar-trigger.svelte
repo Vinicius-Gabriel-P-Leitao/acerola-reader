@@ -4,6 +4,7 @@
 	import { cn } from '$lib/utils/cn.utils.js';
 	import type { ComponentProps } from 'svelte';
 	import { useSidebar } from './context.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		ref = $bindable(null),
@@ -32,5 +33,5 @@
 	{...restProps}
 >
 	<PanelLeftIcon />
-	<span class="sr-only">Toggle Sidebar</span>
+	<span class="sr-only">{m['sidebar.toggle']()}</span>
 </Button>

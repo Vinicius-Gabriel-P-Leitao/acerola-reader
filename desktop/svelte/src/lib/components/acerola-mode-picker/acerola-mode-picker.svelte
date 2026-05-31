@@ -20,6 +20,7 @@
 <script lang="ts">
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import { useTheme } from '$lib/hooks/theme/use-theme.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const themeCtx = useTheme();
 
@@ -28,7 +29,7 @@
 	}
 </script>
 
-<AcerolaButtonIcon onclick={nextMode} title="Mudar tema">
+<AcerolaButtonIcon onclick={nextMode} title={m['components.mode_picker.title']()}>
 	{#key themeCtx.mode}
 		{@const Icon = MODE_CONFIG[themeCtx.mode].icon}
 		<Icon size={16} />

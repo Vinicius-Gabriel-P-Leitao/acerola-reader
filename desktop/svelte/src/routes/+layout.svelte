@@ -105,11 +105,10 @@
 			Acerola
 		</div>
 
-		<!-- FIXME: Traduzir valores -->
 		<div class="flex h-full text-foreground">
 			<button
 				class="inline-flex h-full w-11.5 cursor-pointer items-center justify-center transition-colors hover:bg-muted"
-				aria-label="Minimizar"
+				aria-label={m['layout.buttons.minimize']()}
 				onclick={minimize}
 			>
 				<MinusIcon size={16} strokeWidth={1.5} />
@@ -117,7 +116,7 @@
 
 			<button
 				class="inline-flex h-full w-11.5 cursor-pointer items-center justify-center transition-colors hover:bg-muted"
-				aria-label="Maximizar"
+				aria-label={m['layout.buttons.maximize']()}
 				onclick={toggleMaximize}
 			>
 				<SquareIcon size={14} strokeWidth={1.5} />
@@ -125,7 +124,7 @@
 
 			<button
 				class="hover:text-destructive-foreground inline-flex h-full w-11.5 cursor-pointer items-center justify-center transition-colors hover:bg-destructive"
-				aria-label="Fechar"
+				aria-label={m['layout.buttons.close']()}
 				onclick={closeWindow}
 			>
 				<XIcon size={18} strokeWidth={1.5} />
@@ -179,7 +178,7 @@
 							/>
 							<input
 								type="text"
-								placeholder="Buscar mangá..."
+								placeholder={m['layout.search_placeholder']()}
 								class="placeholder:text-overlay/50 w-full rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none"
 							/>
 						</div>

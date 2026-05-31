@@ -42,6 +42,8 @@
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 
+	import { m } from '$lib/paraglide/messages';
+
 	const { notifications, pop, clearAll } = notificationStore;
 </script>
 
@@ -62,7 +64,7 @@
 			class="flex max-h-96 flex-col gap-2 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 		>
 			{#if notifications.length === 0}
-				<p class="py-6 text-center text-sm text-muted-foreground">Nenhuma notificação</p>
+				<p class="py-6 text-center text-sm text-muted-foreground">{m['components.notification.empty']()}</p>
 			{:else}
 				{#each notifications as notify (notify.id)}
 					{@const Icon = variantIcon[notify.variant]}
@@ -94,7 +96,7 @@
 				{/each}
 
 				<Button variant="ghost" class="w-full text-xs text-muted-foreground" onclick={clearAll}>
-					Limpar tudo
+					{m['components.notification.clear_all']()}
 				</Button>
 			{/if}
 		</div>

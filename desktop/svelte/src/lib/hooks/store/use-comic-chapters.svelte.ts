@@ -13,6 +13,7 @@ import { resolveErrorMessage } from '$lib/contracts/errors/errors.i18n';
 import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
 import { LRUService } from '$lib/services/lru.service';
 import { onMount } from 'svelte';
+import { m } from '$lib/paraglide/messages';
 
 const { notify } = notificationStore;
 
@@ -124,7 +125,7 @@ export function useComicChapters() {
 			unlistenError = await listen<ErrorPayload>(LIBRARY_EVENTS.comicChaptersError, (event) => {
 				const errorMessage = resolveErrorMessage(event.payload);
 
-				notify.error('Erro ao carregar capítulos', {
+				notify.error(m['hooks.comic_chapters.error_load'](), {
 					description: errorMessage
 				});
 				toast.error(errorMessage);
@@ -169,7 +170,7 @@ export function useComicChapters() {
 		} catch (error) {
 			const errorMessage = error as string;
 
-			notify.error('Erro ao solicitar capítulos', {
+			notify.error(m['hooks.comic_chapters.error_request'](), {
 				description: errorMessage
 			});
 			toast.error(errorMessage);

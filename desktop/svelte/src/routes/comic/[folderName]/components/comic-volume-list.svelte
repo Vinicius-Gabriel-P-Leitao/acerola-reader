@@ -34,6 +34,7 @@
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		volumes = [],
@@ -188,7 +189,7 @@
 
 						{#if volume.totalChapters === 0 && !loading}
 							<p class="py-4 text-center text-xs font-black tracking-widest uppercase opacity-50">
-								Nenhum capítulo disponível.
+								{m['pages.comic.volume.no_chapters']()}
 							</p>
 						{/if}
 					</div>
@@ -200,7 +201,7 @@
 			class="space-y-4 rounded-3xl border-2 border-dashed border-surface py-20 text-center opacity-50"
 		>
 			<RefreshCw size={48} class="animate-spin text-primary" />
-			<p class="text-sm font-black tracking-widest uppercase">Nenhum volume indexado ainda.</p>
+			<p class="text-sm font-black tracking-widest uppercase">{m['pages.comic.volume.no_volumes']()}</p>
 		</div>
 	{/if}
 </div>
