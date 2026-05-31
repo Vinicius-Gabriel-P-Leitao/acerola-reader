@@ -36,6 +36,7 @@
 			"desc": "Search for a command to run..."
 		},
 		"notification": {
+			"title": "Notifications",
 			"empty": "No notifications",
 			"clear_all": "Clear all"
 		},

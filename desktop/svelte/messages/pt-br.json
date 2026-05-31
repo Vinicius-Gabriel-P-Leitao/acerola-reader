@@ -36,6 +36,7 @@
 			"desc": "Pesquise por um comando para executar..."
 		},
 		"notification": {
+			"title": "Notificações",
 			"empty": "Nenhuma notificação",
 			"clear_all": "Limpar tudo"
 		},

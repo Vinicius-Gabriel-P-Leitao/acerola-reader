@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import AcerolaNotification, { notificationStore } from './acerola-notification.svelte';
 
 function getTrigger() {
@@ -71,5 +71,22 @@ describe('AcerolaNotification', () => {
 
 		expect(screen.queryByText('Notificação 1')).not.toBeInTheDocument();
 		expect(screen.queryByText('Notificação 2')).not.toBeInTheDocument();
+	});
+
+	it('executa a ação e remove a notificação ao clicar no botão de ação', async () => {
+		const onClick = vi.fn();
+		notificationStore.notify.success('Teste', {
+			action: { label: 'Executar', onClick }
+		});
+		render(AcerolaNotification);
+
+		const user = userEvent.setup();
+		await user.click(getTrigger());
+
+		const actionBtn = screen.getByText('Executar');
+		await user.click(actionBtn);
+
+		expect(onClick).toHaveBeenCalled();
+		expect(screen.queryByText('Teste')).not.toBeInTheDocument();
 	});
 });
