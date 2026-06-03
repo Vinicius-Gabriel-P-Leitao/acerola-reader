@@ -1,7 +1,12 @@
-use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::{Entity, Repository};
-use crate::infra::error::DbError;
 use sqlx::SqlitePool;
+
+use crate::{
+    data::{
+        models::archive::comic_directory::ComicDirectory,
+        repositories::{Entity, Repository},
+    },
+    infra::error::DbError,
+};
 
 #[derive(Clone)]
 pub struct ComicRepository {
@@ -33,9 +38,10 @@ impl ComicRepository {
 #[cfg(test)]
 mod tests {
     use super::ComicRepository;
-    use crate::data::models::archive::comic_directory::ComicDirectory;
-    use crate::infra::error::DbError;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::{
+        data::models::archive::comic_directory::ComicDirectory, infra::error::DbError,
+        tests::utils::setup_test_db::setup_test_db,
+    };
 
     fn berserk() -> ComicDirectory {
         ComicDirectory {

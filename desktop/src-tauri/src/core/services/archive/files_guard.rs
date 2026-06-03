@@ -110,9 +110,10 @@ impl ScannerGuard {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::{ArtworkFileGuard, FileGuard, MetadataFileGuard, ScannerGuard, SupportedFileGuard};
     use crate::infra::error::FileError;
-    use std::path::Path;
 
     #[test]
     fn teste_comic_extensao_valida() {

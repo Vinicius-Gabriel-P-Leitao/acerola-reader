@@ -1,8 +1,6 @@
-use std::future::Future;
-use std::path::PathBuf;
-use std::pin::Pin;
-use tokio::fs;
-use tokio::sync::mpsc;
+use std::{future::Future, path::PathBuf, pin::Pin};
+
+use tokio::{fs, sync::mpsc};
 
 /// Um diretório, os arquivos encontrados diretamente dentro dele e seus subdiretórios diretos.
 pub struct DirectoryEntry {
@@ -77,10 +75,12 @@ impl ScannerEngine {
 
 #[cfg(test)]
 mod tests {
-    use super::{DirectoryEntry, ScannerEngine};
     use std::fs;
+
     use tempfile::tempdir;
     use tokio::sync::mpsc;
+
+    use super::{DirectoryEntry, ScannerEngine};
 
     async fn collect(root: std::path::PathBuf) -> Vec<DirectoryEntry> {
         let (tx, mut rx) = mpsc::channel(32);

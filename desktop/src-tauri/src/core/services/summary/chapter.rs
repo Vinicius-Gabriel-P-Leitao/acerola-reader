@@ -1,3 +1,5 @@
+use sqlx::SqlitePool;
+
 use crate::{
     cmd::events::summary::{
         ChapterDto, ChapterFileDto, ChapterPageDto, VolumeArchiveDto, VolumeChapterGroupDto,
@@ -9,7 +11,6 @@ use crate::{
     },
     infra::error::ComicError,
 };
-use sqlx::SqlitePool;
 
 pub struct ChapterService {
     chapter_repo: ChapterRepository,
@@ -176,9 +177,10 @@ impl ChapterService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::models::archive::chapter_archive::ChapterArchive;
-    use crate::data::repositories::Repository;
-    use crate::tests::utils::setup_test_db::setup_test_db_with_volumes;
+    use crate::{
+        data::{models::archive::chapter_archive::ChapterArchive, repositories::Repository},
+        tests::utils::setup_test_db::setup_test_db_with_volumes,
+    };
 
     async fn popular_dados(pool: &SqlitePool) {
         let chapter_repo = Repository::<ChapterArchive>::new(pool.clone());

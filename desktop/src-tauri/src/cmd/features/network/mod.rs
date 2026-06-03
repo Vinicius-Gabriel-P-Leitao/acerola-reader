@@ -1,6 +1,6 @@
-use crate::{cmd::events::network::NetworkStatusPayload, core::services::network::NetworkService};
-
 use tauri::{AppHandle, Emitter, State};
+
+use crate::{cmd::events::network::NetworkStatusPayload, core::services::network::NetworkService};
 
 #[tauri::command]
 pub async fn get_network_status(

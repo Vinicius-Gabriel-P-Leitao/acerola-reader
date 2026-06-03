@@ -1,3 +1,5 @@
+use std::{collections::HashSet, sync::Arc};
+
 use acerola_p2p::api::{
     guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
     identity::DeviceInfo,
@@ -5,7 +7,6 @@ use acerola_p2p::api::{
     peer::PeerIdentity,
     AcerolaP2p,
 };
-use std::{collections::HashSet, sync::Arc};
 
 pub struct NetworkService {
     node: Arc<AcerolaP2p>,

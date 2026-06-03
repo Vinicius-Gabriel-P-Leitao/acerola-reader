@@ -1,11 +1,12 @@
+use std::path::PathBuf;
+
+use sqlx::SqlitePool;
+use tauri::{AppHandle, Emitter, State};
+
 use crate::{
     cmd::events::shared::ErrorPayload,
     core::services::archive::comic_scanner_engine::ComicScannerService,
 };
-use sqlx::SqlitePool;
-use std::path::PathBuf;
-use tauri::State;
-use tauri::{AppHandle, Emitter};
 
 /// Processa todas as pastas encontradas no disco sem comparar com o banco.
 /// Pastas já indexadas são ignoradas via INSERT OR IGNORE.

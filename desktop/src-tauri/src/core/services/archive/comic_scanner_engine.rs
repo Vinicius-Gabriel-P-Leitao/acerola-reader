@@ -1,26 +1,38 @@
-use std::collections::{HashMap, HashSet};
-use std::future::Future;
-use std::path::PathBuf;
-use tokio::fs;
-use tokio::sync::mpsc;
-
-use crate::core::services::archive::chapter_scanner_engine::ChapterScannerService;
-use crate::core::services::archive::files_guard::{
-    ArchiveFileGuard, ArtworkFileGuard, FileGuard, ScannerGuard,
+use std::{
+    collections::{HashMap, HashSet},
+    future::Future,
+    path::PathBuf,
 };
-use crate::core::services::archive::path_guard::{path_hash, PathGuard};
-use crate::data::models::archive::archive_template::{ArchiveTemplate, SortType};
-use crate::data::models::archive::chapter_archive::ChapterArchive;
-use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::models::archive::volume_archive::VolumeArchive;
-use crate::data::repositories::archive::archive_template_repo::ArchiveTemplateRepository;
-use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
-use crate::data::repositories::archive::volume_archive_repo::VolumeRepository;
-use crate::infra::error::ComicError;
-use crate::infra::error::DbError;
-use crate::infra::filesystem::{DirectoryEntry, ScannerEngine};
-use crate::infra::pattern::template::{detect_template, extract_chapter_parts};
-use crate::infra::pattern::template_validator::validate_chapter_template;
+
+use tokio::{fs, sync::mpsc};
+
+use crate::{
+    core::services::archive::{
+        chapter_scanner_engine::ChapterScannerService,
+        files_guard::{ArchiveFileGuard, ArtworkFileGuard, FileGuard, ScannerGuard},
+        path_guard::{path_hash, PathGuard},
+    },
+    data::{
+        models::archive::{
+            archive_template::{ArchiveTemplate, SortType},
+            chapter_archive::ChapterArchive,
+            comic_directory::ComicDirectory,
+            volume_archive::VolumeArchive,
+        },
+        repositories::archive::{
+            archive_template_repo::ArchiveTemplateRepository,
+            comic_directory_repo::ComicRepository, volume_archive_repo::VolumeRepository,
+        },
+    },
+    infra::{
+        error::{ComicError, DbError},
+        filesystem::{DirectoryEntry, ScannerEngine},
+        pattern::{
+            template::{detect_template, extract_chapter_parts},
+            template_validator::validate_chapter_template,
+        },
+    },
+};
 
 /// Orquestra o scan de uma biblioteca de quadrinhos no sistema de arquivos.
 ///
@@ -436,14 +448,19 @@ fn modified_secs(meta: &std::fs::Metadata) -> i64 {
 
 #[cfg(test)]
 mod tests {
-    use super::ComicScannerService;
-    use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-    use crate::data::repositories::archive::comic_directory_repo::ComicRepository;
-    use crate::data::repositories::archive::volume_archive_repo::VolumeRepository;
-    use crate::tests::utils::setup_test_db::{reset_comics_last_modified, setup_test_db};
     use std::path::PathBuf;
+
     use tempfile::TempDir;
     use tokio::fs;
+
+    use super::ComicScannerService;
+    use crate::{
+        data::repositories::archive::{
+            chapter_archive_repo::ChapterRepository, comic_directory_repo::ComicRepository,
+            volume_archive_repo::VolumeRepository,
+        },
+        tests::utils::setup_test_db::{reset_comics_last_modified, setup_test_db},
+    };
 
     async fn setup(root: &TempDir) -> (ComicScannerService, sqlx::SqlitePool) {
         let pool = setup_test_db().await;

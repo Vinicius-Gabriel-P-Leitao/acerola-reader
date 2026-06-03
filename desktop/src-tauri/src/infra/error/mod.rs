@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+
 use thiserror::Error;
 
 pub mod comic;

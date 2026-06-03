@@ -1,5 +1,6 @@
-use sqlx::SqlitePool;
 use std::collections::HashMap;
+
+use sqlx::SqlitePool;
 
 use crate::{
     data::{

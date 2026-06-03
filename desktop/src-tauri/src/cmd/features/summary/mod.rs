@@ -1,3 +1,6 @@
+use sqlx::SqlitePool;
+use tauri::{AppHandle, Emitter, State};
+
 use crate::{
     cmd::events::{
         shared::ErrorPayload,
@@ -5,9 +8,6 @@ use crate::{
     },
     core::services::summary::{ChapterService, HomeService},
 };
-
-use sqlx::SqlitePool;
-use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
 pub async fn get_comic_summary(app: AppHandle, pool: State<'_, SqlitePool>) -> Result<(), String> {

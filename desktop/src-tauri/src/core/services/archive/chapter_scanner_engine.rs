@@ -2,13 +2,17 @@ use std::path::Path;
 
 use tokio::fs;
 
-use crate::core::services::archive::path_guard::path_hash;
-use crate::data::models::archive::chapter_archive::{is_special_name, ChapterArchive};
-use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-use crate::infra::error::ComicError;
-use crate::infra::error::DbError;
-use crate::infra::pattern::template::extract_chapter_parts;
-use crate::infra::pattern::template_validator::validate_chapter_template;
+use crate::{
+    core::services::archive::path_guard::path_hash,
+    data::{
+        models::archive::chapter_archive::{is_special_name, ChapterArchive},
+        repositories::archive::chapter_archive_repo::ChapterRepository,
+    },
+    infra::{
+        error::{ComicError, DbError},
+        pattern::{template::extract_chapter_parts, template_validator::validate_chapter_template},
+    },
+};
 
 /// Responsável por indexar capítulos individuais no banco de dados.
 ///
@@ -95,12 +99,16 @@ fn modified_secs(meta: &std::fs::Metadata) -> i64 {
 
 #[cfg(test)]
 mod tests {
-    use super::ChapterScannerService;
-    use crate::data::repositories::archive::chapter_archive_repo::ChapterRepository;
-    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
     use std::path::PathBuf;
+
     use tempfile::TempDir;
     use tokio::fs;
+
+    use super::ChapterScannerService;
+    use crate::{
+        data::repositories::archive::chapter_archive_repo::ChapterRepository,
+        tests::utils::setup_test_db::setup_test_db_with_comic,
+    };
 
     async fn setup() -> (ChapterScannerService, sqlx::SqlitePool, TempDir) {
         let pool = setup_test_db_with_comic().await;

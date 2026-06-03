@@ -1,5 +1,5 @@
-use std::path::PathBuf;
-use std::sync::mpsc;
+use std::{path::PathBuf, sync::mpsc};
+
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 

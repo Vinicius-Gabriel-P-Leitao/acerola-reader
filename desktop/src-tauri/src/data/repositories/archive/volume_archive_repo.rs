@@ -1,7 +1,12 @@
-use crate::data::models::archive::volume_archive::VolumeArchive;
-use crate::data::repositories::{Entity, Repository};
-use crate::infra::error::DbError;
 use sqlx::SqlitePool;
+
+use crate::{
+    data::{
+        models::archive::volume_archive::VolumeArchive,
+        repositories::{Entity, Repository},
+    },
+    infra::error::DbError,
+};
 
 pub struct VolumeRepository {
     pub base: Repository<VolumeArchive>,
@@ -75,9 +80,10 @@ impl VolumeRepository {
 #[cfg(test)]
 mod tests {
     use super::VolumeRepository;
-    use crate::data::models::archive::volume_archive::VolumeArchive;
-    use crate::infra::error::DbError;
-    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
+    use crate::{
+        data::models::archive::volume_archive::VolumeArchive, infra::error::DbError,
+        tests::utils::setup_test_db::setup_test_db_with_comic,
+    };
 
     fn vol1() -> VolumeArchive {
         VolumeArchive {

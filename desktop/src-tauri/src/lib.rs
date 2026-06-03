@@ -3,26 +3,28 @@ mod core;
 mod data;
 mod infra;
 
-use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
-use cmd::features::network as network_cmd;
-use cmd::features::summary as comic_summary_cmd;
+use cmd::features::{
+    library::{comic_scanner_cmd, select_folder_cmd},
+    network as network_cmd, summary as comic_summary_cmd,
+};
 use tauri::Manager;
 
 #[cfg(test)]
 pub mod tests;
 
 mod app_bootstrap {
-    use crate::core::services::network::NetworkService;
+    use std::{path::PathBuf, sync::Arc};
 
-    use super::*;
     use acerola_p2p::api::{
         guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
         identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
         transport::IrohTransportBuilder,
         AcerolaP2p,
     };
-    use std::{path::PathBuf, sync::Arc};
     use tauri::Emitter;
+
+    use super::*;
+    use crate::core::services::network::NetworkService;
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();

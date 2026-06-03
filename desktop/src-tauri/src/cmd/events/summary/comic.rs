@@ -1,7 +1,9 @@
-use crate::data::models::views::ComicSummaryView;
+use std::collections::HashMap;
+
 use chrono::Local;
 use serde::Serialize;
-use std::collections::HashMap;
+
+use crate::data::models::views::ComicSummaryView;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

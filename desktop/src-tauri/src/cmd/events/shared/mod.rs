@@ -1,5 +1,6 @@
-use crate::infra::error::ComicError;
 use serde::Serialize;
+
+use crate::infra::error::ComicError;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
