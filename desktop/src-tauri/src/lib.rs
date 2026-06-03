@@ -93,6 +93,7 @@ mod app_bootstrap {
         let store = Arc::new(InMemoryTrustedStore::new());
 
         let transport = IrohTransportBuilder::default()
+            // TODO: Derivar de forma melhor o valor
             .seed(*b"acerola-desktop-seed-v1-00000000")
             .relay("https://relay.acerola-comic.com");
 
