@@ -4,7 +4,10 @@ use thiserror::Error;
 
 pub mod comic;
 pub mod db;
+pub mod reader;
 pub mod rpc;
+
+pub use reader::ReaderError;
 
 #[derive(Debug, Error)]
 pub enum ComicError {

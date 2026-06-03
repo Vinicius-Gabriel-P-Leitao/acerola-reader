@@ -1,11 +1,16 @@
 <script lang="ts" module>
 	export type Chapter = {
 		id: string;
+		name?: string;
 		title: string;
 		fileName: string;
 		isRead: boolean;
 		chapterSort: string;
+		path?: string;
+		volumeId?: string | null;
 		volumeName?: string | null;
+		isSpecial?: boolean;
+		lastModified?: number;
 	};
 
 	export type ChapterPage = {
@@ -27,12 +32,14 @@
 		pagesData = [],
 		totalChapters = 0,
 		pageSize = 25,
-		onvisiblepages
+		onvisiblepages,
+		onopenchapter
 	}: {
 		pagesData: ChapterPage[];
 		totalChapters: number;
 		pageSize: number;
 		onvisiblepages?: (pages: number[]) => void;
+		onopenchapter?: (chapter: Chapter) => void;
 	} = $props();
 
 	/**
@@ -117,6 +124,7 @@
 							<AcerolaHeroButton
 								title={chapter.title}
 								description={chapter.fileName}
+								onclick={() => onopenchapter?.(chapter)}
 								class="h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30"
 							>
 								{#snippet icon()}
@@ -129,6 +137,7 @@
 									<AcerolaButtonIcon
 										variant="ghost"
 										size="sm"
+										onclick={(event) => event.stopPropagation()}
 										class="text-overlay hover:text-primary"
 									>
 										<MoreVertical size={20} />

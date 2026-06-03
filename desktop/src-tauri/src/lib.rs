@@ -5,7 +5,7 @@ mod infra;
 
 use cmd::features::{
     library::{comic_scanner_cmd, select_folder_cmd},
-    network as network_cmd, summary as comic_summary_cmd,
+    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
 };
 use tauri::Manager;
 
@@ -24,7 +24,7 @@ mod app_bootstrap {
     use tauri::Emitter;
 
     use super::*;
-    use crate::core::services::network::NetworkService;
+    use crate::core::services::{network::NetworkService, reader::ReaderService};
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();
@@ -48,6 +48,12 @@ mod app_bootstrap {
             network_cmd::switch_to_relay,
             network_cmd::connect_to_peer,
             network_cmd::get_local_id,
+            reader_cmd::reader_open_chapter,
+            reader_cmd::reader_load_page,
+            reader_cmd::reader_set_current_page,
+            reader_cmd::reader_status,
+            reader_cmd::reader_close_chapter,
+            reader_cmd::reader_prefetch_window,
         ])
     }
 
@@ -132,6 +138,8 @@ mod app_bootstrap {
                 .level_for("acerola_lib", tauri_plugin_log::log::LevelFilter::Debug)
                 .build(),
         )?;
+
+        handle.manage(ReaderService::new());
 
         tauri::async_runtime::block_on(async move {
             setup_database(&handle, db_path).await;

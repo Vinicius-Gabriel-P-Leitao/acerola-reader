@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
 
@@ -11,6 +12,7 @@
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
+	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -19,11 +21,11 @@
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
 
-	import ComicChapterList from './components/comic-chapter-list.svelte';
+	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
 	import ComicMetadataPanel from './components/comic-metadata-panel.svelte';
 	import ComicPreferences from './components/comic-preferences.svelte';
-	import ComicVolumeList from './components/comic-volume-list.svelte';
+	import ComicVolumeList, { type VolumeChapter } from './components/comic-volume-list.svelte';
 
 	let { data } = $props();
 
@@ -44,6 +46,32 @@
 	let visiblePages = $state<number[]>([]);
 
 	const onBack = () => window.history.back();
+
+	function toReaderChapter(chapter: Chapter | VolumeChapter): ReaderChapterPayload | null {
+		if (!chapter.path) return null;
+
+		return {
+			id: chapter.id,
+			name: chapter.name ?? chapter.title,
+			path: chapter.path,
+			chapterSort: chapter.chapterSort ?? '',
+			volumeId: chapter.volumeId ?? null,
+			volumeName: chapter.volumeName ?? null,
+			isSpecial: chapter.isSpecial ?? false,
+			lastModified: chapter.lastModified ?? 0
+		};
+	}
+
+	function openReader(chapter: Chapter | VolumeChapter) {
+		const readerChapter = toReaderChapter(chapter);
+		if (!readerChapter) return;
+
+		goto('/reader', {
+			state: {
+				chapter: readerChapter
+			}
+		});
+	}
 
 	onMount(async () => {
 		if (!activeComic.item && data.comic) {
@@ -134,11 +162,16 @@
 
 				.map((comic) => ({
 					id: comic.id.toString(),
+					name: comic.name,
 					title: comic.name,
 					fileName: comic.name,
 					isRead: false,
 					chapterSort: comic.chapterSort,
-					volumeName: comic.volumeName
+					path: comic.path,
+					volumeId: comic.volumeId,
+					volumeName: comic.volumeName,
+					isSpecial: comic.isSpecial,
+					lastModified: comic.lastModified
 				}))
 		}));
 
@@ -291,6 +324,7 @@
 								viewMode={volumeViewPreference.volumeViewMode}
 								onexpand={(v) => (expandedVolumeId = v)}
 								onvisiblepages={(p) => (visiblePages = p)}
+								onopenchapter={openReader}
 							/>
 						{:else}
 							<ComicChapterList
@@ -298,6 +332,7 @@
 								totalChapters={manga.chaptersCount}
 								pageSize={manga.pageSize}
 								onvisiblepages={(page: number[]) => (visiblePages = page)}
+								onopenchapter={openReader}
 							/>
 						{/if}
 					{:else if activeTab === 'preferences'}

@@ -1,9 +1,16 @@
 <script lang="ts" module>
 	export type VolumeChapter = {
 		id: string;
+		name?: string;
 		title: string;
 		fileName: string;
 		isRead: boolean;
+		chapterSort?: string;
+		path?: string;
+		volumeId?: string | null;
+		volumeName?: string | null;
+		isSpecial?: boolean;
+		lastModified?: number;
 	};
 
 	export type Volume = {
@@ -43,7 +50,8 @@
 		pageSize = 25,
 		viewMode = 'cover',
 		onexpand,
-		onvisiblepages
+		onvisiblepages,
+		onopenchapter
 	}: {
 		volumes: Volume[];
 		pagesData?: VolumePage[];
@@ -52,6 +60,7 @@
 		viewMode?: 'cover' | 'banner';
 		onexpand: (volumeId: string | null) => void;
 		onvisiblepages?: (pages: number[]) => void;
+		onopenchapter?: (chapter: VolumeChapter) => void;
 	} = $props();
 
 	let expandedVolumeId = $state<string | null>(null);
@@ -156,6 +165,7 @@
 												<AcerolaHeroButton
 													title={chapter.title}
 													description={chapter.fileName}
+													onclick={() => onopenchapter?.(chapter)}
 													class="h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30"
 												>
 													{#snippet icon()}
@@ -168,6 +178,7 @@
 														<AcerolaButtonIcon
 															variant="ghost"
 															size="sm"
+															onclick={(event) => event.stopPropagation()}
 															class="text-overlay hover:text-primary"
 														>
 															<MoreVertical size={20} />
