@@ -10,6 +10,7 @@
 	"description": "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.",
 	"scripts": {
 		"tauri": "tauri",
+		"make": "cargo make --cwd ./src-tauri",
 		"preview": "vite preview",
 		"dev": "npm run paraglide:compile && vite dev",
 		"build": "npm run paraglide:compile && vite build",
@@ -21,14 +22,12 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:unit": "vitest run --project=unit",
+		"test:coverage": "vitest run --coverage",
 		"test:unit:watch": "vitest --project=unit",
 		"test:storybook": "vitest run --project=storybook",
 		"test:storybook:watch": "vitest --project=storybook",
-		"test:coverage": "vitest run --coverage",
 		"test:coverage:unit": "vitest run --project=unit --coverage",
 		"test:ui": "vitest --ui",
-		"test:tauri": "cargo test --manifest-path ./src-tauri/Cargo.toml",
-		"test:all": "npm run test && npm run test:tauri",
 		"lint": "prettier --check .",
 		"format": "prettier --write ."
 	},
