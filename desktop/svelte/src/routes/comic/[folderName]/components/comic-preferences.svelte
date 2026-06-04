@@ -79,12 +79,16 @@
 									{m['pages.comic.preferences.volume_highlight_cover']()}
 								</ToggleGroupItem>
 
-								<ToggleGroupItem value="banner" class="px-4 py-1.5 text-[10px] font-black uppercase">
+								<ToggleGroupItem
+									value="banner"
+									class="px-4 py-1.5 text-[10px] font-black uppercase"
+								>
 									{m['pages.comic.preferences.volume_highlight_banner']()}
 								</ToggleGroupItem>
 							{/snippet}
 						</AcerolaToggleGroup>
-					{/snippet}				</AcerolaHeroButton>
+					{/snippet}
+				</AcerolaHeroButton>
 			{/if}
 
 			<!-- Chapters per page -->

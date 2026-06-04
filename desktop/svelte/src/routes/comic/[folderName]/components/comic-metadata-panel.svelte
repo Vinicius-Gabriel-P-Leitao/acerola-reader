@@ -77,7 +77,9 @@
 
 			<div class="w-full space-y-3 rounded-3xl border border-surface/30 bg-base/30 p-6 text-left">
 				<div class="flex items-center justify-between">
-					<h3 class="text-overlay text-[10px] font-black tracking-widest uppercase">{m['pages.comic.metadata.synopsis']()}</h3>
+					<h3 class="text-overlay text-[10px] font-black tracking-widest uppercase">
+						{m['pages.comic.metadata.synopsis']()}
+					</h3>
 					<span class="text-[9px] font-black tracking-widest text-primary/60 uppercase"
 						>{m['pages.comic.metadata.chapters_count']({ count: chaptersCount })}</span
 					>
@@ -89,7 +91,8 @@
 				<AcerolaButton
 					class="flex w-full items-center justify-center gap-3 rounded-3xl py-8 font-black"
 				>
-					<Play size={24} fill="currentColor" /> {m['pages.comic.metadata.read_now']()}
+					<Play size={24} fill="currentColor" />
+					{m['pages.comic.metadata.read_now']()}
 				</AcerolaButton>
 
 				<div class="grid grid-cols-2 gap-3">
@@ -97,14 +100,16 @@
 						variant="outline"
 						class="flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black"
 					>
-						<Bookmark size={16} /> {m['pages.comic.metadata.save']()}
+						<Bookmark size={16} />
+						{m['pages.comic.metadata.save']()}
 					</AcerolaButton>
 
 					<AcerolaButton
 						variant="outline"
 						class="flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black"
 					>
-						<RefreshCw size={16} /> {m['pages.comic.metadata.sync']()}
+						<RefreshCw size={16} />
+						{m['pages.comic.metadata.sync']()}
 					</AcerolaButton>
 				</div>
 			</div>

@@ -25,10 +25,18 @@
 			await listen<NetworkStatus>('network:status', (e) => {
 				status = e.payload;
 			}),
-			await listen<string>('rpc:ping_sent', (e) => addLog(e.payload, m['pages.history.logs.ping_sent']())),
-			await listen<string>('rpc:ping_received', (e) => addLog(e.payload, m['pages.history.logs.ping_received']())),
-			await listen<string>('rpc:pong_sent', (e) => addLog(e.payload, m['pages.history.logs.pong_sent']())),
-			await listen<string>('rpc:pong_received', (e) => addLog(e.payload, m['pages.history.logs.pong_received']())),
+			await listen<string>('rpc:ping_sent', (e) =>
+				addLog(e.payload, m['pages.history.logs.ping_sent']())
+			),
+			await listen<string>('rpc:ping_received', (e) =>
+				addLog(e.payload, m['pages.history.logs.ping_received']())
+			),
+			await listen<string>('rpc:pong_sent', (e) =>
+				addLog(e.payload, m['pages.history.logs.pong_sent']())
+			),
+			await listen<string>('rpc:pong_received', (e) =>
+				addLog(e.payload, m['pages.history.logs.pong_received']())
+			),
 			await listen<string>('rpc:device_info_exchanged', (e) => {
 				addLog(e.payload, m['pages.history.logs.info_exchanged']());
 				refresh();
@@ -82,7 +90,9 @@
 	</div>
 
 	<div class="flex items-center gap-4">
-		<span class="text-sm text-muted-foreground">{m['pages.history.mode']({ mode: status?.mode ?? '...' })}</span>
+		<span class="text-sm text-muted-foreground"
+			>{m['pages.history.mode']({ mode: status?.mode ?? '...' })}</span
+		>
 		<button onclick={switchLocal} class="text-sm underline">{m['pages.history.local']()}</button>
 		<button onclick={switchRelay} class="text-sm underline">{m['pages.history.relay']()}</button>
 	</div>
@@ -93,7 +103,9 @@
 			placeholder="Peer ID"
 			bind:value={targetPeerId}
 		/>
-		<button onclick={connect} class="rounded border px-3 py-1 text-sm">{m['pages.history.connect']()}</button>
+		<button onclick={connect} class="rounded border px-3 py-1 text-sm"
+			>{m['pages.history.connect']()}</button
+		>
 	</div>
 
 	<div>
@@ -112,7 +124,9 @@
 							<span>v{conn.device.version}</span>
 						</div>
 					{:else}
-						<span class="text-xs text-muted-foreground italic">{m['pages.history.unknown_device']()}</span>
+						<span class="text-xs text-muted-foreground italic"
+							>{m['pages.history.unknown_device']()}</span
+						>
 					{/if}
 				</div>
 			{/each}
