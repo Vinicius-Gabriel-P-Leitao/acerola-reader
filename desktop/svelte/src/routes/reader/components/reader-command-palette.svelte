@@ -2,14 +2,23 @@
 	import type { ReaderMode } from '../hooks/use-reader-zoom.svelte';
 
 	export type ReaderCommandPaletteProps = {
-		open?: boolean;
-		value?: string;
-		readingMode?: ReaderMode;
-		zoomMode: boolean;
-		onToggleZoomMode: () => void;
-		onZoomIn: () => void;
-		onZoomOut: () => void;
-		onResetZoom: () => void;
+		data: {
+			zoomMode: boolean;
+		};
+		state: {
+			open: boolean;
+			value: string;
+			readingMode: ReaderMode;
+		};
+		events: {
+			onOpenChange: (open: boolean) => void;
+			onValueChange: (value: string) => void;
+			onReadingModeChange: (mode: ReaderMode) => void;
+			onToggleZoomMode: () => void;
+			onZoomIn: () => void;
+			onZoomOut: () => void;
+			onResetZoom: () => void;
+		};
 	};
 </script>
 
@@ -23,20 +32,11 @@
 	import ZoomIn from '@lucide/svelte/icons/zoom-in';
 	import ZoomOut from '@lucide/svelte/icons/zoom-out';
 
-	let {
-		open = $bindable(false),
-		value = $bindable(''),
-		readingMode = $bindable<ReaderMode>('vertical'),
-		zoomMode,
-		onToggleZoomMode,
-		onZoomIn,
-		onZoomOut,
-		onResetZoom
-	}: ReaderCommandPaletteProps = $props();
+	let { data, events, state }: ReaderCommandPaletteProps = $props();
 
 	function closeCommand() {
-		open = false;
-		value = '';
+		events.onOpenChange(false);
+		events.onValueChange('');
 	}
 
 	function runCommand(action: () => void) {
@@ -45,7 +45,7 @@
 	}
 </script>
 
-{#if open}
+{#if state.open}
 	<div class="absolute inset-0 z-40">
 		<button
 			type="button"
@@ -57,7 +57,10 @@
 		<div
 			class="absolute top-1/2 left-1/2 w-[min(34rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-surface/50 bg-base/95 shadow-2xl shadow-crust/60"
 		>
-			<AcerolaCommand bind:value>
+			<AcerolaCommand
+				state={{ value: state.value }}
+				events={{ onValueChange: events.onValueChange }}
+			>
 				{#snippet children()}
 					<Command.Input placeholder={m['pages.reader.command.placeholder']()} autofocus />
 
@@ -66,11 +69,11 @@
 							<Command.Item
 								value={m['pages.reader.command.toggle_zoom_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(onToggleZoomMode)}
+								onSelect={() => runCommand(events.onToggleZoomMode)}
 							>
 								<ZoomIn size={16} />
 								<span>
-									{zoomMode
+									{data.zoomMode
 										? m['pages.reader.command.disable_zoom_mode']()
 										: m['pages.reader.command.enable_zoom_mode']()}
 								</span>
@@ -80,7 +83,7 @@
 							<Command.Item
 								value={m['pages.reader.command.zoom_in_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(onZoomIn)}
+								onSelect={() => runCommand(events.onZoomIn)}
 							>
 								<ZoomIn size={16} />
 								<span>{m['pages.reader.command.zoom_in']()}</span>
@@ -90,7 +93,7 @@
 							<Command.Item
 								value={m['pages.reader.command.zoom_out_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(onZoomOut)}
+								onSelect={() => runCommand(events.onZoomOut)}
 							>
 								<ZoomOut size={16} />
 								<span>{m['pages.reader.command.zoom_out']()}</span>
@@ -100,7 +103,7 @@
 							<Command.Item
 								value={m['pages.reader.command.reset_zoom_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(onResetZoom)}
+								onSelect={() => runCommand(events.onResetZoom)}
 							>
 								<ZoomOut size={16} />
 								<span>{m['pages.reader.command.reset_zoom']()}</span>
@@ -112,7 +115,7 @@
 							<Command.Item
 								value={m['pages.reader.command.vertical_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(() => (readingMode = 'vertical'))}
+								onSelect={() => runCommand(() => events.onReadingModeChange('vertical'))}
 							>
 								<Rows2 size={16} />
 								<span>{m['pages.reader.modes.vertical']()}</span>
@@ -121,7 +124,7 @@
 							<Command.Item
 								value={m['pages.reader.command.horizontal_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(() => (readingMode = 'horizontal'))}
+								onSelect={() => runCommand(() => events.onReadingModeChange('horizontal'))}
 							>
 								<Columns2 size={16} />
 								<span>{m['pages.reader.modes.horizontal']()}</span>
@@ -130,7 +133,7 @@
 							<Command.Item
 								value={m['pages.reader.command.webtoon_search']()}
 								class="cursor-pointer"
-								onSelect={() => runCommand(() => (readingMode = 'webtoon'))}
+								onSelect={() => runCommand(() => events.onReadingModeChange('webtoon'))}
 							>
 								<ScrollText size={16} />
 								<span>{m['pages.reader.modes.webtoon']()}</span>

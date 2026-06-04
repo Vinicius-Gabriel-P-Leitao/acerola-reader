@@ -66,7 +66,9 @@
 
 					{#snippet action()}
 						<AcerolaButtonIcon
-							class="text-overlay bg-transparent transition-colors hover:text-primary"
+							ui={{
+								class: 'text-overlay bg-transparent transition-colors hover:text-primary'
+							}}
 						>
 							<MoreHorizontal size={16} />
 						</AcerolaButtonIcon>

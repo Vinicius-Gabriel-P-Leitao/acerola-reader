@@ -1,3 +1,12 @@
+<script lang="ts" module>
+	export type ComicHeroBannerProps = {
+		data?: {
+			banner?: string | null;
+			genres?: string[];
+		};
+	};
+</script>
+
 <script lang="ts">
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Star from '@lucide/svelte/icons/star';
@@ -5,20 +14,16 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { m } from '$lib/paraglide/messages';
 
-	let {
-		banner,
-		genres = []
-	}: {
-		banner?: string | null;
-		genres?: string[];
-	} = $props();
+	let { data }: ComicHeroBannerProps = $props();
+
+	const genres = $derived(data?.genres ?? []);
 </script>
 
 <div class="relative h-75 w-full shrink-0 lg:h-112.5">
-	{#if banner}
+	{#if data?.banner}
 		<div class="relative h-full w-full">
 			<img
-				src={banner}
+				src={data.banner}
 				alt="Banner"
 				class="h-full w-full object-cover"
 				referrerpolicy="no-referrer"

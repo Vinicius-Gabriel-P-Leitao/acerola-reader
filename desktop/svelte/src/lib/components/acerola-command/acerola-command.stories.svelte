@@ -11,21 +11,21 @@
 			docs: {
 				description: {
 					component:
-						'Container para interfaces no estilo command palette. O wrapper recebe `children` como snippet e repassa `value` e `onValueChange` ao primitive subjacente, sendo adequado para busca local, navegacao rapida, menus acionaveis por teclado e selecao assistida por filtro.'
+						'Container para interfaces no estilo command palette. O wrapper recebe `children` como snippet e organiza estado/eventos em `state` e `events`, sendo adequado para busca local, navegacao rapida, menus acionaveis por teclado e selecao assistida por filtro.'
 				}
 			},
 			controls: {
-				include: ['value']
+				include: ['state']
 			}
 		},
 		argTypes: {
-			value: {
+			state: {
 				description: 'Texto atual usado pelo input de busca do command.',
-				control: 'text'
+				control: 'object'
 			},
-			onValueChange: {
+			events: {
 				description: 'Callback disparado quando o texto de busca e alterado.',
-				control: false
+				control: 'object'
 			},
 			children: {
 				description: 'Snippet com a composicao interna do command, como input, lista e itens.',
@@ -35,7 +35,7 @@
 	});
 </script>
 
-{#snippet template(args: { value?: string })}
+{#snippet template(args: Record<string, unknown>)}
 	<div class="w-full max-w-md">
 		<AcerolaCommand {...args}>
 			{#snippet children()}
@@ -52,7 +52,7 @@
 
 <Story
 	name="Default"
-	args={{ value: '' }}
+	args={{ state: { value: '' } }}
 	parameters={{
 		docs: {
 			description: {
@@ -66,7 +66,7 @@
 
 <Story
 	name="With Search Value"
-	args={{ value: 'item' }}
+	args={{ state: { value: 'item' } }}
 	parameters={{
 		docs: {
 			description: {

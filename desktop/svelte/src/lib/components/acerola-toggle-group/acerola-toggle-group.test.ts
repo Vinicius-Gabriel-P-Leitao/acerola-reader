@@ -13,8 +13,8 @@ describe('AcerolaToggleGroup', () => {
 
 		render(AcerolaToggleGroup, {
 			children,
-			value,
-			type: 'single'
+			state: { value },
+			config: { type: 'single' }
 		});
 
 		const buttons = screen.getAllByRole('button');

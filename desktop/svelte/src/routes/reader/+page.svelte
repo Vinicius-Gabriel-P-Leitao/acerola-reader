@@ -321,60 +321,79 @@
 <ReaderShell>
 	{#snippet toolbar()}
 		<ReaderToolbar
-			bind:readingMode
-			title={chapter?.name ?? m['pages.reader.fallback.chapter_unavailable']()}
-			subtitle={readerSubtitle}
-			zoomLevel={zoom.zoomLevel}
-			zoomMode={zoom.zoomMode}
-			{isPaginatedMode}
-			{pageControlsDisabled}
-			{canPreviousPage}
-			{canNextPage}
-			onBack={leaveReader}
-			onToggleQuickZoom={zoom.toggleQuickZoom}
-			onToggleZoomMode={zoom.toggleZoomMode}
-			onOpenCommandPalette={openCommandPalette}
-			onPreviousPage={() => goToReaderPage(reader.currentPage - 1)}
-			onNextPage={() => goToReaderPage(reader.currentPage + 1)}
+			data={{
+				title: chapter?.name ?? m['pages.reader.fallback.chapter_unavailable'](),
+				subtitle: readerSubtitle,
+				zoomLevel: zoom.zoomLevel,
+				zoomMode: zoom.zoomMode,
+				isPaginatedMode,
+				pageControlsDisabled,
+				canPreviousPage,
+				canNextPage
+			}}
+			state={{ readingMode }}
+			events={{
+				onBack: leaveReader,
+				onReadingModeChange: (mode) => (readingMode = mode),
+				onToggleQuickZoom: zoom.toggleQuickZoom,
+				onToggleZoomMode: zoom.toggleZoomMode,
+				onOpenCommandPalette: openCommandPalette,
+				onPreviousPage: () => goToReaderPage(reader.currentPage - 1),
+				onNextPage: () => goToReaderPage(reader.currentPage + 1)
+			}}
 		/>
 	{/snippet}
 
 	{#snippet viewport()}
-		<ReaderViewport mode={readingMode} {zoom}>
+		<ReaderViewport data={{ mode: readingMode }} context={{ zoom }}>
 			<ReaderPages
-				mode={readingMode}
-				pageCount={reader.pageCount}
-				currentPage={reader.currentPage}
-				{openFailed}
-				chapterAvailable={Boolean(chapter)}
-				pageAt={reader.pageAt}
-				{trackPage}
+				data={{
+					mode: readingMode,
+					pageCount: reader.pageCount,
+					currentPage: reader.currentPage,
+					openFailed,
+					chapterAvailable: Boolean(chapter)
+				}}
+				services={{
+					pageAt: reader.pageAt,
+					trackPage
+				}}
 			/>
 		</ReaderViewport>
 	{/snippet}
 
 	{#snippet footer()}
 		<ReaderFooter
-			bind:readingMode
-			{pageProgressPercent}
-			{pageProgressWidth}
-			{chapterProgressLabel}
-			{modeLabel}
-			zoomStatusLabel={zoom.zoomStatusLabel}
-			{chaptersRemainingLabel}
+			data={{
+				pageProgressPercent,
+				pageProgressWidth,
+				chapterProgressLabel,
+				modeLabel,
+				zoomStatusLabel: zoom.zoomStatusLabel,
+				chaptersRemainingLabel
+			}}
+			state={{ readingMode }}
+			events={{ onReadingModeChange: (mode) => (readingMode = mode) }}
 		/>
 	{/snippet}
 
 	{#snippet command()}
 		<ReaderCommandPalette
-			bind:open={commandOpen}
-			bind:value={commandValue}
-			bind:readingMode
-			zoomMode={zoom.zoomMode}
-			onToggleZoomMode={zoom.toggleZoomMode}
-			onZoomIn={zoom.zoomIn}
-			onZoomOut={zoom.zoomOut}
-			onResetZoom={zoom.resetZoom}
+			data={{ zoomMode: zoom.zoomMode }}
+			state={{
+				open: commandOpen,
+				value: commandValue,
+				readingMode
+			}}
+			events={{
+				onOpenChange: (open) => (commandOpen = open),
+				onValueChange: (value) => (commandValue = value),
+				onReadingModeChange: (mode) => (readingMode = mode),
+				onToggleZoomMode: zoom.toggleZoomMode,
+				onZoomIn: zoom.zoomIn,
+				onZoomOut: zoom.zoomOut,
+				onResetZoom: zoom.resetZoom
+			}}
 		/>
 	{/snippet}
 </ReaderShell>

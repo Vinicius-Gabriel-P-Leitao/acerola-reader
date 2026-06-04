@@ -14,10 +14,8 @@
 			}
 		},
 		argTypes: {
-			value: { description: 'Valor do campo de texto', control: 'text' },
-			placeholder: { description: 'Placeholder do input', control: 'text' },
-			disabled: { description: 'Desabilita o input', control: 'boolean' },
-			type: { description: 'Tipo do input (text, search, etc)', control: 'text' }
+			state: { description: 'Estado controlado do campo', control: 'object' },
+			ui: { description: 'Configuração visual do input', control: 'object' }
 		}
 	});
 </script>
@@ -26,18 +24,22 @@
 	<AcerolaInput {...args} />
 {/snippet}
 
-<Story name="Default" args={{ placeholder: 'Digite algo...' }} {template} />
+<Story name="Default" args={{ ui: { placeholder: 'Digite algo...' } }} {template} />
 
 <Story
 	name="With Value"
-	args={{ value: 'Texto inicial', placeholder: 'Digite algo...' }}
+	args={{ state: { value: 'Texto inicial' }, ui: { placeholder: 'Digite algo...' } }}
 	{template}
 />
 
 <Story
 	name="Search"
-	args={{ type: 'search', placeholder: 'Pesquisar na biblioteca...' }}
+	args={{ ui: { type: 'search', placeholder: 'Pesquisar na biblioteca...' } }}
 	{template}
 />
 
-<Story name="Disabled" args={{ disabled: true, placeholder: 'Campo desabilitado' }} {template} />
+<Story
+	name="Disabled"
+	args={{ ui: { disabled: true, placeholder: 'Campo desabilitado' } }}
+	{template}
+/>

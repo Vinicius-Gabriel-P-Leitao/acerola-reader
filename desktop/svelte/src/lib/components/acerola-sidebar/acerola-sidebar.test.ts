@@ -29,24 +29,24 @@ const items = [
 
 describe('AcerolasSidebar', () => {
 	it('renderiza o sidebar', () => {
-		render(AcerolasSidebar, { items });
+		render(AcerolasSidebar, { props: { data: { items } } });
 		expect(screen.getByText('Biblioteca')).toBeInTheDocument();
 	});
 
 	it('renderiza todos os itens de navegação', () => {
-		render(AcerolasSidebar, { items });
+		render(AcerolasSidebar, { props: { data: { items } } });
 		expect(screen.getByText('Biblioteca')).toBeInTheDocument();
 		expect(screen.getByText('Configurações')).toBeInTheDocument();
 	});
 
 	it('renderiza links com href correto', () => {
-		render(AcerolasSidebar, { items });
+		render(AcerolasSidebar, { props: { data: { items } } });
 		expect(screen.getByRole('link', { name: /Biblioteca/i })).toHaveAttribute('href', '/home');
 		expect(screen.getByRole('link', { name: /Configurações/i })).toHaveAttribute('href', '/config');
 	});
 
 	it('não renderiza o footer quando não é passado', () => {
-		const { container } = render(AcerolasSidebar, { items });
+		const { container } = render(AcerolasSidebar, { props: { data: { items } } });
 		expect(container).toBeInTheDocument();
 	});
 });

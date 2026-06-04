@@ -250,14 +250,16 @@
 		</div>
 
 		<ComicMetadataPanel
-			title={manga.title}
-			author={manga.metadata.author}
-			status={manga.metadata.status}
-			source={manga.metadata.source}
-			chaptersCount={manga.chaptersCount}
-			description={manga.metadata.description}
-			cover={manga.cover}
-			{onBack}
+			data={{
+				title: manga.title,
+				author: manga.metadata.author,
+				status: manga.metadata.status,
+				source: manga.metadata.source,
+				chaptersCount: manga.chaptersCount,
+				description: manga.metadata.description,
+				cover: manga.cover
+			}}
+			events={{ onBack }}
 		/>
 
 		<div
@@ -266,7 +268,7 @@
 			<div
 				class="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-surface/30 bg-base/90 px-6 backdrop-blur-md lg:hidden"
 			>
-				<AcerolaButtonIcon onclick={onBack} size="sm">
+				<AcerolaButtonIcon events={{ onClick: onBack }} ui={{ size: 'sm' }}>
 					<ArrowLeft size={20} />
 				</AcerolaButtonIcon>
 
@@ -277,13 +279,22 @@
 				<div class="w-10"></div>
 			</div>
 
-			<ComicHeroBanner banner={manga.banner} genres={manga.metadata.genres} />
+			<ComicHeroBanner data={{ banner: manga.banner, genres: manga.metadata.genres }} />
 
 			<div class="mx-auto w-full max-w-5xl space-y-12 p-8 lg:p-16">
 				<div
 					class="sticky top-0 z-40 -mx-4 flex items-center justify-between border-b border-surface/30 bg-base/5 px-4 backdrop-blur-3xl"
 				>
-					<AcerolaToggleGroup type="single" class="flex gap-4" bind:value={activeTab}>
+					<AcerolaToggleGroup
+						config={{ type: 'single' }}
+						state={{ value: activeTab }}
+						events={{
+							onValueChange: (value) => {
+								if (typeof value === 'string') activeTab = value;
+							}
+						}}
+						ui={{ class: 'flex gap-4' }}
+					>
 						{#snippet children()}
 							<ToggleGroupItem
 								value="content"
@@ -333,31 +344,49 @@
 					{#if activeTab === 'content'}
 						{#if chapterStore.chapters?.hasVolumeStructure}
 							<ComicVolumeList
-								volumes={manga.volumes}
-								pagesData={manga.pagesData}
-								loading={chapterStore.loading}
-								pageSize={manga.pageSize}
-								viewMode={volumeViewPreference.volumeViewMode}
-								onexpand={(v) => (expandedVolumeId = v)}
-								onvisiblepages={(p) => (visiblePages = p)}
-								onopenchapter={openReader}
+								data={{
+									volumes: manga.volumes,
+									pagesData: manga.pagesData,
+									loading: chapterStore.loading,
+									pageSize: manga.pageSize,
+									viewMode: volumeViewPreference.volumeViewMode
+								}}
+								events={{
+									onExpand: (value) => (expandedVolumeId = value),
+									onVisiblePages: (pages) => (visiblePages = pages),
+									onOpenChapter: openReader
+								}}
 							/>
 						{:else}
 							<ComicChapterList
-								pagesData={manga.pagesData}
-								totalChapters={manga.chaptersCount}
-								pageSize={manga.pageSize}
-								onvisiblepages={(page: number[]) => (visiblePages = page)}
-								onopenchapter={openReader}
+								data={{
+									pagesData: manga.pagesData,
+									totalChapters: manga.chaptersCount,
+									pageSize: manga.pageSize
+								}}
+								events={{
+									onVisiblePages: (pages: number[]) => (visiblePages = pages),
+									onOpenChapter: openReader
+								}}
 							/>
 						{/if}
 					{:else if activeTab === 'preferences'}
 						<ComicPreferences
-							bind:displayMode
-							bind:mediaType
-							bind:chaptersPerPage={chaptersPreference.chaptersPerPage}
-							bind:volumeViewMode={volumeViewPreference.volumeViewMode}
-							hasVolumeStructure={chapterStore.chapters?.hasVolumeStructure ?? false}
+							data={{
+								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false
+							}}
+							state={{
+								displayMode,
+								mediaType,
+								chaptersPerPage: chaptersPreference.chaptersPerPage,
+								volumeViewMode: volumeViewPreference.volumeViewMode
+							}}
+							events={{
+								onDisplayModeChange: (value) => (displayMode = value),
+								onMediaTypeChange: (value) => (mediaType = value),
+								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
+								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value)
+							}}
 						/>
 					{/if}
 				</div>

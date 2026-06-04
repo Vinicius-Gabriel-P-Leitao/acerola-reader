@@ -21,9 +21,9 @@
 </script>
 
 <Story name="With Banner" asChild>
-	<ComicHeroBanner {banner} />
+	<ComicHeroBanner data={{ banner }} />
 </Story>
 
 <Story name="Without Banner" asChild>
-	<ComicHeroBanner banner={null} />
+	<ComicHeroBanner data={{ banner: null }} />
 </Story>

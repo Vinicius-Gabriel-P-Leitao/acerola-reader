@@ -38,21 +38,23 @@
 			}
 		}
 	];
+
+	export type ThemePickerComponentProps = {
+		data: {
+			theme: ThemeColor;
+			mode: ThemeMode;
+		};
+		events: {
+			onSelect: (name: ThemeColor) => void;
+		};
+	};
 </script>
 
 <script lang="ts">
 	import PaletteIcon from '@lucide/svelte/icons/palette';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 
-	let {
-		theme,
-		mode,
-		onselect
-	}: {
-		mode: ThemeMode;
-		theme: ThemeColor;
-		onselect: (name: ThemeColor) => void;
-	} = $props();
+	let { data, events }: ThemePickerComponentProps = $props();
 </script>
 
 <section class="space-y-4">
@@ -66,15 +68,15 @@
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 		{#each themes as it}
 			<button
-				onclick={() => onselect(it.id)}
+				onclick={() => events.onSelect(it.id)}
 				class="relative cursor-pointer overflow-hidden rounded-3xl border-2 p-6 text-left transition-all
-          {theme === it.id
+          {data.theme === it.id
 					? 'border-primary bg-primary/5 shadow-xl shadow-primary/10'
 					: 'border-border bg-card hover:border-muted-foreground'}"
 			>
 				<div class="mb-4 flex items-center gap-4">
 					<div class="flex -space-x-2">
-						{#each it.colors[mode] as color}
+						{#each it.colors[data.mode] as color}
 							<div
 								class="h-8 w-8 rounded-full border-2 border-card shadow-sm"
 								style="background-color: {color}"
@@ -86,7 +88,7 @@
 				<h3 class="font-bold text-foreground">{it.name()}</h3>
 				<p class="mt-1 text-xs text-muted-foreground">{it.description()}</p>
 
-				{#if theme === it.id}
+				{#if data.theme === it.id}
 					<div
 						class="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
 					>

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import ComicVolumeList from './comic-volume-list.svelte';
 
 // Mock animate for Svelte transitions in JSDOM
@@ -17,6 +17,14 @@ if (typeof window !== 'undefined' && !window.HTMLElement.prototype.animate) {
 }
 
 describe('ComicVolumeList', () => {
+	beforeAll(() => {
+		globalThis.IntersectionObserver ??= class {
+			observe = vi.fn();
+			unobserve = vi.fn();
+			disconnect = vi.fn();
+		} as unknown as typeof IntersectionObserver;
+	});
+
 	const volumes = [
 		{
 			id: 'v1',
@@ -35,15 +43,25 @@ describe('ComicVolumeList', () => {
 	];
 
 	it('renderiza a lista de volumes quando fornecida', () => {
-		render(ComicVolumeList, { volumes, pagesData, onexpand: vi.fn() });
+		render(ComicVolumeList, {
+			props: {
+				data: { volumes, pagesData },
+				events: { onExpand: vi.fn() }
+			}
+		});
 
 		expect(screen.getByText('Volume 1')).toBeInTheDocument();
-		expect(screen.getByText('1 Capítulos inclusos')).toBeInTheDocument();
+		expect(screen.getByText('1 capítulos inclusos')).toBeInTheDocument();
 	});
 
 	it('expande o volume ao clicar para mostrar os capítulos', async () => {
 		const user = userEvent.setup();
-		render(ComicVolumeList, { volumes, pagesData, onexpand: vi.fn() });
+		render(ComicVolumeList, {
+			props: {
+				data: { volumes, pagesData },
+				events: { onExpand: vi.fn() }
+			}
+		});
 
 		const volumeBtn = screen.getByRole('button', { name: /Volume 1/i });
 		expect(volumeBtn).toBeInTheDocument();
@@ -55,7 +73,12 @@ describe('ComicVolumeList', () => {
 	});
 
 	it('renderiza empty state quando a lista está vazia', () => {
-		render(ComicVolumeList, { volumes: [], onexpand: vi.fn() });
+		render(ComicVolumeList, {
+			props: {
+				data: { volumes: [] },
+				events: { onExpand: vi.fn() }
+			}
+		});
 
 		expect(screen.getByText('Nenhum volume indexado ainda.')).toBeInTheDocument();
 	});

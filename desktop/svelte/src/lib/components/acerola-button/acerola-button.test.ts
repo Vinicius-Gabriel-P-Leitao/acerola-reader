@@ -9,7 +9,7 @@ describe('AcerolaButton', () => {
 		const children = createRawSnippet(() => ({
 			render: () => `<span>Clique aqui</span>`
 		}));
-		render(AcerolaButton, { children });
+		render(AcerolaButton, { props: { children } });
 		expect(screen.getByText('Clique aqui')).toBeInTheDocument();
 	});
 
@@ -17,7 +17,7 @@ describe('AcerolaButton', () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 
-		render(AcerolaButton, { onclick });
+		render(AcerolaButton, { props: { events: { onClick: onclick } } });
 		await user.click(screen.getByRole('button'));
 
 		expect(onclick).toHaveBeenCalledOnce();
@@ -27,7 +27,9 @@ describe('AcerolaButton', () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 
-		render(AcerolaButton, { onclick, disabled: true });
+		render(AcerolaButton, {
+			props: { events: { onClick: onclick }, ui: { disabled: true } }
+		});
 		await user.click(screen.getByRole('button'));
 
 		expect(onclick).not.toHaveBeenCalled();

@@ -14,9 +14,8 @@
 			}
 		},
 		argTypes: {
-			title: { description: 'Título do card', control: 'text' },
-			description: { description: 'Descrição opcional abaixo do título', control: 'text' },
-			size: { description: 'Tamanho do card', control: 'radio', options: ['default', 'sm'] }
+			data: { description: 'Conteúdo do card', control: 'object' },
+			ui: { description: 'Configuração visual do card', control: 'object' }
 		}
 	});
 </script>
@@ -26,29 +25,34 @@
 	import AcerolaInput from '$lib/components/acerola-input/acerola-input.svelte';
 </script>
 
-<Story name="Default" args={{ title: 'Berserk' }} />
+<Story name="Default" args={{ data: { title: 'Berserk' } }} />
 
-<Story name="Com descrição" args={{ title: 'Berserk', description: 'Kentaro Miura' }} />
+<Story name="Com descrição" args={{ data: { title: 'Berserk', description: 'Kentaro Miura' } }} />
 
-<Story name="Tamanho sm" args={{ title: 'Vagabond', description: 'Takehiko Inoue', size: 'sm' }} />
+<Story
+	name="Tamanho sm"
+	args={{ data: { title: 'Vagabond', description: 'Takehiko Inoue' }, ui: { size: 'sm' } }}
+/>
 
 <Story name="Com conteúdo e footer" asChild>
 	<div class="w-sm">
 		<AcerolaCard
-			title="Configurações da biblioteca"
-			description="Ajuste como os quadrinhos são organizados e escaneados."
+			data={{
+				title: 'Configurações da biblioteca',
+				description: 'Ajuste como os quadrinhos são organizados e escaneados.'
+			}}
 		>
 			{#snippet children()}
 				<div class="flex flex-col gap-4">
 					<AcerolaInput />
-					<AcerolaInput type="password" placeholder="Senha" />
+					<AcerolaInput ui={{ type: 'password', placeholder: 'Senha' }} />
 				</div>
 			{/snippet}
 
 			{#snippet footer()}
 				<div class="flex w-full gap-2">
-					<AcerolaButton variant="outline" class="flex-1">Cancelar</AcerolaButton>
-					<AcerolaButton class="flex-1">Salvar</AcerolaButton>
+					<AcerolaButton ui={{ variant: 'outline', class: 'flex-1' }}>Cancelar</AcerolaButton>
+					<AcerolaButton ui={{ class: 'flex-1' }}>Salvar</AcerolaButton>
 				</div>
 			{/snippet}
 		</AcerolaCard>

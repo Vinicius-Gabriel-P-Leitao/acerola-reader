@@ -1,8 +1,16 @@
 import { render, screen } from '@testing-library/svelte';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import ComicChapterList from './comic-chapter-list.svelte';
 
 describe('ComicChapterList', () => {
+	beforeAll(() => {
+		globalThis.IntersectionObserver ??= class {
+			observe = vi.fn();
+			unobserve = vi.fn();
+			disconnect = vi.fn();
+		} as unknown as typeof IntersectionObserver;
+	});
+
 	const pagesData = [
 		{
 			page: 0,
@@ -26,7 +34,9 @@ describe('ComicChapterList', () => {
 	];
 
 	it('renderiza a lista de capítulos quando fornecida', () => {
-		render(ComicChapterList, { pagesData, totalChapters: 2, pageSize: 2 });
+		render(ComicChapterList, {
+			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
+		});
 
 		expect(screen.getByText('Capítulo 1: Test')).toBeInTheDocument();
 		expect(screen.getByText('001.cbz')).toBeInTheDocument();
@@ -35,7 +45,9 @@ describe('ComicChapterList', () => {
 	});
 
 	it('renderiza empty state quando a lista está vazia', () => {
-		render(ComicChapterList, { pagesData: [], totalChapters: 0, pageSize: 2 });
+		render(ComicChapterList, {
+			props: { data: { pagesData: [], totalChapters: 0, pageSize: 2 } }
+		});
 
 		expect(screen.getByText('Carregando...')).toBeInTheDocument();
 	});

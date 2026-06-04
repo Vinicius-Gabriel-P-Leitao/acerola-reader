@@ -73,10 +73,13 @@
 </script>
 
 <AcerolaPopover
-	contentClass="p-0 w-84 overflow-hidden rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl"
+	ui={{
+		contentClass:
+			'p-0 w-84 overflow-hidden rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl'
+	}}
 >
 	{#snippet trigger()}
-		<AcerolaButtonIcon class="relative hover:bg-muted/80">
+		<AcerolaButtonIcon ui={{ class: 'relative hover:bg-muted/80' }}>
 			<BellIcon size={20} />
 			{#if notifications.length > 0}
 				<span

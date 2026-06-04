@@ -2,13 +2,22 @@
 	import type { Snippet } from 'svelte';
 
 	export type AcerolaHeroButtonProps = {
-		title?: string;
-		class?: string;
-		description?: string;
+		data?: {
+			title?: string;
+			description?: string;
+		};
+		events?: {
+			onClick?: (event: MouseEvent) => void;
+		};
+		ui?: {
+			class?: string;
+		};
+	};
+
+	export type AcerolaHeroButtonSnippets = {
 		icon?: Snippet;
 		action?: Snippet;
 		children?: Snippet;
-		onclick?: (event: MouseEvent) => void;
 	};
 </script>
 
@@ -17,25 +26,17 @@
 	import * as Item from '$lib/components/ui/item/index.js';
 	import { cn } from '$lib/utils/cn.utils';
 
-	let {
-		title,
-		description,
-		class: className,
-		icon,
-		action,
-		onclick,
-		...rest
-	}: AcerolaHeroButtonProps = $props();
+	let { data, events, ui, icon, action }: AcerolaHeroButtonProps & AcerolaHeroButtonSnippets =
+		$props();
 </script>
 
 <Item.Root
 	class={cn(
 		'group flex items-center justify-between rounded-3xl border border-border bg-card p-6 transition-colors',
-		onclick ? 'cursor-pointer hover:border-primary/50' : '',
-		className
+		events?.onClick ? 'cursor-pointer hover:border-primary/50' : '',
+		ui?.class
 	)}
-	{onclick}
-	{...rest}
+	onclick={events?.onClick}
 >
 	<div class="flex items-center gap-4">
 		{#if icon}
@@ -48,11 +49,12 @@
 
 		<Item.Content class="text-left">
 			<Item.Title class="text-lg font-bold text-foreground">
-				{title ?? m['components.hero_button.default_title']()}
+				{data?.title ?? m['components.hero_button.default_title']()}
 			</Item.Title>
 
-			{#if description}
-				<Item.Description class="text-sm text-muted-foreground">{description}</Item.Description>
+			{#if data?.description}
+				<Item.Description class="text-sm text-muted-foreground">{data.description}</Item.Description
+				>
 			{/if}
 		</Item.Content>
 	</div>

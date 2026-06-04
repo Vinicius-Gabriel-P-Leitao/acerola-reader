@@ -14,14 +14,16 @@
 				}
 			},
 			controls: {
-				include: ['open']
+				include: ['state']
 			}
 		},
 		argTypes: {
-			open: {
+			state: {
 				description: 'Define se o popover inicia aberto ou fechado.',
-				control: 'boolean'
+				control: 'object'
 			},
+			events: { description: 'Callbacks de abertura do popover.', control: 'object' },
+			ui: { description: 'Configuração visual do conteúdo.', control: 'object' },
 			trigger: {
 				description: 'Snippet que renderiza o elemento usado como gatilho do popover.',
 				control: false
@@ -34,7 +36,7 @@
 	});
 </script>
 
-{#snippet template(args: { open?: boolean })}
+{#snippet template(args: Record<string, unknown>)}
 	<AcerolaPopover {...args}>
 		{#snippet trigger()}
 			<button type="button" class="rounded bg-primary px-4 py-2 text-primary-foreground">
@@ -51,7 +53,7 @@
 
 <Story
 	name="Default"
-	args={{ open: false }}
+	args={{ state: { open: false } }}
 	parameters={{
 		docs: {
 			description: {
@@ -65,7 +67,7 @@
 
 <Story
 	name="Initially Open"
-	args={{ open: true }}
+	args={{ state: { open: true } }}
 	parameters={{
 		docs: {
 			description: {

@@ -5,10 +5,20 @@ import ComicPreferences from './comic-preferences.svelte';
 describe('ComicPreferences', () => {
 	it('renderiza as opções de preferência', () => {
 		render(ComicPreferences, {
-			displayMode: 'Lista',
-			chaptersPerPage: '100',
-			mediaType: 'Manga',
-			volumeViewMode: 'cover'
+			props: {
+				state: {
+					displayMode: 'Lista',
+					chaptersPerPage: '100',
+					mediaType: 'Manga',
+					volumeViewMode: 'cover'
+				},
+				events: {
+					onDisplayModeChange: () => {},
+					onChaptersPerPageChange: () => {},
+					onMediaTypeChange: () => {},
+					onVolumeViewModeChange: () => {}
+				}
+			}
 		});
 
 		expect(screen.getByText('Modo de Exibição')).toBeInTheDocument();
@@ -16,7 +26,7 @@ describe('ComicPreferences', () => {
 		expect(screen.getByText('Grade')).toBeInTheDocument();
 		expect(screen.getByText('Capítulos por página')).toBeInTheDocument();
 		expect(screen.getByText('Tipo de Mídia')).toBeInTheDocument();
-		expect(screen.getByText('Manga')).toBeInTheDocument();
-		expect(screen.getByText('Hq')).toBeInTheDocument();
+		expect(screen.getByText('Mangá')).toBeInTheDocument();
+		expect(screen.getByText('HQ')).toBeInTheDocument();
 	});
 });

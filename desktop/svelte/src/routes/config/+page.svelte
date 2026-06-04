@@ -79,11 +79,13 @@
 		<div class="grid gap-4">
 			<!-- Item: Pasta dos mangás -->
 			<AcerolaHeroButton
-				title={m['pages.config.file_system.comic_path.title']()}
-				description={m['pages.config.file_system.comic_path.desc']({
-					path: folder.folderPath ?? ''
-				})}
-				onclick={folder.selectFolder}
+				data={{
+					title: m['pages.config.file_system.comic_path.title'](),
+					description: m['pages.config.file_system.comic_path.desc']({
+						path: folder.folderPath ?? ''
+					})
+				}}
+				events={{ onClick: folder.selectFolder }}
 			>
 				{#snippet icon()}
 					<FolderIcon class="text-chart-5" size={24} />
@@ -91,7 +93,10 @@
 
 				{#snippet action()}
 					<AcerolaButtonIcon
-						class="rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
 					>
 						<PlayIcon />
 					</AcerolaButtonIcon>
@@ -100,8 +105,10 @@
 
 			<!-- Item: Gerar ComicInfo.xml para os mangás -->
 			<AcerolaHeroButton
-				title={m['pages.config.file_system.comic_info.title']()}
-				description={m['pages.config.file_system.comic_info.desc']()}
+				data={{
+					title: m['pages.config.file_system.comic_info.title'](),
+					description: m['pages.config.file_system.comic_info.desc']()
+				}}
 			>
 				{#snippet icon()}
 					<FileTextIcon class="text-chart-2" size={24} />
@@ -109,9 +116,11 @@
 
 				{#snippet action()}
 					<AcerolaSwitch
-						checked={comicInfoPreference.comicInfoPreference ?? false}
-						onCheckedChange={async () => {
-							await comicInfoPreference.selectComicInfoPreference();
+						state={{ checked: comicInfoPreference.comicInfoPreference ?? false }}
+						events={{
+							onCheckedChange: async () => {
+								await comicInfoPreference.selectComicInfoPreference();
+							}
 						}}
 					/>
 				{/snippet}
@@ -131,9 +140,11 @@
 		<div class="grid gap-4">
 			<!-- Item: Iniciar sincronização rápida, aqui sera usado o refresh_library rapido -->
 			<AcerolaHeroButton
-				title={m['pages.config.file_system.sync.fast.title']()}
-				description={m['pages.config.file_system.sync.fast.desc']()}
-				onclick={() => refreshScanner.start()}
+				data={{
+					title: m['pages.config.file_system.sync.fast.title'](),
+					description: m['pages.config.file_system.sync.fast.desc']()
+				}}
+				events={{ onClick: () => refreshScanner.start() }}
 			>
 				{#snippet icon()}
 					<FolderSync class="text-chart-3" size={24} />
@@ -141,7 +152,10 @@
 
 				{#snippet action()}
 					<AcerolaButtonIcon
-						class="rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
 					>
 						<RefreshCw />
 					</AcerolaButtonIcon>
@@ -150,9 +164,11 @@
 
 			<!-- Item: Sincronização profunda, reescreve tudo do banco de dados, aqui sera usado o rebuild_library -->
 			<AcerolaHeroButton
-				title={m['pages.config.file_system.sync.deep.title']()}
-				description={m['pages.config.file_system.sync.deep.desc']()}
-				onclick={() => rebuildScanner.start()}
+				data={{
+					title: m['pages.config.file_system.sync.deep.title'](),
+					description: m['pages.config.file_system.sync.deep.desc']()
+				}}
+				events={{ onClick: () => rebuildScanner.start() }}
 			>
 				{#snippet icon()}
 					<FolderSync class="text-chart-1" size={24} />
@@ -160,7 +176,10 @@
 
 				{#snippet action()}
 					<AcerolaButtonIcon
-						class="rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
 					>
 						<RefreshCw />
 					</AcerolaButtonIcon>
@@ -170,7 +189,10 @@
 	</section>
 
 	<!-- Aparência (Componente Existente) -->
-	<ThemePicker theme={ctx.theme} mode={ctx.resolved} onselect={ctx.setTheme} />
+	<ThemePicker
+		data={{ theme: ctx.theme, mode: ctx.resolved }}
+		events={{ onSelect: ctx.setTheme }}
+	/>
 
 	<!-- Metadados -->
 
@@ -185,9 +207,11 @@
 		<div class="grid gap-4">
 			<!-- Item: Seleção do idioma dos metadados -->
 			<AcerolaHeroButton
-				title={m['pages.config.metadata.lang.title']()}
-				description={m['pages.config.metadata.lang.desc']()}
-				onclick={() => console.log('teste')}
+				data={{
+					title: m['pages.config.metadata.lang.title'](),
+					description: m['pages.config.metadata.lang.desc']()
+				}}
+				events={{ onClick: () => console.log('teste') }}
 			>
 				{#snippet icon()}
 					<LanguagesIcon class="text-chart-4" size={24} />
@@ -197,7 +221,10 @@
 					<AcerolaPopover>
 						{#snippet trigger()}
 							<AcerolaButtonIcon
-								class="rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+								ui={{
+									class:
+										'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+								}}
 							>
 								<Plus />
 							</AcerolaButtonIcon>
@@ -229,10 +256,12 @@
 
 			<!-- Item: Sync com o mangadex -->
 			<AcerolaHeroButton
-				title={m['pages.config.metadata.mangadex.title']()}
-				description={m['pages.config.metadata.mangadex.desc']()}
+				data={{
+					title: m['pages.config.metadata.mangadex.title'](),
+					description: m['pages.config.metadata.mangadex.desc']()
+				}}
 				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
-				onclick={() => console.log('sync')}
+				events={{ onClick: () => console.log('sync') }}
 			>
 				{#snippet icon()}
 					<MangaDexIcon class="h-6 w-6 rounded-lg" />
@@ -240,7 +269,10 @@
 
 				{#snippet action()}
 					<AcerolaButtonIcon
-						class="rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
 					>
 						<RefreshCw />
 					</AcerolaButtonIcon>
@@ -249,10 +281,12 @@
 
 			<!-- Item: Sync com o anilist -->
 			<AcerolaHeroButton
-				title={m['pages.config.metadata.anilist.title']()}
-				description={m['pages.config.metadata.anilist.desc']()}
+				data={{
+					title: m['pages.config.metadata.anilist.title'](),
+					description: m['pages.config.metadata.anilist.desc']()
+				}}
 				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
-				onclick={() => console.log('sync')}
+				events={{ onClick: () => console.log('sync') }}
 			>
 				{#snippet icon()}
 					<AniListIcon class="h-6 w-6 rounded-lg" />
@@ -260,7 +294,10 @@
 
 				{#snippet action()}
 					<AcerolaButtonIcon
-						class="rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
 					>
 						<RefreshCw />
 					</AcerolaButtonIcon>

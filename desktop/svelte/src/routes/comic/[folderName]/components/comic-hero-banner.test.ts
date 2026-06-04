@@ -4,14 +4,16 @@ import ComicHeroBanner from './comic-hero-banner.svelte';
 
 describe('ComicHeroBanner', () => {
 	it('renderiza imagem do banner quando a url é fornecida', () => {
-		const { container } = render(ComicHeroBanner, { banner: 'https://test.com/banner.jpg' });
+		const { container } = render(ComicHeroBanner, {
+			props: { data: { banner: 'https://test.com/banner.jpg' } }
+		});
 		const img = container.querySelector('img');
 		expect(img).toBeInTheDocument();
 		expect(img?.getAttribute('src')).toBe('https://test.com/banner.jpg');
 	});
 
 	it('renderiza placeholder de ícone quando o banner não é fornecido', () => {
-		const { container } = render(ComicHeroBanner, { banner: null });
+		const { container } = render(ComicHeroBanner, { props: { data: { banner: null } } });
 		const img = container.querySelector('img');
 		expect(img).not.toBeInTheDocument();
 		// Verifica se os elementos das estatísticas ainda estão lá

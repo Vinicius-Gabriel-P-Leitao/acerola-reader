@@ -13,10 +13,14 @@ describe('AcerolaCommand', () => {
 		}));
 
 		render(AcerolaCommand, {
-			children,
-			value,
-			onValueChange: (nextValue: string) => {
-				value = nextValue;
+			props: {
+				children,
+				state: { value },
+				events: {
+					onValueChange: (nextValue: string) => {
+						value = nextValue;
+					}
+				}
 			}
 		});
 

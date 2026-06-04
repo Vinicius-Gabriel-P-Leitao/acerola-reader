@@ -2,33 +2,33 @@
 	import type { Snippet } from 'svelte';
 
 	export type AcerolaCardProps = {
-		title: string;
-		description?: string;
+		data: {
+			title: string;
+			description?: string;
+		};
+		ui?: {
+			size?: 'default' | 'sm';
+			class?: string;
+		};
+	};
+
+	export type AcerolaCardSnippets = {
 		children?: Snippet;
 		footer?: Snippet;
-		size?: 'default' | 'sm';
-		class?: string;
 	};
 </script>
 
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 
-	let {
-		title,
-		description,
-		children,
-		footer,
-		size = 'default',
-		class: className
-	}: AcerolaCardProps = $props();
+	let { data, ui, children, footer }: AcerolaCardProps & AcerolaCardSnippets = $props();
 </script>
 
-<Card.Root {size} class={className}>
+<Card.Root size={ui?.size ?? 'default'} class={ui?.class}>
 	<Card.Header>
-		<Card.Title class="font-semibold text-foreground">{title}</Card.Title>
-		{#if description}
-			<Card.Description>{description}</Card.Description>
+		<Card.Title class="font-semibold text-foreground">{data.title}</Card.Title>
+		{#if data.description}
+			<Card.Description>{data.description}</Card.Description>
 		{/if}
 	</Card.Header>
 

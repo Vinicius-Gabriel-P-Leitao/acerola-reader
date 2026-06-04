@@ -28,13 +28,15 @@
 
 <Story name="Default" asChild>
 	<ComicMetadataPanel
-		{title}
-		{author}
-		status="Ongoing"
-		source="LOCAL"
-		{chaptersCount}
-		{description}
-		{cover}
-		{onBack}
+		data={{
+			title,
+			author,
+			status: 'Ongoing',
+			source: 'LOCAL',
+			chaptersCount,
+			description,
+			cover
+		}}
+		events={{ onBack }}
 	/>
 </Story>

@@ -8,13 +8,12 @@
 		tags: ['autodocs'],
 		parameters: {
 			controls: {
-				include: ['checked', 'size', 'disabled']
+				include: ['state', 'ui']
 			}
 		},
 		argTypes: {
-			checked: { description: 'Estado do switch', control: 'boolean' },
-			size: { description: 'Tamanho do switch', control: 'select', options: ['default', 'sm'] },
-			disabled: { description: 'Desabilita o switch', control: 'boolean' }
+			state: { description: 'Estado do switch', control: 'object' },
+			ui: { description: 'Configuração visual do switch', control: 'object' }
 		}
 	});
 </script>
@@ -24,13 +23,13 @@
 </Story>
 
 <Story name="Checked" asChild>
-	<AcerolaSwitch checked />
+	<AcerolaSwitch state={{ checked: true }} />
 </Story>
 
 <Story name="Small" asChild>
-	<AcerolaSwitch size="sm" />
+	<AcerolaSwitch ui={{ size: 'sm' }} />
 </Story>
 
 <Story name="Disabled" asChild>
-	<AcerolaSwitch disabled />
+	<AcerolaSwitch ui={{ disabled: true }} />
 </Story>

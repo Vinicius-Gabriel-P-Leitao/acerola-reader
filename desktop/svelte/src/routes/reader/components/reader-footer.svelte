@@ -2,13 +2,20 @@
 	import type { ReaderMode } from '../hooks/use-reader-zoom.svelte';
 
 	export type ReaderFooterProps = {
-		readingMode?: ReaderMode;
-		pageProgressPercent: number;
-		pageProgressWidth: string;
-		chapterProgressLabel: string;
-		modeLabel: string;
-		zoomStatusLabel: string;
-		chaptersRemainingLabel: string;
+		data: {
+			pageProgressPercent: number;
+			pageProgressWidth: string;
+			chapterProgressLabel: string;
+			modeLabel: string;
+			zoomStatusLabel: string;
+			chaptersRemainingLabel: string;
+		};
+		state: {
+			readingMode: ReaderMode;
+		};
+		events: {
+			onReadingModeChange: (mode: ReaderMode) => void;
+		};
 	};
 </script>
 
@@ -16,15 +23,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import ReaderModeToggle from './reader-mode-toggle.svelte';
 
-	let {
-		readingMode = $bindable<ReaderMode>('vertical'),
-		pageProgressPercent,
-		pageProgressWidth,
-		chapterProgressLabel,
-		modeLabel,
-		zoomStatusLabel,
-		chaptersRemainingLabel
-	}: ReaderFooterProps = $props();
+	let { data, events, state }: ReaderFooterProps = $props();
 </script>
 
 <footer
@@ -35,26 +34,32 @@
 			class="text-overlay flex items-center justify-between gap-3 text-[10px] font-black tracking-widest uppercase"
 		>
 			<span class="shrink-0"
-				>{m['pages.reader.progress.read_percent']({ percent: pageProgressPercent })}</span
+				>{m['pages.reader.progress.read_percent']({ percent: data.pageProgressPercent })}</span
 			>
-			<span class="hidden min-w-0 truncate md:inline">{modeLabel} - {zoomStatusLabel}</span>
-			<span class="min-w-0 truncate text-right">{chaptersRemainingLabel}</span>
+			<span class="hidden min-w-0 truncate md:inline"
+				>{data.modeLabel} - {data.zoomStatusLabel}</span
+			>
+			<span class="min-w-0 truncate text-right">{data.chaptersRemainingLabel}</span>
 		</div>
 
 		<div
 			role="progressbar"
 			aria-valuemin="0"
 			aria-valuemax="100"
-			aria-valuenow={pageProgressPercent}
+			aria-valuenow={data.pageProgressPercent}
 			class="h-2 overflow-hidden rounded-full bg-surface/60"
-			title={chapterProgressLabel}
+			title={data.chapterProgressLabel}
 		>
 			<div
 				class="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
-				style:width={pageProgressWidth}
+				style:width={data.pageProgressWidth}
 			></div>
 		</div>
 
-		<ReaderModeToggle variant="mobile" bind:value={readingMode} />
+		<ReaderModeToggle
+			state={{ value: state.readingMode }}
+			events={{ onValueChange: events.onReadingModeChange }}
+			ui={{ variant: 'mobile' }}
+		/>
 	</div>
 </footer>

@@ -1,3 +1,23 @@
+<script lang="ts" module>
+	export type ComicPreferencesProps = {
+		data?: {
+			hasVolumeStructure?: boolean;
+		};
+		state: {
+			displayMode: string;
+			chaptersPerPage: string;
+			mediaType: string;
+			volumeViewMode: 'cover' | 'banner';
+		};
+		events: {
+			onDisplayModeChange: (value: string) => void;
+			onChaptersPerPageChange: (value: string) => void;
+			onMediaTypeChange: (value: string) => void;
+			onVolumeViewModeChange: (value: 'cover' | 'banner') => void;
+		};
+	};
+</script>
+
 <script lang="ts">
 	import AcerolaHeroButton from '$lib/components/acerola-hero-button/acerola-hero-button.svelte';
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
@@ -12,19 +32,7 @@
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import Tag from '@lucide/svelte/icons/tag';
 
-	let {
-		displayMode = $bindable(),
-		chaptersPerPage = $bindable(),
-		mediaType = $bindable(),
-		volumeViewMode = $bindable(),
-		hasVolumeStructure = false
-	}: {
-		displayMode: string;
-		chaptersPerPage: string;
-		mediaType: string;
-		volumeViewMode: 'cover' | 'banner';
-		hasVolumeStructure?: boolean;
-	} = $props();
+	let { data, events, state }: ComicPreferencesProps = $props();
 </script>
 
 <div class="space-y-12">
@@ -40,15 +48,25 @@
 		<div class="grid gap-4">
 			<!-- Display Mode -->
 			<AcerolaHeroButton
-				title={m['pages.comic.preferences.display_mode']()}
-				description={m['pages.comic.preferences.display_mode_desc']()}
+				data={{
+					title: m['pages.comic.preferences.display_mode'](),
+					description: m['pages.comic.preferences.display_mode_desc']()
+				}}
 			>
 				{#snippet icon()}
 					<LayoutGrid class="text-chart-1" size={24} />
 				{/snippet}
 
 				{#snippet action()}
-					<AcerolaToggleGroup type="single" bind:value={displayMode}>
+					<AcerolaToggleGroup
+						config={{ type: 'single' }}
+						state={{ value: state.displayMode }}
+						events={{
+							onValueChange: (value) => {
+								if (typeof value === 'string') events.onDisplayModeChange(value);
+							}
+						}}
+					>
 						{#snippet children()}
 							<ToggleGroupItem value="Lista" class="px-4 py-1.5 text-[10px] font-black uppercase">
 								{m['pages.comic.preferences.display_mode_list']()}
@@ -63,17 +81,29 @@
 			</AcerolaHeroButton>
 
 			<!-- Volume Highlight (Conditional) -->
-			{#if hasVolumeStructure}
+			{#if data?.hasVolumeStructure}
 				<AcerolaHeroButton
-					title={m['pages.comic.preferences.volume_highlight']()}
-					description={m['pages.comic.preferences.volume_highlight_desc']()}
+					data={{
+						title: m['pages.comic.preferences.volume_highlight'](),
+						description: m['pages.comic.preferences.volume_highlight_desc']()
+					}}
 				>
 					{#snippet icon()}
 						<Layers class="text-chart-2" size={24} />
 					{/snippet}
 
 					{#snippet action()}
-						<AcerolaToggleGroup type="single" bind:value={volumeViewMode}>
+						<AcerolaToggleGroup
+							config={{ type: 'single' }}
+							state={{ value: state.volumeViewMode }}
+							events={{
+								onValueChange: (value) => {
+									if (value === 'cover' || value === 'banner') {
+										events.onVolumeViewModeChange(value);
+									}
+								}
+							}}
+						>
 							{#snippet children()}
 								<ToggleGroupItem value="cover" class="px-4 py-1.5 text-[10px] font-black uppercase">
 									{m['pages.comic.preferences.volume_highlight_cover']()}
@@ -93,8 +123,10 @@
 
 			<!-- Chapters per page -->
 			<AcerolaHeroButton
-				title={m['pages.comic.preferences.chapters_per_page']()}
-				description={m['pages.comic.preferences.chapters_per_page_desc']()}
+				data={{
+					title: m['pages.comic.preferences.chapters_per_page'](),
+					description: m['pages.comic.preferences.chapters_per_page_desc']()
+				}}
 			>
 				{#snippet icon()}
 					<Hash class="text-chart-3" size={24} />
@@ -102,12 +134,17 @@
 
 				{#snippet action()}
 					<AcerolaSelect
-						bind:value={chaptersPerPage}
-						options={[
-							{ value: '25', label: '25' },
-							{ value: '50', label: '50' },
-							{ value: '100', label: '100' }
-						]}
+						data={{
+							options: [
+								{ value: '25', label: '25' },
+								{ value: '50', label: '50' },
+								{ value: '100', label: '100' }
+							]
+						}}
+						state={{ value: state.chaptersPerPage }}
+						events={{
+							onValueChange: events.onChaptersPerPageChange
+						}}
 					/>
 				{/snippet}
 			</AcerolaHeroButton>
@@ -126,15 +163,26 @@
 		<div class="grid gap-4">
 			<!-- Media Type -->
 			<AcerolaHeroButton
-				title={m['pages.comic.preferences.media_type']()}
-				description={m['pages.comic.preferences.media_type_desc']()}
+				data={{
+					title: m['pages.comic.preferences.media_type'](),
+					description: m['pages.comic.preferences.media_type_desc']()
+				}}
 			>
 				{#snippet icon()}
 					<BookOpen class="text-chart-4" size={24} />
 				{/snippet}
 
 				{#snippet action()}
-					<AcerolaToggleGroup type="single" bind:value={mediaType} class="flex flex-wrap gap-2">
+					<AcerolaToggleGroup
+						config={{ type: 'single' }}
+						state={{ value: state.mediaType }}
+						events={{
+							onValueChange: (value) => {
+								if (typeof value === 'string') events.onMediaTypeChange(value);
+							}
+						}}
+						ui={{ class: 'flex flex-wrap gap-2' }}
+					>
 						{#snippet children()}
 							{#each [{ value: 'Manga', label: m['pages.comic.preferences.media_types.manga']() }, { value: 'Hq', label: m['pages.comic.preferences.media_types.hq']() }, { value: 'Novel', label: m['pages.comic.preferences.media_types.novel']() }, { value: 'Webtoon', label: m['pages.comic.preferences.media_types.webtoon']() }] as cat}
 								<ToggleGroupItem

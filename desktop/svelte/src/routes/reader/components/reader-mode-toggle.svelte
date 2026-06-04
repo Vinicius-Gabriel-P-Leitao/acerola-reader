@@ -2,9 +2,16 @@
 	import type { ReaderMode } from '../hooks/use-reader-zoom.svelte';
 
 	export type ReaderModeToggleProps = {
-		value?: ReaderMode;
-		variant?: 'desktop' | 'mobile';
-		class?: string;
+		state: {
+			value: ReaderMode;
+		};
+		events: {
+			onValueChange: (value: ReaderMode) => void;
+		};
+		ui?: {
+			variant?: 'desktop' | 'mobile';
+			class?: string;
+		};
 	};
 </script>
 
@@ -17,23 +24,30 @@
 	import Rows2 from '@lucide/svelte/icons/rows-2';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
 
-	let {
-		value = $bindable<ReaderMode>('vertical'),
-		variant = 'desktop',
-		class: className
-	}: ReaderModeToggleProps = $props();
+	let { events, state, ui }: ReaderModeToggleProps = $props();
+
+	const variant = $derived(ui?.variant ?? 'desktop');
 </script>
 
 <AcerolaToggleGroup
-	type="single"
-	bind:value
-	class={cn(
-		variant === 'desktop' &&
-			'hidden shrink-0 gap-1 rounded-xl border border-surface/40 bg-mantle/60 p-1 md:flex',
-		variant === 'mobile' &&
-			'grid grid-cols-3 gap-1 rounded-xl border border-surface/40 bg-mantle/60 p-1 md:hidden',
-		className
-	)}
+	config={{ type: 'single' }}
+	state={{ value: state.value }}
+	events={{
+		onValueChange: (value) => {
+			if (value === 'vertical' || value === 'horizontal' || value === 'webtoon') {
+				events.onValueChange(value);
+			}
+		}
+	}}
+	ui={{
+		class: cn(
+			variant === 'desktop' &&
+				'hidden shrink-0 gap-1 rounded-xl border border-surface/40 bg-mantle/60 p-1 md:flex',
+			variant === 'mobile' &&
+				'grid grid-cols-3 gap-1 rounded-xl border border-surface/40 bg-mantle/60 p-1 md:hidden',
+			ui?.class
+		)
+	}}
 >
 	{#snippet children()}
 		<ToggleGroupItem

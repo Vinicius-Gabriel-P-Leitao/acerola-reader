@@ -1,3 +1,20 @@
+<script lang="ts" module>
+	export type ComicMetadataPanelProps = {
+		data: {
+			title: string;
+			author: string;
+			status: string;
+			source: string;
+			chaptersCount: number;
+			description: string;
+			cover: string | null;
+		};
+		events: {
+			onBack: () => void;
+		};
+	};
+</script>
+
 <script lang="ts">
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
@@ -9,32 +26,14 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
-	let {
-		title,
-		author,
-		status,
-		source,
-		chaptersCount,
-		description,
-		cover,
-		onBack
-	}: {
-		title: string;
-		author: string;
-		status: string;
-		source: string;
-		chaptersCount: number;
-		description: string;
-		cover: string | null;
-		onBack: () => void;
-	} = $props();
+	let { data, events }: ComicMetadataPanelProps = $props();
 </script>
 
 <div
 	class="relative z-10 hidden h-full w-100 shrink-0 flex-col border-r border-surface/30 bg-mantle/60 backdrop-blur-3xl select-none lg:flex"
 >
 	<div class="flex h-full flex-col p-10">
-		<AcerolaButtonIcon onclick={onBack} class="group mb-10 shadow-lg">
+		<AcerolaButtonIcon events={{ onClick: events.onBack }} ui={{ class: 'group mb-10 shadow-lg' }}>
 			<ArrowLeft size={24} />
 		</AcerolaButtonIcon>
 
@@ -43,8 +42,8 @@
 		>
 			<AcerolaCardImage
 				data={{
-					title: title,
-					cover: cover
+					title: data.title,
+					cover: data.cover
 				}}
 				ui={{
 					class: 'w-64 shrink-0 [&_.mt-3]:hidden'
@@ -59,18 +58,20 @@
 
 			<div class="w-full space-y-3 px-4">
 				<div class="space-y-1">
-					<h1 class="line-clamp-2 text-4xl leading-tight font-black tracking-tighter">{title}</h1>
-					<p class="text-lg font-bold text-primary">{author}</p>
+					<h1 class="line-clamp-2 text-4xl leading-tight font-black tracking-tighter">
+						{data.title}
+					</h1>
+					<p class="text-lg font-bold text-primary">{data.author}</p>
 				</div>
 
 				<div class="flex flex-wrap justify-center gap-2">
 					<span
 						class="text-text rounded-lg border border-surface/30 bg-surface/80 px-4 py-1.5 text-[10px] font-black tracking-widest uppercase shadow-sm"
-						>{status}</span
+						>{data.status}</span
 					>
 					<span
 						class="text-text rounded-lg border border-surface/30 bg-surface/80 px-4 py-1.5 text-[10px] font-black tracking-widest uppercase shadow-sm"
-						>{source}</span
+						>{data.source}</span
 					>
 				</div>
 			</div>
@@ -81,15 +82,19 @@
 						{m['pages.comic.metadata.synopsis']()}
 					</h3>
 					<span class="text-[9px] font-black tracking-widest text-primary/60 uppercase"
-						>{m['pages.comic.metadata.chapters_count']({ count: chaptersCount })}</span
+						>{m['pages.comic.metadata.chapters_count']({ count: data.chaptersCount })}</span
 					>
 				</div>
-				<p class="text-subtext line-clamp-6 text-xs leading-relaxed font-medium">{description}</p>
+				<p class="text-subtext line-clamp-6 text-xs leading-relaxed font-medium">
+					{data.description}
+				</p>
 			</div>
 
 			<div class="mt-auto w-full space-y-3 pt-4">
 				<AcerolaButton
-					class="flex w-full items-center justify-center gap-3 rounded-3xl py-8 font-black"
+					ui={{
+						class: 'flex w-full items-center justify-center gap-3 rounded-3xl py-8 font-black'
+					}}
 				>
 					<Play size={24} fill="currentColor" />
 					{m['pages.comic.metadata.read_now']()}
@@ -97,16 +102,20 @@
 
 				<div class="grid grid-cols-2 gap-3">
 					<AcerolaButton
-						variant="outline"
-						class="flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black"
+						ui={{
+							variant: 'outline',
+							class: 'flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black'
+						}}
 					>
 						<Bookmark size={16} />
 						{m['pages.comic.metadata.save']()}
 					</AcerolaButton>
 
 					<AcerolaButton
-						variant="outline"
-						class="flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black"
+						ui={{
+							variant: 'outline',
+							class: 'flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black'
+						}}
 					>
 						<RefreshCw size={16} />
 						{m['pages.comic.metadata.sync']()}

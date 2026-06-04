@@ -39,9 +39,9 @@
 </script>
 
 <Story name="With Volumes" asChild>
-	<ComicVolumeList {volumes} onexpand={() => {}} />
+	<ComicVolumeList data={{ volumes }} events={{ onExpand: () => {} }} />
 </Story>
 
 <Story name="Empty" asChild>
-	<ComicVolumeList volumes={[]} onexpand={() => {}} />
+	<ComicVolumeList data={{ volumes: [] }} events={{ onExpand: () => {} }} />
 </Story>
