@@ -139,6 +139,63 @@
 				"no_volumes": "Nenhum volume indexado ainda."
 			}
 		},
+		"reader": {
+			"fallback": {
+				"chapter_unavailable": "Capítulo indisponível"
+			},
+			"progress": {
+				"chapter_unavailable": "Progresso do capítulo",
+				"chapter_count": "Capítulo {current} de {total}",
+				"remaining_unavailable": "Capítulos restantes indisponíveis",
+				"remaining_one": "1 capítulo restante",
+				"remaining_many": "{count} capítulos restantes",
+				"subtitle": "{scope} - {current} / {total} páginas",
+				"read_percent": "{percent}% lido"
+			},
+			"modes": {
+				"vertical": "Paginado vertical",
+				"horizontal": "Paginado horizontal",
+				"webtoon": "Webtoon",
+				"vertical_short": "Vertical",
+				"horizontal_short": "Horizontal"
+			},
+			"actions": {
+				"back": "Voltar",
+				"apply_zoom": "Aplicar zoom",
+				"reset_zoom": "Resetar zoom",
+				"zoom_mode": "Modo zoom",
+				"commands": "Comandos",
+				"previous_page": "Página anterior",
+				"next_page": "Próxima página",
+				"page_navigation_locked": "Desative o zoom para trocar de página",
+				"close_commands": "Fechar comandos"
+			},
+			"pages": {
+				"label": "Página {page}",
+				"image_alt": "Página {page}"
+			},
+			"command": {
+				"placeholder": "Comandos do leitor...",
+				"zoom_group": "Zoom",
+				"reading_group": "Leitura",
+				"toggle_zoom_search": "alternar modo zoom",
+				"zoom_in_search": "aumentar zoom",
+				"zoom_out_search": "reduzir zoom",
+				"reset_zoom_search": "resetar zoom",
+				"vertical_search": "paginado vertical",
+				"horizontal_search": "paginado horizontal",
+				"webtoon_search": "webtoon",
+				"enable_zoom_mode": "Ativar modo zoom",
+				"disable_zoom_mode": "Desativar modo zoom",
+				"zoom_in": "Aumentar zoom",
+				"zoom_out": "Reduzir zoom",
+				"reset_zoom": "Resetar zoom"
+			},
+			"zoom": {
+				"status": "Zoom {zoom}",
+				"scroll_status": "Zoom {zoom} - scroll ajusta"
+			}
+		},
 		"history": {
 			"title": "Rede P2P",
 			"local_id": "ID local: {id}",

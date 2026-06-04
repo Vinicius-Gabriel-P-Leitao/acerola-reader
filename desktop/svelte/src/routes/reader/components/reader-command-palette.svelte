@@ -16,6 +16,7 @@
 <script lang="ts">
 	import AcerolaCommand from '$lib/components/acerola-command/acerola-command.svelte';
 	import * as Command from '$lib/components/ui/command';
+	import { m } from '$lib/paraglide/messages';
 	import Columns2 from '@lucide/svelte/icons/columns-2';
 	import Rows2 from '@lucide/svelte/icons/rows-2';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
@@ -48,7 +49,7 @@
 	<div class="absolute inset-0 z-40">
 		<button
 			type="button"
-			aria-label="Fechar comandos"
+			aria-label={m['pages.reader.actions.close_commands']()}
 			class="absolute inset-0 bg-base/20 backdrop-blur-[2px]"
 			onclick={closeCommand}
 		></button>
@@ -58,77 +59,81 @@
 		>
 			<AcerolaCommand bind:value>
 				{#snippet children()}
-					<Command.Input placeholder="Comandos do leitor..." autofocus />
+					<Command.Input placeholder={m['pages.reader.command.placeholder']()} autofocus />
 
 					<Command.List class="p-1">
-						<Command.Group heading="Zoom">
+						<Command.Group heading={m['pages.reader.command.zoom_group']()}>
 							<Command.Item
-								value="alternar modo zoom"
+								value={m['pages.reader.command.toggle_zoom_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(onToggleZoomMode)}
 							>
 								<ZoomIn size={16} />
-								<span>{zoomMode ? 'Desativar modo zoom' : 'Ativar modo zoom'}</span>
+								<span>
+									{zoomMode
+										? m['pages.reader.command.disable_zoom_mode']()
+										: m['pages.reader.command.enable_zoom_mode']()}
+								</span>
 								<Command.Shortcut>Z</Command.Shortcut>
 							</Command.Item>
 
 							<Command.Item
-								value="aumentar zoom"
+								value={m['pages.reader.command.zoom_in_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(onZoomIn)}
 							>
 								<ZoomIn size={16} />
-								<span>Aumentar zoom</span>
+								<span>{m['pages.reader.command.zoom_in']()}</span>
 								<Command.Shortcut>Ctrl +</Command.Shortcut>
 							</Command.Item>
 
 							<Command.Item
-								value="reduzir zoom"
+								value={m['pages.reader.command.zoom_out_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(onZoomOut)}
 							>
 								<ZoomOut size={16} />
-								<span>Reduzir zoom</span>
+								<span>{m['pages.reader.command.zoom_out']()}</span>
 								<Command.Shortcut>Ctrl -</Command.Shortcut>
 							</Command.Item>
 
 							<Command.Item
-								value="resetar zoom"
+								value={m['pages.reader.command.reset_zoom_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(onResetZoom)}
 							>
 								<ZoomOut size={16} />
-								<span>Resetar zoom</span>
+								<span>{m['pages.reader.command.reset_zoom']()}</span>
 								<Command.Shortcut>Ctrl 0</Command.Shortcut>
 							</Command.Item>
 						</Command.Group>
 
-						<Command.Group heading="Leitura">
+						<Command.Group heading={m['pages.reader.command.reading_group']()}>
 							<Command.Item
-								value="paginado vertical"
+								value={m['pages.reader.command.vertical_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(() => (readingMode = 'vertical'))}
 							>
 								<Rows2 size={16} />
-								<span>Paginado vertical</span>
+								<span>{m['pages.reader.modes.vertical']()}</span>
 							</Command.Item>
 
 							<Command.Item
-								value="paginado horizontal"
+								value={m['pages.reader.command.horizontal_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(() => (readingMode = 'horizontal'))}
 							>
 								<Columns2 size={16} />
-								<span>Paginado horizontal</span>
+								<span>{m['pages.reader.modes.horizontal']()}</span>
 							</Command.Item>
 
 							<Command.Item
-								value="webtoon"
+								value={m['pages.reader.command.webtoon_search']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(() => (readingMode = 'webtoon'))}
 							>
 								<ScrollText size={16} />
-								<span>Webtoon</span>
+								<span>{m['pages.reader.modes.webtoon']()}</span>
 							</Command.Item>
 						</Command.Group>
 					</Command.List>

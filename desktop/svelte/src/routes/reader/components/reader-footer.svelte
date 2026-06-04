@@ -13,6 +13,7 @@
 </script>
 
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
 	import ReaderModeToggle from './reader-mode-toggle.svelte';
 
 	let {
@@ -33,7 +34,9 @@
 		<div
 			class="text-overlay flex items-center justify-between gap-3 text-[10px] font-black tracking-widest uppercase"
 		>
-			<span class="shrink-0">{pageProgressPercent}% lido</span>
+			<span class="shrink-0"
+				>{m['pages.reader.progress.read_percent']({ percent: pageProgressPercent })}</span
+			>
 			<span class="hidden min-w-0 truncate md:inline">{modeLabel} - {zoomStatusLabel}</span>
 			<span class="min-w-0 truncate text-right">{chaptersRemainingLabel}</span>
 		</div>

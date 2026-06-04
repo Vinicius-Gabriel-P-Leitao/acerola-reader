@@ -11,6 +11,7 @@
 <script lang="ts">
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
+	import { m } from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils/cn.utils';
 	import Columns2 from '@lucide/svelte/icons/columns-2';
 	import Rows2 from '@lucide/svelte/icons/rows-2';
@@ -37,7 +38,7 @@
 	{#snippet children()}
 		<ToggleGroupItem
 			value="vertical"
-			title="Paginado vertical"
+			title={m['pages.reader.modes.vertical']()}
 			class={cn(
 				'h-9 gap-2 rounded-lg text-[10px] font-black tracking-widest uppercase data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
 				variant === 'desktop' && 'px-3'
@@ -45,15 +46,15 @@
 		>
 			<Rows2 size={15} />
 			{#if variant === 'desktop'}
-				<span class="hidden lg:inline">Vertical</span>
+				<span class="hidden lg:inline">{m['pages.reader.modes.vertical_short']()}</span>
 			{:else}
-				<span>Vertical</span>
+				<span>{m['pages.reader.modes.vertical_short']()}</span>
 			{/if}
 		</ToggleGroupItem>
 
 		<ToggleGroupItem
 			value="horizontal"
-			title="Paginado horizontal"
+			title={m['pages.reader.modes.horizontal']()}
 			class={cn(
 				'h-9 gap-2 rounded-lg text-[10px] font-black tracking-widest uppercase data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
 				variant === 'desktop' && 'px-3'
@@ -61,15 +62,15 @@
 		>
 			<Columns2 size={15} />
 			{#if variant === 'desktop'}
-				<span class="hidden lg:inline">Horizontal</span>
+				<span class="hidden lg:inline">{m['pages.reader.modes.horizontal_short']()}</span>
 			{:else}
-				<span>Horizontal</span>
+				<span>{m['pages.reader.modes.horizontal_short']()}</span>
 			{/if}
 		</ToggleGroupItem>
 
 		<ToggleGroupItem
 			value="webtoon"
-			title="Webtoon"
+			title={m['pages.reader.modes.webtoon']()}
 			class={cn(
 				'h-9 gap-2 rounded-lg text-[10px] font-black tracking-widest uppercase data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
 				variant === 'desktop' && 'px-3'
@@ -77,9 +78,9 @@
 		>
 			<ScrollText size={15} />
 			{#if variant === 'desktop'}
-				<span class="hidden lg:inline">Webtoon</span>
+				<span class="hidden lg:inline">{m['pages.reader.modes.webtoon']()}</span>
 			{:else}
-				<span>Webtoon</span>
+				<span>{m['pages.reader.modes.webtoon']()}</span>
 			{/if}
 		</ToggleGroupItem>
 	{/snippet}

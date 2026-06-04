@@ -17,6 +17,7 @@
 </script>
 
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils/cn.utils';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { fade } from 'svelte/transition';
@@ -34,7 +35,7 @@
 
 {#if openFailed || !chapterAvailable}
 	<div class="text-overlay flex h-full items-center justify-center text-sm font-black uppercase">
-		Capitulo indisponivel
+		{m['pages.reader.fallback.chapter_unavailable']()}
 	</div>
 {:else if pageCount === 0}
 	<div class="flex h-full items-center justify-center">
@@ -60,7 +61,7 @@
 					mode === 'vertical' &&
 						'flex h-full w-full shrink-0 snap-center items-center justify-center px-3 py-6'
 				)}
-				aria-label={`Pagina ${pageIndex + 1}`}
+				aria-label={m['pages.reader.pages.label']({ page: pageIndex + 1 })}
 			>
 				{#if pageItem}
 					<div
@@ -72,7 +73,7 @@
 						<img
 							in:fade={{ duration: 120 }}
 							src={pageItem.url}
-							alt={`Pagina ${pageIndex + 1}`}
+							alt={m['pages.reader.pages.image_alt']({ page: pageIndex + 1 })}
 							class={cn(
 								'bg-base object-contain',
 								mode === 'webtoon' && 'w-full',

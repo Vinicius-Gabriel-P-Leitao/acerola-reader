@@ -1,3 +1,5 @@
+import { m } from '$lib/paraglide/messages';
+
 export type ReaderMode = 'vertical' | 'horizontal' | 'webtoon';
 
 const MIN_ZOOM = 1;
@@ -42,7 +44,9 @@ export function useReaderZoom() {
 	const zoomLabel = $derived(`${zoomPercent}%`);
 
 	const zoomStatusLabel = $derived(
-		zoomMode ? `Zoom ${zoomLabel} - scroll ajusta` : `Zoom ${zoomLabel}`
+		zoomMode
+			? m['pages.reader.zoom.scroll_status']({ zoom: zoomLabel })
+			: m['pages.reader.zoom.status']({ zoom: zoomLabel })
 	);
 
 	const zoomLayerStyle = $derived(

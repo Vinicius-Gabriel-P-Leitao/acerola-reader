@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { useReader } from '$lib/hooks/store/use-reader.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import { onMount, tick, untrack } from 'svelte';
 	import ReaderCommandPalette from './components/reader-command-palette.svelte';
 	import ReaderFooter from './components/reader-footer.svelte';
@@ -39,48 +40,72 @@
 
 	const navigationState = $derived((page.state ?? {}) as ReaderNavigationState);
 	const chapter = $derived(navigationState.chapter);
+
 	const chapterIndex = $derived.by(() => {
 		const value = navigationState.chapterIndex;
 		return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : undefined;
 	});
+
 	const totalChapters = $derived.by(() => {
 		const value = navigationState.totalChapters;
 		return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : undefined;
 	});
+
 	const chaptersRemaining = $derived.by(() => {
 		if (chapterIndex === undefined || totalChapters === undefined) return undefined;
 		return Math.max(0, totalChapters - chapterIndex - 1);
 	});
+
 	const chapterProgressLabel = $derived.by(() => {
-		if (chapterIndex === undefined || totalChapters === undefined) return 'Progresso do capitulo';
-		return `Capitulo ${chapterIndex + 1} de ${totalChapters}`;
+		if (chapterIndex === undefined || totalChapters === undefined) {
+			return m['pages.reader.progress.chapter_unavailable']();
+		}
+
+		return m['pages.reader.progress.chapter_count']({
+			current: chapterIndex + 1,
+			total: totalChapters
+		});
 	});
+
 	const chaptersRemainingLabel = $derived.by(() => {
-		if (chaptersRemaining === undefined) return 'Capitulos restantes indisponiveis';
+		if (chaptersRemaining === undefined) {
+			return m['pages.reader.progress.remaining_unavailable']();
+		}
+
 		return chaptersRemaining === 1
-			? '1 capitulo restante'
-			: `${chaptersRemaining} capitulos restantes`;
+			? m['pages.reader.progress.remaining_one']()
+			: m['pages.reader.progress.remaining_many']({ count: chaptersRemaining });
 	});
+
 	const pageProgressPercent = $derived(
 		reader.pageCount > 0 ? Math.round(((reader.currentPage + 1) / reader.pageCount) * 100) : 0
 	);
+
 	const pageProgressWidth = $derived(`${pageProgressPercent}%`);
 	const readerScopeLabel = $derived(navigationState.chapterScope ?? chapterProgressLabel);
+
 	const readerSubtitle = $derived(
 		reader.session
-			? `${readerScopeLabel} - ${reader.currentPage + 1} / ${reader.pageCount} paginas`
+			? m['pages.reader.progress.subtitle']({
+					scope: readerScopeLabel,
+					current: reader.currentPage + 1,
+					total: reader.pageCount
+				})
 			: undefined
 	);
+
 	const isPaginatedMode = $derived(readingMode !== 'webtoon');
 	const pageControlsDisabled = $derived(isPaginatedMode && zoom.isZoomed);
 	const canPreviousPage = $derived(Boolean(reader.session) && reader.currentPage > 0);
+
 	const canNextPage = $derived(
 		Boolean(reader.session) && reader.currentPage < reader.pageCount - 1
 	);
+
 	const modeLabel = $derived.by(() => {
-		if (readingMode === 'horizontal') return 'Paginado horizontal';
-		if (readingMode === 'webtoon') return 'Webtoon';
-		return 'Paginado vertical';
+		if (readingMode === 'horizontal') return m['pages.reader.modes.horizontal']();
+		if (readingMode === 'webtoon') return m['pages.reader.modes.webtoon']();
+		return m['pages.reader.modes.vertical']();
 	});
 
 	function leaveReader() {
@@ -297,7 +322,7 @@
 	{#snippet toolbar()}
 		<ReaderToolbar
 			bind:readingMode
-			title={chapter?.name ?? 'Capitulo indisponivel'}
+			title={chapter?.name ?? m['pages.reader.fallback.chapter_unavailable']()}
 			subtitle={readerSubtitle}
 			zoomLevel={zoom.zoomLevel}
 			zoomMode={zoom.zoomMode}

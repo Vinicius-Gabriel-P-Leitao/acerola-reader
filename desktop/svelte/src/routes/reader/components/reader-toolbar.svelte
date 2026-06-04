@@ -22,6 +22,7 @@
 
 <script lang="ts">
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -53,7 +54,7 @@
 	class="relative z-20 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-surface/40 bg-base/95 px-4 py-2 backdrop-blur-md"
 >
 	<div class="flex min-w-0 flex-1 items-center gap-3">
-		<AcerolaButtonIcon onclick={onBack} variant="ghost" title="Voltar">
+		<AcerolaButtonIcon onclick={onBack} variant="ghost" title={m['pages.reader.actions.back']()}>
 			<ArrowLeft size={20} />
 		</AcerolaButtonIcon>
 
@@ -71,7 +72,9 @@
 		<AcerolaButtonIcon
 			variant={zoomLevel > 1 ? 'secondary' : 'ghost'}
 			onclick={onToggleQuickZoom}
-			title={zoomLevel > 1 ? 'Resetar zoom' : 'Aplicar zoom'}
+			title={zoomLevel > 1
+				? m['pages.reader.actions.reset_zoom']()
+				: m['pages.reader.actions.apply_zoom']()}
 		>
 			{#if zoomLevel > 1}
 				<ZoomOut size={20} />
@@ -83,12 +86,16 @@
 		<AcerolaButtonIcon
 			variant={zoomMode ? 'default' : 'ghost'}
 			onclick={onToggleZoomMode}
-			title="Modo zoom"
+			title={m['pages.reader.actions.zoom_mode']()}
 		>
 			<ZoomIn size={20} />
 		</AcerolaButtonIcon>
 
-		<AcerolaButtonIcon variant="ghost" onclick={onOpenCommandPalette} title="Comandos">
+		<AcerolaButtonIcon
+			variant="ghost"
+			onclick={onOpenCommandPalette}
+			title={m['pages.reader.actions.commands']()}
+		>
 			<CommandIcon size={20} />
 		</AcerolaButtonIcon>
 
@@ -97,7 +104,9 @@
 				variant="ghost"
 				disabled={!canPreviousPage || pageControlsDisabled}
 				onclick={() => onPreviousPage()}
-				title={pageControlsDisabled ? 'Desative o zoom para trocar de pagina' : 'Pagina anterior'}
+				title={pageControlsDisabled
+					? m['pages.reader.actions.page_navigation_locked']()
+					: m['pages.reader.actions.previous_page']()}
 			>
 				<ChevronLeft size={20} />
 			</AcerolaButtonIcon>
@@ -106,7 +115,9 @@
 				variant="ghost"
 				disabled={!canNextPage || pageControlsDisabled}
 				onclick={() => onNextPage()}
-				title={pageControlsDisabled ? 'Desative o zoom para trocar de pagina' : 'Proxima pagina'}
+				title={pageControlsDisabled
+					? m['pages.reader.actions.page_navigation_locked']()
+					: m['pages.reader.actions.next_page']()}
 			>
 				<ChevronRight size={20} />
 			</AcerolaButtonIcon>
