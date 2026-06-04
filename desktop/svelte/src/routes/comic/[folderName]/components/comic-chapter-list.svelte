@@ -11,6 +11,7 @@
 		volumeName?: string | null;
 		isSpecial?: boolean;
 		lastModified?: number;
+		chapterIndex?: number;
 	};
 
 	export type ChapterPage = {

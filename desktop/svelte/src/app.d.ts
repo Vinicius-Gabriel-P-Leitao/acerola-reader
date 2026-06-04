@@ -9,6 +9,9 @@ declare global {
 		interface PageState {
 			chapter?: ReaderChapterPayload;
 			startPage?: number;
+			chapterIndex?: number;
+			totalChapters?: number;
+			chapterScope?: string;
 		}
 		// interface Platform {}
 	}

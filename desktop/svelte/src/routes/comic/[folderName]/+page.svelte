@@ -62,13 +62,29 @@
 		};
 	}
 
+	function getReaderProgress(chapter: Chapter | VolumeChapter) {
+		const currentManga = manga;
+		if (!currentManga) return {};
+
+		const volume = chapter.volumeId
+			? currentManga.volumes.find((item) => item.id === chapter.volumeId)
+			: null;
+
+		return {
+			chapterIndex: chapter.chapterIndex,
+			totalChapters: volume?.totalChapters ?? currentManga.chaptersCount,
+			chapterScope: volume?.title ?? currentManga.title
+		};
+	}
+
 	function openReader(chapter: Chapter | VolumeChapter) {
 		const readerChapter = toReaderChapter(chapter);
 		if (!readerChapter) return;
 
 		goto('/reader', {
 			state: {
-				chapter: readerChapter
+				chapter: readerChapter,
+				...getReaderProgress(chapter)
 			}
 		});
 	}
@@ -154,13 +170,7 @@
 			page: it.page,
 
 			items: it.items
-				.filter((comic) => {
-					const matchesSearch = comic.name.toLowerCase().includes(searchQuery.toLowerCase());
-					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
-					return matchesSearch && matchesVolume;
-				})
-
-				.map((comic) => ({
+				.map((comic, index) => ({
 					id: comic.id.toString(),
 					name: comic.name,
 					title: comic.name,
@@ -171,8 +181,14 @@
 					volumeId: comic.volumeId,
 					volumeName: comic.volumeName,
 					isSpecial: comic.isSpecial,
-					lastModified: comic.lastModified
+					lastModified: comic.lastModified,
+					chapterIndex: it.page * pageSize + index
 				}))
+				.filter((comic) => {
+					const matchesSearch = comic.name.toLowerCase().includes(searchQuery.toLowerCase());
+					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
+					return matchesSearch && matchesVolume;
+				})
 		}));
 
 		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
