@@ -9,7 +9,9 @@ version = "0.0.1-beta"
 # NOTE: Em rust para baixar libs cargo build
 [lib]
 # WARN: Sufixo _lib é para não dar conflito de binário
-crate-type = ["staticlib", "cdylib", "rlib"]
+# Desktop-only: o binario linka esta lib como rlib. staticlib/cdylib ficam para mobile/FFI
+# e geram artefatos enormes no debug do Windows, principalmente acerola_lib.lib/.pdb.
+crate-type = ["rlib"]
 name = "acerola_lib"
 
 [[bin]]

@@ -5,6 +5,12 @@ skip_core_tasks = true
 [tasks.default]
 alias = "test"
 
+[tasks.clean]
+args = ["clean"]
+command = "cargo"
+description = "Clean target"
+workspace = false
+
 [tasks.test]
 args = ["nextest", "run"]
 command = "cargo"
