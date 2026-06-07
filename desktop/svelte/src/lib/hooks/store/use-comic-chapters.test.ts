@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { useComicChapters } from './use-comic-chapters.svelte';
-import ComicChaptersHarness from './use-comic-chapters.harness.svelte';
+import ComicChaptersHarness from '../../../../tests/harness/hooks/comic-chapters-store.svelte';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
 import { mockIPC, mockWindows } from '@tauri-apps/api/mocks';

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { useReader } from './use-reader.svelte';
+	import { useReader } from '$lib/hooks/store/use-reader.svelte';
 
 	let {
 		onReady

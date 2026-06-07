@@ -7,7 +7,7 @@ import { toast } from 'svelte-sonner';
 import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
 import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
-import HookHarness from '../hook.test-harness.svelte';
+import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useLibraryScanner } from './use-comic-scanner.svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({

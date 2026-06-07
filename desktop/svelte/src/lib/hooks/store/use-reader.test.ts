@@ -8,7 +8,7 @@ import type {
 	ReaderSessionPayload
 } from '$lib/contracts/reader/reader.payloads';
 import { useReader } from './use-reader.svelte';
-import ReaderHarness from './use-reader.harness.svelte';
+import ReaderHarness from '../../../../tests/harness/hooks/reader-store.svelte';
 import { invoke } from '@tauri-apps/api/core';
 
 vi.mock('@tauri-apps/api/core', () => ({

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { useReaderZoom } from './use-reader-zoom.svelte';
+	import { useReaderZoom } from '../../../src/routes/reader/hooks/use-reader-zoom.svelte';
 
 	let {
 		onReady

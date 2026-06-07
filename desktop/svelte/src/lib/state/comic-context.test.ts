@@ -3,8 +3,8 @@ import { tick } from 'svelte';
 import { describe, expect, it } from 'vitest';
 import type { ComicSummaryItem } from '$lib/contracts/home/home.payloads';
 import { ActiveComicState } from './comic-context.svelte';
-import ProviderHarness from './comic-context-provider.test-harness.svelte';
-import MissingHarness from './comic-context-missing.test-harness.svelte';
+import ProviderHarness from '../../../tests/harness/state/comic-context-provider.svelte';
+import MissingHarness from '../../../tests/harness/state/comic-context-missing.svelte';
 
 function comic(): ComicSummaryItem {
 	return {

@@ -7,7 +7,7 @@ import { toast } from 'svelte-sonner';
 import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
 import { STORE_KEYS } from '$lib/constants/store-plugin';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/library.commands';
-import HookHarness from '../hook.test-harness.svelte';
+import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useSelectFolder } from './use-select-folder.svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({

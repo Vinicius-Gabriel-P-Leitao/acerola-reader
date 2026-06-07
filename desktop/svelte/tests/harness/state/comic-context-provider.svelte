@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ComicSummaryItem } from '$lib/contracts/home/home.payloads';
-	import Child from './comic-context-child.test-harness.svelte';
-	import { setComicContext, type ActiveComicState } from './comic-context.svelte';
+	import { setComicContext, type ActiveComicState } from '$lib/state/comic-context.svelte';
+	import Child from './comic-context-child.svelte';
 
 	let {
 		comic,

@@ -2,7 +2,7 @@ import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { THEMES } from '$lib/constants/themes';
-import HookHarness from '../hook.test-harness.svelte';
+import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useTheme } from './use-theme.svelte';
 
 async function renderHook() {

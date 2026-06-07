@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { load } from '@tauri-apps/plugin-store';
 import { STORE_KEYS } from '$lib/constants/store-plugin';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/library.commands';
-import HookHarness from '../hook.test-harness.svelte';
+import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useChaptersPerPage } from './use-chapters-per-page.svelte';
 import { useComicInfoPreference } from './use-comic-info.svelte';
 import { useVolumeViewMode } from './use-volume-view-mode.svelte';

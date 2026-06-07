@@ -9,7 +9,7 @@ import { notificationStore } from '$lib/components/acerola-notification/acerola-
 import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
 import { HOME_EVENTS } from '$lib/contracts/home/home.events';
 import type { ComicSummaryPayload } from '$lib/contracts/home/home.payloads';
-import HookHarness from '../hook.test-harness.svelte';
+import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useComicSummary } from './use-comic-summary.svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({

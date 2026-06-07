@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { useComicContext, type ActiveComicState } from './comic-context.svelte';
+	import { useComicContext, type ActiveComicState } from '$lib/state/comic-context.svelte';
 
 	let {
 		onReady
