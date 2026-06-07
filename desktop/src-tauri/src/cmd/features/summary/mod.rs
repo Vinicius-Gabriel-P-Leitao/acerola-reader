@@ -1,5 +1,5 @@
 use sqlx::SqlitePool;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Runtime, State};
 
 use crate::{
     cmd::events::{
@@ -10,7 +10,9 @@ use crate::{
 };
 
 #[tauri::command]
-pub async fn get_comic_summary(app: AppHandle, pool: State<'_, SqlitePool>) -> Result<(), String> {
+pub async fn get_comic_summary<R: Runtime>(
+    app: AppHandle<R>, pool: State<'_, SqlitePool>,
+) -> Result<(), String> {
     let pool = pool.inner().clone();
 
     tokio::spawn(async move {
@@ -41,9 +43,9 @@ pub async fn get_comic_by_folder_name(
 }
 
 #[tauri::command]
-pub async fn get_comic_chapters(
+pub async fn get_comic_chapters<R: Runtime>(
     comic_directory_fk: String, volume_id: Option<String>, page: i32, page_size: i32, asc: bool,
-    app: AppHandle, pool: State<'_, SqlitePool>,
+    app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
     tracing::info!("[get_comic_chapters] Called for comic_directory_fk={}, volume_id={:?}, page={}, page_size={}, asc={}", comic_directory_fk, volume_id, page, page_size, asc);

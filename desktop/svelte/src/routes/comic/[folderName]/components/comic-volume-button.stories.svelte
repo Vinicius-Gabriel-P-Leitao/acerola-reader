@@ -2,7 +2,7 @@
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import ComicVolumeButton from './comic-volume-button.svelte';
 
-	export const meta = defineMeta({
+	const { Story } = defineMeta({
 		title: 'Components/Comic/ComicVolumeButton',
 		component: ComicVolumeButton,
 		argTypes: {
@@ -10,10 +10,6 @@
 			events: { control: 'object' }
 		}
 	});
-</script>
-
-<script lang="ts">
-	import { Story } from '@storybook/addon-svelte-csf';
 </script>
 
 <Story

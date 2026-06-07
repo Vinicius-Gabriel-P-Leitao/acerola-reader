@@ -14,3 +14,12 @@ svelte/project.inlang/cache/
 
 *storybook.log
 storybook-static
+
+# Cargo/Tauri generated files
+/src-tauri/target/
+/src-tauri/gen/schemas
+
+# Test WebDriver binaries
+/msedgedriver.exe
+/src-tauri/tests/.drivers/*
+!/src-tauri/tests/.drivers/.gitkeep

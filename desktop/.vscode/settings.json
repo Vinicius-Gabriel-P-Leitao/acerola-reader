@@ -19,7 +19,10 @@
 		"**/capabilities": true,
 		"**/project.inlang": true,
 		"**/node_modules": true,
-		"**/.svelte-kit": true
+		"**/.svelte-kit": true,
+		"**/.vitest-attachments": true,
+		"**/coverage": true,
+		"**/storybook-static": true
 	},
 	"search.exclude": {
 		"**/target": true,
@@ -29,7 +32,10 @@
 		"**/capabilities": true,
 		"**/project.inlang": true,
 		"**/node_modules": true,
-		"**/.svelte-kit": true
+		"**/.svelte-kit": true,
+		"**/.vitest-attachments": true,
+		"**/coverage": true,
+		"**/storybook-static": true
 	},
 	"explorer.fileNesting.enabled": true,
 	"explorer.fileNesting.patterns": {

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use sqlx::SqlitePool;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Runtime, State};
 
 use crate::{
     cmd::events::shared::ErrorPayload,
@@ -11,8 +11,8 @@ use crate::{
 /// Processa todas as pastas encontradas no disco sem comparar com o banco.
 /// Pastas já indexadas são ignoradas via INSERT OR IGNORE.
 #[tauri::command]
-pub async fn refresh_library(
-    path: String, app: AppHandle, pool: State<'_, SqlitePool>,
+pub async fn refresh_library<R: Runtime>(
+    path: String, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();
@@ -37,8 +37,8 @@ pub async fn refresh_library(
 /// Processa apenas pastas novas ou modificadas com base no `last_modified`.
 /// Remove do banco as pastas que não existem mais no disco.
 #[tauri::command]
-pub async fn incremental_scan(
-    path: String, app: AppHandle, pool: State<'_, SqlitePool>,
+pub async fn incremental_scan<R: Runtime>(
+    path: String, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();
@@ -63,8 +63,8 @@ pub async fn incremental_scan(
 /// Faz o refresh completo de todas as pastas e re-escaneia os capítulos de cada comic.
 /// É a operação mais pesada — use quando o banco pode estar em estado inconsistente.
 #[tauri::command]
-pub async fn rebuild_library(
-    path: String, app: AppHandle, pool: State<'_, SqlitePool>,
+pub async fn rebuild_library<R: Runtime>(
+    path: String, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
     let pool = pool.inner().clone();

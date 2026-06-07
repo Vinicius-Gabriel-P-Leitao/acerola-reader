@@ -1,5 +1,5 @@
 import { render } from 'vitest-browser-svelte';
-import { expect, it, describe, vi, beforeEach } from 'vitest';
+import { expect, it, describe, vi, beforeEach, afterEach } from 'vitest';
 import ComicPage from '../+page.svelte';
 import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
@@ -37,23 +37,103 @@ vi.mock('$lib/assets/placeholder/placeholder_manga.svg?component', () => ({
 	default: vi.fn(() => null)
 }));
 
+class MockIntersectionObserver {
+	readonly root: Element | Document | null;
+	readonly rootMargin: string;
+	readonly thresholds: ReadonlyArray<number>;
+	readonly observedElements = new Map<number, HTMLElement>();
+
+	constructor(
+		readonly callback: IntersectionObserverCallback,
+		options?: IntersectionObserverInit
+	) {
+		this.root = options?.root ?? null;
+		this.rootMargin = options?.rootMargin ?? '';
+		this.thresholds = Array.isArray(options?.threshold)
+			? options.threshold
+			: [options?.threshold ?? 0];
+	}
+
+	observe = vi.fn((target: Element) => {
+		const pageIndex = Number((target as HTMLElement).dataset.page);
+
+		this.observedElements.set(pageIndex, target as HTMLElement);
+	});
+
+	unobserve = vi.fn((target: Element) => {
+		const pageIndex = Number((target as HTMLElement).dataset.page);
+
+		this.observedElements.delete(pageIndex);
+	});
+
+	disconnect = vi.fn(() => {
+		this.observedElements.clear();
+	});
+
+	takeRecords = vi.fn(() => []);
+
+	emitVisiblePages(pageIndexes: number[]) {
+		const entries = Array.from(this.observedElements.entries()).map(([pageIndex, target]) => {
+			const isIntersecting = pageIndexes.includes(pageIndex);
+			const rect = target.getBoundingClientRect();
+
+			return {
+				boundingClientRect: rect,
+				intersectionRatio: isIntersecting ? 1 : 0,
+				intersectionRect: rect,
+				isIntersecting,
+				rootBounds: null,
+				target,
+				time: performance.now()
+			} as IntersectionObserverEntry;
+		});
+
+		this.callback(entries, this as unknown as IntersectionObserver);
+	}
+}
+
 describe('ComicPage Scroll Integration', () => {
 	const TOTAL_CHAPTERS = 1000;
 	const PAGE_SIZE = 25;
-	const ITEM_HEIGHT = 92; // 80px + gap
-	let rustEventEmitter: Function;
+	const ITEM_HEIGHT = 112;
+
+	let rustEventEmitter:
+		| ((event: { payload: ReturnType<typeof generatePagePayload> }) => void)
+		| undefined;
+	let intersectionObservers: MockIntersectionObserver[] = [];
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		rustEventEmitter = undefined;
+		intersectionObservers = [];
 
-		(listen as any).mockImplementation((eventName: string, callback: Function) => {
-			if (eventName === LIBRARY_EVENTS.comicChapters) {
-				rustEventEmitter = callback;
+		vi.stubGlobal(
+			'IntersectionObserver',
+			class extends MockIntersectionObserver {
+				constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+					super(callback, options);
+					intersectionObservers.push(this);
+				}
+			} as unknown as typeof IntersectionObserver
+		);
+
+		(listen as any).mockImplementation(
+			(
+				eventName: string,
+				callback: (event: { payload: ReturnType<typeof generatePagePayload> }) => void
+			) => {
+				if (eventName === LIBRARY_EVENTS.comicChapters) {
+					rustEventEmitter = callback;
+				}
+				return Promise.resolve(() => {});
 			}
-			return Promise.resolve(() => {});
-		});
+		);
 
 		(invoke as any).mockImplementation(async () => ({}));
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	const generatePagePayload = (pageIndex: number) => ({
@@ -95,131 +175,136 @@ describe('ComicPage Scroll Integration', () => {
 		initialVolumeViewMode: 'cover' as 'cover' | 'banner'
 	};
 
-	it('should maintain scroll stability with virtual spacers during LRU eviction', async () => {
-		const { container } = render(ComicPage, { data: loaderDataMock });
+	function getLatestObserver() {
+		const observer = intersectionObservers[intersectionObservers.length - 1];
 
-		// 1. Resolve initial fetch (Page 0)
-		await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
-		rustEventEmitter({ payload: generatePagePayload(0) });
-		await new Promise((resolve) => setTimeout(resolve, 50));
+		if (!observer) {
+			throw new Error('IntersectionObserver was not created');
+		}
 
-		// 2. Load up to LRU limit (6 pages: 0, 1, 2, 3, 4, 5)
-		await Array.from({ length: 6 }).reduce(async (promise, _, index) => {
-			await promise;
-			rustEventEmitter({ payload: generatePagePayload(index) });
-			return new Promise((resolve) => setTimeout(resolve, 10));
-		}, Promise.resolve());
+		return observer;
+	}
 
-		// 3. Evict Page 0 by loading Page 6
-		rustEventEmitter({ payload: generatePagePayload(6) });
-		await new Promise((resolve) => setTimeout(resolve, 100));
+	function emitComicChapters(pageIndex: number) {
+		if (!rustEventEmitter) {
+			throw new Error('Rust event emitter was not registered');
+		}
 
-		// 4. Verify Virtual Padding Top (Page 0 is gone, so minPage=1)
-		const listContainer = container.querySelector(".relative[style*='padding-top']") as HTMLElement;
-		expect(listContainer).toBeDefined();
+		rustEventEmitter({ payload: generatePagePayload(pageIndex) });
+	}
 
-		// minPage (1) * pageSize (25) * itemHeight (92) = 2300px
-		expect(listContainer.style.paddingTop).toBe('2300px');
-	});
-
-	it('should clear the cache when a non-adjacent page is received (Window Continuity)', async () => {
-		const { container } = render(ComicPage, { data: loaderDataMock });
-
-		await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
-
-		// 1. Load Page 0
-		rustEventEmitter({ payload: generatePagePayload(0) });
-		await vi.waitFor(() => {
-			const items = container.querySelectorAll('[data-slot="item-title"]');
-			expect(items.length).toBe(PAGE_SIZE);
-		});
-
-		// 2. Receive Page 10 (Non-adjacent to Page 0)
-		rustEventEmitter({ payload: generatePagePayload(10) });
-		await new Promise((resolve) => setTimeout(resolve, 100));
-
-		// 3. Verification: Page 0 should be GONE, and only Page 10 should be present
-		const items = container.querySelectorAll('[data-slot="item-title"]');
-		expect(items.length).toBe(PAGE_SIZE); // Only 25 items, not 50
-		expect(items[0].textContent?.trim()).toBe('Chapter 251'); // Page 10 starts at item 250 (Chapter 251)
-
-		// 4. Verify paddingTop is adjusted for Page 10
-		const listContainer = container.querySelector(".relative[style*='padding-top']") as HTMLElement;
-		// minPage (10) * pageSize (25) * itemHeight (92) = 23000px
-		expect(listContainer.style.paddingTop).toBe('23000px');
-	});
-
-	it('should fetch the correct next page when scrolling down (Bidirectional Flow)', async () => {
-		const { container } = render(ComicPage, { data: loaderDataMock });
-
-		// 1. Initial State: Load Page 0
-		await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
-		rustEventEmitter({ payload: generatePagePayload(0) });
-
-		// Ensure Page 0 is rendered
-		await vi.waitFor(() => {
-			const items = container.querySelectorAll('[data-slot="item-title"]');
-			expect(items.length).toBe(PAGE_SIZE);
-		});
-
-		const scrollableElement = container.querySelector('.overflow-y-auto') as HTMLElement;
-		expect(scrollableElement).toBeDefined();
-
-		// Set explicit dimensions for the test environment
-		Object.defineProperty(scrollableElement, 'clientHeight', { value: 800 });
-		Object.defineProperty(scrollableElement, 'scrollHeight', { value: 92000 }); // 1000 items * 92px
-
-		// 2. Simulate Scroll Down: Trigger Edge DOWN for Page 1
-		// DISTANCE_THRESHOLD is 1500px.
-		// pageSize=25. itemHeight=92. Page 0 ends at 2300px.
-		// distanceFromContentBottom = (scrollHeight - paddingBottom) - (scrollTop + clientHeight)
-		// (92000 - 89700) - (2000 + 800) = 2300 - 2800 = -500px (Trigger!)
-		scrollableElement.scrollTop = 2000;
-		scrollableElement.dispatchEvent(new Event('scroll'));
-
-		// 3. Verification: System should request Page 1
-		await vi.waitFor(
-			() => {
-				const invokeCalls = (invoke as any).mock.calls;
-				const page1Requested = invokeCalls.some(
-					(callArgs: any[]) =>
-						callArgs[0] === LIBRARY_COMMANDS.getComicChapters && callArgs[1].page === 1
-				);
-				expect(page1Requested).toBe(true);
-			},
-			{ timeout: 5000 }
+	function getChapterTitles(container: HTMLElement) {
+		return Array.from(container.querySelectorAll('[data-slot="item-title"]')).map((element) =>
+			element.textContent?.trim()
 		);
+	}
 
-		// 4. Provide Page 1 to the component
-		rustEventEmitter({ payload: generatePagePayload(1) });
-		await new Promise((resolve) => setTimeout(resolve, 100));
+	function getPageRequestCount(pageIndex: number) {
+		return (invoke as any).mock.calls.filter(
+			(callArgs: any[]) =>
+				callArgs[0] === LIBRARY_COMMANDS.getComicChapters && callArgs[1].page === pageIndex
+		).length;
+	}
 
-		// 5. Simulate Scroll Up: Trigger Edge UP for Page 0 (Already cached)
-		// distanceFromContentTop = scrollTop - paddingTop = 100 - 0 = 100 (Trigger!)
-		scrollableElement.scrollTop = 100;
-		scrollableElement.dispatchEvent(new Event('scroll'));
+	async function waitForPageRequest(pageIndex: number) {
+		await vi.waitFor(() => {
+			expect(getPageRequestCount(pageIndex)).toBeGreaterThan(0);
+		});
+	}
 
-		// Verification: Should NOT call invoke again for Page 0 (Cache HIT)
-		// The touch() method should have been called instead
-		const initialInvokeCount = (invoke as any).mock.calls.length;
-		await new Promise((resolve) => setTimeout(resolve, 200));
-		expect((invoke as any).mock.calls.length).toBe(initialInvokeCount);
-	});
+	async function waitForTrackedPage(pageIndex: number) {
+		await vi.waitFor(() => {
+			expect(getLatestObserver().observedElements.has(pageIndex)).toBe(true);
+		});
+	}
 
-	it('should render correct chapter titles using the clean name from Rust', async () => {
-		const { container } = render(ComicPage, { data: loaderDataMock });
+	async function waitForChapterTitle(container: HTMLElement, title: string) {
+		await vi.waitFor(() => {
+			expect(getChapterTitles(container)).toContain(title);
+		});
+	}
+
+	async function renderLoadedComicPage() {
+		const view = render(ComicPage, { data: loaderDataMock });
 
 		await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
-		rustEventEmitter({ payload: generatePagePayload(0) });
+		await waitForPageRequest(0);
+		emitComicChapters(0);
+		await waitForChapterTitle(view.container, 'Chapter 1');
+		await waitForTrackedPage(0);
 
-		// Wait for the specific list component to render items
-		// Item.Title uses data-slot="item-title"
+		return view;
+	}
+
+	async function loadVisiblePage(container: HTMLElement, pageIndex: number) {
+		await waitForTrackedPage(pageIndex);
+		getLatestObserver().emitVisiblePages([pageIndex]);
+		await waitForPageRequest(pageIndex);
+		emitComicChapters(pageIndex);
+		await waitForChapterTitle(container, `Chapter ${pageIndex * PAGE_SIZE + 1}`);
+	}
+
+	it('mantem a estabilidade do scroll com espacadores virtuais apos despejo do LRU', async () => {
+		const { container } = await renderLoadedComicPage();
+
+		for (let pageIndex = 1; pageIndex <= 6; pageIndex++) {
+			await loadVisiblePage(container, pageIndex);
+		}
+
+		await vi.waitFor(() => {
+			const titles = getChapterTitles(container);
+
+			expect(titles).toHaveLength(PAGE_SIZE * 6);
+			expect(titles).not.toContain('Chapter 1');
+			expect(titles).toContain('Chapter 151');
+		});
+
+		const firstPageBlock = container.querySelector('[data-page="0"]') as HTMLElement | null;
+
+		expect(firstPageBlock).not.toBeNull();
+		expect(firstPageBlock?.style.height).toBe(`${PAGE_SIZE * ITEM_HEIGHT}px`);
+		expect(firstPageBlock?.querySelector('[data-slot="item-title"]')).toBeNull();
+	});
+
+	it('limpa o cache quando recebe uma pagina nao adjacente', async () => {
+		const { container } = await renderLoadedComicPage();
+
+		await loadVisiblePage(container, 10);
+
+		await vi.waitFor(() => {
+			const titles = getChapterTitles(container);
+
+			expect(titles).toHaveLength(PAGE_SIZE);
+			expect(titles[0]).toBe('Chapter 251');
+			expect(titles).not.toContain('Chapter 1');
+		});
+
+		const tenthPageBlock = container.querySelector('[data-page="10"]') as HTMLElement | null;
+
+		expect(tenthPageBlock).not.toBeNull();
+		expect(tenthPageBlock?.style.height).toBe(`${PAGE_SIZE * ITEM_HEIGHT}px`);
+	});
+
+	it('busca a proxima pagina correta ao rolar para baixo', async () => {
+		const { container } = await renderLoadedComicPage();
+		const initialPageZeroRequests = getPageRequestCount(0);
+
+		await loadVisiblePage(container, 1);
+
+		getLatestObserver().emitVisiblePages([0]);
+
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		expect(getPageRequestCount(0)).toBe(initialPageZeroRequests);
+		expect(getPageRequestCount(1)).toBe(1);
+	});
+
+	it('renderiza os titulos dos capitulos usando o nome limpo vindo do Rust', async () => {
+		const { container } = await renderLoadedComicPage();
+
 		await vi.waitFor(
 			() => {
-				const chapterTitles = Array.from(
-					container.querySelectorAll('[data-slot="item-title"]')
-				).map((element) => element.textContent?.trim());
-				expect(chapterTitles).toContain('Chapter 1');
+				expect(getChapterTitles(container)).toContain('Chapter 1');
 			},
 			{ timeout: 3000 }
 		);

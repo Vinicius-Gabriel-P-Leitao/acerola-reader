@@ -11,17 +11,26 @@ command = "cargo"
 description = "Run all tests using nextest"
 workspace = false
 
+[tasks.test.windows]
+env = { RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/tests/windows-app-manifest.xml" }
+
 [tasks.test-verbose]
 args = ["nextest", "run", "--no-capture"]
 command = "cargo"
 description = "Run all tests using nextest with verbose output"
 workspace = false
 
+[tasks.test-verbose.windows]
+env = { RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/tests/windows-app-manifest.xml" }
+
 [tasks.test-ci]
 args = ["nextest", "run", "--profile", "ci"]
 command = "cargo"
 description = "Run tests in CI profile (longer timeouts, no fail-fast)"
 workspace = false
+
+[tasks.test-ci.windows]
+env = { RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/tests/windows-app-manifest.xml" }
 
 [tasks.format]
 args = [

@@ -524,10 +524,47 @@ fn mime_type_for(name: &str) -> Result<String, ReaderError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{natural_key, window_indices};
+    use std::{fs::File, io::Write, path::Path};
+
+    use tempfile::TempDir;
+    use zip::{
+        write::{SimpleFileOptions, ZipWriter},
+        CompressionMethod,
+    };
+
+    use super::{natural_key, window_indices, ReaderError, ReaderService};
+    use crate::cmd::events::reader::ReaderChapterPayload;
+
+    fn chapter(path: &Path) -> ReaderChapterPayload {
+        ReaderChapterPayload {
+            id: "chapter-1".to_string(),
+            name: "Chapter 1".to_string(),
+            path: path.to_string_lossy().to_string(),
+            chapter_sort: "1".to_string(),
+            volume_id: Some("volume-1".to_string()),
+            volume_name: Some("Volume 1".to_string()),
+            is_special: false,
+            last_modified: 0,
+        }
+    }
+
+    fn create_cbz(temp_dir: &TempDir, name: &str, entries: &[(&str, &[u8])]) -> std::path::PathBuf {
+        let path = temp_dir.path().join(name);
+        let file = File::create(&path).unwrap();
+        let mut archive = ZipWriter::new(file);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+
+        for (entry_name, bytes) in entries {
+            archive.start_file(*entry_name, options).unwrap();
+            archive.write_all(bytes).unwrap();
+        }
+
+        archive.finish().unwrap();
+        path
+    }
 
     #[test]
-    fn natural_key_orders_numbered_pages() {
+    fn teste_ordena_paginas_numeradas_por_ordem_natural() {
         let mut pages = vec!["page10.jpg", "page2.jpg", "page001.jpg"];
         pages.sort_by_key(|page| natural_key(page));
 
@@ -535,8 +572,163 @@ mod tests {
     }
 
     #[test]
-    fn window_indices_clamps_to_valid_range() {
+    fn teste_intervalo_de_paginas_respeita_limites() {
         assert_eq!(window_indices(0, 5, 2), vec![0, 1, 2]);
         assert_eq!(window_indices(4, 5, 2), vec![2, 3, 4]);
+    }
+
+    #[test]
+    fn teste_intervalo_de_paginas_com_total_zero_retorna_vazio() {
+        assert_eq!(window_indices(0, 0, 2), Vec::<usize>::new());
+    }
+
+    #[tokio::test]
+    async fn teste_abre_cbz_e_carrega_paginas_em_ordem_natural() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(
+            &temp_dir,
+            "chapter.cbz",
+            &[("page10.jpg", &[10]), ("page2.png", &[2]), ("page001.jpg", &[1])],
+        );
+        let reader = ReaderService::new();
+
+        let session = reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+        assert_eq!(session.chapter.id, "chapter-1");
+        assert_eq!(session.page_count, 3);
+        assert_eq!(session.current_page, 0);
+        assert_eq!(session.cache_capacity, 7);
+
+        let first_page = reader.load_page(0, true).await.unwrap();
+        assert_eq!(first_page.chapter_id, "chapter-1");
+        assert_eq!(first_page.index, 0);
+        assert_eq!(first_page.total, 3);
+        assert_eq!(first_page.mime_type, "image/jpeg");
+        assert_eq!(first_page.bytes, vec![1]);
+        assert!(!first_page.cache_hit);
+
+        let second_page = reader.load_page(1, true).await.unwrap();
+        assert_eq!(second_page.mime_type, "image/png");
+        assert_eq!(second_page.bytes, vec![2]);
+
+        let status = reader.status().await.unwrap();
+        assert_eq!(status.current_page, Some(1));
+        assert_eq!(status.page_count, 3);
+    }
+
+    #[tokio::test]
+    async fn teste_reutiliza_cache_ao_carregar_mesma_pagina() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("001.jpg", &[1])]);
+        let reader = ReaderService::new();
+
+        reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+
+        let first_read = reader.load_page(0, false).await.unwrap();
+        assert!(!first_read.cache_hit);
+
+        let second_read = reader.load_page(0, false).await.unwrap();
+        assert!(second_read.cache_hit);
+        assert_eq!(second_read.bytes, vec![1]);
+    }
+
+    #[tokio::test]
+    async fn teste_altera_pagina_atual_sem_carregar_cache() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(
+            &temp_dir,
+            "chapter.cbz",
+            &[("001.jpg", &[1]), ("002.jpg", &[2]), ("003.jpg", &[3])],
+        );
+        let reader = ReaderService::new();
+
+        reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+
+        let status = reader.set_current_page(2).await.unwrap();
+        assert_eq!(status.current_page, Some(2));
+        assert_eq!(status.cache_keys, Vec::<usize>::new());
+    }
+
+    #[tokio::test]
+    async fn teste_pre_carregamento_carrega_paginas_vizinhas() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(
+            &temp_dir,
+            "chapter.cbz",
+            &[
+                ("001.jpg", &[1]),
+                ("002.jpg", &[2]),
+                ("003.jpg", &[3]),
+                ("004.jpg", &[4]),
+                ("005.jpg", &[5]),
+            ],
+        );
+        let reader = ReaderService::new();
+
+        reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+        reader.prefetch_window(2, 1).await.unwrap();
+
+        let mut cache_keys = reader.status().await.unwrap().cache_keys;
+        cache_keys.sort_unstable();
+        assert_eq!(cache_keys, vec![1, 2, 3]);
+    }
+
+    #[tokio::test]
+    async fn teste_fecha_capitulo_e_limpa_status() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("001.jpg", &[1])]);
+        let reader = ReaderService::new();
+
+        reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+        reader.load_page(0, true).await.unwrap();
+
+        let status = reader.close_chapter().await.unwrap();
+        assert!(!status.is_open);
+        assert_eq!(status.chapter_id, None);
+        assert_eq!(status.page_count, 0);
+        assert_eq!(status.current_page, None);
+        assert_eq!(status.cache_keys, Vec::<usize>::new());
+    }
+
+    #[tokio::test]
+    async fn teste_carregar_pagina_sem_capitulo_aberto_retorna_erro() {
+        let reader = ReaderService::new();
+        let error = reader.load_page(0, true).await.unwrap_err();
+
+        assert!(matches!(error, ReaderError::ChapterNotOpen));
+    }
+
+    #[tokio::test]
+    async fn teste_carregar_pagina_fora_do_limite_retorna_erro() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("001.jpg", &[1])]);
+        let reader = ReaderService::new();
+
+        reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+        let error = reader.load_page(1, true).await.unwrap_err();
+
+        assert!(matches!(error, ReaderError::PageOutOfBounds { index: 1, total: 1 }));
+    }
+
+    #[tokio::test]
+    async fn teste_abrir_capitulo_rejeita_formato_nao_suportado() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("chapter.txt");
+        std::fs::write(&path, "content").unwrap();
+        let reader = ReaderService::new();
+
+        let error = reader.open_chapter(chapter(&path)).await.unwrap_err();
+
+        assert!(matches!(error, ReaderError::UnsupportedFormat(format) if format == "txt"));
+    }
+
+    #[tokio::test]
+    async fn teste_abrir_capitulo_rejeita_cbz_sem_imagens() {
+        let temp_dir = TempDir::new().unwrap();
+        let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("notes.txt", b"without image")]);
+        let reader = ReaderService::new();
+
+        let error = reader.open_chapter(chapter(&cbz_path)).await.unwrap_err();
+
+        assert!(matches!(error, ReaderError::EmptyChapter(path) if path.ends_with("chapter.cbz")));
     }
 }

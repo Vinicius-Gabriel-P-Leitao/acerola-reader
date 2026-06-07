@@ -24,7 +24,10 @@ mod app_bootstrap {
     use tauri::Emitter;
 
     use super::*;
-    use crate::core::services::{network::NetworkService, reader::ReaderService};
+    use crate::core::services::{
+        network::{NetworkService, NetworkServiceApi},
+        reader::ReaderService,
+    };
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();
@@ -115,7 +118,7 @@ mod app_bootstrap {
             .await
             .expect("Failed to start the p2p node");
 
-        let service = NetworkService::new(Arc::new(node));
+        let service: Arc<dyn NetworkServiceApi> = Arc::new(NetworkService::new(Arc::new(node)));
         handle.manage(service);
     }
 
