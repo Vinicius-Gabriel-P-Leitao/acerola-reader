@@ -3,6 +3,7 @@ import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { useComicChapters } from './use-comic-chapters.svelte';
 import ComicChaptersHarness from './use-comic-chapters.harness.svelte';
+import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
 import { mockIPC, mockWindows } from '@tauri-apps/api/mocks';
 import { listen } from '@tauri-apps/api/event';
@@ -12,8 +13,15 @@ vi.mock('@tauri-apps/api/event', () => ({
 	listen: vi.fn()
 }));
 
+vi.mock('svelte-sonner', () => ({
+	toast: {
+		error: vi.fn()
+	}
+}));
+
 describe('useComicChapters (Hook Integration)', () => {
 	let eventCallback: Function;
+	let ipcCalls: Array<{ command: string; args: unknown }>;
 
 	async function renderComicChaptersHook() {
 		let chapterHook: ReturnType<typeof useComicChapters> | undefined;
@@ -35,7 +43,9 @@ describe('useComicChapters (Hook Integration)', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockWindows('main');
-		mockIPC(async () => {
+		ipcCalls = [];
+		mockIPC(async (command, args) => {
+			ipcCalls.push({ command, args });
 			return;
 		});
 
@@ -92,6 +102,52 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.chapters?.archive.items.length).toBe(25);
 		expect(chapterHook.chapters?.archive.page).toBe(0);
 		expect(chapterHook.lruKeys).toContain(0);
+	});
+
+	it('descarta resposta stale distante da página solicitada', async () => {
+		const chapterHook = await renderComicChaptersHook();
+		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, true);
+
+		eventCallback({ payload: generateMockChapterData(6, 500) });
+		await fetchOperation;
+
+		expect(chapterHook.loading).toBe(false);
+		expect(chapterHook.chapters).toBeUndefined();
+		expect(chapterHook.lruKeys).toEqual([]);
+	});
+
+	it('não solicita novamente página marcada com erro parcial', async () => {
+		mockIPC(async (command, args) => {
+			ipcCalls.push({ command, args });
+			throw new Error('falha parcial');
+		});
+
+		const chapterHook = await renderComicChaptersHook();
+
+		await chapterHook.fetch('directory-id-1', 2, 25, true);
+		await chapterHook.fetch('directory-id-1', 2, 25, true);
+
+		expect(chapterHook.loading).toBe(false);
+		expect(ipcCalls).toHaveLength(1);
+		expect(ipcCalls[0]).toMatchObject({
+			command: LIBRARY_COMMANDS.getComicChapters,
+			args: expect.objectContaining({ page: 2 })
+		});
+	});
+
+	it('reutiliza página em cache sem novo IPC', async () => {
+		const chapterHook = await renderComicChaptersHook();
+		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, true);
+
+		eventCallback({ payload: generateMockChapterData(0, 100) });
+		await fetchOperation;
+
+		expect(ipcCalls).toHaveLength(1);
+
+		await chapterHook.fetch('directory-id-1', 0, 25, true);
+
+		expect(ipcCalls).toHaveLength(1);
+		expect(chapterHook.chapters?.archive.items.length).toBe(25);
 	});
 
 	it('should manage the sliding window (LRU) when multiple pages are loaded', async () => {

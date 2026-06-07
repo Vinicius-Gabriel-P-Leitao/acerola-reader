@@ -180,6 +180,69 @@ describe('useReader', () => {
 		expect(reader.loading).toBe(false);
 	});
 
+	it('registra erro quando carregamento de página falha', async () => {
+		const { reader } = await renderHook();
+		const error = new Error('decode failed');
+
+		await reader.open(chapter(), 4);
+		await waitMicrotasks();
+		invokeMock.mockClear();
+		invokeMock.mockRejectedValueOnce(error);
+
+		await expect(reader.loadPage(1)).rejects.toThrow(error);
+
+		expect(reader.error).toBe('decode failed');
+		expect(reader.loading).toBe(false);
+		expect(invokeMock).toHaveBeenCalledWith(READER_COMMANDS.loadPage, {
+			index: 1,
+			setCurrent: true
+		});
+	});
+
+	it('ignora página stale de sessão anterior', async () => {
+		const { reader } = await renderHook();
+		let activeChapterId = 'chapter-1';
+		let resolveStalePage: (payload: ReaderPagePayload) => void = () => {};
+
+		invokeMock.mockImplementation((command, args) => {
+			if (command === READER_COMMANDS.openChapter) {
+				const payload = args as { chapter: ReaderChapterPayload };
+				activeChapterId = payload.chapter.id;
+				return Promise.resolve(session(payload.chapter));
+			}
+
+			if (command === READER_COMMANDS.loadPage) {
+				const payload = args as { index: number; setCurrent: boolean };
+
+				if (activeChapterId === 'chapter-1' && payload.index === 1 && payload.setCurrent) {
+					return new Promise<ReaderPagePayload>((resolve) => {
+						resolveStalePage = resolve;
+					});
+				}
+
+				return Promise.resolve(page(activeChapterId, payload.index));
+			}
+
+			return Promise.resolve(undefined);
+		});
+
+		await reader.open(chapter('chapter-1'), 4);
+		await waitMicrotasks();
+
+		const staleLoad = reader.loadPage(1);
+		await Promise.resolve();
+
+		await reader.open(chapter('chapter-2'), 4);
+		await waitMicrotasks();
+
+		resolveStalePage(page('chapter-1', 1));
+
+		await expect(staleLoad).resolves.toBeUndefined();
+		expect(reader.session?.chapter.id).toBe('chapter-2');
+		expect(reader.currentPage).toBe(4);
+		expect(reader.pageAt(1)).toBeUndefined();
+	});
+
 	it('fecha capitulo, limpa cache e revoga urls', async () => {
 		const { reader } = await renderHook();
 
@@ -194,6 +257,20 @@ describe('useReader', () => {
 		expect(reader.session).toBeUndefined();
 		expect(reader.currentPage).toBe(0);
 		expect(reader.cacheKeys).toEqual([]);
+		expect(URL.revokeObjectURL).toHaveBeenCalled();
+	});
+
+	it('limpa recursos ao desmontar o componente', async () => {
+		const { reader, unmount } = await renderHook();
+
+		await reader.open(chapter(), 0);
+		await waitMicrotasks();
+		invokeMock.mockClear();
+
+		unmount();
+		await waitMicrotasks();
+
+		expect(invokeMock).toHaveBeenCalledWith(READER_COMMANDS.closeChapter);
 		expect(URL.revokeObjectURL).toHaveBeenCalled();
 	});
 });
