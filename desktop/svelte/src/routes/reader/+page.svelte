@@ -140,6 +140,18 @@
 
 		if (isReaderEditableTarget(event.target)) return;
 
+		if (key === 'arrowright' && canNextPage && !pageControlsDisabled) {
+			event.preventDefault();
+			void goToReaderPage(reader.currentPage + 1);
+			return;
+		}
+
+		if (key === 'arrowleft' && canPreviousPage && !pageControlsDisabled) {
+			event.preventDefault();
+			void goToReaderPage(reader.currentPage - 1);
+			return;
+		}
+
 		if (commandKey && (event.key === '+' || event.key === '=')) {
 			event.preventDefault();
 			zoom.zoomIn();
