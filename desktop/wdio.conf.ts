@@ -24,7 +24,7 @@ export const config: Options.Testrunner = {
 	maxInstances: 1,
 	capabilities: [
 		{
-			browserName: process.platform === 'win32' ? 'chrome' : 'wry',
+			maxInstances: 1,
 			'tauri:options': {
 				application: appPath
 			}
