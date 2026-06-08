@@ -58,6 +58,10 @@
 		"mod.rs": "rust-mod"
 	},
 	"material-icon-theme.folders.associations": {
+		"fs": "resource",
+		"pattern": "rules",
+		"harness": "test",
+		"reader": "docs",
 		"network": "connection",
 		"summary": "docs",
 		"comic": "queue",

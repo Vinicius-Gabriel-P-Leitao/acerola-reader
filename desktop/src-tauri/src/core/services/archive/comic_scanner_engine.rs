@@ -26,7 +26,7 @@ use crate::{
     },
     infra::{
         error::{ComicError, DbError},
-        filesystem::{DirectoryEntry, ScannerEngine},
+        fs::{DirectoryEntry, ScannerEngine},
         pattern::{
             template::{detect_template, extract_chapter_parts},
             template_validator::validate_chapter_template,
@@ -554,7 +554,7 @@ mod tests {
         // Seed de templates de volume
         // FIXME: Trocar isso por uma função que existe em tests/
         let pool_ref = &pool;
-        sqlx::query(include_str!("../../../../migrations/seeds/001_seed_chapter_template.sql"))
+        sqlx::query(include_str!("../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"))
             .execute(pool_ref)
             .await
             .unwrap();
@@ -604,7 +604,7 @@ mod tests {
 
         // Seed de templates de volume para Berserk funcionar
         let pool_ref = &pool;
-        sqlx::query(include_str!("../../../../migrations/seeds/001_seed_chapter_template.sql"))
+        sqlx::query(include_str!("../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"))
             .execute(pool_ref)
             .await
             .unwrap();
@@ -714,7 +714,7 @@ mod tests {
 
         // Seed de templates de volume
         let pool_ref = &pool;
-        sqlx::query(include_str!("../../../../migrations/seeds/001_seed_chapter_template.sql"))
+        sqlx::query(include_str!("../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"))
             .execute(pool_ref)
             .await
             .unwrap();

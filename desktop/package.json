@@ -27,6 +27,7 @@
 		"test:storybook": "vitest run --project=storybook",
 		"test:storybook:watch": "vitest --project=storybook",
 		"test:coverage:unit": "vitest run --project=unit --coverage",
+		"test:wdio": "wdio run wdio.conf.ts",
 		"test:ui": "vitest --ui",
 		"lint": "prettier --check .",
 		"format": "prettier --write ."
@@ -63,6 +64,11 @@
 		"@types/node": "^24",
 		"@vitest/browser-playwright": "^4.1.0",
 		"@vitest/coverage-v8": "^4.1.0",
+		"@wdio/cli": "latest",
+		"@wdio/local-runner": "latest",
+		"@wdio/mocha-framework": "latest",
+		"@wdio/spec-reporter": "latest",
+		"@wdio/types": "latest",
 		"bits-ui": "^2.16.5",
 		"clsx": "^2.1.1",
 		"jsdom": "^29.0.1",
@@ -83,6 +89,7 @@
 		"typescript": "~5.6.2",
 		"vite": "^6.0.3",
 		"vitest": "^4.1.0",
-		"vitest-browser-svelte": "^2.0.2"
+		"vitest-browser-svelte": "^2.0.2",
+		"webdriverio": "latest"
 	}
 }

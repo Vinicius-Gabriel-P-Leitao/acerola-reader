@@ -21,5 +21,7 @@ storybook-static
 
 # Test WebDriver binaries
 /msedgedriver.exe
-/src-tauri/tests/.drivers/*
-!/src-tauri/tests/.drivers/.gitkeep
+/.bin/*
+!/.bin/windows/
+/.bin/windows/*
+!/.bin/windows/.gitkeep
