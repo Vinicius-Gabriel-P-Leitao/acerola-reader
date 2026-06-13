@@ -1,8 +1,5 @@
-import { existsSync } from 'node:fs';
-import path from 'node:path';
-import { getTitle, navigateTo, waitForAppReady } from '../helpers/app';
-
-const readerFixturePath = path.resolve('tests/wdio/fixtures/reader.cbz');
+import { getTitle, navigateTo, navigateToWithState, waitForAppReady } from '../helpers/app';
+import { createReaderFixture, readerChapterFor } from '../helpers/fixtures';
 
 describe('acerola nativo via WebDriverIO', () => {
 	it('inicializa o app sem crash', async () => {
@@ -38,20 +35,21 @@ describe('acerola nativo via WebDriverIO', () => {
 		expect(url).toMatch(/tauri:\/\/localhost|localhost/i);
 	});
 
-	it('carrega imagem pelo protocolo asset ou tauri', async () => {
-		if (!existsSync(readerFixturePath)) {
-			console.warn(`Fixture CBZ ausente: ${readerFixturePath} — teste pulado.`);
-			return;
-		}
-
+	it('carrega imagem do capítulo nativo no reader', async () => {
+		const fixture = createReaderFixture('Acerola WDIO Native');
 		await waitForAppReady();
-		await navigateTo('/reader');
+		await navigateToWithState('/reader', {
+			chapter: readerChapterFor(fixture),
+			chapterIndex: 0,
+			totalChapters: 1,
+			chapterScope: fixture.comicTitle
+		});
 
-		const image = await browser.$('img');
+		const image = await browser.$('img[alt="Página 1"]');
 		await image.waitForDisplayed({ timeout: 10_000 });
 
 		const src = await image.getAttribute('src');
-		expect(src).toMatch(/asset:\/\/|tauri:\/\//i);
+		expect(src).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 	});
 
 	it('aciona controle nativo de minimizar pela titlebar', async () => {
@@ -60,16 +58,24 @@ describe('acerola nativo via WebDriverIO', () => {
 
 		const beforeRect = await browser.getWindowRect();
 
-		const minimizeButton = await browser.$('[aria-label="Minimizar"]');
-		await minimizeButton.waitForDisplayed({ timeout: 5_000 });
-		await minimizeButton.click();
-		await browser.pause(500);
+		try {
+			const minimizeButton = await browser.$('[aria-label="Minimizar"]');
+			await minimizeButton.waitForDisplayed({ timeout: 5_000 });
+			await minimizeButton.click();
+			await browser.pause(500);
 
-		const afterRect = await browser.getWindowRect();
-		const visibilityState = await browser.execute(() => document.visibilityState);
+			const afterRect = await browser.getWindowRect();
+			const visibilityState = await browser.execute(() => document.visibilityState);
 
-		// minimizado = visibilityState oculto OU altura da janela alterada
-		const wasMinimized = visibilityState !== 'visible' || afterRect.height < beforeRect.height;
-		expect(wasMinimized).toBe(true);
+			// Windows/WebView2 mantém o tamanho, mas move a janela minimizada para fora da tela.
+			const movedOffscreen = afterRect.x < -10_000 || afterRect.y < -10_000;
+			const wasMinimized =
+				visibilityState !== 'visible' || afterRect.height < beforeRect.height || movedOffscreen;
+			expect(wasMinimized).toBe(true);
+		} finally {
+			await browser
+				.setWindowRect(beforeRect.x, beforeRect.y, beforeRect.width, beforeRect.height)
+				.catch(() => undefined);
+		}
 	});
 });

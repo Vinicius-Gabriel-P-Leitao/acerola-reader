@@ -1,4 +1,5 @@
-const APP_ORIGIN = process.platform === 'win32' ? 'http://tauri.localhost' : 'tauri://localhost';
+export const APP_ORIGIN =
+	process.platform === 'win32' ? 'http://tauri.localhost' : 'tauri://localhost';
 const APP_READY_SELECTOR = '[data-tauri-drag-region]';
 const APP_ORIGINS = ['http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost'];
 
@@ -59,6 +60,43 @@ export async function navigateTo(route: string) {
 	);
 }
 
+export async function navigateToWithState(route: string, state: Record<string, unknown>) {
+	const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+	const fullUrl = `${APP_ORIGIN}${normalizedRoute}`;
+
+	await browser.execute(
+		({ targetUrl, pageState }) => {
+			const currentState = window.history.state ?? {};
+			const fallbackIndex = Date.now();
+			const currentHistoryIndex = Number(currentState['sveltekit:history']) || fallbackIndex;
+			const currentNavigationIndex = Number(currentState['sveltekit:navigation']) || fallbackIndex;
+
+			const nextState = {
+				...currentState,
+				'sveltekit:history': currentHistoryIndex + 1,
+				'sveltekit:navigation': currentNavigationIndex + 1,
+				'sveltekit:states': pageState
+			};
+
+			window.history.pushState(nextState, '', targetUrl);
+			window.dispatchEvent(new PopStateEvent('popstate', { state: nextState }));
+		},
+		{ targetUrl: fullUrl, pageState: state }
+	);
+
+	await browser.waitUntil(
+		async () => {
+			const currentState = await getAppState();
+			return currentState.pathname === normalizedRoute;
+		},
+		{
+			timeout: 5_000,
+			interval: 100,
+			timeoutMsg: `WebView não navegou para ${normalizedRoute} com estado de página.`
+		}
+	);
+}
+
 export async function waitForAppReady() {
 	// __TAURI_INTERNALS__ fica disponivel ainda em about:blank; carregue a rota real primeiro.
 	await waitForTauriReady();
@@ -92,4 +130,106 @@ export async function waitForAppReady() {
 
 export async function getTitle() {
 	return browser.execute(() => document.title);
+}
+
+export async function getPathname() {
+	return browser.execute(() => window.location.pathname);
+}
+
+export async function expectPathname(pathname: string) {
+	await browser.waitUntil(async () => (await getPathname()) === pathname, {
+		timeout: 5_000,
+		interval: 100,
+		timeoutMsg: `Rota atual não ficou em ${pathname}.`
+	});
+}
+
+export function xpathLiteral(value: string) {
+	if (!value.includes("'")) return `'${value}'`;
+	if (!value.includes('"')) return `"${value}"`;
+
+	return `concat(${value
+		.split("'")
+		.map((part) => `'${part}'`)
+		.join(`, "'", `)})`;
+}
+
+export function exactTextSelector(text: string) {
+	return `//*[normalize-space()=${xpathLiteral(text)}]`;
+}
+
+export function containsTextSelector(text: string) {
+	return `//*[contains(normalize-space(), ${xpathLiteral(text)})]`;
+}
+
+export async function waitForText(text: string, timeout = 5_000) {
+	return firstDisplayed(exactTextSelector(text), timeout);
+}
+
+export async function waitForTextContaining(text: string, timeout = 5_000) {
+	return firstDisplayed(containsTextSelector(text), timeout);
+}
+
+export async function isTextDisplayed(text: string) {
+	const elements = await browser.$$(exactTextSelector(text));
+
+	for (const element of elements) {
+		if (await element.isDisplayed().catch(() => false)) return true;
+	}
+
+	return false;
+}
+
+export async function clickText(text: string, timeout = 5_000) {
+	const element = await waitForText(text, timeout);
+	await element.click();
+	return element;
+}
+
+export async function firstDisplayed(selector: string, timeout = 5_000) {
+	let lastCount = 0;
+
+	await browser.waitUntil(
+		async () => {
+			const elements = await browser.$$(selector);
+			lastCount = await elements.length;
+
+			for (const element of elements) {
+				if (await element.isDisplayed().catch(() => false)) return true;
+			}
+
+			return false;
+		},
+		{
+			timeout,
+			interval: 100,
+			timeoutMsg: `Nenhum elemento visível para seletor "${selector}" (${lastCount} encontrados).`
+		}
+	);
+
+	const elements = await browser.$$(selector);
+	for (const element of elements) {
+		if (await element.isDisplayed().catch(() => false)) return element;
+	}
+
+	throw new Error(`Nenhum elemento visível para seletor "${selector}".`);
+}
+
+export async function invokeTauriCommand<T = unknown>(command: string, args?: unknown) {
+	return browser.execute(
+		async ({ command: commandName, args: commandArgs }) => {
+			const tauriWindow = window as typeof window & {
+				__TAURI_INTERNALS__?: {
+					invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
+				};
+			};
+
+			if (!tauriWindow.__TAURI_INTERNALS__) {
+				throw new Error('window.__TAURI_INTERNALS__ indisponível.');
+			}
+
+			return tauriWindow.__TAURI_INTERNALS__.invoke(commandName, commandArgs);
+		},
+		{ command, args }
+	) as Promise<T>;
 }
