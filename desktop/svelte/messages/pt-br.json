@@ -245,7 +245,13 @@
 				"title": "Configuração de metadados",
 				"lang": {
 					"title": "Idioma",
-					"desc": "Selecione o idioma padrão para os metadados."
+					"desc": "Selecione o idioma padrão para os metadados.",
+					"popover_title": "Idioma dos metadados",
+					"popover_desc": "Atual: {language}",
+					"search_placeholder": "Buscar idioma...",
+					"group_title": "Idiomas disponíveis",
+					"empty": "Nenhum idioma encontrado.",
+					"item_desc": "Código {code}"
 				},
 				"mangadex": {
 					"title": "Sincronização com MangaDex",

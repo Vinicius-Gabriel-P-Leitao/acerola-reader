@@ -245,7 +245,13 @@
 				"title": "Metadata configuration",
 				"lang": {
 					"title": "Language",
-					"desc": "Select the default language for metadata."
+					"desc": "Select the default language for metadata.",
+					"popover_title": "Metadata language",
+					"popover_desc": "Current: {language}",
+					"search_placeholder": "Search language...",
+					"group_title": "Available languages",
+					"empty": "No language found.",
+					"item_desc": "Code {code}"
 				},
 				"mangadex": {
 					"title": "MangaDex Synchronization",
