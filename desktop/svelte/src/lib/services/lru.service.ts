@@ -1,10 +1,14 @@
 import { LRUCache } from 'lru-cache';
 
-export interface LRUConfig {
+export interface LRUConfig<
+	KeyType extends string | number = string | number,
+	ValueType extends {} = {}
+> {
 	/**
 	 * Número máximo estrito de itens mantidos em memória.
 	 */
 	max: number;
+	dispose?: (value: ValueType, key: KeyType) => void;
 }
 
 /**
@@ -15,10 +19,11 @@ export interface LRUConfig {
 export class LRUService<KeyType extends string | number, ValueType extends {}> {
 	private cache: LRUCache<KeyType, ValueType>;
 
-	constructor(config: LRUConfig) {
+	constructor(config: LRUConfig<KeyType, ValueType>) {
 		this.cache = new LRUCache({
 			max: config.max,
 			dispose: (value, key) => {
+				config.dispose?.(value, key);
 				console.log(`[LRUService] 🗑️ EVICTING page ${key} (Cache limit reached)`);
 			}
 		});

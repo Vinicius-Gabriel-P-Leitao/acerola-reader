@@ -33,7 +33,9 @@
 </script>
 
 {#if summary.loading}
-	<div class="flex items-center justify-center p-8 text-muted-foreground">{m['pages.home.loading']()}</div>
+	<div class="flex items-center justify-center p-8 text-muted-foreground">
+		{m['pages.home.loading']()}
+	</div>
 {:else if summary.comics && summary.comics.total > 0}
 	<div class="p-8">
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
@@ -64,7 +66,9 @@
 
 					{#snippet action()}
 						<AcerolaButtonIcon
-							class="text-overlay bg-transparent transition-colors hover:text-primary"
+							ui={{
+								class: 'text-overlay bg-transparent transition-colors hover:text-primary'
+							}}
 						>
 							<MoreHorizontal size={16} />
 						</AcerolaButtonIcon>

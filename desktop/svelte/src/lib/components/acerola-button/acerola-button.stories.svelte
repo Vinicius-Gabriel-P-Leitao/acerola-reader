@@ -7,12 +7,10 @@
 		component: AcerolaButton,
 		tags: ['autodocs'],
 		argTypes: {
-			variant: {
+			ui: {
 				description: 'Variação visual do botão',
-				control: 'select',
-				options: ['default', 'outline', 'ghost', 'destructive']
-			},
-			disabled: { description: 'Desabilita o botão', control: 'boolean' }
+				control: 'object'
+			}
 		}
 	});
 </script>
@@ -22,17 +20,17 @@
 </Story>
 
 <Story name="Outline" asChild>
-	<AcerolaButton variant="outline">Outline</AcerolaButton>
+	<AcerolaButton ui={{ variant: 'outline' }}>Outline</AcerolaButton>
 </Story>
 
 <Story name="Ghost" asChild>
-	<AcerolaButton variant="ghost">Ghost</AcerolaButton>
+	<AcerolaButton ui={{ variant: 'ghost' }}>Ghost</AcerolaButton>
 </Story>
 
 <Story name="Destructive" asChild>
-	<AcerolaButton variant="destructive">Deletar</AcerolaButton>
+	<AcerolaButton ui={{ variant: 'destructive' }}>Deletar</AcerolaButton>
 </Story>
 
 <Story name="Disabled" asChild>
-	<AcerolaButton disabled>Desabilitado</AcerolaButton>
+	<AcerolaButton ui={{ disabled: true }}>Desabilitado</AcerolaButton>
 </Story>

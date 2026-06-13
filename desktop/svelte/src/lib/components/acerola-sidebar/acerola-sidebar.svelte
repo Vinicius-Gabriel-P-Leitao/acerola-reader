@@ -9,10 +9,17 @@
 	};
 
 	export type AcerolaSidebarProps = {
-		items: SidebarItem[];
+		data: {
+			items: SidebarItem[];
+		};
+		ui?: {
+			class?: string;
+		};
+	};
+
+	export type AcerolaSidebarSnippets = {
 		header?: Snippet;
 		footer?: Snippet;
-		class?: string;
 	};
 </script>
 
@@ -20,10 +27,10 @@
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
-	let { items, header, footer, class: className }: AcerolaSidebarProps = $props();
+	let { data, ui, header, footer }: AcerolaSidebarProps & AcerolaSidebarSnippets = $props();
 </script>
 
-<Sidebar.Root collapsible="icon" class={className}>
+<Sidebar.Root collapsible="icon" class={ui?.class}>
 	{#if header}
 		<Sidebar.Header class="p-6">
 			{@render header()}
@@ -34,7 +41,7 @@
 		<Sidebar.Group class="mt-4 px-3">
 			<Sidebar.GroupContent>
 				<Sidebar.Menu class="gap-2">
-					{#each items as item (item.href)}
+					{#each data.items as item (item.href)}
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
 								isActive={page.url.pathname === item.href}

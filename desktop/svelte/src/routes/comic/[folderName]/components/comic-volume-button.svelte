@@ -1,3 +1,19 @@
+<script lang="ts" module>
+	export type ComicVolumeButtonProps = {
+		data: {
+			title: string;
+			totalChapters: number;
+			viewMode?: 'cover' | 'banner';
+			coverUri?: string | null;
+			bannerUri?: string | null;
+			isExpanded?: boolean;
+		};
+		events: {
+			onClick: () => void;
+		};
+	};
+</script>
+
 <script lang="ts">
 	import Folder from '@lucide/svelte/icons/folder';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -6,37 +22,23 @@
 	import { AspectRatio } from '$lib/components/ui/aspect-ratio';
 	import { m } from '$lib/paraglide/messages';
 
-	let {
-		title,
-		totalChapters,
-		viewMode = 'cover',
-		coverUri = null,
-		bannerUri = null,
-		isExpanded = false,
-		onclick
-	}: {
-		title: string;
-		totalChapters: number;
-		viewMode?: 'cover' | 'banner';
-		coverUri?: string | null;
-		bannerUri?: string | null;
-		isExpanded?: boolean;
-		onclick: () => void;
-	} = $props();
+	let { data, events }: ComicVolumeButtonProps = $props();
 
-	const activeBanner = $derived(viewMode === 'banner' ? bannerUri || coverUri : null);
-	const activeCover = $derived(coverUri || bannerUri);
+	const activeBanner = $derived(
+		(data.viewMode ?? 'cover') === 'banner' ? data.bannerUri || data.coverUri : null
+	);
+	const activeCover = $derived(data.coverUri || data.bannerUri);
 </script>
 
 <button
-	{onclick}
+	onclick={events.onClick}
 	class="group relative flex w-full items-center justify-between overflow-hidden rounded-3xl border border-surface/40 bg-mantle/50 p-5 text-left transition-all duration-300 hover:border-primary/50 hover:bg-mantle/70"
 >
 	{#if activeBanner}
 		<div class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
 			<img
 				src={activeBanner}
-				alt={title}
+				alt={data.title}
 				class="h-full w-full scale-105 object-cover opacity-20 blur-[2px] transition-all duration-300 group-hover:scale-110 group-hover:opacity-30"
 			/>
 
@@ -50,7 +52,7 @@
 				{#if activeCover}
 					<img
 						src={activeCover}
-						alt={title}
+						alt={data.title}
 						class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 					/>
 				{:else}
@@ -63,11 +65,11 @@
 
 		<div class="min-w-0">
 			<h3 class="line-clamp-1 text-lg font-bold text-foreground">
-				{title}
+				{data.title}
 			</h3>
 
 			<p class="text-sm text-muted-foreground">
-				{totalChapters} capítulos inclusos
+				{m['pages.comic.volume.chapters_included']({ count: data.totalChapters })}
 			</p>
 		</div>
 	</div>
@@ -75,7 +77,7 @@
 	<div
 		class={cn(
 			'relative z-10 ml-4 shrink-0 transition-transform duration-300',
-			isExpanded && 'rotate-180'
+			data.isExpanded && 'rotate-180'
 		)}
 	>
 		<ChevronDown size={20} />

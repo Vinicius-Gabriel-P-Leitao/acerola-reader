@@ -3,26 +3,31 @@ mod core;
 mod data;
 mod infra;
 
-use cmd::features::library::{comic_scanner_cmd, select_folder_cmd};
-use cmd::features::network as network_cmd;
-use cmd::features::summary as comic_summary_cmd;
+use cmd::features::{
+    library::{comic_scanner_cmd, select_folder_cmd},
+    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
+};
 use tauri::Manager;
 
 #[cfg(test)]
 pub mod tests;
 
 mod app_bootstrap {
-    use crate::core::services::network::NetworkService;
+    use std::{path::PathBuf, sync::Arc};
 
-    use super::*;
     use acerola_p2p::api::{
         guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
         identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
         transport::IrohTransportBuilder,
         AcerolaP2p,
     };
-    use std::{path::PathBuf, sync::Arc};
     use tauri::Emitter;
+
+    use super::*;
+    use crate::core::services::{
+        network::{NetworkService, NetworkServiceApi},
+        reader::ReaderService,
+    };
 
     pub fn build() -> tauri::Builder<tauri::Wry> {
         let builder = tauri::Builder::default();
@@ -46,6 +51,12 @@ mod app_bootstrap {
             network_cmd::switch_to_relay,
             network_cmd::connect_to_peer,
             network_cmd::get_local_id,
+            reader_cmd::reader_open_chapter,
+            reader_cmd::reader_load_page,
+            reader_cmd::reader_set_current_page,
+            reader_cmd::reader_status,
+            reader_cmd::reader_close_chapter,
+            reader_cmd::reader_prefetch_window,
         ])
     }
 
@@ -93,6 +104,7 @@ mod app_bootstrap {
         let store = Arc::new(InMemoryTrustedStore::new());
 
         let transport = IrohTransportBuilder::default()
+            // TODO: Derivar de forma melhor o valor
             .seed(*b"acerola-desktop-seed-v1-00000000")
             .relay("https://relay.acerola-comic.com");
 
@@ -106,7 +118,7 @@ mod app_bootstrap {
             .await
             .expect("Failed to start the p2p node");
 
-        let service = NetworkService::new(Arc::new(node));
+        let service: Arc<dyn NetworkServiceApi> = Arc::new(NetworkService::new(Arc::new(node)));
         handle.manage(service);
     }
 
@@ -129,6 +141,8 @@ mod app_bootstrap {
                 .level_for("acerola_lib", tauri_plugin_log::log::LevelFilter::Debug)
                 .build(),
         )?;
+
+        handle.manage(ReaderService::new());
 
         tauri::async_runtime::block_on(async move {
             setup_database(&handle, db_path).await;

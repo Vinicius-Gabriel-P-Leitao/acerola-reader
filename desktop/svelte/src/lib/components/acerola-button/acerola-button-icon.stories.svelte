@@ -10,7 +10,7 @@
 		component: AcerolaButtonIcon,
 		tags: ['autodocs'],
 		argTypes: {
-			disabled: { description: 'Desabilita o botão', control: 'boolean' }
+			ui: { description: 'Configuração visual do botão', control: 'object' }
 		}
 	});
 </script>
@@ -34,7 +34,7 @@
 </Story>
 
 <Story name="Disabled">
-	<AcerolaButtonIcon disabled>
+	<AcerolaButtonIcon ui={{ disabled: true }}>
 		<MoonIcon size={16} />
 	</AcerolaButtonIcon>
 </Story>

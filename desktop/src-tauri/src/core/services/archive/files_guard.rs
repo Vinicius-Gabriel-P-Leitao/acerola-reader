@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use crate::infra::{error::FileError, pattern::archive_format::ArchiveFormat};
+use crate::infra::{
+    error::FileError,
+    pattern::{archive_format::ArchiveFormat, image_file_format::ImageFileFormat},
+};
 
 pub struct SupportedFileGuard;
 pub struct ArchiveFileGuard;
@@ -51,10 +54,11 @@ impl FileGuard for ArtworkFileGuard {
     fn is_allowed(&self, path: &Path) -> Result<(), FileError> {
         let name =
             path.file_name().and_then(|name| name.to_str()).ok_or(FileError::MissingFileName)?;
+        let stem =
+            path.file_stem().and_then(|name| name.to_str()).ok_or(FileError::MissingFileName)?;
 
-        match name {
-            "cover.png" | "cover.jpg" | "cover.jpeg" | "banner.png" | "banner.jpg"
-            | "banner.jpeg" => Ok(()),
+        match (stem, ImageFileFormat::from_path(path)) {
+            ("cover" | "banner", Some(_)) => Ok(()),
             _ => Err(FileError::FileNameNotAllowed(name.to_string())),
         }
     }
@@ -66,8 +70,7 @@ impl ArtworkFileGuard {
             return false;
         }
 
-        let name = path.file_name().and_then(|file_name| file_name.to_str()).unwrap_or("");
-        matches!(name, "cover.png" | "cover.jpg" | "cover.jpeg")
+        is_named_artwork(path, "cover")
     }
 
     pub fn is_banner(&self, path: &Path) -> bool {
@@ -75,9 +78,14 @@ impl ArtworkFileGuard {
             return false;
         }
 
-        let name = path.file_name().and_then(|file_name| file_name.to_str()).unwrap_or("");
-        matches!(name, "banner.png" | "banner.jpg" | "banner.jpeg")
+        is_named_artwork(path, "banner")
     }
+}
+
+fn is_named_artwork(path: &Path, expected_stem: &str) -> bool {
+    let stem = path.file_stem().and_then(|file_name| file_name.to_str()).unwrap_or("");
+
+    stem == expected_stem && ImageFileFormat::from_path(path).is_some()
 }
 
 pub struct ScannerGuard {
@@ -110,9 +118,10 @@ impl ScannerGuard {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::{ArtworkFileGuard, FileGuard, MetadataFileGuard, ScannerGuard, SupportedFileGuard};
     use crate::infra::error::FileError;
-    use std::path::Path;
 
     #[test]
     fn teste_comic_extensao_valida() {

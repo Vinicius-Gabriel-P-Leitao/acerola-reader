@@ -2,60 +2,74 @@
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import ComicVolumeButton from './comic-volume-button.svelte';
 
-	export const meta = defineMeta({
+	const { Story } = defineMeta({
 		title: 'Components/Comic/ComicVolumeButton',
 		component: ComicVolumeButton,
 		argTypes: {
-			title: { control: 'text' },
-			totalChapters: { control: 'number' },
-			viewMode: { control: 'radio', options: ['cover', 'banner'] },
-			isExpanded: { control: 'boolean' }
+			data: { control: 'object' },
+			events: { control: 'object' }
 		}
 	});
-</script>
-
-<script lang="ts">
-	import { Story } from '@storybook/addon-svelte-csf';
 </script>
 
 <Story
 	name="Default (No Image)"
 	args={{
-		title: 'Volume 1',
-		totalChapters: 12,
-		viewMode: 'cover',
-		isExpanded: false
+		data: {
+			title: 'Volume 1',
+			totalChapters: 12,
+			viewMode: 'cover',
+			isExpanded: false
+		},
+		events: {
+			onClick: () => {}
+		}
 	}}
 />
 
 <Story
 	name="With Cover"
 	args={{
-		title: 'Volume 1',
-		totalChapters: 12,
-		viewMode: 'cover',
-		coverUri: 'https://placehold.co/400x600/png',
-		isExpanded: false
+		data: {
+			title: 'Volume 1',
+			totalChapters: 12,
+			viewMode: 'cover',
+			coverUri: 'https://placehold.co/400x600/png',
+			isExpanded: false
+		},
+		events: {
+			onClick: () => {}
+		}
 	}}
 />
 
 <Story
 	name="With Banner"
 	args={{
-		title: 'Volume 1',
-		totalChapters: 12,
-		viewMode: 'banner',
-		bannerUri: 'https://placehold.co/800x400/png',
-		isExpanded: false
+		data: {
+			title: 'Volume 1',
+			totalChapters: 12,
+			viewMode: 'banner',
+			bannerUri: 'https://placehold.co/800x400/png',
+			isExpanded: false
+		},
+		events: {
+			onClick: () => {}
+		}
 	}}
 />
 
 <Story
 	name="Expanded"
 	args={{
-		title: 'Volume 1',
-		totalChapters: 12,
-		viewMode: 'cover',
-		isExpanded: true
+		data: {
+			title: 'Volume 1',
+			totalChapters: 12,
+			viewMode: 'cover',
+			isExpanded: true
+		},
+		events: {
+			onClick: () => {}
+		}
 	}}
 />

@@ -29,7 +29,10 @@
 	}
 </script>
 
-<AcerolaButtonIcon onclick={nextMode} title={m['components.mode_picker.title']()}>
+<AcerolaButtonIcon
+	events={{ onClick: nextMode }}
+	ui={{ title: m['components.mode_picker.title']() }}
+>
 	{#key themeCtx.mode}
 		{@const Icon = MODE_CONFIG[themeCtx.mode].icon}
 		<Icon size={16} />

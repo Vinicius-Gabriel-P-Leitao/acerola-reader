@@ -5,18 +5,22 @@ import ComicMetadataPanel from './comic-metadata-panel.svelte';
 
 describe('ComicMetadataPanel', () => {
 	const defaultProps = {
-		title: 'Test Manga',
-		author: 'Test Author',
-		status: 'Ongoing',
-		source: 'LOCAL',
-		chaptersCount: 15,
-		description: 'Test description',
-		cover: 'https://test.com/cover.jpg',
-		onBack: vi.fn()
+		data: {
+			title: 'Test Manga',
+			author: 'Test Author',
+			status: 'Ongoing',
+			source: 'LOCAL',
+			chaptersCount: 15,
+			description: 'Test description',
+			cover: 'https://test.com/cover.jpg'
+		},
+		events: {
+			onBack: vi.fn()
+		}
 	};
 
 	it('renderiza o título, autor, categoria e contagem de capítulos', () => {
-		render(ComicMetadataPanel, defaultProps);
+		render(ComicMetadataPanel, { props: defaultProps });
 		expect(screen.getByRole('heading', { name: 'Test Manga', level: 1 })).toBeInTheDocument();
 		expect(screen.getByText('Test Author')).toBeInTheDocument();
 		expect(screen.getByText('Ongoing')).toBeInTheDocument();
@@ -28,7 +32,12 @@ describe('ComicMetadataPanel', () => {
 	it('chama onBack quando o botão de voltar é clicado', async () => {
 		const user = userEvent.setup();
 		const onBack = vi.fn();
-		const { container } = render(ComicMetadataPanel, { ...defaultProps, onBack });
+		const { container } = render(ComicMetadataPanel, {
+			props: {
+				...defaultProps,
+				events: { onBack }
+			}
+		});
 
 		const backButton = container.querySelector('button');
 		expect(backButton).toBeInTheDocument();

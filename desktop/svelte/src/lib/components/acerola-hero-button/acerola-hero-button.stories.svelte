@@ -9,18 +9,20 @@
 		component: AcerolaHeroButton,
 		tags: ['autodocs'],
 		args: {
-			title: 'Título Padrão',
-			description: 'Descrição padrão do componente'
+			data: {
+				title: 'Título Padrão',
+				description: 'Descrição padrão do componente'
+			}
 		},
 		argTypes: {
-			title: { description: 'Título principal do botão', control: 'text' },
-			description: { description: 'Texto descritivo abaixo do título', control: 'text' },
+			data: { description: 'Conteúdo principal do botão', control: 'object' },
+			events: { description: 'Callbacks do botão', control: 'object' },
+			ui: { description: 'Configuração visual do botão', control: 'object' },
 			icon: { description: 'Snippet para renderizar um ícone à esquerda', control: 'object' },
 			action: {
 				description: 'Snippet para renderizar um componente de ação à direita',
 				control: 'object'
-			},
-			onclick: { description: 'Função de clique', action: 'clicked' }
+			}
 		}
 	});
 </script>
@@ -40,27 +42,39 @@
 <Story
 	name="Completo"
 	args={{
-		title: 'Pasta dos Mangás',
-		description: 'C:/Users/acerola/comics',
+		data: {
+			title: 'Pasta dos Mangás',
+			description: 'C:/Users/acerola/comics'
+		},
 		icon: folderIcon,
 		action: actionButton,
-		onclick: () => console.log('Clicou!')
+		events: { onClick: () => console.log('Clicou!') }
 	}}
 />
 
 <Story
 	name="Apenas Texto"
 	args={{
-		title: 'Título de Exemplo',
-		description: 'Esta descrição deve aparecer agora.'
+		data: {
+			title: 'Título de Exemplo',
+			description: 'Esta descrição deve aparecer agora.'
+		}
 	}}
 />
 
 <Story name="Uso Manual">
 	<AcerolaHeroButton
-		title="Uso Manual"
-		description="Passando props diretamente no componente"
-		icon={folderIcon}
-		action={actionButton}
-	/>
+		data={{
+			title: 'Uso Manual',
+			description: 'Passando props diretamente no componente'
+		}}
+	>
+		{#snippet icon()}
+			{@render folderIcon()}
+		{/snippet}
+
+		{#snippet action()}
+			{@render actionButton()}
+		{/snippet}
+	</AcerolaHeroButton>
 </Story>

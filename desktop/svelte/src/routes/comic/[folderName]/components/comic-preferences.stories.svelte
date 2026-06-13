@@ -25,10 +25,18 @@
 
 <Story name="Default" asChild>
 	<ComicPreferences
-		bind:displayMode
-		bind:chaptersPerPage
-		bind:mediaType
-		bind:volumeViewMode
-		hasVolumeStructure={true}
+		data={{ hasVolumeStructure: true }}
+		state={{
+			displayMode,
+			chaptersPerPage,
+			mediaType,
+			volumeViewMode
+		}}
+		events={{
+			onDisplayModeChange: (value) => (displayMode = value),
+			onChaptersPerPageChange: (value) => (chaptersPerPage = value),
+			onMediaTypeChange: (value) => (mediaType = value),
+			onVolumeViewModeChange: (value) => (volumeViewMode = value)
+		}}
 	/>
 </Story>

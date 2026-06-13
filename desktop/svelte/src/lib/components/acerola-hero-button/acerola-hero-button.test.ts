@@ -6,8 +6,12 @@ import AcerolaHeroButton from './acerola-hero-button.svelte';
 describe('AcerolaHeroButton', () => {
 	it('renderiza o titulo e descricao corretamente', () => {
 		render(AcerolaHeroButton, {
-			title: 'Pasta de Teste',
-			description: 'Minha descrição de teste'
+			props: {
+				data: {
+					title: 'Pasta de Teste',
+					description: 'Minha descrição de teste'
+				}
+			}
 		});
 
 		expect(screen.getByText('Pasta de Teste')).toBeInTheDocument();
@@ -17,8 +21,14 @@ describe('AcerolaHeroButton', () => {
 	it('aplica a classe cursor-pointer e hover state se onclick for passado', async () => {
 		const handleClick = vi.fn();
 		render(AcerolaHeroButton, {
-			title: 'Item clicável',
-			onclick: handleClick
+			props: {
+				data: {
+					title: 'Item clicável'
+				},
+				events: {
+					onClick: handleClick
+				}
+			}
 		});
 
 		const wrapper = screen.getByText('Item clicável').closest('[data-slot="item"]');
@@ -33,7 +43,11 @@ describe('AcerolaHeroButton', () => {
 
 	it('não aplica cursor-pointer se não for clicável', () => {
 		render(AcerolaHeroButton, {
-			title: 'Apenas leitura'
+			props: {
+				data: {
+					title: 'Apenas leitura'
+				}
+			}
 		});
 
 		const wrapper = screen.getByText('Apenas leitura').closest('[data-slot="item"]');

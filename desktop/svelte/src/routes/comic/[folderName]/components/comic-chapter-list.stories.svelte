@@ -41,9 +41,9 @@
 </script>
 
 <Story name="With Chapters" asChild>
-	<ComicChapterList {pagesData} totalChapters={2} pageSize={25} />
+	<ComicChapterList data={{ pagesData, totalChapters: 2, pageSize: 25 }} />
 </Story>
 
 <Story name="Empty" asChild>
-	<ComicChapterList pagesData={[]} totalChapters={0} pageSize={25} />
+	<ComicChapterList data={{ pagesData: [], totalChapters: 0, pageSize: 25 }} />
 </Story>

@@ -5,6 +5,8 @@ import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 import type { ComicSummaryItem } from '$lib/contracts/home/home.payloads';
 import type { PageLoad } from './$types';
 
+export const prerender = false;
+
 export const load: PageLoad = async ({ params }) => {
 	const comic = await invoke<ComicSummaryItem | null>(LIBRARY_COMMANDS.getComicByFolderName, {
 		folderName: params.folderName

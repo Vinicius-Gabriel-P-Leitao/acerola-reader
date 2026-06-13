@@ -137,7 +137,7 @@
 		<SidebarProvider class="h-full min-h-0">
 			<AcerolaSonner />
 
-			<AcerolaSidebar items={sidebarItems} class="absolute h-full">
+			<AcerolaSidebar data={{ items: sidebarItems }} ui={{ class: 'absolute h-full' }}>
 				{#snippet header()}
 					<div class="flex items-center gap-3">
 						<div
@@ -157,9 +157,10 @@
 						<AcerolaModePicker />
 
 						<AcerolaSelect
-							bind:value={currentLocale}
-							options={localeOptions}
-							class="min-w-0 flex-1"
+							data={{ options: localeOptions }}
+							state={{ value: currentLocale }}
+							events={{ onValueChange: (value) => (currentLocale = value as Locale) }}
+							ui={{ class: 'min-w-0 flex-1' }}
 						/>
 					</div>
 				{/snippet}

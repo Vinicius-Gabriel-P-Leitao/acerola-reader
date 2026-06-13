@@ -1,9 +1,17 @@
 <script lang="ts" module>
 	export type VolumeChapter = {
 		id: string;
+		name?: string;
 		title: string;
 		fileName: string;
 		isRead: boolean;
+		chapterSort?: string;
+		path?: string;
+		volumeId?: string | null;
+		volumeName?: string | null;
+		isSpecial?: boolean;
+		lastModified?: number;
+		chapterIndex?: number;
 	};
 
 	export type Volume = {
@@ -19,6 +27,21 @@
 	export type VolumePage = {
 		page: number;
 		items: VolumeChapter[];
+	};
+
+	export type ComicVolumeListProps = {
+		data: {
+			volumes: Volume[];
+			pagesData?: VolumePage[];
+			loading?: boolean;
+			pageSize?: number;
+			viewMode?: 'cover' | 'banner';
+		};
+		events: {
+			onExpand: (volumeId: string | null) => void;
+			onVisiblePages?: (pages: number[]) => void;
+			onOpenChapter?: (chapter: VolumeChapter) => void;
+		};
 	};
 </script>
 
@@ -36,23 +59,13 @@
 	import { onMount } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 
-	let {
-		volumes = [],
-		pagesData = [],
-		loading = false,
-		pageSize = 25,
-		viewMode = 'cover',
-		onexpand,
-		onvisiblepages
-	}: {
-		volumes: Volume[];
-		pagesData?: VolumePage[];
-		loading?: boolean;
-		pageSize?: number;
-		viewMode?: 'cover' | 'banner';
-		onexpand: (volumeId: string | null) => void;
-		onvisiblepages?: (pages: number[]) => void;
-	} = $props();
+	let { data, events }: ComicVolumeListProps = $props();
+
+	const volumes = $derived(data.volumes ?? []);
+	const pagesData = $derived(data.pagesData ?? []);
+	const loading = $derived(data.loading ?? false);
+	const pageSize = $derived(data.pageSize ?? 25);
+	const viewMode = $derived(data.viewMode ?? 'cover');
 
 	let expandedVolumeId = $state<string | null>(null);
 	let visiblePages = new Set<number>();
@@ -66,12 +79,12 @@
 			expandedVolumeId = null;
 			visiblePages.clear();
 
-			if (onvisiblepages) onvisiblepages([]);
+			if (events.onVisiblePages) events.onVisiblePages([]);
 		} else {
 			expandedVolumeId = volumeId;
 		}
 
-		onexpand(expandedVolumeId);
+		events.onExpand(expandedVolumeId);
 	};
 
 	onMount(() => {
@@ -97,8 +110,8 @@
 					}
 				});
 
-				if (changed && onvisiblepages) {
-					onvisiblepages(Array.from(visiblePages).sort((a, b) => a - b));
+				if (changed && events.onVisiblePages) {
+					events.onVisiblePages(Array.from(visiblePages).sort((a, b) => a - b));
 				}
 			},
 			{ rootMargin: '1200px 0px' }
@@ -121,13 +134,17 @@
 	{#if volumes && volumes.length > 0}
 		{#each volumes as volume}
 			<ComicVolumeButton
-				title={volume.title}
-				totalChapters={volume.totalChapters}
-				{viewMode}
-				coverUri={volume.coverUri}
-				bannerUri={volume.bannerUri}
-				isExpanded={expandedVolumeId === volume.id}
-				onclick={() => toggleVolume(volume.id)}
+				data={{
+					title: volume.title,
+					totalChapters: volume.totalChapters,
+					viewMode,
+					coverUri: volume.coverUri,
+					bannerUri: volume.bannerUri,
+					isExpanded: expandedVolumeId === volume.id
+				}}
+				events={{
+					onClick: () => toggleVolume(volume.id)
+				}}
 			/>
 
 			{#if expandedVolumeId === volume.id}
@@ -154,9 +171,17 @@
 												style:height="{BUTTON_HEIGHT}px"
 											>
 												<AcerolaHeroButton
-													title={chapter.title}
-													description={chapter.fileName}
-													class="h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30"
+													data={{
+														title: chapter.title,
+														description: chapter.fileName
+													}}
+													events={{
+														onClick: () => events.onOpenChapter?.(chapter)
+													}}
+													ui={{
+														class:
+															'h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30'
+													}}
 												>
 													{#snippet icon()}
 														<div class={chapter.isRead ? 'text-overlay' : 'text-primary'}>
@@ -166,9 +191,14 @@
 
 													{#snippet action()}
 														<AcerolaButtonIcon
-															variant="ghost"
-															size="sm"
-															class="text-overlay hover:text-primary"
+															events={{
+																onClick: (event) => event.stopPropagation()
+															}}
+															ui={{
+																variant: 'ghost',
+																size: 'sm',
+																class: 'text-overlay hover:text-primary'
+															}}
 														>
 															<MoreVertical size={20} />
 														</AcerolaButtonIcon>
@@ -201,7 +231,9 @@
 			class="space-y-4 rounded-3xl border-2 border-dashed border-surface py-20 text-center opacity-50"
 		>
 			<RefreshCw size={48} class="animate-spin text-primary" />
-			<p class="text-sm font-black tracking-widest uppercase">{m['pages.comic.volume.no_volumes']()}</p>
+			<p class="text-sm font-black tracking-widest uppercase">
+				{m['pages.comic.volume.no_volumes']()}
+			</p>
 		</div>
 	{/if}
 </div>

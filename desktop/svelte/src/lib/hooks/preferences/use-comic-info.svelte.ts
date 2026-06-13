@@ -20,7 +20,7 @@ export function useComicInfoPreference() {
 
 	async function loadSavedComicInfoPreference() {
 		const store = await load(STORE_FILE);
-		comicInfoPreference = (await store.get<boolean>(STORE_KEYS.libraryPath)) ?? undefined;
+		comicInfoPreference = (await store.get<boolean>(STORE_KEYS.comicInfoPreference)) ?? undefined;
 	}
 
 	return {

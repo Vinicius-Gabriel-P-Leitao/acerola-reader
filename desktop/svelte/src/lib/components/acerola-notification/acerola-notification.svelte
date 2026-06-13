@@ -54,7 +54,8 @@
 		if (!scrollContainer) return;
 		const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
 		// Show indicator if there is more to scroll and we aren't at the bottom
-		showScrollIndicator = scrollHeight > clientHeight && scrollTop + clientHeight < scrollHeight - 10;
+		showScrollIndicator =
+			scrollHeight > clientHeight && scrollTop + clientHeight < scrollHeight - 10;
 	}
 
 	function scrollToBottom() {
@@ -71,13 +72,18 @@
 	});
 </script>
 
-<AcerolaPopover contentClass="p-0 w-84 overflow-hidden rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl">
+<AcerolaPopover
+	ui={{
+		contentClass:
+			'p-0 w-84 overflow-hidden rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl'
+	}}
+>
 	{#snippet trigger()}
-		<AcerolaButtonIcon class="relative hover:bg-muted/80">
+		<AcerolaButtonIcon ui={{ class: 'relative hover:bg-muted/80' }}>
 			<BellIcon size={20} />
 			{#if notifications.length > 0}
 				<span
-					class="absolute -top-1 -right-1 flex min-w-[18px] h-[18px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-sm"
+					class="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-sm"
 				>
 					{notifications.length}
 				</span>
@@ -87,19 +93,28 @@
 
 	{#snippet content()}
 		<div class="flex flex-col">
-			<div class="flex items-center justify-between border-b border-border/40 bg-muted/20 px-4 py-3">
+			<div
+				class="flex items-center justify-between border-b border-border/40 bg-muted/20 px-4 py-3"
+			>
 				<div class="flex items-center gap-2">
-					<h3 class="text-xs font-bold uppercase tracking-widest text-foreground/80">
+					<h3 class="text-xs font-bold tracking-widest text-foreground/80 uppercase">
 						{m['components.notification.title']()}
 					</h3>
 					{#if notifications.length > 0}
-						<span class="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+						<span
+							class="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+						>
 							{notifications.length}
 						</span>
 					{/if}
 				</div>
 				{#if notifications.length > 0}
-					<Button variant="ghost" size="xs" class="h-7 px-2 text-[10px] font-semibold hover:bg-destructive/10 hover:text-destructive" onclick={clearAll}>
+					<Button
+						variant="ghost"
+						size="xs"
+						class="h-7 px-2 text-[10px] font-semibold hover:bg-destructive/10 hover:text-destructive"
+						onclick={clearAll}
+					>
 						{m['components.notification.clear_all']()}
 					</Button>
 				{/if}
@@ -122,9 +137,7 @@
 							<p class="text-sm font-semibold text-foreground/60">
 								{m['components.notification.empty']()}
 							</p>
-							<p class="mt-1 text-xs text-muted-foreground/60">
-								Suas novidades aparecerão aqui
-							</p>
+							<p class="mt-1 text-xs text-muted-foreground/60">Suas novidades aparecerão aqui</p>
 						</div>
 					{:else}
 						{#each notifications as notify (notify.id)}
@@ -137,27 +150,40 @@
 								class="group relative flex flex-col gap-2 rounded-xl border border-transparent p-3 transition-all hover:bg-muted/40"
 							>
 								<!-- Indicator Bar -->
-								<div class="absolute left-0 top-3 bottom-3 w-1 rounded-full {notifyVariants({ variant: notify.variant }).split(' ').pop()}"></div>
+								<div
+									class="absolute top-3 bottom-3 left-0 w-1 rounded-full {notifyVariants({
+										variant: notify.variant
+									})
+										.split(' ')
+										.pop()}"
+								></div>
 
 								<div class="flex items-start justify-between gap-2 pl-2">
 									<div class="flex items-start gap-3">
-										<div class="mt-0.5 rounded-lg p-1.5 {notifyVariants({ variant: notify.variant }).split(' ').slice(0,2).join(' ')}">
+										<div
+											class="mt-0.5 rounded-lg p-1.5 {notifyVariants({ variant: notify.variant })
+												.split(' ')
+												.slice(0, 2)
+												.join(' ')}"
+										>
 											<Icon size={14} />
 										</div>
 										<div class="min-w-0 flex-1">
-											<p class="text-sm font-semibold leading-snug text-foreground">
+											<p class="text-sm leading-snug font-semibold text-foreground">
 												{notify.message}
 											</p>
 											{#if notify.description}
-												<p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground/80">
+												<p
+													class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground/80"
+												>
 													{notify.description}
 												</p>
 											{/if}
 										</div>
 									</div>
 
-									<button 
-										class="size-6 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-muted hover:text-foreground opacity-0 transition-all group-hover:opacity-100"
+									<button
+										class="flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground/40 opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground"
 										onclick={() => pop(notify.id)}
 									>
 										<XIcon size={14} />
@@ -186,14 +212,14 @@
 
 				<!-- Scroll Indicators -->
 				{#if showScrollIndicator}
-					<div 
+					<div
 						transition:fade={{ duration: 200 }}
-						class="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card/80 to-transparent"
+						class="pointer-events-none absolute right-0 bottom-0 left-0 h-16 bg-gradient-to-t from-card/80 to-transparent"
 					></div>
 					<button
 						onclick={scrollToBottom}
 						transition:fly={{ y: 10, duration: 200 }}
-						class="absolute bottom-4 left-1/2 -translate-x-1/2 flex size-8 items-center justify-center rounded-full border border-border/40 bg-card/90 text-foreground shadow-lg backdrop-blur-sm transition-all hover:bg-accent hover:scale-110 active:scale-95"
+						class="absolute bottom-4 left-1/2 flex size-8 -translate-x-1/2 items-center justify-center rounded-full border border-border/40 bg-card/90 text-foreground shadow-lg backdrop-blur-sm transition-all hover:scale-110 hover:bg-accent active:scale-95"
 						aria-label="Scroll to bottom"
 					>
 						<ChevronDownIcon size={16} />

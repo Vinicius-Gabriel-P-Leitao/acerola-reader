@@ -5,10 +5,19 @@
 	};
 
 	export type AcerolaSelectProps = {
-		value?: string;
-		class?: string;
-		placeholder?: string;
-		options: AcerolaSelectOption[];
+		data: {
+			options: AcerolaSelectOption[];
+		};
+		state?: {
+			value?: string;
+		};
+		events?: {
+			onValueChange?: (value: string) => void;
+		};
+		ui?: {
+			class?: string;
+			placeholder?: string;
+		};
 	};
 </script>
 
@@ -17,26 +26,43 @@
 	import { m } from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils/cn.utils';
 
-	let {
-		options = [],
-		class: className,
-		value = $bindable(''),
-		placeholder = m['components.select.placeholder'](),
-		...props
-	}: AcerolaSelectProps = $props();
+	let { data, state: control, events, ui }: AcerolaSelectProps = $props();
+
+	let value = $state('');
+	let lastValue = $state('');
+
+	const placeholder = $derived(ui?.placeholder ?? m['components.select.placeholder']());
 
 	let selectedLabel = $derived(
-		options.find((it: AcerolaSelectOption) => it.value === value)?.label ?? placeholder
+		data.options.find((it: AcerolaSelectOption) => it.value === value)?.label ?? placeholder
 	);
+
+	$effect(() => {
+		if (control?.value === undefined) return;
+
+		const nextValue = control.value;
+
+		if (nextValue !== lastValue) {
+			value = nextValue;
+			lastValue = nextValue;
+		}
+	});
+
+	$effect(() => {
+		if (value === lastValue) return;
+
+		lastValue = value;
+		events?.onValueChange?.(value);
+	});
 </script>
 
-<Select type="single" bind:value {...props}>
-	<SelectTrigger class={cn('w-auto min-w-48 justify-between', className)}>
+<Select type="single" bind:value>
+	<SelectTrigger class={cn('w-auto min-w-48 justify-between', ui?.class)}>
 		{selectedLabel}
 	</SelectTrigger>
 
 	<SelectContent>
-		{#each options as option (option.value)}
+		{#each data.options as option (option.value)}
 			<SelectItem value={option.value} label={option.label}>
 				{option.label}
 			</SelectItem>

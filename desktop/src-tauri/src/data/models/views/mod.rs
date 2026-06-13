@@ -1,6 +1,7 @@
-use crate::data::repositories::Entity;
 use serde::Serialize;
 use sqlx::prelude::FromRow;
+
+use crate::data::repositories::Entity;
 
 /// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ComicSummaryView {

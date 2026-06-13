@@ -1,7 +1,10 @@
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+    path::{Path, PathBuf},
+};
+
 use crate::infra::error::PathError;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::path::{Path, PathBuf};
 
 /// Gera um ID numérico determinístico de 64 bits a partir de um caminho de arquivo.
 ///
@@ -48,10 +51,12 @@ impl PathGuard {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
+    use tempfile::tempdir;
+
     use super::PathGuard;
     use crate::infra::error::PathError;
-    use std::fs;
-    use tempfile::tempdir;
 
     #[test]
     fn teste_caminho_valido_dentro_do_root() {

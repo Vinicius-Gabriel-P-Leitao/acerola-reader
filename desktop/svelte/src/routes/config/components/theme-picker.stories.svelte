@@ -14,15 +14,10 @@
 			}
 		},
 		argTypes: {
-			theme: { description: 'ID do tema selecionado', control: 'text' },
-			mode: {
-				description: 'Modo de cor (light ou dark)',
-				control: 'inline-radio',
-				options: ['light', 'dark']
-			},
-			onselect: {
+			data: { description: 'Tema e modo atual', control: 'object' },
+			events: {
 				description: 'Callback quando um tema é selecionado',
-				action: 'selected'
+				control: 'object'
 			}
 		}
 	});
@@ -38,7 +33,7 @@
 		document.documentElement.classList.contains('dark') ? 'dark' : 'light'
 	);
 
-	function onselect(name: ThemeColor) {
+	function onSelect(name: ThemeColor) {
 		theme = name;
 		document.documentElement.setAttribute('data-theme', THEMES[name][mode]);
 		document.documentElement.classList.toggle('dark', mode === 'dark');
@@ -46,5 +41,5 @@
 </script>
 
 <Story name="Default" asChild>
-	<ThemePicker {theme} {mode} {onselect} />
+	<ThemePicker data={{ theme, mode }} events={{ onSelect }} />
 </Story>

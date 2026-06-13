@@ -1,6 +1,7 @@
-use crate::data::repositories::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
+
+use crate::data::repositories::{Bindable, Entity};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]

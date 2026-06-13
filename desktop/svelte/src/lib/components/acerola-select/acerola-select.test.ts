@@ -11,7 +11,12 @@ describe('AcerolaSelect', () => {
 	];
 
 	it('renderiza o select com o placeholder', () => {
-		render(AcerolaSelect, { options, placeholder: 'Escolha o idioma' });
+		render(AcerolaSelect, {
+			props: {
+				data: { options },
+				ui: { placeholder: 'Escolha o idioma' }
+			}
+		});
 
 		// the underlying component from bits-ui uses a button with combobox role,
 		// but without JS full mount sometimes it's just a button
@@ -20,13 +25,18 @@ describe('AcerolaSelect', () => {
 	});
 
 	it('exibe o label correto de acordo com o valor', () => {
-		render(AcerolaSelect, { options, value: 'pt-br' });
+		render(AcerolaSelect, { props: { data: { options }, state: { value: 'pt-br' } } });
 		expect(screen.getByText('Português')).toBeInTheDocument();
 	});
 
 	it('abre as opções ao clicar e permite selecionar uma opção', async () => {
 		const user = userEvent.setup();
-		render(AcerolaSelect, { options, placeholder: 'Selecione...' });
+		render(AcerolaSelect, {
+			props: {
+				data: { options },
+				ui: { placeholder: 'Selecione...' }
+			}
+		});
 
 		const trigger = screen.getByText('Selecione...');
 		await user.click(trigger);

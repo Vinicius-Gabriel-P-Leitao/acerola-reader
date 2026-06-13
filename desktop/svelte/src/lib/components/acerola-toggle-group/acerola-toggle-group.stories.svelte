@@ -10,29 +10,13 @@
 		tags: ['autodocs'],
 		parameters: {
 			controls: {
-				include: ['type', 'variant', 'size', 'value']
+				include: ['config', 'ui', 'state']
 			}
 		},
 		argTypes: {
-			type: {
-				description: 'Modo de selecao do grupo',
-				control: 'select',
-				options: ['single', 'multiple']
-			},
-			variant: {
-				description: 'Variacao visual do grupo',
-				control: 'select',
-				options: ['default', 'outline']
-			},
-			size: {
-				description: 'Tamanho dos itens',
-				control: 'select',
-				options: ['sm', 'default', 'lg']
-			},
-			value: {
-				description: 'Valor selecionado',
-				control: false
-			}
+			config: { description: 'Configuração de seleção do grupo', control: 'object' },
+			ui: { description: 'Configuração visual do grupo', control: 'object' },
+			state: { description: 'Valor selecionado', control: 'object' }
 		}
 	});
 </script>
@@ -49,41 +33,60 @@
 
 <Story
 	name="Single Default"
-	args={{ type: 'single', variant: 'default', size: 'default', value: 'a' }}
+	args={{
+		config: { type: 'single' },
+		ui: { variant: 'default', size: 'default' },
+		state: { value: 'a' }
+	}}
 	{template}
 />
 
 <Story
 	name="Single Outline"
-	args={{ type: 'single', variant: 'outline', size: 'default', value: 'b' }}
+	args={{
+		config: { type: 'single' },
+		ui: { variant: 'outline', size: 'default' },
+		state: { value: 'b' }
+	}}
 	{template}
 />
 
 <Story
 	name="Multiple Default"
 	args={{
-		type: 'multiple',
-		variant: 'default',
-		size: 'default',
-		value: ['a', 'c']
+		config: { type: 'multiple' },
+		ui: { variant: 'default', size: 'default' },
+		state: { value: ['a', 'c'] }
 	}}
 	{template}
 />
 
 <Story
 	name="Multiple Outline"
-	args={{ type: 'multiple', variant: 'outline', size: 'default', value: ['b'] }}
+	args={{
+		config: { type: 'multiple' },
+		ui: { variant: 'outline', size: 'default' },
+		state: { value: ['b'] }
+	}}
 	{template}
 />
 
 <Story
 	name="Size Small"
-	args={{ type: 'single', variant: 'default', size: 'sm', value: 'a' }}
+	args={{
+		config: { type: 'single' },
+		ui: { variant: 'default', size: 'sm' },
+		state: { value: 'a' }
+	}}
 	{template}
 />
 
 <Story
 	name="Size Large"
-	args={{ type: 'single', variant: 'default', size: 'lg', value: 'c' }}
+	args={{
+		config: { type: 'single' },
+		ui: { variant: 'default', size: 'lg' },
+		state: { value: 'c' }
+	}}
 	{template}
 />

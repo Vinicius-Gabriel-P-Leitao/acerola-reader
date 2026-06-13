@@ -1,6 +1,6 @@
-use crate::data::models::archive::archive_template::ArchiveTemplate;
-use crate::data::repositories::Repository;
 use sqlx::SqlitePool;
+
+use crate::data::{models::archive::archive_template::ArchiveTemplate, repositories::Repository};
 
 pub struct ArchiveTemplateRepository {
     pub base: Repository<ArchiveTemplate>,
@@ -15,9 +15,11 @@ impl ArchiveTemplateRepository {
 #[cfg(test)]
 mod tests {
     use super::ArchiveTemplateRepository;
-    use crate::data::models::archive::archive_template::{ArchiveTemplate, SortType};
-    use crate::infra::error::DbError;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::{
+        data::models::archive::archive_template::{ArchiveTemplate, SortType},
+        infra::error::DbError,
+        tests::utils::setup_test_db::setup_test_db,
+    };
 
     fn chapter_template() -> ArchiveTemplate {
         ArchiveTemplate {

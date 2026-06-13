@@ -33,5 +33,5 @@
 	{...restProps}
 >
 	<PanelLeftIcon />
-	<span class="sr-only">{m['sidebar.toggle']()}</span>
+	<span class="sr-only">{m['components.sidebar.toggle']()}</span>
 </Button>

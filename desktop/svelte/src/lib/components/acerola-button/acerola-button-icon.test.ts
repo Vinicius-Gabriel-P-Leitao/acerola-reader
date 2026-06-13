@@ -19,7 +19,7 @@ describe('AcerolaButtonIcon', () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 
-		render(AcerolaButtonIcon, { props: { onclick } });
+		render(AcerolaButtonIcon, { props: { events: { onClick: onclick } } });
 		await user.click(screen.getByRole('button'));
 
 		expect(onclick).toHaveBeenCalledOnce();
@@ -29,7 +29,9 @@ describe('AcerolaButtonIcon', () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 
-		render(AcerolaButtonIcon, { props: { onclick, disabled: true } });
+		render(AcerolaButtonIcon, {
+			props: { events: { onClick: onclick }, ui: { disabled: true } }
+		});
 		await user.click(screen.getByRole('button'));
 
 		expect(onclick).not.toHaveBeenCalled();

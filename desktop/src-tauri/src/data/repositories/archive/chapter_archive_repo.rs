@@ -1,9 +1,14 @@
-use crate::data::models::archive::chapter_archive::ChapterArchive;
-use crate::data::repositories::{Entity, Repository};
-use crate::infra::error::DbError;
+use std::collections::HashMap;
+
 use sqlx::{Row, SqlitePool};
 
-use std::collections::HashMap;
+use crate::{
+    data::{
+        models::archive::chapter_archive::ChapterArchive,
+        repositories::{Entity, Repository},
+    },
+    infra::error::DbError,
+};
 
 #[derive(Debug, sqlx::FromRow, Clone)]
 pub struct ChapterArchiveWithVolume {
@@ -258,9 +263,9 @@ impl ChapterRepository {
 #[cfg(test)]
 mod tests {
     use super::{ChapterArchive, ChapterRepository};
-    use crate::infra::error::DbError;
-    use crate::tests::utils::setup_test_db::{
-        setup_test_db_with_comic, setup_test_db_with_volumes,
+    use crate::{
+        infra::error::DbError,
+        tests::utils::setup_test_db::{setup_test_db_with_comic, setup_test_db_with_volumes},
     };
 
     fn chapter(id: i64, chapter_sort: &str) -> ChapterArchive {

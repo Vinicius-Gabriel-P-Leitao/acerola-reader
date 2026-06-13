@@ -27,7 +27,8 @@
 			}
 		},
 		argTypes: {
-			items: { description: 'Lista de itens de navegação', control: 'object' },
+			data: { description: 'Dados da sidebar', control: 'object' },
+			ui: { description: 'Configuração visual da sidebar', control: 'object' },
 			footer: {
 				description: 'Snippet opcional para o rodapé da sidebar',
 				control: 'object'
@@ -38,13 +39,13 @@
 
 <Story name="Default" asChild>
 	<SidebarProvider>
-		<AcerolasSidebar {items} />
+		<AcerolasSidebar data={{ items }} />
 	</SidebarProvider>
 </Story>
 
 <Story name="With Footer" asChild>
 	<SidebarProvider>
-		<AcerolasSidebar {items}>
+		<AcerolasSidebar data={{ items }}>
 			{#snippet footer()}
 				<AcerolaModePicker />
 			{/snippet}

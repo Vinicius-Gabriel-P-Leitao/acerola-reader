@@ -14,8 +14,10 @@ describe('AcerolaPopover', () => {
 		}));
 
 		render(AcerolaPopover, {
-			trigger,
-			content
+			props: {
+				trigger,
+				content
+			}
 		});
 
 		const button = document.querySelector<HTMLElement>('[data-popover-trigger]')!;

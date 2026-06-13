@@ -8,15 +8,12 @@
 		component: AcerolaSelect,
 		tags: ['autodocs'],
 		argTypes: {
-			value: { description: 'Valor selecionado atualmente', control: 'text' },
-			placeholder: {
-				description: 'Texto exibido quando nada esta selecionado',
-				control: 'text'
-			},
-			options: {
+			data: {
 				description: 'Array de opcoes ({ value, label })',
 				control: 'object'
-			}
+			},
+			state: { description: 'Valor selecionado atualmente', control: 'object' },
+			ui: { description: 'Configuração visual e placeholder', control: 'object' }
 		}
 	});
 
@@ -30,23 +27,23 @@
 <Story
 	name="Default"
 	args={{
-		options: defaultOptions,
-		placeholder: 'Selecione o tipo...'
+		data: { options: defaultOptions },
+		ui: { placeholder: 'Selecione o tipo...' }
 	}}
 />
 
 <Story
 	name="Com valor predefinido"
 	args={{
-		options: defaultOptions,
-		value: 'manga'
+		data: { options: defaultOptions },
+		state: { value: 'manga' }
 	}}
 />
 
 <Story
 	name="Placeholder customizado"
 	args={{
-		options: defaultOptions,
-		placeholder: 'Escolha um formato'
+		data: { options: defaultOptions },
+		ui: { placeholder: 'Escolha um formato' }
 	}}
 />

@@ -20,6 +20,7 @@ export default defineConfig({
 	],
 	optimizeDeps: {
 		include: [
+			'@tauri-apps/api/window',
 			'aria-query',
 			'axobject-query',
 			'lz-string',
@@ -34,7 +35,8 @@ export default defineConfig({
 			$theme: path.resolve('./svelte/src/theme'),
 			$services: path.resolve('./svelte/src/services'),
 			'$app/state': path.resolve('./svelte/tests/mocks/app-state.ts'),
-			'$app/environment': path.resolve('./svelte/tests/mocks/app-environment.ts')
+			'$app/environment': path.resolve('./svelte/tests/mocks/app-environment.ts'),
+			'$app/navigation': path.resolve('./svelte/tests/mocks/app-navigation.ts')
 		},
 		// Crucial for Svelte 5 Browser Mode
 		conditions: ['browser', 'svelte', 'development']

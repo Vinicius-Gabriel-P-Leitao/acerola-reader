@@ -5,7 +5,12 @@ import ThemePicker from './theme-picker.svelte';
 
 describe('ThemePicker', () => {
 	it('renderiza os três temas disponíveis', () => {
-		render(ThemePicker, { theme: 'catppuccin', mode: 'dark', onselect: vi.fn() });
+		render(ThemePicker, {
+			props: {
+				data: { theme: 'catppuccin', mode: 'dark' },
+				events: { onSelect: vi.fn() }
+			}
+		});
 
 		expect(screen.getByText('Catppuccin')).toBeInTheDocument();
 		expect(screen.getByText('Nord')).toBeInTheDocument();
@@ -16,7 +21,12 @@ describe('ThemePicker', () => {
 		const user = userEvent.setup();
 		const onselect = vi.fn();
 
-		render(ThemePicker, { theme: 'catppuccin', mode: 'dark', onselect });
+		render(ThemePicker, {
+			props: {
+				data: { theme: 'catppuccin', mode: 'dark' },
+				events: { onSelect: onselect }
+			}
+		});
 		await user.click(screen.getByText('Nord').closest('button')!);
 
 		expect(onselect).toHaveBeenCalledOnce();
@@ -24,7 +34,12 @@ describe('ThemePicker', () => {
 	});
 
 	it('aplica estilo de selecionado no tema ativo', () => {
-		const { container } = render(ThemePicker, { theme: 'nord', mode: 'dark', onselect: vi.fn() });
+		const { container } = render(ThemePicker, {
+			props: {
+				data: { theme: 'nord', mode: 'dark' },
+				events: { onSelect: vi.fn() }
+			}
+		});
 
 		const buttons = container.querySelectorAll('button');
 		const nordBtn = Array.from(buttons).find((b) => b.textContent?.includes('Nord'));
@@ -33,7 +48,12 @@ describe('ThemePicker', () => {
 	});
 
 	it('não aplica estilo de selecionado nos temas inativos', () => {
-		const { container } = render(ThemePicker, { theme: 'nord', mode: 'dark', onselect: vi.fn() });
+		const { container } = render(ThemePicker, {
+			props: {
+				data: { theme: 'nord', mode: 'dark' },
+				events: { onSelect: vi.fn() }
+			}
+		});
 
 		const buttons = container.querySelectorAll('button');
 		const catppuccinBtn = Array.from(buttons).find((b) => b.textContent?.includes('Catppuccin'));
@@ -43,9 +63,10 @@ describe('ThemePicker', () => {
 
 	it('renderiza as cores corretas no modo light', () => {
 		const { container } = render(ThemePicker, {
-			theme: 'catppuccin',
-			mode: 'light',
-			onselect: vi.fn()
+			props: {
+				data: { theme: 'catppuccin', mode: 'light' },
+				events: { onSelect: vi.fn() }
+			}
 		});
 
 		const colorDots = container.querySelectorAll<HTMLElement>("[style*='background-color']");

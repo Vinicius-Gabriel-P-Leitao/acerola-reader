@@ -1,0 +1,76 @@
+import { render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import ReaderFooter from './reader-footer.svelte';
+
+function props(overrides = {}) {
+	return {
+		data: {
+			pageProgressPercent: 45,
+			pageProgressWidth: '45%',
+			chapterProgressLabel: 'Chapter 2 of 8',
+			modeLabel: 'Vertical',
+			zoomStatusLabel: 'Zoom 100%',
+			chaptersRemainingLabel: '6 chapters remaining'
+		},
+		state: {
+			readingMode: 'vertical'
+		},
+		events: {
+			onReadingModeChange: vi.fn()
+		},
+		...overrides
+	} as const;
+}
+
+describe('ReaderFooter', () => {
+	it('renderiza progresso, modo, zoom e capitulos restantes', () => {
+		render(ReaderFooter, { props: props() });
+
+		expect(screen.getByText('45% lido')).toBeInTheDocument();
+		expect(screen.getByText('Vertical - Zoom 100%')).toBeInTheDocument();
+		expect(screen.getByText('6 chapters remaining')).toBeInTheDocument();
+
+		const progress = screen.getByRole('progressbar');
+		expect(progress).toHaveAttribute('aria-valuenow', '45');
+		expect(progress).toHaveAttribute('title', 'Chapter 2 of 8');
+		expect(progress.firstElementChild).toHaveStyle({ width: '45%' });
+	});
+
+	it('renderiza valores extremos de progresso', () => {
+		const values = [
+			{ percent: 0, width: '0%' },
+			{ percent: 100, width: '100%' }
+		];
+
+		for (const value of values) {
+			const { unmount } = render(ReaderFooter, {
+				props: props({
+					data: {
+						...props().data,
+						pageProgressPercent: value.percent,
+						pageProgressWidth: value.width
+					}
+				})
+			});
+
+			const progress = screen.getByRole('progressbar');
+			expect(screen.getByText(`${value.percent}% lido`)).toBeInTheDocument();
+			expect(progress).toHaveAttribute('aria-valuenow', String(value.percent));
+			expect(progress.firstElementChild).toHaveStyle({ width: value.width });
+			unmount();
+		}
+	});
+
+	it('propaga mudanca do modo de leitura pelo seletor mobile', async () => {
+		const user = userEvent.setup();
+		const footerProps = props();
+
+		render(ReaderFooter, { props: footerProps });
+		await user.click(screen.getByTitle('Paginado horizontal'));
+		await user.click(screen.getByTitle('Webtoon'));
+
+		expect(footerProps.events.onReadingModeChange).toHaveBeenCalledWith('horizontal');
+		expect(footerProps.events.onReadingModeChange).toHaveBeenCalledWith('webtoon');
+	});
+});

@@ -12,11 +12,16 @@ describe('AcerolaSwitch', () => {
 	it('muda de estado ao ser clicado', async () => {
 		const user = userEvent.setup();
 		let checked = false;
-		render(AcerolaSwitch, { checked });
+		render(AcerolaSwitch, {
+			props: {
+				events: { onCheckedChange: (value: boolean) => (checked = value) }
+			}
+		});
 
 		const switchEl = screen.getByRole('switch');
 		await user.click(switchEl);
 
 		expect(switchEl.getAttribute('aria-checked')).toBe('true');
+		expect(checked).toBe(true);
 	});
 });

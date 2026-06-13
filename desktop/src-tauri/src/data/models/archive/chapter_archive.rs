@@ -1,6 +1,7 @@
-use crate::data::repositories::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
+
+use crate::data::repositories::{Bindable, Entity};
 
 /// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ChapterArchive {

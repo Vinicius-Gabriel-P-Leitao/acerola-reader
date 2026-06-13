@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
 
@@ -11,6 +12,7 @@
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
+	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -19,11 +21,11 @@
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
 
-	import ComicChapterList from './components/comic-chapter-list.svelte';
+	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
 	import ComicMetadataPanel from './components/comic-metadata-panel.svelte';
 	import ComicPreferences from './components/comic-preferences.svelte';
-	import ComicVolumeList from './components/comic-volume-list.svelte';
+	import ComicVolumeList, { type VolumeChapter } from './components/comic-volume-list.svelte';
 
 	let { data } = $props();
 
@@ -44,6 +46,48 @@
 	let visiblePages = $state<number[]>([]);
 
 	const onBack = () => window.history.back();
+
+	function toReaderChapter(chapter: Chapter | VolumeChapter): ReaderChapterPayload | null {
+		if (!chapter.path) return null;
+
+		return {
+			id: chapter.id,
+			name: chapter.name ?? chapter.title,
+			path: chapter.path,
+			chapterSort: chapter.chapterSort ?? '',
+			volumeId: chapter.volumeId ?? null,
+			volumeName: chapter.volumeName ?? null,
+			isSpecial: chapter.isSpecial ?? false,
+			lastModified: chapter.lastModified ?? 0
+		};
+	}
+
+	function getReaderProgress(chapter: Chapter | VolumeChapter) {
+		const currentManga = manga;
+		if (!currentManga) return {};
+
+		const volume = chapter.volumeId
+			? currentManga.volumes.find((item) => item.id === chapter.volumeId)
+			: null;
+
+		return {
+			chapterIndex: chapter.chapterIndex,
+			totalChapters: volume?.totalChapters ?? currentManga.chaptersCount,
+			chapterScope: volume?.title ?? currentManga.title
+		};
+	}
+
+	function openReader(chapter: Chapter | VolumeChapter) {
+		const readerChapter = toReaderChapter(chapter);
+		if (!readerChapter) return;
+
+		goto('/reader', {
+			state: {
+				chapter: readerChapter,
+				...getReaderProgress(chapter)
+			}
+		});
+	}
 
 	onMount(async () => {
 		if (!activeComic.item && data.comic) {
@@ -126,20 +170,25 @@
 			page: it.page,
 
 			items: it.items
+				.map((comic, index) => ({
+					id: comic.id.toString(),
+					name: comic.name,
+					title: comic.name,
+					fileName: comic.name,
+					isRead: false,
+					chapterSort: comic.chapterSort,
+					path: comic.path,
+					volumeId: comic.volumeId,
+					volumeName: comic.volumeName,
+					isSpecial: comic.isSpecial,
+					lastModified: comic.lastModified,
+					chapterIndex: it.page * pageSize + index
+				}))
 				.filter((comic) => {
 					const matchesSearch = comic.name.toLowerCase().includes(searchQuery.toLowerCase());
 					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
 					return matchesSearch && matchesVolume;
 				})
-
-				.map((comic) => ({
-					id: comic.id.toString(),
-					title: comic.name,
-					fileName: comic.name,
-					isRead: false,
-					chapterSort: comic.chapterSort,
-					volumeName: comic.volumeName
-				}))
 		}));
 
 		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
@@ -201,14 +250,16 @@
 		</div>
 
 		<ComicMetadataPanel
-			title={manga.title}
-			author={manga.metadata.author}
-			status={manga.metadata.status}
-			source={manga.metadata.source}
-			chaptersCount={manga.chaptersCount}
-			description={manga.metadata.description}
-			cover={manga.cover}
-			{onBack}
+			data={{
+				title: manga.title,
+				author: manga.metadata.author,
+				status: manga.metadata.status,
+				source: manga.metadata.source,
+				chaptersCount: manga.chaptersCount,
+				description: manga.metadata.description,
+				cover: manga.cover
+			}}
+			events={{ onBack }}
 		/>
 
 		<div
@@ -217,7 +268,7 @@
 			<div
 				class="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-surface/30 bg-base/90 px-6 backdrop-blur-md lg:hidden"
 			>
-				<AcerolaButtonIcon onclick={onBack} size="sm">
+				<AcerolaButtonIcon events={{ onClick: onBack }} ui={{ size: 'sm' }}>
 					<ArrowLeft size={20} />
 				</AcerolaButtonIcon>
 
@@ -228,13 +279,22 @@
 				<div class="w-10"></div>
 			</div>
 
-			<ComicHeroBanner banner={manga.banner} genres={manga.metadata.genres} />
+			<ComicHeroBanner data={{ banner: manga.banner, genres: manga.metadata.genres }} />
 
 			<div class="mx-auto w-full max-w-5xl space-y-12 p-8 lg:p-16">
 				<div
 					class="sticky top-0 z-40 -mx-4 flex items-center justify-between border-b border-surface/30 bg-base/5 px-4 backdrop-blur-3xl"
 				>
-					<AcerolaToggleGroup type="single" class="flex gap-4" bind:value={activeTab}>
+					<AcerolaToggleGroup
+						config={{ type: 'single' }}
+						state={{ value: activeTab }}
+						events={{
+							onValueChange: (value) => {
+								if (typeof value === 'string') activeTab = value;
+							}
+						}}
+						ui={{ class: 'flex gap-4' }}
+					>
 						{#snippet children()}
 							<ToggleGroupItem
 								value="content"
@@ -284,29 +344,49 @@
 					{#if activeTab === 'content'}
 						{#if chapterStore.chapters?.hasVolumeStructure}
 							<ComicVolumeList
-								volumes={manga.volumes}
-								pagesData={manga.pagesData}
-								loading={chapterStore.loading}
-								pageSize={manga.pageSize}
-								viewMode={volumeViewPreference.volumeViewMode}
-								onexpand={(v) => (expandedVolumeId = v)}
-								onvisiblepages={(p) => (visiblePages = p)}
+								data={{
+									volumes: manga.volumes,
+									pagesData: manga.pagesData,
+									loading: chapterStore.loading,
+									pageSize: manga.pageSize,
+									viewMode: volumeViewPreference.volumeViewMode
+								}}
+								events={{
+									onExpand: (value) => (expandedVolumeId = value),
+									onVisiblePages: (pages) => (visiblePages = pages),
+									onOpenChapter: openReader
+								}}
 							/>
 						{:else}
 							<ComicChapterList
-								pagesData={manga.pagesData}
-								totalChapters={manga.chaptersCount}
-								pageSize={manga.pageSize}
-								onvisiblepages={(page: number[]) => (visiblePages = page)}
+								data={{
+									pagesData: manga.pagesData,
+									totalChapters: manga.chaptersCount,
+									pageSize: manga.pageSize
+								}}
+								events={{
+									onVisiblePages: (pages: number[]) => (visiblePages = pages),
+									onOpenChapter: openReader
+								}}
 							/>
 						{/if}
 					{:else if activeTab === 'preferences'}
 						<ComicPreferences
-							bind:displayMode
-							bind:mediaType
-							bind:chaptersPerPage={chaptersPreference.chaptersPerPage}
-							bind:volumeViewMode={volumeViewPreference.volumeViewMode}
-							hasVolumeStructure={chapterStore.chapters?.hasVolumeStructure ?? false}
+							data={{
+								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false
+							}}
+							state={{
+								displayMode,
+								mediaType,
+								chaptersPerPage: chaptersPreference.chaptersPerPage,
+								volumeViewMode: volumeViewPreference.volumeViewMode
+							}}
+							events={{
+								onDisplayModeChange: (value) => (displayMode = value),
+								onMediaTypeChange: (value) => (mediaType = value),
+								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
+								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value)
+							}}
 						/>
 					{/if}
 				</div>

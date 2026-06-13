@@ -139,6 +139,63 @@
 				"no_volumes": "No volumes indexed yet."
 			}
 		},
+		"reader": {
+			"fallback": {
+				"chapter_unavailable": "Chapter unavailable"
+			},
+			"progress": {
+				"chapter_unavailable": "Chapter progress",
+				"chapter_count": "Chapter {current} of {total}",
+				"remaining_unavailable": "Remaining chapters unavailable",
+				"remaining_one": "1 chapter remaining",
+				"remaining_many": "{count} chapters remaining",
+				"subtitle": "{scope} - {current} / {total} pages",
+				"read_percent": "{percent}% read"
+			},
+			"modes": {
+				"vertical": "Paginated vertical",
+				"horizontal": "Paginated horizontal",
+				"webtoon": "Webtoon",
+				"vertical_short": "Vertical",
+				"horizontal_short": "Horizontal"
+			},
+			"actions": {
+				"back": "Back",
+				"apply_zoom": "Apply zoom",
+				"reset_zoom": "Reset zoom",
+				"zoom_mode": "Zoom mode",
+				"commands": "Commands",
+				"previous_page": "Previous page",
+				"next_page": "Next page",
+				"page_navigation_locked": "Disable zoom to change pages",
+				"close_commands": "Close commands"
+			},
+			"pages": {
+				"label": "Page {page}",
+				"image_alt": "Page {page}"
+			},
+			"command": {
+				"placeholder": "Reader commands...",
+				"zoom_group": "Zoom",
+				"reading_group": "Reading",
+				"toggle_zoom_search": "toggle zoom mode",
+				"zoom_in_search": "zoom in",
+				"zoom_out_search": "zoom out",
+				"reset_zoom_search": "reset zoom",
+				"vertical_search": "paginated vertical",
+				"horizontal_search": "paginated horizontal",
+				"webtoon_search": "webtoon",
+				"enable_zoom_mode": "Enable zoom mode",
+				"disable_zoom_mode": "Disable zoom mode",
+				"zoom_in": "Zoom in",
+				"zoom_out": "Zoom out",
+				"reset_zoom": "Reset zoom"
+			},
+			"zoom": {
+				"status": "Zoom {zoom}",
+				"scroll_status": "Zoom {zoom} - scroll adjusts"
+			}
+		},
 		"history": {
 			"title": "P2P Network",
 			"local_id": "Local ID: {id}",
@@ -188,7 +245,13 @@
 				"title": "Metadata configuration",
 				"lang": {
 					"title": "Language",
-					"desc": "Select the default language for metadata."
+					"desc": "Select the default language for metadata.",
+					"popover_title": "Metadata language",
+					"popover_desc": "Current: {language}",
+					"search_placeholder": "Search language...",
+					"group_title": "Available languages",
+					"empty": "No language found.",
+					"item_desc": "Code {code}"
 				},
 				"mangadex": {
 					"title": "MangaDex Synchronization",

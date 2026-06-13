@@ -1,16 +1,34 @@
 <script lang="ts" module>
 	export type Chapter = {
 		id: string;
+		name?: string;
 		title: string;
 		fileName: string;
 		isRead: boolean;
 		chapterSort: string;
+		path?: string;
+		volumeId?: string | null;
 		volumeName?: string | null;
+		isSpecial?: boolean;
+		lastModified?: number;
+		chapterIndex?: number;
 	};
 
 	export type ChapterPage = {
 		page: number;
 		items: Chapter[];
+	};
+
+	export type ComicChapterListProps = {
+		data: {
+			pagesData: ChapterPage[];
+			totalChapters: number;
+			pageSize: number;
+		};
+		events?: {
+			onVisiblePages?: (pages: number[]) => void;
+			onOpenChapter?: (chapter: Chapter) => void;
+		};
 	};
 </script>
 
@@ -23,17 +41,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
-	let {
-		pagesData = [],
-		totalChapters = 0,
-		pageSize = 25,
-		onvisiblepages
-	}: {
-		pagesData: ChapterPage[];
-		totalChapters: number;
-		pageSize: number;
-		onvisiblepages?: (pages: number[]) => void;
-	} = $props();
+	let { data, events }: ComicChapterListProps = $props();
 
 	/**
 	 * ITEM_HEIGHT (112px): Altura total do slot (item + gap).
@@ -42,7 +50,7 @@
 	const ITEM_HEIGHT = 112;
 	const BUTTON_HEIGHT = 100;
 
-	const totalPages = $derived(Math.ceil(totalChapters / pageSize));
+	const totalPages = $derived(Math.ceil(data.totalChapters / data.pageSize));
 
 	let visiblePages = new Set<number>();
 	let observer: IntersectionObserver | null = null;
@@ -70,8 +78,8 @@
 					}
 				});
 
-				if (changed && onvisiblepages) {
-					onvisiblepages(Array.from(visiblePages).sort((a, b) => a - b));
+				if (changed && events?.onVisiblePages) {
+					events.onVisiblePages(Array.from(visiblePages).sort((a, b) => a - b));
 				}
 			},
 			{ rootMargin: '1200px 0px' }
@@ -93,9 +101,9 @@
 <div class="flex w-full flex-col">
 	{#if totalPages > 0}
 		{#each Array(totalPages) as _, pageIndex}
-			{@const blockData = pagesData.find((page) => page.page === pageIndex)}
+			{@const blockData = data.pagesData.find((page) => page.page === pageIndex)}
 			<!-- prettier-ignore -->
-			{@const itemsInThisPage = pageIndex === totalPages - 1 ? totalChapters % pageSize || pageSize : pageSize}
+			{@const itemsInThisPage = pageIndex === totalPages - 1 ? data.totalChapters % data.pageSize || data.pageSize : data.pageSize}
 
 			<!-- 
         PAGE BLOCK (Relative): 
@@ -115,9 +123,17 @@
 							style:height="{BUTTON_HEIGHT}px"
 						>
 							<AcerolaHeroButton
-								title={chapter.title}
-								description={chapter.fileName}
-								class="h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30"
+								data={{
+									title: chapter.title,
+									description: chapter.fileName
+								}}
+								events={{
+									onClick: () => events?.onOpenChapter?.(chapter)
+								}}
+								ui={{
+									class:
+										'h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30'
+								}}
 							>
 								{#snippet icon()}
 									<div class={chapter.isRead ? 'text-overlay' : 'text-primary'}>
@@ -127,9 +143,14 @@
 
 								{#snippet action()}
 									<AcerolaButtonIcon
-										variant="ghost"
-										size="sm"
-										class="text-overlay hover:text-primary"
+										events={{
+											onClick: (event) => event.stopPropagation()
+										}}
+										ui={{
+											variant: 'ghost',
+											size: 'sm',
+											class: 'text-overlay hover:text-primary'
+										}}
 									>
 										<MoreVertical size={20} />
 									</AcerolaButtonIcon>

@@ -1,10 +1,12 @@
-use crate::infra::error::DbError;
+use std::marker::PhantomData;
+
 use sqlx::{
     query, query_as,
     sqlite::{SqliteArguments, SqliteRow},
     FromRow, Pool, Sqlite,
 };
-use std::marker::PhantomData;
+
+use crate::infra::error::DbError;
 
 pub mod archive;
 pub mod views;
@@ -105,12 +107,13 @@ impl<T: Entity> Repository<T> {
 
 #[cfg(test)]
 mod tests {
+    use sqlx::{query::Query, sqlite::SqliteArguments, FromRow, Sqlite};
+
     use crate::{
         data::repositories::{Bindable, Entity, Repository},
         infra::error::DbError,
         tests::utils::setup_test_db::setup_test_db,
     };
-    use sqlx::{query::Query, sqlite::SqliteArguments, FromRow, Sqlite};
 
     #[derive(Debug, FromRow, PartialEq)]
     struct FakeEntity {

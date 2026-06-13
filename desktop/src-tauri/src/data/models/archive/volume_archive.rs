@@ -1,6 +1,7 @@
-use crate::data::repositories::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
+
+use crate::data::repositories::{Bindable, Entity};
 
 impl Entity for VolumeArchive {
     fn columns() -> &'static [&'static str] {
