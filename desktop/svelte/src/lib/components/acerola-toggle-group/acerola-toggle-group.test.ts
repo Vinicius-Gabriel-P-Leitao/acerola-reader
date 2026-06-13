@@ -1,24 +1,24 @@
-import { render, screen } from "@testing-library/svelte";
-import { createRawSnippet } from "svelte";
-import { describe, expect, it } from "vitest";
-import AcerolaToggleGroup from "./acerola-toggle-group.svelte";
+import { render, screen } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
+import { describe, expect, it } from 'vitest';
+import AcerolaToggleGroup from './acerola-toggle-group.svelte';
 
-describe("AcerolaToggleGroup", () => {
-  it("renderiza o grupo de toggles", () => {
-    let value = "bold";
-    const children = createRawSnippet(() => ({
-      render: () =>
-        '<div><button data-value="bold">Bold</button><button data-value="italic">Italic</button></div>',
-    }));
+describe('AcerolaToggleGroup', () => {
+	it('renderiza o grupo de toggles', () => {
+		let value = 'bold';
+		const children = createRawSnippet(() => ({
+			render: () =>
+				'<div><button data-value="bold">Bold</button><button data-value="italic">Italic</button></div>'
+		}));
 
-    render(AcerolaToggleGroup, {
-      children,
-      value,
-      type: "single",
-    });
+		render(AcerolaToggleGroup, {
+			children,
+			state: { value },
+			config: { type: 'single' }
+		});
 
-    const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(2);
-    expect(screen.getByRole("group")).toBeInTheDocument();
-  });
+		const buttons = screen.getAllByRole('button');
+		expect(buttons).toHaveLength(2);
+		expect(screen.getByRole('group')).toBeInTheDocument();
+	});
 });

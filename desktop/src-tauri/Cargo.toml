@@ -1,38 +1,58 @@
 [package]
-name = "acerola"
-edition = "2021"
-version = "0.0.1-alpha"
-license = "GPL-3.0-only"
 authors = ["Vinícius Gabriel Pereira Leitão"]
 description = "Um app de organização, leitura de quadrinhos em cbz e cbr"
+edition = "2021"
+license = "GPL-3.0-only"
+name = "acerola"
+version = "0.0.1-beta"
 
 # NOTE: Em rust para baixar libs cargo build
 [lib]
 # WARN: Sufixo _lib é para não dar conflito de binário
+# Desktop-only: o binario linka esta lib como rlib. staticlib/cdylib ficam para mobile/FFI
+# e geram artefatos enormes no debug do Windows, principalmente acerola_lib.lib/.pdb.
+crate-type = ["rlib"]
 name = "acerola_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "acerola"
+path = "src/main.rs"
+test = false
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = {version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["protocol-asset"] }
-tauri-plugin-opener = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-mdns-sd = "0.18.2"
+acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5", branch = "feature/challenge-response", features = ["iroh"] }
+anyhow = "1.0.102"
+async-trait = "0.1.89"
 axum = "0.8.8"
-tokio = { version = "1.51.0", features = ["full"] }
-tauri-plugin-dialog = "2.7.0"
-tauri-plugin-store = "2"
-tauri-plugin-fs = "2"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-sqlx = "0.8.6"
-thiserror = "2.0.18"
-tauri-plugin-log = "2"
-log = "0.4"
-regex = "1.12.3"
 chrono = "0.4.44"
+futures = "0.3.32"
+image = "0.25.10"
+log = "0.4"
+lru = "0.18.0"
+mdns-sd = "0.18.2"
+pdfium = "0.10.4"
+regex = "1.12.3"
+serde = {version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = "0.8.6"
+tauri = {version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2.7.0"
+tauri-plugin-fs = "2"
+tauri-plugin-log = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-sql = {version = "2", features = ["sqlite"] }
+tauri-plugin-store = "2"
+thiserror = "2.0.18"
+tokio = {version = "1.52.1", features = ["full"] }
+tokio-stream = "0.1.18"
+tokio-util = "0.7.18"
+tracing = {version = "0.1.44", features = ["log"] }
+unrar = "0.5.8"
+zip = "8.6.0"
 
 [dev-dependencies]
+tauri = {version = "2", features = ["protocol-asset", "test"] }
 tempfile = "3"

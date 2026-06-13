@@ -1,0 +1,39 @@
+import { expect, test } from '@playwright/test';
+import { HOME_COMMANDS } from '../../svelte/src/lib/contracts/home/home.commands';
+import { HOME_EVENTS } from '../../svelte/src/lib/contracts/home/home.events';
+import {
+	collectConsoleErrors,
+	installTauriMocks,
+	mockedTauriResponse,
+	tauriCommandCalls
+} from '../../svelte/tests/mocks/tauri-playwright';
+
+test.describe('erro IPC na home', () => {
+	let consoleErrors: string[];
+
+	test.beforeEach(async ({ page }) => {
+		consoleErrors = collectConsoleErrors(page);
+
+		await installTauriMocks(page, {
+			[HOME_COMMANDS.getComicSummary]: mockedTauriResponse({
+				events: [
+					{
+						event: HOME_EVENTS.homeError,
+						payload: { errorType: 'Unknown', message: 'db_error' }
+					}
+				]
+			})
+		});
+	});
+
+	test('exibe erro de biblioteca sem loop infinito de retry', async ({ page }) => {
+		test.setTimeout(10_000);
+
+		await page.goto('/home');
+
+		await expect(page.getByText('db_error')).toBeVisible();
+		await expect(page).not.toHaveURL(/\/comic\//);
+		await expect.poll(() => tauriCommandCalls(page, HOME_COMMANDS.getComicSummary)).toBeLessThanOrEqual(1);
+		expect(consoleErrors).toEqual([]);
+	});
+});

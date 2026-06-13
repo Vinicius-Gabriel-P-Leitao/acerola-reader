@@ -1,7 +1,12 @@
-use crate::data::models::archive::comic_directory::ComicDirectory;
-use crate::data::repositories::base::{Entity, Repository};
-use crate::infra::error::translations::db_error::DbError;
 use sqlx::SqlitePool;
+
+use crate::{
+    data::{
+        models::archive::comic_directory::ComicDirectory,
+        repositories::{Entity, Repository},
+    },
+    infra::error::DbError,
+};
 
 #[derive(Clone)]
 pub struct ComicRepository {
@@ -11,17 +16,13 @@ pub struct ComicRepository {
 
 impl ComicRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self {
-            base: Repository::new(pool.clone()),
-            pool,
-        }
+        Self { base: Repository::new(pool.clone()), pool }
     }
 
     pub async fn find_by_name(&self, name: &str) -> Result<Option<ComicDirectory>, DbError> {
         let table = ComicDirectory::table_name();
         let cols = ComicDirectory::columns().join(", ");
 
-        
         let result = sqlx::query_as::<_, ComicDirectory>(&format!(
             "SELECT {} FROM {} WHERE name = ?",
             cols, table
@@ -37,9 +38,10 @@ impl ComicRepository {
 #[cfg(test)]
 mod tests {
     use super::ComicRepository;
-    use crate::data::models::archive::comic_directory::ComicDirectory;
-    use crate::infra::error::translations::db_error::DbError;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::{
+        data::models::archive::comic_directory::ComicDirectory, infra::error::DbError,
+        tests::utils::setup_test_db::setup_test_db,
+    };
 
     fn berserk() -> ComicDirectory {
         ComicDirectory {
@@ -49,7 +51,7 @@ mod tests {
             cover: None,
             banner: None,
             last_modified: 1700000000,
-            chapter_template_fk: None,
+            archive_template_fk: None,
             external_sync_enabled: true,
             hidden: false,
         }
@@ -89,10 +91,7 @@ mod tests {
 
         repo.base.insert(&berserk()).await.unwrap();
 
-        let updated = ComicDirectory {
-            name: "Berserk Deluxe".to_string(),
-            ..berserk()
-        };
+        let updated = ComicDirectory { name: "Berserk Deluxe".to_string(), ..berserk() };
         let result = repo.base.update(&updated).await.unwrap();
 
         assert_eq!(result.name, "Berserk Deluxe");

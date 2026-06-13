@@ -33,11 +33,7 @@ impl ArchiveFormat {
 
     pub fn extensions_pattern() -> &'static str {
         EXTENSIONS.get_or_init(|| {
-            Self::all()
-                .iter()
-                .map(|it| it.extension())
-                .collect::<Vec<_>>()
-                .join("|")
+            Self::all().iter().map(|it| it.extension()).collect::<Vec<_>>().join("|")
         })
     }
 }

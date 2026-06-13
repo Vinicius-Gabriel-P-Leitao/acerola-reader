@@ -1,34 +1,46 @@
-<script lang="ts">
-  import * as Card from "$lib/components/ui/card";
-  import type { AcerolaCardProps } from "./acerola-card.types";
+<script module lang="ts">
+	import type { Snippet } from 'svelte';
 
-  let {
-    title,
-    description,
-    children,
-    footer,
-    size = "default",
-    class: className,
-  }: AcerolaCardProps = $props();
+	export type AcerolaCardProps = {
+		data: {
+			title: string;
+			description?: string;
+		};
+		ui?: {
+			size?: 'default' | 'sm';
+			class?: string;
+		};
+	};
+
+	export type AcerolaCardSnippets = {
+		children?: Snippet;
+		footer?: Snippet;
+	};
 </script>
 
-<Card.Root {size} class={className}>
-  <Card.Header>
-    <Card.Title class="text-foreground font-semibold">{title}</Card.Title>
-    {#if description}
-      <Card.Description>{description}</Card.Description>
-    {/if}
-  </Card.Header>
+<script lang="ts">
+	import * as Card from '$lib/components/ui/card';
 
-  {#if children}
-    <Card.Content>
-      {@render children()}
-    </Card.Content>
-  {/if}
+	let { data, ui, children, footer }: AcerolaCardProps & AcerolaCardSnippets = $props();
+</script>
 
-  {#if footer}
-    <Card.Footer>
-      {@render footer()}
-    </Card.Footer>
-  {/if}
+<Card.Root size={ui?.size ?? 'default'} class={ui?.class}>
+	<Card.Header>
+		<Card.Title class="font-semibold text-foreground">{data.title}</Card.Title>
+		{#if data.description}
+			<Card.Description>{data.description}</Card.Description>
+		{/if}
+	</Card.Header>
+
+	{#if children}
+		<Card.Content>
+			{@render children()}
+		</Card.Content>
+	{/if}
+
+	{#if footer}
+		<Card.Footer>
+			{@render footer()}
+		</Card.Footer>
+	{/if}
 </Card.Root>

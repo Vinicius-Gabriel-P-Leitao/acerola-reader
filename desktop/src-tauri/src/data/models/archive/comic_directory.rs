@@ -1,8 +1,9 @@
-use crate::data::repositories::base::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
-/// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
+use crate::data::repositories::{Bindable, Entity};
+
+/// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ComicDirectory {
     fn columns() -> &'static [&'static str] {
         &[
@@ -12,7 +13,7 @@ impl Entity for ComicDirectory {
             "cover",
             "banner",
             "last_modified",
-            "chapter_template_fk",
+            "archive_template_fk",
             "external_sync_enabled",
             "hidden",
         ]
@@ -28,8 +29,7 @@ impl Entity for ComicDirectory {
 /// Garante que o código consiga serializar o sql para o objeto
 impl Bindable for ComicDirectory {
     fn bind_insert<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(self.id)
@@ -38,14 +38,13 @@ impl Bindable for ComicDirectory {
             .bind(&self.cover)
             .bind(&self.banner)
             .bind(self.last_modified)
-            .bind(self.chapter_template_fk)
+            .bind(self.archive_template_fk)
             .bind(self.external_sync_enabled)
             .bind(self.hidden)
     }
 
     fn bind_update<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(&self.name)
@@ -53,7 +52,7 @@ impl Bindable for ComicDirectory {
             .bind(&self.cover)
             .bind(&self.banner)
             .bind(self.last_modified)
-            .bind(self.chapter_template_fk)
+            .bind(self.archive_template_fk)
             .bind(self.external_sync_enabled)
             .bind(self.hidden)
             .bind(self.id) // <- id pro WHERE id = ?
@@ -71,7 +70,7 @@ pub struct ComicDirectory {
     pub cover: Option<String>,
     pub banner: Option<String>,
     pub last_modified: i64,
-    pub chapter_template_fk: Option<i64>,
+    pub archive_template_fk: Option<i64>,
     pub external_sync_enabled: bool,
     pub hidden: bool,
 }

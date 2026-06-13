@@ -1,8 +1,12 @@
 <script lang="ts">
-  import { Toaster as AcerolaToaster } from "$lib/components/ui/sonner/index.js";
-  import type { ToasterProps as SonnerProps } from "svelte-sonner";
+	import { Toaster as AcerolaToaster } from '$lib/components/ui/sonner/index.js';
+	import type { ToasterProps as SonnerProps } from 'svelte-sonner';
 
-  let { ...restProps }: SonnerProps = $props();
+	export type AcerolaSonnerProps = {
+		ui?: SonnerProps;
+	};
+
+	let { ui }: AcerolaSonnerProps = $props();
 </script>
 
-<AcerolaToaster {...restProps} />
+<AcerolaToaster {...ui} />

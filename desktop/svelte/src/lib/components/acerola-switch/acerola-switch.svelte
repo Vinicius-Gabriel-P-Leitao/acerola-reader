@@ -1,33 +1,68 @@
-<script lang="ts">
-  import { Switch as SwitchPrimitive } from "bits-ui";
-  import { cn } from "$lib/utils/cn.utils.js";
-  import type { AcerolaSwitchProps } from "./acerola-switch.types.js";
+<script module lang="ts">
+	import { Switch as SwitchPrimitive } from 'bits-ui';
+	import type { WithoutChildrenOrChild } from '$lib/utils/cn.utils.js';
 
-  let {
-    class: className,
-    size = "default",
-    ref = $bindable(null),
-    checked = $bindable(false),
-    ...restProps
-  }: AcerolaSwitchProps = $props();
+	export type AcerolaSwitchProps = {
+		state?: {
+			checked?: boolean;
+		};
+		events?: {
+			onCheckedChange?: (checked: boolean) => void;
+		};
+		ui?: Omit<WithoutChildrenOrChild<SwitchPrimitive.RootProps>, 'checked' | 'class'> & {
+			class?: string;
+			size?: 'sm' | 'default';
+		};
+	};
+</script>
+
+<script lang="ts">
+	import { cn } from '$lib/utils/cn.utils.js';
+
+	let { events, state: control, ui }: AcerolaSwitchProps = $props();
+
+	let checked = $state(false);
+	let lastChecked = $state(false);
+
+	const restProps = $derived.by(() => {
+		const { class: _class, size: _size, ...rest } = ui ?? {};
+		return rest;
+	});
+
+	$effect(() => {
+		if (control?.checked === undefined) return;
+
+		const nextChecked = control.checked;
+
+		if (nextChecked !== lastChecked) {
+			checked = nextChecked;
+			lastChecked = nextChecked;
+		}
+	});
+
+	$effect(() => {
+		if (checked === lastChecked) return;
+
+		lastChecked = checked;
+		events?.onCheckedChange?.(checked);
+	});
 </script>
 
 <SwitchPrimitive.Root
-  bind:ref
-  bind:checked
-  data-slot="switch"
-  data-size={size}
-  class={cn(
-    "peer group/switch relative inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
-    size === "default" ? "h-8 w-14" : "h-6 w-11",
-    className,
-  )}
-  {...restProps}
+	bind:checked
+	data-slot="switch"
+	data-size={ui?.size ?? 'default'}
+	class={cn(
+		'peer group/switch relative inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input',
+		(ui?.size ?? 'default') === 'default' ? 'h-8 w-14' : 'h-6 w-11',
+		ui?.class
+	)}
+	{...restProps}
 >
-  <SwitchPrimitive.Thumb
-    class={cn(
-      "pointer-events-none block rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-full data-[state=unchecked]:translate-x-0",
-      size === "default" ? "h-6 w-6" : "h-5 w-5",
-    )}
-  />
+	<SwitchPrimitive.Thumb
+		class={cn(
+			'pointer-events-none block rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-full data-[state=unchecked]:translate-x-0',
+			(ui?.size ?? 'default') === 'default' ? 'h-6 w-6' : 'h-5 w-5'
+		)}
+	/>
 </SwitchPrimitive.Root>

@@ -1,8 +1,8 @@
-@import "./tailwind.css";
+@import './tailwind.css';
 
 *[data-tauri-drag-region] {
-  -webkit-app-region: drag;
-  shape-margin: drag;
+	-webkit-app-region: drag;
+	shape-margin: drag;
 }
 
 button,
@@ -10,30 +10,30 @@ a,
 input,
 select,
 textarea {
-  -webkit-app-region: no-drag;
+	-webkit-app-region: no-drag;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+	width: 6px;
+	height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+	background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 9999px;
+	background: var(--border);
+	border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+	background: var(--muted-foreground);
 }
 
 img {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: smooth;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: smooth;
+	transform: translateZ(0);
+	backface-visibility: hidden;
 }

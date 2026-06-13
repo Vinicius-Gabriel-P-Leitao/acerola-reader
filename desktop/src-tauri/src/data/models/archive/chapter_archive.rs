@@ -1,8 +1,9 @@
-use crate::data::repositories::base::{Bindable, Entity};
 use serde::{Deserialize, Serialize};
 use sqlx::{query::Query, sqlite::SqliteArguments, Sqlite};
 
-/// Contrato com o [`crate::data::repositories::base::Repository`] genérico.
+use crate::data::repositories::{Bindable, Entity};
+
+/// Contrato com o [`crate::data::repositories::Repository`] genérico.
 impl Entity for ChapterArchive {
     fn columns() -> &'static [&'static str] {
         &[
@@ -10,8 +11,11 @@ impl Entity for ChapterArchive {
             "chapter",
             "path",
             "chapter_sort",
+            "is_special",
+            "checksum",
             "fast_hash",
             "comic_directory_fk",
+            "volume_id_fk",
             "last_modified",
         ]
     }
@@ -26,29 +30,33 @@ impl Entity for ChapterArchive {
 /// Garante que o código consiga serializar o sql para o objeto
 impl Bindable for ChapterArchive {
     fn bind_insert<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(self.id)
             .bind(&self.chapter)
             .bind(&self.path)
             .bind(&self.chapter_sort)
+            .bind(self.is_special)
+            .bind(&self.checksum)
             .bind(&self.fast_hash)
             .bind(self.comic_directory_fk)
+            .bind(self.volume_id_fk)
             .bind(self.last_modified)
     }
 
     fn bind_update<'query>(
-        &'query self,
-        query: Query<'query, Sqlite, SqliteArguments<'query>>,
+        &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
         query
             .bind(&self.chapter)
             .bind(&self.path)
             .bind(&self.chapter_sort)
+            .bind(self.is_special)
+            .bind(&self.checksum)
             .bind(&self.fast_hash)
             .bind(self.comic_directory_fk)
+            .bind(self.volume_id_fk)
             .bind(self.last_modified)
             .bind(self.id) // <- id pro WHERE id = ?
     }
@@ -63,17 +71,28 @@ impl ChapterArchive {
     }
 
     pub fn fallback_sort(file_name: &str, index: usize) -> String {
-        let filtered = file_name
-            .chars()
-            .filter(|it| it.is_ascii_digit() || *it == '.' || *it == ',')
-            .collect::<String>()
-            .replace(',', ".");
-
-        if filtered.is_empty() {
-            (index + 1).to_string()
-        } else {
-            filtered
-        }
+        file_name
+            .find(|character: char| character.is_ascii_digit())
+            .map(|start_index| {
+                file_name[start_index..]
+                    .chars()
+                    .scan(false, |has_decimal_separator, current_char| match current_char {
+                        digit if digit.is_ascii_digit() => Some(digit),
+                        separator
+                            if (separator == '.' || separator == ',')
+                                && !*has_decimal_separator =>
+                        {
+                            *has_decimal_separator = true;
+                            Some('.')
+                        },
+                        _ => None,
+                    })
+                    .collect::<String>()
+                    .trim_end_matches('.')
+                    .to_string()
+            })
+            .filter(|numeric_sequence| !numeric_sequence.is_empty())
+            .unwrap_or_else(|| (index + 1).to_string())
     }
 }
 
@@ -84,10 +103,15 @@ pub struct ChapterArchive {
     pub chapter: String,
     pub path: String,
     pub chapter_sort: String,
+    pub is_special: bool,
+    pub checksum: Option<String>,
     pub fast_hash: Option<String>,
     pub comic_directory_fk: i64,
+    pub volume_id_fk: Option<i64>,
     pub last_modified: i64,
 }
+
+pub use crate::infra::pattern::volume_special::is_special_name;
 
 #[cfg(test)]
 mod tests {
