@@ -150,14 +150,24 @@ describe('ComicVolumeList', () => {
 		expect(observedElements).toHaveLength(1);
 
 		intersectionCallback(
-			[{ target: observedElements[0], isIntersecting: true } as IntersectionObserverEntry],
+			[
+				{
+					target: observedElements[0],
+					isIntersecting: true
+				} as unknown as IntersectionObserverEntry
+			],
 			{} as IntersectionObserver
 		);
 
 		expect(onVisiblePages).toHaveBeenLastCalledWith([0]);
 
 		intersectionCallback(
-			[{ target: observedElements[0], isIntersecting: false } as IntersectionObserverEntry],
+			[
+				{
+					target: observedElements[0],
+					isIntersecting: false
+				} as unknown as IntersectionObserverEntry
+			],
 			{} as IntersectionObserver
 		);
 

@@ -72,7 +72,7 @@ describe('ComicChapterList', () => {
 		expect(nextPage).toBeInTheDocument();
 
 		intersectionCallback(
-			[{ target: nextPage!, isIntersecting: true } as IntersectionObserverEntry],
+			[{ target: nextPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
 			{} as IntersectionObserver
 		);
 
@@ -92,11 +92,11 @@ describe('ComicChapterList', () => {
 		expect(firstPage).toBeInTheDocument();
 
 		intersectionCallback(
-			[{ target: firstPage!, isIntersecting: true } as IntersectionObserverEntry],
+			[{ target: firstPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
 			{} as IntersectionObserver
 		);
 		intersectionCallback(
-			[{ target: firstPage!, isIntersecting: false } as IntersectionObserverEntry],
+			[{ target: firstPage!, isIntersecting: false } as unknown as IntersectionObserverEntry],
 			{} as IntersectionObserver
 		);
 
