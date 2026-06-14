@@ -8,9 +8,68 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-build:
-    name: Build & Test (Windows)
+  rust:
+    name: Rust Tests
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: acerola
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('acerola/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo test tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-make.exe
+            ~/.cargo/bin/cargo-nextest.exe
+          key: ${{ runner.os }}-cargo-test-tools-v1
+
+      - name: Install Cargo test tools
+        run: |
+          $cargoBin = "$HOME/.cargo/bin"
+          New-Item -ItemType Directory -Force $cargoBin | Out-Null
+
+          if (!(Test-Path "$cargoBin/cargo-make.exe")) {
+            cargo install cargo-make --locked
+          }
+
+          if (!(Test-Path "$cargoBin/cargo-nextest.exe")) {
+            cargo install cargo-nextest --locked
+          }
+
+          Add-Content -Path $env:GITHUB_PATH -Value $cargoBin
+
+      - name: Cache Rust test target
+        uses: actions/cache@v4
+        with:
+          path: acerola/src-tauri/target
+          key: ${{ runner.os }}-cargo-target-rust-${{ hashFiles('acerola/src-tauri/Cargo.lock', 'acerola/src-tauri/Cargo.toml', 'acerola/src-tauri/Makefile.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-rust-
+
+      - name: Run Rust checks and tests
+        run: cargo make --cwd ./src-tauri ci
+
+  svelte:
+    name: Svelte Tests
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: acerola
@@ -26,28 +85,138 @@ jobs:
           cache: npm
           cache-dependency-path: acerola/package-lock.json
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('acerola/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Svelte check
+        run: npm run check
+
+      - name: Run Svelte tests
+        run: npm run test
+
+  wdio:
+    name: WebdriverIO Tests
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: acerola
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: acerola/package-lock.json
+
+      - name: Cache Cargo registry
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            acerola/src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('acerola/src-tauri/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Tauri WebDriver tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/tauri-driver.exe
+            ~/.cargo/bin/msedgedriver-tool.exe
+          key: ${{ runner.os }}-tauri-webdriver-tools-v1
+
+      - name: Install Tauri WebDriver tools
+        run: |
+          $cargoBin = "$HOME/.cargo/bin"
+          New-Item -ItemType Directory -Force $cargoBin | Out-Null
+
+          if (!(Test-Path "$cargoBin/tauri-driver.exe")) {
+            cargo install tauri-driver --locked
+          }
+
+          if (!(Test-Path "$cargoBin/msedgedriver-tool.exe")) {
+            cargo install --git https://github.com/chippers/msedgedriver-tool
+          }
+
+          Add-Content -Path $env:GITHUB_PATH -Value $cargoBin
+
+      - name: Get Microsoft Edge version
+        id: edge-version
+        run: |
+          $edgePaths = @(
+            "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+            "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe"
+          )
+
+          $edgePath = $edgePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+          if (!$edgePath) {
+            throw "Microsoft Edge was not found."
+          }
+
+          $edgeVersion = (Get-Item $edgePath).VersionInfo.ProductVersion
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$edgeVersion"
+
+      - name: Cache Microsoft Edge WebDriver
+        uses: actions/cache@v4
+        with:
+          path: acerola/.bin/windows/msedgedriver.exe
+          key: ${{ runner.os }}-msedgedriver-${{ steps.edge-version.outputs.version }}
+
+      - name: Install Microsoft Edge WebDriver
+        run: |
+          $nativeDriverDir = ".\.bin\windows"
+          $nativeDriverPath = "$nativeDriverDir\msedgedriver.exe"
+
+          New-Item -ItemType Directory -Force $nativeDriverDir | Out-Null
+
+          if (!(Test-Path $nativeDriverPath)) {
+            & "$HOME/.cargo/bin/msedgedriver-tool.exe"
+
+            if (Test-Path ".\msedgedriver.exe") {
+              Move-Item -Force ".\msedgedriver.exe" $nativeDriverPath
+            }
+          }
+
+          if (!(Test-Path $nativeDriverPath)) {
+            throw "msedgedriver.exe was not generated at .bin/windows/msedgedriver.exe"
+          }
+
+          Add-Content -Path $env:GITHUB_PATH -Value (Resolve-Path $nativeDriverDir)
+
+      - name: Cache Tauri release target
+        uses: actions/cache@v4
+        with:
+          path: acerola/src-tauri/target
+          key: ${{ runner.os }}-cargo-target-wdio-${{ hashFiles('acerola/src-tauri/Cargo.lock', 'acerola/src-tauri/Cargo.toml', 'acerola/src-tauri/tauri.conf.json', 'acerola/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-wdio-
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Build (no bundle)
+      - name: Build Tauri app
         run: npm run tauri -- build --no-bundle
 
-      - name: Run all tests
-        run: npm run test:all
+      - name: Run WebdriverIO tests
+        run: npm run test:wdio
