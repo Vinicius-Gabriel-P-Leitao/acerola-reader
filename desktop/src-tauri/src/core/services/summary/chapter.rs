@@ -7,7 +7,7 @@ use crate::{
     },
     data::repositories::archive::{
         chapter_archive_repo::ChapterRepository,
-        volume_archive_repo::{VolumeRepository, VolumeWithCount},
+        volume_archive_repo::VolumeRepository,
     },
     infra::error::ComicError,
 };

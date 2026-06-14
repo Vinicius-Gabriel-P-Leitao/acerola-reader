@@ -1,10 +1,12 @@
 import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/svelte';
 import { afterEach, vi } from 'vitest';
 
 // Mock para resolver problemas do jsdom e pointer events do radix/bits-ui
 if (typeof window !== 'undefined') {
 	window.HTMLElement.prototype.hasPointerCapture = vi.fn();
 	window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+	window.HTMLElement.prototype.scrollIntoView = vi.fn();
 	// @ts-ignore: Mock simples para testes que resolve o hasPointerCapture
 	window.PointerEvent = class PointerEvent extends Event {};
 
@@ -62,6 +64,8 @@ vi.mock('@tauri-apps/plugin-store', () => {
 	};
 });
 
-afterEach(() => {
+afterEach(async () => {
+	cleanup();
+	await new Promise((resolve) => setTimeout(resolve, 30));
 	vi.clearAllMocks();
 });
