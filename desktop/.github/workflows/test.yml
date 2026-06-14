@@ -93,14 +93,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
-      - name: Print npm lock state
-        run: |
-          node -p "'sha: ' + process.env.GITHUB_SHA"
-          node -p "'package typescript: ' + require('./package.json').devDependencies.typescript"
-          node -p "'lock root typescript: ' + require('./package-lock.json').packages[''].devDependencies.typescript"
-          node -p "'lock resolved typescript: ' + require('./package-lock.json').packages['node_modules/typescript'].version"
-          npm --version
-
       - name: Install dependencies
         run: npm ci
 
@@ -219,14 +211,6 @@ jobs:
           key: ${{ runner.os }}-cargo-target-wdio-${{ hashFiles('acerola/src-tauri/Cargo.lock', 'acerola/src-tauri/Cargo.toml', 'acerola/src-tauri/tauri.conf.json', 'acerola/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-cargo-target-wdio-
-
-      - name: Print npm lock state
-        run: |
-          node -p "'sha: ' + process.env.GITHUB_SHA"
-          node -p "'package typescript: ' + require('./package.json').devDependencies.typescript"
-          node -p "'lock root typescript: ' + require('./package-lock.json').packages[''].devDependencies.typescript"
-          node -p "'lock resolved typescript: ' + require('./package-lock.json').packages['node_modules/typescript'].version"
-          npm --version
 
       - name: Install dependencies
         run: npm ci
