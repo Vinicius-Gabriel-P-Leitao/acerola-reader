@@ -1,35 +1,61 @@
-use std::{future::Future, path::PathBuf, pin::Pin};
+use std::{future::Future, path::PathBuf, pin::Pin, sync::Arc};
 
 use tokio::{fs, sync::mpsc};
 
-/// Um diretório, os arquivos encontrados diretamente dentro dele e seus subdiretórios diretos.
+/// Representa uma entrada de diretório descoberta durante o escaneamento.
+/// 
+/// Contém o caminho do diretório, a lista de arquivos filtrados e a lista de 
+/// subdiretórios imediatos.
 pub struct DirectoryEntry {
     pub directory: PathBuf,
     pub files: Vec<PathBuf>,
     pub subdirs: Vec<PathBuf>,
 }
 
+/// Motor de busca recursivo para arquivos no sistema de arquivos.
+/// 
+/// O `ScannerEngine` percorre árvores de diretórios de forma assíncrona, enviando
+/// notificações de pastas encontradas através de um canal (`mpsc`).
 pub struct ScannerEngine {
+    /// Profundidade máxima de recursão permitida. `None` indica profundidade ilimitada.
     pub max_depth: Option<usize>,
 }
 
-// FIXME: Criar um tratamento de erros
 impl ScannerEngine {
     pub fn new() -> Self {
         Self { max_depth: None }
     }
 
-    /// Escaneia `root` recursivamente e emite via channel um [`DirectoryEntry`]
-    /// por pasta que contiver arquivos (ou subpastas com arquivos) — sem acumular tudo na heap.
-    pub async fn scan(
-        &self, root: PathBuf, tx: mpsc::Sender<DirectoryEntry>,
-    ) -> Result<(), std::io::Error> {
-        self.walk(&root, &tx, 0).await.map(|_| ())
+    /// Inicia o escaneamento recursivo a partir de `root`.
+    /// 
+    /// # Argumentos
+    /// * `root` - O ponto de partida no sistema de arquivos.
+    /// * `tx` - Canal para envio dos resultados encontrados.
+    /// * `filter` - Função de filtragem para decidir quais arquivos devem ser incluídos no scan.
+    pub async fn scan<F>(
+        &self,
+        root: PathBuf,
+        tx: mpsc::Sender<DirectoryEntry>,
+        filter: F,
+    ) -> Result<(), std::io::Error>
+    where
+        F: Fn(&PathBuf) -> bool + Send + Sync + 'static,
+    {
+        let shared_filter = Arc::new(filter);
+        self.walk(root, tx, 0, shared_filter).await.map(|_| ())
     }
 
-    fn walk<'a>(
-        &'a self, path: &'a PathBuf, tx: &'a mpsc::Sender<DirectoryEntry>, depth: usize,
-    ) -> Pin<Box<dyn Future<Output = Result<bool, std::io::Error>> + Send + 'a>> {
+    /// Função recursiva interna para caminhar pela árvore de diretórios.
+    fn walk<F>(
+        &self,
+        path: PathBuf,
+        tx: mpsc::Sender<DirectoryEntry>,
+        depth: usize,
+        filter: Arc<F>,
+    ) -> Pin<Box<dyn Future<Output = Result<bool, std::io::Error>> + Send + '_>>
+    where
+        F: Fn(&PathBuf) -> bool + Send + Sync + 'static,
+    {
         Box::pin(async move {
             if let Some(max) = self.max_depth {
                 if depth > max {
@@ -37,27 +63,27 @@ impl ScannerEngine {
                 }
             }
 
-            let mut entries = fs::read_dir(path).await?;
+            let mut entries = fs::read_dir(&path).await?;
             let mut subdirs: Vec<PathBuf> = vec![];
             let mut files: Vec<PathBuf> = vec![];
 
             while let Ok(Some(entry)) = entries.next_entry().await {
                 let entry_path = entry.path();
-                let meta = entry.metadata().await?;
+                let metadata = entry.metadata().await?;
 
-                if meta.is_dir() {
+                if metadata.is_dir() {
                     subdirs.push(entry_path);
                     continue;
                 }
 
-                if meta.is_file() {
+                if metadata.is_file() && filter(&entry_path) {
                     files.push(entry_path);
                 }
             }
 
             let mut child_found = false;
-            for subdir in &subdirs {
-                if self.walk(subdir, tx, depth + 1).await? {
+            for subdirectory in subdirs.clone() {
+                if self.walk(subdirectory, tx.clone(), depth + 1, filter.clone()).await? {
                     child_found = true;
                 }
             }
@@ -65,7 +91,13 @@ impl ScannerEngine {
             let should_emit = !files.is_empty() || child_found;
 
             if should_emit {
-                let _ = tx.send(DirectoryEntry { directory: path.clone(), files, subdirs }).await;
+                let _ = tx
+                    .send(DirectoryEntry {
+                        directory: path,
+                        files,
+                        subdirs,
+                    })
+                    .await;
             }
 
             Ok(should_emit)
@@ -87,7 +119,7 @@ mod tests {
         let engine = ScannerEngine::new();
 
         tokio::spawn(async move {
-            engine.scan(root, tx).await.unwrap();
+            engine.scan(root, tx, |_| true).await.unwrap();
         });
 
         let mut result = vec![];
@@ -126,8 +158,6 @@ mod tests {
         let mut entries = collect(root.path().to_path_buf()).await;
         entries.sort_by_key(|e| e.directory.clone());
 
-        // Esperamos 3 entradas: root, Berserk e HQ
-        // root é emitido porque seus filhos têm arquivos.
         assert_eq!(entries.len(), 3);
 
         let paths: Vec<_> = entries.iter().map(|e| e.directory.clone()).collect();
@@ -146,7 +176,6 @@ mod tests {
 
         let entries = collect(root.path().to_path_buf()).await;
 
-        // Esperamos 3: root, root/Mangas, root/Mangas/Berserk
         assert_eq!(entries.len(), 3);
         let paths: Vec<_> = entries.iter().map(|e| e.directory.clone()).collect();
         assert!(paths.contains(&mangas));
@@ -168,7 +197,7 @@ mod tests {
         let root_path = root.path().to_path_buf();
 
         tokio::spawn(async move {
-            engine.scan(root_path, tx).await.unwrap();
+            engine.scan(root_path, tx, |_| true).await.unwrap();
         });
 
         let mut entries = vec![];
@@ -176,7 +205,6 @@ mod tests {
             entries.push(entry);
         }
 
-        // root (0) e Mangas (1). Berserk (2) é ignorado pelo max_depth.
         assert_eq!(entries.len(), 2);
     }
 

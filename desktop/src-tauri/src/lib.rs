@@ -165,7 +165,37 @@ mod app_bootstrap {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // INFO: Configura a localização da biblioteca PDFium antes de iniciar o app
+    #[cfg(debug_assertions)]
+    {
+        // Em desenvolvimento, busca a pasta .bin relativa ao diretório do manifesto (Cargo.toml)
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        let bin_path = std::path::Path::new(&manifest_dir).join(".bin");
+        pdfium::set_library_location(bin_path.to_str().unwrap_or("."));
+    }
+
+    let app_context = tauri::generate_context!();
+
+    #[cfg(not(debug_assertions))]
+    {
+        // Em produção, a DLL é empacotada como um recurso.
+        // Como o set_library_location precisa ser chamado cedo, tentamos prever o caminho.
+        // Geralmente, os recursos ficam em uma pasta específica relativa ao executável.
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(exe_dir) = exe_path.parent() {
+                // O Tauri organiza os recursos em uma estrutura específica
+                let resource_dir = exe_dir.join("_up_").join(".bin");
+                if resource_dir.exists() {
+                    pdfium::set_library_location(resource_dir.to_str().unwrap_or("."));
+                } else {
+                    // Fallback para a pasta do executável
+                    pdfium::set_library_location(exe_dir.to_str().unwrap_or("."));
+                }
+            }
+        }
+    }
+
     app_bootstrap::build()
-        .run(tauri::generate_context!())
-        .expect("Error while running tauri application");
+        .run(app_context)
+        .expect("Erro ao executar a aplicação Tauri");
 }
