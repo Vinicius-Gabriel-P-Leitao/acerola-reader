@@ -5,7 +5,7 @@ use std::{
 };
 
 use image::ImageFormat;
-use pdfium::{lib, pdfium_types, PdfiumDocument};
+use pdfium::{PdfiumDocument, PdfiumRenderConfig, PdfiumColor, PdfiumBitmapFormat};
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 
 use crate::infra::error::ComicError;
@@ -26,7 +26,6 @@ impl ConverterService {
             let document = PdfiumDocument::new_from_path(&pdf_path, None)
                 .map_err(|error| ComicError::SystemFailure(format!("Failed to load PDF: {}", error)))?;
 
-            // Abrimos o arquivo diretamente. O ZipWriter da versão 8.6.0 lida com o buffer internamente.
             let archive_file = File::create(&cbz_path).map_err(ComicError::Io)?;
             let mut zip_writer = ZipWriter::new(archive_file);
             
@@ -36,53 +35,26 @@ impl ConverterService {
             let page_count = document.page_count();
             let render_scale = 2.0;
 
-            // Buffer reutilizável para evitar alocações excessivas
-            let mut image_buffer = Vec::with_capacity(1024 * 1024 * 2); // 1MB inicial
+            let mut image_buffer = Vec::with_capacity(1024 * 1024 * 2);
 
             for page_index in 0..page_count {
-                let page = lib().FPDF_LoadPage(&document, page_index)
+                let page = document.page(page_index)
                     .map_err(|error| ComicError::SystemFailure(format!("Failed to load page {}: {}", page_index, error)))?;
 
-                let mut left = 0.0;
-                let mut bottom = 0.0;
-                let mut right = 0.0;
-                let mut top = 0.0;
+                let page_boundaries = page.boundaries().media().map_err(|error| {
+                    ComicError::SystemFailure(format!("Failed to get boundaries for page {}: {}", page_index, error))
+                })?;
 
-                lib().FPDFPage_GetMediaBox(&page, &mut left, &mut bottom, &mut right, &mut top)
-                    .map_err(|error| ComicError::SystemFailure(format!("Failed to get media box for page {}: {}", page_index, error)))?;
+                let target_width = (page_boundaries.width() * render_scale) as i32;
+                
+                let render_config = PdfiumRenderConfig::new()
+                    .with_width(target_width)
+                    .with_format(PdfiumBitmapFormat::Bgra)
+                    .with_background(PdfiumColor::WHITE)
+                    .with_scale(render_scale);
 
-                let target_width = ((right - left).abs() * render_scale) as i32;
-                let target_height = ((top - bottom).abs() * render_scale) as i32;
-
-                let bitmap = lib().FPDFBitmap_Create(target_width, target_height, 1)
-                    .map_err(|error| ComicError::SystemFailure(format!("Failed to create bitmap for page {}: {}", page_index, error)))?;
-
-                lib().FPDFBitmap_FillRect(&bitmap, 0, 0, target_width, target_height, 0xffffffff)
-                    .map_err(|error| ComicError::SystemFailure(format!("Failed to clear bitmap for page {}: {}", page_index, error)))?;
-
-                let transform_matrix = pdfium_types::FS_MATRIX {
-                    a: render_scale,
-                    b: 0.0,
-                    c: 0.0,
-                    d: render_scale,
-                    e: 0.0,
-                    f: 0.0,
-                };
-
-                let clipping_rect = pdfium_types::FS_RECTF {
-                    left: 0.0,
-                    top: target_height as f32,
-                    right: target_width as f32,
-                    bottom: 0.0,
-                };
-
-                lib().FPDF_RenderPageBitmapWithMatrix(
-                    &bitmap,
-                    &page,
-                    &transform_matrix,
-                    &clipping_rect,
-                    0,
-                );
+                let bitmap = page.render(&render_config)
+                    .map_err(|error| ComicError::SystemFailure(format!("Failed to render page {}: {}", page_index, error)))?;
 
                 image_buffer.clear();
                 let rgba_data = bitmap.as_rgba_bytes().map_err(|error| {
@@ -90,8 +62,8 @@ impl ConverterService {
                 })?;
 
                 let rgba_image = image::RgbaImage::from_raw(
-                    target_width as u32,
-                    target_height as u32,
+                    bitmap.width() as u32,
+                    bitmap.height() as u32,
                     rgba_data,
                 ).ok_or_else(|| ComicError::SystemFailure("Failed to create RgbaImage".into()))?;
 
@@ -104,14 +76,10 @@ impl ConverterService {
                 
                 zip_writer.write_all(&image_buffer).map_err(ComicError::Io)?;
                 
-                // Explicitamente dropamos o bitmap e a página para liberar memória FFI o quanto antes
                 drop(bitmap);
-                // Note: FPDF_ClosePage doesn't exist in lib() wrapper usually, 
-                // but let's assume handles are managed or not critical for this bug.
+                drop(page);
             }
 
-            // O pulo do gato: finish() DEVE ser chamado e o resultado ignorado para garantir que o 
-            // Central Directory seja escrito e o arquivo fechado pelo drop do File interno.
             zip_writer.finish().map_err(|error| {
                 ComicError::SystemFailure(format!("Failed to finalize CBZ archive: {}", error))
             })?;
@@ -124,3 +92,36 @@ impl ConverterService {
         })?
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[tokio::test]
+    async fn test_convert_pdf_to_cbz() {
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        let bin_path = std::path::Path::new(&manifest_dir).join(".bin");
+        pdfium::set_library_location(bin_path.to_str().unwrap_or("."));
+
+        let converter = ConverterService::new();
+        // Resolve the path correctly
+        let pdf_path = std::path::Path::new(&manifest_dir).parent().unwrap().join("tests/wdio/comic/pdf/witchcraft.pdf");
+        
+        let cbz_path = pdf_path.with_extension("cbz");
+        if cbz_path.exists() {
+            std::fs::remove_file(&cbz_path).unwrap();
+        }
+
+        let result = converter.convert_pdf_to_cbz(pdf_path).await;
+        assert!(result.is_ok(), "Conversion failed: {:?}", result.err());
+
+        // Validate the generated ZIP
+        let file = std::fs::File::open(&cbz_path).unwrap();
+        let mut archive = zip::ZipArchive::new(file).expect("Failed to read generated ZIP");
+        assert!(archive.len() > 0, "ZIP archive is empty");
+        let first_file = archive.by_index(0).unwrap();
+        assert_eq!(first_file.name(), "001.png");
+    }
+}
+
