@@ -15,8 +15,9 @@ import br.acerola.comic.logging.LogSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -51,7 +52,7 @@ class PdfToCbzConverter
                     val outputStream = context.contentResolver.openOutputStream(cbzFile.uri)
                         ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
 
-                    java.util.zip.ZipOutputStream(outputStream).use { zip ->
+                    ZipOutputStream(outputStream).use { zip ->
                         for (it in 0 until pageCount) {
                             val page = pdfRenderer.openPage(it)
 
@@ -68,7 +69,7 @@ class PdfToCbzConverter
                             page.close()
 
                             val pageName = String.format(Locale.ENGLISH, "%04d.jpg", it + 1)
-                            zip.putNextEntry(java.util.zip.ZipEntry(pageName))
+                            zip.putNextEntry(ZipEntry(pageName))
                             
                             // Comprime direto para o disco
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, zip)
