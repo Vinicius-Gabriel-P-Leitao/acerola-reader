@@ -4,6 +4,7 @@ use std::{
     path::PathBuf,
 };
 
+use futures::stream::{self, StreamExt};
 use tokio::{fs, sync::mpsc};
 
 use crate::{
@@ -40,7 +41,7 @@ use crate::{
 ///
 /// Este serviço é responsável por percorrer diretórios, identificar pastas que representam
 /// obras (Comics), gerenciar capítulos e volumes, além de lidar com a conversão de formatos.
-/// 
+///
 /// ### IDs Determinísticos
 /// Utiliza IDs baseados em hash do caminho relativo para garantir consistência entre scans
 /// e facilitar futuras sincronizações sem depender do estado do banco de dados.
@@ -58,6 +59,8 @@ pub struct ComicScannerService {
     converter: ConverterService,
 }
 
+const PDF_CONVERSION_CONCURRENCY: usize = 3;
+
 impl ComicScannerService {
     pub fn new(root: PathBuf, pool: sqlx::SqlitePool) -> Self {
         Self {
@@ -71,19 +74,20 @@ impl ComicScannerService {
     }
 
     /// Executa um escaneamento completo (Refresh), indexando novas pastas e capítulos.
-    /// 
-    /// Utiliza a estratégia `INSERT OR IGNORE`, garantindo que itens já existentes 
+    ///
+    /// Utiliza a estratégia `INSERT OR IGNORE`, garantindo que itens já existentes
     /// não sejam duplicados nem reprocessados desnecessariamente.
     pub async fn refresh_library(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let mut entries = self.collect_entries(path).await?;
         entries.sort_by_key(|entry| entry.directory.clone());
+
+        // Converte todos os PDFs de todos os diretórios em paralelo antes do scan
+        self.pre_convert_all_pdfs(&entries).await;
 
         let repository = self.comic_repo.clone();
         let mut processed_paths: Vec<String> = vec![];
@@ -92,7 +96,9 @@ impl ComicScannerService {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
             // Pula se o diretório atual for subdiretório de algum já processado como comic
-            if processed_paths.iter().any(|processed| directory_path.starts_with(processed) && directory_path != *processed) {
+            if processed_paths.iter().any(|processed| {
+                directory_path.starts_with(processed) && directory_path != *processed
+            }) {
                 continue;
             }
 
@@ -117,15 +123,13 @@ impl ComicScannerService {
     }
 
     /// Realiza um escaneamento incremental, detectando apenas modificações no disco.
-    /// 
+    ///
     /// # Comportamento
     /// - Adiciona novos quadrinhos.
     /// - Atualiza quadrinhos cujas pastas tiveram data de modificação alterada.
     /// - Remove do banco de dados registros cujas pastas não existem mais no disco.
     pub async fn incremental_scan(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
@@ -133,16 +137,17 @@ impl ComicScannerService {
         let mut discovered = self.collect_entries(path).await?;
         discovered.sort_by_key(|entry| entry.directory.clone());
 
+        // Converte todos os PDFs de todos os diretórios em paralelo antes do scan
+        self.pre_convert_all_pdfs(&discovered).await;
+
         let indexed: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
         let repository = self.comic_repo.clone();
 
         let indexed_map: HashMap<String, &ComicDirectory> =
             indexed.iter().map(|comic| (comic.path.clone(), comic)).collect();
 
-        let discovered_paths: HashSet<String> = discovered
-            .iter()
-            .map(|entry| entry.directory.to_string_lossy().to_string())
-            .collect();
+        let discovered_paths: HashSet<String> =
+            discovered.iter().map(|entry| entry.directory.to_string_lossy().to_string()).collect();
 
         for comic in &indexed {
             if !discovered_paths.contains(&comic.path) {
@@ -155,7 +160,9 @@ impl ComicScannerService {
         for entry in discovered {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
-            if processed_paths.iter().any(|processed| directory_path.starts_with(processed) && directory_path != *processed) {
+            if processed_paths.iter().any(|processed| {
+                directory_path.starts_with(processed) && directory_path != *processed
+            }) {
                 continue;
             }
 
@@ -199,13 +206,11 @@ impl ComicScannerService {
     }
 
     /// Reconstrói a biblioteca do zero, ignorando o estado atual do banco de dados.
-    /// 
-    /// Utiliza `DELETE` seguido de `INSERT` para todos os itens encontrados, o que 
+    ///
+    /// Utiliza `DELETE` seguido de `INSERT` para todos os itens encontrados, o que
     /// força a re-verificação de todos os arquivos e a atualização de todos os metadados.
     pub async fn rebuild_library(
-        &self,
-        path: PathBuf,
-        mut on_progress: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
     ) -> Result<(), ComicError> {
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
@@ -213,13 +218,18 @@ impl ComicScannerService {
         let mut entries = self.collect_entries(path).await?;
         entries.sort_by_key(|entry| entry.directory.clone());
 
+        // Converte todos os PDFs de todos os diretórios em paralelo antes do scan
+        self.pre_convert_all_pdfs(&entries).await;
+
         let repository = self.comic_repo.clone();
         let mut processed_paths: Vec<String> = vec![];
 
         for entry in entries {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
-            if processed_paths.iter().any(|processed| directory_path.starts_with(processed) && directory_path != *processed) {
+            if processed_paths.iter().any(|processed| {
+                directory_path.starts_with(processed) && directory_path != *processed
+            }) {
                 continue;
             }
 
@@ -261,14 +271,11 @@ impl ComicScannerService {
     }
 
     /// Processa uma única entrada de diretório, classificando arquivos e convertendo PDFs.
-    /// 
+    ///
     /// Esta é a função principal que aplica a lógica de middleware para interceptar
     /// formatos não suportados nativamente pelo banco de dados (PDF) e transformá-los.
     async fn process_entry<F, Fut>(
-        &self,
-        entry: DirectoryEntry,
-        templates: &[ArchiveTemplate],
-        persist: F,
+        &self, entry: DirectoryEntry, templates: &[ArchiveTemplate], persist: F,
     ) -> Result<bool, ComicError>
     where
         F: FnOnce(ComicDirectory) -> Fut,
@@ -310,30 +317,18 @@ impl ComicScannerService {
             }
         }
 
-        // Middleware: Convert PDFs to CBZ
-        for pdf_path in pdf_files {
-            let cbz_path = pdf_path.with_extension("cbz");
-            if !comic_files.contains(&cbz_path) {
-                match self.converter.convert_pdf_to_cbz(pdf_path.clone()).await {
-                    Ok(converted_path) => {
-                        comic_files.push(converted_path);
-                    },
-                    Err(error) => {
-                        tracing::warn!("Failed to convert PDF to CBZ for {:?}: {}", pdf_path, error);
-                    },
-                }
-            }
-        }
+        let converted_files = self.convert_pdf_files(pdf_files, &comic_files, "comic").await;
+        comic_files.extend(converted_files);
 
-        let volume_pattern_strs: Vec<&str> = volume_templates
-            .iter()
-            .map(|template| template.pattern.as_str())
-            .collect();
+        let volume_pattern_strs: Vec<&str> =
+            volume_templates.iter().map(|template| template.pattern.as_str()).collect();
 
         let mut matched_volumes = vec![];
         for subdirectory in &entry.subdirs {
-            let directory_name = subdirectory.file_name().and_then(|name| name.to_str()).unwrap_or("");
-            if let Some(pattern) = detect_template(directory_name, &volume_pattern_strs, |_| Ok(())) {
+            let directory_name =
+                subdirectory.file_name().and_then(|name| name.to_str()).unwrap_or("");
+            if let Some(pattern) = detect_template(directory_name, &volume_pattern_strs, |_| Ok(()))
+            {
                 matched_volumes.push((subdirectory, pattern));
             }
         }
@@ -375,7 +370,8 @@ impl ComicScannerService {
         }
 
         for (subdirectory, pattern) in matched_volumes {
-            let directory_name = subdirectory.file_name().and_then(|name| name.to_str()).unwrap_or("");
+            let directory_name =
+                subdirectory.file_name().and_then(|name| name.to_str()).unwrap_or("");
 
             let volume_sort = extract_chapter_parts(directory_name, pattern, |_| Ok(()))
                 .map(|(vol, dec)| ChapterArchive::format_sort(vol, dec))
@@ -412,14 +408,9 @@ impl ComicScannerService {
                 }
             }
 
-            for pdf_path in volume_pdfs {
-                let cbz_path = pdf_path.with_extension("cbz");
-                if !volume_archives.contains(&cbz_path) {
-                    if let Ok(converted_path) = self.converter.convert_pdf_to_cbz(pdf_path).await {
-                        volume_archives.push(converted_path);
-                    }
-                }
-            }
+            let converted_files =
+                self.convert_pdf_files(volume_pdfs, &volume_archives, "volume").await;
+            volume_archives.extend(converted_files);
 
             let volume_id = path_hash(subdirectory);
             let volume = VolumeArchive {
@@ -466,10 +457,141 @@ impl ComicScannerService {
         Ok(files)
     }
 
+    async fn convert_pdf_files(
+        &self, pdf_files: Vec<PathBuf>, existing_archives: &[PathBuf], scope: &'static str,
+    ) -> Vec<PathBuf> {
+        let existing_archives: HashSet<PathBuf> = existing_archives.iter().cloned().collect();
+        let mut seen_targets: HashSet<PathBuf> = HashSet::new();
+        let mut pre_converted: Vec<(usize, PathBuf)> = Vec::new();
+
+        let conversion_jobs: Vec<(usize, PathBuf)> = pdf_files
+            .into_iter()
+            .enumerate()
+            .filter_map(|(index, pdf_path)| {
+                let cbz_path = pdf_path.with_extension("cbz");
+
+                if existing_archives.contains(&cbz_path) || !seen_targets.insert(cbz_path.clone()) {
+                    return None;
+                }
+
+                // Já foi pré-convertido pelo pre_convert_all_pdfs — inclui sem reprocessar
+                if cbz_path.exists() {
+                    pre_converted.push((index, cbz_path));
+                    return None;
+                }
+
+                Some((index, pdf_path))
+            })
+            .collect();
+
+        if conversion_jobs.is_empty() {
+            let mut result = pre_converted;
+            result.sort_unstable_by_key(|(i, _)| *i);
+            return result.into_iter().map(|(_, p)| p).collect();
+        }
+
+        tracing::info!(
+            scope,
+            total_pdfs = conversion_jobs.len(),
+            concurrency = PDF_CONVERSION_CONCURRENCY,
+            "Starting PDF conversion batch"
+        );
+
+        let stream_results =
+            stream::iter(conversion_jobs.into_iter().map(|(index, pdf_path)| async move {
+                let pdf_label = pdf_path.to_string_lossy().to_string();
+
+                match self.converter.convert_pdf_to_cbz(pdf_path).await {
+                    Ok(converted_path) => {
+                        tracing::info!(
+                            scope,
+                            pdf = %pdf_label,
+                            cbz = %converted_path.to_string_lossy(),
+                            "Finished PDF conversion"
+                        );
+                        (index, Some(converted_path))
+                    },
+                    Err(error) => {
+                        tracing::warn!(
+                            scope,
+                            pdf = %pdf_label,
+                            error = %error,
+                            "Failed to convert PDF to CBZ"
+                        );
+                        (index, None)
+                    },
+                }
+            }))
+            .buffer_unordered(PDF_CONVERSION_CONCURRENCY)
+            .collect::<Vec<_>>()
+            .await;
+
+        let mut all_results = pre_converted;
+        for (index, path_opt) in stream_results {
+            if let Some(path) = path_opt {
+                all_results.push((index, path));
+            }
+        }
+        all_results.sort_unstable_by_key(|(i, _)| *i);
+        all_results.into_iter().map(|(_, p)| p).collect()
+    }
+
+    /// Pré-converte todos os PDFs encontrados em TODAS as entradas antes do scan principal.
+    ///
+    /// Garante que PDFs de diretórios diferentes sejam processados em paralelo
+    /// (até [`PDF_CONVERSION_CONCURRENCY`] conversões simultâneas) em vez de aguardar
+    /// o processamento sequencial de cada entrada no loop principal.
+    async fn pre_convert_all_pdfs(&self, entries: &[DirectoryEntry]) {
+        let mut pdf_paths: HashSet<PathBuf> = HashSet::new();
+
+        let add_pdfs = |files: &[PathBuf], paths: &mut HashSet<PathBuf>| {
+            for file in files.iter().filter(|f| {
+                f.extension()
+                    .and_then(|e| e.to_str())
+                    .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf))
+            }) {
+                if !file.with_extension("cbz").exists() {
+                    paths.insert(file.clone());
+                }
+            }
+        };
+
+        for entry in entries {
+            add_pdfs(&entry.files, &mut pdf_paths);
+
+            for subdir in &entry.subdirs {
+                if let Ok(subdir_files) = self.collect_files(subdir).await {
+                    add_pdfs(&subdir_files, &mut pdf_paths);
+                }
+            }
+        }
+
+        if pdf_paths.is_empty() {
+            return;
+        }
+
+        tracing::info!(
+            total_pdfs = pdf_paths.len(),
+            concurrency = PDF_CONVERSION_CONCURRENCY,
+            "Pre-converting all PDFs across directories"
+        );
+
+        stream::iter(pdf_paths)
+            .map(|pdf| self.converter.convert_pdf_to_cbz(pdf))
+            .buffer_unordered(PDF_CONVERSION_CONCURRENCY)
+            .for_each(|result| async {
+                match result {
+                    Ok(cbz) => {
+                        tracing::info!(cbz = %cbz.to_string_lossy(), "PDF pre-converted")
+                    },
+                    Err(e) => tracing::warn!(error = %e, "PDF pre-conversion failed"),
+                }
+            })
+            .await;
+    }
+
     fn detect_template_for<'a>(
-        &self,
-        files: &[PathBuf],
-        templates: &[&'a ArchiveTemplate],
+        &self, files: &[PathBuf], templates: &[&'a ArchiveTemplate],
     ) -> Option<&'a ArchiveTemplate> {
         files
             .first()
@@ -524,10 +646,7 @@ mod tests {
     }
 
     async fn create_volume_dir(
-        root: &TempDir,
-        comic: &str,
-        volume: &str,
-        chapters: &[&str],
+        root: &TempDir, comic: &str, volume: &str, chapters: &[&str],
     ) -> PathBuf {
         let dir = root.path().join(comic).join(volume);
         fs::create_dir_all(&dir).await.unwrap();
@@ -602,10 +721,12 @@ mod tests {
 
         // Seed volume templates
         let pool_ref = &pool;
-        sqlx::query(include_str!("../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"))
-            .execute(pool_ref)
-            .await
-            .unwrap();
+        sqlx::query(include_str!(
+            "../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"
+        ))
+        .execute(pool_ref)
+        .await
+        .unwrap();
 
         service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
 
@@ -703,5 +824,48 @@ mod tests {
         let before = count_chapters(&pool).await;
         service.rebuild_library(root.path().to_path_buf(), |_| {}).await.unwrap();
         assert_eq!(count_chapters(&pool).await, before);
+    }
+
+    #[tokio::test]
+    async fn refresh_library_pre_converts_pdfs() {
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        let bin_path = std::path::Path::new(&manifest_dir).join(".bin");
+        pdfium::set_library_location(bin_path.to_str().unwrap_or("."));
+
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        let fixture_pdf = std::path::Path::new(&manifest_dir)
+            .parent()
+            .unwrap()
+            .join("tests/wdio/comic/pdf/witchcraft.pdf");
+
+        // Set up directory with PDFs
+        let comic_dir = root.path().join("PdfComic");
+        fs::create_dir_all(&comic_dir).await.unwrap();
+        fs::copy(&fixture_pdf, comic_dir.join("root.pdf")).await.unwrap();
+        
+        let vol_dir = comic_dir.join("Vol. 01");
+        fs::create_dir_all(&vol_dir).await.unwrap();
+        fs::copy(&fixture_pdf, vol_dir.join("vol.pdf")).await.unwrap();
+
+        // Seed templates so volume is detected
+        sqlx::query(include_str!(
+            "../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"
+        ))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        service.refresh_library(root.path().to_path_buf(), |_| {}).await.unwrap();
+
+        // Check if the CBZs were generated
+        assert!(comic_dir.join("root.cbz").exists(), "root.cbz should have been generated");
+        assert!(vol_dir.join("vol.cbz").exists(), "vol.cbz should have been generated");
+
+        // Verify indexing
+        assert_eq!(count_comics(&pool).await, 1, "Comic should be indexed");
+        assert_eq!(count_chapters(&pool).await, 2, "Both CBZs should be indexed as chapters");
+        assert_eq!(count_volumes(&pool).await, 1, "Volume should be indexed");
     }
 }

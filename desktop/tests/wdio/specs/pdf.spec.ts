@@ -5,7 +5,7 @@ import {
 	getPathname,
 	invokeTauriCommand,
 	navigateTo,
-	waitForAppReady,
+	waitForAppReady
 } from '../helpers/app';
 
 describe('PDF to CBZ E2E', () => {
@@ -33,7 +33,10 @@ describe('PDF to CBZ E2E', () => {
 		});
 
 		// Clica no capitulo convertido
-		const chapterItem = await firstDisplayed('//*[contains(normalize-space(), "witchcraft")]', 10_000);
+		const chapterItem = await firstDisplayed(
+			'//*[contains(normalize-space(), "witchcraft")]',
+			10_000
+		);
 		await chapterItem.click();
 
 		await browser.waitUntil(async () => (await getPathname()) === '/reader', {
