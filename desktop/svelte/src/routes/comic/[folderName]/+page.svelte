@@ -38,8 +38,6 @@
 	let expandedVolumeId = $state<string | null>(null);
 
 	let activeTab = $state('content');
-	let displayMode = $state('Lista');
-	let mediaType = $state('Manga');
 	let isAscending = $state(true);
 	let searchQuery = $state('');
 
@@ -376,14 +374,10 @@
 								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false
 							}}
 							state={{
-								displayMode,
-								mediaType,
 								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode
 							}}
 							events={{
-								onDisplayModeChange: (value) => (displayMode = value),
-								onMediaTypeChange: (value) => (mediaType = value),
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value)
 							}}

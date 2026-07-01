@@ -113,25 +113,12 @@
 			},
 			"preferences": {
 				"reading": "Reading",
-				"display_mode": "Display Mode",
-				"display_mode_desc": "Choose between list or grid view for chapters.",
-				"display_mode_list": "List",
-				"display_mode_grid": "Grid",
 				"volume_highlight": "Volume Highlight",
 				"volume_highlight_desc": "Choose how volumes are highlighted: as covers or banners.",
 				"volume_highlight_cover": "Cover",
 				"volume_highlight_banner": "Banner",
 				"chapters_per_page": "Chapters per page",
-				"chapters_per_page_desc": "Number of chapters displayed per page.",
-				"metadata": "Metadata",
-				"media_type": "Media Type",
-				"media_type_desc": "Select the media type for this comic.",
-				"media_types": {
-					"manga": "Manga",
-					"hq": "Comic",
-					"novel": "Novel",
-					"webtoon": "Webtoon"
-				}
+				"chapters_per_page_desc": "Number of chapters displayed per page."
 			},
 			"volume": {
 				"chapters_included": "{count} chapters included",

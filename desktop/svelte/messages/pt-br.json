@@ -113,25 +113,12 @@
 			},
 			"preferences": {
 				"reading": "Leitura",
-				"display_mode": "Modo de Exibição",
-				"display_mode_desc": "Escolha entre visualização em lista ou grade para os capítulos.",
-				"display_mode_list": "Lista",
-				"display_mode_grid": "Grade",
 				"volume_highlight": "Destaque do Volume",
 				"volume_highlight_desc": "Escolha como os volumes são destacados: como capas ou banners.",
 				"volume_highlight_cover": "Capa",
 				"volume_highlight_banner": "Banner",
 				"chapters_per_page": "Capítulos por página",
-				"chapters_per_page_desc": "Número de capítulos exibidos por página.",
-				"metadata": "Metadados",
-				"media_type": "Tipo de Mídia",
-				"media_type_desc": "Selecione o tipo de mídia para este mangá.",
-				"media_types": {
-					"manga": "Mangá",
-					"hq": "HQ",
-					"novel": "Novel",
-					"webtoon": "Webtoon"
-				}
+				"chapters_per_page_desc": "Número de capítulos exibidos por página."
 			},
 			"volume": {
 				"chapters_included": "{count} capítulos inclusos",
