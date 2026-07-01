@@ -402,6 +402,7 @@ impl ComicScannerService {
                     continue;
                 }
 
+                // FIXME: Melhorar esse código
                 if archive_guard.is_allowed(&file).is_ok() {
                     volume_archives.push(file);
                 } else if let Some(extension) = file.extension().and_then(|ext| ext.to_str()) {

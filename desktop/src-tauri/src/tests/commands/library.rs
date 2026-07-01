@@ -51,7 +51,7 @@ fn create_manga_dir(root: &TempDir, name: &str, chapters: &[&str]) -> Result<Pat
 
 async fn refresh_direct(pool: &SqlitePool, root: &TempDir) -> Result<()> {
     let service = ComicScannerService::new(root.path().to_path_buf(), pool.clone());
-    service.refresh_library(root.path().to_path_buf(), |_| {}).await?;
+    service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await?;
     Ok(())
 }
 
