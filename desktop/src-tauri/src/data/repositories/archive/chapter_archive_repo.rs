@@ -200,20 +200,20 @@ impl ChapterRepository {
                 va.name AS volume_name,
                 va.volume_sort,
                 va.is_special AS volume_is_special
-             FROM chapter_archive ca
-             LEFT JOIN volume_archive va ON ca.volume_id_fk = va.id
-             WHERE ca.comic_directory_fk = ? AND ca.volume_id_fk = ?
-             ORDER BY 
-                CAST(ca.chapter_sort AS INTEGER) DESC, 
-                CAST(
-                    CASE 
-                        WHEN ca.chapter_sort LIKE '%.%' 
-                        THEN SUBSTR(ca.chapter_sort, INSTR(ca.chapter_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) DESC,
-                (ca.is_special OR COALESCE(va.is_special, 0)) ASC
-             LIMIT ? OFFSET ?",
+                FROM chapter_archive ca
+                LEFT JOIN volume_archive va ON ca.volume_id_fk = va.id
+                WHERE ca.comic_directory_fk = ? AND ca.volume_id_fk = ?
+                ORDER BY 
+                    CAST(ca.chapter_sort AS INTEGER) DESC, 
+                    CAST(
+                        CASE 
+                            WHEN ca.chapter_sort LIKE '%.%' 
+                            THEN SUBSTR(ca.chapter_sort, INSTR(ca.chapter_sort, '.') + 1) 
+                            ELSE 0 
+                        END AS INTEGER
+                    ) DESC,
+                    (ca.is_special OR COALESCE(va.is_special, 0)) ASC
+                LIMIT ? OFFSET ?",
         )
         .bind(comic_directory_fk)
         .bind(volume_id_fk)

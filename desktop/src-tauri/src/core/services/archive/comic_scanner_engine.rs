@@ -305,18 +305,26 @@ impl ComicScannerService {
 
             if comic_cover.is_none() && is_cover {
                 comic_cover = Some(file.to_string_lossy().to_string());
+                continue;
             }
 
             if comic_banner.is_none() && is_banner {
                 comic_banner = Some(file.to_string_lossy().to_string());
+                continue;
             }
 
             if is_archive {
                 comic_files.push(file);
-            } else if let Some(extension) = file.extension().and_then(|ext| ext.to_str()) {
-                if ArchiveFormat::from_extension(extension) == Some(ArchiveFormat::Pdf) {
-                    pdf_files.push(file);
-                }
+                continue;
+            }
+
+            let is_pdf = file
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf));
+
+            if is_pdf {
+                pdf_files.push(file);
             }
         }
 
@@ -402,13 +410,18 @@ impl ComicScannerService {
                     continue;
                 }
 
-                // FIXME: Melhorar esse código
                 if archive_guard.is_allowed(&file).is_ok() {
                     volume_archives.push(file);
-                } else if let Some(extension) = file.extension().and_then(|ext| ext.to_str()) {
-                    if ArchiveFormat::from_extension(extension) == Some(ArchiveFormat::Pdf) {
-                        volume_pdfs.push(file);
-                    }
+                    continue;
+                }
+
+                let is_pdf = file
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf));
+
+                if is_pdf {
+                    volume_pdfs.push(file);
                 }
             }
 

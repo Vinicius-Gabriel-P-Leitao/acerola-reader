@@ -54,20 +54,20 @@ impl VolumeRepository {
             "SELECT 
                 va.*,
                 COUNT(ca.id) as chapter_count
-             FROM volume_archive va
-             LEFT JOIN chapter_archive ca ON ca.volume_id_fk = va.id
-             WHERE va.comic_directory_fk = ?
-             GROUP BY va.id
-             ORDER BY 
-                va.is_special ASC,
-                CAST(va.volume_sort AS INTEGER) ASC,
-                CAST(
-                    CASE 
-                        WHEN va.volume_sort LIKE '%.%' 
-                        THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) ASC",
+                FROM volume_archive va
+                LEFT JOIN chapter_archive ca ON ca.volume_id_fk = va.id
+                WHERE va.comic_directory_fk = ?
+                GROUP BY va.id
+                ORDER BY 
+                    va.is_special ASC,
+                    CAST(va.volume_sort AS INTEGER) ASC,
+                    CAST(
+                        CASE 
+                            WHEN va.volume_sort LIKE '%.%' 
+                            THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
+                            ELSE 0 
+                        END AS INTEGER
+                    ) ASC",
         )
         .bind(comic_directory_fk)
         .fetch_all(&self.pool)

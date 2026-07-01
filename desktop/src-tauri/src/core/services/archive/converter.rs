@@ -87,6 +87,7 @@ impl ConverterService {
                         if right == 0.0 {
                             right = lib().FPDF_GetPageWidth(&page) as f32;
                         }
+                        
                         top = lib().FPDF_GetPageHeightF(&page) as f32;
                         if top == 0.0 {
                             top = lib().FPDF_GetPageHeight(&page) as f32;
