@@ -3,8 +3,8 @@ use std::{future::Future, path::PathBuf, pin::Pin, sync::Arc};
 use tokio::{fs, sync::mpsc};
 
 /// Representa uma entrada de diretório descoberta durante o escaneamento.
-/// 
-/// Contém o caminho do diretório, a lista de arquivos filtrados e a lista de 
+///
+/// Contém o caminho do diretório, a lista de arquivos filtrados e a lista de
 /// subdiretórios imediatos.
 pub struct DirectoryEntry {
     pub directory: PathBuf,
@@ -13,7 +13,7 @@ pub struct DirectoryEntry {
 }
 
 /// Motor de busca recursivo para arquivos no sistema de arquivos.
-/// 
+///
 /// O `ScannerEngine` percorre árvores de diretórios de forma assíncrona, enviando
 /// notificações de pastas encontradas através de um canal (`mpsc`).
 pub struct ScannerEngine {
@@ -27,16 +27,13 @@ impl ScannerEngine {
     }
 
     /// Inicia o escaneamento recursivo a partir de `root`.
-    /// 
+    ///
     /// # Argumentos
     /// * `root` - O ponto de partida no sistema de arquivos.
     /// * `tx` - Canal para envio dos resultados encontrados.
     /// * `filter` - Função de filtragem para decidir quais arquivos devem ser incluídos no scan.
     pub async fn scan<F>(
-        &self,
-        root: PathBuf,
-        tx: mpsc::Sender<DirectoryEntry>,
-        filter: F,
+        &self, root: PathBuf, tx: mpsc::Sender<DirectoryEntry>, filter: F,
     ) -> Result<(), std::io::Error>
     where
         F: Fn(&PathBuf) -> bool + Send + Sync + 'static,
@@ -47,11 +44,7 @@ impl ScannerEngine {
 
     /// Função recursiva interna para caminhar pela árvore de diretórios.
     fn walk<F>(
-        &self,
-        path: PathBuf,
-        tx: mpsc::Sender<DirectoryEntry>,
-        depth: usize,
-        filter: Arc<F>,
+        &self, path: PathBuf, tx: mpsc::Sender<DirectoryEntry>, depth: usize, filter: Arc<F>,
     ) -> Pin<Box<dyn Future<Output = Result<bool, std::io::Error>> + Send + '_>>
     where
         F: Fn(&PathBuf) -> bool + Send + Sync + 'static,
@@ -91,13 +84,7 @@ impl ScannerEngine {
             let should_emit = !files.is_empty() || child_found;
 
             if should_emit {
-                let _ = tx
-                    .send(DirectoryEntry {
-                        directory: path,
-                        files,
-                        subdirs,
-                    })
-                    .await;
+                let _ = tx.send(DirectoryEntry { directory: path, files, subdirs }).await;
             }
 
             Ok(should_emit)

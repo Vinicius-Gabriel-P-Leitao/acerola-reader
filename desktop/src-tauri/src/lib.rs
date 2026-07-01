@@ -195,7 +195,5 @@ pub fn run() {
         }
     }
 
-    app_bootstrap::build()
-        .run(app_context)
-        .expect("Erro ao executar a aplicação Tauri");
+    app_bootstrap::build().run(app_context).expect("Erro ao executar a aplicação Tauri");
 }
