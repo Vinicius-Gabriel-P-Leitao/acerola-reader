@@ -35,6 +35,18 @@ export function useLibraryScanner(
 			}
 		});
 
+		const unlistenConverting = await listen<string>(LIBRARY_EVENTS.scanConverting, (event) => {
+			if (progressId === undefined) {
+				const msg = event.payload || 'Convertendo arquivos para cbz...';
+				toast.info(msg);
+				progressId = notify.info(msg, { duration: 0 });
+			} else {
+				pop(progressId);
+				const msg = event.payload || 'Convertendo arquivos para cbz...';
+				progressId = notify.info(msg, { duration: 0 });
+			}
+		});
+
 		const unlisten = await listen(LIBRARY_EVENTS.scanComplete, () => {
 			if (progressId !== undefined) {
 				pop(progressId);
@@ -50,6 +62,7 @@ export function useLibraryScanner(
 			unlisten();
 			unlistenErr();
 			unlistenProgress();
+			unlistenConverting();
 		});
 
 		const unlistenErr = await listen<ErrorPayload>(LIBRARY_EVENTS.scanError, (it) => {
@@ -71,6 +84,7 @@ export function useLibraryScanner(
 			unlisten();
 			unlistenErr();
 			unlistenProgress();
+			unlistenConverting();
 		});
 
 		await invoke(command, { path });

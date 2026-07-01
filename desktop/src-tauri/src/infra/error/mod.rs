@@ -23,7 +23,7 @@ pub enum ComicError {
     #[error("Invalid or missing reference to a related record.")]
     IntegrityViolation,
 
-    #[error("System failure while processing the comic.")]
+    #[error("System failure while processing the comic: {0}")]
     SystemFailure(String),
 
     #[error("Filesystem access error: {0}")]

@@ -333,7 +333,7 @@ async fn get_comic_summary_emite_home_error() -> Result<()> {
     let error = recv_event(error_rx, "home:error").await?;
 
     assert!(error["errorType"].as_str().unwrap_or_default().contains("SystemFailure"));
-    assert_eq!(error["message"], json!("System failure while processing the comic."));
+    assert!(error["message"].as_str().unwrap_or_default().contains("System failure while processing the comic: Internal database error"));
 
     Ok(())
 }
@@ -379,7 +379,7 @@ async fn get_comic_by_folder_name_serializa_erro() -> Result<()> {
     let error =
         invoke_err(&webview, "get_comic_by_folder_name", json!({ "folderName": "Berserk" }))?;
 
-    assert_eq!(error, json!("System failure while processing the comic."));
+    assert!(error.as_str().unwrap_or_default().contains("System failure while processing the comic: Internal database error"));
 
     Ok(())
 }

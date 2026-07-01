@@ -22,8 +22,8 @@ impl ArchiveFormat {
         &[Self::Cbz, Self::Cbr, Self::Pdf]
     }
 
-    pub fn from_extension(ext: &str) -> Option<Self> {
-        match ext {
+    pub fn from_extension(extension: &str) -> Option<Self> {
+        match extension.to_ascii_lowercase().as_str() {
             "cbz" => Some(Self::Cbz),
             "cbr" => Some(Self::Cbr),
             "pdf" => Some(Self::Pdf),

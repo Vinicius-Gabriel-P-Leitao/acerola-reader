@@ -25,3 +25,6 @@ storybook-static
 !/.bin/windows/
 /.bin/windows/*
 !/.bin/windows/.gitkeep
+
+# Dev setup
+*.idea
