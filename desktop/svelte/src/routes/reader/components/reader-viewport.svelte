@@ -38,11 +38,11 @@
 		zoom.isZoomed && 'touch-none overflow-hidden select-none',
 		!zoom.isZoomed &&
 			data.mode === 'horizontal' &&
-			'snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth',
+			'snap-x snap-mandatory overflow-x-auto overflow-y-hidden',
 		!zoom.isZoomed &&
 			data.mode === 'vertical' &&
-			'snap-y snap-mandatory overflow-x-hidden overflow-y-auto scroll-smooth',
-		!zoom.isZoomed && data.mode === 'webtoon' && 'overflow-x-hidden overflow-y-auto scroll-smooth',
+			'snap-y snap-mandatory overflow-x-hidden overflow-y-auto',
+		!zoom.isZoomed && data.mode === 'webtoon' && 'overflow-x-hidden overflow-y-auto',
 		zoom.isPanning && 'cursor-grabbing',
 		!zoom.isPanning && zoom.isZoomed && 'cursor-grab',
 		!zoom.isPanning && !zoom.isZoomed && zoom.zoomMode && 'cursor-zoom-in'

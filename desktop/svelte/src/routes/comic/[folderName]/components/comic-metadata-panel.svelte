@@ -9,8 +9,13 @@
 			description: string;
 			cover: string | null;
 		};
+		state?: {
+			isResuming?: boolean;
+			isLoading?: boolean;
+		};
 		events: {
 			onBack: () => void;
+			onReadNow?: () => void;
 		};
 	};
 </script>
@@ -26,7 +31,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
-	let { data, events }: ComicMetadataPanelProps = $props();
+	let { data, events, state }: ComicMetadataPanelProps = $props();
 </script>
 
 <div
@@ -92,12 +97,16 @@
 
 			<div class="mt-auto w-full space-y-3 pt-4">
 				<AcerolaButton
+					events={{ onClick: events.onReadNow }}
 					ui={{
-						class: 'flex w-full items-center justify-center gap-3 rounded-3xl py-8 font-black'
+						class: 'flex w-full items-center justify-center gap-3 rounded-3xl py-8 font-black',
+						disabled: state?.isLoading
 					}}
 				>
 					<Play size={24} fill="currentColor" />
-					{m['pages.comic.metadata.read_now']()}
+					{state?.isResuming 
+						? (m['pages.history.resume'] ? m['pages.history.resume']() : 'Continue Reading') 
+						: m['pages.comic.metadata.read_now']()}
 				</AcerolaButton>
 
 				<div class="grid grid-cols-2 gap-3">

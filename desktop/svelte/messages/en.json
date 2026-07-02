@@ -184,25 +184,11 @@
 			}
 		},
 		"history": {
-			"title": "P2P Network",
-			"local_id": "Local ID: {id}",
-			"mode": "Mode: {mode}",
-			"local": "Local",
-			"relay": "Relay",
-			"connect": "Connect",
-			"active_connections": "Active connections ({count})",
-			"unknown_device": "Unknown device",
-			"no_active_connections": "No active connections.",
-			"rpc_log": "RPC Log",
-			"no_events": "No events yet.",
-			"logs": {
-				"ping_sent": "Ping sent",
-				"ping_received": "Ping received",
-				"pong_sent": "Pong sent",
-				"pong_received": "Pong received",
-				"info_exchanged": "Info exchanged",
-				"info_received": "Info received"
-			}
+			"title": "History",
+			"clear_history": "Clear History",
+			"loading": "Loading...",
+			"no_events": "No history found.",
+			"resume": "Continue Reading"
 		},
 		"config": {
 			"title": "Settings",

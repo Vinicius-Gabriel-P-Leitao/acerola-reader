@@ -4,6 +4,7 @@
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { useReader } from '$lib/hooks/store/use-reader.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { invoke } from '@tauri-apps/api/core';
 	import { onMount, tick, untrack } from 'svelte';
 	import ReaderCommandPalette from './components/reader-command-palette.svelte';
 	import ReaderFooter from './components/reader-footer.svelte';
@@ -23,6 +24,7 @@
 		chapterIndex?: number;
 		totalChapters?: number;
 		chapterScope?: string;
+		comicDirectoryId?: string;
 	};
 
 	const reader = useReader();
@@ -37,6 +39,7 @@
 	let modeSwitchPage = $state<number | null>(null);
 	let commandOpen = $state(false);
 	let commandValue = $state('');
+	let initializing = $state(true);
 
 	const navigationState = $derived((page.state ?? {}) as ReaderNavigationState);
 	const chapter = $derived(navigationState.chapter);
@@ -210,12 +213,17 @@
 		if (!reader.session || reader.pageCount === 0) return;
 
 		const targetPage = Math.max(0, Math.min(pageIndex, reader.pageCount - 1));
+		const distance = Math.abs(reader.currentPage - targetPage);
+		
 		await reader.goToPage(targetPage);
 		zoom.resetPan();
 
 		await tick();
-		scrollPageIntoView(targetPage);
+		// If jumping far, don't smooth scroll to avoid firing observer on 50 intermediate pages
+		scrollPageIntoView(targetPage, distance > 3 ? 'auto' : 'smooth');
 	}
+
+	let scrollTimeoutId: number;
 
 	onMount(() => {
 		observer = new IntersectionObserver(
@@ -236,7 +244,10 @@
 				}
 
 				if (changed) {
-					visiblePages = visiblePageOrder();
+					window.clearTimeout(scrollTimeoutId);
+					scrollTimeoutId = window.setTimeout(() => {
+						visiblePages = visiblePageOrder();
+					}, 50);
 				}
 			},
 			{ threshold: 0.01 }
@@ -248,9 +259,19 @@
 			try {
 				await reader.open(chapter, navigationState.startPage ?? 0);
 				await tick();
-				scrollPageIntoView(reader.currentPage, 'auto');
+				
+				// Small delay to ensure DOM is ready and IntersectionObserver catches the initial state
+				setTimeout(() => {
+					scrollPageIntoView(reader.currentPage, 'auto');
+					
+					// Another tick to allow the observer to register the jump before showing UI
+					setTimeout(() => {
+						initializing = false;
+					}, 50);
+				}, 50);
 			} catch {
 				openFailed = true;
+				initializing = false;
 			}
 		};
 
@@ -326,9 +347,37 @@
 			}
 		};
 	}
+
+	$effect(() => {
+		const currentPage = reader.currentPage;
+		const pageCount = reader.pageCount;
+		const chapterId = chapter?.id;
+		const comicDirectoryId = navigationState.comicDirectoryId;
+
+		if (!reader.session || !chapterId || !comicDirectoryId || pageCount === 0) return;
+
+		untrack(() => {
+			const isCompleted = (currentPage + 1) / pageCount >= 0.7;
+			invoke('history_update_reading', {
+				comicId: comicDirectoryId.toString(),
+				chapterId: chapterId.toString(),
+				lastPage: currentPage,
+				isCompleted
+			}).catch((err) => console.error('Failed to update history', err));
+		});
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} onresize={zoom.clampPan} />
+
+{#if initializing}
+	<div class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-base/95 backdrop-blur-xl transition-opacity duration-300">
+		<div class="flex flex-col items-center gap-4">
+			<div class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+			<p class="text-sm font-black tracking-widest text-primary uppercase animate-pulse">{m['pages.reader.fallback.loading'] ? m['pages.reader.fallback.loading']() : 'Carregando'}</p>
+		</div>
+	</div>
+{/if}
 
 <ReaderShell>
 	{#snippet toolbar()}
