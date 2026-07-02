@@ -109,7 +109,8 @@
 				"chapters_count": "{count} Caps",
 				"read_now": "LER AGORA",
 				"save": "SALVAR",
-				"sync": "SYNC"
+				"sync": "SYNC",
+				"completed": "CONCLUÍDO"
 			},
 			"preferences": {
 				"reading": "Leitura",

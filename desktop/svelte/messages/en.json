@@ -109,7 +109,8 @@
 				"chapters_count": "{count} Caps",
 				"read_now": "READ NOW",
 				"save": "SAVE",
-				"sync": "SYNC"
+				"sync": "SYNC",
+				"completed": "COMPLETED"
 			},
 			"preferences": {
 				"reading": "Reading",

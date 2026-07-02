@@ -146,7 +146,7 @@
 									<div class="flex items-center gap-2">
 										{#if chapter.isRead}
 											<span class="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black tracking-widest text-primary uppercase">
-												{m['pages.comic.completed'] ? m['pages.comic.completed']() : 'LIDO'}
+												{m['pages.comic.metadata.completed'] ? m['pages.comic.metadata.completed']() : 'LIDO'}
 											</span>
 										{/if}
 										<AcerolaButtonIcon
