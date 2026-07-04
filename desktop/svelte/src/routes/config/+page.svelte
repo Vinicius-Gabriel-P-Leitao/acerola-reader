@@ -32,8 +32,10 @@
 	const ctx = useTheme();
 	const folder = useSelectFolder();
 	const comicInfoPreference = useComicInfoPreference();
+
 	let metadataLanguagePopoverOpen = $state(false);
 	let selectedMetadataLanguage = $state<LanguageCode>('pt-br');
+
 	const selectedMetadataLanguageLabel = $derived(
 		LANGUAGES.find((lang) => lang.code === selectedMetadataLanguage)?.label ??
 			selectedMetadataLanguage

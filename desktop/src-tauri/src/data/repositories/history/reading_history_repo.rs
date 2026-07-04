@@ -27,14 +27,15 @@ impl ReadingHistoryRepository {
         let table = ReadingHistory::table_name();
 
         let result = sqlx::query_as::<_, ReadingHistory>(&format!(
-            "INSERT INTO {table} ({cols})
+            "INSERT INTO {} ({})
              VALUES (?, ?, ?, ?, ?)
              ON CONFLICT(comic_directory_id) DO UPDATE SET
                  chapter_archive_id = excluded.chapter_archive_id,
-                 last_page          = excluded.last_page,
-                 is_completed       = excluded.is_completed,
-                 updated_at         = excluded.updated_at
-             RETURNING *"
+                 last_page = excluded.last_page,
+                 is_completed = excluded.is_completed,
+                 updated_at = excluded.updated_at
+             RETURNING *",
+            table, cols
         ))
         .bind(history.comic_directory_id)
         .bind(history.chapter_archive_id)
@@ -93,15 +94,15 @@ impl ReadingHistoryRepository {
                 rh.updated_at,
                 c.name  AS comic_name,
                 c.cover AS comic_cover,
-                ca.chapter      AS chapter_name,
-                c.name          AS folder_name,
-                ca.path         AS chapter_path,
+                ca.chapter AS chapter_name,
+                c.name AS folder_name,
+                ca.path AS chapter_path,
                 ca.chapter_sort,
                 ca.is_special,
                 ca.last_modified
              FROM reading_history rh
-             JOIN comic_directory  c  ON rh.comic_directory_id = c.id
-             JOIN chapter_archive  ca ON rh.chapter_archive_id = ca.id
+             JOIN comic_directory c  ON rh.comic_directory_id = c.id
+             JOIN chapter_archive ca ON rh.chapter_archive_id = ca.id
              WHERE rh.comic_directory_id = ?",
         )
         .bind(comic_directory_id)
@@ -122,15 +123,15 @@ impl ReadingHistoryRepository {
                 rh.updated_at,
                 c.name  AS comic_name,
                 c.cover AS comic_cover,
-                ca.chapter      AS chapter_name,
-                c.name          AS folder_name,
-                ca.path         AS chapter_path,
+                ca.chapter AS chapter_name,
+                c.name AS folder_name,
+                ca.path AS chapter_path,
                 ca.chapter_sort,
                 ca.is_special,
                 ca.last_modified
              FROM reading_history rh
-             JOIN comic_directory  c  ON rh.comic_directory_id = c.id
-             JOIN chapter_archive  ca ON rh.chapter_archive_id = ca.id
+             JOIN comic_directory c  ON rh.comic_directory_id = c.id
+             JOIN chapter_archive ca ON rh.chapter_archive_id = ca.id
              ORDER BY rh.updated_at DESC",
         )
         .fetch_all(&self.pool)
@@ -155,7 +156,9 @@ mod tests {
         tests::utils::setup_test_db::setup_test_db_with_comic,
     };
 
-    fn historico(comic_directory_id: i64, chapter_archive_id: i64, last_page: i64) -> ReadingHistory {
+    fn historico(
+        comic_directory_id: i64, chapter_archive_id: i64, last_page: i64,
+    ) -> ReadingHistory {
         ReadingHistory {
             comic_directory_id,
             chapter_archive_id,

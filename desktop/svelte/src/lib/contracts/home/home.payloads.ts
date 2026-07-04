@@ -1,33 +1,33 @@
-export type ComicSummaryRelations = {
+export type ComicSummaryRelationsPayload = {
 	directoryId: string;
 	metadataId: string | null;
 };
 
-export type ComicSummaryFilesystem = {
+export type ComicSummaryFilesystemPayload = {
 	folderName: string;
 };
 
-export type ComicSummaryMetadata = {
+export type ComicSummaryMetadataPayload = {
 	title: string | null;
 	externalSync: boolean;
 	activeSource: string | null;
 	chapterCount: number;
 };
 
-export type ComicSummaryArtwork = {
+export type ComicSummaryArtworkPayload = {
 	cover: string | null;
 	banner: string | null;
 };
 
-export type ComicSummaryItem = {
-	relations: ComicSummaryRelations;
-	filesystem: ComicSummaryFilesystem;
-	metadata: ComicSummaryMetadata;
-	artwork: ComicSummaryArtwork;
+export type ComicSummaryItemPayload = {
+	relations: ComicSummaryRelationsPayload;
+	filesystem: ComicSummaryFilesystemPayload;
+	metadata: ComicSummaryMetadataPayload;
+	artwork: ComicSummaryArtworkPayload;
 };
 
 export type ComicSummaryPayload = {
-	comics: ComicSummaryItem[];
+	comics: ComicSummaryItemPayload[];
 	total: number;
 	fetchedAt: string;
 };

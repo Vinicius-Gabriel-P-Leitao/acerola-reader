@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	export type AcerolaAlertDialogProps = {
-		state: {
+		state?: {
 			open: boolean;
 		};
 		data?: {

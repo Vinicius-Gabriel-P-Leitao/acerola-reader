@@ -11,12 +11,12 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	import { resolveArtworkPath } from '$lib/utils/artwork.utils';
-	import type { ReadingHistoryDto } from '$lib/contracts/history/history.payloads';
+	import type { ReadingHistoryPayload } from '$lib/contracts/history/history.payloads';
 	import { useHistory } from '$lib/hooks/store/use-history.svelte';
 
 	const history = useHistory();
 
-	function resumeReading(item: ReadingHistoryDto) {
+	function resumeReading(item: ReadingHistoryPayload) {
 		goto('/reader', {
 			state: {
 				comicDirectoryId: item.comicDirectoryId,
@@ -36,7 +36,7 @@
 		});
 	}
 
-	function openComic(item: ReadingHistoryDto) {
+	function openComic(item: ReadingHistoryPayload) {
 		goto(`/comic/${item.folderName}`, {
 			state: {
 				comicDirectoryId: item.comicDirectoryId
@@ -141,9 +141,12 @@
 								{#snippet footer()}
 									<div class="mt-1 flex flex-col gap-1">
 										<span class="text-overlay flex items-center gap-1 text-[10px] font-black tracking-wider uppercase">
-											<BookOpen size={10} />
-											{m['pages.history.chapter_label']({ chapter: item.chapterName })}
+											<BookOpen size={10} class="shrink-0" />
+											<span class="truncate">
+												{m['pages.history.chapter_label']({ chapter: item.chapterName })}
+											</span>
 										</span>
+										
 										<span class="text-overlay text-[10px] opacity-80">
 											{m['pages.history.page_label']({ page: item.lastPage + 1 })}
 										</span>

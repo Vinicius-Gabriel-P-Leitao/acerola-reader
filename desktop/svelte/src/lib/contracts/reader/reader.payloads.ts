@@ -1,6 +1,6 @@
-import type { ChapterFileDto } from '$lib/contracts/library/chapter.payloads';
+import type { ChapterFilePayload } from '$lib/contracts/library/chapter.payloads';
 
-export type ReaderChapterPayload = ChapterFileDto;
+export type ReaderChapterPayload = ChapterFilePayload;
 
 export type ReaderSessionPayload = {
 	chapter: ReaderChapterPayload;
@@ -18,7 +18,7 @@ export type ReaderPagePayload = {
 	cacheHit: boolean;
 };
 
-export type ReaderCachedPage = {
+export type ReaderCachedPagePayload = {
 	index: number;
 	total: number;
 	mimeType: string;
