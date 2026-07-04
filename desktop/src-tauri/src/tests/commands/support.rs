@@ -15,7 +15,7 @@ pub(super) fn request(cmd: &str, body: Value) -> InvokeRequest {
         cmd: cmd.into(),
         callback: tauri::ipc::CallbackFn(0),
         error: tauri::ipc::CallbackFn(1),
-        url: "http://tauri.localhost".parse().expect("a URL fixa do IPC de teste deve ser valida"),
+        url: "http://tauri.localhost".parse().expect("the fixed test IPC URL must be valid"),
         body: InvokeBody::Json(body),
         headers: Default::default(),
         invoke_key: test::INVOKE_KEY.to_string(),
@@ -35,9 +35,9 @@ pub(super) fn invoke_ok<T: DeserializeOwned>(
     webview: &WebviewWindow<MockRuntime>, cmd: &str, body: Value,
 ) -> Result<T> {
     let response = test::get_ipc_response(webview, request(cmd, body))
-        .map_err(|error| anyhow::anyhow!("IPC `{cmd}` retornou erro inesperado: {error}"))?;
+        .map_err(|error| anyhow::anyhow!("IPC `{cmd}` returned unexpected error: {error}"))?;
 
-    response.deserialize::<T>().with_context(|| format!("falha ao desserializar `{cmd}`"))
+    response.deserialize::<T>().with_context(|| format!("failed to deserialize `{cmd}`"))
 }
 
 pub(super) fn invoke_ok_value(
@@ -52,7 +52,7 @@ pub(super) fn invoke_err(
     match test::get_ipc_response(webview, request(cmd, body)) {
         Ok(response) => {
             let value = response.deserialize::<Value>()?;
-            bail!("IPC `{cmd}` deveria falhar, mas retornou sucesso: {value}");
+            bail!("IPC `{cmd}` should have failed, but returned success: {value}");
         },
         Err(error) => Ok(error),
     }
@@ -74,9 +74,9 @@ pub(super) async fn recv_event(rx: mpsc::Receiver<String>, event_name: &str) -> 
     let event = event_name.to_string();
     let payload = tokio::task::spawn_blocking(move || rx.recv_timeout(Duration::from_secs(3)))
         .await
-        .with_context(|| format!("task de espera do evento `{event}` falhou"))?
-        .with_context(|| format!("evento `{event}` nao foi emitido dentro do timeout"))?;
+        .with_context(|| format!("event `{event}` wait task failed"))?
+        .with_context(|| format!("event `{event}` was not emitted within the timeout"))?;
 
     serde_json::from_str(&payload)
-        .with_context(|| format!("payload do evento `{event_name}` nao era JSON valido"))
+        .with_context(|| format!("event `{event_name}` payload was not valid JSON"))
 }

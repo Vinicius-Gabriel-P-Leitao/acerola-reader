@@ -12,6 +12,7 @@ declare global {
 			chapterIndex?: number;
 			totalChapters?: number;
 			chapterScope?: string;
+			comicDirectoryId?: string;
 		}
 		// interface Platform {}
 	}

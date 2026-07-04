@@ -7,7 +7,7 @@ mod infra;
 
 use cmd::features::{
     library::{comic_scanner_cmd, select_folder_cmd},
-    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
+    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd, history as history_cmd,
 };
 use tauri::Manager;
 
@@ -59,6 +59,11 @@ mod app_bootstrap {
             reader_cmd::reader_status,
             reader_cmd::reader_close_chapter,
             reader_cmd::reader_prefetch_window,
+            history_cmd::history_update_reading,
+            history_cmd::history_get_all,
+            history_cmd::history_get_comic,
+            history_cmd::history_get_read_chapters,
+            history_cmd::history_clear,
         ])
     }
 
@@ -93,7 +98,8 @@ mod app_bootstrap {
             db_path.to_string_lossy()
         )).await.unwrap();
 
-        handle.manage(pool);
+        handle.manage(pool.clone());
+        handle.manage(crate::core::services::history::HistoryService::new(pool));
     }
 
     async fn setup_network(handle: &tauri::AppHandle) {
@@ -195,7 +201,5 @@ pub fn run() {
         }
     }
 
-    app_bootstrap::build()
-        .run(app_context)
-        .expect("Erro ao executar a aplicação Tauri");
+    app_bootstrap::build().run(app_context).expect("Erro ao executar a aplicação Tauri");
 }

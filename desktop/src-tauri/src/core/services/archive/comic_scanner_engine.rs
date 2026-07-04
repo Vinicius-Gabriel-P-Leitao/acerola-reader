@@ -78,7 +78,8 @@ impl ComicScannerService {
     /// Utiliza a estratégia `INSERT OR IGNORE`, garantindo que itens já existentes
     /// não sejam duplicados nem reprocessados desnecessariamente.
     pub async fn refresh_library(
-        &self, path: PathBuf, mut on_progress: impl FnMut(String), mut on_converting: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
+        mut on_converting: impl FnMut(String),
     ) -> Result<(), ComicError> {
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
@@ -129,7 +130,8 @@ impl ComicScannerService {
     /// - Atualiza quadrinhos cujas pastas tiveram data de modificação alterada.
     /// - Remove do banco de dados registros cujas pastas não existem mais no disco.
     pub async fn incremental_scan(
-        &self, path: PathBuf, mut on_progress: impl FnMut(String), mut on_converting: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
+        mut on_converting: impl FnMut(String),
     ) -> Result<(), ComicError> {
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
@@ -210,7 +212,8 @@ impl ComicScannerService {
     /// Utiliza `DELETE` seguido de `INSERT` para todos os itens encontrados, o que
     /// força a re-verificação de todos os arquivos e a atualização de todos os metadados.
     pub async fn rebuild_library(
-        &self, path: PathBuf, mut on_progress: impl FnMut(String), mut on_converting: impl FnMut(String),
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
+        mut on_converting: impl FnMut(String),
     ) -> Result<(), ComicError> {
         self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
 
@@ -302,18 +305,26 @@ impl ComicScannerService {
 
             if comic_cover.is_none() && is_cover {
                 comic_cover = Some(file.to_string_lossy().to_string());
+                continue;
             }
 
             if comic_banner.is_none() && is_banner {
                 comic_banner = Some(file.to_string_lossy().to_string());
+                continue;
             }
 
             if is_archive {
                 comic_files.push(file);
-            } else if let Some(extension) = file.extension().and_then(|ext| ext.to_str()) {
-                if ArchiveFormat::from_extension(extension) == Some(ArchiveFormat::Pdf) {
-                    pdf_files.push(file);
-                }
+                continue;
+            }
+
+            let is_pdf = file
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf));
+
+            if is_pdf {
+                pdf_files.push(file);
             }
         }
 
@@ -401,10 +412,16 @@ impl ComicScannerService {
 
                 if archive_guard.is_allowed(&file).is_ok() {
                     volume_archives.push(file);
-                } else if let Some(extension) = file.extension().and_then(|ext| ext.to_str()) {
-                    if ArchiveFormat::from_extension(extension) == Some(ArchiveFormat::Pdf) {
-                        volume_pdfs.push(file);
-                    }
+                    continue;
+                }
+
+                let is_pdf = file
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf));
+
+                if is_pdf {
+                    volume_pdfs.push(file);
                 }
             }
 
@@ -548,9 +565,9 @@ impl ComicScannerService {
 
         let add_pdfs = |files: &[PathBuf], paths: &mut HashSet<PathBuf>| {
             for file in files.iter().filter(|f| {
-                f.extension()
-                    .and_then(|e| e.to_str())
-                    .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf))
+                f.extension().and_then(|e| e.to_str()).is_some_and(|ext| {
+                    ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf)
+                })
             }) {
                 if !file.with_extension("cbz").exists() {
                     paths.insert(file.clone());
@@ -760,9 +777,13 @@ mod tests {
 
         let mut progress_count = 0usize;
         service
-            .incremental_scan(root.path().to_path_buf(), |_| {
-                progress_count += 1;
-            }, |_| {})
+            .incremental_scan(
+                root.path().to_path_buf(),
+                |_| {
+                    progress_count += 1;
+                },
+                |_| {},
+            )
             .await
             .unwrap();
         assert_eq!(progress_count, 0, "No folders should be reprocessed");
@@ -848,7 +869,7 @@ mod tests {
         let comic_dir = root.path().join("PdfComic");
         fs::create_dir_all(&comic_dir).await.unwrap();
         fs::copy(&fixture_pdf, comic_dir.join("root.pdf")).await.unwrap();
-        
+
         let vol_dir = comic_dir.join("Vol. 01");
         fs::create_dir_all(&vol_dir).await.unwrap();
         fs::copy(&fixture_pdf, vol_dir.join("vol.pdf")).await.unwrap();

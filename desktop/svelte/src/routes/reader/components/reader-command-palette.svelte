@@ -59,7 +59,7 @@
 		>
 			<AcerolaCommand
 				state={{ value: state.value }}
-				events={{ onValueChange: events.onValueChange }}
+				events={{ onValueChange: events.onValueChange }}	
 			>
 				{#snippet children()}
 					<Command.Input placeholder={m['pages.reader.command.placeholder']()} autofocus />

@@ -6,8 +6,7 @@ use crate::{
         VolumeViewType,
     },
     data::repositories::archive::{
-        chapter_archive_repo::ChapterRepository,
-        volume_archive_repo::VolumeRepository,
+        chapter_archive_repo::ChapterRepository, volume_archive_repo::VolumeRepository,
     },
     infra::error::ComicError,
 };

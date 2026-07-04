@@ -51,7 +51,7 @@ fn create_manga_dir(root: &TempDir, name: &str, chapters: &[&str]) -> Result<Pat
 
 async fn refresh_direct(pool: &SqlitePool, root: &TempDir) -> Result<()> {
     let service = ComicScannerService::new(root.path().to_path_buf(), pool.clone());
-    service.refresh_library(root.path().to_path_buf(), |_| {}).await?;
+    service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await?;
     Ok(())
 }
 
@@ -170,7 +170,7 @@ async fn refresh_library_emite_scan_error_para_path_inexistente() -> Result<()> 
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool)?;
     let root = TempDir::new()?;
-    let missing = root.path().join("nao-existe");
+    let missing = root.path().join("does-not-exist");
     let error_rx = listen_event(&app, "scan:error");
 
     let _: Value = invoke_ok(
@@ -243,7 +243,7 @@ async fn incremental_scan_emite_scan_error_para_path_inexistente() -> Result<()>
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool)?;
     let root = TempDir::new()?;
-    let missing = root.path().join("nao-existe");
+    let missing = root.path().join("does-not-exist");
     let error_rx = listen_event(&app, "scan:error");
 
     let _: Value = invoke_ok(
@@ -288,7 +288,7 @@ async fn rebuild_library_emite_scan_error_para_path_inexistente() -> Result<()> 
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool)?;
     let root = TempDir::new()?;
-    let missing = root.path().join("nao-existe");
+    let missing = root.path().join("does-not-exist");
     let error_rx = listen_event(&app, "scan:error");
 
     let _: Value = invoke_ok(
@@ -333,7 +333,10 @@ async fn get_comic_summary_emite_home_error() -> Result<()> {
     let error = recv_event(error_rx, "home:error").await?;
 
     assert!(error["errorType"].as_str().unwrap_or_default().contains("SystemFailure"));
-    assert!(error["message"].as_str().unwrap_or_default().contains("System failure while processing the comic: Internal database error"));
+    assert!(error["message"]
+        .as_str()
+        .unwrap_or_default()
+        .contains("System failure while processing the comic: Internal database error"));
 
     Ok(())
 }
@@ -363,7 +366,7 @@ async fn get_comic_by_folder_name_retorna_none() -> Result<()> {
     let comic = invoke_ok_value(
         &webview,
         "get_comic_by_folder_name",
-        json!({ "folderName": "Nao Existe" }),
+        json!({ "folderName": "Does Not Exist" }),
     )?;
 
     assert_eq!(comic, Value::Null);
@@ -379,7 +382,10 @@ async fn get_comic_by_folder_name_serializa_erro() -> Result<()> {
     let error =
         invoke_err(&webview, "get_comic_by_folder_name", json!({ "folderName": "Berserk" }))?;
 
-    assert!(error.as_str().unwrap_or_default().contains("System failure while processing the comic: Internal database error"));
+    assert!(error
+        .as_str()
+        .unwrap_or_default()
+        .contains("System failure while processing the comic: Internal database error"));
 
     Ok(())
 }
@@ -408,7 +414,7 @@ async fn get_comic_chapters_emite_pagina_paginada() -> Result<()> {
     assert_eq!(data["archive"]["page"], 1);
     assert_eq!(data["archive"]["pageSize"], 2);
     assert_eq!(data["archive"]["total"], 3);
-    assert_eq!(data["archive"]["items"].as_array().context("items deveria ser array")?.len(), 1);
+    assert_eq!(data["archive"]["items"].as_array().context("items should be an array")?.len(), 1);
 
     Ok(())
 }
@@ -436,7 +442,7 @@ async fn get_comic_chapters_filtra_por_volume() -> Result<()> {
 
     assert_eq!(data["hasVolumeStructure"], true);
     assert_eq!(data["archive"]["total"], 2);
-    assert_eq!(data["archive"]["items"].as_array().context("items deveria ser array")?.len(), 2);
+    assert_eq!(data["archive"]["items"].as_array().context("items should be an array")?.len(), 2);
     assert_eq!(data["archive"]["items"][0]["volumeId"], volume_id.to_string());
 
     Ok(())

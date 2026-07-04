@@ -5,14 +5,11 @@ use std::{
     time::Instant,
 };
 
-use image::codecs::jpeg::JpegEncoder;
-use image::ImageEncoder;
+use image::{codecs::jpeg::JpegEncoder, ImageEncoder};
 use pdfium::{lib, pdfium_types, PdfiumDocument};
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 
 use crate::infra::error::ComicError;
-
-
 
 /// Serviço especializado na conversão de documentos PDF para o formato CBZ (Comic Book Zip).
 pub struct ConverterService;
@@ -32,17 +29,18 @@ impl ConverterService {
         }
 
         tokio::task::spawn_blocking(move || {
-            let document = PdfiumDocument::new_from_path(&pdf_path, None)
-                .map_err(|error| ComicError::SystemFailure(format!("Failed to load PDF: {}", error)))?;
+            let document = PdfiumDocument::new_from_path(&pdf_path, None).map_err(|error| {
+                ComicError::SystemFailure(format!("Failed to load PDF: {}", error))
+            })?;
 
             let temp_path = cbz_path.with_extension("cbz.tmp");
             let _ = std::fs::remove_file(&temp_path);
 
             let archive_file = File::create(&temp_path).map_err(ComicError::Io)?;
             let mut zip_writer = ZipWriter::new(archive_file);
-            
-            let zip_options = SimpleFileOptions::default()
-                .compression_method(CompressionMethod::Stored);
+
+            let zip_options =
+                SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
 
             let page_count = document.page_count();
             let render_scale = 2.0;
@@ -69,29 +67,53 @@ impl ConverterService {
                 }
 
                 let (target_width, target_height, rgba_data) = {
-                    let page = lib().FPDF_LoadPage(&document, page_index)
-                        .map_err(|error| ComicError::SystemFailure(format!("Failed to load page {}: {}", page_index, error)))?;
+                    let page = lib().FPDF_LoadPage(&document, page_index).map_err(|error| {
+                        ComicError::SystemFailure(format!(
+                            "Failed to load page {}: {}",
+                            page_index, error
+                        ))
+                    })?;
 
                     let mut left = 0.0;
                     let mut bottom = 0.0;
                     let mut right = 0.0;
                     let mut top = 0.0;
 
-                    if lib().FPDFPage_GetMediaBox(&page, &mut left, &mut bottom, &mut right, &mut top).is_err() {
+                    if lib()
+                        .FPDFPage_GetMediaBox(&page, &mut left, &mut bottom, &mut right, &mut top)
+                        .is_err()
+                    {
                         right = lib().FPDF_GetPageWidthF(&page) as f32;
-                        if right == 0.0 { right = lib().FPDF_GetPageWidth(&page) as f32; }
+                        if right == 0.0 {
+                            right = lib().FPDF_GetPageWidth(&page) as f32;
+                        }
+                        
                         top = lib().FPDF_GetPageHeightF(&page) as f32;
-                        if top == 0.0 { top = lib().FPDF_GetPageHeight(&page) as f32; }
+                        if top == 0.0 {
+                            top = lib().FPDF_GetPageHeight(&page) as f32;
+                        }
                     }
 
                     let target_width = ((right - left).abs() * render_scale) as i32;
                     let target_height = ((top - bottom).abs() * render_scale) as i32;
 
-                    let bitmap = lib().FPDFBitmap_Create(target_width, target_height, 1)
-                        .map_err(|error| ComicError::SystemFailure(format!("Failed to create bitmap for page {}: {}", page_index, error)))?;
+                    let bitmap = lib().FPDFBitmap_Create(target_width, target_height, 1).map_err(
+                        |error| {
+                            ComicError::SystemFailure(format!(
+                                "Failed to create bitmap for page {}: {}",
+                                page_index, error
+                            ))
+                        },
+                    )?;
 
-                    lib().FPDFBitmap_FillRect(&bitmap, 0, 0, target_width, target_height, 0xffffffff)
-                        .map_err(|error| ComicError::SystemFailure(format!("Failed to clear bitmap for page {}: {}", page_index, error)))?;
+                    lib()
+                        .FPDFBitmap_FillRect(&bitmap, 0, 0, target_width, target_height, 0xffffffff)
+                        .map_err(|error| {
+                            ComicError::SystemFailure(format!(
+                                "Failed to clear bitmap for page {}: {}",
+                                page_index, error
+                            ))
+                        })?;
 
                     let transform_matrix = pdfium_types::FS_MATRIX {
                         a: render_scale,
@@ -133,10 +155,8 @@ impl ConverterService {
                 image_buffer.clear();
 
                 // Converte RGBA para RGB
-                let rgb_data: Vec<u8> = rgba_data
-                    .chunks_exact(4)
-                    .flat_map(|px| [px[0], px[1], px[2]])
-                    .collect();
+                let rgb_data: Vec<u8> =
+                    rgba_data.chunks_exact(4).flat_map(|px| [px[0], px[1], px[2]]).collect();
 
                 let encoder = JpegEncoder::new_with_quality(
                     Cursor::new(&mut image_buffer),
@@ -144,13 +164,21 @@ impl ConverterService {
                 );
 
                 encoder
-                    .write_image(&rgb_data, target_width as u32, target_height as u32, image::ExtendedColorType::Rgb8)
-                    .map_err(|error| ComicError::SystemFailure(format!("Failed to encode JPEG: {}", error)))?;
+                    .write_image(
+                        &rgb_data,
+                        target_width as u32,
+                        target_height as u32,
+                        image::ExtendedColorType::Rgb8,
+                    )
+                    .map_err(|error| {
+                        ComicError::SystemFailure(format!("Failed to encode JPEG: {}", error))
+                    })?;
 
                 let entry_name = format!("{:03}.jpg", page_index + 1);
-                zip_writer.start_file(entry_name, zip_options)
-                    .map_err(|error| ComicError::SystemFailure(format!("Failed to start zip entry: {}", error)))?;
-                
+                zip_writer.start_file(entry_name, zip_options).map_err(|error| {
+                    ComicError::SystemFailure(format!("Failed to start zip entry: {}", error))
+                })?;
+
                 zip_writer.write_all(&image_buffer).map_err(ComicError::Io)?;
             }
 
@@ -187,8 +215,9 @@ impl ConverterService {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::io::Read;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_convert_pdf_to_cbz() {
@@ -198,8 +227,11 @@ mod tests {
 
         let converter = ConverterService::new();
         // Resolve the path correctly
-        let pdf_path = std::path::Path::new(&manifest_dir).parent().unwrap().join("tests/wdio/comic/pdf/witchcraft.pdf");
-        
+        let pdf_path = std::path::Path::new(&manifest_dir)
+            .parent()
+            .unwrap()
+            .join("tests/wdio/comic/pdf/witchcraft.pdf");
+
         let cbz_path = pdf_path.with_extension("cbz");
         if cbz_path.exists() {
             std::fs::remove_file(&cbz_path).unwrap();
@@ -214,7 +246,7 @@ mod tests {
         assert!(!archive.is_empty(), "ZIP archive is empty");
         let mut first_file = archive.by_index(0).unwrap();
         assert_eq!(first_file.name(), "001.jpg");
-        
+
         let mut bytes = Vec::new();
         first_file.read_to_end(&mut bytes).unwrap();
         assert!(!bytes.is_empty(), "First rendered page is empty");
