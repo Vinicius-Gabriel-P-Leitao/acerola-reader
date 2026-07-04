@@ -167,6 +167,8 @@
 				"commands": "Comandos",
 				"previous_page": "Página anterior",
 				"next_page": "Próxima página",
+				"previous_chapter": "Capítulo anterior",
+				"next_chapter": "Próximo capítulo",
 				"page_navigation_locked": "Desative o zoom para trocar de página",
 				"close_commands": "Fechar comandos"
 			},
