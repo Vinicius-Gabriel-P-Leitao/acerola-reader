@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ComicSummaryItem } from '$lib/contracts/home/home.payloads';
+	import type { ComicSummaryItemPayload } from '$lib/contracts/home/home.payloads';
 	import { setComicContext, type ActiveComicState } from '$lib/state/comic-context.svelte';
 	import Child from './comic-context-child.svelte';
 
@@ -8,7 +8,7 @@
 		cover,
 		onReady
 	}: {
-		comic: ComicSummaryItem;
+		comic: ComicSummaryItemPayload;
 		cover: string | null;
 		onReady: (context: ActiveComicState) => void;
 	} = $props();

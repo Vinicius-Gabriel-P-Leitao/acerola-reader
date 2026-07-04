@@ -4,9 +4,9 @@ import { toast } from 'svelte-sonner';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
 import type {
-	ChapterDto,
-	ChapterFileDto,
-	ChapterPageDto
+	ChapterPayload,
+	ChapterFilePayload,
+	ChapterPagePayload
 } from '$lib/contracts/library/chapter.payloads';
 import type { ErrorPayload } from '$lib/contracts/shared/shared.payloads';
 import { resolveErrorMessage } from '$lib/contracts/errors/errors.i18n';
@@ -30,7 +30,7 @@ const LRU_WINDOW_SIZE = 6;
 const STALE_RESPONSE_THRESHOLD = 5;
 
 export function useComicChapters() {
-	const lruCache = new LRUService<number, ChapterFileDto[]>({
+	const lruCache = new LRUService<number, ChapterFilePayload[]>({
 		max: LRU_WINDOW_SIZE
 	});
 
@@ -40,7 +40,7 @@ export function useComicChapters() {
 	let currentRequestPage = $state<number | null>(null);
 
 	let metadata = $state<
-		(Omit<ChapterDto, 'archive'> & { archive: Omit<ChapterPageDto, 'items'> }) | undefined
+		(Omit<ChapterPayload, 'archive'> & { archive: Omit<ChapterPagePayload, 'items'> }) | undefined
 	>(undefined);
 
 	function clear(keepMetadata = false) {
@@ -86,7 +86,7 @@ export function useComicChapters() {
 		let unlistenError: (() => void) | undefined;
 
 		const setupListeners = async () => {
-			unlistenChapters = await listen<ChapterDto>(LIBRARY_EVENTS.comicChapters, (event) => {
+			unlistenChapters = await listen<ChapterPayload>(LIBRARY_EVENTS.comicChapters, (event) => {
 				const payload = event.payload;
 
 				if (currentRequestPage !== null) {

@@ -1,5 +1,11 @@
-import type { ComicSummaryItem, ComicSummaryPayload } from '../../src/lib/contracts/home/home.payloads';
-import type { ChapterDto, ChapterFileDto } from '../../src/lib/contracts/library/chapter.payloads';
+import type {
+	ComicSummaryItem,
+	ComicSummaryPayload
+} from '../../src/lib/contracts/home/home.payloads';
+import type {
+	ChapterDto,
+	ChapterFilePayload
+} from '../../src/lib/contracts/library/chapter.payloads';
 import type {
 	ReaderPagePayload,
 	ReaderSessionPayload
@@ -20,7 +26,7 @@ export const e2eComic: ComicSummaryItem = {
 	}
 };
 
-export const e2eChapters: ChapterFileDto[] = [
+export const e2eChapters: ChapterFilePayload[] = [
 	{
 		id: 'chapter-1',
 		name: 'Chapter 1',

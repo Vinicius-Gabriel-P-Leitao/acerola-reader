@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { ReaderCachedPage } from '$lib/contracts/reader/reader.payloads';
+	import type { ReaderCachedPagePayload } from '$lib/contracts/reader/reader.payloads';
 	import type { Action } from 'svelte/action';
 	import type { ReaderMode } from '../hooks/use-reader-zoom.svelte';
 
@@ -14,7 +14,7 @@
 			chapterAvailable: boolean;
 		};
 		services: {
-			pageAt: (index: number) => ReaderCachedPage | undefined;
+			pageAt: (index: number) => ReaderCachedPagePayload | undefined;
 			trackPage: ReaderPageTracker;
 		};
 	};

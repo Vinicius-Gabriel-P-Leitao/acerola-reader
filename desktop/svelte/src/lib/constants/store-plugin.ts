@@ -6,5 +6,6 @@ export const STORE_KEYS = {
 	libraryPath: 'library_path',
 	comicInfoPreference: 'comic_info_preference',
 	chaptersPerPage: 'chapters_per_page',
-	volumeViewMode: 'volume_view_mode'
+	volumeViewMode: 'volume_view_mode',
+	readerMode: 'reader_mode'
 } as const;

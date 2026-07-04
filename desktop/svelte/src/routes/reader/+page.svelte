@@ -1,11 +1,19 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { useReader } from '$lib/hooks/store/use-reader.svelte';
+	import { useReaderMode } from '$lib/hooks/preferences/use-reader-mode.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { invoke } from '@tauri-apps/api/core';
+	import { listen } from '@tauri-apps/api/event';
+	import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
+	import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
+	import { SESSION_KEYS } from '$lib/constants/session-keys';
 	import { onMount, tick, untrack } from 'svelte';
+	import { useReaderNavigation } from '$lib/hooks/store/use-reader-navigation.svelte';
+	import { useHistory } from '$lib/hooks/store/use-history.svelte';
 	import ReaderCommandPalette from './components/reader-command-palette.svelte';
 	import ReaderFooter from './components/reader-footer.svelte';
 	import ReaderPages from './components/reader-pages.svelte';
@@ -18,17 +26,10 @@
 		useReaderZoom
 	} from './hooks/use-reader-zoom.svelte';
 
-	type ReaderNavigationState = {
-		chapter?: ReaderChapterPayload;
-		startPage?: number;
-		chapterIndex?: number;
-		totalChapters?: number;
-		chapterScope?: string;
-		comicDirectoryId?: string;
-	};
-
 	const reader = useReader();
 	const zoom = useReaderZoom();
+	const readerModeStore = useReaderMode();
+	const history = useHistory();
 
 	let observer: IntersectionObserver | null = null;
 	let visibleRects = new Map<number, DOMRectReadOnly>();
@@ -39,45 +40,33 @@
 	let modeSwitchPage = $state<number | null>(null);
 	let commandOpen = $state(false);
 	let commandValue = $state('');
-	let initializing = $state(true);
 
-	const navigationState = $derived((page.state ?? {}) as ReaderNavigationState);
-	const chapter = $derived(navigationState.chapter);
+	const nav = useReaderNavigation();
 
-	const chapterIndex = $derived.by(() => {
-		const value = navigationState.chapterIndex;
-		return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : undefined;
-	});
-
-	const totalChapters = $derived.by(() => {
-		const value = navigationState.totalChapters;
-		return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : undefined;
-	});
-
-	const chaptersRemaining = $derived.by(() => {
-		if (chapterIndex === undefined || totalChapters === undefined) return undefined;
-		return Math.max(0, totalChapters - chapterIndex - 1);
-	});
+	function updateReadingMode(mode: ReaderMode) {
+		readingMode = mode;
+		void readerModeStore.saveReaderMode(mode);
+	}
 
 	const chapterProgressLabel = $derived.by(() => {
-		if (chapterIndex === undefined || totalChapters === undefined) {
+		if (nav.chapterIndex === undefined || nav.totalChapters === undefined) {
 			return m['pages.reader.progress.chapter_unavailable']();
 		}
 
 		return m['pages.reader.progress.chapter_count']({
-			current: chapterIndex + 1,
-			total: totalChapters
+			current: nav.chapterIndex + 1,
+			total: nav.totalChapters
 		});
 	});
 
 	const chaptersRemainingLabel = $derived.by(() => {
-		if (chaptersRemaining === undefined) {
+		if (nav.chaptersRemaining === undefined) {
 			return m['pages.reader.progress.remaining_unavailable']();
 		}
 
-		return chaptersRemaining === 1
+		return nav.chaptersRemaining === 1
 			? m['pages.reader.progress.remaining_one']()
-			: m['pages.reader.progress.remaining_many']({ count: chaptersRemaining });
+			: m['pages.reader.progress.remaining_many']({ count: nav.chaptersRemaining });
 	});
 
 	const pageProgressPercent = $derived(
@@ -85,7 +74,7 @@
 	);
 
 	const pageProgressWidth = $derived(`${pageProgressPercent}%`);
-	const readerScopeLabel = $derived(navigationState.chapterScope ?? chapterProgressLabel);
+	const readerScopeLabel = $derived(nav.state.chapterScope ?? chapterProgressLabel);
 
 	const readerSubtitle = $derived(
 		reader.session
@@ -214,18 +203,62 @@
 
 		const targetPage = Math.max(0, Math.min(pageIndex, reader.pageCount - 1));
 		const distance = Math.abs(reader.currentPage - targetPage);
-		
+
 		await reader.goToPage(targetPage);
 		zoom.resetPan();
 
 		await tick();
-		// If jumping far, don't smooth scroll to avoid firing observer on 50 intermediate pages
+		// Se for um salto muito grande, não use scroll suave para evitar disparar o observer em dezenas de páginas intermediárias
 		scrollPageIntoView(targetPage, distance > 3 ? 'auto' : 'smooth');
 	}
+
+	async function start() {
+		if (!nav.chapter) {
+			nav.initializing = false;
+			return;
+		}
+
+		await nav.loadContext();
+
+		try {
+			await reader.open(nav.chapter, nav.state.startPage ?? 0);
+			nav.state.startPage = undefined; // Reseta a página inicial para que as próximas aberturas comecem do 0
+			await tick();
+
+			// Pequeno atraso para garantir que o DOM está pronto e o IntersectionObserver pegue o estado inicial
+			setTimeout(() => {
+				scrollPageIntoView(reader.currentPage, 'auto');
+
+				// Outro tick para permitir que o observer registre o pulo antes de exibir a interface
+				setTimeout(() => {
+					nav.initializing = false;
+				}, 50);
+			}, 50);
+		} catch {
+			openFailed = true;
+			nav.initializing = false;
+		}
+	}
+
+	let currentChapterId = $state<string | null>(null);
+
+	$effect(() => {
+		if (nav.chapter && nav.chapter.id !== currentChapterId) {
+			untrack(() => {
+				currentChapterId = nav.chapter!.id;
+				nav.initializing = true;
+				void start();
+			});
+		}
+	});
 
 	let scrollTimeoutId: number;
 
 	onMount(() => {
+		void readerModeStore.loadReaderMode().then(() => {
+			readingMode = readerModeStore.readerMode;
+		});
+
 		observer = new IntersectionObserver(
 			(entries) => {
 				let changed = false;
@@ -234,12 +267,13 @@
 					const pageIndex = Number((entry.target as HTMLElement).dataset.page);
 					if (!Number.isFinite(pageIndex)) continue;
 
-					if (entry.isIntersecting) {
-						visibleRects.set(pageIndex, entry.boundingClientRect);
-					} else {
+					if (!entry.isIntersecting) {
 						visibleRects.delete(pageIndex);
+						changed = true;
+						continue;
 					}
 
+					visibleRects.set(pageIndex, entry.boundingClientRect);
 					changed = true;
 				}
 
@@ -253,30 +287,6 @@
 			{ threshold: 0.01 }
 		);
 
-		const start = async () => {
-			if (!chapter) return;
-
-			try {
-				await reader.open(chapter, navigationState.startPage ?? 0);
-				await tick();
-				
-				// Small delay to ensure DOM is ready and IntersectionObserver catches the initial state
-				setTimeout(() => {
-					scrollPageIntoView(reader.currentPage, 'auto');
-					
-					// Another tick to allow the observer to register the jump before showing UI
-					setTimeout(() => {
-						initializing = false;
-					}, 50);
-				}, 50);
-			} catch {
-				openFailed = true;
-				initializing = false;
-			}
-		};
-
-		void start();
-
 		return () => observer?.disconnect();
 	});
 
@@ -287,7 +297,9 @@
 		untrack(() => {
 			const targetPage = reader.currentPage;
 			modeSwitchPage = targetPage;
+
 			zoom.forceResetZoom();
+
 			visibleRects.clear();
 			visiblePages = [];
 
@@ -351,30 +363,36 @@
 	$effect(() => {
 		const currentPage = reader.currentPage;
 		const pageCount = reader.pageCount;
-		const chapterId = chapter?.id;
-		const comicDirectoryId = navigationState.comicDirectoryId;
+		const chapterId = nav.chapter?.id;
+		const comicDirectoryId = nav.state.comicDirectoryId;
 
 		if (!reader.session || !chapterId || !comicDirectoryId || pageCount === 0) return;
 
 		untrack(() => {
 			const isCompleted = (currentPage + 1) / pageCount >= 0.7;
-			invoke('history_update_reading', {
-				comicId: comicDirectoryId.toString(),
-				chapterId: chapterId.toString(),
-				lastPage: currentPage,
+			void history.updateReading(
+				comicDirectoryId.toString(),
+				chapterId.toString(),
+				currentPage,
 				isCompleted
-			}).catch((err) => console.error('Failed to update history', err));
+			);
 		});
 	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} onresize={zoom.clampPan} />
 
-{#if initializing}
-	<div class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-base/95 backdrop-blur-xl transition-opacity duration-300">
+{#if nav.initializing}
+	<div
+		class="fixed inset-0 z-100 flex flex-col items-center justify-center bg-base/95 backdrop-blur-xl transition-opacity duration-300"
+	>
 		<div class="flex flex-col items-center gap-4">
-			<div class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-			<p class="text-sm font-black tracking-widest text-primary uppercase animate-pulse">{m['pages.reader.fallback.loading']()}</p>
+			<div
+				class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"
+			></div>
+			<p class="animate-pulse text-sm font-black tracking-widest text-primary uppercase">
+				{m['pages.reader.fallback.loading']()}
+			</p>
 		</div>
 	</div>
 {/if}
@@ -383,7 +401,7 @@
 	{#snippet toolbar()}
 		<ReaderToolbar
 			data={{
-				title: chapter?.name ?? m['pages.reader.fallback.chapter_unavailable'](),
+				title: nav.chapter?.name ?? m['pages.reader.fallback.chapter_unavailable'](),
 				subtitle: readerSubtitle,
 				zoomLevel: zoom.zoomLevel,
 				zoomMode: zoom.zoomMode,
@@ -395,7 +413,7 @@
 			state={{ readingMode }}
 			events={{
 				onBack: leaveReader,
-				onReadingModeChange: (mode) => (readingMode = mode),
+				onReadingModeChange: updateReadingMode,
 				onToggleQuickZoom: zoom.toggleQuickZoom,
 				onToggleZoomMode: zoom.toggleZoomMode,
 				onOpenCommandPalette: openCommandPalette,
@@ -413,7 +431,7 @@
 					pageCount: reader.pageCount,
 					currentPage: reader.currentPage,
 					openFailed,
-					chapterAvailable: Boolean(chapter)
+					chapterAvailable: Boolean(nav.chapter)
 				}}
 				services={{
 					pageAt: reader.pageAt,
@@ -431,10 +449,16 @@
 				chapterProgressLabel,
 				modeLabel,
 				zoomStatusLabel: zoom.zoomStatusLabel,
-				chaptersRemainingLabel
+				chaptersRemainingLabel,
+				hasNextChapter: nav.hasNextChapter,
+				hasPreviousChapter: nav.hasPreviousChapter
 			}}
 			state={{ readingMode }}
-			events={{ onReadingModeChange: (mode) => (readingMode = mode) }}
+			events={{
+				onReadingModeChange: updateReadingMode,
+				onNextChapter: nav.goToNextChapter,
+				onPreviousChapter: nav.goToPreviousChapter
+			}}
 		/>
 	{/snippet}
 
@@ -449,7 +473,7 @@
 			events={{
 				onOpenChange: (open) => (commandOpen = open),
 				onValueChange: (value) => (commandValue = value),
-				onReadingModeChange: (mode) => (readingMode = mode),
+				onReadingModeChange: updateReadingMode,
 				onToggleZoomMode: zoom.toggleZoomMode,
 				onZoomIn: zoom.zoomIn,
 				onZoomOut: zoom.zoomOut,

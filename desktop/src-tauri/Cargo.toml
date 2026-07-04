@@ -53,6 +53,9 @@ tracing = {version = "0.1.44", features = ["log"] }
 unrar = "0.5.8"
 zip = "8.6.0"
 
+[target.'cfg(windows)'.dependencies]
+windows = {version = "0.58", features = ["ApplicationModel"] }
+
 [dev-dependencies]
 tauri = {version = "2", features = ["protocol-asset", "test"] }
 tempfile = "3"

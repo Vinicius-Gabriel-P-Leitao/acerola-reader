@@ -1,9 +1,9 @@
-import type { ComicSummaryItem } from '$lib/contracts/home/home.payloads';
+import type { ComicSummaryItemPayload } from '$lib/contracts/home/home.payloads';
 import { CONTEXT_KEYS } from '$lib/constants/context-keys';
 import { getContext, setContext } from 'svelte';
 
 export class ActiveComicState {
-	#current = $state<ComicSummaryItem | null>(null);
+	#current = $state<ComicSummaryItemPayload | null>(null);
 	#cover = $state<string | null>(null);
 
 	get item() {
@@ -14,7 +14,7 @@ export class ActiveComicState {
 		return this.#cover;
 	}
 
-	set(item: ComicSummaryItem, cover: string | null) {
+	set(item: ComicSummaryItemPayload, cover: string | null) {
 		this.#current = item;
 		this.#cover = cover;
 	}

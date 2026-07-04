@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { onDestroy } from 'svelte';
 import { READER_COMMANDS } from '$lib/contracts/reader/reader.commands';
 import type {
-	ReaderCachedPage,
+	ReaderCachedPagePayload,
 	ReaderChapterPayload,
 	ReaderPagePayload,
 	ReaderSessionPayload
@@ -14,7 +14,7 @@ const PREFETCH_RADIUS = 2;
 
 export function useReader() {
 	let pageCache = createPageCache(DEFAULT_READER_CACHE_SIZE);
-	let pendingPages = new Map<number, Promise<ReaderCachedPage | undefined>>();
+	let pendingPages = new Map<number, Promise<ReaderCachedPagePayload | undefined>>();
 	let requestVersion = 0;
 
 	let session = $state<ReaderSessionPayload | undefined>(undefined);
@@ -29,7 +29,7 @@ export function useReader() {
 	});
 
 	function createPageCache(max: number) {
-		return new LRUService<number, ReaderCachedPage>({
+		return new LRUService<number, ReaderCachedPagePayload>({
 			max,
 			dispose: (page) => URL.revokeObjectURL(page.url)
 		});
@@ -56,7 +56,7 @@ export function useReader() {
 		return Boolean(session && index >= 0 && index < session.pageCount);
 	}
 
-	function toCachedPage(payload: ReaderPagePayload): ReaderCachedPage {
+	function toCachedPage(payload: ReaderPagePayload): ReaderCachedPagePayload {
 		const bytes = new Uint8Array(payload.bytes);
 		const blob = new Blob([bytes], { type: payload.mimeType });
 
@@ -231,7 +231,7 @@ export function useReader() {
 			.slice()
 			.sort((left, right) => left - right)
 			.map((key) => pageCache.peek(key))
-			.filter((page): page is ReaderCachedPage => Boolean(page));
+			.filter((page): page is ReaderCachedPagePayload => Boolean(page));
 	});
 
 	const current = $derived.by(() => {
