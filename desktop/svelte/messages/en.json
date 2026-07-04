@@ -167,6 +167,8 @@
 				"commands": "Commands",
 				"previous_page": "Previous page",
 				"next_page": "Next page",
+				"previous_chapter": "Previous chapter",
+				"next_chapter": "Next chapter",
 				"page_navigation_locked": "Disable zoom to change pages",
 				"close_commands": "Close commands"
 			},
