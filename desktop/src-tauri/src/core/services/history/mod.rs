@@ -155,3 +155,51 @@ impl HistoryService {
         self.chapter_repo.get_read_chapters(comic_directory_id).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
+    use sqlx::query;
+
+    async fn setup() -> (Pool<Sqlite>, HistoryService) {
+        let pool = setup_test_db_with_comic().await;
+        let service = HistoryService::new(pool.clone());
+        (pool, service)
+    }
+
+    #[tokio::test]
+    async fn teste_atualiza_leitura_de_quadrinho() {
+        // Atualiza o histórico de leitura com sucesso
+        let (pool, service) = setup().await;
+        
+        // Insere capitulo basico no banco para satisfazer chaves estrangeiras
+        query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)").execute(&pool).await.unwrap();
+
+        let result = service.update_reading_history(1, 1, 10, false).await.unwrap();
+        
+        assert_eq!(result.comic_directory_id, 1);
+        assert_eq!(result.chapter_archive_id, 1);
+        assert_eq!(result.last_page, 10);
+        assert_eq!(result.is_completed, false);
+    }
+
+    #[tokio::test]
+    async fn teste_limpa_historico_do_banco() {
+        // Limpa o histórico corretamente
+        let (pool, service) = setup().await;
+        
+        // Insere capitulo basico no banco para satisfazer chaves estrangeiras
+        query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)").execute(&pool).await.unwrap();
+
+        service.update_reading_history(1, 1, 10, false).await.unwrap();
+        
+        let history_before = service.get_full_history().await.unwrap();
+        assert_eq!(history_before.len(), 1);
+        
+        service.clear_history().await.unwrap();
+        
+        let history_after = service.get_full_history().await.unwrap();
+        assert_eq!(history_after.len(), 0);
+    }
+}

@@ -49,10 +49,10 @@ impl ReadingHistoryRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
 
     async fn setup() -> (Pool<Sqlite>, ReadingHistoryRepository) {
-        let pool = setup_test_db().await;
+        let pool = setup_test_db_with_comic().await;
         // The migrations should run during setup_test_db
         let repo = ReadingHistoryRepository::new(pool.clone());
         (pool, repo)
@@ -63,7 +63,6 @@ mod tests {
         let (pool, repo) = setup().await;
         
         // We need to insert comic and chapter to satisfy foreign keys
-        query("INSERT INTO comic_directory (id, title, path, cover, last_modified) VALUES (1, 'Comic 1', 'path', NULL, 0)").execute(&pool).await.unwrap();
         query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)").execute(&pool).await.unwrap();
 
         let history = ReadingHistory {
@@ -83,7 +82,6 @@ mod tests {
     async fn teste_upsert_update() {
         let (pool, repo) = setup().await;
         
-        query("INSERT INTO comic_directory (id, title, path, cover, last_modified) VALUES (1, 'Comic 1', 'path', NULL, 0)").execute(&pool).await.unwrap();
         query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)").execute(&pool).await.unwrap();
         query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (2, '2', 'path', '2', 0, 1, 0)").execute(&pool).await.unwrap();
 

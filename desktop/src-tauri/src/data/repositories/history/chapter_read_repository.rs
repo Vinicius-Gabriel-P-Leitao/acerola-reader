@@ -50,10 +50,10 @@ impl ChapterReadRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
 
     async fn setup() -> (Pool<Sqlite>, ChapterReadRepository) {
-        let pool = setup_test_db().await;
+        let pool = setup_test_db_with_comic().await;
         let repo = ChapterReadRepository::new(pool.clone());
         (pool, repo)
     }
@@ -62,7 +62,6 @@ mod tests {
     async fn teste_insert_chapter_read() {
         let (pool, repo) = setup().await;
         
-        query("INSERT INTO comic_directory (id, title, path, cover, last_modified) VALUES (1, 'Comic 1', 'path', NULL, 0)").execute(&pool).await.unwrap();
         query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)").execute(&pool).await.unwrap();
 
         let chapter_read = ChapterRead {
