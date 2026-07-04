@@ -1,10 +1,15 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { useReader } from '$lib/hooks/store/use-reader.svelte';
+	import { useReaderMode } from '$lib/hooks/preferences/use-reader-mode.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { invoke } from '@tauri-apps/api/core';
+	import { listen } from '@tauri-apps/api/event';
+	import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
+	import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 	import { onMount, tick, untrack } from 'svelte';
 	import ReaderCommandPalette from './components/reader-command-palette.svelte';
 	import ReaderFooter from './components/reader-footer.svelte';
@@ -29,6 +34,7 @@
 
 	const reader = useReader();
 	const zoom = useReaderZoom();
+	const readerModeStore = useReaderMode();
 
 	let observer: IntersectionObserver | null = null;
 	let visibleRects = new Map<number, DOMRectReadOnly>();
@@ -41,7 +47,139 @@
 	let commandValue = $state('');
 	let initializing = $state(true);
 
-	const navigationState = $derived((page.state ?? {}) as ReaderNavigationState);
+	function updateReadingMode(mode: ReaderMode) {
+		readingMode = mode;
+		void readerModeStore.saveReaderMode(mode);
+	}
+
+	async function goToNextChapter() {
+		if (chaptersRemaining === undefined || chaptersRemaining <= 0) return;
+		if (chapterIndex === undefined || !navigationState.comicDirectoryId) return;
+
+		initializing = true;
+
+		const unlisten = await listen<any>(LIBRARY_EVENTS.comicChapters, (event) => {
+			const payload = event.payload;
+			const nextChapterData = payload.archive.items[0];
+			
+			if (nextChapterData) {
+				const readerChapter: ReaderChapterPayload = {
+					id: nextChapterData.id,
+					name: nextChapterData.name ?? nextChapterData.title,
+					path: nextChapterData.path,
+					chapterSort: nextChapterData.chapterSort ?? '',
+					volumeId: nextChapterData.volumeId ?? null,
+					volumeName: nextChapterData.volumeName ?? null,
+					isSpecial: nextChapterData.isSpecial ?? false,
+					lastModified: nextChapterData.lastModified ?? 0
+				};
+				
+				const newState = {
+					chapter: readerChapter,
+					comicDirectoryId: navigationState.comicDirectoryId,
+					chapterIndex: chapterIndex + 1,
+					totalChapters: totalChapters,
+					chapterScope: navigationState.chapterScope
+				};
+
+				navigationState = newState;
+				replaceState(page.url, newState);
+			} else {
+				initializing = false;
+			}
+			unlisten();
+		});
+
+		await invoke(LIBRARY_COMMANDS.getComicChapters, {
+			comicDirectoryFk: navigationState.comicDirectoryId,
+			volumeId: chapter?.volumeId ?? null,
+			page: chapterIndex + 1,
+			pageSize: 1,
+			asc: true
+		}).catch(() => {
+			initializing = false;
+			unlisten();
+		});
+	}
+
+	const hasPreviousChapter = $derived(
+		chapterIndex !== undefined && chapterIndex > 0
+	);
+
+	async function goToPreviousChapter() {
+		if (chapterIndex === undefined || chapterIndex <= 0 || !navigationState.comicDirectoryId) return;
+
+		initializing = true;
+
+		const unlisten = await listen<any>(LIBRARY_EVENTS.comicChapters, (event) => {
+			const payload = event.payload;
+			const prevChapterData = payload.archive.items[0];
+			
+			if (prevChapterData) {
+				const readerChapter: ReaderChapterPayload = {
+					id: prevChapterData.id,
+					name: prevChapterData.name ?? prevChapterData.title,
+					path: prevChapterData.path,
+					chapterSort: prevChapterData.chapterSort ?? '',
+					volumeId: prevChapterData.volumeId ?? null,
+					volumeName: prevChapterData.volumeName ?? null,
+					isSpecial: prevChapterData.isSpecial ?? false,
+					lastModified: prevChapterData.lastModified ?? 0
+				};
+				
+				const newState = {
+					chapter: readerChapter,
+					comicDirectoryId: navigationState.comicDirectoryId,
+					chapterIndex: chapterIndex - 1,
+					totalChapters: totalChapters,
+					chapterScope: navigationState.chapterScope
+				};
+
+				navigationState = newState;
+				replaceState(page.url, newState);
+			} else {
+				initializing = false;
+			}
+			unlisten();
+		});
+
+		await invoke(LIBRARY_COMMANDS.getComicChapters, {
+			comicDirectoryFk: navigationState.comicDirectoryId,
+			volumeId: chapter?.volumeId ?? null,
+			page: chapterIndex - 1,
+			pageSize: 1,
+			asc: true
+		}).catch(() => {
+			initializing = false;
+			unlisten();
+		});
+	}
+
+	let navigationState = $state<ReaderNavigationState>({} as ReaderNavigationState);
+
+	if (browser) {
+		const state = (page.state ?? {}) as ReaderNavigationState;
+		if (Object.keys(state).length > 0 && state.chapter) {
+			navigationState = state;
+			sessionStorage.setItem('acerola:reader_state', JSON.stringify(state));
+		} else {
+			const saved = sessionStorage.getItem('acerola:reader_state');
+			if (saved) {
+				navigationState = JSON.parse(saved);
+			}
+		}
+	} else {
+		navigationState = (page.state ?? {}) as ReaderNavigationState;
+	}
+
+	$effect(() => {
+		const state = (page.state ?? {}) as ReaderNavigationState;
+		if (Object.keys(state).length > 0 && state.chapter) {
+			navigationState = state;
+			sessionStorage.setItem('acerola:reader_state', JSON.stringify(state));
+		}
+	});
+
 	const chapter = $derived(navigationState.chapter);
 
 	const chapterIndex = $derived.by(() => {
@@ -58,6 +196,10 @@
 		if (chapterIndex === undefined || totalChapters === undefined) return undefined;
 		return Math.max(0, totalChapters - chapterIndex - 1);
 	});
+
+	const hasNextChapter = $derived(
+		chaptersRemaining !== undefined && chaptersRemaining > 0
+	);
 
 	const chapterProgressLabel = $derived.by(() => {
 		if (chapterIndex === undefined || totalChapters === undefined) {
@@ -223,9 +365,75 @@
 		scrollPageIntoView(targetPage, distance > 3 ? 'auto' : 'smooth');
 	}
 
+	async function start() {
+		if (!chapter) {
+			initializing = false;
+			return;
+		}
+
+		if (navigationState.chapterIndex === undefined && navigationState.comicDirectoryId) {
+			const unlisten = await listen<any>(LIBRARY_EVENTS.comicChapters, (event) => {
+				const payload = event.payload;
+				const items = payload.archive.items;
+				const idx = items.findIndex((chapterItem: any) => chapterItem.id === chapter.id);
+				if (idx !== -1) {
+					navigationState.chapterIndex = idx;
+					navigationState.totalChapters = payload.archive.total;
+					sessionStorage.setItem('acerola:reader_state', JSON.stringify(navigationState));
+				}
+				unlisten();
+			});
+
+			await invoke(LIBRARY_COMMANDS.getComicChapters, {
+				comicDirectoryFk: navigationState.comicDirectoryId,
+				volumeId: chapter.volumeId ?? null,
+				page: 0,
+				pageSize: 99999,
+				asc: true
+			}).catch(() => {
+				unlisten();
+			});
+		}
+
+		try {
+			await reader.open(chapter, navigationState.startPage ?? 0);
+			navigationState.startPage = undefined; // Reset start page so subsequent loads start at 0
+			await tick();
+			
+			// Small delay to ensure DOM is ready and IntersectionObserver catches the initial state
+			setTimeout(() => {
+				scrollPageIntoView(reader.currentPage, 'auto');
+				
+				// Another tick to allow the observer to register the jump before showing UI
+				setTimeout(() => {
+					initializing = false;
+				}, 50);
+			}, 50);
+		} catch {
+			openFailed = true;
+			initializing = false;
+		}
+	}
+
+	let currentChapterId = $state<string | null>(null);
+
+	$effect(() => {
+		if (chapter && chapter.id !== currentChapterId) {
+			untrack(() => {
+				currentChapterId = chapter.id;
+				initializing = true;
+				void start();
+			});
+		}
+	});
+
 	let scrollTimeoutId: number;
 
 	onMount(() => {
+		void readerModeStore.loadReaderMode().then(() => {
+			readingMode = readerModeStore.readerMode;
+		});
+
 		observer = new IntersectionObserver(
 			(entries) => {
 				let changed = false;
@@ -252,33 +460,6 @@
 			},
 			{ threshold: 0.01 }
 		);
-
-		const start = async () => {
-			if (!chapter) {
-				initializing = false;
-				return;
-			}
-
-			try {
-				await reader.open(chapter, navigationState.startPage ?? 0);
-				await tick();
-				
-				// Small delay to ensure DOM is ready and IntersectionObserver catches the initial state
-				setTimeout(() => {
-					scrollPageIntoView(reader.currentPage, 'auto');
-					
-					// Another tick to allow the observer to register the jump before showing UI
-					setTimeout(() => {
-						initializing = false;
-					}, 50);
-				}, 50);
-			} catch {
-				openFailed = true;
-				initializing = false;
-			}
-		};
-
-		void start();
 
 		return () => observer?.disconnect();
 	});
@@ -366,7 +547,7 @@
 				chapterId: chapterId.toString(),
 				lastPage: currentPage,
 				isCompleted
-			}).catch((err) => console.error('Failed to update history', err));
+			}).catch((error) => console.error('Failed to update history', error));
 		});
 	});
 </script>
@@ -398,7 +579,7 @@
 			state={{ readingMode }}
 			events={{
 				onBack: leaveReader,
-				onReadingModeChange: (mode) => (readingMode = mode),
+				onReadingModeChange: updateReadingMode,
 				onToggleQuickZoom: zoom.toggleQuickZoom,
 				onToggleZoomMode: zoom.toggleZoomMode,
 				onOpenCommandPalette: openCommandPalette,
@@ -434,10 +615,16 @@
 				chapterProgressLabel,
 				modeLabel,
 				zoomStatusLabel: zoom.zoomStatusLabel,
-				chaptersRemainingLabel
+				chaptersRemainingLabel,
+				hasNextChapter,
+				hasPreviousChapter
 			}}
 			state={{ readingMode }}
-			events={{ onReadingModeChange: (mode) => (readingMode = mode) }}
+			events={{ 
+				onReadingModeChange: updateReadingMode,
+				onNextChapter: goToNextChapter,
+				onPreviousChapter: goToPreviousChapter
+			}}
 		/>
 	{/snippet}
 
@@ -452,7 +639,7 @@
 			events={{
 				onOpenChange: (open) => (commandOpen = open),
 				onValueChange: (value) => (commandValue = value),
-				onReadingModeChange: (mode) => (readingMode = mode),
+				onReadingModeChange: updateReadingMode,
 				onToggleZoomMode: zoom.toggleZoomMode,
 				onZoomIn: zoom.zoomIn,
 				onZoomOut: zoom.zoomOut,
