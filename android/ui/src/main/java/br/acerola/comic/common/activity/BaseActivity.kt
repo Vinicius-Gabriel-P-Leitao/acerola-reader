@@ -1,4 +1,5 @@
 package br.acerola.comic.common.activity
+
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -9,7 +10,12 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -74,29 +80,72 @@ abstract class BaseActivity : ComponentActivity() {
                 CompositionLocalProvider(
                     value = LocalSnackbarHostState provides snackbarHostState,
                 ) {
-                    Acerola.Component.Scaffold {
-                        Scaffold(
-                            topBar = { TopBar(navController) },
-                            snackbarHost = {
-                                SnackbarHost(hostState = snackbarHostState) { snackbarData ->
-                                    val message = snackbarData.visuals.message
-                                    when (resolveSnackbarVariant(snackbarData.visuals)) {
-                                        SnackbarVariant.Error -> Acerola.Component.SnackbarError(message)
-                                        SnackbarVariant.Success -> Acerola.Component.SnackbarSuccess(message)
-                                        SnackbarVariant.Warn -> Acerola.Component.SnackbarWarn(message)
+                    if (isLandscape) {
+                        // Em modo landscape: sidebar fora do Scaffold para ocupar toda a altura
+                        // (status bar + conteúdo + nav bar), igual ao Spotify
+                        // applyStatusBarPadding=false para que a sidebar gerencie seus próprios insets
+                        Acerola.Component.Scaffold(applyStatusBarPadding = false) {
+                            Row(modifier = Modifier.fillMaxHeight()) {
+                                SideBar(navController)
+                                Scaffold(
+                                    modifier = Modifier.weight(1f),
+                                    topBar = { TopBar(navController) },
+                                    snackbarHost = {
+                                        SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+                                            val message = snackbarData.visuals.message
+                                            when (resolveSnackbarVariant(snackbarData.visuals)) {
+                                                SnackbarVariant.Error -> Acerola.Component.SnackbarError(message)
+                                                SnackbarVariant.Success -> Acerola.Component.SnackbarSuccess(message)
+                                                SnackbarVariant.Warn -> Acerola.Component.SnackbarWarn(message)
+                                            }
+                                        }
+                                    },
+                                    // Em landscape, o Scaffold M3 deve respeitar apenas os insets
+                                    // do topo e da direita (a sidebar já cuida do lado esquerdo)
+                                    contentWindowInsets = WindowInsets.safeDrawing.only(
+                                        WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom,
+                                    ),
+                                ) { padding ->
+                                    val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
+                                    val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
+
+                                    val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
+                                    Box(modifier = Modifier.padding(paddingValues = contentPadding)) {
+                                        NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
+                                        Acerola.Component.Progress(
+                                            modifier =
+                                                Modifier
+                                                    .align(Alignment.BottomStart)
+                                                    .padding(all = 8.dp),
+                                            isLoading = isIndexing,
+                                            progress = progress,
+                                        )
                                     }
                                 }
-                            },
-                            bottomBar = { if (!isLandscape) BottomBar(navController) },
-                        ) { padding ->
+                            }
+                        }
+                    } else {
+                        // Em modo portrait: layout original com bottom bar
+                        Acerola.Component.Scaffold {
+                            Scaffold(
+                                topBar = { TopBar(navController) },
+                                snackbarHost = {
+                                    SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+                                        val message = snackbarData.visuals.message
+                                        when (resolveSnackbarVariant(snackbarData.visuals)) {
+                                            SnackbarVariant.Error -> Acerola.Component.SnackbarError(message)
+                                            SnackbarVariant.Success -> Acerola.Component.SnackbarSuccess(message)
+                                            SnackbarVariant.Warn -> Acerola.Component.SnackbarWarn(message)
+                                        }
+                                    }
+                                },
+                                bottomBar = { BottomBar(navController) },
+                            ) { padding ->
+                                val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
+                                val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
 
-                            val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
-                            val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
-
-                            val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
-                            Row(modifier = Modifier.padding(paddingValues = contentPadding)) {
-                                if (isLandscape) SideBar(navController)
-                                Box(modifier = Modifier.weight(1f)) {
+                                val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
+                                Box(modifier = Modifier.padding(paddingValues = contentPadding)) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
                                     Acerola.Component.Progress(
                                         modifier =
