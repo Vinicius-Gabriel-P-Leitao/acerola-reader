@@ -26,9 +26,10 @@ impl ChapterReadRepository {
         let table = ChapterRead::table_name();
 
         sqlx::query(&format!(
-            "INSERT INTO {table} ({cols})
+            "INSERT INTO {} ({})
              VALUES (?, ?, ?)
-             ON CONFLICT(comic_directory_id, chapter_archive_id) DO NOTHING"
+             ON CONFLICT(comic_directory_id, chapter_archive_id) DO NOTHING",
+            table, cols
         ))
         .bind(chapter_read.comic_directory_id)
         .bind(chapter_read.chapter_archive_id)
@@ -40,9 +41,7 @@ impl ChapterReadRepository {
     }
 
     /// Retorna os IDs dos capítulos lidos de um quadrinho.
-    pub async fn find_ids_by_comic(
-        &self, comic_directory_id: i64,
-    ) -> Result<Vec<i64>, DbError> {
+    pub async fn find_ids_by_comic(&self, comic_directory_id: i64) -> Result<Vec<i64>, DbError> {
         let table = ChapterRead::table_name();
 
         let rows = sqlx::query_as::<_, (i64,)>(&format!(

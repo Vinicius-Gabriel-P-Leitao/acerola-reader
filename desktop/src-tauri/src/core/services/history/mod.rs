@@ -31,11 +31,7 @@ impl HistoryService {
     /// Atualiza o progresso de leitura de um quadrinho. Se `is_completed`,
     /// registra também o capítulo como lido na tabela `chapter_read`.
     pub async fn update_progress(
-        &self,
-        comic_directory_id: i64,
-        chapter_archive_id: i64,
-        last_page: i64,
-        is_completed: bool,
+        &self, comic_directory_id: i64, chapter_archive_id: i64, last_page: i64, is_completed: bool,
     ) -> Result<ReadingHistory, DbError> {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
 
@@ -50,11 +46,8 @@ impl HistoryService {
         let result = self.reading_repo.upsert(&history).await?;
 
         if is_completed {
-            let chapter_read_entry = ChapterRead {
-                comic_directory_id,
-                chapter_archive_id,
-                created_at: now,
-            };
+            let chapter_read_entry =
+                ChapterRead { comic_directory_id, chapter_archive_id, created_at: now };
             self.chapter_repo.insert_or_ignore(&chapter_read_entry).await?;
         }
 
@@ -79,9 +72,7 @@ impl HistoryService {
     }
 
     /// Retorna os IDs dos capítulos lidos de um quadrinho.
-    pub async fn find_read_chapters(
-        &self, comic_directory_id: i64,
-    ) -> Result<Vec<i64>, DbError> {
+    pub async fn find_read_chapters(&self, comic_directory_id: i64) -> Result<Vec<i64>, DbError> {
         self.chapter_repo.find_ids_by_comic(comic_directory_id).await
     }
 }
@@ -106,7 +97,7 @@ mod tests {
             .await
             .unwrap();
 
-        let result = service.atualizar_progresso(1, 1, 10, false).await.unwrap();
+        let result = service.update_progress(1, 1, 10, false).await.unwrap();
 
         assert_eq!(result.comic_directory_id, 1);
         assert_eq!(result.chapter_archive_id, 1);
@@ -123,14 +114,14 @@ mod tests {
             .await
             .unwrap();
 
-        service.atualizar_progresso(1, 1, 10, false).await.unwrap();
+        service.update_progress(1, 1, 10, false).await.unwrap();
 
-        let antes = service.reading_repo.find_all_ordered().await.unwrap();
-        assert_eq!(antes.len(), 1);
+        let before = service.reading_repo.find_all_ordered().await.unwrap();
+        assert_eq!(before.len(), 1);
 
-        service.limpar_historico().await.unwrap();
+        service.clear().await.unwrap();
 
-        let depois = service.reading_repo.find_all_ordered().await.unwrap();
-        assert_eq!(depois.len(), 0);
+        let after = service.reading_repo.find_all_ordered().await.unwrap();
+        assert_eq!(after.len(), 0);
     }
 }

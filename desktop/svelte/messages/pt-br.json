@@ -199,6 +199,10 @@
 		"history": {
 			"title": "Histórico",
 			"clear_history": "Limpar Histórico",
+			"clear_history_title": "Tem certeza absoluta?",
+			"clear_history_desc": "Essa ação não pode ser desfeita. Todo o histórico de leitura será apagado permanentemente.",
+			"clear_history_cancel": "Cancelar",
+			"clear_history_confirm": "Sim, limpar tudo",
 			"loading": "Carregando...",
 			"no_events": "Nenhum histórico encontrado.",
 			"resume": "Continuar Lendo",

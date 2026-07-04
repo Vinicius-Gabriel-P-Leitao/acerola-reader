@@ -9,12 +9,16 @@
 			modeLabel: string;
 			zoomStatusLabel: string;
 			chaptersRemainingLabel: string;
+			hasNextChapter?: boolean;
+			hasPreviousChapter?: boolean;
 		};
 		state: {
 			readingMode: ReaderMode;
 		};
 		events: {
 			onReadingModeChange: (mode: ReaderMode) => void;
+			onNextChapter?: () => void;
+			onPreviousChapter?: () => void;
 		};
 	};
 </script>
@@ -22,6 +26,8 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
 	import ReaderModeToggle from './reader-mode-toggle.svelte';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 
 	let { data, events, state }: ReaderFooterProps = $props();
 </script>
@@ -56,10 +62,34 @@
 			></div>
 		</div>
 
-		<ReaderModeToggle
-			state={{ value: state.readingMode }}
-			events={{ onValueChange: events.onReadingModeChange }}
-			ui={{ variant: 'mobile' }}
-		/>
+		<div class="flex items-center justify-between gap-4">
+			<div class="flex items-center gap-2">
+				{#if data.hasPreviousChapter && events.onPreviousChapter}
+					<button
+						class="flex items-center gap-2 rounded-lg bg-surface/60 px-4 py-2 text-xs font-bold text-primary transition-all hover:bg-surface active:scale-95"
+						onclick={events.onPreviousChapter}
+					>
+						<ChevronLeft size={16} />
+						<span class="hidden md:inline">{m['pages.reader.actions.previous_chapter']?.() ?? 'ANTERIOR'}</span>
+					</button>
+				{/if}
+
+				<ReaderModeToggle
+					state={{ value: state.readingMode }}
+					events={{ onValueChange: events.onReadingModeChange }}
+					ui={{ variant: 'mobile' }}
+				/>
+			</div>
+
+			{#if data.hasNextChapter && events.onNextChapter}
+				<button
+					class="flex items-center gap-2 rounded-lg bg-surface/60 px-4 py-2 text-xs font-bold text-primary transition-all hover:bg-surface active:scale-95"
+					onclick={events.onNextChapter}
+				>
+					<span class="hidden md:inline">{m['pages.reader.actions.next_chapter']?.() ?? 'PRÓXIMO'}</span>
+					<ChevronRight size={16} />
+				</button>
+			{/if}
+		</div>
 	</div>
 </footer>

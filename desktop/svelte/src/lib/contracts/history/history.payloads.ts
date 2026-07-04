@@ -1,4 +1,4 @@
-export type ReadingHistoryDto = {
+export type ReadingHistoryPayload = {
 	comicDirectoryId: string;
 	chapterArchiveId: string;
 	lastPage: number;

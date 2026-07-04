@@ -4,7 +4,7 @@ export enum VolumeViewType {
 	COVER_VOLUME = 'COVER_VOLUME'
 }
 
-export type ChapterFileDto = {
+export type ChapterFilePayload = {
 	id: string;
 	name: string;
 	path: string;
@@ -15,7 +15,7 @@ export type ChapterFileDto = {
 	lastModified: number;
 };
 
-export type VolumeArchiveDto = {
+export type VolumeArchivePayload = {
 	id: string;
 	name: string;
 	volumeSort: string;
@@ -26,9 +26,9 @@ export type VolumeArchiveDto = {
 	chapterCount: number;
 };
 
-export type VolumeChapterGroupDto = {
-	volume: VolumeArchiveDto;
-	items: ChapterFileDto[];
+export type VolumeChapterGroupPayload = {
+	volume: VolumeArchivePayload;
+	items: ChapterFilePayload[];
 	totalChapters: number;
 	loadedCount: number;
 	hasMore: boolean;
@@ -36,17 +36,17 @@ export type VolumeChapterGroupDto = {
 	totalPages: number;
 };
 
-export type ChapterPageDto = {
-	items: ChapterFileDto[];
-	volumes: VolumeArchiveDto[];
+export type ChapterPagePayload = {
+	items: ChapterFilePayload[];
+	volumes: VolumeArchivePayload[];
 	pageSize: number;
 	page: number;
 	total: number;
-	volumeSections: VolumeChapterGroupDto[];
+	volumeSections: VolumeChapterGroupPayload[];
 };
 
-export type ChapterDto = {
-	archive: ChapterPageDto;
+export type ChapterPayload = {
+	archive: ChapterPagePayload;
 	showVolumeHeaders: boolean;
 	hasVolumeStructure: boolean;
 	effectiveViewMode: VolumeViewType;

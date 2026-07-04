@@ -5,17 +5,18 @@
 
 	import PlaceholderManga from '$lib/assets/placeholder/placeholder_manga.svg?component';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
+	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	import { resolveArtworkPath } from '$lib/utils/artwork.utils';
-	import type { ReadingHistoryDto } from '$lib/contracts/history/history.payloads';
+	import type { ReadingHistoryPayload } from '$lib/contracts/history/history.payloads';
 	import { useHistory } from '$lib/hooks/store/use-history.svelte';
 
 	const history = useHistory();
 
-	function resumeReading(item: ReadingHistoryDto) {
+	function resumeReading(item: ReadingHistoryPayload) {
 		goto('/reader', {
 			state: {
 				comicDirectoryId: item.comicDirectoryId,
@@ -35,7 +36,7 @@
 		});
 	}
 
-	function openComic(item: ReadingHistoryDto) {
+	function openComic(item: ReadingHistoryPayload) {
 		goto(`/comic/${item.folderName}`, {
 			state: {
 				comicDirectoryId: item.comicDirectoryId
@@ -52,13 +53,25 @@
 	<div class="flex shrink-0 items-center justify-between px-8 py-6">
 		<h2 class="text-2xl font-bold tracking-tight">{m['pages.history.title']()}</h2>
 		{#if history.items.length > 0}
-			<AcerolaButton
-				events={{ onClick: () => history.clear() }}
-				ui={{ variant: 'destructive', size: 'sm', class: 'gap-2 font-medium tracking-wide' }}
+			<AcerolaAlertDialog
+				data={{
+					title: m['pages.history.clear_history_title'](),
+					description: m['pages.history.clear_history_desc'](),
+					cancelText: m['pages.history.clear_history_cancel'](),
+					actionText: m['pages.history.clear_history_confirm']()
+				}}
+				ui={{ variant: 'destructive' }}
+				events={{
+					onAction: () => history.clear()
+				}}
 			>
-				<Trash2 size={16} />
-				{m['pages.history.clear_history']()}
-			</AcerolaButton>
+				<AcerolaButton
+					ui={{ variant: 'destructive', size: 'sm', class: 'gap-2 font-medium tracking-wide' }}
+				>
+					<Trash2 size={16} />
+					{m['pages.history.clear_history']()}
+				</AcerolaButton>
+			</AcerolaAlertDialog>
 		{/if}
 	</div>
 
@@ -103,12 +116,14 @@
 							<span>{m['pages.history.page_label']({ page: heroItem.lastPage + 1 })}</span>
 						</div>
 
-						<button
-							class="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-black tracking-widest text-sm hover:opacity-90 hover:scale-105 transition-all shadow-xl shadow-primary/20"
-							onclick={() => resumeReading(heroItem)}
+						<AcerolaButton
+							events={{ onClick: () => resumeReading(heroItem) }}
+							ui={{
+								class: 'mt-4 px-8 py-6 rounded-full font-black tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20'
+							}}
 						>
 							{m['pages.history.resume']()}
-						</button>
+						</AcerolaButton>
 					</div>
 				</div>
 			</div>
@@ -126,9 +141,12 @@
 								{#snippet footer()}
 									<div class="mt-1 flex flex-col gap-1">
 										<span class="text-overlay flex items-center gap-1 text-[10px] font-black tracking-wider uppercase">
-											<BookOpen size={10} />
-											{m['pages.history.chapter_label']({ chapter: item.chapterName })}
+											<BookOpen size={10} class="shrink-0" />
+											<span class="truncate">
+												{m['pages.history.chapter_label']({ chapter: item.chapterName })}
+											</span>
 										</span>
+										
 										<span class="text-overlay text-[10px] opacity-80">
 											{m['pages.history.page_label']({ page: item.lastPage + 1 })}
 										</span>
