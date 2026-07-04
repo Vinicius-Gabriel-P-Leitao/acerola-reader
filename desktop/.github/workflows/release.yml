@@ -120,7 +120,7 @@ jobs:
           git add src-tauri/tauri.conf.json src-tauri/Cargo.toml package.json
           if ! git diff --staged --quiet; then
             git commit -m "[chore]: bump version to $VERSION_FULL [skip ci]"
-            git push origin HEAD:main HEAD:develop
+            git push origin HEAD:main
           fi
         env:
           VERSION_FULL: ${{ env.VERSION_FULL }}
