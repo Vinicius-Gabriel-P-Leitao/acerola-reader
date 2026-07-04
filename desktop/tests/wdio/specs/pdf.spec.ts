@@ -25,7 +25,7 @@ describe('PDF to CBZ E2E', () => {
 		await invokeTauriCommand('refresh_library', { path: pdfFolder });
 
 		// Espera a conversao terminar e o mangá aparecer (tempo maior devido a conversao pdf)
-		const comicCard = await firstDisplayed('//*[normalize-space()="pdf"]', 30_000);
+		const comicCard = await firstDisplayed('main h3', 30_000);
 		await comicCard.click();
 
 		await browser.waitUntil(async () => (await getPathname()) === '/comic/pdf', {

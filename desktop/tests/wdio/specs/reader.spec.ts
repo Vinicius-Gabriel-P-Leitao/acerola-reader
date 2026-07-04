@@ -74,6 +74,13 @@ describe('reader nativo', () => {
 		const firstPage = await browser.$('img[alt="Página 1"]');
 		await firstPage.waitForDisplayed({ timeout: 10_000 });
 
+		// Ensure we are in Paginated mode (in case a previous test left it in Webtoon)
+		const commandsBtn = await browser.$('[title="Comandos"]');
+		if (await commandsBtn.isExisting()) {
+			await commandsBtn.click();
+			await (await firstDisplayed('[title="Paginado horizontal"]')).click();
+		}
+
 		await (await firstDisplayed('[title="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
 		await waitForText('67% lido', 10_000);
