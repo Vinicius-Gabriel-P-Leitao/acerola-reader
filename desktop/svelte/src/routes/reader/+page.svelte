@@ -254,7 +254,10 @@
 		);
 
 		const start = async () => {
-			if (!chapter) return;
+			if (!chapter) {
+				initializing = false;
+				return;
+			}
 
 			try {
 				await reader.open(chapter, navigationState.startPage ?? 0);
