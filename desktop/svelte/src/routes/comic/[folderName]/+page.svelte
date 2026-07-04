@@ -152,8 +152,9 @@
 
 	$effect(() => {
 		if (data.comic) {
+			const comic = data.comic;
 			untrack(() => {
-				activeComic.set(data.comic, resolveCover(data.comic.artwork));
+				activeComic.set(comic, resolveCover(comic.artwork));
 			});
 		}
 	});

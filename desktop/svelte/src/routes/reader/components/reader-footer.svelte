@@ -70,7 +70,7 @@
 						onclick={events.onPreviousChapter}
 					>
 						<ChevronLeft size={16} />
-						<span class="hidden md:inline">{m['pages.reader.actions.previous_chapter']?.() ?? 'ANTERIOR'}</span>
+						<span class="hidden md:inline">{m['pages.reader.actions.previous_chapter']()}</span>
 					</button>
 				{/if}
 
@@ -86,7 +86,7 @@
 					class="flex items-center gap-2 rounded-lg bg-surface/60 px-4 py-2 text-xs font-bold text-primary transition-all hover:bg-surface active:scale-95"
 					onclick={events.onNextChapter}
 				>
-					<span class="hidden md:inline">{m['pages.reader.actions.next_chapter']?.() ?? 'PRÓXIMO'}</span>
+					<span class="hidden md:inline">{m['pages.reader.actions.next_chapter']()}</span>
 					<ChevronRight size={16} />
 				</button>
 			{/if}

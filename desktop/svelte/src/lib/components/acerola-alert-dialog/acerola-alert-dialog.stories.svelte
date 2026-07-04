@@ -5,17 +5,7 @@
 
 	const { Story } = defineMeta({
 		component: AcerolaAlertDialog,
-		title: 'Components/AcerolaAlertDialog',
-		argTypes: {
-			'data.title': { control: 'text' },
-			'data.description': { control: 'text' },
-			'data.cancelText': { control: 'text' },
-			'data.actionText': { control: 'text' },
-			'ui.variant': {
-				control: 'select',
-				options: ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link']
-			}
-		}
+		title: 'Components/AcerolaAlertDialog'
 	});
 </script>
 
@@ -25,7 +15,8 @@
 		state: { open: false },
 		data: {
 			title: 'Are you absolutely sure?',
-			description: 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+			description:
+				'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
 			cancelText: 'Cancel',
 			actionText: 'Continue'
 		},
@@ -34,8 +25,17 @@
 		}
 	}}
 >
-	{#snippet children(args)}
-		<AcerolaAlertDialog {...args}>
+	{#snippet children()}
+		<AcerolaAlertDialog
+			data={{
+				title: 'Are you absolutely sure?',
+				description:
+					'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+				cancelText: 'Cancel',
+				actionText: 'Continue'
+			}}
+			ui={{ variant: 'default' }}
+		>
 			<AcerolaButton>Open Dialog</AcerolaButton>
 		</AcerolaAlertDialog>
 	{/snippet}
@@ -56,8 +56,16 @@
 		}
 	}}
 >
-	{#snippet children(args)}
-		<AcerolaAlertDialog {...args}>
+	{#snippet children()}
+		<AcerolaAlertDialog
+			data={{
+				title: 'Delete everything?',
+				description: 'This will permanently delete all your files. Are you sure?',
+				cancelText: 'Cancel',
+				actionText: 'Delete'
+			}}
+			ui={{ variant: 'destructive' }}
+		>
 			<AcerolaButton ui={{ variant: 'destructive' }}>Delete All</AcerolaButton>
 		</AcerolaAlertDialog>
 	{/snippet}

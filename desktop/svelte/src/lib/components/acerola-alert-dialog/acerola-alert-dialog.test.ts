@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import AcerolaAlertDialog from './acerola-alert-dialog.svelte';
-import { html } from 'code-tag';
 
 describe('AcerolaAlertDialog', () => {
 	it('should render trigger button', () => {
