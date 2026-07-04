@@ -86,7 +86,8 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 
 ### Adicionar um worker para o conversor de pdf
 
-- [ ] **Montar um worker:** Criar um worker para quando um pdf for virar cbz, pode demorar muito, ou se melhor como tenho uma lista de pastas e arquivos na hora de converter, se possível tenta converter 2 ao mesmo tempo, se for viável.
+- [x] **Montar um worker:** Criar um worker para quando um pdf for virar cbz, pode demorar muito, ou se melhor como tenho uma lista de pastas e 
+  arquivos na hora de converter, se possível tenta converter 2 ao mesmo tempo, se for viável.
 
 ### Novas Funcionalidades (Features)
 
@@ -96,3 +97,8 @@ fluida, bonita e eficiente de escanear, organizar e ler arquivos (`.cbz`, `.cbr`
 ### Modificar tabelas do banco de dados para ter nomes consistentes
 
 - [ ] **Alguns campos que deveriam ser _fk estão com _id:** Será feito refactor e migration, deixa isso para versão do banco 3.
+
+### Melhorar infra do rust e contribuição
+
+- [ ] **Contribuição:** Melhorar a descrição do que é necessário para poder rodar, contribuir e entender do projeto.
+- [ ] **Rust:** Fazer o rust ter um makfile e melhorar o gradle para chamara infra do rust sem ter que saber de comandos.

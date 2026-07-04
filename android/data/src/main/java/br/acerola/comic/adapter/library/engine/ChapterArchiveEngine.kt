@@ -14,6 +14,11 @@ import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.translator.ui.toChapterPageDto
 import br.acerola.comic.logging.AcerolaLogger
@@ -137,30 +142,37 @@ class ChapterArchiveEngine
                                 AcerolaLogger.d(TAG, "Checking ${pdfFiles.size} PDF files in: ${dir.name}", LogSource.REPOSITORY)
                                 val cbzNames = children.map { it.name }.toSet()
 
-                                pdfFiles.forEach { pdf ->
-                                    val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormat.CBZ.extension
-                                    if (!archiveValidator.isPdfConversionEligible(targetCbzName, cbzNames, chapterRegex)) {
-                                        AcerolaLogger.v(TAG, "Skipping PDF conversion: ${pdf.name}", LogSource.REPOSITORY)
-                                        return@forEach
-                                    }
+                                val semaphore = Semaphore(3)
+                                coroutineScope {
+                                    pdfFiles.map { pdf ->
+                                        async {
+                                            semaphore.withPermit {
+                                                val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormat.CBZ.extension
+                                                if (!archiveValidator.isPdfConversionEligible(targetCbzName, cbzNames, chapterRegex)) {
+                                                    AcerolaLogger.v(TAG, "Skipping PDF conversion: ${pdf.name}", LogSource.REPOSITORY)
+                                                    return@withPermit
+                                                }
 
-                                    val pdfDocUri =
-                                        if (baseUri != null) {
-                                            DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
-                                        } else {
-                                            pdf.id.toUri()
-                                        }
-                                    val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri) ?: return@forEach
+                                                val pdfDocUri =
+                                                    if (baseUri != null) {
+                                                        DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
+                                                    } else {
+                                                        pdf.id.toUri()
+                                                    }
+                                                val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri) ?: return@withPermit
 
-                                    AcerolaLogger.i(TAG, "Converting: ${pdf.name} -> $targetCbzName in ${dir.name}", LogSource.REPOSITORY)
-                                    pdfToCbzConverterService
-                                        .convertPdfToCbz(dir, pdfDoc, targetCbzName)
-                                        .onRight {
-                                            AcerolaLogger.i(TAG, "Converted: $targetCbzName", LogSource.REPOSITORY)
-                                            needsGlobalRefresh = true
-                                        }.onLeft {
-                                            AcerolaLogger.e(TAG, "PDF conversion failed: ${pdf.name}", LogSource.REPOSITORY)
+                                                AcerolaLogger.i(TAG, "Converting: ${pdf.name} -> $targetCbzName in ${dir.name}", LogSource.REPOSITORY)
+                                                pdfToCbzConverterService
+                                                    .convertPdfToCbz(dir, pdfDoc, targetCbzName)
+                                                    .onRight {
+                                                        AcerolaLogger.i(TAG, "Converted: $targetCbzName", LogSource.REPOSITORY)
+                                                        needsGlobalRefresh = true
+                                                    }.onLeft {
+                                                        AcerolaLogger.e(TAG, "PDF conversion failed: ${pdf.name}", LogSource.REPOSITORY)
+                                                    }
+                                            }
                                         }
+                                    }.awaitAll()
                                 }
                             }
 
