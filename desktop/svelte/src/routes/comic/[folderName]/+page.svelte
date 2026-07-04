@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
 
@@ -13,6 +13,7 @@
 
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
+	import { invoke } from '@tauri-apps/api/core';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -38,8 +39,6 @@
 	let expandedVolumeId = $state<string | null>(null);
 
 	let activeTab = $state('content');
-	let displayMode = $state('Lista');
-	let mediaType = $state('Manga');
 	let isAscending = $state(true);
 	let searchQuery = $state('');
 
@@ -84,10 +83,15 @@
 		goto('/reader', {
 			state: {
 				chapter: readerChapter,
+				comicDirectoryId: activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId,
 				...getReaderProgress(chapter)
 			}
 		});
 	}
+
+	let readingHistory = $state<any | null>(null);
+	let readChapters = $state<string[]>([]);
+	let isHistoryLoading = $state(false);
 
 	onMount(async () => {
 		if (!activeComic.item && data.comic) {
@@ -99,6 +103,48 @@
 			volumeViewPreference.loadVolumeViewMode()
 		]);
 	});
+
+	afterNavigate(async () => {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (id) {
+			isHistoryLoading = true;
+			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(() => null);
+			const fetchRead = invoke<string[]>('history_get_read_chapters', { comicId: id.toString() }).catch(() => []);
+			
+			const [history, read] = await Promise.all([fetchHistory, fetchRead]);
+			readingHistory = history;
+			readChapters = read;
+			
+			isHistoryLoading = false;
+		}
+	});
+
+	function handleReadNow() {
+		if (readingHistory) {
+			goto('/reader', {
+				state: {
+					comicDirectoryId: readingHistory.comicDirectoryId.toString(),
+					startPage: readingHistory.lastPage,
+					chapterScope: readingHistory.comicName,
+					chapter: {
+						id: readingHistory.chapterArchiveId.toString(),
+						name: readingHistory.chapterName,
+						path: readingHistory.chapterPath,
+						chapterSort: readingHistory.chapterSort,
+						isSpecial: readingHistory.isSpecial,
+						lastModified: readingHistory.lastModified,
+						volumeId: null,
+						volumeName: null
+					}
+				}
+			});
+		} else {
+			// Find first chapter available
+			if (manga?.pagesData?.[0]?.items?.[0]) {
+				openReader(manga.pagesData[0].items[0] as unknown as Chapter);
+			}
+		}
+	}
 
 	$effect(() => {
 		const value = chaptersPreference.chaptersPerPage;
@@ -175,7 +221,7 @@
 					name: comic.name,
 					title: comic.name,
 					fileName: comic.name,
-					isRead: false,
+					isRead: readChapters.includes(comic.id.toString()),
 					chapterSort: comic.chapterSort,
 					path: comic.path,
 					volumeId: comic.volumeId,
@@ -259,7 +305,14 @@
 				description: manga.metadata.description,
 				cover: manga.cover
 			}}
-			events={{ onBack }}
+			state={{
+				isResuming: !!readingHistory,
+				isLoading: isHistoryLoading
+			}}
+			events={{ 
+				onBack,
+				onReadNow: handleReadNow
+			}}
 		/>
 
 		<div
@@ -376,14 +429,10 @@
 								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false
 							}}
 							state={{
-								displayMode,
-								mediaType,
 								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode
 							}}
 							events={{
-								onDisplayModeChange: (value) => (displayMode = value),
-								onMediaTypeChange: (value) => (mediaType = value),
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value)
 							}}

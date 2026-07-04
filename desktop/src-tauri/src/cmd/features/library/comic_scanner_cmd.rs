@@ -21,9 +21,15 @@ pub async fn refresh_library<R: Runtime>(
         let service = ComicScannerService::new(root.clone(), pool);
 
         match service
-            .refresh_library(root, |it| {
-                let _ = app.emit("scan:progress", it);
-            })
+            .refresh_library(
+                root,
+                |it| {
+                    let _ = app.emit("scan:progress", it);
+                },
+                |msg| {
+                    let _ = app.emit("scan:converting", msg);
+                },
+            )
             .await
         {
             Ok(_) => app.emit("scan:complete", ()).unwrap(),
@@ -47,9 +53,15 @@ pub async fn incremental_scan<R: Runtime>(
         let service = ComicScannerService::new(root.clone(), pool);
 
         match service
-            .incremental_scan(root, |it| {
-                let _ = app.emit("scan:progress", it);
-            })
+            .incremental_scan(
+                root,
+                |it| {
+                    let _ = app.emit("scan:progress", it);
+                },
+                |msg| {
+                    let _ = app.emit("scan:converting", msg);
+                },
+            )
             .await
         {
             Ok(_) => app.emit("scan:complete", ()).unwrap(),
@@ -73,9 +85,15 @@ pub async fn rebuild_library<R: Runtime>(
         let service = ComicScannerService::new(root.clone(), pool);
 
         match service
-            .rebuild_library(root, |it| {
-                let _ = app.emit("scan:progress", it);
-            })
+            .rebuild_library(
+                root,
+                |it| {
+                    let _ = app.emit("scan:progress", it);
+                },
+                |msg| {
+                    let _ = app.emit("scan:converting", msg);
+                },
+            )
             .await
         {
             Ok(_) => app.emit("scan:complete", ()).unwrap(),

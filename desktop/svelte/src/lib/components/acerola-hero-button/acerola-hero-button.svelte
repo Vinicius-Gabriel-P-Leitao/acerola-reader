@@ -38,22 +38,22 @@
 	)}
 	onclick={events?.onClick}
 >
-	<div class="flex items-center gap-4">
+	<div class="flex flex-1 min-w-0 items-center gap-4">
 		{#if icon}
 			<Item.Media
-				class="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground transition-colors group-hover:text-primary"
+				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-foreground transition-colors group-hover:text-primary"
 			>
 				{@render icon()}
 			</Item.Media>
 		{/if}
 
-		<Item.Content class="text-left">
-			<Item.Title class="text-lg font-bold text-foreground">
+		<Item.Content class="min-w-0 flex-1 text-left">
+			<Item.Title class="block w-full truncate text-lg font-bold text-foreground">
 				{data?.title ?? m['components.hero_button.default_title']()}
 			</Item.Title>
 
 			{#if data?.description}
-				<Item.Description class="text-sm text-muted-foreground">{data.description}</Item.Description
+				<Item.Description class="block w-full truncate text-sm text-muted-foreground">{data.description}</Item.Description
 				>
 			{/if}
 		</Item.Content>

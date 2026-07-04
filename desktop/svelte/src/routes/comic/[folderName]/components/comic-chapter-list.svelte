@@ -131,8 +131,9 @@
 									onClick: () => events?.onOpenChapter?.(chapter)
 								}}
 								ui={{
-									class:
-										'h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30'
+									class: chapter.isRead
+										? 'h-full flex-nowrap overflow-hidden border-primary/30 bg-primary/10 hover:bg-primary/20'
+										: 'h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30'
 								}}
 							>
 								{#snippet icon()}
@@ -142,18 +143,25 @@
 								{/snippet}
 
 								{#snippet action()}
-									<AcerolaButtonIcon
-										events={{
-											onClick: (event) => event.stopPropagation()
-										}}
-										ui={{
-											variant: 'ghost',
-											size: 'sm',
-											class: 'text-overlay hover:text-primary'
-										}}
-									>
-										<MoreVertical size={20} />
-									</AcerolaButtonIcon>
+									<div class="flex items-center gap-2">
+										{#if chapter.isRead}
+											<span class="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black tracking-widest text-primary uppercase">
+												{m['pages.comic.metadata.completed'] ? m['pages.comic.metadata.completed']() : 'LIDO'}
+											</span>
+										{/if}
+										<AcerolaButtonIcon
+											events={{
+												onClick: (event) => event.stopPropagation()
+											}}
+											ui={{
+												variant: 'ghost',
+												size: 'sm',
+												class: 'text-overlay hover:text-primary'
+											}}
+										>
+											<MoreVertical size={20} />
+										</AcerolaButtonIcon>
+									</div>
 								{/snippet}
 							</AcerolaHeroButton>
 						</div>

@@ -43,26 +43,26 @@ impl MockNetworkService {
     }
 
     fn fail_next(&self, message: &str) {
-        self.state.lock().expect("mutex do mock de rede nao deve estar envenenado").failure =
+        self.state.lock().expect("network mock mutex should not be poisoned").failure =
             Some(message.to_string());
     }
 
     fn set_mode(&self, mode: NetworkMode) {
-        self.state.lock().expect("mutex do mock de rede nao deve estar envenenado").mode = mode;
+        self.state.lock().expect("network mock mutex should not be poisoned").mode = mode;
     }
 
     fn set_peers(&self, peers: Vec<ConnectedPeerInfo>) {
-        self.state.lock().expect("mutex do mock de rede nao deve estar envenenado").peers = peers;
+        self.state.lock().expect("network mock mutex should not be poisoned").peers = peers;
     }
 
     fn mode(&self) -> NetworkMode {
-        self.state.lock().expect("mutex do mock de rede nao deve estar envenenado").mode.clone()
+        self.state.lock().expect("network mock mutex should not be poisoned").mode.clone()
     }
 
     fn last_connection(&self) -> Option<(String, Vec<u8>)> {
         self.state
             .lock()
-            .expect("mutex do mock de rede nao deve estar envenenado")
+            .expect("network mock mutex should not be poisoned")
             .last_connection
             .clone()
     }
@@ -79,46 +79,46 @@ impl MockNetworkService {
 #[async_trait]
 impl NetworkServiceApi for MockNetworkService {
     fn local_id(&self) -> Result<String, String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         Ok(state.local_id.clone())
     }
 
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         Ok(state.peers.clone())
     }
 
     async fn switch_to_local(&self) -> Result<(), String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         state.mode = NetworkMode::Local;
         Ok(())
     }
 
     async fn switch_to_relay(&self) -> Result<(), String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         state.mode = NetworkMode::Relay;
         Ok(())
     }
 
     async fn mode(&self) -> Result<NetworkMode, String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         Ok(state.mode.clone())
     }
 
     async fn connect(&self, peer_id: String, alpn: Vec<u8>) -> Result<(), String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         state.last_connection = Some((peer_id, alpn));
         Ok(())
     }
 
     async fn shutdown(&self) -> Result<(), String> {
-        let mut state = self.state.lock().expect("mutex do mock de rede nao deve estar envenenado");
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)
     }
 }
@@ -182,12 +182,12 @@ async fn get_network_status_emite_modo_e_peers() -> Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn get_network_status_serializa_erro_do_servico() -> Result<()> {
     let service = mock_network_service();
-    service.fail_next("falha status");
+    service.fail_next("status failure");
     let (_app, webview) = build_network_app(service)?;
 
     let error = invoke_err(&webview, "get_network_status", json!({}))?;
 
-    assert_eq!(error, json!("falha status"));
+    assert_eq!(error, json!("status failure"));
 
     Ok(())
 }
@@ -208,12 +208,12 @@ async fn switch_to_local_troca_modo() -> Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn switch_to_local_serializa_erro_do_servico() -> Result<()> {
     let service = mock_network_service();
-    service.fail_next("falha local");
+    service.fail_next("local failure");
     let (_app, webview) = build_network_app(service)?;
 
     let error = invoke_err(&webview, "switch_to_local", json!({}))?;
 
-    assert_eq!(error, json!("falha local"));
+    assert_eq!(error, json!("local failure"));
 
     Ok(())
 }
@@ -233,12 +233,12 @@ async fn switch_to_relay_troca_modo() -> Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn switch_to_relay_serializa_erro_do_servico() -> Result<()> {
     let service = mock_network_service();
-    service.fail_next("falha relay");
+    service.fail_next("relay failure");
     let (_app, webview) = build_network_app(service)?;
 
     let error = invoke_err(&webview, "switch_to_relay", json!({}))?;
 
-    assert_eq!(error, json!("falha relay"));
+    assert_eq!(error, json!("relay failure"));
 
     Ok(())
 }
@@ -258,12 +258,12 @@ async fn get_local_id_retorna_id_local() -> Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn get_local_id_serializa_erro_do_servico() -> Result<()> {
     let service = mock_network_service();
-    service.fail_next("falha id");
+    service.fail_next("id failure");
     let (_app, webview) = build_network_app(service)?;
 
     let error = invoke_err(&webview, "get_local_id", json!({}))?;
 
-    assert_eq!(error, json!("falha id"));
+    assert_eq!(error, json!("id failure"));
 
     Ok(())
 }
@@ -290,7 +290,7 @@ async fn connect_to_peer_repassa_peer_id_e_alpn_bytes() -> Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn connect_to_peer_serializa_erro_do_servico() -> Result<()> {
     let service = mock_network_service();
-    service.fail_next("falha connect");
+    service.fail_next("connect failure");
     let (_app, webview) = build_network_app(service)?;
 
     let error = invoke_err(
@@ -299,7 +299,7 @@ async fn connect_to_peer_serializa_erro_do_servico() -> Result<()> {
         json!({ "peerId": "peer-2", "alpn": "acerola/handshake/1" }),
     )?;
 
-    assert_eq!(error, json!("falha connect"));
+    assert_eq!(error, json!("connect failure"));
 
     Ok(())
 }

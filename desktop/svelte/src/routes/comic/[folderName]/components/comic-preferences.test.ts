@@ -7,15 +7,11 @@ describe('ComicPreferences', () => {
 	function defaultProps() {
 		return {
 			state: {
-				displayMode: 'Lista',
 				chaptersPerPage: '100',
-				mediaType: 'Manga',
 				volumeViewMode: 'cover' as const
 			},
 			events: {
-				onDisplayModeChange: vi.fn(),
 				onChaptersPerPageChange: vi.fn(),
-				onMediaTypeChange: vi.fn(),
 				onVolumeViewModeChange: vi.fn()
 			}
 		};
@@ -24,13 +20,9 @@ describe('ComicPreferences', () => {
 	it('renderiza as opções de preferência', () => {
 		render(ComicPreferences, { props: defaultProps() });
 
-		expect(screen.getByText('Modo de Exibição')).toBeInTheDocument();
-		expect(screen.getByText('Lista')).toBeInTheDocument();
-		expect(screen.getByText('Grade')).toBeInTheDocument();
+		expect(screen.getByText('Leitura')).toBeInTheDocument();
 		expect(screen.getByText('Capítulos por página')).toBeInTheDocument();
-		expect(screen.getByText('Tipo de Mídia')).toBeInTheDocument();
-		expect(screen.getByText('Mangá')).toBeInTheDocument();
-		expect(screen.getByText('HQ')).toBeInTheDocument();
+		expect(screen.getByText('Número de capítulos exibidos por página.')).toBeInTheDocument();
 	});
 
 	it('oculta preferência de volume quando não existe estrutura de volume', () => {
@@ -53,16 +45,6 @@ describe('ComicPreferences', () => {
 		expect(screen.getByRole('radio', { name: 'Banner' })).toBeInTheDocument();
 	});
 
-	it('altera modo de exibição ao clicar em grade', async () => {
-		const user = userEvent.setup();
-		const props = defaultProps();
-		render(ComicPreferences, { props });
-
-		await user.click(screen.getByRole('radio', { name: 'Grade' }));
-
-		expect(props.events.onDisplayModeChange).toHaveBeenCalledWith('Grade');
-	});
-
 	it('altera destaque de volume ao clicar em banner', async () => {
 		const user = userEvent.setup();
 		const props = defaultProps();
@@ -76,16 +58,6 @@ describe('ComicPreferences', () => {
 		await user.click(screen.getByRole('radio', { name: 'Banner' }));
 
 		expect(props.events.onVolumeViewModeChange).toHaveBeenCalledWith('banner');
-	});
-
-	it('altera tipo de mídia ao clicar em webtoon', async () => {
-		const user = userEvent.setup();
-		const props = defaultProps();
-		render(ComicPreferences, { props });
-
-		await user.click(screen.getByRole('radio', { name: 'Webtoon' }));
-
-		expect(props.events.onMediaTypeChange).toHaveBeenCalledWith('Webtoon');
 	});
 
 	it('altera capítulos por página pelo select', async () => {
@@ -109,12 +81,10 @@ describe('ComicPreferences', () => {
 			...props,
 			state: {
 				...props.state,
-				chaptersPerPage: '25',
-				mediaType: 'Webtoon'
+				chaptersPerPage: '25'
 			}
 		});
 
 		expect(screen.getByText('25')).toBeInTheDocument();
-		expect(screen.getByRole('radio', { name: 'Webtoon' })).toBeInTheDocument();
 	});
 });

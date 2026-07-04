@@ -72,13 +72,13 @@ fn cache_keys(status: &Value) -> Result<Vec<usize>> {
     let keys = status
         .get("cacheKeys")
         .and_then(Value::as_array)
-        .context("status deveria conter cacheKeys como array")?;
+        .context("status should contain cacheKeys as an array")?;
 
     keys.iter()
         .map(|key| {
             key.as_u64()
                 .map(|value| value as usize)
-                .context("cacheKeys deveria conter apenas numeros")
+                .context("cacheKeys should contain only numbers")
         })
         .collect()
 }
@@ -101,7 +101,7 @@ async fn wait_for_cache_keys(
         sleep(Duration::from_millis(25)).await;
     }
 
-    bail!("cache do reader nao atingiu as chaves esperadas: {expected_sorted:?}");
+    bail!("reader cache did not reach the expected keys: {expected_sorted:?}");
 }
 
 #[tokio::test(flavor = "multi_thread")]
