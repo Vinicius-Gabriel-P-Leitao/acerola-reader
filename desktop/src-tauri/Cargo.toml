@@ -4,7 +4,7 @@ description = "Um app de organização, leitura de quadrinhos em cbz e cbr"
 edition = "2021"
 license = "GPL-3.0-only"
 name = "acerola"
-version = "0.0.1-beta"
+version = "0.0.1"
 
 # NOTE: Em rust para baixar libs cargo build
 [lib]
