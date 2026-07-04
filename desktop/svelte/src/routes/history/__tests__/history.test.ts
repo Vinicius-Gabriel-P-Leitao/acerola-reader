@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import HistoryPage from './+page.svelte';
+import HistoryPage from '../+page.svelte';
 
 vi.mock('$app/navigation', () => ({
 	goto: vi.fn()

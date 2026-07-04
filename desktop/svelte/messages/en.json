@@ -64,12 +64,24 @@
 	},
 	"tauri_errors": {
 		"comic": {
-			"already_exists": { "label": "This comic already exists in your library." },
-			"not_found": { "label": "Comic not found." },
-			"invalid_request": { "label": "Invalid data submitted." },
-			"integrity_violation": { "label": "Integrity error: invalid or missing reference." },
-			"system_failure": { "label": "System failure while processing the comic." },
-			"io_error": { "label": "Filesystem access error." }
+			"already_exists": {
+				"label": "This comic already exists in your library."
+			},
+			"not_found": {
+				"label": "Comic not found."
+			},
+			"invalid_request": {
+				"label": "Invalid data submitted."
+			},
+			"integrity_violation": {
+				"label": "Integrity error: invalid or missing reference."
+			},
+			"system_failure": {
+				"label": "System failure while processing the comic."
+			},
+			"io_error": {
+				"label": "Filesystem access error."
+			}
 		}
 	},
 	"layout": {
@@ -243,5 +255,6 @@
 				"title": "Library"
 			}
 		}
-	}
+	},
+	"pages.reader.fallback.loading": "Loading..."
 }

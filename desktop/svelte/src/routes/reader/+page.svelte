@@ -374,7 +374,7 @@
 	<div class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-base/95 backdrop-blur-xl transition-opacity duration-300">
 		<div class="flex flex-col items-center gap-4">
 			<div class="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-			<p class="text-sm font-black tracking-widest text-primary uppercase animate-pulse">{m['pages.reader.fallback.loading'] ? m['pages.reader.fallback.loading']() : 'Carregando'}</p>
+			<p class="text-sm font-black tracking-widest text-primary uppercase animate-pulse">{m['pages.reader.fallback.loading']()}</p>
 		</div>
 	</div>
 {/if}
