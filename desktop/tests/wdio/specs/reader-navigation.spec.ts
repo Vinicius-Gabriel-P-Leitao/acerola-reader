@@ -32,7 +32,7 @@ describe('Reader Navigation E2E', () => {
 		await invokeTauriCommand('refresh_library', { path: cbzFolder });
 
 		// Wait for comic to appear
-		const comicCard = await firstDisplayed('//a[contains(@href, "/comic/")]', 15_000);
+		const comicCard = await firstDisplayed('main h3', 15_000);
 		await comicCard.click();
 
 		await browser.waitUntil(async () => (await getPathname()).includes('/comic/'), {
@@ -57,7 +57,7 @@ describe('Reader Navigation E2E', () => {
 		expect(await image.getAttribute('src')).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 
 		// 3. Open Command Palette / Footer to see Next Button and click it
-		const nextBtn = await firstDisplayed('//*[normalize-space()="PRÓXIMO"]', 5_000);
+		const nextBtn = await firstDisplayed('//*[normalize-space()="Próximo capítulo"]', 5_000);
 		await nextBtn.click();
 
 		// Wait for the next chapter to load
@@ -65,7 +65,7 @@ describe('Reader Navigation E2E', () => {
 		
 		// The reader should now be in chapter 2.
 		// Let's verify we have a previous button now.
-		const prevBtn = await firstDisplayed('//*[normalize-space()="ANTERIOR"]', 5_000);
+		const prevBtn = await firstDisplayed('//*[normalize-space()="Capítulo anterior"]', 5_000);
 		expect(await prevBtn.isExisting()).toBe(true);
 
 		// 4. Leave Reader and check Comic page
@@ -88,8 +88,8 @@ describe('Reader Navigation E2E', () => {
 		});
 
 		// Check if we are still on chapter 2 by checking for the ANTERIOR button and PRÓXIMO button
-		const nextBtnHistory = await firstDisplayed('//*[normalize-space()="PRÓXIMO"]', 5_000);
-		const prevBtnHistory = await firstDisplayed('//*[normalize-space()="ANTERIOR"]', 5_000);
+		const nextBtnHistory = await firstDisplayed('//*[normalize-space()="Próximo capítulo"]', 5_000);
+		const prevBtnHistory = await firstDisplayed('//*[normalize-space()="Capítulo anterior"]', 5_000);
 		
 		expect(await prevBtnHistory.isExisting()).toBe(true);
 		expect(await nextBtnHistory.isExisting()).toBe(true);
@@ -99,7 +99,7 @@ describe('Reader Navigation E2E', () => {
 		await browser.pause(3000);
 		
 		// Back on chapter 1, previous button should be gone.
-		const prevBtnGone = await browser.$('//*[normalize-space()="ANTERIOR"]');
+		const prevBtnGone = await browser.$('//*[normalize-space()="Capítulo anterior"]');
 		expect(await prevBtnGone.isExisting()).toBe(false);
 
 		// Cleanup files
