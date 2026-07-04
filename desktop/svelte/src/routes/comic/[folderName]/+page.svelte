@@ -94,10 +94,6 @@
 	let isHistoryLoading = $state(false);
 
 	onMount(async () => {
-		if (!activeComic.item && data.comic) {
-			activeComic.set(data.comic, resolveCover(data.comic.artwork));
-		}
-
 		await Promise.all([
 			chaptersPreference.loadChaptersPerPage(),
 			volumeViewPreference.loadVolumeViewMode()
@@ -152,6 +148,14 @@
 		untrack(() => {
 			chaptersPreference.saveChaptersPerPage(value);
 		});
+	});
+
+	$effect(() => {
+		if (data.comic) {
+			untrack(() => {
+				activeComic.set(data.comic, resolveCover(data.comic.artwork));
+			});
+		}
 	});
 
 	$effect(() => {

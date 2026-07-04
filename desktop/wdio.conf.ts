@@ -9,8 +9,8 @@ import type { Capabilities, Options } from '@wdio/types';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appPath =
 	process.platform === 'win32'
-		? 'src-tauri/target/release/acerola.exe'
-		: 'src-tauri/target/release/acerola';
+		? path.resolve(__dirname, 'src-tauri/target/release/acerola.exe')
+		: path.resolve(__dirname, 'src-tauri/target/release/acerola');
 const localNativeDriverPath =
 	process.platform === 'win32' ? path.resolve(__dirname, '.bin/windows/msedgedriver.exe') : null;
 

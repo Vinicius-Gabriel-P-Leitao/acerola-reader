@@ -201,7 +201,10 @@
 			"clear_history": "Limpar Histórico",
 			"loading": "Carregando...",
 			"no_events": "Nenhum histórico encontrado.",
-			"resume": "Continuar Lendo"
+			"resume": "Continuar Lendo",
+			"chapter_label": "Capítulo {chapter}",
+			"page_label": "Página {page}",
+			"older": "Mais Antigos"
 		},
 		"config": {
 			"title": "Configurações",

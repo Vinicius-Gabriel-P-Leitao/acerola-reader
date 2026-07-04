@@ -1,6 +1,9 @@
 use tauri::State;
 
-use crate::core::services::history::{HistoryService, ReadingHistoryView};
+use crate::{
+    cmd::events::history::ReadingHistoryPayload,
+    core::services::history::HistoryService,
+};
 
 #[tauri::command]
 pub async fn history_update_reading(
@@ -10,30 +13,30 @@ pub async fn history_update_reading(
     is_completed: bool,
     history_service: State<'_, HistoryService>,
 ) -> Result<(), String> {
-    let comic_id_i64 = comic_id.parse::<i64>().map_err(|e| e.to_string())?;
-    let chapter_id_i64 = chapter_id.parse::<i64>().map_err(|e| e.to_string())?;
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+    let chapter_id = chapter_id.parse::<i64>().map_err(|error| error.to_string())?;
 
     history_service
-        .update_reading_history(comic_id_i64, chapter_id_i64, last_page, is_completed)
+        .update_progress(comic_id, chapter_id, last_page, is_completed)
         .await
-        .map_err(|e| e.to_string())?;
-    Ok(())
+        .map(|_| ())
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn history_get_all(
     history_service: State<'_, HistoryService>,
-) -> Result<Vec<ReadingHistoryView>, String> {
-    history_service.get_full_history().await.map_err(|e| e.to_string())
+) -> Result<Vec<ReadingHistoryPayload>, String> {
+    history_service.find_all().await.map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn history_get_comic(
     comic_id: String,
     history_service: State<'_, HistoryService>,
-) -> Result<Option<ReadingHistoryView>, String> {
-    let comic_id_i64 = comic_id.parse::<i64>().map_err(|e| e.to_string())?;
-    history_service.get_comic_history_view(comic_id_i64).await.map_err(|e| e.to_string())
+) -> Result<Option<ReadingHistoryPayload>, String> {
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+    history_service.find_by_comic(comic_id).await.map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -41,18 +44,19 @@ pub async fn history_get_read_chapters(
     comic_id: String,
     history_service: State<'_, HistoryService>,
 ) -> Result<Vec<String>, String> {
-    let comic_id_i64 = comic_id.parse::<i64>().map_err(|e| e.to_string())?;
-    
-    let chapters = history_service.get_read_chapters(comic_id_i64)
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+
+    let ids = history_service
+        .find_read_chapters(comic_id)
         .await
-        .map_err(|e| e.to_string())?;
-        
-    Ok(chapters.into_iter().map(|id| id.to_string()).collect())
+        .map_err(|error| error.to_string())?;
+
+    Ok(ids.into_iter().map(|id| id.to_string()).collect())
 }
 
 #[tauri::command]
 pub async fn history_clear(
     history_service: State<'_, HistoryService>,
 ) -> Result<(), String> {
-    history_service.clear_history().await.map_err(|e| e.to_string())
+    history_service.clear().await.map_err(|error| error.to_string())
 }

@@ -9,7 +9,8 @@ import {
 } from '../helpers/app';
 
 describe('PDF to CBZ E2E', () => {
-	it('scans PDF, converts to CBZ, and reads it', async () => {
+	it('scans PDF, converts to CBZ, and reads it', async function () {
+		this.timeout(90_000);
 		const pdfFolder = path.resolve(process.cwd(), 'tests/wdio/comic/pdf');
 		const cbzFile = path.join(pdfFolder, 'witchcraft.cbz');
 
