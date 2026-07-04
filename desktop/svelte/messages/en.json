@@ -199,6 +199,10 @@
 		"history": {
 			"title": "History",
 			"clear_history": "Clear History",
+			"clear_history_title": "Are you absolutely sure?",
+			"clear_history_desc": "This action cannot be undone. All your reading history will be permanently deleted.",
+			"clear_history_cancel": "Cancel",
+			"clear_history_confirm": "Yes, clear everything",
 			"loading": "Loading...",
 			"no_events": "No history found.",
 			"resume": "Continue Reading",
