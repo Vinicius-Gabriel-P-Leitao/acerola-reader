@@ -91,13 +91,18 @@ describe('HistoryPage', () => {
 			expect(screen.getByText('Comic 1')).toBeInTheDocument();
 		});
 
+		// bits-ui AlertDialog.Trigger wraps the child in its own <button>, so two buttons
+		// with the same accessible name are rendered. We take the outermost trigger (index 0).
+		const clearButtons = screen.getAllByRole('button', { name: /Limpar Histórico/i });
+		await user.click(clearButtons[0]);
+
+		// After opening the dialog, click the confirm action button ("Sim, limpar tudo")
 		mockInvoke.mockResolvedValueOnce(undefined);
-		const clearButton = screen.getByRole('button', { name: /Limpar Histórico/i });
-		
-		await user.click(clearButton);
+		const confirmButton = await screen.findByRole('button', { name: /Sim, limpar tudo/i });
+		await user.click(confirmButton);
 
 		expect(mockInvoke).toHaveBeenCalledWith('history_clear', undefined);
-		
+
 		await waitFor(() => {
 			expect(screen.queryByText('Comic 1')).not.toBeInTheDocument();
 		});
