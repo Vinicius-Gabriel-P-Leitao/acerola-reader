@@ -92,7 +92,7 @@
 
 		await invoke(LIBRARY_COMMANDS.getComicChapters, {
 			comicDirectoryFk: navigationState.comicDirectoryId,
-			volumeId: chapter?.volumeId ?? null,
+			volumeId: null,
 			page: chapterIndex + 1,
 			pageSize: 1,
 			asc: true
@@ -145,7 +145,7 @@
 
 		await invoke(LIBRARY_COMMANDS.getComicChapters, {
 			comicDirectoryFk: navigationState.comicDirectoryId,
-			volumeId: chapter?.volumeId ?? null,
+			volumeId: null,
 			page: chapterIndex - 1,
 			pageSize: 1,
 			asc: true
@@ -371,7 +371,7 @@
 			return;
 		}
 
-		if (navigationState.chapterIndex === undefined && navigationState.comicDirectoryId) {
+		if (navigationState.comicDirectoryId) {
 			const unlisten = await listen<any>(LIBRARY_EVENTS.comicChapters, (event) => {
 				const payload = event.payload;
 				const items = payload.archive.items;
@@ -386,7 +386,7 @@
 
 			await invoke(LIBRARY_COMMANDS.getComicChapters, {
 				comicDirectoryFk: navigationState.comicDirectoryId,
-				volumeId: chapter.volumeId ?? null,
+				volumeId: null, // Always search across the whole comic to allow seamless volume transitions
 				page: 0,
 				pageSize: 99999,
 				asc: true

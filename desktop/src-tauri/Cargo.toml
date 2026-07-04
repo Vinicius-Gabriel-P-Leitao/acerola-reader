@@ -20,10 +20,10 @@ path = "src/main.rs"
 test = false
 
 [build-dependencies]
-tauri-build = {version = "2", features = []}
+tauri-build = {version = "2", features = [] }
 
 [dependencies]
-acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5", branch = "feature/challenge-response", features = ["iroh"]}
+acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5", branch = "feature/challenge-response", features = ["iroh"] }
 anyhow = "1.0.102"
 async-trait = "0.1.89"
 axum = "0.8.8"
@@ -35,27 +35,27 @@ lru = "0.18.0"
 mdns-sd = "0.18.2"
 pdfium = "0.10.4"
 regex = "1.12.3"
-serde = {version = "1", features = ["derive"]}
+serde = {version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = "0.8.6"
-tauri = {version = "2", features = ["protocol-asset"]}
+tauri = {version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2.7.0"
 tauri-plugin-fs = "2"
 tauri-plugin-log = "2"
 tauri-plugin-opener = "2"
-tauri-plugin-sql = {version = "2", features = ["sqlite"]}
+tauri-plugin-sql = {version = "2", features = ["sqlite"] }
 tauri-plugin-store = "2"
 thiserror = "2.0.18"
-tokio = {version = "1.52.1", features = ["full"]}
+tokio = {version = "1.52.1", features = ["full"] }
 tokio-stream = "0.1.18"
 tokio-util = "0.7.18"
-tracing = {version = "0.1.44", features = ["log"]}
+tracing = {version = "0.1.44", features = ["log"] }
 unrar = "0.5.8"
 zip = "8.6.0"
 
 [target.'cfg(windows)'.dependencies]
-windows = {version = "0.58", features = ["ApplicationModel"]}
+windows = {version = "0.58", features = ["ApplicationModel"] }
 
 [dev-dependencies]
-tauri = {version = "2", features = ["protocol-asset", "test"]}
+tauri = {version = "2", features = ["protocol-asset", "test"] }
 tempfile = "3"
