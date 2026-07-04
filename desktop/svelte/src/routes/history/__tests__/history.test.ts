@@ -7,9 +7,17 @@ vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
 }));
 
-const mockInvoke = vi.fn();
+const { mockInvoke } = vi.hoisted(() => ({
+	mockInvoke: vi.fn()
+}));
+
 vi.mock('@tauri-apps/api/core', () => ({
-	invoke: (cmd: string, args: any) => mockInvoke(cmd, args)
+	invoke: (cmd: string, args: any) => mockInvoke(cmd, args),
+	convertFileSrc: (path: string) => `asset://${path}`
+}));
+
+vi.mock('$lib/assets/placeholder/placeholder_manga.svg?component', () => ({
+	default: () => ''
 }));
 
 const mockHistoryData = [
@@ -59,7 +67,7 @@ describe('HistoryPage', () => {
 			expect(mockInvoke).toHaveBeenCalledWith('history_get_all', undefined);
 		});
 		
-		expect(screen.getByText(/No history found/i)).toBeInTheDocument();
+		expect(screen.getByText(/Nenhum histórico encontrado/i)).toBeInTheDocument();
 	});
 
 	it('renderiza itens de historico com sucesso', async () => {
@@ -84,7 +92,7 @@ describe('HistoryPage', () => {
 		});
 
 		mockInvoke.mockResolvedValueOnce(undefined);
-		const clearButton = screen.getByRole('button', { name: /Clear History/i });
+		const clearButton = screen.getByRole('button', { name: /Limpar Histórico/i });
 		
 		await user.click(clearButton);
 
