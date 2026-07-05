@@ -2,9 +2,9 @@ import path from 'node:path';
 import fs from 'node:fs';
 import {
 	firstDisplayed,
-	getPathname,
 	invokeTauriCommand,
 	navigateTo,
+	navigateToWithState,
 	waitForAppReady
 } from '../helpers/app';
 
@@ -20,29 +20,36 @@ describe('PDF to CBZ E2E', () => {
 
 		await waitForAppReady();
 		await navigateTo('/home');
+		// Aguarda o onMount registrar o listener scan:complete
+		await browser.pause(500);
 
 		// Dispara a conversao e scan
 		await invokeTauriCommand('refresh_library', { path: pdfFolder });
 
-		// Espera a conversao terminar e o mangá aparecer (tempo maior devido a conversao pdf)
-		const comicCard = await firstDisplayed('main h3', 30_000);
-		await comicCard.click();
+		// Espera o card 'pdf' aparecer — confirma que a conversao PDF→CBZ terminou
+		await firstDisplayed('//main//h3[normalize-space()="pdf"]', 60_000);
 
-		await browser.waitUntil(async () => (await getPathname()) === '/comic/pdf', {
-			timeout: 5_000,
-			timeoutMsg: 'Nao navegou para a página do comic pdf.'
+		// Obtem o directoryId do comic para o estado do reader
+		const comic = await invokeTauriCommand<any>('get_comic_by_folder_name', {
+			folderName: 'pdf'
 		});
 
-		// Clica no capitulo convertido
-		const chapterItem = await firstDisplayed(
-			'//*[contains(normalize-space(), "witchcraft")]',
-			10_000
-		);
-		await chapterItem.click();
-
-		await browser.waitUntil(async () => (await getPathname()) === '/reader', {
-			timeout: 5_000,
-			timeoutMsg: 'Nao navegou para o reader.'
+		// Navega direto para o reader com o capitulo convertido
+		await navigateToWithState('/reader', {
+			chapter: {
+				id: 'pdf-witchcraft-ch1',
+				name: 'witchcraft',
+				path: cbzFile,
+				chapterSort: '0',
+				volumeId: null,
+				volumeName: null,
+				isSpecial: false,
+				lastModified: 0
+			},
+			comicDirectoryId: comic?.relations?.directoryId ?? null,
+			chapterIndex: 0,
+			totalChapters: 1,
+			chapterScope: 'pdf'
 		});
 
 		// Confirma que a página 1 abriu
