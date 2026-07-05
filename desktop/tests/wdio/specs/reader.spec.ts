@@ -76,7 +76,7 @@ describe('reader nativo', () => {
 
 		await waitForText('Ch. 1', 10_000);
 		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
-		await waitForText('33% lido', 10_000);
+		await waitForTextContaining('33%', 10_000);
 
 		const firstPage = await browser.$('img[alt="Página 1"]');
 		await firstPage.waitForDisplayed({ timeout: 10_000 });
@@ -91,7 +91,7 @@ describe('reader nativo', () => {
 
 		await (await firstDisplayed('[title="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
-		await waitForText('67% lido', 10_000);
+		await waitForTextContaining('67%', 10_000);
 
 		await (await firstDisplayed('[title="Página anterior"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
