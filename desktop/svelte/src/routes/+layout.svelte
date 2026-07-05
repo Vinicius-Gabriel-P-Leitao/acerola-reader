@@ -54,6 +54,7 @@
 
 	let currentLocale = $state(getLocale());
 	let appWindow = $state<any>(null);
+	let packageIdentity = $state<string | null>(null);
 	const folder = useSelectFolder();
 
 	const incrementalScanner = useLibraryScanner(
@@ -64,7 +65,21 @@
 	onMount(async () => {
 		// INFO: Importação dinâmica para evitar que quebre durante o SSR (Server-Side Rendering)
 		const { getCurrentWindow } = await import('@tauri-apps/api/window');
+		const { invoke } = await import('@tauri-apps/api/core');
+		const { error: logError } = await import('@tauri-apps/plugin-log');
+		
 		await folder.loadSavedPath();
+
+		try {
+			const packageFamilyName = await invoke<string>('get_package_family_name');
+			if (packageFamilyName !== "No package identity" && !packageFamilyName.startsWith("Error")) {
+				packageIdentity = `Package: ${packageFamilyName}`;
+			} else {
+				packageIdentity = `Not running with package identity`;
+			}
+		} catch (error) {
+			logError(`Failed to check package identity: ${error}`);
+		}
 
 		appWindow = getCurrentWindow();
 
@@ -186,6 +201,9 @@
 					</div>
 
 					<div class="mx-8a flex items-center gap-4">
+						{#if packageIdentity}
+							<span class="text-xs text-muted-foreground">{packageIdentity}</span>
+						{/if}
 						<AcerolaNotification />
 					</div>
 				</header>

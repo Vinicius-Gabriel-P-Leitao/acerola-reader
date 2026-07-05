@@ -64,6 +64,7 @@ mod app_bootstrap {
             history_cmd::history_get_comic,
             history_cmd::history_get_read_chapters,
             history_cmd::history_clear,
+            get_package_family_name,
         ])
     }
 
@@ -202,4 +203,28 @@ pub fn run() {
     }
 
     app_bootstrap::build().run(app_context).expect("Erro ao executar a aplicação Tauri");
+}
+
+#[tauri::command]
+pub fn get_package_family_name() -> String {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::ApplicationModel::Package;
+        match Package::Current() {
+            Ok(package) => {
+                match package.Id() {
+                    Ok(id) => match id.FamilyName() {
+                        Ok(name) => name.to_string(),
+                        Err(_) => "Error retrieving Family Name".to_string(),
+                    },
+                    Err(_) => "Error retrieving Package ID".to_string(),
+                }
+            }
+            Err(_) => "No package identity".to_string(),
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        "Not running on Windows".to_string()
+    }
 }
