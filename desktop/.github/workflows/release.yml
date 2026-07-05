@@ -86,8 +86,7 @@ jobs:
         run: cargo install cargo-make
 
       - name: Install winapp
-        run: cargo install winapp
-        continue-on-error: true # Just in case it's an npm package or already installed
+        run: npm install -g @microsoft/winappcli
 
       - name: Initialize MSIX & Generate Certificate
         run: >
