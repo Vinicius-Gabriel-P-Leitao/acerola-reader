@@ -2,6 +2,10 @@
 default_to_workspace = false
 skip_core_tasks = true
 
+# ==========================================
+# Core Configuration
+# ==========================================
+
 [tasks.default]
 alias = "test"
 
@@ -11,32 +15,9 @@ command = "cargo"
 description = "Clean target"
 workspace = false
 
-[tasks.test]
-args = ["nextest", "run"]
-command = "cargo"
-description = "Run all tests using nextest"
-workspace = false
-
-[tasks.test.windows]
-env = { RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml" }
-
-[tasks.test-verbose]
-args = ["nextest", "run", "--no-capture"]
-command = "cargo"
-description = "Run all tests using nextest with verbose output"
-workspace = false
-
-[tasks.test-verbose.windows]
-env = { RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml" }
-
-[tasks.test-ci]
-args = ["nextest", "run", "--profile", "ci"]
-command = "cargo"
-description = "Run tests in CI profile (longer timeouts, no fail-fast)"
-workspace = false
-
-[tasks.test-ci.windows]
-env = { RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml" }
+# ==========================================
+# Formatting & Linting
+# ==========================================
 
 [tasks.format]
 args = [
@@ -64,7 +45,138 @@ command = "cargo"
 description = "Check Rust code"
 workspace = false
 
+# ==========================================
+# Testing
+# ==========================================
+
+[tasks.test]
+args = ["nextest", "run"]
+command = "cargo"
+description = "Run all tests using nextest"
+workspace = false
+
+[tasks.test.windows]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+[tasks.test-verbose]
+args = ["nextest", "run", "--no-capture"]
+command = "cargo"
+description = "Run all tests using nextest with verbose output"
+workspace = false
+
+[tasks.test-verbose.windows]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+[tasks.test-ci]
+args = ["nextest", "run", "--profile", "ci"]
+command = "cargo"
+description = "Run tests in CI profile (longer timeouts, no fail-fast)"
+workspace = false
+
+[tasks.test-ci.windows]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+# ==========================================
+# Continuous Integration and Deploy
+# ==========================================
+
 [tasks.ci]
 dependencies = ["check", "lint", "test-ci"]
 description = "Run full CI pipeline: check, lint, test"
 workspace = false
+
+[tasks.cd]
+description = "Run full continuous delivery build and organize artifacts"
+
+# ==========================================
+# Windows Packaging & Deployment (MSIX, MSI, EXE)
+# ==========================================
+
+[tasks.init-msix]
+description = "Initialize MSIX files with correct author and description"
+env = {MSIX_PACKAGE_NAME = "acerola", MSIX_DISPLAY_NAME = "Acerola", MSIX_PUBLISHER = "CN=Vinícius Gabriel Pereira Leitão", MSIX_PUBLISHER_DISPLAY_NAME = "Vinícius Gabriel Pereira Leitão", MSIX_DESCRIPTION = "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.", MSIX_BG_COLOR = "#1e1e2e"}
+script = '''
+$ErrorActionPreference = "Stop"
+$msixDir = "..\.bin\windows\msix"
+New-Item -ItemType Directory -Force -Path $msixDir | Out-Null
+winapp init $msixDir --use-defaults --setup-sdks none
+
+$manifest = "$msixDir\Package.appxmanifest"
+$content = Get-Content $manifest -Raw
+$content = $content -replace '\$targetnametoken\$.exe', 'acerola.exe'
+$content = $content -replace 'Name="msix"', 'Name="${MSIX_PACKAGE_NAME}"'
+$content = $content -replace 'Id="msix"', 'Id="${MSIX_PACKAGE_NAME}"'
+$content = $content -replace 'Publisher="CN=.*?"', 'Publisher="${MSIX_PUBLISHER}"'
+$content = $content -replace '<PublisherDisplayName>.*?</PublisherDisplayName>', '<PublisherDisplayName>${MSIX_PUBLISHER_DISPLAY_NAME}</PublisherDisplayName>'
+$content = $content -replace '<DisplayName>.*?</DisplayName>', '<DisplayName>${MSIX_DISPLAY_NAME}</DisplayName>'
+$content = $content -replace 'DisplayName=".*?"', 'DisplayName="${MSIX_DISPLAY_NAME}"'
+$content = $content -replace 'Description=".*?"', 'Description="${MSIX_DESCRIPTION}"'
+$content = $content -replace 'BackgroundColor="transparent"', 'BackgroundColor="${MSIX_BG_COLOR}"'
+Set-Content $manifest -Value $content
+
+winapp cert generate --manifest $manifest --output "$msixDir\devcert.pfx" --if-exists overwrite
+Get-ChildItem -Path "$msixDir\Assets" -Filter *.png | ForEach-Object { Copy-Item -Path "icons\icon.png" -Destination $_.FullName -Force }
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.dev-msix]
+description = "Run the app locally with MSIX identity injected"
+script = '''
+$ErrorActionPreference = "Stop"
+cargo build
+Copy-Item -Force "target\debug\acerola.exe" "..\.bin\windows\msix\"
+Set-Location ..
+winapp run .\.bin\windows\msix
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.cd-build]
+description = "Run Tauri build for production"
+script = '''
+$ErrorActionPreference = "Stop"
+npm run --prefix .. tauri -- build
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.pack-msix]
+description = "Generate MSIX package and move to final folder"
+script = '''
+$ErrorActionPreference = "Stop"
+$binDir = "..\.bin\windows"
+New-Item -ItemType Directory -Force -Path "$binDir\msix" | Out-Null
+Copy-Item -Force "target\release\acerola.exe" "$binDir\msix\"
+Set-Location ..
+winapp pack .\.bin\windows\msix --cert .\.bin\windows\msix\devcert.pfx
+Move-Item -Force -Path *.msix -Destination .\.bin\windows\msix\
+Set-Location src-tauri
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.pack-msi]
+description = "Move MSI installer to final folder"
+script = '''
+$ErrorActionPreference = "Stop"
+$binDir = "..\.bin\windows"
+New-Item -ItemType Directory -Force -Path "$binDir\msi" | Out-Null
+Move-Item -Force -Path "target\release\bundle\msi\*.msi" -Destination "$binDir\msi\"
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.pack-exe]
+description = "Move NSIS setup EXE to final folder"
+script = '''
+$ErrorActionPreference = "Stop"
+$binDir = "..\.bin\windows"
+New-Item -ItemType Directory -Force -Path "$binDir\exe" | Out-Null
+Move-Item -Force -Path "target\release\bundle\nsis\*.exe" -Destination "$binDir\exe\"
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.cd.windows]
+dependencies = ["cd-build", "pack-msix", "pack-msi", "pack-exe"]
