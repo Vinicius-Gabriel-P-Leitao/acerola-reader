@@ -196,8 +196,13 @@ pub fn run() {
                 if resource_dir.exists() {
                     pdfium::set_library_location(resource_dir.to_str().unwrap_or("."));
                 } else {
-                    // Fallback para a pasta do executável
-                    pdfium::set_library_location(exe_dir.to_str().unwrap_or("."));
+                    let local_bin = exe_dir.join(".bin");
+                    if local_bin.exists() {
+                        pdfium::set_library_location(local_bin.to_str().unwrap_or("."));
+                    } else {
+                        // Fallback para a pasta do executável
+                        pdfium::set_library_location(exe_dir.to_str().unwrap_or("."));
+                    }
                 }
             }
         }

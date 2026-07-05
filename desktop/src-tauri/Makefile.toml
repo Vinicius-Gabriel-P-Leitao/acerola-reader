@@ -92,26 +92,34 @@ description = "Run full continuous delivery build and organize artifacts"
 # Windows Packaging & Deployment (MSIX, MSI, EXE)
 # ==========================================
 
+[env]
+MSIX_PACKAGE_NAME = "acerola"
+MSIX_DISPLAY_NAME = "Acerola"
+MSIX_PUBLISHER = "CN=Vinícius Gabriel Pereira Leitão"
+MSIX_PUBLISHER_DISPLAY_NAME = "Vinícius Gabriel Pereira Leitão"
+MSIX_DESCRIPTION = "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais."
+MSIX_BG_COLOR = "#1e1e2e"
+
 [tasks.init-msix]
 description = "Initialize MSIX files with correct author and description"
-env = {MSIX_PACKAGE_NAME = "acerola", MSIX_DISPLAY_NAME = "Acerola", MSIX_PUBLISHER = "CN=Vinícius Gabriel Pereira Leitão", MSIX_PUBLISHER_DISPLAY_NAME = "Vinícius Gabriel Pereira Leitão", MSIX_DESCRIPTION = "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.", MSIX_BG_COLOR = "#1e1e2e"}
 script = '''
 $ErrorActionPreference = "Stop"
 $msixDir = "..\.bin\windows\msix"
 New-Item -ItemType Directory -Force -Path $msixDir | Out-Null
+$manifest = "$msixDir\Package.appxmanifest"
+if (Test-Path $manifest) { Remove-Item $manifest -Force }
 winapp init $msixDir --use-defaults --setup-sdks none
 
-$manifest = "$msixDir\Package.appxmanifest"
 $content = Get-Content $manifest -Raw
 $content = $content -replace '\$targetnametoken\$.exe', 'acerola.exe'
-$content = $content -replace 'Name="msix"', 'Name="${MSIX_PACKAGE_NAME}"'
-$content = $content -replace 'Id="msix"', 'Id="${MSIX_PACKAGE_NAME}"'
-$content = $content -replace 'Publisher="CN=.*?"', 'Publisher="${MSIX_PUBLISHER}"'
-$content = $content -replace '<PublisherDisplayName>.*?</PublisherDisplayName>', '<PublisherDisplayName>${MSIX_PUBLISHER_DISPLAY_NAME}</PublisherDisplayName>'
-$content = $content -replace '<DisplayName>.*?</DisplayName>', '<DisplayName>${MSIX_DISPLAY_NAME}</DisplayName>'
-$content = $content -replace 'DisplayName=".*?"', 'DisplayName="${MSIX_DISPLAY_NAME}"'
-$content = $content -replace 'Description=".*?"', 'Description="${MSIX_DESCRIPTION}"'
-$content = $content -replace 'BackgroundColor="transparent"', 'BackgroundColor="${MSIX_BG_COLOR}"'
+$content = $content -replace 'Name="msix"', "Name=`"$env:MSIX_PACKAGE_NAME`""
+$content = $content -replace 'Id="msix"', "Id=`"$env:MSIX_PACKAGE_NAME`""
+$content = $content -replace 'Publisher="CN=.*?"', "Publisher=`"$env:MSIX_PUBLISHER`""
+$content = $content -replace '<PublisherDisplayName>.*?</PublisherDisplayName>', "<PublisherDisplayName>$env:MSIX_PUBLISHER_DISPLAY_NAME</PublisherDisplayName>"
+$content = $content -replace '<DisplayName>.*?</DisplayName>', "<DisplayName>$env:MSIX_DISPLAY_NAME</DisplayName>"
+$content = $content -replace 'DisplayName=".*?"', "DisplayName=`"$env:MSIX_DISPLAY_NAME`""
+$content = $content -replace 'Description=".*?"', "Description=`"$env:MSIX_DESCRIPTION`""
+$content = $content -replace 'BackgroundColor="transparent"', "BackgroundColor=`"$env:MSIX_BG_COLOR`""
 Set-Content $manifest -Value $content
 
 winapp cert generate --manifest $manifest --output "$msixDir\devcert.pfx" --if-exists overwrite
