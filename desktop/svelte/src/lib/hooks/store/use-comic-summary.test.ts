@@ -12,6 +12,8 @@ import type { ComicSummaryPayload } from '$lib/contracts/home/home.payloads';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useComicSummary } from './use-comic-summary.svelte';
 
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
+
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn()
 }));
@@ -96,12 +98,14 @@ describe('useComicSummary', () => {
 		const { callbacks, unlisteners } = setupListeners();
 		const hook = await renderHook();
 
-		await hook.fetch();
+		const fetchPromise = hook.fetch();
+		await flushPromises();
 
 		expect(hook.loading).toBe(true);
 		expect(invokeMock).toHaveBeenCalledWith(HOME_COMMANDS.getComicSummary);
 
 		callbacks.get(HOME_EVENTS.homeData)?.({ payload: summaryPayload() });
+		await fetchPromise;
 
 		expect(hook.loading).toBe(false);
 		expect(hook.comics?.total).toBe(1);
@@ -111,24 +115,36 @@ describe('useComicSummary', () => {
 	});
 
 	it('ignora nova busca enquanto loading está ativo', async () => {
-		setupListeners();
+		const { callbacks } = setupListeners();
 		const hook = await renderHook();
 
-		await hook.fetch();
+		const fetchPromise1 = hook.fetch();
+		await flushPromises();
+
 		invokeMock.mockClear();
-		await hook.fetch();
+		const fetchPromise2 = hook.fetch();
 
 		expect(invokeMock).not.toHaveBeenCalled();
+
+		callbacks.get(HOME_EVENTS.homeData)?.({ payload: summaryPayload() });
+		await fetchPromise1;
+
+		await flushPromises();
+		callbacks.get(HOME_EVENTS.homeData)?.({ payload: summaryPayload() });
+		await fetchPromise2;
 	});
 
 	it('exibe erro quando evento de erro é recebido', async () => {
 		const { callbacks } = setupListeners();
 		const hook = await renderHook();
 
-		await hook.fetch();
+		const fetchPromise = hook.fetch();
+		await flushPromises();
+
 		callbacks.get(HOME_EVENTS.homeError)?.({
 			payload: { errorType: 'Unknown', message: 'falha ao carregar' }
 		});
+		await fetchPromise;
 
 		expect(hook.loading).toBe(false);
 		expect(hook.comics).toBeUndefined();
