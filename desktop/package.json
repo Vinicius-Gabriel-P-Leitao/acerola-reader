@@ -10,8 +10,8 @@
 	"description": "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.",
 	"scripts": {
 		"tauri": "tauri",
-		"tauri:dev:withidentity": "cargo build --manifest-path src-tauri/Cargo.toml && (if not exist dist mkdir dist) && copy /Y src-tauri\\target\\debug\\acerola.exe dist\\ >nul && winapp run .\\dist",
-		"pack:msix": "npm run tauri -- build && (if not exist dist mkdir dist) && copy /Y src-tauri\\target\\release\\acerola.exe dist\\ >nul && winapp pack .\\dist --cert .\\devcert.pfx",
+		"tauri:dev:withidentity": "cargo build --manifest-path src-tauri/Cargo.toml && copy /Y src-tauri\\target\\debug\\acerola.exe .bin\\windows\\msix\\ >nul && winapp run .\\.bin\\windows\\msix",
+		"pack:msix": "npm run tauri -- build && copy /Y src-tauri\\target\\release\\acerola.exe .bin\\windows\\msix\\ >nul && winapp pack .\\.bin\\windows\\msix --cert .\\.bin\\windows\\msix\\devcert.pfx",
 		"make": "cargo make --cwd ./src-tauri",
 		"preview": "vite preview",
 		"dev": "npm run paraglide:compile && vite dev",
