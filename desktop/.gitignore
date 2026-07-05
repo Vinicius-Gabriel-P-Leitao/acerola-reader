@@ -28,3 +28,4 @@ storybook-static
 
 # Dev setup
 *.idea
+*.winapp

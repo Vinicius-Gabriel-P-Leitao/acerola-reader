@@ -82,41 +82,30 @@ jobs:
         env:
           VERSION_FULL: ${{ env.VERSION_FULL }}
 
-      - name: Build MSI
-        run: npm run tauri -- build --bundles msi
+      - name: Install cargo-make
+        run: cargo install cargo-make
 
-      - name: Rename MSI
+      - name: Install winapp
+        run: cargo install winapp
+        continue-on-error: true # Just in case it's an npm package or already installed
+
+      - name: Initialize MSIX & Generate Certificate
+        run: >
+          npm run make -- 
+          -e MSIX_PACKAGE_NAME="${{ secrets.MSIX_PACKAGE_NAME }}" 
+          -e MSIX_PUBLISHER="${{ secrets.MSIX_PUBLISHER }}" 
+          -e MSIX_PUBLISHER_DISPLAY_NAME="${{ secrets.MSIX_PUBLISHER_DISPLAY_NAME }}" 
+          init-msix
+
+      - name: Build and Package (EXE, MSI, MSIX)
+        run: npm run make cd
+
+      - name: Rename Artifacts
         shell: powershell
         run: |
-          $msi = Get-Item "src-tauri/target/release/bundle/msi/*.msi"
-          Rename-Item $msi.FullName "acerola-windows-x86_64.msi"
-
-      - name: Check AWS CLI
-        run: aws --version
-
-      - name: Upload to Cloudflare R2
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-        run: |
-          # Faz o upload da versão específica (fazemos cache longo por ser imutável)
-          aws s3 cp src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi s3://${{ secrets.R2_BUCKET_NAME }}/releases/v${{ env.VERSION_FULL }}/acerola-windows-x86_64.msi --endpoint-url "$R2_ENDPOINT" --cache-control "public,max-age=31536000"
-          
-          # Faz o upload e sobrescreve a versão 'latest' (invalida cache para baixar sempre a versão nova)
-          aws s3 cp src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi s3://${{ secrets.R2_BUCKET_NAME }}/releases/latest/acerola-windows-x86_64.msi --endpoint-url "$R2_ENDPOINT" --cache-control "no-cache"
-
-      - name: Verify upload
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-        run: |
-          aws s3 ls s3://${{ secrets.R2_BUCKET_NAME }}/releases/latest/acerola-windows-x86_64.msi --endpoint-url "$R2_ENDPOINT"
+          Rename-Item (Get-Item ".bin\windows\msix\*.msix").FullName "acerola-x64.msix"
+          Rename-Item (Get-Item ".bin\windows\msi\*.msi").FullName "acerola-x64.msi"
+          Rename-Item (Get-Item ".bin\windows\exe\*.exe").FullName "acerola-x64.exe"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -124,5 +113,8 @@ jobs:
           name: Acerola ${{ env.VERSION_FULL }}
           draft: false
           prerelease: ${{ contains(env.VERSION_FULL, '-') }}
-          files: acerola/src-tauri/target/release/bundle/msi/acerola-windows-x86_64.msi
+          files: |
+            acerola/.bin/windows/msix/acerola-x64.msix
+            acerola/.bin/windows/msi/acerola-x64.msi
+            acerola/.bin/windows/exe/acerola-x64.exe
           generate_release_notes: true

@@ -5,12 +5,14 @@
 	"license": "GPL-3.0-only",
 	"author": {
 		"name": "Vinícius Gabriel Pereira Leitão",
-		"email": "vinicius.gabriel.p.leitao@gmail.com"
+		"email": "contato@acerola-comic.com"
 	},
 	"description": "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.",
 	"scripts": {
 		"tauri": "tauri",
+		"pack:msix": "npm run make cd",
 		"make": "cargo make --cwd ./src-tauri",
+		"tauri:dev:withidentity": "npm run make dev-msix",
 		"preview": "vite preview",
 		"dev": "npm run paraglide:compile && vite dev",
 		"build": "npm run paraglide:compile && vite build",
