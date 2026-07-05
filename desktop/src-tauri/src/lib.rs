@@ -6,8 +6,9 @@ mod data;
 mod infra;
 
 use cmd::features::{
+    history as history_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
-    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd, history as history_cmd,
+    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
 };
 use tauri::Manager;
 
@@ -64,6 +65,7 @@ mod app_bootstrap {
             history_cmd::history_get_comic,
             history_cmd::history_get_read_chapters,
             history_cmd::history_clear,
+            system_cmd::get_package_family_name,
         ])
     }
 
@@ -194,12 +196,41 @@ pub fn run() {
                 if resource_dir.exists() {
                     pdfium::set_library_location(resource_dir.to_str().unwrap_or("."));
                 } else {
-                    // Fallback para a pasta do executável
-                    pdfium::set_library_location(exe_dir.to_str().unwrap_or("."));
+                    let local_bin = exe_dir.join(".bin");
+                    if local_bin.exists() {
+                        pdfium::set_library_location(local_bin.to_str().unwrap_or("."));
+                    } else {
+                        // Fallback para a pasta do executável
+                        pdfium::set_library_location(exe_dir.to_str().unwrap_or("."));
+                    }
                 }
             }
         }
     }
 
     app_bootstrap::build().run(app_context).expect("Erro ao executar a aplicação Tauri");
+}
+
+pub mod system_cmd {
+    #[tauri::command]
+    pub fn get_package_family_name() -> String {
+        #[cfg(target_os = "windows")]
+        {
+            use windows::ApplicationModel::Package;
+            match Package::Current() {
+                Ok(package) => match package.Id() {
+                    Ok(id) => match id.FamilyName() {
+                        Ok(name) => name.to_string(),
+                        Err(_) => "Error retrieving Family Name".to_string(),
+                    },
+                    Err(_) => "Error retrieving Package ID".to_string(),
+                },
+                Err(_) => "No package identity".to_string(),
+            }
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            "Not running on Windows".to_string()
+        }
+    }
 }

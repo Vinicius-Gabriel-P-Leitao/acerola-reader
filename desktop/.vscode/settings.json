@@ -26,10 +26,10 @@
 		"**/storybook-static": true
 	},
 	"search.exclude": {
+		"**/paraglide": true,
 		"**/target": true,
 		"**/build": true,
 		"**/gen": true,
-		"**/paraglide": true,
 		"**/capabilities": true,
 		"**/project.inlang": true,
 		"**/node_modules": true,
