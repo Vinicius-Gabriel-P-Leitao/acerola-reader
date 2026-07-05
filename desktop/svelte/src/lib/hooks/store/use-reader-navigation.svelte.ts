@@ -20,29 +20,29 @@ export type ReaderNavigationState = {
 };
 
 export function useReaderNavigation() {
-	let state = $state<ReaderNavigationState>({} as ReaderNavigationState);
 	let initializing = $state(false);
 
 	// Mantém o rastro da navegação pendente para que o listener saiba o que fazer
 	let pendingAction = $state<'load' | 'navigate' | null>(null);
 	let pendingTargetIndex = $state<number | null>(null);
 
-	if (browser) {
+	const resolveInitialState = (): ReaderNavigationState => {
 		const pageState = (page.state ?? {}) as ReaderNavigationState;
 
-		if (Object.keys(pageState).length > 0 && pageState.chapter) {
-			state = pageState;
-			sessionStorage.setItem(SESSION_KEYS.readerState, JSON.stringify(pageState));
-		} else {
-			const saved = sessionStorage.getItem(SESSION_KEYS.readerState);
+		if (!browser) return pageState;
 
-			if (saved) {
-				state = JSON.parse(saved);
-			}
+		if (Object.keys(pageState).length > 0 && pageState.chapter) {
+			sessionStorage.setItem(SESSION_KEYS.readerState, JSON.stringify(pageState));
+			return pageState;
 		}
-	} else {
-		state = (page.state ?? {}) as ReaderNavigationState;
-	}
+
+		const saved = sessionStorage.getItem(SESSION_KEYS.readerState);
+		if (saved) return JSON.parse(saved);
+
+		return pageState;
+	};
+
+	let state = $state<ReaderNavigationState>(resolveInitialState());
 
 	$effect(() => {
 		const pageState = (page.state ?? {}) as ReaderNavigationState;
@@ -84,37 +84,49 @@ export function useReaderNavigation() {
 				if (pendingAction === 'load') {
 					const items = payload.archive.items;
 					const idx = items.findIndex((item) => item.id === state.chapter?.id);
+					
 					if (idx !== -1) {
 						state.chapterIndex = idx;
 						state.totalChapters = payload.archive.total ?? items.length;
 						sessionStorage.setItem(SESSION_KEYS.readerState, JSON.stringify(state));
 					}
+					
 					pendingAction = null;
-				} else if (pendingAction === 'navigate' && pendingTargetIndex !== null) {
+					return;
+				}
+
+				if (pendingAction === 'navigate' && pendingTargetIndex !== null) {
 					const nextChapterData = payload.archive.items[0];
-					if (nextChapterData) {
-						const readerChapter: ReaderChapterPayload = {
-							id: nextChapterData.id,
-							name: nextChapterData.name,
-							path: nextChapterData.path,
-							chapterSort: nextChapterData.chapterSort ?? '',
-							volumeId: nextChapterData.volumeId ?? null,
-							volumeName: nextChapterData.volumeName ?? null,
-							isSpecial: nextChapterData.isSpecial ?? false,
-							lastModified: nextChapterData.lastModified ?? 0
-						};
-
-						const newState: ReaderNavigationState = {
-							chapter: readerChapter,
-							comicDirectoryId: state.comicDirectoryId,
-							chapterIndex: pendingTargetIndex,
-							totalChapters: state.totalChapters,
-							chapterScope: state.chapterScope
-						};
-
-						state = newState;
-						replaceState(page.url, newState);
+					
+					if (!nextChapterData) {
+						initializing = false;
+						pendingAction = null;
+						pendingTargetIndex = null;
+						return;
 					}
+
+					const readerChapter: ReaderChapterPayload = {
+						id: nextChapterData.id,
+						name: nextChapterData.name,
+						path: nextChapterData.path,
+						chapterSort: nextChapterData.chapterSort ?? '',
+						volumeId: nextChapterData.volumeId ?? null,
+						volumeName: nextChapterData.volumeName ?? null,
+						isSpecial: nextChapterData.isSpecial ?? false,
+						lastModified: nextChapterData.lastModified ?? 0
+					};
+
+					const newState: ReaderNavigationState = {
+						chapter: readerChapter,
+						comicDirectoryId: state.comicDirectoryId,
+						chapterIndex: pendingTargetIndex,
+						totalChapters: state.totalChapters,
+						chapterScope: state.chapterScope
+					};
+
+					state = newState;
+					replaceState(page.url, newState);
+					
 					initializing = false;
 					pendingAction = null;
 					pendingTargetIndex = null;

@@ -151,6 +151,7 @@ export function useReader() {
 				if (version === requestVersion) {
 					setError(caught);
 				}
+
 				throw caught;
 			} finally {
 				if (version === requestVersion) {

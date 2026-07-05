@@ -16,38 +16,50 @@ export function useComicSummary() {
 	let comics = $state<ComicSummaryPayload | undefined>(undefined);
 	let loading = $state(false);
 
-	async function fetch() {
-		if (loading) return;
+	let fetchQueued = false;
+
+	async function fetch(): Promise<void> {
+		if (loading) {
+			fetchQueued = true;
+			return;
+		}
 		loading = true;
+		fetchQueued = false;
 
-		const unlisten = await listen<ComicSummaryPayload>(HOME_EVENTS.homeData, (event) => {
-			comics = event.payload;
-			loading = false;
+		return new Promise<void>(async (resolve) => {
+			const unlisten = await listen<ComicSummaryPayload>(HOME_EVENTS.homeData, (event) => {
+				comics = event.payload;
 
-			debug(
-				`[useComicSummary] total=${event.payload.total} fetchedAt=${event.payload.fetchedAt} payload=${JSON.stringify(event.payload.comics.slice(0, 3))}`
-			);
+				debug(
+					`[useComicSummary] total=${event.payload.total} fetchedAt=${event.payload.fetchedAt} payload=${JSON.stringify(event.payload.comics.slice(0, 3))}`
+				);
 
-			unlisten();
-			unlistenErr();
-		});
-
-		const unlistenErr = await listen<ErrorPayload>(HOME_EVENTS.homeError, (event) => {
-			const description = resolveErrorMessage(event.payload);
-
-			notify.error(m['hooks.comic_summary.error_title'](), {
-				description,
-				duration: 0
+				unlisten();
+				unlistenErr();
+				resolve();
 			});
-			toast.error(description);
 
+			const unlistenErr = await listen<ErrorPayload>(HOME_EVENTS.homeError, (event) => {
+				const description = resolveErrorMessage(event.payload);
+
+				notify.error(m['hooks.comic_summary.error_title'](), {
+					description,
+					duration: 0
+				});
+
+				toast.error(description);
+				unlisten();
+				unlistenErr();
+				resolve();
+			});
+
+			await invoke(HOME_COMMANDS.getComicSummary);
+		}).finally(() => {
 			loading = false;
-
-			unlisten();
-			unlistenErr();
+			if (fetchQueued) {
+				fetch();
+			}
 		});
-
-		await invoke(HOME_COMMANDS.getComicSummary);
 	}
 
 	return {
