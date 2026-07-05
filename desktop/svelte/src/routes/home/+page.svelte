@@ -20,11 +20,11 @@
 	let unlistenScan: (() => void) | undefined;
 
 	onMount(async () => {
-		await summary.fetch();
-
 		unlistenScan = await listen(LIBRARY_EVENTS.scanComplete, async () => {
 			await summary.fetch();
 		});
+
+		await summary.fetch();
 	});
 
 	onDestroy(() => {

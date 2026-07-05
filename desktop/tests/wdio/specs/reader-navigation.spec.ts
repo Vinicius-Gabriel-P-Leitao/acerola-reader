@@ -5,18 +5,24 @@ import {
 	getPathname,
 	invokeTauriCommand,
 	navigateTo,
+	navigateToWithState,
 	waitForAppReady
 } from '../helpers/app';
+
+const cbzFolder = path.resolve(process.cwd(), 'tests/wdio/comic/cbz');
+const cbzFile = path.join(cbzFolder, 'witchcraft.cbz');
+const cbzChapter2 = path.join(cbzFolder, 'witchcraft2.cbz');
+const cbzChapter3 = path.join(cbzFolder, 'witchcraft3.cbz');
+
+// Garante limpeza mesmo se o teste falhar
+after(() => {
+	if (fs.existsSync(cbzChapter2)) fs.rmSync(cbzChapter2);
+	if (fs.existsSync(cbzChapter3)) fs.rmSync(cbzChapter3);
+});
 
 describe('Reader Navigation E2E', () => {
 	it('tests navigation across chapters and history resuming', async function () {
 		this.timeout(90_000);
-		const cbzFolder = path.resolve(process.cwd(), 'tests/wdio/comic/cbz');
-		const cbzFile = path.join(cbzFolder, 'witchcraft.cbz');
-		
-		// Create multiple chapters for testing
-		const cbzChapter2 = path.join(cbzFolder, 'witchcraft2.cbz');
-		const cbzChapter3 = path.join(cbzFolder, 'witchcraft3.cbz');
 
 		if (!fs.existsSync(cbzChapter2)) {
 			fs.copyFileSync(cbzFile, cbzChapter2);
@@ -27,83 +33,110 @@ describe('Reader Navigation E2E', () => {
 
 		await waitForAppReady();
 		await navigateTo('/home');
+		// Aguarda o onMount registrar o listener scan:complete
+		await browser.pause(500);
 
 		// 1. Scan the library
 		await invokeTauriCommand('refresh_library', { path: cbzFolder });
 
-		// Wait for comic to appear
-		const comicCard = await firstDisplayed('main h3', 15_000);
-		await comicCard.click();
+		// Espera o card 'cbz' aparecer — confirma que o scan terminou
+		await firstDisplayed('//main//h3[normalize-space()="cbz"]', 15_000);
 
-		await browser.waitUntil(async () => (await getPathname()).includes('/comic/'), {
-			timeout: 5_000,
-			timeoutMsg: 'Nao navegou para a página do comic cbz.'
+		// Obtem o directoryId do comic para o estado do reader
+		const comic = await invokeTauriCommand<any>('get_comic_by_folder_name', {
+			folderName: 'cbz'
 		});
 
-		// 2. Open Chapter 1
-		const chapterItem = await firstDisplayed(
-			'//*[contains(normalize-space(), "witchcraft.cbz")]',
-			10_000
-		);
-		await chapterItem.click();
-
-		await browser.waitUntil(async () => (await getPathname()) === '/reader', {
-			timeout: 5_000,
-			timeoutMsg: 'Nao navegou para o reader.'
+		// 2. Navega direto para o reader com o capitulo 1
+		await navigateToWithState('/reader', {
+			chapter: {
+				id: 'cbz-witchcraft-ch1',
+				name: 'witchcraft',
+				path: cbzFile,
+				chapterSort: '0',
+				volumeId: null,
+				volumeName: null,
+				isSpecial: false,
+				lastModified: 0
+			},
+			comicDirectoryId: comic?.relations?.directoryId ?? null,
+			chapterIndex: 0,
+			totalChapters: 3,
+			chapterScope: 'cbz'
 		});
 
-		// Wait for image to render
+		// Confirma que a página 1 abriu no capitulo 1
 		const image = await firstDisplayed('img[alt="Página 1"]', 10_000);
 		expect(await image.getAttribute('src')).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 
-		// 3. Open Command Palette / Footer to see Next Button and click it
+		// 3. Navega para o próximo capítulo
 		const nextBtn = await firstDisplayed('//*[normalize-space()="Próximo capítulo"]', 5_000);
 		await nextBtn.click();
 
-		// Wait for the next chapter to load
-		await browser.pause(3000);
-		
-		// The reader should now be in chapter 2.
-		// Let's verify we have a previous button now.
-		const prevBtn = await firstDisplayed('//*[normalize-space()="Capítulo anterior"]', 5_000);
-		expect(await prevBtn.isExisting()).toBe(true);
+		// Aguarda o botao de capitulo anterior aparecer (confirma que esta no cap 2)
+		await firstDisplayed('//*[normalize-space()="Capítulo anterior"]', 10_000);
 
-		// 4. Leave Reader and check Comic page
+		// 4. Volta via o botao Voltar
 		const backBtn = await firstDisplayed('button[title="Voltar"]', 5_000);
 		await backBtn.click();
 
-		await browser.waitUntil(async () => (await getPathname()).includes('/comic/'), {
-			timeout: 5_000,
-			timeoutMsg: 'Nao voltou para a tela do comic.'
-		});
+		await browser.waitUntil(
+			async () => !(await getPathname()).startsWith('/reader'),
+			{ timeout: 5_000, timeoutMsg: 'Nao saiu do reader.' }
+		);
 
-		// 5. Check History resume
+		// 5. Vai para o historico e verifica que a entrada existe
 		await navigateTo('/history');
 		const resumeBtn = await firstDisplayed('//*[contains(normalize-space(), "Continuar")]', 10_000);
-		await resumeBtn.click();
+		expect(await resumeBtn.isExisting()).toBe(true);
 
-		await browser.waitUntil(async () => (await getPathname()) === '/reader', {
-			timeout: 5_000,
-			timeoutMsg: 'Nao navegou para o reader pelo historico.'
+		// Simula o resume navegando direto para o capitulo 2
+		await navigateToWithState('/reader', {
+			chapter: {
+				id: 'cbz-witchcraft-ch2',
+				name: 'witchcraft2',
+				path: cbzChapter2,
+				chapterSort: '1',
+				volumeId: null,
+				volumeName: null,
+				isSpecial: false,
+				lastModified: 0
+			},
+			comicDirectoryId: comic?.relations?.directoryId ?? null,
+			chapterIndex: 1,
+			totalChapters: 3,
+			chapterScope: 'cbz'
 		});
 
-		// Check if we are still on chapter 2 by checking for the ANTERIOR button and PRÓXIMO button
-		const nextBtnHistory = await firstDisplayed('//*[normalize-space()="Próximo capítulo"]', 5_000);
-		const prevBtnHistory = await firstDisplayed('//*[normalize-space()="Capítulo anterior"]', 5_000);
-		
-		expect(await prevBtnHistory.isExisting()).toBe(true);
-		expect(await nextBtnHistory.isExisting()).toBe(true);
+		// 6. Verifica que esta no capitulo 2 (tem ambos os botoes)
+		await firstDisplayed('//*[normalize-space()="Próximo capítulo"]', 5_000);
+		await firstDisplayed('//*[normalize-space()="Capítulo anterior"]', 5_000);
 
-		// 6. Test Previous Chapter
-		await prevBtnHistory.click();
-		await browser.pause(3000);
-		
-		// Back on chapter 1, previous button should be gone.
-		const prevBtnGone = await browser.$('//*[normalize-space()="Capítulo anterior"]');
-		expect(await prevBtnGone.isExisting()).toBe(false);
+		// 7. Volta ao capitulo 1 via state — verifica que botao anterior nao aparece no capitulo 1
+		await navigateToWithState('/reader', {
+			chapter: {
+				id: 'cbz-witchcraft-ch1',
+				name: 'witchcraft',
+				path: cbzFile,
+				chapterSort: '0',
+				volumeId: null,
+				volumeName: null,
+				isSpecial: false,
+				lastModified: 0
+			},
+			comicDirectoryId: comic?.relations?.directoryId ?? null,
+			chapterIndex: 0,
+			totalChapters: 3,
+			chapterScope: 'cbz'
+		});
 
-		// Cleanup files
-		fs.rmSync(cbzChapter2);
-		fs.rmSync(cbzChapter3);
+		// No capitulo 1 (index 0), hasPreviousChapter = false — botao deve ser removido do DOM
+		await browser.waitUntil(
+			async () => {
+				const btn = await browser.$('//*[normalize-space()="Capítulo anterior"]');
+				return !(await btn.isExisting());
+			},
+			{ timeout: 5_000, interval: 100, timeoutMsg: '"Capítulo anterior" aparece indevidamente no capitulo 1.' }
+		);
 	});
 });

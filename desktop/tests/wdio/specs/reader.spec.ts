@@ -36,6 +36,13 @@ describe('reader nativo', () => {
 		const progress = await firstDisplayed('[role="progressbar"]');
 		expect(await progress.getAttribute('aria-valuenow')).toBe('0');
 
+		try {
+			const paginadoBtn = await firstDisplayed('[title="Paginado horizontal"]', 2000);
+			if ((await paginadoBtn.getAttribute('data-state')) !== 'on') {
+				await paginadoBtn.click();
+			}
+		} catch (e) {}
+
 		const previous = await firstDisplayed('[title="Página anterior"]');
 		const next = await firstDisplayed('[title="Próxima página"]');
 		expect(await previous.isEnabled()).toBe(false);
@@ -75,11 +82,12 @@ describe('reader nativo', () => {
 		await firstPage.waitForDisplayed({ timeout: 10_000 });
 
 		// Ensure we are in Paginated mode (in case a previous test left it in Webtoon)
-		const commandsBtn = await browser.$('[title="Comandos"]');
-		if (await commandsBtn.isExisting()) {
-			await commandsBtn.click();
-			await (await firstDisplayed('[title="Paginado horizontal"]')).click();
-		}
+		try {
+			const paginadoBtn = await firstDisplayed('[title="Paginado horizontal"]', 2000);
+			if ((await paginadoBtn.getAttribute('data-state')) !== 'on') {
+				await paginadoBtn.click();
+			}
+		} catch (e) {}
 
 		await (await firstDisplayed('[title="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
