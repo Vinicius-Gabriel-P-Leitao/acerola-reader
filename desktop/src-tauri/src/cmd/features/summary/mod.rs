@@ -11,14 +11,14 @@ use crate::{
 
 #[tauri::command]
 pub async fn get_comic_summary<R: Runtime>(
-    app: AppHandle<R>, pool: State<'_, SqlitePool>,
+    search: Option<String>, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
 
     tokio::spawn(async move {
         let service = HomeService::new(pool);
 
-        match service.get_all().await {
+        match service.get_all(search).await {
             Ok((comics, counts)) => {
                 app.emit("home:data", ComicSummaryPayload::from(comics, counts)).unwrap()
             },

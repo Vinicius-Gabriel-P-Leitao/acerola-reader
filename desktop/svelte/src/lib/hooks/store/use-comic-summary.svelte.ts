@@ -17,10 +17,12 @@ export function useComicSummary() {
 	let loading = $state(false);
 
 	let fetchQueued = false;
+	let lastSearch: string | undefined = undefined;
 
-	async function fetch(): Promise<void> {
+	async function fetch(search?: string): Promise<void> {
 		if (loading) {
 			fetchQueued = true;
+			lastSearch = search;
 			return;
 		}
 		loading = true;
@@ -53,11 +55,11 @@ export function useComicSummary() {
 				resolve();
 			});
 
-			await invoke(HOME_COMMANDS.getComicSummary);
+			await invoke(HOME_COMMANDS.getComicSummary, { search });
 		}).finally(() => {
 			loading = false;
 			if (fetchQueued) {
-				fetch();
+				fetch(lastSearch);
 			}
 		});
 	}
