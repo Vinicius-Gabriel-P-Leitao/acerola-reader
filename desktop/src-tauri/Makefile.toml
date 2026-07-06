@@ -110,17 +110,17 @@ $manifest = "$msixDir\Package.appxmanifest"
 if (Test-Path $manifest) { Remove-Item $manifest -Force }
 winapp init $msixDir --use-defaults --setup-sdks none
 
-$content = Get-Content $manifest -Raw
-$content = $content -replace '\$targetnametoken\$.exe', 'acerola.exe'
-$content = $content -replace 'Name="msix"', "Name=`"$env:MSIX_PACKAGE_NAME`""
-$content = $content -replace 'Id="msix"', "Id=`"$env:MSIX_PACKAGE_NAME`""
-$content = $content -replace 'Publisher="CN=.*?"', "Publisher=`"$env:MSIX_PUBLISHER`""
-$content = $content -replace '<PublisherDisplayName>.*?</PublisherDisplayName>', "<PublisherDisplayName>$env:MSIX_PUBLISHER_DISPLAY_NAME</PublisherDisplayName>"
-$content = $content -replace '<DisplayName>.*?</DisplayName>', "<DisplayName>$env:MSIX_DISPLAY_NAME</DisplayName>"
-$content = $content -replace 'DisplayName=".*?"', "DisplayName=`"$env:MSIX_DISPLAY_NAME`""
-$content = $content -replace 'Description=".*?"', "Description=`"$env:MSIX_DESCRIPTION`""
-$content = $content -replace 'BackgroundColor="transparent"', "BackgroundColor=`"$env:MSIX_BG_COLOR`""
-Set-Content $manifest -Value $content
+$xml = [xml](Get-Content $manifest)
+$xml.Package.Identity.Name = $env:MSIX_PACKAGE_NAME
+$xml.Package.Identity.Publisher = $env:MSIX_PUBLISHER
+$xml.Package.Properties.DisplayName = $env:MSIX_DISPLAY_NAME
+$xml.Package.Properties.PublisherDisplayName = $env:MSIX_PUBLISHER_DISPLAY_NAME
+$xml.Package.Applications.Application.Id = $env:MSIX_PACKAGE_NAME
+$xml.Package.Applications.Application.Executable = "acerola.exe"
+$xml.Package.Applications.Application.VisualElements.DisplayName = $env:MSIX_DISPLAY_NAME
+$xml.Package.Applications.Application.VisualElements.Description = $env:MSIX_DESCRIPTION
+$xml.Package.Applications.Application.VisualElements.BackgroundColor = $env:MSIX_BG_COLOR
+$xml.Save($manifest)
 
 winapp cert generate --manifest $manifest --output "$msixDir\devcert.pfx" --if-exists overwrite
 Get-ChildItem -Path "$msixDir\Assets" -Filter *.png | ForEach-Object { Copy-Item -Path "icons\icon.png" -Destination $_.FullName -Force }
