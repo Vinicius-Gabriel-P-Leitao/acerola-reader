@@ -56,13 +56,22 @@ impl ScannerEngine {
                 }
             }
 
-            let mut entries = fs::read_dir(&path).await?;
+            let mut entries = match fs::read_dir(&path).await {
+                Ok(e) => e,
+                Err(err) => {
+                    tracing::warn!("Scanner error reading directory {:?}: {}", path, err);
+                    return Ok(false);
+                }
+            };
             let mut subdirs: Vec<PathBuf> = vec![];
             let mut files: Vec<PathBuf> = vec![];
 
             while let Ok(Some(entry)) = entries.next_entry().await {
                 let entry_path = entry.path();
-                let metadata = entry.metadata().await?;
+                let metadata = match entry.metadata().await {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
 
                 if metadata.is_dir() {
                     subdirs.push(entry_path);
@@ -76,8 +85,12 @@ impl ScannerEngine {
 
             let mut child_found = false;
             for subdirectory in subdirs.clone() {
-                if self.walk(subdirectory, tx.clone(), depth + 1, filter.clone()).await? {
-                    child_found = true;
+                match self.walk(subdirectory, tx.clone(), depth + 1, filter.clone()).await {
+                    Ok(true) => child_found = true,
+                    Ok(false) => {},
+                    Err(err) => {
+                        tracing::warn!("Scanner error during walk: {}", err);
+                    }
                 }
             }
 

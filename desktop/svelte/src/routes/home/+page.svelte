@@ -9,6 +9,7 @@
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useComicContext } from '$lib/state/comic-context.svelte';
+	import { globalSearch } from '$lib/state/search.svelte';
 	import { resolveCover } from '$lib/utils/artwork.utils';
 	import { listen } from '@tauri-apps/api/event';
 	import { onDestroy, onMount } from 'svelte';
@@ -18,26 +19,35 @@
 	const activeComic = useComicContext();
 
 	let unlistenScan: (() => void) | undefined;
+	let searchTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
 	onMount(async () => {
 		unlistenScan = await listen(LIBRARY_EVENTS.scanComplete, async () => {
-			await summary.fetch();
+			await summary.fetch(globalSearch.query);
 		});
 
-		await summary.fetch();
+		await summary.fetch(globalSearch.query);
 	});
 
 	onDestroy(() => {
 		unlistenScan?.();
 	});
+
+	$effect(() => {
+		const query = globalSearch.query;
+		if (searchTimeout) clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => {
+			summary.fetch(query);
+		}, 300);
+	});
 </script>
 
-{#if summary.loading}
+{#if summary.loading && (!summary.comics || summary.comics.total === 0)}
 	<div class="flex items-center justify-center p-8 text-muted-foreground">
 		{m['pages.home.loading']()}
 	</div>
 {:else if summary.comics && summary.comics.total > 0}
-	<div class="p-8">
+	<div class="px-8 pb-8 pt-8">
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 			{#each summary.comics.comics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}

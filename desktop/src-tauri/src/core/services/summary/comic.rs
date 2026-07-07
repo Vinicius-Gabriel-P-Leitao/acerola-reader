@@ -20,8 +20,11 @@ impl HomeService {
         Self { repo: HomeRepository::new(pool.clone()), chapter_repo: ChapterRepository::new(pool) }
     }
 
-    pub async fn get_all(&self) -> Result<(Vec<ComicSummaryView>, HashMap<i64, i64>), ComicError> {
-        let comics = self.repo.base.find_all().await?;
+    pub async fn get_all(&self, search: Option<String>) -> Result<(Vec<ComicSummaryView>, HashMap<i64, i64>), ComicError> {
+        let comics = match search {
+            Some(query) if !query.trim().is_empty() => self.repo.search_by_title(&query).await?,
+            _ => self.repo.base.find_all().await?,
+        };
         let counts = self.chapter_repo.get_all_counts().await?;
         Ok((comics, counts))
     }
