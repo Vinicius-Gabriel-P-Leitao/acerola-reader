@@ -19,10 +19,10 @@ impl HomeRepository {
     pub async fn search_by_title(&self, query_str: &str) -> Result<Vec<ComicSummaryView>, DbError> {
         let table = ComicSummaryView::table_name();
         let cols = ComicSummaryView::columns().join(", ");
-        let search_pattern = format!("%{}%", query_str);
+        let search_pattern = format!("%{}%", query_str.to_lowercase());
 
         let sql = format!(
-            "SELECT {} FROM {} WHERE folder_name LIKE ? OR metadata_title LIKE ?",
+            "SELECT {} FROM {} WHERE LOWER(folder_name) LIKE ? OR LOWER(metadata_title) LIKE ?",
             cols, table
         );
 
@@ -54,16 +54,16 @@ mod tests {
         let (pool, repo) = setup().await;
 
         // Inserir dados nas tabelas base
-        sqlx::query("INSERT INTO comic_directory (id, name, path) VALUES (1, 'One Piece', '/mangas/one piece')")
+        sqlx::query("INSERT INTO comic_directory (id, name, path, last_modified) VALUES (1, 'One Piece', '/mangas/one piece', 0)")
             .execute(&pool)
             .await
             .unwrap();
-        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title) VALUES (1, 1, 'One Piece - Piratas')")
+        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, romanji, status) VALUES (1, 1, 'One Piece - Piratas', 'desc', 'romanji', 'status')")
             .execute(&pool)
             .await
             .unwrap();
 
-        sqlx::query("INSERT INTO comic_directory (id, name, path) VALUES (2, 'NARUTO', '/mangas/naruto')")
+        sqlx::query("INSERT INTO comic_directory (id, name, path, last_modified) VALUES (2, 'NARUTO', '/mangas/naruto', 0)")
             .execute(&pool)
             .await
             .unwrap();
