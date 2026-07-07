@@ -37,6 +37,7 @@
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
+	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { setComicContext } from '$lib/state/comic-context.svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
@@ -55,6 +56,7 @@
 	import { Command as CommandPrimitive } from 'bits-ui';
 
 	import AcerolaNotification from '$lib/components/acerola-notification/acerola-notification.svelte';
+	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import '$theme/layout.css';
 	import Search from '@lucide/svelte/icons/search';
 
@@ -67,6 +69,7 @@
 
 	const folder = useSelectFolder();
 	const summary = useComicSummary();
+	const bookmarkStore = useBookmarks();
 
 	const incrementalScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.incrementalScan,
@@ -80,6 +83,7 @@
 		const { error: logError } = await import('@tauri-apps/plugin-log');
 		
 		await folder.loadSavedPath();
+		await bookmarkStore.loadBookmarks();
 
 		try {
 			const packageFamilyName = await invoke<string>('get_package_family_name');
@@ -274,6 +278,7 @@
 					<div class="flex flex-col gap-2">
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
+							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)?.color}
 							<Command.Item
 								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
 								onSelect={() => {
@@ -282,7 +287,10 @@
 								}}
 								class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
 							>
-								<div class="h-32 w-24 shrink-0 overflow-hidden rounded-xl border border-surface/50 bg-mantle shadow-sm">
+								<div class="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl border border-surface/50 bg-mantle shadow-sm">
+									{#if bookmarkColor != null}
+										<AcerolaBookmarkRibbon color={bookmarkColor} />
+									{/if}
 									{#if cover}
 										<img src={cover} alt="" class="h-full w-full object-cover" />
 									{:else}

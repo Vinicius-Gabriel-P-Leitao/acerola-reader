@@ -8,6 +8,7 @@
 	import { useChaptersPerPage } from '$lib/hooks/preferences/use-chapters-per-page.svelte';
 	import { useVolumeViewMode } from '$lib/hooks/preferences/use-volume-view-mode.svelte';
 	import { useComicChapters } from '$lib/hooks/store/use-comic-chapters.svelte';
+	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 
@@ -35,8 +36,10 @@
 
 	const chaptersPreference = useChaptersPerPage();
 	const volumeViewPreference = useVolumeViewMode();
+	const bookmarkStore = useBookmarks();
 
 	let expandedVolumeId = $state<string | null>(null);
+	let currentBookmarkId = $state<number | null>(null);
 
 	let activeTab = $state('content');
 	let isAscending = $state(true);
@@ -96,7 +99,8 @@
 	onMount(async () => {
 		await Promise.all([
 			chaptersPreference.loadChaptersPerPage(),
-			volumeViewPreference.loadVolumeViewMode()
+			volumeViewPreference.loadVolumeViewMode(),
+			bookmarkStore.loadBookmarks()
 		]);
 	});
 
@@ -106,10 +110,12 @@
 			isHistoryLoading = true;
 			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(() => null);
 			const fetchRead = invoke<string[]>('history_get_read_chapters', { comicId: id.toString() }).catch(() => []);
+			const fetchBookmark = bookmarkStore.getComicBookmark(id);
 			
-			const [history, read] = await Promise.all([fetchHistory, fetchRead]);
+			const [history, read, bookmark] = await Promise.all([fetchHistory, fetchRead, fetchBookmark]);
 			readingHistory = history;
 			readChapters = read;
+			currentBookmarkId = bookmark?.id ?? null;
 			
 			isHistoryLoading = false;
 		}
@@ -308,7 +314,8 @@
 				source: manga.metadata.source,
 				chaptersCount: manga.chaptersCount,
 				description: manga.metadata.description,
-				cover: manga.cover
+				cover: manga.cover,
+				bookmarkColor: bookmarkStore.bookmarks.find(b => b.id === currentBookmarkId)?.color
 			}}
 			state={{
 				isResuming: !!readingHistory,
@@ -431,15 +438,28 @@
 					{:else if activeTab === 'preferences'}
 						<ComicPreferences
 							data={{
-								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false
+								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false,
+								bookmarks: bookmarkStore.bookmarks
 							}}
 							state={{
 								chaptersPerPage: chaptersPreference.chaptersPerPage,
-								volumeViewMode: volumeViewPreference.volumeViewMode
+								volumeViewMode: volumeViewPreference.volumeViewMode,
+								bookmarkId: currentBookmarkId
 							}}
 							events={{
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
-								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value)
+								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value),
+								onBookmarkChange: async (value) => {
+									const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+									if (!id) return;
+									
+									if (value) {
+										await bookmarkStore.assignToComic(id, value);
+									} else {
+										await bookmarkStore.removeComicBookmark(id);
+									}
+									currentBookmarkId = value;
+								}
 							}}
 						/>
 					{/if}

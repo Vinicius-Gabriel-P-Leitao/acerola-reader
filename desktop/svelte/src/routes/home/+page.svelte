@@ -3,6 +3,8 @@
 	import PlaceholderManga from '$lib/assets/placeholder/placeholder_manga.svg?component';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
+	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
+	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 
@@ -17,6 +19,7 @@
 
 	const summary = useComicSummary();
 	const activeComic = useComicContext();
+	const bookmarkStore = useBookmarks();
 
 	let unlistenScan: (() => void) | undefined;
 	let searchTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
@@ -51,6 +54,7 @@
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 			{#each summary.comics.comics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
+				{@const bookmarkColor = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)?.color}
 				<AcerolaCardImage
 					data={{
 						title: comic.metadata.title ?? comic.filesystem.folderName,
@@ -63,6 +67,12 @@
 						}
 					}}
 				>
+					{#snippet floatingBadge()}
+						{#if bookmarkColor != null}
+							<AcerolaBookmarkRibbon color={bookmarkColor} />
+						{/if}
+					{/snippet}
+
 					{#snippet footer()}
 						<div class="mt-1 flex items-center justify-between">
 							<span

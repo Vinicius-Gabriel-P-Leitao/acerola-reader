@@ -34,11 +34,17 @@
 	name="Com progresso"
 	args={{
 		data: {
-			title: 'Berserk',
-			progress: 65
+			description: 'Descrição de teste',
+			progress: 50
 		}
 	}}
-/>
+>
+	{#snippet floatingBadge()}
+		<div class="absolute -top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-md">
+			N
+		</div>
+	{/snippet}
+</Story>
 
 <Story
 	name="Com descrição no overlay"

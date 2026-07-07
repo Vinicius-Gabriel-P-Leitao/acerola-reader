@@ -21,6 +21,7 @@
 		overlay?: Snippet;
 		footer?: Snippet;
 		action?: Snippet;
+		floatingBadge?: Snippet;
 	};
 </script>
 
@@ -36,19 +37,24 @@
 		footer,
 		action,
 		overlay,
-		placeholder
+		placeholder,
+		floatingBadge
 	}: AcerolaCardImageProps & AcerolaCardImageSnippets = $props();
 </script>
 
 <div
 	class={cn(
-		'group w-36 transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.02]',
+		'relative group w-36 transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.02]',
 		ui?.class
 	)}
 >
+	{#if floatingBadge}
+		{@render floatingBadge()}
+	{/if}
+
 	<AspectRatio
 		ratio={2 / 3}
-		class="rounded-xl bg-surface shadow-lg transition-shadow duration-300 group-hover:shadow-2xl group-hover:shadow-primary/20"
+		class="relative rounded-xl bg-surface shadow-lg transition-shadow duration-300 group-hover:shadow-2xl group-hover:shadow-primary/20"
 	>
 		<div class="h-full w-full overflow-hidden rounded-xl">
 			<button
@@ -71,7 +77,6 @@
 						<BookOpenIcon size={40} />
 					</div>
 				{/if}
-
 				<div
 					class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-crust via-crust/30 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 				>

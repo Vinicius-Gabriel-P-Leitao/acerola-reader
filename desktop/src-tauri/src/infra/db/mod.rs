@@ -117,8 +117,8 @@ fn category_migrations() -> Vec<Migration> {
         },
         Migration {
             version: 16,
-            description: "create_manga_category",
-            sql: include_str!("./migrations/models/category/002_create_manga_category.sql"),
+            description: "create_comic_category",
+            sql: include_str!("./migrations/models/category/002_create_comic_category.sql"),
             kind: MigrationKind::Up,
         },
     ]

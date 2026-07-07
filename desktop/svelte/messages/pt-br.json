@@ -131,7 +131,10 @@
 				"volume_highlight_cover": "Capa",
 				"volume_highlight_banner": "Banner",
 				"chapters_per_page": "Capítulos por página",
-				"chapters_per_page_desc": "Número de capítulos exibidos por página."
+				"chapters_per_page_desc": "Número de capítulos exibidos por página.",
+				"bookmark": "Marcador",
+				"bookmark_desc": "Atribua um marcador a este quadrinho.",
+				"bookmark_none": "Nenhum"
 			},
 			"volume": {
 				"chapters_included": "{count} capítulos inclusos",
@@ -262,6 +265,15 @@
 			},
 			"library": {
 				"title": "Biblioteca"
+			},
+			"bookmarks": {
+				"title": "Marcadores",
+				"desc": "Crie marcadores personalizados para categorizar seus quadrinhos.",
+				"add": "Adicionar Marcador",
+				"name": "Nome do marcador",
+				"color": "Cor",
+				"create": "Criar",
+				"empty": "Nenhum marcador criado."
 			}
 		}
 	},

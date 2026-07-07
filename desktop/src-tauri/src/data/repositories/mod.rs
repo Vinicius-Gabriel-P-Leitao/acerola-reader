@@ -11,6 +11,7 @@ use crate::infra::error::DbError;
 pub mod archive;
 pub mod history;
 pub mod views;
+pub mod category;
 
 pub trait Entity {
     fn columns() -> &'static [&'static str];
