@@ -98,13 +98,13 @@ impl ComicScannerService {
 
             // Pula se o diretório atual for subdiretório de algum já processado como comic
             if processed_paths.iter().any(|processed| {
-                directory_path.starts_with(processed) && directory_path != *processed
+                std::path::Path::new(&directory_path).starts_with(processed) && directory_path != *processed
             }) {
                 continue;
             }
 
             let repo_clone = repository.clone();
-            let is_comic = self
+            let is_comic = match self
                 .process_entry(entry, &templates, |comic| async move {
                     match repo_clone.base.insert(&comic).await {
                         Ok(saved) => Ok(saved),
@@ -112,7 +112,13 @@ impl ComicScannerService {
                         Err(error) => Err(ComicError::from(error)),
                     }
                 })
-                .await?;
+                .await {
+                Ok(processed_successfully) => processed_successfully,
+                Err(processing_error) => {
+                    tracing::error!("Error processing comic in {}: {}", directory_path, processing_error);
+                    false
+                }
+            };
 
             if is_comic {
                 on_progress(directory_path.clone());
@@ -163,7 +169,7 @@ impl ComicScannerService {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
             if processed_paths.iter().any(|processed| {
-                directory_path.starts_with(processed) && directory_path != *processed
+                std::path::Path::new(&directory_path).starts_with(processed) && directory_path != *processed
             }) {
                 continue;
             }
@@ -179,7 +185,7 @@ impl ComicScannerService {
 
             let is_comic = if needs_processing {
                 let repo_clone = repository.clone();
-                let was_processed = self
+                match self
                     .process_entry(entry, &templates, |comic| async move {
                         match repo_clone.base.insert(&comic).await {
                             Ok(saved) => Ok(saved),
@@ -189,12 +195,18 @@ impl ComicScannerService {
                             Err(error) => Err(ComicError::from(error)),
                         }
                     })
-                    .await?;
-
-                if was_processed {
-                    on_progress(directory_path.clone());
+                    .await {
+                    Ok(processed_successfully) => {
+                        if processed_successfully {
+                            on_progress(directory_path.clone());
+                        }
+                        processed_successfully
+                    },
+                    Err(processing_error) => {
+                        tracing::error!("Error processing comic in {}: {}", directory_path, processing_error);
+                        false
+                    }
                 }
-                was_processed
             } else {
                 true
             };
@@ -231,18 +243,24 @@ impl ComicScannerService {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
             if processed_paths.iter().any(|processed| {
-                directory_path.starts_with(processed) && directory_path != *processed
+                std::path::Path::new(&directory_path).starts_with(processed) && directory_path != *processed
             }) {
                 continue;
             }
 
             let repo_clone = repository.clone();
-            let is_comic = self
+            let is_comic = match self
                 .process_entry(entry, &templates, |comic| async move {
                     repo_clone.base.delete(comic.id).await?;
                     repo_clone.base.insert(&comic).await.map_err(ComicError::from)
                 })
-                .await?;
+                .await {
+                Ok(processed_successfully) => processed_successfully,
+                Err(processing_error) => {
+                    tracing::error!("Error processing comic in {}: {}", directory_path, processing_error);
+                    false
+                }
+            };
 
             if is_comic {
                 on_progress(directory_path.clone());
