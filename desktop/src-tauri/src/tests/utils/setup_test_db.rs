@@ -112,7 +112,7 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
         .unwrap();
 
     sqlx::query(include_str!(
-        "../../infra/db/migrations/models/category/002_create_manga_category.sql"
+        "../../infra/db/migrations/models/category/002_create_comic_category.sql"
     ))
     .execute(&pool)
     .await
