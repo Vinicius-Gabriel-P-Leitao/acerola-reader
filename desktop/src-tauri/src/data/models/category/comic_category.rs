@@ -7,9 +7,8 @@ impl Entity for ComicCategory {
     fn columns() -> &'static [&'static str] {
         &["id", "comic_directory_fk", "category_id"]
     }
-    // FIXME: MUdar o nome para comic_category, lembrar de fazer isso no mobile também.
     fn table_name() -> &'static str {
-        "manga_category"
+        "comic_category"
     }
     fn id(&self) -> i64 {
         self.id.unwrap_or(0)

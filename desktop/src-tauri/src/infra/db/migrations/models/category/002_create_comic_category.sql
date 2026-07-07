@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS manga_category (
+CREATE TABLE IF NOT EXISTS comic_category (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   comic_directory_fk INTEGER NOT NULL UNIQUE,
   category_id INTEGER NOT NULL,
