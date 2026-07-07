@@ -275,6 +275,7 @@
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
 							<Command.Item
+								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
 								onSelect={() => {
 									isSearchDialogOpen = false;
 									import('$app/navigation').then((n) => n.goto(`/comic/${comic.filesystem.folderName}`));
