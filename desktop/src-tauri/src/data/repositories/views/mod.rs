@@ -1,8 +1,11 @@
 use sqlx::{query_as, SqlitePool};
 
 use crate::{
-    data::{models::views::ComicSummaryView, repositories::{Entity, Repository}}, 
-    infra::error::DbError
+    data::{
+        models::views::ComicSummaryView,
+        repositories::{Entity, Repository},
+    },
+    infra::error::DbError,
 };
 
 #[derive(Clone)]

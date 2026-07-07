@@ -6,8 +6,8 @@ mod data;
 mod infra;
 
 use cmd::features::{
-    history as history_cmd,
     category::category_cmd,
+    history as history_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
     network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
 };

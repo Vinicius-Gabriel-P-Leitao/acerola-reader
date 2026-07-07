@@ -35,10 +35,9 @@ pub async fn delete_category(id: i64, pool: State<'_, SqlitePool>) -> Result<(),
 pub async fn assign_category_to_comic(
     comic_id: String, category_id: i64, pool: State<'_, SqlitePool>,
 ) -> Result<ComicCategory, ErrorPayload> {
-    let comic_id = comic_id.parse::<i64>().map_err(|e| ErrorPayload {
-        error_type: "ParseError".into(),
-        message: e.to_string(),
-    })?;
+    let comic_id = comic_id
+        .parse::<i64>()
+        .map_err(|e| ErrorPayload { error_type: "ParseError".into(), message: e.to_string() })?;
     let service = CategoryService::new(pool.inner().clone());
     service
         .assign_category_to_comic(comic_id, category_id)
@@ -51,12 +50,14 @@ pub async fn assign_category_to_comic(
 pub async fn remove_category_from_comic(
     comic_id: String, pool: State<'_, SqlitePool>,
 ) -> Result<(), ErrorPayload> {
-    let comic_id = comic_id.parse::<i64>().map_err(|e| ErrorPayload {
-        error_type: "ParseError".into(),
-        message: e.to_string(),
-    })?;
+    let comic_id = comic_id
+        .parse::<i64>()
+        .map_err(|e| ErrorPayload { error_type: "ParseError".into(), message: e.to_string() })?;
     let service = CategoryService::new(pool.inner().clone());
-    service.remove_category_from_comic(comic_id).await.map_err(|error| ErrorPayload::from(&error.into()))
+    service
+        .remove_category_from_comic(comic_id)
+        .await
+        .map_err(|error| ErrorPayload::from(&error.into()))
 }
 
 /// Comando Tauri para buscar a categoria associada a um quadrinho.
@@ -64,17 +65,18 @@ pub async fn remove_category_from_comic(
 pub async fn get_comic_category(
     comic_id: String, pool: State<'_, SqlitePool>,
 ) -> Result<Option<Category>, ErrorPayload> {
-    let comic_id = comic_id.parse::<i64>().map_err(|e| ErrorPayload {
-        error_type: "ParseError".into(),
-        message: e.to_string(),
-    })?;
+    let comic_id = comic_id
+        .parse::<i64>()
+        .map_err(|e| ErrorPayload { error_type: "ParseError".into(), message: e.to_string() })?;
     let service = CategoryService::new(pool.inner().clone());
     service.get_comic_category(comic_id).await.map_err(|error| ErrorPayload::from(&error.into()))
 }
 
 /// Comando Tauri para buscar todas as atribuições de categoria a quadrinhos.
 #[tauri::command]
-pub async fn get_all_comic_categories(pool: State<'_, SqlitePool>) -> Result<Vec<ComicCategory>, ErrorPayload> {
+pub async fn get_all_comic_categories(
+    pool: State<'_, SqlitePool>,
+) -> Result<Vec<ComicCategory>, ErrorPayload> {
     let service = CategoryService::new(pool.inner().clone());
     service.get_all_comic_categories().await.map_err(|error| ErrorPayload::from(&error.into()))
 }
