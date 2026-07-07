@@ -102,7 +102,7 @@ describe('useComicSummary', () => {
 		await flushPromises();
 
 		expect(hook.loading).toBe(true);
-		expect(invokeMock).toHaveBeenCalledWith(HOME_COMMANDS.getComicSummary);
+		expect(invokeMock).toHaveBeenCalledWith(HOME_COMMANDS.getComicSummary, { search: undefined });
 
 		callbacks.get(HOME_EVENTS.homeData)?.({ payload: summaryPayload() });
 		await fetchPromise;

@@ -7,6 +7,7 @@ mod infra;
 
 use cmd::features::{
     history as history_cmd,
+    category::category_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
     network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
 };
@@ -66,6 +67,13 @@ mod app_bootstrap {
             history_cmd::history_get_read_chapters,
             history_cmd::history_clear,
             system_cmd::get_package_family_name,
+            category_cmd::create_category,
+            category_cmd::get_categories,
+            category_cmd::delete_category,
+            category_cmd::assign_category_to_comic,
+            category_cmd::remove_category_from_comic,
+            category_cmd::get_comic_category,
+            category_cmd::get_all_comic_categories,
         ])
     }
 

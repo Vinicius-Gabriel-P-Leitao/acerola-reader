@@ -8,6 +8,7 @@
 			chaptersCount: number;
 			description: string;
 			cover: string | null;
+			bookmarkColor?: number | null;
 		};
 		state?: {
 			isResuming?: boolean;
@@ -24,6 +25,7 @@
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
+	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import PlaceholderManga from '$lib/assets/placeholder/placeholder_manga.svg?component';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Play from '@lucide/svelte/icons/play';
@@ -31,7 +33,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
-	let { data, events, state }: ComicMetadataPanelProps = $props();
+	let { data, events, state, floatingBadge }: ComicMetadataPanelProps = $props();
 </script>
 
 <div
@@ -54,6 +56,12 @@
 					class: 'w-64 shrink-0 [&_.mt-3]:hidden'
 				}}
 			>
+				{#snippet floatingBadge()}
+					{#if data.bookmarkColor != null}
+						<AcerolaBookmarkRibbon color={data.bookmarkColor} class="-top-1.5 left-5 w-6 h-10" />
+					{/if}
+				{/snippet}
+
 				{#snippet placeholder()}
 					<div class="h-full w-full bg-surface">
 						<PlaceholderManga class="h-full w-full" />
