@@ -1,17 +1,20 @@
 import { invoke } from '@tauri-apps/api/core';
 import { error } from '@tauri-apps/plugin-log';
+import { BOOKMARKS_COMMANDS } from '$lib/contracts/bookmarks/bookmarks.commands';
+import type { Category, MangaCategory } from '$lib/contracts/bookmarks/bookmarks.payloads';
 
-export type Category = {
-    id: number;
-    name: string;
-    color: number;
-};
+let bookmarks = $state<Category[]>([]);
+let assignments = $state<MangaCategory[]>([]);
+let isLoading = $state(false);
+let isInitialized = false;
 
-export type MangaCategory = {
-    id: number;
-    comic_directory_fk: number;
-    category_id: number;
-};
+// ONLY FOR TESTING
+export function _resetBookmarksState() {
+    bookmarks = [];
+    assignments = [];
+    isInitialized = false;
+    isLoading = false;
+}
 
 /**
  * Hook to manage categories (bookmarks) in the global state.
@@ -21,13 +24,18 @@ export type MangaCategory = {
  * @returns An object containing the bookmarks state and mutation methods.
  */
 export function useBookmarks() {
-    let bookmarks = $state<Category[]>([]);
-    let isLoading = $state(false);
 
     async function loadBookmarks() {
+        if (isInitialized) return;
         isLoading = true;
         try {
-            bookmarks = await invoke<Category[]>('get_categories');
+            const [fetchedBookmarks, fetchedAssignments] = await Promise.all([
+                invoke<Category[]>(BOOKMARKS_COMMANDS.getCategories),
+                invoke<MangaCategory[]>(BOOKMARKS_COMMANDS.getAllComicCategories)
+            ]);
+            bookmarks = fetchedBookmarks;
+            assignments = fetchedAssignments;
+            isInitialized = true;
         } catch (err) {
             error(`Failed to load bookmarks: ${err}`);
         } finally {
@@ -37,7 +45,7 @@ export function useBookmarks() {
 
     async function createBookmark(name: string, color: number) {
         try {
-            const newBookmark = await invoke<Category>('create_category', { name, color });
+            const newBookmark = await invoke<Category>(BOOKMARKS_COMMANDS.createCategory, { name, color });
             bookmarks = [...bookmarks, newBookmark];
             return newBookmark;
         } catch (err) {
@@ -48,7 +56,7 @@ export function useBookmarks() {
 
     async function deleteBookmark(id: number) {
         try {
-            await invoke('delete_category', { id });
+            await invoke(BOOKMARKS_COMMANDS.deleteCategory, { id: Number(id) });
             bookmarks = bookmarks.filter((bookmark) => bookmark.id !== id);
         } catch (err) {
             error(`Failed to delete bookmark: ${err}`);
@@ -56,39 +64,56 @@ export function useBookmarks() {
         }
     }
 
-    async function assignToComic(comicId: number, categoryId: number) {
+    async function assignToComic(comicId: string | number, categoryId: number) {
         try {
             // Como a tabela tem `comic_directory_fk` definido como UNIQUE,
             // cada quadrinho pode ter no máximo um marcador associado.
             // Garantimos a exclusão do vínculo anterior antes de criar o novo.
-            await invoke('remove_category_from_comic', { comicId });
-            return await invoke<MangaCategory>('assign_category_to_comic', { comicId, categoryId });
+            await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
+            const assignment = await invoke<MangaCategory>(BOOKMARKS_COMMANDS.assignCategoryToComic, { 
+                comicId: comicId.toString(), 
+                categoryId: Number(categoryId) 
+            });
+            
+            assignments = [
+                ...assignments.filter(a => a.comic_directory_fk.toString() !== comicId.toString()),
+                assignment
+            ];
+            return assignment;
         } catch (err) {
             error(`Failed to assign bookmark: ${err}`);
             throw err;
         }
     }
 
-    async function removeComicBookmark(comicId: number) {
+    async function removeComicBookmark(comicId: string | number) {
         try {
-            await invoke('remove_category_from_comic', { comicId });
+            await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
+            assignments = assignments.filter(a => a.comic_directory_fk.toString() !== comicId.toString());
         } catch (err) {
             error(`Failed to remove bookmark from comic: ${err}`);
             throw err;
         }
     }
 
-    async function getComicBookmark(comicId: number) {
+    async function getComicBookmark(comicId: string | number) {
         try {
-            return await invoke<Category | null>('get_comic_category', { comicId });
+            return await invoke<Category | null>(BOOKMARKS_COMMANDS.getComicCategory, { comicId: comicId.toString() });
         } catch (err) {
             error(`Failed to get comic bookmark: ${err}`);
             return null;
         }
     }
 
+    function getBookmarkForComic(comicId: string | number) {
+        const assignment = assignments.find(a => a.comic_directory_fk.toString() === comicId.toString());
+        if (!assignment) return null;
+        return bookmarks.find(b => b.id === assignment.category_id) ?? null;
+    }
+
     return {
         get bookmarks() { return bookmarks; },
+        get assignments() { return assignments; },
         get isLoading() { return isLoading; },
         loadBookmarks,
         createBookmark,
@@ -96,5 +121,6 @@ export function useBookmarks() {
         assignToComic,
         removeComicBookmark,
         getComicBookmark,
+        getBookmarkForComic
     };
 }

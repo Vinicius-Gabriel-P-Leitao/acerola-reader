@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
 import { error as tauriError } from '@tauri-apps/plugin-log';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
-import { useBookmarks } from './use-bookmarks.svelte';
+import { useBookmarks, _resetBookmarksState } from './use-bookmarks.svelte';
+import { BOOKMARKS_COMMANDS } from '$lib/contracts/bookmarks/bookmarks.commands';
 
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn()
@@ -38,29 +39,34 @@ async function renderBookmarksHook() {
 describe('useBookmarks', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		_resetBookmarksState();
 	});
 
 	it('loads bookmarks successfully', async () => {
 		const mockBookmarks = [{ id: 1, name: 'Favoritos', color: 0xFFF44336 }];
+		const mockAssignments = [{ id: 1, comic_directory_fk: 123, category_id: 1 }];
+		
 		invokeMock.mockResolvedValueOnce(mockBookmarks);
+		invokeMock.mockResolvedValueOnce(mockAssignments);
 
 		const hook = await renderBookmarksHook();
 		
 		expect(hook.isLoading).toBe(false);
 		await hook.loadBookmarks();
 		
-		expect(invokeMock).toHaveBeenCalledWith('get_categories');
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getCategories);
 		expect(hook.bookmarks).toEqual(mockBookmarks);
 		expect(hook.isLoading).toBe(false);
 	});
 
 	it('handles error when loading bookmarks', async () => {
 		invokeMock.mockRejectedValueOnce('Network error');
+		invokeMock.mockResolvedValueOnce([]);
 
 		const hook = await renderBookmarksHook();
 		await hook.loadBookmarks();
 		
-		expect(invokeMock).toHaveBeenCalledWith('get_categories');
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getCategories);
 		expect(errorMock).toHaveBeenCalledWith('Failed to load bookmarks: Network error');
 		expect(hook.bookmarks).toEqual([]);
 		expect(hook.isLoading).toBe(false);
@@ -74,7 +80,7 @@ describe('useBookmarks', () => {
 		
 		const result = await hook.createBookmark('Lidos', 0xFFE91E63);
 		
-		expect(invokeMock).toHaveBeenCalledWith('create_category', { name: 'Lidos', color: 0xFFE91E63 });
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.createCategory, { name: 'Lidos', color: 0xFFE91E63 });
 		expect(result).toEqual(newBookmark);
 		expect(hook.bookmarks).toContainEqual(newBookmark);
 	});
@@ -82,6 +88,7 @@ describe('useBookmarks', () => {
 	it('deletes bookmark and removes it from the list', async () => {
 		const mockBookmarks = [{ id: 1, name: 'Fav', color: 0xFFF44336 }];
 		invokeMock.mockResolvedValueOnce(mockBookmarks);
+		invokeMock.mockResolvedValueOnce([]);
 
 		const hook = await renderBookmarksHook();
 		await hook.loadBookmarks(); // Populates list
@@ -91,7 +98,7 @@ describe('useBookmarks', () => {
 
 		await hook.deleteBookmark(1);
 		
-		expect(invokeMock).toHaveBeenCalledWith('delete_category', { id: 1 });
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.deleteCategory, { id: 1 });
 		expect(hook.bookmarks).toHaveLength(0);
 	});
 
@@ -103,8 +110,8 @@ describe('useBookmarks', () => {
 		const hook = await renderBookmarksHook();
 		const result = await hook.assignToComic(123, 1);
 		
-		expect(invokeMock).toHaveBeenCalledWith('remove_category_from_comic', { comicId: 123 });
-		expect(invokeMock).toHaveBeenCalledWith('assign_category_to_comic', { comicId: 123, categoryId: 1 });
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: '123' });
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.assignCategoryToComic, { comicId: '123', categoryId: 1 });
 		expect(result).toEqual(assignment);
 	});
 
@@ -114,7 +121,7 @@ describe('useBookmarks', () => {
 		const hook = await renderBookmarksHook();
 		await hook.removeComicBookmark(123);
 		
-		expect(invokeMock).toHaveBeenCalledWith('remove_category_from_comic', { comicId: 123 });
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: '123' });
 	});
 
 	it('gets comic bookmark', async () => {
@@ -124,7 +131,7 @@ describe('useBookmarks', () => {
 		const hook = await renderBookmarksHook();
 		const result = await hook.getComicBookmark(123);
 		
-		expect(invokeMock).toHaveBeenCalledWith('get_comic_category', { comicId: 123 });
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getComicCategory, { comicId: '123' });
 		expect(result).toEqual(mockBookmark);
 	});
 });

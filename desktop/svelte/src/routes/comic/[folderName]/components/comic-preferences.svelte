@@ -130,7 +130,8 @@
 								{ value: 'none', label: m['pages.comic.preferences.bookmark_none']() },
 								...(data?.bookmarks ?? []).map((b) => ({
 									value: b.id.toString(),
-									label: b.name
+									label: b.name,
+									color: b.color
 								}))
 							]
 						}}

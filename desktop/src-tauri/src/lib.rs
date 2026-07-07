@@ -73,6 +73,7 @@ mod app_bootstrap {
             category_cmd::assign_category_to_comic,
             category_cmd::remove_category_from_comic,
             category_cmd::get_comic_category,
+            category_cmd::get_all_comic_categories,
         ])
     }
 

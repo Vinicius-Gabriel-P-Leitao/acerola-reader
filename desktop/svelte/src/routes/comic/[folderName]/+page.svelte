@@ -314,7 +314,8 @@
 				source: manga.metadata.source,
 				chaptersCount: manga.chaptersCount,
 				description: manga.metadata.description,
-				cover: manga.cover
+				cover: manga.cover,
+				bookmarkColor: bookmarkStore.bookmarks.find(b => b.id === currentBookmarkId)?.color
 			}}
 			state={{
 				isResuming: !!readingHistory,

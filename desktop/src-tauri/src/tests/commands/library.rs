@@ -38,7 +38,7 @@ fn build_library_app(
     ))
 }
 
-fn create_manga_dir(root: &TempDir, name: &str, chapters: &[&str]) -> Result<PathBuf> {
+fn create_comic_dir(root: &TempDir, name: &str, chapters: &[&str]) -> Result<PathBuf> {
     let dir = root.path().join(name);
     std::fs::create_dir_all(&dir)?;
 
@@ -144,7 +144,7 @@ async fn refresh_library_emite_progress_e_complete() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
-    create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"])?;
+    create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"])?;
     let progress_rx = listen_event(&app, "scan:progress");
     let complete_rx = listen_event(&app, "scan:complete");
 
@@ -191,7 +191,7 @@ async fn incremental_scan_ignora_comic_sem_mudanca_e_emite_complete() -> Result<
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
-    create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"])?;
+    create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"])?;
     refresh_direct(&pool, &root).await?;
     let progress_rx = listen_event(&app, "scan:progress");
     let complete_rx = listen_event(&app, "scan:complete");
@@ -216,10 +216,10 @@ async fn incremental_scan_adiciona_novos_remove_deletados_e_emite_progress() -> 
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
-    let berserk_dir = create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"])?;
+    let berserk_dir = create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"])?;
     refresh_direct(&pool, &root).await?;
     std::fs::remove_dir_all(berserk_dir)?;
-    create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"])?;
+    create_comic_dir(&root, "Vinland Saga", &["Ch. 1.cbz"])?;
     let progress_rx = listen_event(&app, "scan:progress");
     let complete_rx = listen_event(&app, "scan:complete");
 
@@ -264,7 +264,7 @@ async fn rebuild_library_reprocessa_sem_duplicar_capitulos_e_emite_complete() ->
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
-    create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"])?;
+    create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"])?;
     refresh_direct(&pool, &root).await?;
     let before = count_chapters(&pool).await?;
     let complete_rx = listen_event(&app, "scan:complete");

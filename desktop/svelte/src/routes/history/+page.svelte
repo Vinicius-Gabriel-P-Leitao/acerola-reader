@@ -5,8 +5,10 @@
 
 	import PlaceholderManga from '$lib/assets/placeholder/placeholder_manga.svg?component';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
+	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
+	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
@@ -15,6 +17,7 @@
 	import { useHistory } from '$lib/hooks/store/use-history.svelte';
 
 	const history = useHistory();
+	const bookmarkStore = useBookmarks();
 
 	function resumeReading(item: ReadingHistoryPayload) {
 		goto('/reader', {
@@ -134,8 +137,12 @@
 					<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 						{#each history.items.slice(1) as item (item.comicDirectoryId)}
 							{@const cover = resolveArtworkPath(item.comicCover) || undefined}
+							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(item.comicDirectoryId)?.color}
 							<AcerolaCardImage
-								data={{ title: item.comicName, cover }}
+								data={{ 
+									title: item.comicName, 
+									cover,
+								}}
 								events={{ onClick: () => openComic(item) }}
 							>
 								{#snippet footer()}
@@ -151,6 +158,12 @@
 											{m['pages.history.page_label']({ page: item.lastPage + 1 })}
 										</span>
 									</div>	
+								{/snippet}
+
+								{#snippet floatingBadge()}
+									{#if bookmarkColor != null}
+										<AcerolaBookmarkRibbon color={bookmarkColor} />
+									{/if}
 								{/snippet}
 
 								{#snippet placeholder()}

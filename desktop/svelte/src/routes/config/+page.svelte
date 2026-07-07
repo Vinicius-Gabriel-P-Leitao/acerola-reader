@@ -387,49 +387,50 @@
 			<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
 				<p class="mb-4 text-sm text-muted-foreground">{m['pages.config.bookmarks.desc']()}</p>
 				
-				<div class="mb-6 flex flex-col gap-6 sm:flex-row sm:items-start">
-					<div class="flex-1 space-y-4">
-						<div class="space-y-1">
+				<div class="mb-6 space-y-6">
+					<!-- Row 1: Name and Button -->
+					<div class="flex items-end gap-4">
+						<div class="flex-1 space-y-1">
 							<label for="bookmarkName" class="text-xs font-semibold">{m['pages.config.bookmarks.name']()}</label>
 							<Input 
 								id="bookmarkName" 
 								placeholder={m['pages.config.bookmarks.name']()} 
 								bind:value={newBookmarkName} 
-								class="h-10"
+								class="h-10 bg-background text-foreground"
 							/>
 						</div>
-						
-						<div class="space-y-2">
-							<label class="text-xs font-semibold">{m['pages.config.bookmarks.color']()}</label>
-							<div class="flex flex-wrap gap-2">
-								{#each CATEGORY_COLORS as hexColor}
-									<button
-										type="button"
-										class="relative h-8 w-8 cursor-pointer rounded-full transition-transform hover:scale-110"
-										style="background-color: #{((hexColor & 0xFFFFFF).toString(16).padStart(6, '0'))}"
-										onclick={() => (newBookmarkColor = hexColor)}
-										aria-label="Color"
-									>
-										{#if newBookmarkColor === hexColor}
-											<div class="absolute inset-0 rounded-full border-2 border-primary ring-2 ring-background"></div>
-										{/if}
-									</button>
-								{/each}
-							</div>
-						</div>
+						<Button 
+							disabled={!newBookmarkName.trim() || bookmarkStore.isLoading}
+							onclick={async () => {
+								await bookmarkStore.createBookmark(newBookmarkName, newBookmarkColor);
+								newBookmarkName = '';
+							}}
+							class="h-10 gap-2 px-6"
+						>
+							<PlusIcon size={16} />
+							{m['pages.config.bookmarks.create']()}
+						</Button>
 					</div>
 
-					<Button 
-						disabled={!newBookmarkName.trim() || bookmarkStore.isLoading}
-						onclick={async () => {
-							await bookmarkStore.createBookmark(newBookmarkName, newBookmarkColor);
-							newBookmarkName = '';
-						}}
-						class="h-10 gap-2 sm:mt-5"
-					>
-						<PlusIcon size={16} />
-						{m['pages.config.bookmarks.create']()}
-					</Button>
+					<!-- Row 2: Colors -->
+					<div class="space-y-2">
+						<label class="text-xs font-semibold">{m['pages.config.bookmarks.color']()}</label>
+						<div class="flex flex-wrap gap-2">
+							{#each CATEGORY_COLORS as hexColor}
+								<button
+									type="button"
+									class="relative h-8 w-8 cursor-pointer rounded-full transition-transform hover:scale-110"
+									style="background-color: #{((hexColor & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+									onclick={() => (newBookmarkColor = hexColor)}
+									aria-label="Color"
+								>
+									{#if newBookmarkColor === hexColor}
+										<div class="absolute inset-0 rounded-full border-2 border-primary ring-2 ring-background"></div>
+									{/if}
+								</button>
+							{/each}
+						</div>
+					</div>
 				</div>
 
 				<div class="space-y-2">

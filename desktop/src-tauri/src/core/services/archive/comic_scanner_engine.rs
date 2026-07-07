@@ -98,7 +98,8 @@ impl ComicScannerService {
 
             // Pula se o diretório atual for subdiretório de algum já processado como comic
             if processed_paths.iter().any(|processed| {
-                std::path::Path::new(&directory_path).starts_with(processed) && directory_path != *processed
+                std::path::Path::new(&directory_path).starts_with(processed)
+                    && directory_path != *processed
             }) {
                 continue;
             }
@@ -112,12 +113,17 @@ impl ComicScannerService {
                         Err(error) => Err(ComicError::from(error)),
                     }
                 })
-                .await {
+                .await
+            {
                 Ok(processed_successfully) => processed_successfully,
                 Err(processing_error) => {
-                    tracing::error!("Error processing comic in {}: {}", directory_path, processing_error);
+                    tracing::error!(
+                        "Error processing comic in {}: {}",
+                        directory_path,
+                        processing_error
+                    );
                     false
-                }
+                },
             };
 
             if is_comic {
@@ -169,7 +175,8 @@ impl ComicScannerService {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
             if processed_paths.iter().any(|processed| {
-                std::path::Path::new(&directory_path).starts_with(processed) && directory_path != *processed
+                std::path::Path::new(&directory_path).starts_with(processed)
+                    && directory_path != *processed
             }) {
                 continue;
             }
@@ -195,7 +202,8 @@ impl ComicScannerService {
                             Err(error) => Err(ComicError::from(error)),
                         }
                     })
-                    .await {
+                    .await
+                {
                     Ok(processed_successfully) => {
                         if processed_successfully {
                             on_progress(directory_path.clone());
@@ -203,9 +211,13 @@ impl ComicScannerService {
                         processed_successfully
                     },
                     Err(processing_error) => {
-                        tracing::error!("Error processing comic in {}: {}", directory_path, processing_error);
+                        tracing::error!(
+                            "Error processing comic in {}: {}",
+                            directory_path,
+                            processing_error
+                        );
                         false
-                    }
+                    },
                 }
             } else {
                 true
@@ -243,7 +255,8 @@ impl ComicScannerService {
             let directory_path = entry.directory.to_string_lossy().to_string();
 
             if processed_paths.iter().any(|processed| {
-                std::path::Path::new(&directory_path).starts_with(processed) && directory_path != *processed
+                std::path::Path::new(&directory_path).starts_with(processed)
+                    && directory_path != *processed
             }) {
                 continue;
             }
@@ -254,12 +267,17 @@ impl ComicScannerService {
                     repo_clone.base.delete(comic.id).await?;
                     repo_clone.base.insert(&comic).await.map_err(ComicError::from)
                 })
-                .await {
+                .await
+            {
                 Ok(processed_successfully) => processed_successfully,
                 Err(processing_error) => {
-                    tracing::error!("Error processing comic in {}: {}", directory_path, processing_error);
+                    tracing::error!(
+                        "Error processing comic in {}: {}",
+                        directory_path,
+                        processing_error
+                    );
                     false
-                }
+                },
             };
 
             if is_comic {
@@ -433,10 +451,9 @@ impl ComicScannerService {
                     continue;
                 }
 
-                let is_pdf = file
-                    .extension()
-                    .and_then(|ext| ext.to_str())
-                    .is_some_and(|ext| ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf));
+                let is_pdf = file.extension().and_then(|ext| ext.to_str()).is_some_and(|ext| {
+                    ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf)
+                });
 
                 if is_pdf {
                     volume_pdfs.push(file);
@@ -521,8 +538,8 @@ impl ComicScannerService {
 
         if conversion_jobs.is_empty() {
             let mut result = pre_converted;
-            result.sort_unstable_by_key(|(i, _)| *i);
-            return result.into_iter().map(|(_, p)| p).collect();
+            result.sort_unstable_by_key(|(it, _)| *it);
+            return result.into_iter().map(|(_, path)| path).collect();
         }
 
         tracing::info!(
@@ -582,8 +599,8 @@ impl ComicScannerService {
         let mut pdf_paths: HashSet<PathBuf> = HashSet::new();
 
         let add_pdfs = |files: &[PathBuf], paths: &mut HashSet<PathBuf>| {
-            for file in files.iter().filter(|f| {
-                f.extension().and_then(|e| e.to_str()).is_some_and(|ext| {
+            for file in files.iter().filter(|file| {
+                file.extension().and_then(|it| it.to_str()).is_some_and(|ext| {
                     ArchiveFormat::from_extension(ext) == Some(ArchiveFormat::Pdf)
                 })
             }) {
@@ -623,7 +640,7 @@ impl ComicScannerService {
                     Ok(cbz) => {
                         tracing::info!(cbz = %cbz.to_string_lossy(), "PDF pre-converted")
                     },
-                    Err(e) => tracing::warn!(error = %e, "PDF pre-conversion failed"),
+                    Err(error) => tracing::warn!(error = %error, "PDF pre-conversion failed"),
                 }
             })
             .await;
@@ -675,7 +692,7 @@ mod tests {
         (service, pool)
     }
 
-    async fn create_manga_dir(root: &TempDir, name: &str, chapters: &[&str]) -> PathBuf {
+    async fn create_comic_dir(root: &TempDir, name: &str, chapters: &[&str]) -> PathBuf {
         let dir = root.path().join(name);
         fs::create_dir_all(&dir).await.unwrap();
         for chapter in chapters {
@@ -712,8 +729,8 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
-        create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
+        create_comic_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
 
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 2);
@@ -724,7 +741,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz", "Ch. 3.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz", "Ch. 3.cbz"]).await;
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         assert_eq!(count_chapters(&pool).await, 3);
     }
@@ -744,7 +761,7 @@ mod tests {
     async fn refresh_library_does_not_duplicate_on_double_run() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 1);
@@ -779,7 +796,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
 
         let chapters = ChapterRepository::new(pool.clone()).base.find_all().await.unwrap();
@@ -790,7 +807,7 @@ mod tests {
     async fn incremental_scan_does_not_process_unchanged_comic() {
         let root = tempfile::tempdir().unwrap();
         let (service, _) = setup(&root).await;
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
 
         let mut progress_count = 0usize;
@@ -812,10 +829,10 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
 
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
-        create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
 
         service.incremental_scan(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         assert_eq!(count_comics(&pool).await, 2);
@@ -826,8 +843,8 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
-        create_manga_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
 
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         fs::remove_dir_all(root.path().join("Vinland Saga")).await.unwrap();
@@ -842,7 +859,7 @@ mod tests {
     async fn incremental_scan_updates_cover_on_modified_folder() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
-        let dir = create_manga_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        let dir = create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
 
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
         let before = ComicRepository::new(pool.clone()).base.find_all().await.unwrap();
@@ -861,7 +878,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
-        create_manga_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
 
         let before = count_chapters(&pool).await;
