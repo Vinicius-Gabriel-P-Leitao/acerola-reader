@@ -7,6 +7,7 @@
 			cover?: string | null;
 			progress?: number;
 			description?: string;
+			bookmarkColor?: number | null;
 		};
 		events?: {
 			onClick?: (event: MouseEvent) => void;
@@ -28,6 +29,7 @@
 	import BookOpenIcon from '@lucide/svelte/icons/book-open';
 	import { AspectRatio } from '$lib/components/ui/aspect-ratio';
 	import { cn } from '$lib/utils/cn.utils';
+	import BookmarkRibbon from '$lib/components/bookmark-ribbon.svelte';
 
 	let {
 		ui,
@@ -70,6 +72,10 @@
 					>
 						<BookOpenIcon size={40} />
 					</div>
+				{/if}
+
+				{#if data.bookmarkColor != null}
+					<BookmarkRibbon color={data.bookmarkColor} />
 				{/if}
 
 				<div

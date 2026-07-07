@@ -16,7 +16,9 @@
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useTheme } from '$lib/hooks/theme/use-theme.svelte';
+	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { onMount } from 'svelte';
+	import { Input } from '$lib/components/ui/input';
 
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
@@ -28,10 +30,24 @@
 	import LanguagesIcon from '@lucide/svelte/icons/languages';
 	import PlayIcon from '@lucide/svelte/icons/play';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
+	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import PlusIcon from '@lucide/svelte/icons/plus';
 
 	const ctx = useTheme();
 	const folder = useSelectFolder();
 	const comicInfoPreference = useComicInfoPreference();
+	const bookmarkStore = useBookmarks();
+
+	const CATEGORY_COLORS = [
+		0xFFF44336, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7, 0xFF3F51B5,
+		0xFF2196F3, 0xFF03A9F4, 0xFF00BCD4, 0xFF009688, 0xFF4CAF50,
+		0xFF8BC34A, 0xFFCDDC39, 0xFFFFEB3B, 0xFFFFC107, 0xFFFF9800,
+		0xFFFF5722, 0xFF795548, 0xFF9E9E9E, 0xFF607D8B
+	];
+
+	let newBookmarkName = $state('');
+	let newBookmarkColor = $state<number>(CATEGORY_COLORS[0]);
 
 	let metadataLanguagePopoverOpen = $state(false);
 	let selectedMetadataLanguage = $state<LanguageCode>('pt-br');
@@ -60,6 +76,7 @@
 
 	onMount(async () => {
 		await folder.loadSavedPath();
+		await bookmarkStore.loadBookmarks();
 	});
 
 	$effect(() => {
@@ -354,6 +371,95 @@
 					</AcerolaButtonIcon>
 				{/snippet}
 			</AcerolaHeroButton>
+		</div>
+	</section>
+
+	<!-- Marcadores (Bookmarks) -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<BookmarkIcon size={16} />
+			{m['pages.config.bookmarks.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
+				<p class="mb-4 text-sm text-muted-foreground">{m['pages.config.bookmarks.desc']()}</p>
+				
+				<div class="mb-6 flex flex-col gap-6 sm:flex-row sm:items-start">
+					<div class="flex-1 space-y-4">
+						<div class="space-y-1">
+							<label for="bookmarkName" class="text-xs font-semibold">{m['pages.config.bookmarks.name']()}</label>
+							<Input 
+								id="bookmarkName" 
+								placeholder={m['pages.config.bookmarks.name']()} 
+								bind:value={newBookmarkName} 
+								class="h-10"
+							/>
+						</div>
+						
+						<div class="space-y-2">
+							<label class="text-xs font-semibold">{m['pages.config.bookmarks.color']()}</label>
+							<div class="flex flex-wrap gap-2">
+								{#each CATEGORY_COLORS as hexColor}
+									<button
+										type="button"
+										class="relative h-8 w-8 cursor-pointer rounded-full transition-transform hover:scale-110"
+										style="background-color: #{((hexColor & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+										onclick={() => (newBookmarkColor = hexColor)}
+										aria-label="Color"
+									>
+										{#if newBookmarkColor === hexColor}
+											<div class="absolute inset-0 rounded-full border-2 border-primary ring-2 ring-background"></div>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						</div>
+					</div>
+
+					<Button 
+						disabled={!newBookmarkName.trim() || bookmarkStore.isLoading}
+						onclick={async () => {
+							await bookmarkStore.createBookmark(newBookmarkName, newBookmarkColor);
+							newBookmarkName = '';
+						}}
+						class="h-10 gap-2 sm:mt-5"
+					>
+						<PlusIcon size={16} />
+						{m['pages.config.bookmarks.create']()}
+					</Button>
+				</div>
+
+				<div class="space-y-2">
+					{#if bookmarkStore.bookmarks.length === 0}
+						<div class="rounded-xl border border-dashed border-border/40 p-8 text-center text-sm text-muted-foreground">
+							{m['pages.config.bookmarks.empty']()}
+						</div>
+					{:else}
+						{#each bookmarkStore.bookmarks as bookmark (bookmark.id)}
+							<div class="flex items-center justify-between rounded-xl border border-border/40 bg-background/50 p-3 transition-colors hover:bg-muted/50">
+								<div class="flex items-center gap-3">
+									<div 
+										class="h-6 w-6 rounded-full shadow-inner" 
+										style="background-color: #{((bookmark.color & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+									></div>
+									<span class="font-medium">{bookmark.name}</span>
+								</div>
+								<Button 
+									variant="ghost" 
+									size="icon" 
+									class="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+									onclick={() => bookmarkStore.deleteBookmark(bookmark.id)}
+								>
+									<Trash2Icon size={16} />
+								</Button>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			</div>
 		</div>
 	</section>
 </div>

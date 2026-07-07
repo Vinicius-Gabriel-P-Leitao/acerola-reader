@@ -131,7 +131,10 @@
 				"volume_highlight_cover": "Cover",
 				"volume_highlight_banner": "Banner",
 				"chapters_per_page": "Chapters per page",
-				"chapters_per_page_desc": "Number of chapters displayed per page."
+				"chapters_per_page_desc": "Number of chapters displayed per page.",
+				"bookmark": "Bookmark",
+				"bookmark_desc": "Assign a bookmark to this comic.",
+				"bookmark_none": "None"
 			},
 			"volume": {
 				"chapters_included": "{count} chapters included",
@@ -262,6 +265,15 @@
 			},
 			"library": {
 				"title": "Library"
+			},
+			"bookmarks": {
+				"title": "Bookmarks",
+				"desc": "Create custom bookmarks to categorize your comics.",
+				"add": "Add Bookmark",
+				"name": "Bookmark Name",
+				"color": "Color",
+				"create": "Create",
+				"empty": "No bookmarks created."
 			}
 		}
 	},

@@ -2,14 +2,17 @@
 	export type ComicPreferencesProps = {
 		data?: {
 			hasVolumeStructure?: boolean;
+			bookmarks?: { id: number; name: string; color: number }[];
 		};
 		state: {
 			chaptersPerPage: string;
 			volumeViewMode: 'cover' | 'banner';
+			bookmarkId: number | null;
 		};
 		events: {
 			onChaptersPerPageChange: (value: string) => void;
 			onVolumeViewModeChange: (value: 'cover' | 'banner') => void;
+			onBookmarkChange: (value: number | null) => void;
 		};
 	};
 </script>
@@ -24,6 +27,7 @@
 	import Hash from '@lucide/svelte/icons/hash';
 	import Layers from '@lucide/svelte/icons/layers';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
+	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
 
 	let { data, events, state }: ComicPreferencesProps = $props();
 </script>
@@ -103,6 +107,36 @@
 						state={{ value: state.chaptersPerPage }}
 						events={{
 							onValueChange: events.onChaptersPerPageChange
+						}}
+					/>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<!-- Bookmark Assignment -->
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.bookmark'](),
+					description: m['pages.comic.preferences.bookmark_desc']()
+				}}
+			>
+				{#snippet icon()}
+					<BookmarkIcon class="text-chart-4" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaSelect
+						data={{
+							options: [
+								{ value: 'none', label: m['pages.comic.preferences.bookmark_none']() },
+								...(data?.bookmarks ?? []).map((b) => ({
+									value: b.id.toString(),
+									label: b.name
+								}))
+							]
+						}}
+						state={{ value: state.bookmarkId ? state.bookmarkId.toString() : 'none' }}
+						events={{
+							onValueChange: (v) => events.onBookmarkChange(v === 'none' ? null : parseInt(v))
 						}}
 					/>
 				{/snippet}

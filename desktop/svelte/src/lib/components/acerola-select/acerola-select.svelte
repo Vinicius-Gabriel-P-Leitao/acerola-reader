@@ -2,6 +2,7 @@
 	export type AcerolaSelectOption = {
 		value: string;
 		label: string;
+		color?: number;
 	};
 
 	export type AcerolaSelectProps = {
@@ -33,9 +34,8 @@
 
 	const placeholder = $derived(ui?.placeholder ?? m['components.select.placeholder']());
 
-	let selectedLabel = $derived(
-		data.options.find((it: AcerolaSelectOption) => it.value === value)?.label ?? placeholder
-	);
+	let selectedOption = $derived(data.options.find((it) => it.value === value));
+	let selectedLabel = $derived(selectedOption?.label ?? placeholder);
 
 	$effect(() => {
 		if (control?.value === undefined) return;
@@ -58,13 +58,29 @@
 
 <Select type="single" bind:value>
 	<SelectTrigger class={cn('w-auto min-w-48 justify-between', ui?.class)}>
-		{selectedLabel}
+		<div class="flex items-center gap-2">
+			{#if selectedOption?.color != null}
+				<div 
+					class="h-3 w-3 rounded-full" 
+					style="background-color: #{((selectedOption.color & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+				></div>
+			{/if}
+			<span>{selectedLabel}</span>
+		</div>
 	</SelectTrigger>
 
 	<SelectContent>
 		{#each data.options as option (option.value)}
 			<SelectItem value={option.value} label={option.label}>
-				{option.label}
+				<div class="flex items-center gap-2">
+					{#if option.color != null}
+						<div 
+							class="h-3 w-3 rounded-full" 
+							style="background-color: #{((option.color & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+						></div>
+					{/if}
+					<span>{option.label}</span>
+				</div>
 			</SelectItem>
 		{/each}
 	</SelectContent>
