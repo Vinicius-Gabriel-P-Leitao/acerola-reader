@@ -17,7 +17,7 @@ describe('home nativa', () => {
 		await waitForText('Histórico');
 		await waitForText('Configurações');
 
-		const search = await firstDisplayed('input[placeholder="Buscar mangá..."]');
+		const search = await firstDisplayed('input[placeholder="Buscar quadrinho..."]');
 		await search.setValue('acerola');
 		expect(await search.getValue()).toBe('acerola');
 		expect(await getPathname()).toBe('/home');
