@@ -17,7 +17,7 @@
     // But since it's 0xFFF44336, we can bitwise AND with 0xFFFFFF to get RGB.
     // In JS, numbers are double precision, bitwise operates on 32-bit signed integers.
     // 0xFFF44336 & 0xFFFFFF = 0xF44336
-    const hexColor = '#' + (color & 0xFFFFFF).toString(16).padStart(6, '0');
+    let hexColor = $derived('#' + (color & 0xFFFFFF).toString(16).padStart(6, '0'));
 </script>
 
 <div

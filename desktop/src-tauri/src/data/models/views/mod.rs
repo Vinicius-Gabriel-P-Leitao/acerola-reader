@@ -9,7 +9,6 @@ impl Entity for ComicSummaryView {
         &[
             "directory_id",
             "folder_name",
-            "folder_name",
             "folder_cover",
             "folder_banner",
             "external_sync",

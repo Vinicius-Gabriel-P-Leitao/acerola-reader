@@ -28,11 +28,13 @@
 		data={{ hasVolumeStructure: true }}
 		state={{
 			chaptersPerPage,
-			volumeViewMode
+			volumeViewMode,
+			bookmarkId: null
 		}}
 		events={{
 			onChaptersPerPageChange: (value) => (chaptersPerPage = value),
-			onVolumeViewModeChange: (value) => (volumeViewMode = value)
+			onVolumeViewModeChange: (value) => (volumeViewMode = value),
+			onBookmarkChange: () => {}
 		}}
 	/>
 </Story>

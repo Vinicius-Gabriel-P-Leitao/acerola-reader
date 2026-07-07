@@ -30,20 +30,20 @@
 	}}
 />
 
-<Story
-	name="Com progresso"
-	args={{
-		data: {
+<Story name="Com progresso" asChild>
+	<AcerolaCardImage
+		data={{
+			title: 'Berserk',
 			description: 'Descrição de teste',
 			progress: 50
-		}
-	}}
->
-	{#snippet floatingBadge()}
-		<div class="absolute -top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-md">
-			N
-		</div>
-	{/snippet}
+		}}
+	>
+		{#snippet floatingBadge()}
+			<div class="absolute -top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-md">
+				N
+			</div>
+		{/snippet}
+	</AcerolaCardImage>
 </Story>
 
 <Story

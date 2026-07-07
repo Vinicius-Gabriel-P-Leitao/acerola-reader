@@ -8,11 +8,13 @@ describe('ComicPreferences', () => {
 		return {
 			state: {
 				chaptersPerPage: '100',
-				volumeViewMode: 'cover' as const
+				volumeViewMode: 'cover' as const,
+				bookmarkId: null
 			},
 			events: {
 				onChaptersPerPageChange: vi.fn(),
-				onVolumeViewModeChange: vi.fn()
+				onVolumeViewModeChange: vi.fn(),
+				onBookmarkChange: vi.fn()
 			}
 		};
 	}
