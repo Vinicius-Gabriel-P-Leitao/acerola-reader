@@ -33,6 +33,21 @@ vi.mock('$lib/state/comic-context.svelte', () => ({
 	}))
 }));
 
+vi.mock('$lib/hooks/store/use-bookmarks.svelte', () => ({
+	useBookmarks: vi.fn(() => ({
+		bookmarks: [],
+		assignments: [],
+		isLoading: false,
+		loadBookmarks: vi.fn(),
+		createBookmark: vi.fn(),
+		deleteBookmark: vi.fn(),
+		assignToComic: vi.fn(),
+		removeComicBookmark: vi.fn(),
+		getComicBookmark: vi.fn(),
+		getBookmarkForComic: vi.fn()
+	}))
+}));
+
 vi.mock('$lib/assets/placeholder/placeholder_manga.svg?component', () => ({
 	default: vi.fn(() => null)
 }));
