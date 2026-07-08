@@ -18,16 +18,17 @@ vi.mock('@tauri-apps/plugin-log', () => ({
 
 // Mock do element.animate para jsdom
 if (!window.HTMLElement.prototype.animate) {
-	window.HTMLElement.prototype.animate = () => ({
-		finished: Promise.resolve(),
-		cancel: () => {},
-		finish: () => {},
-		play: () => {},
-		pause: () => {},
-		reverse: () => {},
-		addEventListener: () => {},
-		removeEventListener: () => {}
-	});
+	window.HTMLElement.prototype.animate = function() {
+		const self = {} as Animation;
+		return {
+			finished: Promise.resolve(self),
+			cancel: () => {},
+			finish: () => {},
+			play: () => {},
+			pause: () => {},
+			reverse: () => {}
+		} as Animation;
+	};
 }
 
 describe('AcerolaComicActionDialog', () => {

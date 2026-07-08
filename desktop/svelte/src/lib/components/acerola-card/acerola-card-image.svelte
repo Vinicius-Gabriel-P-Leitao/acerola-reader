@@ -51,8 +51,8 @@
 		lg: 'w-48'
 	};
 
-	const size = ui?.size ?? 'md';
-	const hideTitle = ui?.hideTitle ?? false;
+	const size = $derived(ui?.size ?? 'md');
+	const hideTitle = $derived(ui?.hideTitle ?? false);
 </script>
 
 <div
