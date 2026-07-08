@@ -18,7 +18,7 @@ describe('home nativa', () => {
 		await waitForText('Configurações');
 
 		// Abre o dialog de busca
-		const searchButton = await firstDisplayed('button[aria-label="Buscar"]');
+		const searchButton = await firstDisplayed('button[aria-label="Buscar quadrinho..."]');
 		await searchButton.click();
 
 		// Verifica se o dialog de busca abriu
