@@ -19,7 +19,7 @@ pub mod guard {
 
 /// Encapsulamento da identificação de instâncias ligadas ao P2p.
 pub mod peer {
-    pub use crate::infra::peer::PeerId as PeerIdentity;
+    pub use crate::infra::peer::{PeerAddr, PeerId as PeerIdentity};
 }
 
 /// Interfaces essenciais e contratos que descrevem lógicas customizadas.
