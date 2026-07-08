@@ -6,12 +6,12 @@
 
 - [x] **Exibir biblioteca em grade (grid)** - Cards com capa retornada pelo backend (Rust). O Svelte carrega os assets do disco local.
 - [x] **Buscar quadrinhos por título** - Filtro reativo no frontend (Svelte store) comparando com os itens em memória.
-- [ ] **Ordenar biblioteca** - Menu na UI que permite ordenar os itens do frontend por: título (A-Z / Z-A), contagem ou data de atualização.
-- [ ] **Filtrar biblioteca** - Filtros aplicados no state manager (MangaDex, AniList, Local, lidos/não lidos).
-- [ ] **(validar se faz sentido nesse caso) Menu de ações por quadrinho (multi-select / hover menu / botão direito)** - Menu para: favoritar com categoria, ocultar/mostrar e deletar. (Para Desktop o long press não se aplica).
-- [ ] **Favoritar quadrinho com categoria** - Comando Tauri vincula um `category_id` ao quadrinho no banco de dados SQLite local.
-- [ ] **Ocultar / mostrar quadrinho** - Comando Tauri atualiza o campo de status do quadrinho. O frontend apenas remove/adiciona visualmente.
-- [ ] **Deletar quadrinho** - Comando Tauri deleta o registro do banco local, sem afetar o arquivo físico (com dialog de confirmação no Svelte).
+- [x] **Ordenar biblioteca** - Menu na UI que permite ordenar os itens do frontend por: título (A-Z / Z-A), contagem ou data de atualização.
+- [x] **Filtrar biblioteca** - Filtros aplicados no state manager (MangaDex, AniList, Local, lidos/não lidos).
+- [x] **(validar se faz sentido nesse caso) Menu de ações por quadrinho (multi-select / hover menu / botão direito)** - Menu para: favoritar com categoria, ocultar/mostrar e deletar. (Para Desktop o long press não se aplica).
+- [x] **Favoritar quadrinho com categoria** - Comando Tauri vincula um `category_id` ao quadrinho no banco de dados SQLite local.
+- [x] **Ocultar / mostrar quadrinho** - Comando Tauri atualiza o campo de status do quadrinho. O frontend apenas remove/adiciona visualmente.
+- [x] **Deletar quadrinho** - Comando Tauri deleta o registro do banco local, sem afetar o arquivo físico (com dialog de confirmação no Svelte).
 
 ---
 
@@ -24,7 +24,7 @@
 - [x] **Iniciar / Continuar / Reler** - O Svelte consulta `history_get_comic` via Tauri e decide a string e para qual página a rota `/reader` vai navegar.
 - [x] **Listar capítulos com status de leitura** - Listagem renderizada com os `readChapters` marcados visualmente.
 - [ ] **Marcar capítulo como lido / não lido** - Ação explícita na UI chamando um evento no backend (Tauri) para inserir ou deletar row no histórico.
-- [ ] **Ordenar capítulos** - Controle de estado `isAscending` ligado em um botão na UI para reverter a lista de capítulos em tela.
+- [x] **Ordenar capítulos** - Menu com 4 opções: número (crescente/decrescente) e última modificação (crescente/decrescente). Aplica-se a chapters e volumes.
 - [x] **Agrupar capítulos por volume** - Agrupamento e renderização dos dados que possuem `volumeId` formatados no Rust.
 - [x] **Trocar estilo de exibição de capítulos/volumes** - O frontend muda o layout de list para volume baseado nas preferências da store do Svelte.
 - [x] **Configurar paginação da lista de capítulos** - Parametrização customizável gravada nas preferências que quebra requisições grandes pro Rust.
