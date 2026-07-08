@@ -10,7 +10,7 @@ import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
 import { HOME_EVENTS } from '$lib/contracts/home/home.events';
 import type { ComicSummaryPayload } from '$lib/contracts/home/home.payloads';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
-import { useComicSummary } from './use-comic-summary.svelte';
+import { useComicSummary, _resetComicSummaryState } from './use-comic-summary.svelte';
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -91,6 +91,7 @@ describe('useComicSummary', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		notificationStore.clearAll();
+		_resetComicSummaryState();
 		invokeMock.mockResolvedValue(undefined);
 	});
 
@@ -102,7 +103,11 @@ describe('useComicSummary', () => {
 		await flushPromises();
 
 		expect(hook.loading).toBe(true);
-		expect(invokeMock).toHaveBeenCalledWith(HOME_COMMANDS.getComicSummary, { search: undefined });
+		expect(invokeMock).toHaveBeenCalledWith(HOME_COMMANDS.getComicSummarySorted, {
+			search: undefined,
+			sortBy: 'title',
+			sortOrder: 'asc'
+		});
 
 		callbacks.get(HOME_EVENTS.homeData)?.({ payload: summaryPayload() });
 		await fetchPromise;

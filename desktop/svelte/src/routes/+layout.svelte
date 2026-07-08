@@ -202,6 +202,7 @@
 				>
 				<div class="max-w-xl flex-1">
 					<button
+						aria-label={m['layout.search_placeholder']()}
 						class="group relative w-full cursor-text text-left"
 						onclick={() => {
 							isSearchDialogOpen = true;

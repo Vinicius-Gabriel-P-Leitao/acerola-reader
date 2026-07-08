@@ -16,6 +16,20 @@ vi.mock('@tauri-apps/plugin-log', () => ({
 	error: vi.fn()
 }));
 
+// Mock do element.animate para jsdom
+if (!window.HTMLElement.prototype.animate) {
+	window.HTMLElement.prototype.animate = () => ({
+		finished: Promise.resolve(),
+		cancel: () => {},
+		finish: () => {},
+		play: () => {},
+		pause: () => {},
+		reverse: () => {},
+		addEventListener: () => {},
+		removeEventListener: () => {}
+	});
+}
+
 describe('AcerolaComicActionDialog', () => {
 	const mockBookmarks: Category[] = [
 		{ id: 1, name: 'Favoritos', color: 0xff0000 },
@@ -111,8 +125,8 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		const deleteButton = screen.getByText('Delete');
-		await fireEvent.click(deleteButton);
+		const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+		await fireEvent.click(deleteButtons[0]);
 
 		expect(screen.getByText('Delete Comics')).toBeInTheDocument();
 		expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
@@ -133,12 +147,12 @@ describe('AcerolaComicActionDialog', () => {
 		});
 
 		// Abre o dialog
-		const deleteButton = screen.getByText('Delete');
-		await fireEvent.click(deleteButton);
+		const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+		await fireEvent.click(deleteButtons[0]);
 
-		// Confirma a deleção
-		const confirmButton = screen.getByRole('button', { name: 'Delete' });
-		await fireEvent.click(confirmButton);
+		// Confirma a deleção - pega o botão dentro do dialog de confirmação (último botão Delete)
+		const confirmButtons = screen.getAllByRole('button', { name: 'Delete' });
+		await fireEvent.click(confirmButtons[confirmButtons.length - 1]);
 
 		expect(mockOnDelete).toHaveBeenCalledWith([1, 2]);
 	});
@@ -155,7 +169,7 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		const bookmarkButton = screen.getByText('Bookmark');
+		const bookmarkButton = screen.getByRole('button', { name: /Bookmark/ });
 		await fireEvent.click(bookmarkButton);
 
 		expect(screen.getByText('Favoritos')).toBeInTheDocument();
@@ -177,7 +191,7 @@ describe('AcerolaComicActionDialog', () => {
 		});
 
 		// Abre o menu de bookmarks
-		const bookmarkButton = screen.getByText('Bookmark');
+		const bookmarkButton = screen.getByRole('button', { name: /Bookmark/ });
 		await fireEvent.click(bookmarkButton);
 
 		// Clica em uma categoria
@@ -200,8 +214,8 @@ describe('AcerolaComicActionDialog', () => {
 		});
 
 		// Encontra o botão de fechar pelo ícone X
-		const closeButton = screen.getByRole('button', { name: '' });
-		await fireEvent.click(closeButton);
+		const closeButtons = screen.getAllByRole('button', { name: '' });
+		await fireEvent.click(closeButtons[0]);
 
 		expect(mockOnClose).toHaveBeenCalled();
 	});
@@ -220,7 +234,7 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		const hideButton = screen.getByText('Hide');
+		const hideButton = screen.getByRole('button', { name: 'Hide' });
 		await fireEvent.click(hideButton);
 
 		// Verifica se os botões estão desabilitados durante o processamento
@@ -240,8 +254,8 @@ describe('AcerolaComicActionDialog', () => {
 		});
 
 		// Abre o dialog
-		const deleteButton = screen.getByText('Delete');
-		await fireEvent.click(deleteButton);
+		const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+		await fireEvent.click(deleteButtons[0]);
 
 		// Clica em Cancel
 		const cancelButton = screen.getByRole('button', { name: 'Cancel' });

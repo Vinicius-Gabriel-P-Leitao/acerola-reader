@@ -513,7 +513,7 @@ async fn get_comic_chapters_filtra_por_search_query() -> Result<()> {
             "page": 0,
             "pageSize": 10,
             "sortBy": "number_asc",
-            "searchQuery": "Ch. 1"
+            "searchQuery": "Cap"
         }),
     )?;
 
@@ -523,7 +523,7 @@ async fn get_comic_chapters_filtra_por_search_query() -> Result<()> {
     assert!(!items.is_empty());
     for item in items {
         let name = item["name"].as_str().context("name should be a string")?;
-        assert!(name.contains("Ch. 1"));
+        assert!(name.contains("Cap"));
     }
 
     Ok(())
