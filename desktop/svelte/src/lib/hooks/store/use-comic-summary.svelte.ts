@@ -4,21 +4,33 @@ import { debug } from '@tauri-apps/plugin-log';
 import { toast } from 'svelte-sonner';
 import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
 import { HOME_EVENTS } from '$lib/contracts/home/home.events';
-import type { ComicSummaryPayload } from '$lib/contracts/home/home.payloads';
+import type { ComicSummaryPayload, SortBy, SortOrder } from '$lib/contracts/home/home.payloads';
 import type { ErrorPayload } from '$lib/contracts/shared/shared.payloads';
 import { resolveErrorMessage } from '$lib/contracts/errors/errors.i18n';
 import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
 import { m } from '$lib/paraglide/messages';
+import { error } from '@tauri-apps/plugin-log';
 
 const { notify } = notificationStore;
 
+let comics = $state<ComicSummaryPayload | undefined>(undefined);
+let loading = $state(false);
+let sortBy = $state<SortBy>('title');
+let sortOrder = $state<SortOrder>('asc');
+
+let fetchQueued = false;
+let lastSearch: string | undefined = undefined;
+
+export function _resetComicSummaryState() {
+	comics = undefined;
+	loading = false;
+	sortBy = 'title';
+	sortOrder = 'asc';
+	fetchQueued = false;
+	lastSearch = undefined;
+}
+
 export function useComicSummary() {
-	let comics = $state<ComicSummaryPayload | undefined>(undefined);
-	let loading = $state(false);
-
-	let fetchQueued = false;
-	let lastSearch: string | undefined = undefined;
-
 	async function fetch(search?: string): Promise<void> {
 		if (loading) {
 			fetchQueued = true;
@@ -55,7 +67,11 @@ export function useComicSummary() {
 				resolve();
 			});
 
-			await invoke(HOME_COMMANDS.getComicSummary, { search });
+			await invoke(HOME_COMMANDS.getComicSummarySorted, {
+				search,
+				sortBy,
+				sortOrder
+			});
 		}).finally(() => {
 			loading = false;
 			if (fetchQueued) {
@@ -64,13 +80,70 @@ export function useComicSummary() {
 		});
 	}
 
+	async function updateVisibility(ids: number[], hidden: boolean): Promise<number> {
+		try {
+			const count = await invoke<number>(HOME_COMMANDS.updateComicsVisibility, {
+				ids,
+				hidden
+			});
+			// Remove hidden comics from the local state
+			if (hidden && comics) {
+				comics = {
+					...comics,
+					comics: comics.comics.filter(
+						(c) => !ids.includes(Number(c.relations.directoryId))
+					),
+					total: comics.total - count
+				};
+			}
+			return count;
+		} catch (err) {
+			error(`Failed to update comics visibility: ${err}`);
+			throw err;
+		}
+	}
+
+	async function deleteComics(ids: number[]): Promise<number> {
+		try {
+			const count = await invoke<number>(HOME_COMMANDS.deleteComics, { ids });
+			// Remove deleted comics from the local state
+			if (comics) {
+				comics = {
+					...comics,
+					comics: comics.comics.filter(
+						(c) => !ids.includes(Number(c.relations.directoryId))
+					),
+					total: comics.total - count
+				};
+			}
+			return count;
+		} catch (err) {
+			error(`Failed to delete comics: ${err}`);
+			throw err;
+		}
+	}
+
+	function setSorting(newSortBy: SortBy, newSortOrder: SortOrder): void {
+		sortBy = newSortBy;
+		sortOrder = newSortOrder;
+	}
+
 	return {
 		fetch,
+		updateVisibility,
+		deleteComics,
+		setSorting,
 		get comics() {
 			return comics;
 		},
 		get loading() {
 			return loading;
+		},
+		get sortBy() {
+			return sortBy;
+		},
+		get sortOrder() {
+			return sortOrder;
 		}
 	};
 }

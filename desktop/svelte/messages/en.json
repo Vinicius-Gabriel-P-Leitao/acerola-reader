@@ -100,7 +100,24 @@
 	"pages": {
 		"home": {
 			"loading": "Loading...",
-			"no_comics": "No comics found."
+			"no_comics": "No comics found.",
+			"sort": {
+				"button": "Sort",
+				"title_asc": "Title (A-Z)",
+				"title_desc": "Title (Z-A)",
+				"chapter_asc": "Chapter count (Low to High)",
+				"chapter_desc": "Chapter count (High to Low)"
+			},
+			"selection": {
+				"selected": "{count} selected",
+				"select_all": "Select all",
+				"cancel": "Cancel"
+			},
+			"toast": {
+				"hidden": "{count} comic(s) hidden",
+				"deleted": "{count} comic(s) deleted",
+				"bookmarked": "{count} comic(s) bookmarked"
+			}
 		},
 		"comic": {
 			"loading": "Loading...",
@@ -110,6 +127,13 @@
 				"preferences": "Preferences"
 			},
 			"filter_placeholder": "FILTER...",
+			"sort": {
+				"button": "Sort",
+				"number_asc": "Number (Low to High)",
+				"number_desc": "Number (High to Low)",
+				"modified_asc": "Oldest",
+				"modified_desc": "Newest"
+			},
 			"banner": {
 				"popular": "Popular"
 			},

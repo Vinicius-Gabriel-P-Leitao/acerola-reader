@@ -61,7 +61,7 @@ impl ScannerEngine {
                 Err(err) => {
                     tracing::warn!("Scanner error reading directory {:?}: {}", path, err);
                     return Ok(false);
-                }
+                },
             };
             let mut subdirs: Vec<PathBuf> = vec![];
             let mut files: Vec<PathBuf> = vec![];
@@ -90,7 +90,7 @@ impl ScannerEngine {
                     Ok(false) => {},
                     Err(err) => {
                         tracing::warn!("Scanner error during walk: {}", err);
-                    }
+                    },
                 }
             }
 

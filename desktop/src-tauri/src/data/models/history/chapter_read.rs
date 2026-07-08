@@ -21,18 +21,13 @@ impl Bindable for ChapterRead {
     fn bind_insert<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
-        query
-            .bind(self.comic_directory_id)
-            .bind(self.chapter_archive_id)
-            .bind(self.created_at)
+        query.bind(self.comic_directory_id).bind(self.chapter_archive_id).bind(self.created_at)
     }
 
     fn bind_update<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
-        query
-            .bind(self.created_at)
-            .bind(self.chapter_archive_id) // <- id pro WHERE id = ?
+        query.bind(self.created_at).bind(self.chapter_archive_id) // <- id pro WHERE id = ?
     }
 }
 

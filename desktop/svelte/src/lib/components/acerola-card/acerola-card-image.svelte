@@ -1,6 +1,8 @@
 <script module lang="ts">
 	import type { Snippet } from 'svelte';
 
+	export type AcerolaCardImageSize = 'sm' | 'md' | 'lg';
+
 	export type AcerolaCardImageProps = {
 		data: {
 			title: string;
@@ -13,6 +15,8 @@
 		};
 		ui?: {
 			class?: string;
+			size?: AcerolaCardImageSize;
+			hideTitle?: boolean;
 		};
 	};
 
@@ -40,11 +44,21 @@
 		placeholder,
 		floatingBadge
 	}: AcerolaCardImageProps & AcerolaCardImageSnippets = $props();
+
+	const sizeClasses: Record<AcerolaCardImageSize, string> = {
+		sm: 'w-24',
+		md: 'w-36',
+		lg: 'w-48'
+	};
+
+	const size = ui?.size ?? 'md';
+	const hideTitle = ui?.hideTitle ?? false;
 </script>
 
 <div
 	class={cn(
-		'relative group w-36 transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.02]',
+		'relative group transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.02]',
+		sizeClasses[size],
 		ui?.class
 	)}
 >
@@ -103,23 +117,25 @@
 		</div>
 	</AspectRatio>
 
-	<div class="mt-3 flex items-start justify-between gap-2 px-1">
-		<div class="min-w-0 flex-1">
-			<h3
-				class="line-clamp-1 text-sm font-bold transition-colors duration-200 group-hover:text-primary"
-			>
-				{data.title}
-			</h3>
+	{#if !hideTitle}
+		<div class="mt-3 flex items-start justify-between gap-2 px-1">
+			<div class="min-w-0 flex-1">
+				<h3
+					class="line-clamp-1 text-sm font-bold transition-colors duration-200 group-hover:text-primary"
+				>
+					{data.title}
+				</h3>
 
-			{#if footer}
-				<div class="mt-1">
-					{@render footer()}
-				</div>
+				{#if footer}
+					<div class="mt-1">
+						{@render footer()}
+					</div>
+				{/if}
+			</div>
+
+			{#if action}
+				{@render action()}
 			{/if}
 		</div>
-
-		{#if action}
-			{@render action()}
-		{/if}
-	</div>
+	{/if}
 </div>
