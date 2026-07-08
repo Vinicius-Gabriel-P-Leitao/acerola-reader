@@ -5,7 +5,10 @@ use sqlx::SqlitePool;
 use crate::{
     data::{
         models::views::ComicSummaryView,
-        repositories::{archive::chapter_archive_repo::ChapterRepository, views::HomeRepository},
+        repositories::{
+            archive::chapter_archive_repo::ChapterRepository,
+            views::{HomeRepository, SortCriteria},
+        },
     },
     infra::error::ComicError,
 };
@@ -27,6 +30,15 @@ impl HomeService {
             Some(query) if !query.trim().is_empty() => self.repo.search_by_title(&query).await?,
             _ => self.repo.base.find_all().await?,
         };
+        let counts = self.chapter_repo.get_all_counts().await?;
+        Ok((comics, counts))
+    }
+
+    /// Busca todos os quadrinhos com ordenação específica.
+    pub async fn get_all_sorted(
+        &self, criteria: SortCriteria,
+    ) -> Result<(Vec<ComicSummaryView>, HashMap<i64, i64>), ComicError> {
+        let comics = self.repo.find_all_sorted(criteria).await?;
         let counts = self.chapter_repo.get_all_counts().await?;
         Ok((comics, counts))
     }

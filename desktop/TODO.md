@@ -45,8 +45,8 @@
 
 - [x] **Ler arquivos .cbz** - Tauri/Rust lidam com zip/cbz em disco, retornando uma lista de bytes serializada ou lendo via protocolo de assets (asset://).
 - [x] **Ler arquivos .cbr** - Backend Rust trata a descompressão do rar no SO e entrega as páginas no front.
-- [ ] **(validar se faz sentido nesse caso) Converter .pdf para .cbz antes de ler** - O backend converte o PDF internamente num zip de bitmaps para servir ao leitor.
-- [ ] **(validar se faz sentido nesse caso) Pré-carregar páginas adjacentes (prefetch)** - O store do leitor (Svelte) pode fazer um fetch em background das N próximas imagens, ou o Tauri as deixa em buffer de RAM cache (LRU).
+- [x] **(validar se faz sentido nesse caso) Converter .pdf para .cbz antes de ler** - O backend converte o PDF internamente num zip de bitmaps para servir ao leitor.
+- [x] **(validar se faz sentido nesse caso) Pré-carregar páginas adjacentes (prefetch)** - O store do leitor (Svelte) pode fazer um fetch em background das N próximas imagens, ou o Tauri as deixa em buffer de RAM cache (LRU).
 - [x] **Modo de leitura horizontal paginado** - Componente web lidando com interações de next/prev horizontalmente (mouse, teclado, etc).
 - [x] **Modo de leitura vertical paginado** - Scroll restrito p/ cada página por vez.
 - [x] **Modo Webtoon (scroll vertical contínuo)** - Lista CSS (`flex-col`) contínua para mangás compridos com intersection observers reportando a página.
@@ -76,8 +76,8 @@
 - [x] **Scan profundo (rebuild) da biblioteca** - O comando `rebuild_library` dropa informações antigas no Rust e itera pesadamente em todos arquivos de novo.
 - [x] **Selecionar idioma global de metadados** - Svelte envia o código `pt-br`, `en`, para parametrizar APIs do backend.
 - [x] **Ativar/desativar geração de ComicInfo.xml** - Estado guardado que liga rotinas passivas do Rust.
-- [ ] **Criar categoria** - Envio dos params (Label, HexColor) do modal do frontend para insert no SQLite via Tauri.
-- [ ] **Deletar categoria** - Deleção propagada em cascata pelo Rust com as devidas confirmações no Svelte.
+- [x] **Criar categoria** - Envio dos params (Label, HexColor) do modal do frontend para insert no SQLite via Tauri.
+- [x] **Deletar categoria** - Deleção propagada em cascata pelo Rust com as devidas confirmações no Svelte.
 - [x] **Selecionar tema do app** - Comportamento nativo SvelteKit pra injetar class CSS da cor (Ex: Catppuccin/Dracula).
 - [ ] **Navegar para configuração de templates** - Rota isolada listando as macros e regras.
 

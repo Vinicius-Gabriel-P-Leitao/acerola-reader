@@ -46,7 +46,6 @@
 	
 	import AcerolaModePicker from '$lib/components/acerola-mode-picker/acerola-mode-picker.svelte';
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
-	import { globalSearch } from '$lib/state/search.svelte';
 	import AcerolaSidebar from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
 	import AcerolaSonner from '$lib/components/acerola-sonner/acerola-sonner.svelte';
 	import SidebarProvider from '$lib/components/ui/sidebar/sidebar-provider.svelte';
@@ -200,42 +199,25 @@
 				<header
 					class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl"
 				>
-					<div class="max-w-xl flex-1">
-						{#if $page.url.pathname === '/home'}
-							<!-- In-place search for Home -->
-							<div class="group relative">
-								<Search
-									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-focus-within:text-primary"
-									size={20}
-								/>
-								<input
-									type="text"
-									bind:value={globalSearch.query}
-									placeholder={m['layout.search_placeholder']()}
-									class="placeholder:text-overlay/50 w-full rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none"
-								/>
-							</div>
-						{:else}
-							<!-- Trigger for Command Dialog -->
-							<button
-								class="group relative w-full cursor-text text-left"
-								onclick={() => {
-									isSearchDialogOpen = true;
-									if (!summary.comics) summary.fetch();
-								}}
-							>
-								<Search
-									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
-									size={20}
-								/>
-								<div
-									class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
-								>
-									{m['layout.search_placeholder']()}
-								</div>
-							</button>
-						{/if}
-					</div>
+				<div class="max-w-xl flex-1">
+					<button
+						class="group relative w-full cursor-text text-left"
+						onclick={() => {
+							isSearchDialogOpen = true;
+							if (!summary.comics) summary.fetch();
+						}}
+					>
+						<Search
+							class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
+							size={20}
+						/>
+						<div
+							class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
+						>
+							{m['layout.search_placeholder']()}
+						</div>
+					</button>
+				</div>
 
 					<div class="mx-8 flex items-center gap-4">
 						{#if packageIdentity}

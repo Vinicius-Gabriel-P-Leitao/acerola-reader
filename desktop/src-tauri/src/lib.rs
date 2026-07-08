@@ -7,6 +7,7 @@ mod infra;
 
 use cmd::features::{
     category::category_cmd,
+    comic as comic_cmd,
     history as history_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
     network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
@@ -74,6 +75,9 @@ mod app_bootstrap {
             category_cmd::remove_category_from_comic,
             category_cmd::get_comic_category,
             category_cmd::get_all_comic_categories,
+            comic_cmd::get_comic_summary_sorted,
+            comic_cmd::update_comics_visibility,
+            comic_cmd::delete_comics,
         ])
     }
 

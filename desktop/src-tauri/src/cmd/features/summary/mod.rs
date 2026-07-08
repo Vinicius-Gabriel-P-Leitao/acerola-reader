@@ -45,10 +45,18 @@ pub async fn get_comic_by_folder_name(
 #[tauri::command]
 pub async fn get_comic_chapters<R: Runtime>(
     comic_directory_fk: String, volume_id: Option<String>, page: i32, page_size: i32, asc: bool,
-    app: AppHandle<R>, pool: State<'_, SqlitePool>,
+    search_query: Option<String>, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
-    tracing::info!("[get_comic_chapters] Called for comic_directory_fk={}, volume_id={:?}, page={}, page_size={}, asc={}", comic_directory_fk, volume_id, page, page_size, asc);
+    tracing::info!(
+        "[get_comic_chapters] Called for comic_directory_fk={}, volume_id={:?}, page={}, page_size={}, asc={}, search_query={:?}",
+        comic_directory_fk,
+        volume_id,
+        page,
+        page_size,
+        asc,
+        search_query
+    );
 
     let comic_directory_id =
         comic_directory_fk.parse::<i64>().map_err(|error| error.to_string())?;
@@ -61,8 +69,10 @@ pub async fn get_comic_chapters<R: Runtime>(
     tokio::spawn(async move {
         let service = ChapterService::new(pool);
 
+        let search_ref = search_query.as_deref();
+
         match service
-            .get_comic_chapters(comic_directory_id, volume_id_filter, page, page_size, asc)
+            .get_comic_chapters(comic_directory_id, volume_id_filter, page, page_size, asc, search_ref)
             .await
         {
             Ok(data) => {

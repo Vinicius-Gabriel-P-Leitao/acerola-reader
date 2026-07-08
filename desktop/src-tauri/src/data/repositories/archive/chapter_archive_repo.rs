@@ -4,29 +4,14 @@ use sqlx::{Row, SqlitePool};
 
 use crate::{
     data::{
-        models::archive::chapter_archive::ChapterArchive,
+        models::{
+            archive::chapter_archive::ChapterArchive,
+            relations::chapter_with_volume::ChapterArchiveWithVolume,
+        },
         repositories::{Entity, Repository},
     },
     infra::error::DbError,
 };
-
-#[derive(Debug, sqlx::FromRow, Clone)]
-pub struct ChapterArchiveWithVolume {
-    pub id: i64,
-    pub chapter: String,
-    pub path: String,
-    pub chapter_sort: String,
-    pub is_special: bool,
-    pub checksum: Option<String>,
-    pub fast_hash: Option<String>,
-    pub comic_directory_fk: i64,
-    pub volume_id_fk: Option<i64>,
-    pub last_modified: i64,
-    // Volume fields
-    pub volume_name: Option<String>,
-    pub volume_sort: Option<String>,
-    pub volume_is_special: Option<bool>,
-}
 
 pub struct ChapterRepository {
     pub base: Repository<ChapterArchive>,
@@ -54,6 +39,19 @@ impl ChapterRepository {
         let result =
             sqlx::query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = ?")
                 .bind(comic_directory_fk)
+                .fetch_one(&self.pool)
+                .await?;
+        Ok(result.get(0))
+    }
+
+    pub async fn count_by_directory_id_with_search(
+        &self, comic_directory_fk: i64, search_query: &str,
+    ) -> Result<i64, DbError> {
+        let search_pattern = format!("%{}%", search_query);
+        let result =
+            sqlx::query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = ? AND chapter LIKE ?")
+                .bind(comic_directory_fk)
+                .bind(&search_pattern)
                 .fetch_one(&self.pool)
                 .await?;
         Ok(result.get(0))
@@ -116,6 +114,49 @@ impl ChapterRepository {
         Ok(result)
     }
 
+    pub async fn get_chapters_by_directory_paged_with_search(
+        &self, comic_directory_fk: i64, page_size: i64, offset: i64, search_query: &str,
+    ) -> Result<Vec<ChapterArchiveWithVolume>, DbError> {
+        let search_pattern = format!("%{}%", search_query);
+        let result = sqlx::query_as::<_, ChapterArchiveWithVolume>(
+            "SELECT 
+                ca.*,
+                va.name AS volume_name,
+                va.volume_sort,
+                va.is_special AS volume_is_special
+             FROM chapter_archive ca
+             LEFT JOIN volume_archive va ON ca.volume_id_fk = va.id
+             WHERE ca.comic_directory_fk = ? AND ca.chapter LIKE ?
+             ORDER BY 
+                CAST(COALESCE(va.volume_sort, '0') AS INTEGER) ASC,
+                CAST(
+                    CASE 
+                        WHEN va.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC,
+                CAST(ca.chapter_sort AS INTEGER) ASC, 
+                CAST(
+                    CASE 
+                        WHEN ca.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(ca.chapter_sort, INSTR(ca.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) ASC,
+                (ca.is_special OR COALESCE(va.is_special, 0)) ASC
+             LIMIT ? OFFSET ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(&search_pattern)
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     pub async fn get_chapters_by_directory_paged_desc(
         &self, comic_directory_fk: i64, page_size: i64, offset: i64,
     ) -> Result<Vec<ChapterArchiveWithVolume>, DbError> {
@@ -149,6 +190,49 @@ impl ChapterRepository {
              LIMIT ? OFFSET ?",
         )
         .bind(comic_directory_fk)
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn get_chapters_by_directory_paged_desc_with_search(
+        &self, comic_directory_fk: i64, page_size: i64, offset: i64, search_query: &str,
+    ) -> Result<Vec<ChapterArchiveWithVolume>, DbError> {
+        let search_pattern = format!("%{}%", search_query);
+        let result = sqlx::query_as::<_, ChapterArchiveWithVolume>(
+            "SELECT 
+                ca.*,
+                va.name AS volume_name,
+                va.volume_sort,
+                va.is_special AS volume_is_special
+             FROM chapter_archive ca
+             LEFT JOIN volume_archive va ON ca.volume_id_fk = va.id
+             WHERE ca.comic_directory_fk = ? AND ca.chapter LIKE ?
+             ORDER BY 
+                CAST(COALESCE(va.volume_sort, '0') AS INTEGER) DESC,
+                CAST(
+                    CASE 
+                        WHEN va.volume_sort LIKE '%.%' 
+                        THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                CAST(ca.chapter_sort AS INTEGER) DESC, 
+                CAST(
+                    CASE 
+                        WHEN ca.chapter_sort LIKE '%.%' 
+                        THEN SUBSTR(ca.chapter_sort, INSTR(ca.chapter_sort, '.') + 1) 
+                        ELSE 0 
+                    END AS INTEGER
+                ) DESC,
+                (ca.is_special OR COALESCE(va.is_special, 0)) ASC
+             LIMIT ? OFFSET ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(&search_pattern)
         .bind(page_size)
         .bind(offset)
         .fetch_all(&self.pool)

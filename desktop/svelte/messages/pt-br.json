@@ -100,7 +100,24 @@
 	"pages": {
 		"home": {
 			"loading": "Carregando...",
-			"no_comics": "Nenhum quadrinho encontrado."
+			"no_comics": "Nenhum quadrinho encontrado.",
+			"sort": {
+				"button": "Ordenar",
+				"title_asc": "Título (A-Z)",
+				"title_desc": "Título (Z-A)",
+				"chapter_asc": "Capítulos (Menor para Maior)",
+				"chapter_desc": "Capítulos (Maior para Menor)"
+			},
+			"selection": {
+				"selected": "{count} selecionado(s)",
+				"select_all": "Selecionar todos",
+				"cancel": "Cancelar"
+			},
+			"toast": {
+				"hidden": "{count} quadrinho(s) ocultado(s)",
+				"deleted": "{count} quadrinho(s) excluído(s)",
+				"bookmarked": "{count} quadrinho(s) marcado(s)"
+			}
 		},
 		"comic": {
 			"loading": "Carregando...",

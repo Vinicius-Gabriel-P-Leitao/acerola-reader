@@ -405,7 +405,8 @@ async fn get_comic_chapters_emite_pagina_paginada() -> Result<()> {
             "volumeId": Value::Null,
             "page": 1,
             "pageSize": 2,
-            "asc": true
+            "asc": true,
+            "searchQuery": Value::Null
         }),
     )?;
 
@@ -434,7 +435,8 @@ async fn get_comic_chapters_filtra_por_volume() -> Result<()> {
             "volumeId": volume_id.to_string(),
             "page": 0,
             "pageSize": 10,
-            "asc": true
+            "asc": true,
+            "searchQuery": Value::Null
         }),
     )?;
 
@@ -461,7 +463,8 @@ async fn get_comic_chapters_retorna_erro_de_parse_para_comic_id() -> Result<()> 
             "volumeId": Value::Null,
             "page": 0,
             "pageSize": 10,
-            "asc": true
+            "asc": true,
+            "searchQuery": Value::Null
         }),
     )?;
 
@@ -484,11 +487,44 @@ async fn get_comic_chapters_retorna_erro_de_parse_para_volume_id() -> Result<()>
             "volumeId": "volume-invalido",
             "page": 0,
             "pageSize": 10,
-            "asc": true
+            "asc": true,
+            "searchQuery": Value::Null
         }),
     )?;
 
     assert!(error.as_str().unwrap_or_default().contains("invalid digit"));
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn get_comic_chapters_filtra_por_search_query() -> Result<()> {
+    let pool = in_memory_db().await;
+    let comic_id = seed_comic(&pool, "Berserk").await?;
+    let (app, webview) = build_library_app(pool)?;
+    let chapters_rx = listen_event(&app, "comic:chapters");
+
+    let _: Value = invoke_ok(
+        &webview,
+        "get_comic_chapters",
+        json!({
+            "comicDirectoryFk": comic_id.to_string(),
+            "volumeId": Value::Null,
+            "page": 0,
+            "pageSize": 10,
+            "asc": true,
+            "searchQuery": "Ch. 1"
+        }),
+    )?;
+
+    let data = recv_event(chapters_rx, "comic:chapters").await?;
+
+    let items = data["archive"]["items"].as_array().context("items should be an array")?;
+    assert!(items.len() >= 1);
+    for item in items {
+        let name = item["name"].as_str().context("name should be a string")?;
+        assert!(name.contains("Ch. 1"));
+    }
 
     Ok(())
 }

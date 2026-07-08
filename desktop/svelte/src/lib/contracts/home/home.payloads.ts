@@ -31,3 +31,12 @@ export type ComicSummaryPayload = {
 	total: number;
 	fetchedAt: string;
 };
+
+export type SortBy = 'title' | 'chapterCount';
+export type SortOrder = 'asc' | 'desc';
+
+export type SortConfig = {
+	sortBy: SortBy;
+	sortOrder: SortOrder;
+};
+

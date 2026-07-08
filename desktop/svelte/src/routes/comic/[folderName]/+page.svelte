@@ -175,6 +175,7 @@
 
 	$effect(() => {
 		const volumeId = expandedVolumeId;
+		const query = searchQuery;
 
 		const comic = activeComic.item ?? data.comic;
 		if (!comic) return;
@@ -184,7 +185,14 @@
 		untrack(() => {
 			visiblePages = [];
 			chapterStore.clear(true);
-			chapterStore.fetch(comic.relations.directoryId, 0, pageSize, isAscending, volumeId);
+			chapterStore.fetch(
+				comic.relations.directoryId,
+				0,
+				pageSize,
+				isAscending,
+				volumeId,
+				query || null
+			);
 		});
 	});
 
@@ -210,7 +218,8 @@
 				missingPages[0],
 				parseInt(chaptersPreference.chaptersPerPage),
 				isAscending,
-				expandedVolumeId
+				expandedVolumeId,
+				searchQuery || null
 			);
 		});
 	});
@@ -242,9 +251,8 @@
 					chapterIndex: it.page * pageSize + index
 				}))
 				.filter((comic) => {
-					const matchesSearch = comic.name.toLowerCase().includes(searchQuery.toLowerCase());
 					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
-					return matchesSearch && matchesVolume;
+					return matchesVolume;
 				})
 		}));
 

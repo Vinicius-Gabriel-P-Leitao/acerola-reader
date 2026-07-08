@@ -26,7 +26,7 @@ impl ChapterService {
 
     pub async fn get_comic_chapters(
         &self, comic_directory_fk: i64, volume_id_filter: Option<i64>, page: i32, page_size: i32,
-        asc: bool,
+        asc: bool, search_query: Option<&str>,
     ) -> Result<ChapterDto, ComicError> {
         // FIXME: Corrigir parametro ou corrigir SQL
         let page_i64 = page as i64;
@@ -63,17 +63,21 @@ impl ChapterService {
             let count = self.chapter_repo.get_total_count_by_volume(volume_id).await?;
             (items, count)
         } else {
-            let items = if asc {
-                self.chapter_repo
-                    .get_chapters_by_directory_paged(comic_directory_fk, page_size_i64, offset)
-                    .await?
-            } else {
-                self.chapter_repo
-                    .get_chapters_by_directory_paged_desc(comic_directory_fk, page_size_i64, offset)
-                    .await?
+            let query = search_query.unwrap_or("");
+            let has_search = !query.is_empty();
+            
+            let items = match (has_search, asc) {
+                (false, true) => self.chapter_repo.get_chapters_by_directory_paged(comic_directory_fk, page_size_i64, offset).await?,
+                (false, false) => self.chapter_repo.get_chapters_by_directory_paged_desc(comic_directory_fk, page_size_i64, offset).await?,
+                (true, true) => self.chapter_repo.get_chapters_by_directory_paged_with_search(comic_directory_fk, page_size_i64, offset, query).await?,
+                (true, false) => self.chapter_repo.get_chapters_by_directory_paged_desc_with_search(comic_directory_fk, page_size_i64, offset, query).await?,
             };
 
-            let count = self.chapter_repo.count_by_directory_id(comic_directory_fk).await?;
+            let count = if has_search {
+                self.chapter_repo.count_by_directory_id_with_search(comic_directory_fk, query).await?
+            } else {
+                self.chapter_repo.count_by_directory_id(comic_directory_fk).await?
+            };
             (items, count)
         };
 
@@ -206,7 +210,7 @@ mod tests {
         popular_dados(&pool).await;
 
         let service = ChapterService::new(pool);
-        let result = service.get_comic_chapters(1, None, 0, 25, true).await.unwrap();
+        let result = service.get_comic_chapters(1, None, 0, 25, true, None).await.unwrap();
 
         assert_eq!(result.archive.total, 1);
         assert_eq!(result.archive.items.len(), 1);
