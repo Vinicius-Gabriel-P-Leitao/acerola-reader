@@ -520,7 +520,7 @@ async fn get_comic_chapters_filtra_por_search_query() -> Result<()> {
     let data = recv_event(chapters_rx, "comic:chapters").await?;
 
     let items = data["archive"]["items"].as_array().context("items should be an array")?;
-    assert!(items.len() >= 1);
+    assert!(!items.is_empty());
     for item in items {
         let name = item["name"].as_str().context("name should be a string")?;
         assert!(name.contains("Ch. 1"));

@@ -17,6 +17,7 @@ export type ReaderNavigationState = {
 	totalChapters?: number;
 	chapterScope?: string;
 	comicDirectoryId?: string;
+	sortBy?: 'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc';
 };
 
 export function useReaderNavigation() {
@@ -121,7 +122,8 @@ export function useReaderNavigation() {
 						comicDirectoryId: state.comicDirectoryId,
 						chapterIndex: pendingTargetIndex,
 						totalChapters: state.totalChapters,
-						chapterScope: state.chapterScope
+						chapterScope: state.chapterScope,
+						sortBy: state.sortBy
 					};
 
 					state = newState;
@@ -153,13 +155,16 @@ export function useReaderNavigation() {
 
 		pendingAction = 'load';
 
+		const sortBy = state.sortBy ?? 'number_asc';
+
 		try {
 			await invoke(LIBRARY_COMMANDS.getComicChapters, {
 				comicDirectoryFk: state.comicDirectoryId,
-				volumeId: null, // Sempre busca em todo o quadrinho para permitir transições contínuas entre volumes
+				volumeId: null,
 				page: 0,
 				pageSize: 99999,
-				asc: true
+				sortBy: sortBy,
+				searchQuery: null
 			});
 		} catch {
 			pendingAction = null;
@@ -181,13 +186,16 @@ export function useReaderNavigation() {
 		pendingAction = 'navigate';
 		pendingTargetIndex = targetIndex;
 
+		const sortBy = state.sortBy ?? 'number_asc';
+
 		try {
 			await invoke(LIBRARY_COMMANDS.getComicChapters, {
 				comicDirectoryFk: state.comicDirectoryId,
 				volumeId: null,
 				page: targetIndex,
 				pageSize: 1,
-				asc: true
+				sortBy: sortBy,
+				searchQuery: null
 			});
 		} catch {
 			initializing = false;

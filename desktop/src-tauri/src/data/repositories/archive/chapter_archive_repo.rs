@@ -8,7 +8,7 @@ use crate::{
             archive::chapter_archive::ChapterArchive,
             relations::chapter_with_volume::ChapterArchiveWithVolume,
         },
-        repositories::{Entity, Repository},
+        repositories::Repository,
     },
     infra::error::DbError,
 };

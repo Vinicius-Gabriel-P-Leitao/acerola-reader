@@ -79,7 +79,8 @@
 		return {
 			chapterIndex: chapter.chapterIndex,
 			totalChapters: volume?.totalChapters ?? currentManga.chaptersCount,
-			chapterScope: volume?.title ?? currentManga.title
+			chapterScope: volume?.title ?? currentManga.title,
+			sortBy: sortBy
 		};
 	}
 

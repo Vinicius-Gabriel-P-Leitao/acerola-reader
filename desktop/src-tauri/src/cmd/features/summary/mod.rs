@@ -44,6 +44,7 @@ pub async fn get_comic_by_folder_name(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn get_comic_chapters<R: Runtime>(
     comic_directory_fk: String,
     volume_id: Option<String>,

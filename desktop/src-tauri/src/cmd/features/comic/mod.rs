@@ -46,12 +46,12 @@ pub async fn update_comics_visibility(
     service
         .update_hidden_status_batch(&ids, hidden)
         .await
-        .map_err(|error| ErrorPayload::from(&error.into()))
+        .map_err(|error| ErrorPayload::from(&error))
 }
 
 /// Comando Tauri para deletar múltiplos quadrinhos.
 #[tauri::command]
 pub async fn delete_comics(ids: Vec<i64>, pool: State<'_, SqlitePool>) -> Result<usize, ErrorPayload> {
     let service = ComicService::new(pool.inner().clone());
-    service.delete_batch(&ids).await.map_err(|error| ErrorPayload::from(&error.into()))
+    service.delete_batch(&ids).await.map_err(|error| ErrorPayload::from(&error))
 }
