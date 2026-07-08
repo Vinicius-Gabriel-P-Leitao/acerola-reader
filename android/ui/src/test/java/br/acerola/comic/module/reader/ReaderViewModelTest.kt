@@ -7,8 +7,12 @@ import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
 import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
+import br.acerola.comic.config.preference.ChapterSortPreference
 import br.acerola.comic.config.preference.ReadingModePreference
+import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
+import br.acerola.comic.config.preference.types.ChapterSortType
 import br.acerola.comic.config.preference.types.ReadingMode
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.service.reader.ReaderProcessor
@@ -56,6 +60,10 @@ class ReaderViewModelTest {
         mockkObject(ReadingModePreference)
         every { ReadingModePreference.readingModeFlow(any()) } returns flowOf(ReadingMode.HORIZONTAL)
 
+        mockkObject(ChapterSortPreference)
+        every { ChapterSortPreference.sortFlow(any()) } returns 
+            flowOf(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
+
         readerUseCase = ReaderUseCase(processor)
         trackReadingProgressUseCase = TrackReadingProgressUseCase(historyGateway)
         observeChaptersUseCase = ObserveChaptersUseCase(readGateway = readGateway, syncStatusGateway = statusGateway)
@@ -76,6 +84,7 @@ class ReaderViewModelTest {
     @After
     fun tearDown() {
         unmockkObject(ReadingModePreference)
+        unmockkObject(ChapterSortPreference)
     }
 
     @Test
@@ -137,6 +146,89 @@ class ReaderViewModelTest {
                 val state = awaitItem()
                 assertThat(state.nextChapterId).isEqualTo(2L)
                 assertThat(state.previousChapterId).isNull()
+            }
+        }
+
+    @Test
+    fun `deve respeitar ordenacao ascendente ao navegar entre capitulos`() =
+        runTest {
+            coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
+
+            viewModel.openChapter(1L, chapter1, 0)
+
+            viewModel.uiState.test {
+                val state = awaitItem()
+                assertThat(state.nextChapterId).isEqualTo(2L)
+            }
+        }
+
+    @Test
+    fun `deve respeitar ordenacao descendente ao navegar entre capitulos`() =
+        runTest {
+            unmockkObject(ChapterSortPreference)
+            mockkObject(ChapterSortPreference)
+            every { ChapterSortPreference.sortFlow(any()) } returns
+                flowOf(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.DESCENDING))
+
+            every { readGateway.observeChapters(any(), any(), any()) } returns
+                MutableStateFlow(ChapterPageDto(listOf(chapter2, chapter1), emptyList(), 20, 0, 2))
+
+            val viewModelDesc =
+                ReaderViewModel(
+                    readerUseCase = readerUseCase,
+                    context = context,
+                    trackReadingProgressUseCase = trackReadingProgressUseCase,
+                    observeChaptersUseCase = observeChaptersUseCase,
+                )
+
+            coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
+
+            viewModelDesc.openChapter(1L, chapter2, 0)
+
+            viewModelDesc.uiState.test {
+                val state = awaitItem()
+                assertThat(state.nextChapterId).isEqualTo(1L)
+            }
+        }
+
+    @Test
+    fun `deve ordenar capitulos decimais corretamente`() =
+        runTest {
+            val chapter001 = ChapterFileDto(1L, "Cap 0.01", "/path/1", "0.01")
+            val chapter010 = ChapterFileDto(10L, "Cap 0.10", "/path/10", "0.10")
+            val chapter016 = ChapterFileDto(16L, "Cap 0.16", "/path/16", "0.16")
+            val chapter002 = ChapterFileDto(2L, "Cap 0.02", "/path/2", "0.02")
+
+            every { ChapterSortPreference.sortFlow(any()) } returns
+                flowOf(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
+
+            every { readGateway.observeChapters(any(), any(), any()) } returns
+                MutableStateFlow(
+                    ChapterPageDto(
+                        listOf(chapter001, chapter002, chapter010, chapter016),
+                        emptyList(),
+                        20,
+                        0,
+                        4,
+                    ),
+                )
+
+            val viewModelDecimal =
+                ReaderViewModel(
+                    readerUseCase = readerUseCase,
+                    context = context,
+                    trackReadingProgressUseCase = trackReadingProgressUseCase,
+                    observeChaptersUseCase = observeChaptersUseCase,
+                )
+
+            coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
+
+            viewModelDecimal.openChapter(1L, chapter010, 0)
+
+            viewModelDecimal.uiState.test {
+                val state = awaitItem()
+                assertThat(state.nextChapterId).isEqualTo(16L)
+                assertThat(state.previousChapterId).isEqualTo(2L)
             }
         }
 }

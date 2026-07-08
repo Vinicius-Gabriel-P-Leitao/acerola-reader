@@ -67,8 +67,15 @@ fun Comic.Component.ChapterItem(
     val iconTint =
         if (isRead) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
 
+    val surfaceColor =
+        if (isRead) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+        } else {
+            Color.Transparent
+        }
+
     Surface(
-        color = Color.Transparent,
+        color = surfaceColor,
         modifier =
             modifier
                 .fillMaxWidth()

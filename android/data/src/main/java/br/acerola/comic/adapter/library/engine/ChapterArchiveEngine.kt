@@ -279,24 +279,31 @@ class ChapterArchiveEngine
             comicId: Long,
             sortType: String,
             isAscending: Boolean,
-        ): StateFlow<ChapterPageDto> =
-            chapterArchiveDao
-                .getChaptersByDirectoryId(folderId = comicId)
+        ): StateFlow<ChapterPageDto> {
+            val sourceFlow =
+                if (sortType == "NUMBER") {
+                    if (isAscending) {
+                        chapterArchiveDao.getChaptersByDirectoryId(folderId = comicId)
+                    } else {
+                        chapterArchiveDao.getChaptersByDirectoryIdDesc(folderId = comicId)
+                    }
+                } else {
+                    chapterArchiveDao.getChaptersByDirectoryId(folderId = comicId).map { list ->
+                        val sortedList = list.sortedBy { it.chapter.lastModified }
+                        if (isAscending) sortedList else sortedList.reversed()
+                    }
+                }
+
+            return sourceFlow
                 .map { list ->
                     AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
-                    val finalList =
-                        if (sortType == "LAST_UPDATE") {
-                            val base = list.sortedBy { it.chapter.lastModified }
-                            if (isAscending) base else base.reversed()
-                        } else {
-                            if (isAscending) list else list.reversed()
-                        }
-                    finalList.toChapterPageDto()
+                    list.toChapterPageDto()
                 }.stateIn(
                     started = SharingStarted.Lazily,
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
                     initialValue = ChapterPageDto(items = emptyList(), pageSize = -1, total = 0, page = 0),
                 )
+        }
 
         override suspend fun getChapterPage(
             comicId: Long,
