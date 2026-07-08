@@ -127,6 +127,13 @@
 				"preferences": "Preferências"
 			},
 			"filter_placeholder": "FILTRAR...",
+			"sort": {
+				"button": "Ordenar",
+				"number_asc": "Número (Menor para Maior)",
+				"number_desc": "Número (Maior para Menor)",
+				"modified_asc": "Mais Antigo",
+				"modified_desc": "Mais Recente"
+			},
 			"banner": {
 				"popular": "Popular"
 			},

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, afterNavigate } from '$app/navigation';
+	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
 
@@ -18,6 +19,8 @@
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+	import Check from '@lucide/svelte/icons/check';
 
 	import { onMount, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
@@ -42,8 +45,9 @@
 	let currentBookmarkId = $state<number | null>(null);
 
 	let activeTab = $state('content');
-	let isAscending = $state(true);
+	let sortBy = $state<'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc'>('number_asc');
 	let searchQuery = $state('');
+	let showSortMenu = $state(false);
 
 	let visiblePages = $state<number[]>([]);
 
@@ -176,6 +180,7 @@
 	$effect(() => {
 		const volumeId = expandedVolumeId;
 		const query = searchQuery;
+		const currentSortBy = sortBy;
 
 		const comic = activeComic.item ?? data.comic;
 		if (!comic) return;
@@ -189,7 +194,7 @@
 				comic.relations.directoryId,
 				0,
 				pageSize,
-				isAscending,
+				currentSortBy,
 				volumeId,
 				query || null
 			);
@@ -217,7 +222,7 @@
 				comic.relations.directoryId,
 				missingPages[0],
 				parseInt(chaptersPreference.chaptersPerPage),
-				isAscending,
+				sortBy,
 				expandedVolumeId,
 				searchQuery || null
 			);
@@ -401,14 +406,77 @@
 						{/snippet}
 					</AcerolaToggleGroup>
 
-					{#if activeTab === 'content' && !chapterStore.chapters?.hasVolumeStructure}
+					{#if activeTab === 'content'}
 						<div class="flex items-center gap-2 pr-4">
-							<input
-								type="text"
-								bind:value={searchQuery}
-								placeholder={m['pages.comic.filter_placeholder']()}
-								class="w-40 rounded-full border border-surface/30 bg-surface/20 px-6 py-2 text-[10px] font-black tracking-widest transition-all focus:w-60 focus:ring-2 focus:ring-primary/50 focus:outline-none"
-							/>
+							{#if !chapterStore.chapters?.hasVolumeStructure}
+								<input
+									type="text"
+									bind:value={searchQuery}
+									placeholder={m['pages.comic.filter_placeholder']()}
+									class="w-40 rounded-full border border-surface/30 bg-surface/20 px-6 py-2 text-[10px] font-black tracking-widest transition-all focus:w-60 focus:ring-2 focus:ring-primary/50 focus:outline-none"
+								/>
+							{/if}
+
+							<div class="relative">
+								<AcerolaButton
+									ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
+									events={{ onClick: () => (showSortMenu = !showSortMenu) }}
+								>
+									<ArrowUpDown size={16} />
+									{m['pages.comic.sort.button']()}
+								</AcerolaButton>
+
+								{#if showSortMenu}
+									<div class="absolute right-0 top-full z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg">
+										<div class="p-2">
+											<AcerolaButton
+												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+												events={{ onClick: () => { sortBy = 'number_asc'; showSortMenu = false; } }}
+											>
+												{#if sortBy === 'number_asc'}
+													<Check size={16} />
+												{:else}
+													<div class="w-4"></div>
+												{/if}
+												{m['pages.comic.sort.number_asc']()}
+											</AcerolaButton>
+											<AcerolaButton
+												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+												events={{ onClick: () => { sortBy = 'number_desc'; showSortMenu = false; } }}
+											>
+												{#if sortBy === 'number_desc'}
+													<Check size={16} />
+												{:else}
+													<div class="w-4"></div>
+												{/if}
+												{m['pages.comic.sort.number_desc']()}
+											</AcerolaButton>
+											<AcerolaButton
+												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+												events={{ onClick: () => { sortBy = 'modified_desc'; showSortMenu = false; } }}
+											>
+												{#if sortBy === 'modified_desc'}
+													<Check size={16} />
+												{:else}
+													<div class="w-4"></div>
+												{/if}
+												{m['pages.comic.sort.modified_desc']()}
+											</AcerolaButton>
+											<AcerolaButton
+												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+												events={{ onClick: () => { sortBy = 'modified_asc'; showSortMenu = false; } }}
+											>
+												{#if sortBy === 'modified_asc'}
+													<Check size={16} />
+												{:else}
+													<div class="w-4"></div>
+												{/if}
+												{m['pages.comic.sort.modified_asc']()}
+											</AcerolaButton>
+										</div>
+									</div>
+								{/if}
+							</div>
 						</div>
 					{/if}
 				</div>

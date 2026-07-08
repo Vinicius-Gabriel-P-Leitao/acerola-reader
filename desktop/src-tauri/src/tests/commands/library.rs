@@ -405,7 +405,7 @@ async fn get_comic_chapters_emite_pagina_paginada() -> Result<()> {
             "volumeId": Value::Null,
             "page": 1,
             "pageSize": 2,
-            "asc": true,
+            "sortBy": "number_asc",
             "searchQuery": Value::Null
         }),
     )?;
@@ -435,7 +435,7 @@ async fn get_comic_chapters_filtra_por_volume() -> Result<()> {
             "volumeId": volume_id.to_string(),
             "page": 0,
             "pageSize": 10,
-            "asc": true,
+            "sortBy": "number_asc",
             "searchQuery": Value::Null
         }),
     )?;
@@ -463,7 +463,7 @@ async fn get_comic_chapters_retorna_erro_de_parse_para_comic_id() -> Result<()> 
             "volumeId": Value::Null,
             "page": 0,
             "pageSize": 10,
-            "asc": true,
+            "sortBy": "number_asc",
             "searchQuery": Value::Null
         }),
     )?;
@@ -487,7 +487,7 @@ async fn get_comic_chapters_retorna_erro_de_parse_para_volume_id() -> Result<()>
             "volumeId": "volume-invalido",
             "page": 0,
             "pageSize": 10,
-            "asc": true,
+            "sortBy": "number_asc",
             "searchQuery": Value::Null
         }),
     )?;
@@ -512,7 +512,7 @@ async fn get_comic_chapters_filtra_por_search_query() -> Result<()> {
             "volumeId": Value::Null,
             "page": 0,
             "pageSize": 10,
-            "asc": true,
+            "sortBy": "number_asc",
             "searchQuery": "Ch. 1"
         }),
     )?;

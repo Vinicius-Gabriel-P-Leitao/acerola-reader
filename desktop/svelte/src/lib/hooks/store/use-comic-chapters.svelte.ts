@@ -146,7 +146,7 @@ export function useComicChapters() {
 		comicDirectoryId: string,
 		pageIndex: number,
 		pageSize: number,
-		isAscending: boolean,
+		sortBy: 'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc',
 		volumeId: string | null = null,
 		searchQuery: string | null = null
 	) {
@@ -166,7 +166,7 @@ export function useComicChapters() {
 				volumeId,
 				page: pageIndex,
 				pageSize,
-				asc: isAscending,
+				sortBy,
 				searchQuery: searchQuery || null
 			});
 		} catch (error) {
