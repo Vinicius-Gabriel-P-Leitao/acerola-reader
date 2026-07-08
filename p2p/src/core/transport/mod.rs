@@ -9,7 +9,10 @@ pub mod iroh;
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::infra::{error::ConnectionError, peer::PeerId};
+use crate::infra::{
+    error::ConnectionError,
+    peer::{PeerAddr, PeerId},
+};
 
 /// Representa um handshake inicial recebido pelo daemon aguardando conversão em fluxos úteis.
 #[async_trait]
@@ -19,6 +22,9 @@ pub trait IncomingConnection: Send {
 
     /// Os dados brutos do vizinho emitente que efetuou a requisição na porta do host.
     fn peer(&self) -> &PeerId;
+
+    /// O endereço completo para discagem reversa se necessário.
+    fn addr(&self) -> &PeerAddr;
 
     /// Promove de fato o socket entrante convertendo-o nas traits `tokio::io` de Leitura/Escrita.
     ///
@@ -41,6 +47,9 @@ pub trait P2pTransport: Send + Sync {
     /// Fornece as chaves/IDs públicas usadas por este nó.
     fn local_id(&self) -> PeerId;
 
+    /// Fornece o endereço para discagem, retorna o PeerId dentro também
+    fn local_addr(&self) -> Result<PeerAddr, ConnectionError>;
+
     /// Loop passivo aguardando requisições de conexão da WAN/LAN.
     ///
     /// Deve entregar um objeto em estado pré-pronto (IncomingConnection)
@@ -51,7 +60,7 @@ pub trait P2pTransport: Send + Sync {
     ///
     /// Em caso de aceite do outro lado, as streams são entregues prontas para comunicação duplex.
     async fn open_bi(
-        &self, alpn: &[u8], peer: &PeerId,
+        &self, alpn: &[u8], peer: &PeerAddr,
     ) -> Result<
         (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,

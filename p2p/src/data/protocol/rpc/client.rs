@@ -7,7 +7,9 @@ use tokio::{
 };
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use super::{read_byte, read_device_info, write_byte, write_device_info, Recv, Writer, PING, PONG};
+use super::{
+    read_byte, read_device_info, write_byte, write_device_info, Recv, Writer, GOODBYE, PING, PONG,
+};
 use crate::{
     core::network::state::NetworkState,
     data::{
@@ -73,8 +75,10 @@ impl RpcClientHandler {
         match read_device_info(recv).await {
             Ok(device_info) => {
                 tracing::debug!(layer = "rpc_client", peer = %peer.id, "device info received");
+               
                 (self.emit)("rpc:device_info_received", peer.id.clone());
                 self.state.write().await.store_device_info(peer.clone(), device_info);
+               
                 Ok(())
             },
             Err(err) => Err(ConnectionError::from(err)),
@@ -89,6 +93,10 @@ impl RpcClientHandler {
                 Ok(PING) => {
                     write_byte(send, PONG).await?;
                 },
+                Ok(GOODBYE) => {
+                    tracing::info!("rpc_client: goodbye received, closing connection");
+                    break;
+                }
                 Ok(_) => break,
                 Err(err) => return Err(ConnectionError::from(err)),
             }

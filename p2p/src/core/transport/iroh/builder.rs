@@ -38,7 +38,7 @@ impl TransportP2pBuilder for IrohTransportBuilder {
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
         tracing::debug!(
             layer = "iroh_transport",
-            alpns = ?alpns.iter().map(|a| String::from_utf8_lossy(a)).collect::<Vec<_>>(),
+            alpns = ?alpns.iter().map(|it| String::from_utf8_lossy(it)).collect::<Vec<_>>(),
             "building iroh transport"
         );
 

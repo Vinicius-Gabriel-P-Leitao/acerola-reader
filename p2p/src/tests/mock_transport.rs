@@ -15,7 +15,7 @@ use tokio::{
 
 use crate::{
     core::transport::{IncomingConnection, P2pTransport},
-    infra::{error::ConnectionError, peer::PeerId},
+    infra::{error::ConnectionError, peer::{PeerAddr, PeerId}},
 };
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".
@@ -29,6 +29,7 @@ type OutboundConnection = (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead
 struct MockIncoming {
     alpn: Vec<u8>,
     peer: PeerId,
+    addr: PeerAddr,
     send: Box<dyn AsyncWrite + Send + Unpin>,
     recv: Box<dyn AsyncRead + Send + Unpin>,
 }
@@ -41,6 +42,10 @@ impl IncomingConnection for MockIncoming {
 
     fn peer(&self) -> &PeerId {
         &self.peer
+    }
+
+    fn addr(&self) -> &PeerAddr {
+        &self.addr
     }
 
     async fn accept_bi(
@@ -97,16 +102,22 @@ impl P2pTransport for MockTransport {
         PeerId { id: "mock-peer".to_string(), device_id: None }
     }
 
+    fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
+        Ok(PeerAddr { id: self.local_id(), addrs: vec![] })
+    }
+
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
         let (alpn, peer, send, recv) =
             self.inbound_rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)?;
 
-        Ok(Box::new(MockIncoming { alpn, peer, send, recv }))
+        let addr = PeerAddr { id: peer.clone(), addrs: vec![] };
+
+        Ok(Box::new(MockIncoming { alpn, peer, addr, send, recv }))
     }
 
     #[rustfmt::skip]
     async fn open_bi(
-        &self, _alpn: &[u8], _peer: &PeerId,
+        &self, _alpn: &[u8], _peer: &PeerAddr,
     ) -> Result<
         (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,

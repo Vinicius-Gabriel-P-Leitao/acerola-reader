@@ -16,7 +16,10 @@ use crate::{
         transport::TransportP2pBuilder,
     },
     data::{identity::device_info::DeviceInfo, protocol::EventEmitter},
-    infra::{error::ConnectionError, peer::PeerId},
+    infra::{
+        error::ConnectionError,
+        peer::{PeerAddr, PeerId},
+    },
 };
 
 /// A Instância consolidada e o Controlador do Nó rodando em background.
@@ -27,8 +30,9 @@ use crate::{
 pub struct AcerolaP2p {
     pub(super) command_tx: mpsc::Sender<NetworkCommand>,
     pub(super) state: Arc<RwLock<NetworkState>>,
-    pub(super) local_id: PeerId,
     pub(super) device_info: DeviceInfo,
+    pub(super) local_addr: PeerAddr,
+    pub(super) local_id: PeerId,
 }
 
 impl AcerolaP2p {
@@ -47,6 +51,11 @@ impl AcerolaP2p {
         &self.local_id.id
     }
 
+    /// Retorna um objeto do PeerAddr, juntamente vem o id do peerid + addr
+    pub fn local_addr(&self) -> &PeerAddr {
+        &self.local_addr
+    }
+
     /// Retorna o `device_id` UUID v5 derivado da chave pública do nó.
     pub fn local_device_id(&self) -> Option<&str> {
         self.local_id.device_id.as_deref()
@@ -61,9 +70,8 @@ impl AcerolaP2p {
     ///
     /// Se a resposta for exitosa, as transmissões vão direto pro handler do protocolo (`alpn`) mapeado.
     #[rustfmt::skip]
-    pub async fn connect(&self, peer_id: &str, alpn: &[u8]) -> Result<(), ConnectionError> {
-        let peer = PeerId { id: peer_id.to_string(), device_id: None };
-        self.command_tx.send(NetworkCommand::Connect { peer, alpn: alpn.to_vec() }).await.map_err(|_| ConnectionError::Shutdown)
+    pub async fn connect(&self, addr: PeerAddr, alpn: &[u8]) -> Result<(), ConnectionError> {
+        self.command_tx.send(NetworkCommand::Connect { addr, alpn: alpn.to_vec() }).await.map_err(|_| ConnectionError::Shutdown)
     }
 
     /// Captura um Snapshot/Cópia pesada dos nós que estão trafegando e seus marcadores de sub-protocolo atrelados.
