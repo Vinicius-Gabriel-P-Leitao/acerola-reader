@@ -66,17 +66,15 @@ export function useBookmarks() {
 
     async function assignToComic(comicId: string | number, categoryId: number) {
         try {
-            // Como a tabela tem `comic_directory_fk` definido como UNIQUE,
-            // cada quadrinho pode ter no máximo um marcador associado.
-            // Garantimos a exclusão do vínculo anterior antes de criar o novo.
             await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
             const assignment = await invoke<MangaCategory>(BOOKMARKS_COMMANDS.assignCategoryToComic, { 
                 comicId: comicId.toString(), 
                 categoryId: Number(categoryId) 
             });
             
+            const comicIdNum = Number(comicId);
             assignments = [
-                ...assignments.filter(a => a.comic_directory_fk.toString() !== comicId.toString()),
+                ...assignments.filter(a => a.comic_directory_fk !== comicIdNum),
                 assignment
             ];
             return assignment;
@@ -89,7 +87,8 @@ export function useBookmarks() {
     async function removeComicBookmark(comicId: string | number) {
         try {
             await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
-            assignments = assignments.filter(a => a.comic_directory_fk.toString() !== comicId.toString());
+            const comicIdNum = Number(comicId);
+            assignments = assignments.filter(a => a.comic_directory_fk !== comicIdNum);
         } catch (err) {
             error(`Failed to remove bookmark from comic: ${err}`);
             throw err;
@@ -106,7 +105,8 @@ export function useBookmarks() {
     }
 
     function getBookmarkForComic(comicId: string | number) {
-        const assignment = assignments.find(a => a.comic_directory_fk.toString() === comicId.toString());
+        const comicIdNum = Number(comicId);
+        const assignment = assignments.find(a => a.comic_directory_fk === comicIdNum);
         if (!assignment) return null;
         return bookmarks.find(b => b.id === assignment.category_id) ?? null;
     }

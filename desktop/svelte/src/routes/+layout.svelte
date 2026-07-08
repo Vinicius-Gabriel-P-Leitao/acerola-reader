@@ -56,6 +56,7 @@
 
 	import AcerolaNotification from '$lib/components/acerola-notification/acerola-notification.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
+	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import '$theme/layout.css';
 	import Search from '@lucide/svelte/icons/search';
 
@@ -261,35 +262,36 @@
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
 							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)?.color}
-							<Command.Item
-								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
-								onSelect={() => {
-									isSearchDialogOpen = false;
-									import('$app/navigation').then((n) => n.goto(`/comic/${comic.filesystem.folderName}`));
+						<Command.Item
+							value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
+							onSelect={() => {
+								isSearchDialogOpen = false;
+								import('$app/navigation').then((n) => n.goto(`/comic/${comic.filesystem.folderName}`));
+							}}
+							class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
+						>
+							<AcerolaCardImage
+								data={{
+									title: comic.metadata.title ?? comic.filesystem.folderName,
+									cover
 								}}
-								class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
+								ui={{ size: 'sm', hideTitle: true }}
 							>
-								<div class="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl border border-surface/50 bg-mantle shadow-sm">
+								{#snippet floatingBadge()}
 									{#if bookmarkColor != null}
 										<AcerolaBookmarkRibbon color={bookmarkColor} />
 									{/if}
-									{#if cover}
-										<img src={cover} alt="" class="h-full w-full object-cover" />
-									{:else}
-										<div class="flex h-full w-full items-center justify-center text-muted-foreground/50">
-											<BookOpenIcon size={24} />
-										</div>
-									{/if}
-								</div>
-								<div class="flex flex-col gap-2 overflow-hidden">
-									<span class="truncate text-xl font-bold text-foreground">
-										{comic.metadata.title ?? comic.filesystem.folderName}
-									</span>
-									<span class="truncate text-sm font-medium text-muted-foreground">
-										{comic.filesystem.folderName}
-									</span>
-								</div>
-							</Command.Item>
+								{/snippet}
+							</AcerolaCardImage>
+							<div class="flex flex-col gap-2 overflow-hidden">
+								<span class="truncate text-xl font-bold text-foreground">
+									{comic.metadata.title ?? comic.filesystem.folderName}
+								</span>
+								<span class="truncate text-sm font-medium text-muted-foreground">
+									{comic.filesystem.folderName}
+								</span>
+							</div>
+						</Command.Item>
 						{/each}
 					</div>
 				</Command.Group>
