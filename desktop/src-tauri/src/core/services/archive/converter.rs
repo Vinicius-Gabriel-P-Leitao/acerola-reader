@@ -15,7 +15,7 @@ use crate::infra::error::ComicError;
 static PDFIUM: OnceLock<Pdfium> = OnceLock::new();
 
 fn get_pdfium() -> &'static Pdfium {
-    PDFIUM.get_or_init(|| Pdfium::default())
+    PDFIUM.get_or_init(Pdfium::default)
 }
 
 pub struct ConverterService;
