@@ -19,13 +19,17 @@ pub async fn select_folder(app: AppHandle) -> Result<String, String> {
         },
     };
 
-    app.fs_scope()
-        .allow_directory(&path, true)
-        .map_err(|e| e.to_string())?;
+    tracing::info!("Usuário selecionou pasta: {:?}", path);
 
-    app.asset_protocol_scope()
-        .allow_directory(&path, true)
-        .map_err(|e| e.to_string())?;
+    match app.fs_scope().allow_directory(&path, true) {
+        Ok(_) => tracing::info!("fs_scope liberado para: {:?}", path),
+        Err(e) => tracing::error!("falha ao liberar fs_scope: {}", e),
+    }
+
+    match app.asset_protocol_scope().allow_directory(&path, true) {
+        Ok(_) => tracing::info!("asset_protocol_scope liberado para: {:?}", path),
+        Err(e) => tracing::error!("falha ao liberar asset_protocol_scope: {}", e),
+    }
 
     Ok(path.to_string_lossy().to_string())
 }

@@ -88,6 +88,10 @@
 	});
 </script>
 
+<style>
+	/* SVG icons use inline fill attributes - no CSS override needed */
+</style>
+
 <div class="max-w-5xl space-y-12 p-8">
 	<!-- Header -->
 	<div>
@@ -331,9 +335,11 @@
 				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
 				events={{ onClick: () => console.log('sync') }}
 			>
-				{#snippet icon()}
-					<MangaDexIcon class="h-6 w-6 rounded-lg" />
-				{/snippet}
+{#snippet icon()}
+	<span style="all: unset; display: inline-flex;">
+		<MangaDexIcon class="h-6 w-6 rounded-lg" />
+	</span>
+{/snippet}
 
 				{#snippet action()}
 					<AcerolaButtonIcon
@@ -356,9 +362,11 @@
 				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
 				events={{ onClick: () => console.log('sync') }}
 			>
-				{#snippet icon()}
-					<AniListIcon class="h-6 w-6 rounded-lg" />
-				{/snippet}
+{#snippet icon()}
+	<span style="all: unset; display: inline-flex;">
+		<AniListIcon class="h-6 w-6 rounded-lg" />
+	</span>
+{/snippet}
 
 				{#snippet action()}
 					<AcerolaButtonIcon
