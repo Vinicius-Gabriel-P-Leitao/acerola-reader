@@ -80,6 +80,8 @@ fun Main.Home.Template.Screen(
     val allCategories by homeViewModel.allCategories.collectAsStateWithLifecycle()
     val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
     val filterSettings by homeViewModel.filterSettings.collectAsStateWithLifecycle()
+    val searchQuery by homeViewModel.searchQuery.collectAsStateWithLifecycle()
+    val isSearchExpanded by homeViewModel.isSearchExpanded.collectAsStateWithLifecycle()
     
     val lastRead by remember(comics) {
         derivedStateOf {
@@ -135,7 +137,16 @@ fun Main.Home.Template.Screen(
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Main.Home.Component.HomeSearchBar(
-                        onClick = { },
+                        query = searchQuery,
+                        onQueryChange = { homeViewModel.updateSearchQuery(it) },
+                        onSearch = { homeViewModel.updateSearchQuery(it) },
+                        expanded = isSearchExpanded,
+                        onExpandedChange = { homeViewModel.setSearchExpanded(it) },
+                        comics = comicList.map { it.first },
+                        onComicClick = { comic ->
+                            homeViewModel.setSearchExpanded(false)
+                            onAction(HomeAction.ClickManga(comic))
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .zIndex(1f)

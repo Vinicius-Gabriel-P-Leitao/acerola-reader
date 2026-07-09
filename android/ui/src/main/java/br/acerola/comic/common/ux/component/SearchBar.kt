@@ -24,13 +24,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Surface
@@ -68,7 +68,7 @@ fun <T> Acerola.Component.SearchBar(
 
     val animatedShape = rememberSearchBarShape(expanded)
 
-    DockedSearchBar(
+    SearchBar(
         modifier = modifier.animateContentSize(),
         inputField = {
             InputField(
@@ -190,7 +190,7 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
             label = stringResource(R.string.common_search_transition),
         )
 
-    val bottomCornerRadius by transition.animateDp(
+    val cornerRadius by transition.animateDp(
         transitionSpec = {
             if (targetState) {
                 tween(
@@ -206,16 +206,10 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
         },
         label = stringResource(R.string.common_search_corner_radius),
     ) { isExpanded ->
-        // 🔥 Aqui está a correção real
         if (isExpanded) 12.dp else 28.dp
     }
 
-    return remember(bottomCornerRadius) {
-        RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp,
-            bottomStart = bottomCornerRadius,
-            bottomEnd = bottomCornerRadius,
-        )
+    return remember(cornerRadius) {
+        RoundedCornerShape(cornerRadius)
     }
 }
