@@ -26,6 +26,7 @@ mod app_bootstrap {
         AcerolaP2p,
     };
     use tauri::Emitter;
+    use tauri_plugin_fs::FsExt;
 
     use super::*;
     use crate::core::services::{
@@ -77,6 +78,7 @@ mod app_bootstrap {
             comic_cmd::get_comic_summary_sorted,
             comic_cmd::update_comics_visibility,
             comic_cmd::delete_comics,
+            system_cmd::open_filesystem_access_settings,
         ])
     }
 
@@ -113,6 +115,25 @@ mod app_bootstrap {
 
         handle.manage(pool.clone());
         handle.manage(crate::core::services::history::HistoryService::new(pool));
+    }
+
+    async fn setup_scopes_from_store(handle: &tauri::AppHandle) {
+        let store_path = handle.path().app_data_dir().unwrap().join("settings.json");
+        
+        if !store_path.exists() {
+            return;
+        }
+
+        if let Ok(content) = std::fs::read_to_string(&store_path) {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(path_str) = json.get("library_path").and_then(|v| v.as_str()) {
+                    let path = PathBuf::from(path_str);
+                    
+                    let _ = handle.fs_scope().allow_directory(&path, true);
+                    let _ = handle.asset_protocol_scope().allow_directory(&path, true);
+                }
+            }
+        }
     }
 
     async fn setup_network(handle: &tauri::AppHandle) {
@@ -168,6 +189,7 @@ mod app_bootstrap {
         tauri::async_runtime::block_on(async move {
             setup_database(&handle, db_path).await;
             setup_network(&handle).await;
+            setup_scopes_from_store(&handle).await;
         });
 
         Ok(())
@@ -237,6 +259,17 @@ pub mod system_cmd {
         #[cfg(not(target_os = "windows"))]
         {
             "Not running on Windows".to_string()
+        }
+    }
+
+    #[tauri::command]
+    pub fn open_filesystem_access_settings() {
+        #[cfg(target_os = "windows")]
+        {
+            std::process::Command::new("cmd")
+                .args(["/C", "start", "ms-settings:privacy-broadfilesystemaccess"])
+                .spawn()
+                .ok();
         }
     }
 }

@@ -280,7 +280,7 @@ async fn connect_to_peer_repassa_peer_id_e_alpn_bytes() -> Result<()> {
     let _: Value = invoke_ok(
         &webview,
         "connect_to_peer",
-        json!({ "peerId": "peer-2", "alpn": "acerola/handshake/1" }),
+        json!({ "peerId": "peer-2", "addrs": [], "alpn": "acerola/handshake/1" }),
     )?;
 
     assert_eq!(
@@ -300,7 +300,7 @@ async fn connect_to_peer_serializa_erro_do_servico() -> Result<()> {
     let error = invoke_err(
         &webview,
         "connect_to_peer",
-        json!({ "peerId": "peer-2", "alpn": "acerola/handshake/1" }),
+        json!({ "peerId": "peer-2", "addrs": [], "alpn": "acerola/handshake/1" }),
     )?;
 
     assert_eq!(error, json!("connect failure"));
