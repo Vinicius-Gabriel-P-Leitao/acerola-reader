@@ -184,7 +184,38 @@ mod app_bootstrap {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let _ = pdfium_render::prelude::Pdfium::default();
+    let pdfium_path = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()));
+
+    let pdfium_bindings = if let Some(ref exe_dir) = pdfium_path {
+        let resource_dir = exe_dir.join("_up_").join(".bin");
+        if resource_dir.exists() {
+            pdfium_render::prelude::Pdfium::bind_to_library(
+                pdfium_render::prelude::Pdfium::pdfium_platform_library_name_at_path(&resource_dir),
+            )
+        } else {
+            let local_bin = exe_dir.join(".bin");
+            if local_bin.exists() {
+                pdfium_render::prelude::Pdfium::bind_to_library(
+                    pdfium_render::prelude::Pdfium::pdfium_platform_library_name_at_path(&local_bin),
+                )
+            } else {
+                pdfium_render::prelude::Pdfium::bind_to_library(
+                    pdfium_render::prelude::Pdfium::pdfium_platform_library_name_at_path(exe_dir),
+                )
+            }
+        }
+    } else {
+        pdfium_render::prelude::Pdfium::bind_to_system_library()
+    };
+
+    let pdfium = pdfium_render::prelude::Pdfium::new(
+        pdfium_bindings.or_else(|_| pdfium_render::prelude::Pdfium::bind_to_system_library())
+            .expect("Failed to bind to Pdfium library"),
+    );
+    std::mem::forget(pdfium);
+
     let app_context = tauri::generate_context!();
     app_bootstrap::build().run(app_context).expect("Erro ao executar a aplicação Tauri");
 }
