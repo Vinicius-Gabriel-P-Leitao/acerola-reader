@@ -23,7 +23,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
@@ -181,9 +183,14 @@ fun Main.Home.Component.HomeContinueBanner(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    FilledTonalButton(
+                    Button(
                         onClick = onContinueClick,
-                        modifier = Modifier.height(36.dp)
+                        modifier = Modifier.height(36.dp),
+                        shape = ShapeTokens.Large,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        )
                     ) {
                         Icon(Icons.Filled.PlayArrow, null, modifier = Modifier.size(18.dp))
                     }
@@ -237,9 +244,14 @@ fun Main.Home.Component.HomeContinueBanner(
                     
                     Spacer(modifier = Modifier.height(SpacingTokens.Large))
                     
-                    FilledTonalButton(
+                    Button(
                         onClick = onContinueClick,
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = ShapeTokens.Large,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        )
                     ) {
                         Icon(Icons.Filled.PlayArrow, null, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(SpacingTokens.Small))
