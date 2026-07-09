@@ -72,8 +72,14 @@ class HomeViewModel
         private val _sortSettings = MutableStateFlow(HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING))
         val sortSettings: StateFlow<HomeSortPreference> = _sortSettings.asStateFlow()
 
-        private val _filterSettings = MutableStateFlow(FilterSettings())
-        val filterSettings: StateFlow<FilterSettings> = _filterSettings.asStateFlow()
+    private val _filterSettings = MutableStateFlow(FilterSettings())
+    val filterSettings: StateFlow<FilterSettings> = _filterSettings.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isSearchExpanded = MutableStateFlow(false)
+    val isSearchExpanded: StateFlow<Boolean> = _isSearchExpanded.asStateFlow()
 
         val allCategories: StateFlow<List<CategoryDto>> =
             manageCategoriesUseCase
@@ -83,70 +89,73 @@ class HomeViewModel
         val isIndexing: StateFlow<Boolean> = statusRepository.isIndexing
         val progress: StateFlow<Int> = statusRepository.progress
 
-        val comics: StateFlow<List<Triple<ComicDto, ReadingHistoryDto?, Int>>?> =
+    val comics: StateFlow<List<Triple<ComicDto, ReadingHistoryDto?, Int>>?> =
+        combine(
             combine(
-                combine(
-                    directoryObserve(),
-                    mangadexObserve(),
-                    observeHistoryUseCase.invokeRecent(),
-                    manageCategoriesUseCase.getAllComicCategories(),
-                    getChapterCountUseCase(),
-                ) { directories, remote, history, categories, counts ->
-                    HomeCombinedArgs(directories, remote, history, categories, counts)
-                },
-                _sortSettings,
-                _filterSettings,
-            ) { args, sort, filter ->
-                val remoteInfoMap =
-                    args.remoteMangaInfo
-                        .filter { it.comicDirectoryFk != null }
-                        .associateBy { it.comicDirectoryFk!! }
+                directoryObserve(),
+                mangadexObserve(),
+                observeHistoryUseCase.invokeRecent(),
+                manageCategoriesUseCase.getAllComicCategories(),
+                getChapterCountUseCase(),
+            ) { directories, remote, history, categories, counts ->
+                HomeCombinedArgs(directories, remote, history, categories, counts)
+            },
+            _sortSettings,
+            _filterSettings,
+            _searchQuery,
+        ) { args, sort, filter, query ->
+            val remoteInfoMap =
+                args.remoteMangaInfo
+                    .filter { it.comicDirectoryFk != null }
+                    .associateBy { it.comicDirectoryFk!! }
 
-                val historyMap = args.historyList.associateBy { it.comicDirectoryId }
+            val historyMap = args.historyList.associateBy { it.comicDirectoryId }
 
-                val list =
-                    args.comicDirectories
-                        .filter { directory ->
-                            val matchesHidden = filter.showHidden || !directory.hidden
-                            val matchesCategory =
-                                filter.bookmarkCategoryId == null || args.categoryMap[directory.id]?.id == filter.bookmarkCategoryId
+            val list =
+                args.comicDirectories
+                    .filter { directory ->
+                        val matchesHidden = filter.showHidden || !directory.hidden
+                        val matchesCategory =
+                            filter.bookmarkCategoryId == null || args.categoryMap[directory.id]?.id == filter.bookmarkCategoryId
 
-                            val source = remoteInfoMap[directory.id]?.syncSource?.displayName
-                            val matchesSource =
-                                when (filter.metadataSource) {
-                                    null -> true
-                                    "NONE" -> source == null
-                                    else -> source == filter.metadataSource
-                                }
+                        val source = remoteInfoMap[directory.id]?.syncSource?.displayName
+                        val matchesSource =
+                            when (filter.metadataSource) {
+                                null -> true
+                                "NONE" -> source == null
+                                else -> source == filter.metadataSource
+                            }
 
-                            matchesHidden && matchesCategory && matchesSource
-                        }.map { directory ->
-                            val comic =
-                                ComicDto(
-                                    directory = directory,
-                                    remoteInfo = remoteInfoMap[directory.id],
-                                    category = args.categoryMap[directory.id],
-                                )
-                            Triple(comic, historyMap[directory.id], args.chapterCounts[directory.id] ?: 0)
-                        }
+                        val title = remoteInfoMap[directory.id]?.title ?: directory.name
+                        val matchesQuery = query.isEmpty() || title.contains(query, ignoreCase = true)
 
-                // Apply Sorting
-                val sortedList =
-                    when (sort.type) {
-                        ComicSortType.TITLE -> list.sortedBy { it.first.remoteInfo?.title ?: it.first.directory.name }
-                        ComicSortType.CHAPTER_COUNT -> list.sortedBy { it.third }
-                        ComicSortType.LAST_UPDATE -> list.sortedBy { it.first.directory.lastModified }
+                        matchesHidden && matchesCategory && matchesSource && matchesQuery
+                    }.map { directory ->
+                        val comic =
+                            ComicDto(
+                                directory = directory,
+                                remoteInfo = remoteInfoMap[directory.id],
+                                category = args.categoryMap[directory.id],
+                            )
+                        Triple(comic, historyMap[directory.id], args.chapterCounts[directory.id] ?: 0)
                     }
 
-                val finalList = if (sort.direction == SortDirection.DESCENDING) sortedList.reversed() else sortedList
+            val sortedList =
+                when (sort.type) {
+                    ComicSortType.TITLE -> list.sortedBy { it.first.remoteInfo?.title ?: it.first.directory.name }
+                    ComicSortType.CHAPTER_COUNT -> list.sortedBy { it.third }
+                    ComicSortType.LAST_UPDATE -> list.sortedBy { it.first.directory.lastModified }
+                }
 
-                AcerolaLogger.d(TAG, "Library loaded: ${finalList.size} comics found", LogSource.VIEWMODEL)
-                finalList
-            }.stateIn(
-                viewModelScope,
-                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-                initialValue = null,
-            )
+            val finalList = if (sort.direction == SortDirection.DESCENDING) sortedList.reversed() else sortedList
+
+            AcerolaLogger.d(TAG, "Library loaded: ${finalList.size} comics found", LogSource.VIEWMODEL)
+            finalList
+        }.stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+            initialValue = null,
+        )
 
         init {
             observeHomeLayout()
@@ -205,6 +214,17 @@ class HomeViewModel
                 viewModelScope.launch {
                     HomeFilterPreference.saveShowHidden(context, filter.showHidden)
                 }
+            }
+        }
+
+        fun updateSearchQuery(query: String) {
+            _searchQuery.value = query
+        }
+
+        fun setSearchExpanded(expanded: Boolean) {
+            _isSearchExpanded.value = expanded
+            if (!expanded) {
+                _searchQuery.value = ""
             }
         }
 

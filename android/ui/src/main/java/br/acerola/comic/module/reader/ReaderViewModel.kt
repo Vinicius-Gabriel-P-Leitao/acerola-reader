@@ -14,6 +14,8 @@ import br.acerola.comic.error.message.ChapterError
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.module.reader.state.ReaderUiState
+import br.acerola.comic.config.preference.ChapterSortPreference
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
@@ -88,8 +91,11 @@ class ReaderViewModel
             seenPages.clear()
 
             viewModelScope.launch {
+                val sortSettings = ChapterSortPreference.sortFlow(context).first()
+                val isAscending = sortSettings.direction == SortDirection.ASCENDING
+                
                 observeChaptersUseCase
-                    .observeByComic(comicId)
+                    .observeByComic(comicId, sortSettings.type.name, isAscending)
                     .filter { it.items.isNotEmpty() }
                     .take(1)
                     .collect { pageDto ->
@@ -140,8 +146,11 @@ class ReaderViewModel
             _uiState.update { it.copy(isLoading = true) }
 
             viewModelScope.launch {
+                val sortSettings = ChapterSortPreference.sortFlow(context).first()
+                val isAscending = sortSettings.direction == SortDirection.ASCENDING
+                
                 observeChaptersUseCase
-                    .observeByComic(comicId)
+                    .observeByComic(comicId, sortSettings.type.name, isAscending)
                     .combine(observeChaptersUseCase.isIndexing) { pageDto, isIndexing ->
                         pageDto to isIndexing
                     }.collect { (pageDto, isIndexing) ->

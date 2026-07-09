@@ -34,7 +34,9 @@ fun Comic.Template.chapterSection(
             chapters.archive.volumeSections.isNotEmpty()
 
     if (useVolumeSections) {
-        chapters.archive.volumeSections.forEach { group ->
+        val sortedSections = chapters.archive.volumeSections.sortedBy { it.volume.isSpecial }
+        
+        sortedSections.forEach { group ->
             val isExpanded = activeVolumeId == group.volume.id
             val onToggleExpanded = { onSetActiveVolume(if (isExpanded) null else group.volume.id) }
 

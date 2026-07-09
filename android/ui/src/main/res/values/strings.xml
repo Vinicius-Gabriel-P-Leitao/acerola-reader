@@ -38,6 +38,7 @@
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
     <string name="description_icon_home_filter">Filtro</string>
+    <string name="label_home_search_placeholder">Buscar quadrinhos...</string>
 
     <!-- Text title -->
     <string name="title_text_archive_configs_in_app">Configuração dos arquivos</string>
@@ -161,6 +162,11 @@
     <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
     <string name="label_history_hero_most_recent">MAIS RECENTE</string>
     <string name="label_history_hero_continue">CONTINUAR LENDO</string>
+    <string name="label_banner_continue_reading">Continuar Lendo</string>
+    <string name="label_banner_chapter_progress">Capítulo %1$s</string>
+    <string name="label_banner_continue">Continuar</string>
+    <string name="description_icon_collapse_banner">Colapsar banner</string>
+    <string name="description_icon_home_search">Pesquisar</string>
     <string name="label_reader_config_title">Modo de Leitura</string>
     <string name="label_reader_pages_prefix">Páginas</string>
     <string name="label_reader_next_chapter">Próximo</string>
