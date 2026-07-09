@@ -39,8 +39,12 @@ pub async fn get_local_id(
 
 #[tauri::command]
 pub async fn connect_to_peer(
-    service: State<'_, Arc<dyn NetworkServiceApi>>, peer_id: String, alpn: String,
+    service: State<'_, Arc<dyn NetworkServiceApi>>, peer_id: String, addrs: Vec<u8>, alpn: String,
 ) -> Result<(), String> {
-    service.connect(peer_id, alpn.into_bytes()).await?;
+    use acerola_p2p::api::peer::{PeerAddr, PeerIdentity};
+
+    let peer_identity = PeerIdentity { id: peer_id, device_id: None };
+    let peer_addr = PeerAddr { id: peer_identity, addrs };
+    service.connect(peer_addr, alpn.into_bytes()).await?;
     Ok(())
 }

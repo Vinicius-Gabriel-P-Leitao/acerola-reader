@@ -146,8 +146,9 @@ export function useComicChapters() {
 		comicDirectoryId: string,
 		pageIndex: number,
 		pageSize: number,
-		isAscending: boolean,
-		volumeId: string | null = null
+		sortBy: 'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc',
+		volumeId: string | null = null,
+		searchQuery: string | null = null
 	) {
 		if (failedPages.has(pageIndex)) return;
 		if (lruCache.has(pageIndex)) return;
@@ -165,7 +166,8 @@ export function useComicChapters() {
 				volumeId,
 				page: pageIndex,
 				pageSize,
-				asc: isAscending
+				sortBy,
+				searchQuery: searchQuery || null
 			});
 		} catch (error) {
 			const errorMessage = error as string;

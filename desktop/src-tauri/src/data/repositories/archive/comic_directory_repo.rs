@@ -33,6 +33,83 @@ impl ComicRepository {
 
         Ok(result)
     }
+
+    /// Atualiza o status de visibilidade de um quadrinho especifico.
+    pub async fn update_hidden_status(
+        &self, id: i64, hidden: bool,
+    ) -> Result<ComicDirectory, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "UPDATE {} SET hidden = ? WHERE id = ? RETURNING {}",
+            table, cols
+        ))
+        .bind(hidden)
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Atualiza o status de visibilidade de multiplos quadrinhos em batch.
+    pub async fn update_hidden_status_batch(
+        &self, ids: &[i64], hidden: bool,
+    ) -> Result<usize, DbError> {
+        if ids.is_empty() {
+            return Ok(0);
+        }
+
+        let table = ComicDirectory::table_name();
+        let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+
+        let sql = format!("UPDATE {} SET hidden = ? WHERE id IN ({})", table, placeholders);
+
+        let mut query = sqlx::query(&sql).bind(hidden);
+        for &id in ids {
+            query = query.bind(id);
+        }
+
+        let rows_affected = query.execute(&self.pool).await?.rows_affected();
+        Ok(rows_affected as usize)
+    }
+
+    /// Deleta multiplos quadrinhos em batch.
+    pub async fn delete_batch(&self, ids: &[i64]) -> Result<usize, DbError> {
+        if ids.is_empty() {
+            return Ok(0);
+        }
+
+        let table = ComicDirectory::table_name();
+        let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+
+        let sql = format!("DELETE FROM {} WHERE id IN ({})", table, placeholders);
+
+        let mut query = sqlx::query(&sql);
+        for &id in ids {
+            query = query.bind(id);
+        }
+
+        let rows_affected = query.execute(&self.pool).await?.rows_affected();
+        Ok(rows_affected as usize)
+    }
+
+    /// Busca todos os quadrinhos filtrando pelo status de visibilidade.
+    pub async fn find_all_by_hidden(&self, hidden: bool) -> Result<Vec<ComicDirectory>, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "SELECT {} FROM {} WHERE hidden = ?",
+            cols, table
+        ))
+        .bind(hidden)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
@@ -142,5 +219,115 @@ mod tests {
             "Deveria ter retornado NotFound, mas veio: {:?}",
             result
         );
+    }
+
+    #[tokio::test]
+    async fn teste_atualizar_status_visibilidade() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+
+        let result = repo.update_hidden_status(1, true).await.unwrap();
+        assert!(result.hidden);
+
+        let fetched = repo.find_by_name("Berserk").await.unwrap().unwrap();
+        assert!(fetched.hidden);
+    }
+
+    #[tokio::test]
+    async fn teste_atualizar_status_visibilidade_batch() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 2,
+                name: "Vinland Saga".to_string(),
+                path: "/quadrinhos/vinland".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: false,
+            })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 3,
+                name: "One Piece".to_string(),
+                path: "/quadrinhos/onepiece".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: false,
+            })
+            .await
+            .unwrap();
+
+        let count = repo.update_hidden_status_batch(&[1, 2], true).await.unwrap();
+        assert_eq!(count, 2);
+
+        let hidden = repo.find_all_by_hidden(true).await.unwrap();
+        assert_eq!(hidden.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn teste_deletar_batch() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 2,
+                name: "Vinland Saga".to_string(),
+                path: "/quadrinhos/vinland".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: false,
+            })
+            .await
+            .unwrap();
+
+        let count = repo.delete_batch(&[1, 2]).await.unwrap();
+        assert_eq!(count, 2);
+
+        let all = repo.base.find_all().await.unwrap();
+        assert_eq!(all.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn teste_buscar_por_status_visibilidade() {
+        let repo = setup().await;
+
+        repo.base.insert(&berserk()).await.unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 2,
+                name: "Hidden Manga".to_string(),
+                path: "/quadrinhos/hidden".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: true,
+            })
+            .await
+            .unwrap();
+
+        let visible = repo.find_all_by_hidden(false).await.unwrap();
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].name, "Berserk");
+
+        let hidden = repo.find_all_by_hidden(true).await.unwrap();
+        assert_eq!(hidden.len(), 1);
+        assert_eq!(hidden[0].name, "Hidden Manga");
     }
 }

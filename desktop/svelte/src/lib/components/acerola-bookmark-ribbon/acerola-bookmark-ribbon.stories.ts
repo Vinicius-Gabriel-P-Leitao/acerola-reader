@@ -9,7 +9,7 @@ const meta = {
 		color: { control: 'number' },
 		class: { control: 'text' }
 	}
-} satisfies Meta<AcerolaBookmarkRibbon>;
+} satisfies Meta<typeof AcerolaBookmarkRibbon>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -57,6 +57,15 @@ workspace = false
 
 [tasks.test.windows]
 env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+dependencies = ["copy-pdfium-dll"]
+
+[tasks.copy-pdfium-dll]
+script = '''
+Copy-Item -Force ".bin\pdfium.dll" "target\\debug\\deps\\pdfium.dll" -ErrorAction SilentlyContinue
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+workspace = false
 
 [tasks.test-verbose]
 args = ["nextest", "run", "--no-capture"]
@@ -93,12 +102,12 @@ description = "Run full continuous delivery build and organize artifacts"
 # ==========================================
 
 [env]
-MSIX_PACKAGE_NAME = "acerola"
+MSIX_BG_COLOR = "#1e1e2e"
+MSIX_DESCRIPTION = "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais."
 MSIX_DISPLAY_NAME = "Acerola"
+MSIX_PACKAGE_NAME = "acerola"
 MSIX_PUBLISHER = "CN=Vinícius Gabriel Pereira Leitão"
 MSIX_PUBLISHER_DISPLAY_NAME = "Vinícius Gabriel Pereira Leitão"
-MSIX_DESCRIPTION = "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais."
-MSIX_BG_COLOR = "#1e1e2e"
 
 [tasks.init-msix]
 description = "Initialize MSIX files with correct author and description"

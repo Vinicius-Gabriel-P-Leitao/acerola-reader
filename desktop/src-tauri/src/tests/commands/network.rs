@@ -3,7 +3,11 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use acerola_p2p::api::{identity::DeviceInfo, network::NetworkMode, peer::PeerIdentity};
+use acerola_p2p::api::{
+    identity::DeviceInfo,
+    network::NetworkMode,
+    peer::{PeerAddr, PeerIdentity},
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::{json, Value};
@@ -110,10 +114,10 @@ impl NetworkServiceApi for MockNetworkService {
         Ok(state.mode.clone())
     }
 
-    async fn connect(&self, peer_id: String, alpn: Vec<u8>) -> Result<(), String> {
+    async fn connect(&self, peer_addr: PeerAddr, alpn: Vec<u8>) -> Result<(), String> {
         let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
-        state.last_connection = Some((peer_id, alpn));
+        state.last_connection = Some((peer_addr.id.id, alpn));
         Ok(())
     }
 

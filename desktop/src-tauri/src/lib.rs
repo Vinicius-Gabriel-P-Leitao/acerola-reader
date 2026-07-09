@@ -6,8 +6,8 @@ mod data;
 mod infra;
 
 use cmd::features::{
-    history as history_cmd,
     category::category_cmd,
+    comic as comic_cmd, history as history_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
     network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
 };
@@ -74,6 +74,9 @@ mod app_bootstrap {
             category_cmd::remove_category_from_comic,
             category_cmd::get_comic_category,
             category_cmd::get_all_comic_categories,
+            comic_cmd::get_comic_summary_sorted,
+            comic_cmd::update_comics_visibility,
+            comic_cmd::delete_comics,
         ])
     }
 
@@ -181,41 +184,36 @@ mod app_bootstrap {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // INFO: Configura a localização da biblioteca PDFium antes de iniciar o app
-    #[cfg(debug_assertions)]
-    {
-        // Em desenvolvimento, busca a pasta .bin relativa ao diretório do manifesto (Cargo.toml)
-        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-        let bin_path = std::path::Path::new(&manifest_dir).join(".bin");
-        pdfium::set_library_location(bin_path.to_str().unwrap_or("."));
-    }
+    use pdfium_render::prelude::Pdfium;
 
-    let app_context = tauri::generate_context!();
+    let pdfium_path = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()));
 
-    #[cfg(not(debug_assertions))]
-    {
-        // Em produção, a DLL é empacotada como um recurso.
-        // Como o set_library_location precisa ser chamado cedo, tentamos prever o caminho.
-        // Geralmente, os recursos ficam em uma pasta específica relativa ao executável.
-        if let Ok(exe_path) = std::env::current_exe() {
-            if let Some(exe_dir) = exe_path.parent() {
-                // O Tauri organiza os recursos em uma estrutura específica
-                let resource_dir = exe_dir.join("_up_").join(".bin");
-                if resource_dir.exists() {
-                    pdfium::set_library_location(resource_dir.to_str().unwrap_or("."));
-                } else {
-                    let local_bin = exe_dir.join(".bin");
-                    if local_bin.exists() {
-                        pdfium::set_library_location(local_bin.to_str().unwrap_or("."));
-                    } else {
-                        // Fallback para a pasta do executável
-                        pdfium::set_library_location(exe_dir.to_str().unwrap_or("."));
-                    }
-                }
+    let pdfium_bindings = if let Some(ref exe_dir) = pdfium_path {
+        let resource_dir = exe_dir.join("_up_").join(".bin");
+        if resource_dir.exists() {
+            Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(&resource_dir))
+        } else {
+            let local_bin = exe_dir.join(".bin");
+            if local_bin.exists() {
+                Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(&local_bin))
+            } else {
+                Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(exe_dir))
             }
         }
-    }
+    } else {
+        Pdfium::bind_to_system_library()
+    };
 
+    let pdfium = Pdfium::new(
+        pdfium_bindings
+            .or_else(|_| Pdfium::bind_to_system_library())
+            .expect("Failed to bind to Pdfium library"),
+    );
+    std::mem::forget(pdfium);
+
+    let app_context = tauri::generate_context!();
     app_bootstrap::build().run(app_context).expect("Erro ao executar a aplicação Tauri");
 }
 

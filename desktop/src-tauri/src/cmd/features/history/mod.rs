@@ -1,16 +1,10 @@
 use tauri::State;
 
-use crate::{
-    cmd::events::history::ReadingHistoryPayload,
-    core::services::history::HistoryService,
-};
+use crate::{cmd::events::history::ReadingHistoryPayload, core::services::history::HistoryService};
 
 #[tauri::command]
 pub async fn history_update_reading(
-    comic_id: String,
-    chapter_id: String,
-    last_page: i64,
-    is_completed: bool,
+    comic_id: String, chapter_id: String, last_page: i64, is_completed: bool,
     history_service: State<'_, HistoryService>,
 ) -> Result<(), String> {
     let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
@@ -32,8 +26,7 @@ pub async fn history_get_all(
 
 #[tauri::command]
 pub async fn history_get_comic(
-    comic_id: String,
-    history_service: State<'_, HistoryService>,
+    comic_id: String, history_service: State<'_, HistoryService>,
 ) -> Result<Option<ReadingHistoryPayload>, String> {
     let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
     history_service.find_by_comic(comic_id).await.map_err(|error| error.to_string())
@@ -41,22 +34,17 @@ pub async fn history_get_comic(
 
 #[tauri::command]
 pub async fn history_get_read_chapters(
-    comic_id: String,
-    history_service: State<'_, HistoryService>,
+    comic_id: String, history_service: State<'_, HistoryService>,
 ) -> Result<Vec<String>, String> {
     let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
 
-    let ids = history_service
-        .find_read_chapters(comic_id)
-        .await
-        .map_err(|error| error.to_string())?;
+    let ids =
+        history_service.find_read_chapters(comic_id).await.map_err(|error| error.to_string())?;
 
     Ok(ids.into_iter().map(|id| id.to_string()).collect())
 }
 
 #[tauri::command]
-pub async fn history_clear(
-    history_service: State<'_, HistoryService>,
-) -> Result<(), String> {
+pub async fn history_clear(history_service: State<'_, HistoryService>) -> Result<(), String> {
     history_service.clear().await.map_err(|error| error.to_string())
 }

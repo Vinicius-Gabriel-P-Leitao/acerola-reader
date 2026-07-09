@@ -1,4 +1,5 @@
 pub mod archive;
-pub mod history;
-pub mod views;
 pub mod category;
+pub mod history;
+pub mod relations;
+pub mod views;

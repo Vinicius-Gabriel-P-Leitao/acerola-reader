@@ -37,6 +37,7 @@
 	import AcerolaHeroButton from '$lib/components/acerola-hero-button/acerola-hero-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Check from '@lucide/svelte/icons/check';
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
@@ -137,8 +138,14 @@
 								}}
 							>
 								{#snippet icon()}
-									<div class={chapter.isRead ? 'text-overlay' : 'text-primary'}>
-										<BookOpen size={24} />
+									<div class={chapter.isRead ? '' : 'text-primary'}>
+										{#if chapter.isRead}
+											<div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust">
+												<Check size={16} strokeWidth={3} />
+											</div>
+										{:else}
+											<BookOpen size={24} />
+										{/if}
 									</div>
 								{/snippet}
 

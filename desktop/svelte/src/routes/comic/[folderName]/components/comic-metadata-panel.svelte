@@ -33,7 +33,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
-	let { data, events, state, floatingBadge }: ComicMetadataPanelProps = $props();
+	let { data, events, state }: ComicMetadataPanelProps = $props();
 </script>
 
 <div

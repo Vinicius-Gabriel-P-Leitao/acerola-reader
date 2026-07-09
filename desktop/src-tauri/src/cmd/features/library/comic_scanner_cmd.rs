@@ -23,17 +23,29 @@ pub async fn refresh_library<R: Runtime>(
         match service
             .refresh_library(
                 root,
-                |it| {
-                    let _ = app.emit("scan:progress", it);
+                |progress_path| {
+                    if let Err(error) = app.emit("scan:progress", progress_path) {
+                        tracing::error!("Failed to emit scan:progress: {}", error);
+                    }
                 },
-                |msg| {
-                    let _ = app.emit("scan:converting", msg);
+                |converting_message| {
+                    if let Err(error) = app.emit("scan:converting", converting_message) {
+                        tracing::error!("Failed to emit scan:converting: {}", error);
+                    }
                 },
             )
             .await
         {
-            Ok(_) => app.emit("scan:complete", ()).unwrap(),
-            Err(err) => app.emit("scan:error", ErrorPayload::from(&err)).unwrap(),
+            Ok(_) => {
+                if let Err(error) = app.emit("scan:complete", ()) {
+                    tracing::error!("Failed to emit scan:complete: {}", error);
+                }
+            },
+            Err(error) => {
+                if let Err(emit_error) = app.emit("scan:error", ErrorPayload::from(&error)) {
+                    tracing::error!("Failed to emit scan:error: {}", emit_error);
+                }
+            },
         }
     });
 
@@ -55,17 +67,29 @@ pub async fn incremental_scan<R: Runtime>(
         match service
             .incremental_scan(
                 root,
-                |it| {
-                    let _ = app.emit("scan:progress", it);
+                |progress_path| {
+                    if let Err(error) = app.emit("scan:progress", progress_path) {
+                        tracing::error!("Failed to emit scan:progress: {}", error);
+                    }
                 },
-                |msg| {
-                    let _ = app.emit("scan:converting", msg);
+                |converting_message| {
+                    if let Err(error) = app.emit("scan:converting", converting_message) {
+                        tracing::error!("Failed to emit scan:converting: {}", error);
+                    }
                 },
             )
             .await
         {
-            Ok(_) => app.emit("scan:complete", ()).unwrap(),
-            Err(err) => app.emit("scan:error", ErrorPayload::from(&err)).unwrap(),
+            Ok(_) => {
+                if let Err(error) = app.emit("scan:complete", ()) {
+                    tracing::error!("Failed to emit scan:complete: {}", error);
+                }
+            },
+            Err(error) => {
+                if let Err(emit_error) = app.emit("scan:error", ErrorPayload::from(&error)) {
+                    tracing::error!("Failed to emit scan:error: {}", emit_error);
+                }
+            },
         }
     });
 
@@ -87,17 +111,29 @@ pub async fn rebuild_library<R: Runtime>(
         match service
             .rebuild_library(
                 root,
-                |it| {
-                    let _ = app.emit("scan:progress", it);
+                |progress_path| {
+                    if let Err(error) = app.emit("scan:progress", progress_path) {
+                        tracing::error!("Failed to emit scan:progress: {}", error);
+                    }
                 },
-                |msg| {
-                    let _ = app.emit("scan:converting", msg);
+                |converting_message| {
+                    if let Err(error) = app.emit("scan:converting", converting_message) {
+                        tracing::error!("Failed to emit scan:converting: {}", error);
+                    }
                 },
             )
             .await
         {
-            Ok(_) => app.emit("scan:complete", ()).unwrap(),
-            Err(err) => app.emit("scan:error", ErrorPayload::from(&err)).unwrap(),
+            Ok(_) => {
+                if let Err(error) = app.emit("scan:complete", ()) {
+                    tracing::error!("Failed to emit scan:complete: {}", error);
+                }
+            },
+            Err(error) => {
+                if let Err(emit_error) = app.emit("scan:error", ErrorPayload::from(&error)) {
+                    tracing::error!("Failed to emit scan:error: {}", emit_error);
+                }
+            },
         }
     });
 

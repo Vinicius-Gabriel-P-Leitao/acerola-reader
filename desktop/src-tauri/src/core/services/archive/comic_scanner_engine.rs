@@ -81,11 +81,21 @@ impl ComicScannerService {
         &self, path: PathBuf, mut on_progress: impl FnMut(String),
         mut on_converting: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_guard_path| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let mut entries = self.collect_entries(path).await?;
         entries.sort_by_key(|entry| entry.directory.clone());
+
+        let indexed: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
+        let discovered_paths: HashSet<String> =
+            entries.iter().map(|entry| entry.directory.to_string_lossy().to_string()).collect();
+
+        for comic in &indexed {
+            if !discovered_paths.contains(&comic.path) {
+                self.comic_repo.base.delete(comic.id).await?;
+            }
+        }
 
         // Converte todos os PDFs de todos os diretórios em paralelo antes do scan
         self.pre_convert_all_pdfs(&entries, &mut on_converting).await;
@@ -145,7 +155,7 @@ impl ComicScannerService {
         &self, path: PathBuf, mut on_progress: impl FnMut(String),
         mut on_converting: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_guard_path| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let mut discovered = self.collect_entries(path).await?;
@@ -239,13 +249,23 @@ impl ComicScannerService {
         &self, path: PathBuf, mut on_progress: impl FnMut(String),
         mut on_converting: impl FnMut(String),
     ) -> Result<(), ComicError> {
-        self.path_guard.execute(&path, |_| -> Result<(), String> { Ok(()) })?;
+        self.path_guard.execute(&path, |_guard_path| -> Result<(), String> { Ok(()) })?;
 
         let templates = self.template_repo.base.find_all().await?;
         let mut entries = self.collect_entries(path).await?;
         entries.sort_by_key(|entry| entry.directory.clone());
 
-        // Converte todos os PDFs de todos os diretórios em paralelo antes do scan
+        let indexed: Vec<ComicDirectory> = self.comic_repo.base.find_all().await?;
+        let discovered_paths: HashSet<String> =
+            entries.iter().map(|entry| entry.directory.to_string_lossy().to_string()).collect();
+
+        for comic in &indexed {
+            if !discovered_paths.contains(&comic.path) {
+                self.comic_repo.base.delete(comic.id).await?;
+            }
+        }
+
+        // Converts all PDFs from all directories in parallel before the scan
         self.pre_convert_all_pdfs(&entries, &mut on_converting).await;
 
         let repository = self.comic_repo.clone();
@@ -296,7 +316,9 @@ impl ComicScannerService {
 
         tokio::spawn(async move {
             let guard = ScannerGuard::new();
-            if let Err(error) = scanner.scan(path, tx, move |p| guard.is_allowed(p).is_ok()).await {
+            if let Err(error) =
+                scanner.scan(path, tx, move |entry_path| guard.is_allowed(entry_path).is_ok()).await
+            {
                 tracing::error!("Scanner engine failure: {}", error);
             }
         });
@@ -889,8 +911,6 @@ mod tests {
     #[tokio::test]
     async fn refresh_library_pre_converts_pdfs() {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-        let bin_path = std::path::Path::new(&manifest_dir).join(".bin");
-        pdfium::set_library_location(bin_path.to_str().unwrap_or("."));
 
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;

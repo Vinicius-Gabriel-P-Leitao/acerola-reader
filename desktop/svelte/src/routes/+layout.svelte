@@ -46,7 +46,6 @@
 	
 	import AcerolaModePicker from '$lib/components/acerola-mode-picker/acerola-mode-picker.svelte';
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
-	import { globalSearch } from '$lib/state/search.svelte';
 	import AcerolaSidebar from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
 	import AcerolaSonner from '$lib/components/acerola-sonner/acerola-sonner.svelte';
 	import SidebarProvider from '$lib/components/ui/sidebar/sidebar-provider.svelte';
@@ -57,6 +56,7 @@
 
 	import AcerolaNotification from '$lib/components/acerola-notification/acerola-notification.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
+	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import '$theme/layout.css';
 	import Search from '@lucide/svelte/icons/search';
 
@@ -200,42 +200,26 @@
 				<header
 					class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl"
 				>
-					<div class="max-w-xl flex-1">
-						{#if $page.url.pathname === '/home'}
-							<!-- In-place search for Home -->
-							<div class="group relative">
-								<Search
-									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-focus-within:text-primary"
-									size={20}
-								/>
-								<input
-									type="text"
-									bind:value={globalSearch.query}
-									placeholder={m['layout.search_placeholder']()}
-									class="placeholder:text-overlay/50 w-full rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none"
-								/>
-							</div>
-						{:else}
-							<!-- Trigger for Command Dialog -->
-							<button
-								class="group relative w-full cursor-text text-left"
-								onclick={() => {
-									isSearchDialogOpen = true;
-									if (!summary.comics) summary.fetch();
-								}}
-							>
-								<Search
-									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
-									size={20}
-								/>
-								<div
-									class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
-								>
-									{m['layout.search_placeholder']()}
-								</div>
-							</button>
-						{/if}
-					</div>
+				<div class="max-w-xl flex-1">
+					<button
+						aria-label={m['layout.search_placeholder']()}
+						class="group relative w-full cursor-text text-left"
+						onclick={() => {
+							isSearchDialogOpen = true;
+							if (!summary.comics) summary.fetch();
+						}}
+					>
+						<Search
+							class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
+							size={20}
+						/>
+						<div
+							class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
+						>
+							{m['layout.search_placeholder']()}
+						</div>
+					</button>
+				</div>
 
 					<div class="mx-8 flex items-center gap-4">
 						{#if packageIdentity}
@@ -279,35 +263,36 @@
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
 							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)?.color}
-							<Command.Item
-								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
-								onSelect={() => {
-									isSearchDialogOpen = false;
-									import('$app/navigation').then((n) => n.goto(`/comic/${comic.filesystem.folderName}`));
+						<Command.Item
+							value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
+							onSelect={() => {
+								isSearchDialogOpen = false;
+								import('$app/navigation').then((n) => n.goto(`/comic/${comic.filesystem.folderName}`));
+							}}
+							class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
+						>
+							<AcerolaCardImage
+								data={{
+									title: comic.metadata.title ?? comic.filesystem.folderName,
+									cover
 								}}
-								class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
+								ui={{ size: 'sm', hideTitle: true }}
 							>
-								<div class="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl border border-surface/50 bg-mantle shadow-sm">
+								{#snippet floatingBadge()}
 									{#if bookmarkColor != null}
 										<AcerolaBookmarkRibbon color={bookmarkColor} />
 									{/if}
-									{#if cover}
-										<img src={cover} alt="" class="h-full w-full object-cover" />
-									{:else}
-										<div class="flex h-full w-full items-center justify-center text-muted-foreground/50">
-											<BookOpenIcon size={24} />
-										</div>
-									{/if}
-								</div>
-								<div class="flex flex-col gap-2 overflow-hidden">
-									<span class="truncate text-xl font-bold text-foreground">
-										{comic.metadata.title ?? comic.filesystem.folderName}
-									</span>
-									<span class="truncate text-sm font-medium text-muted-foreground">
-										{comic.filesystem.folderName}
-									</span>
-								</div>
-							</Command.Item>
+								{/snippet}
+							</AcerolaCardImage>
+							<div class="flex flex-col gap-2 overflow-hidden">
+								<span class="truncate text-xl font-bold text-foreground">
+									{comic.metadata.title ?? comic.filesystem.folderName}
+								</span>
+								<span class="truncate text-sm font-medium text-muted-foreground">
+									{comic.filesystem.folderName}
+								</span>
+							</div>
+						</Command.Item>
 						{/each}
 					</div>
 				</Command.Group>

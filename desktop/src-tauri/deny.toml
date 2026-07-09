@@ -19,6 +19,10 @@ allow = [
   "Unlicense",
   "CC0-1.0",
   "CDLA-Permissive-2.0",
+  
+  # Licenças permissivas específicas de dependências
+  "bzip2-1.0.6",
+  "NCSA",
 ]
 
 [bans]

@@ -414,7 +414,7 @@
 
 					<!-- Row 2: Colors -->
 					<div class="space-y-2">
-						<label class="text-xs font-semibold">{m['pages.config.bookmarks.color']()}</label>
+						<span class="block text-xs font-semibold">{m['pages.config.bookmarks.color']()}</span>
 						<div class="flex flex-wrap gap-2">
 							{#each CATEGORY_COLORS as hexColor}
 								<button

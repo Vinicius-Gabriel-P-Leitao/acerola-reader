@@ -93,9 +93,8 @@ describe('useComicChapters (Hook Integration)', () => {
 
 	it('should correctly load and store the first page of chapters', async () => {
 		const chapterHook = await renderComicChaptersHook();
-		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, true);
+		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, 'number_asc');
 
-		// Simulate Rust response
 		eventCallback({ payload: generateMockChapterData(0, 100) });
 		await fetchOperation;
 
@@ -106,7 +105,7 @@ describe('useComicChapters (Hook Integration)', () => {
 
 	it('descarta resposta stale distante da página solicitada', async () => {
 		const chapterHook = await renderComicChaptersHook();
-		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, true);
+		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, 'number_asc');
 
 		eventCallback({ payload: generateMockChapterData(6, 500) });
 		await fetchOperation;
@@ -124,8 +123,8 @@ describe('useComicChapters (Hook Integration)', () => {
 
 		const chapterHook = await renderComicChaptersHook();
 
-		await chapterHook.fetch('directory-id-1', 2, 25, true);
-		await chapterHook.fetch('directory-id-1', 2, 25, true);
+		await chapterHook.fetch('directory-id-1', 2, 25, 'number_asc');
+		await chapterHook.fetch('directory-id-1', 2, 25, 'number_asc');
 
 		expect(chapterHook.loading).toBe(false);
 		expect(ipcCalls).toHaveLength(1);
@@ -137,14 +136,14 @@ describe('useComicChapters (Hook Integration)', () => {
 
 	it('reutiliza página em cache sem novo IPC', async () => {
 		const chapterHook = await renderComicChaptersHook();
-		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, true);
+		const fetchOperation = chapterHook.fetch('directory-id-1', 0, 25, 'number_asc');
 
 		eventCallback({ payload: generateMockChapterData(0, 100) });
 		await fetchOperation;
 
 		expect(ipcCalls).toHaveLength(1);
 
-		await chapterHook.fetch('directory-id-1', 0, 25, true);
+		await chapterHook.fetch('directory-id-1', 0, 25, 'number_asc');
 
 		expect(ipcCalls).toHaveLength(1);
 		expect(chapterHook.chapters?.archive.items.length).toBe(25);
@@ -152,12 +151,11 @@ describe('useComicChapters (Hook Integration)', () => {
 
 	it('should manage the sliding window (LRU) when multiple pages are loaded', async () => {
 		const chapterHook = await renderComicChaptersHook();
-		const totalPagesToLoad = 6; // Current hook window size
+		const totalPagesToLoad = 6;
 
-		// Functionally load pages sequentially
 		await Array.from({ length: totalPagesToLoad }).reduce(async (previousPromise, _, pageIndex) => {
 			await previousPromise;
-			const currentFetch = chapterHook.fetch('directory-id-1', pageIndex, 25, true);
+			const currentFetch = chapterHook.fetch('directory-id-1', pageIndex, 25, 'number_asc');
 			eventCallback({ payload: generateMockChapterData(pageIndex, 500) });
 			return currentFetch;
 		}, Promise.resolve());
@@ -166,12 +164,10 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.lruKeys).toContain(0);
 		expect(chapterHook.lruKeys).toContain(5);
 
-		// Load the 7th page to trigger eviction
-		const evictionFetch = chapterHook.fetch('directory-id-1', 6, 25, true);
+		const evictionFetch = chapterHook.fetch('directory-id-1', 6, 25, 'number_asc');
 		eventCallback({ payload: generateMockChapterData(6, 500) });
 		await evictionFetch;
 
-		// Page 0 should have been evicted (oldest access)
 		expect(chapterHook.lruKeys.length).toBe(6);
 		expect(chapterHook.lruKeys).not.toContain(0);
 		expect(chapterHook.lruKeys).toContain(6);
@@ -180,17 +176,14 @@ describe('useComicChapters (Hook Integration)', () => {
 	it('should detect a large jump and reset the cache to prevent gaps', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
-		// Initial page
-		const initialFetch = chapterHook.fetch('directory-id-1', 0, 25, true);
+		const initialFetch = chapterHook.fetch('directory-id-1', 0, 25, 'number_asc');
 		eventCallback({ payload: generateMockChapterData(0, 500) });
 		await initialFetch;
 
-		// Teleport jump to a distant page that still exists in the mocked total
-		const jumpFetch = chapterHook.fetch('directory-id-1', 10, 25, true);
+		const jumpFetch = chapterHook.fetch('directory-id-1', 10, 25, 'number_asc');
 		eventCallback({ payload: generateMockChapterData(10, 500) });
 		await jumpFetch;
 
-		// Cache should be reset and only contain page 10
 		expect(chapterHook.lruKeys).toEqual([10]);
 		expect(chapterHook.lruKeys).not.toContain(0);
 	});
@@ -198,7 +191,7 @@ describe('useComicChapters (Hook Integration)', () => {
 	it('should handle an empty chapter list result gracefully', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
-		const emptyFetch = chapterHook.fetch('directory-id-1', 0, 25, true);
+		const emptyFetch = chapterHook.fetch('directory-id-1', 0, 25, 'number_asc');
 		eventCallback({ payload: generateMockChapterData(0, 0, 0) });
 		await emptyFetch;
 
@@ -209,29 +202,25 @@ describe('useComicChapters (Hook Integration)', () => {
 	it('should preserve prioritized pages using the touch method during scrolling', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
-		// Load page 0 and page 1
 		await [0, 1].reduce(async (previousPromise, pageIndex) => {
 			await previousPromise;
-			const currentFetch = chapterHook.fetch('directory-id-1', pageIndex, 25, true);
+			const currentFetch = chapterHook.fetch('directory-id-1', pageIndex, 25, 'number_asc');
 			eventCallback({ payload: generateMockChapterData(pageIndex, 100) });
 			return currentFetch;
 		}, Promise.resolve());
 
-		// Mark page 0 as "recently used" manually (scroll telemetry simulation)
 		chapterHook.touch(0);
 
-		// Fill the remaining cache slots and one extra page (from 2 up to 6)
 		await Array.from({ length: 5 }, (_, index) => index + 2).reduce(
 			async (previousPromise, pageIndex) => {
 				await previousPromise;
-				const currentFetch = chapterHook.fetch('directory-id-1', pageIndex, 25, true);
+				const currentFetch = chapterHook.fetch('directory-id-1', pageIndex, 25, 'number_asc');
 				eventCallback({ payload: generateMockChapterData(pageIndex, 500) });
 				return currentFetch;
 			},
 			Promise.resolve()
 		);
 
-		// Page 1 should have been evicted instead of Page 0 because of the touch() call
 		expect(chapterHook.lruKeys).toContain(0);
 		expect(chapterHook.lruKeys).not.toContain(1);
 	});

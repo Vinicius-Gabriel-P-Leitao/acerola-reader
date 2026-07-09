@@ -17,9 +17,23 @@ describe('home nativa', () => {
 		await waitForText('Histórico');
 		await waitForText('Configurações');
 
-		const search = await firstDisplayed('input[placeholder="Buscar quadrinho..."]');
-		await search.setValue('acerola');
-		expect(await search.getValue()).toBe('acerola');
+		// Abre o dialog de busca
+		const searchButton = await firstDisplayed('button[aria-label="Buscar quadrinho..."]');
+		await searchButton.click();
+
+		// Verifica se o dialog de busca abriu
+		await browser.waitUntil(
+			async () => {
+				const searchDialog = await browser.$('[role="dialog"]');
+				return searchDialog.isDisplayed();
+			},
+			{
+				timeout: 5_000,
+				interval: 100,
+				timeoutMsg: 'Dialog de busca não abriu.'
+			}
+		);
+
 		expect(await getPathname()).toBe('/home');
 
 		await browser.waitUntil(

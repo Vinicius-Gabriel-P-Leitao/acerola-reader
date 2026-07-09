@@ -3,7 +3,7 @@ use sqlx::SqlitePool;
 use crate::{
     data::{
         models::archive::volume_archive::VolumeArchive,
-        repositories::{Entity, Repository},
+        repositories::{archive::chapter_archive_repo::ChapterSortCriteria, Entity, Repository},
     },
     infra::error::DbError,
 };
@@ -45,6 +45,31 @@ impl VolumeRepository {
         .await?;
 
         Ok(result)
+    }
+
+    fn order_clause_for_volumes(criteria: ChapterSortCriteria) -> String {
+        match criteria {
+            ChapterSortCriteria::NumberAsc => "ORDER BY va.is_special ASC, CAST(va.volume_sort AS INTEGER) ASC, CAST(CASE WHEN va.volume_sort LIKE '%.%' THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) ELSE 0 END AS INTEGER) ASC".to_string(),
+            ChapterSortCriteria::NumberDesc => "ORDER BY va.is_special ASC, CAST(va.volume_sort AS INTEGER) DESC, CAST(CASE WHEN va.volume_sort LIKE '%.%' THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) ELSE 0 END AS INTEGER) DESC".to_string(),
+            ChapterSortCriteria::ModifiedAsc => "ORDER BY va.is_special ASC, va.last_modified ASC".to_string(),
+            ChapterSortCriteria::ModifiedDesc => "ORDER BY va.is_special ASC, va.last_modified DESC".to_string(),
+        }
+    }
+
+    pub async fn find_by_comic_with_counts_sorted(
+        &self, comic_directory_fk: i64, criteria: ChapterSortCriteria,
+    ) -> Result<Vec<VolumeWithCount>, DbError> {
+        let order = Self::order_clause_for_volumes(criteria);
+        let sql = format!(
+            "SELECT va.*, COUNT(ca.id) as chapter_count FROM volume_archive va LEFT JOIN chapter_archive ca ON ca.volume_id_fk = va.id WHERE va.comic_directory_fk = ? GROUP BY va.id {}",
+            order
+        );
+
+        sqlx::query_as::<_, VolumeWithCount>(&sql)
+            .bind(comic_directory_fk)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(Into::into)
     }
 
     pub async fn find_by_comic_with_counts(
