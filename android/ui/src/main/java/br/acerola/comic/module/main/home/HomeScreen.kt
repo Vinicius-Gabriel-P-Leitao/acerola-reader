@@ -142,7 +142,7 @@ fun Main.Home.Template.Screen(
                         onSearch = { homeViewModel.updateSearchQuery(it) },
                         expanded = isSearchExpanded,
                         onExpandedChange = { homeViewModel.setSearchExpanded(it) },
-                        comics = comicList.map { it.first },
+                        comics = comicList,
                         onComicClick = { comic ->
                             homeViewModel.setSearchExpanded(false)
                             onAction(HomeAction.ClickManga(comic))
