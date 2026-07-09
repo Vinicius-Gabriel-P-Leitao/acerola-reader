@@ -56,8 +56,8 @@ description = "Run all tests using nextest"
 workspace = false
 
 [tasks.test.windows]
-env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
 dependencies = ["copy-pdfium-dll"]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
 
 [tasks.copy-pdfium-dll]
 script = '''
@@ -108,20 +108,24 @@ MSIX_DISPLAY_NAME = "Acerola"
 MSIX_PACKAGE_NAME = "acerola"
 MSIX_PUBLISHER = "CN=Vinícius Gabriel Pereira Leitão"
 MSIX_PUBLISHER_DISPLAY_NAME = "Vinícius Gabriel Pereira Leitão"
+MSIX_VERSION = "1.0.0.0"
 
 [tasks.init-msix]
 description = "Initialize MSIX files with correct author and description"
 script = '''
 $ErrorActionPreference = "Stop"
-$msixDir = "..\.bin\windows\msix"
+$msixDir = "..\\.bin\\windows\\msix"
+
 New-Item -ItemType Directory -Force -Path $msixDir | Out-Null
-$manifest = "$msixDir\Package.appxmanifest"
+$manifest = "$msixDir\\Package.appxmanifest"
+
 if (Test-Path $manifest) { Remove-Item $manifest -Force }
 winapp init $msixDir --use-defaults --setup-sdks none
 
 $xml = [xml](Get-Content $manifest)
 $xml.Package.Identity.Name = $env:MSIX_PACKAGE_NAME
 $xml.Package.Identity.Publisher = $env:MSIX_PUBLISHER
+$xml.Package.Identity.Version = $env:MSIX_VERSION
 $xml.Package.Properties.DisplayName = $env:MSIX_DISPLAY_NAME
 $xml.Package.Properties.PublisherDisplayName = $env:MSIX_PUBLISHER_DISPLAY_NAME
 $xml.Package.Applications.Application.Id = $env:MSIX_PACKAGE_NAME
@@ -129,10 +133,17 @@ $xml.Package.Applications.Application.Executable = "acerola.exe"
 $xml.Package.Applications.Application.VisualElements.DisplayName = $env:MSIX_DISPLAY_NAME
 $xml.Package.Applications.Application.VisualElements.Description = $env:MSIX_DESCRIPTION
 $xml.Package.Applications.Application.VisualElements.BackgroundColor = $env:MSIX_BG_COLOR
+
+$rescapNS = "http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+$capsNode = $xml.Package.Capabilities
+$broadFs = $xml.CreateElement("rescap", "Capability", $rescapNS)
+$broadFs.SetAttribute("Name", "broadFileSystemAccess")
+$capsNode.AppendChild($broadFs) | Out-Null
+
 $xml.Save($manifest)
 
-winapp cert generate --manifest $manifest --output "$msixDir\devcert.pfx" --if-exists overwrite
-Get-ChildItem -Path "$msixDir\Assets" -Filter *.png | ForEach-Object { Copy-Item -Path "icons\icon.png" -Destination $_.FullName -Force }
+winapp cert generate --manifest $manifest --output "$msixDir\\devcert.pfx" --if-exists overwrite
+Get-ChildItem -Path "$msixDir\\Assets" -Filter *.png | ForEach-Object { Copy-Item -Path "icons\\icon.png" -Destination $_.FullName -Force }
 '''
 script_extension = "ps1"
 script_runner = "pwsh"
@@ -162,12 +173,18 @@ script_runner = "pwsh"
 description = "Generate MSIX package and move to final folder"
 script = '''
 $ErrorActionPreference = "Stop"
-$binDir = "..\.bin\windows"
-New-Item -ItemType Directory -Force -Path "$binDir\msix" | Out-Null
-Copy-Item -Force "target\release\acerola.exe" "$binDir\msix\"
+$binDir = "..\\.bin\\windows"
+
+New-Item -ItemType Directory -Force -Path "$binDir\\msix" | Out-Null
+Copy-Item -Force "target\\release\\acerola.exe" "$binDir\\msix\\"
+
+New-Item -ItemType Directory -Force -Path "$binDir\\msix\\.bin" | Out-Null
+Copy-Item -Force ".bin\\pdfium.dll" "$binDir\\msix\\.bin\\"
+
 Set-Location ..
-winapp pack .\.bin\windows\msix --cert .\.bin\windows\msix\devcert.pfx
-Move-Item -Force -Path *.msix -Destination .\.bin\windows\msix\
+
+winapp pack .\\.bin\\windows\\msix --cert .\\.bin\\windows\\msix\\devcert.pfx
+Move-Item -Force -Path *.msix -Destination .\\.bin\\windows\\msix\\
 Set-Location src-tauri
 '''
 script_extension = "ps1"
@@ -178,6 +195,7 @@ description = "Move MSI installer to final folder"
 script = '''
 $ErrorActionPreference = "Stop"
 $binDir = "..\.bin\windows"
+
 New-Item -ItemType Directory -Force -Path "$binDir\msi" | Out-Null
 Move-Item -Force -Path "target\release\bundle\msi\*.msi" -Destination "$binDir\msi\"
 '''
@@ -189,6 +207,7 @@ description = "Move NSIS setup EXE to final folder"
 script = '''
 $ErrorActionPreference = "Stop"
 $binDir = "..\.bin\windows"
+
 New-Item -ItemType Directory -Force -Path "$binDir\exe" | Out-Null
 Move-Item -Force -Path "target\release\bundle\nsis\*.exe" -Destination "$binDir\exe\"
 '''
