@@ -66,8 +66,8 @@ acerola-p2p = { git = "https://github.com/your-org/acerola-p2p" }
 
 ```rust
 use std::sync::Arc;
-use acerola_p2p::{AcerolaP2p, EventEmitter};
-use acerola_p2p::transport::iroh::IrohTransportBuilder;
+use acerola_p2p::{AcerolaP2p, protocol::EventEmitter, identity::DeviceInfo};
+use acerola_p2p::transport::IrohTransportBuilder;
 
 #[tokio::main]
 async fn main() {
@@ -75,7 +75,13 @@ async fn main() {
         println!("[{event}] {data}");
     });
 
-    let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default())
+    let device_info = DeviceInfo {
+        name: "meu-dispositivo".to_string(),
+        os: "linux".to_string(),
+        version: "1.0.0".to_string(),
+    };
+
+    let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
         .build()
         .await
         .expect("falha ao iniciar o nó");
@@ -87,8 +93,7 @@ async fn main() {
 ### Com relay configurado
 
 ```rust
-let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default()
-        .relay("https://meu-relay.example.com"))
+let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
     .build()
     .await?;
 ```
