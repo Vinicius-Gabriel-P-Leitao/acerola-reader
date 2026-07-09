@@ -64,10 +64,7 @@ impl ComicRepository {
         let table = ComicDirectory::table_name();
         let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
-        let sql = format!(
-            "UPDATE {} SET hidden = ? WHERE id IN ({})",
-            table, placeholders
-        );
+        let sql = format!("UPDATE {} SET hidden = ? WHERE id IN ({})", table, placeholders);
 
         let mut query = sqlx::query(&sql).bind(hidden);
         for &id in ids {
@@ -87,10 +84,7 @@ impl ComicRepository {
         let table = ComicDirectory::table_name();
         let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
-        let sql = format!(
-            "DELETE FROM {} WHERE id IN ({})",
-            table, placeholders
-        );
+        let sql = format!("DELETE FROM {} WHERE id IN ({})", table, placeholders);
 
         let mut query = sqlx::query(&sql);
         for &id in ids {
@@ -245,32 +239,34 @@ mod tests {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
-        repo.base.insert(&ComicDirectory {
-            id: 2,
-            name: "Vinland Saga".to_string(),
-            path: "/quadrinhos/vinland".to_string(),
-            cover: None,
-            banner: None,
-            last_modified: 1700000000,
-            archive_template_fk: None,
-            external_sync_enabled: false,
-            hidden: false,
-        })
-        .await
-        .unwrap();
-        repo.base.insert(&ComicDirectory {
-            id: 3,
-            name: "One Piece".to_string(),
-            path: "/quadrinhos/onepiece".to_string(),
-            cover: None,
-            banner: None,
-            last_modified: 1700000000,
-            archive_template_fk: None,
-            external_sync_enabled: false,
-            hidden: false,
-        })
-        .await
-        .unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 2,
+                name: "Vinland Saga".to_string(),
+                path: "/quadrinhos/vinland".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: false,
+            })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 3,
+                name: "One Piece".to_string(),
+                path: "/quadrinhos/onepiece".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: false,
+            })
+            .await
+            .unwrap();
 
         let count = repo.update_hidden_status_batch(&[1, 2], true).await.unwrap();
         assert_eq!(count, 2);
@@ -284,19 +280,20 @@ mod tests {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
-        repo.base.insert(&ComicDirectory {
-            id: 2,
-            name: "Vinland Saga".to_string(),
-            path: "/quadrinhos/vinland".to_string(),
-            cover: None,
-            banner: None,
-            last_modified: 1700000000,
-            archive_template_fk: None,
-            external_sync_enabled: false,
-            hidden: false,
-        })
-        .await
-        .unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 2,
+                name: "Vinland Saga".to_string(),
+                path: "/quadrinhos/vinland".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: false,
+            })
+            .await
+            .unwrap();
 
         let count = repo.delete_batch(&[1, 2]).await.unwrap();
         assert_eq!(count, 2);
@@ -310,19 +307,20 @@ mod tests {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
-        repo.base.insert(&ComicDirectory {
-            id: 2,
-            name: "Hidden Manga".to_string(),
-            path: "/quadrinhos/hidden".to_string(),
-            cover: None,
-            banner: None,
-            last_modified: 1700000000,
-            archive_template_fk: None,
-            external_sync_enabled: false,
-            hidden: true,
-        })
-        .await
-        .unwrap();
+        repo.base
+            .insert(&ComicDirectory {
+                id: 2,
+                name: "Hidden Manga".to_string(),
+                path: "/quadrinhos/hidden".to_string(),
+                cover: None,
+                banner: None,
+                last_modified: 1700000000,
+                archive_template_fk: None,
+                external_sync_enabled: false,
+                hidden: true,
+            })
+            .await
+            .unwrap();
 
         let visible = repo.find_all_by_hidden(false).await.unwrap();
         assert_eq!(visible.len(), 1);

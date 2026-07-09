@@ -911,8 +911,6 @@ mod tests {
     #[tokio::test]
     async fn refresh_library_pre_converts_pdfs() {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-        let bin_path = std::path::Path::new(&manifest_dir).join(".bin");
-        pdfium::set_library_location(bin_path.to_str().unwrap_or("."));
 
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;

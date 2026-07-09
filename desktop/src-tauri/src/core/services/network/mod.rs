@@ -4,7 +4,7 @@ use acerola_p2p::api::{
     guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
     identity::DeviceInfo,
     network::NetworkMode,
-    peer::PeerIdentity,
+    peer::{PeerAddr, PeerIdentity},
     AcerolaP2p,
 };
 use async_trait::async_trait;
@@ -18,7 +18,7 @@ pub trait NetworkServiceApi: Send + Sync + 'static {
     async fn switch_to_local(&self) -> Result<(), String>;
     async fn switch_to_relay(&self) -> Result<(), String>;
     async fn mode(&self) -> Result<NetworkMode, String>;
-    async fn connect(&self, peer_id: String, alpn: Vec<u8>) -> Result<(), String>;
+    async fn connect(&self, peer_addr: PeerAddr, alpn: Vec<u8>) -> Result<(), String>;
     async fn shutdown(&self) -> Result<(), String>;
 }
 
@@ -58,8 +58,8 @@ impl NetworkServiceApi for NetworkService {
         Ok(self.node.mode().await)
     }
 
-    async fn connect(&self, peer_id: String, alpn: Vec<u8>) -> Result<(), String> {
-        self.node.connect(&peer_id, &alpn).await.map_err(|err| err.to_string())
+    async fn connect(&self, peer_addr: PeerAddr, alpn: Vec<u8>) -> Result<(), String> {
+        self.node.connect(peer_addr, &alpn).await.map_err(|err| err.to_string())
     }
 
     async fn shutdown(&self) -> Result<(), String> {

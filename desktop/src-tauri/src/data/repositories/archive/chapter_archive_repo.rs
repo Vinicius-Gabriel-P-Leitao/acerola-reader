@@ -56,12 +56,13 @@ impl ChapterRepository {
         &self, comic_directory_fk: i64, search_query: &str,
     ) -> Result<i64, DbError> {
         let search_pattern = format!("%{}%", search_query);
-        let result =
-            sqlx::query("SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = ? AND chapter LIKE ?")
-                .bind(comic_directory_fk)
-                .bind(&search_pattern)
-                .fetch_one(&self.pool)
-                .await?;
+        let result = sqlx::query(
+            "SELECT COUNT(*) FROM chapter_archive WHERE comic_directory_fk = ? AND chapter LIKE ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(&search_pattern)
+        .fetch_one(&self.pool)
+        .await?;
         Ok(result.get(0))
     }
 
@@ -109,7 +110,8 @@ impl ChapterRepository {
     }
 
     pub async fn get_chapters_by_directory_with_search(
-        &self, comic_directory_fk: i64, page_size: i64, offset: i64, search_query: &str, criteria: ChapterSortCriteria,
+        &self, comic_directory_fk: i64, page_size: i64, offset: i64, search_query: &str,
+        criteria: ChapterSortCriteria,
     ) -> Result<Vec<ChapterArchiveWithVolume>, DbError> {
         let search_pattern = format!("%{}%", search_query);
         let order = Self::order_clause(criteria);
@@ -129,7 +131,8 @@ impl ChapterRepository {
     }
 
     pub async fn get_chapters_by_volume(
-        &self, comic_directory_fk: i64, volume_id_fk: i64, page_size: i64, offset: i64, criteria: ChapterSortCriteria,
+        &self, comic_directory_fk: i64, volume_id_fk: i64, page_size: i64, offset: i64,
+        criteria: ChapterSortCriteria,
     ) -> Result<Vec<ChapterArchiveWithVolume>, DbError> {
         let order = Self::order_clause(criteria);
         let sql = format!(
@@ -211,7 +214,8 @@ mod tests {
         repo.base.insert(&chapter(3, "1.0")).await.unwrap();
         repo.base.insert(&chapter(4, "0.1")).await.unwrap();
 
-        let result = repo.get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::NumberAsc).await.unwrap();
+        let result =
+            repo.get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::NumberAsc).await.unwrap();
 
         assert_eq!(result.len(), 4);
         assert_eq!(result[0].chapter_sort, "0.1");
@@ -230,7 +234,10 @@ mod tests {
         repo.base.insert(&chapter(3, "1.0")).await.unwrap();
         repo.base.insert(&chapter(4, "0.1")).await.unwrap();
 
-        let result = repo.get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::NumberDesc).await.unwrap();
+        let result = repo
+            .get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::NumberDesc)
+            .await
+            .unwrap();
 
         assert_eq!(result.len(), 4);
         assert_eq!(result[0].chapter_sort, "1.0");
@@ -255,7 +262,10 @@ mod tests {
         repo.base.insert(&c2).await.unwrap();
         repo.base.insert(&c3).await.unwrap();
 
-        let result = repo.get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::ModifiedAsc).await.unwrap();
+        let result = repo
+            .get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::ModifiedAsc)
+            .await
+            .unwrap();
 
         assert_eq!(result.len(), 3);
         assert_eq!(result[0].last_modified, 100);
@@ -279,7 +289,10 @@ mod tests {
         repo.base.insert(&c2).await.unwrap();
         repo.base.insert(&c3).await.unwrap();
 
-        let result = repo.get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::ModifiedDesc).await.unwrap();
+        let result = repo
+            .get_chapters_by_directory(1, 10, 0, ChapterSortCriteria::ModifiedDesc)
+            .await
+            .unwrap();
 
         assert_eq!(result.len(), 3);
         assert_eq!(result[0].last_modified, 300);

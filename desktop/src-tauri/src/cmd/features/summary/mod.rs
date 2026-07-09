@@ -46,14 +46,8 @@ pub async fn get_comic_by_folder_name(
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
 pub async fn get_comic_chapters<R: Runtime>(
-    comic_directory_fk: String,
-    volume_id: Option<String>,
-    page: i32,
-    page_size: i32,
-    sort_by: String,
-    search_query: Option<String>,
-    app: AppHandle<R>,
-    pool: State<'_, SqlitePool>,
+    comic_directory_fk: String, volume_id: Option<String>, page: i32, page_size: i32,
+    sort_by: String, search_query: Option<String>, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
     tracing::info!(
@@ -87,7 +81,14 @@ pub async fn get_comic_chapters<R: Runtime>(
         let search_ref = search_query.as_deref();
 
         match service
-            .get_comic_chapters(comic_directory_id, volume_id_filter, page, page_size, sort_criteria, search_ref)
+            .get_comic_chapters(
+                comic_directory_id,
+                volume_id_filter,
+                page,
+                page_size,
+                sort_criteria,
+                search_ref,
+            )
             .await
         {
             Ok(data) => {

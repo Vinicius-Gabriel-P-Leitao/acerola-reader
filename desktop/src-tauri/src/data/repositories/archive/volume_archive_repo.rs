@@ -3,9 +3,8 @@ use sqlx::SqlitePool;
 use crate::{
     data::{
         models::archive::volume_archive::VolumeArchive,
-        repositories::{Entity, Repository},
+        repositories::{archive::chapter_archive_repo::ChapterSortCriteria, Entity, Repository},
     },
-    data::repositories::archive::chapter_archive_repo::ChapterSortCriteria,
     infra::error::DbError,
 };
 

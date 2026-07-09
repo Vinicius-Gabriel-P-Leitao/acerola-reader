@@ -56,12 +56,8 @@ impl HomeRepository {
         let cols = ComicSummaryView::columns().join(", ");
 
         let order_clause = match criteria {
-            SortCriteria::TitleAsc => {
-                "ORDER BY COALESCE(metadata_title, folder_name) ASC"
-            },
-            SortCriteria::TitleDesc => {
-                "ORDER BY COALESCE(metadata_title, folder_name) DESC"
-            },
+            SortCriteria::TitleAsc => "ORDER BY COALESCE(metadata_title, folder_name) ASC",
+            SortCriteria::TitleDesc => "ORDER BY COALESCE(metadata_title, folder_name) DESC",
             SortCriteria::ChapterCountAsc | SortCriteria::ChapterCountDesc => {
                 // Para ordenação por contagem de capítulos, precisamos de uma subquery
                 // porque a view não tem a contagem de capítulos diretamente.
@@ -72,9 +68,7 @@ impl HomeRepository {
 
         let sql = format!("SELECT {} FROM {} {}", cols, table, order_clause);
 
-        let result = query_as::<_, ComicSummaryView>(&sql)
-            .fetch_all(&self.pool)
-            .await?;
+        let result = query_as::<_, ComicSummaryView>(&sql).fetch_all(&self.pool).await?;
         Ok(result)
     }
 
@@ -98,9 +92,7 @@ impl HomeRepository {
             cols, table, order_direction
         );
 
-        let result = query_as::<_, ComicSummaryView>(&sql)
-            .fetch_all(&self.pool)
-            .await?;
+        let result = query_as::<_, ComicSummaryView>(&sql).fetch_all(&self.pool).await?;
         Ok(result)
     }
 }
@@ -116,14 +108,18 @@ mod tests {
         (pool, repo)
     }
 
-    async fn insert_comic_with_chapters(pool: &SqlitePool, id: i64, name: &str, title: &str, chapter_count: i64) {
-        sqlx::query("INSERT INTO comic_directory (id, name, path, last_modified) VALUES (?, ?, ?, 0)")
-            .bind(id)
-            .bind(name)
-            .bind(format!("/mangas/{}", name.to_lowercase()))
-            .execute(pool)
-            .await
-            .unwrap();
+    async fn insert_comic_with_chapters(
+        pool: &SqlitePool, id: i64, name: &str, title: &str, chapter_count: i64,
+    ) {
+        sqlx::query(
+            "INSERT INTO comic_directory (id, name, path, last_modified) VALUES (?, ?, ?, 0)",
+        )
+        .bind(id)
+        .bind(name)
+        .bind(format!("/mangas/{}", name.to_lowercase()))
+        .execute(pool)
+        .await
+        .unwrap();
 
         sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, romanji, status) VALUES (?, ?, ?, '', '', '')")
             .bind(id)
