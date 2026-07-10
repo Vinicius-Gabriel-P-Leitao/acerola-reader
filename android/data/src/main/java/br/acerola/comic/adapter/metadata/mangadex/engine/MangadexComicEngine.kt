@@ -55,8 +55,8 @@ class MangadexComicEngine
         @param:ApplicationContext private val context: Context,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
     ) : ComicSingleSyncGateway,
-    ComicLibraryScanGateway,
-    ComicReadOnlyGateway<ComicMetadataDto> {
+        ComicLibraryScanGateway,
+        ComicReadOnlyGateway<ComicMetadataDto> {
         @Inject
         @MangadexSource
         lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>

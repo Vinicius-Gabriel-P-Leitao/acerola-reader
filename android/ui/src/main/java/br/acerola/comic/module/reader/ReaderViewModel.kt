@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.Either
+import br.acerola.comic.config.preference.ChapterSortPreference
 import br.acerola.comic.config.preference.ReadingModePreference
 import br.acerola.comic.config.preference.types.ReadingMode
+import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
@@ -14,8 +16,6 @@ import br.acerola.comic.error.message.ChapterError
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.module.reader.state.ReaderUiState
-import br.acerola.comic.config.preference.ChapterSortPreference
-import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
@@ -93,7 +93,7 @@ class ReaderViewModel
             viewModelScope.launch {
                 val sortSettings = ChapterSortPreference.sortFlow(context).first()
                 val isAscending = sortSettings.direction == SortDirection.ASCENDING
-                
+
                 observeChaptersUseCase
                     .observeByComic(comicId, sortSettings.type.name, isAscending)
                     .filter { it.items.isNotEmpty() }
@@ -148,7 +148,7 @@ class ReaderViewModel
             viewModelScope.launch {
                 val sortSettings = ChapterSortPreference.sortFlow(context).first()
                 val isAscending = sortSettings.direction == SortDirection.ASCENDING
-                
+
                 observeChaptersUseCase
                     .observeByComic(comicId, sortSettings.type.name, isAscending)
                     .combine(observeChaptersUseCase.isIndexing) { pageDto, isIndexing ->

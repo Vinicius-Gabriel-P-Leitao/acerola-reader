@@ -31,10 +31,11 @@ object ComicInfoCaseModule {
     fun provideSyncLibraryUseCase(
         @ComicInfoEngine scanGateway: ComicLibraryScanGateway,
         @ComicInfoEngine chapterGateway: ChapterSyncGateway,
-    ): SyncLibraryUseCase = SyncLibraryUseCase(
-        scanGateway = scanGateway,
-        chapterGateway = chapterGateway,
-    )
+    ): SyncLibraryUseCase =
+        SyncLibraryUseCase(
+            scanGateway = scanGateway,
+            chapterGateway = chapterGateway,
+        )
 
     @Provides
     @ComicInfoCase

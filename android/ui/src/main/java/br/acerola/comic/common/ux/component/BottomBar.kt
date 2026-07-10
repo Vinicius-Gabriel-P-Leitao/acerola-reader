@@ -7,9 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -21,10 +25,6 @@ import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,53 +86,58 @@ fun Acerola.Component.SideBar(navController: NavHostController) {
 
     // Insets: start (status bar top) + bottom (navigation bar), but NOT end
     // so the sidebar goes edge-to-edge on its own side like Spotify
-    val sideBarInsets = WindowInsets.safeDrawing.only(
-        WindowInsetsSides.Start + WindowInsetsSides.Vertical,
-    )
+    val sideBarInsets =
+        WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Start + WindowInsetsSides.Vertical,
+        )
 
     // Box externo: preenche toda a altura e aplica a cor de fundo (inclusive atrás da status bar e nav bar)
     Box(
-        modifier = Modifier
-            .fillMaxHeight()
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier =
+            Modifier
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .windowInsetsPadding(sideBarInsets)
-                .width(200.dp)
-                .padding(vertical = 12.dp, horizontal = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .windowInsetsPadding(sideBarInsets)
+                    .width(200.dp)
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             navDestinations.forEach { destination ->
                 val routeString = stringResource(id = destination.route)
                 val isSelected = currentRoute == routeString
-                val itemBackground = if (isSelected) {
-                    MaterialTheme.colorScheme.secondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                }
-                val contentColor = if (isSelected) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
+                val itemBackground =
+                    if (isSelected) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    }
+                val contentColor =
+                    if (isSelected) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(itemBackground)
-                        .clickable {
-                            if (currentRoute != routeString) {
-                                navController.navigate(routeString) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(itemBackground)
+                            .clickable {
+                                if (currentRoute != routeString) {
+                                    navController.navigate(routeString) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                            }
-                        }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                            }.padding(horizontal = 16.dp, vertical = 14.dp),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

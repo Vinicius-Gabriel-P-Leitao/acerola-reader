@@ -20,9 +20,9 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.service.cache.ChapterCacheHandler
 import br.acerola.comic.type.UiText
 import br.acerola.comic.ui.R
-import br.acerola.comic.service.cache.ChapterCacheHandler
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase

@@ -10,8 +10,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
-import br.acerola.comic.adapter.contract.gateway.ComicRebuildGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.data.R

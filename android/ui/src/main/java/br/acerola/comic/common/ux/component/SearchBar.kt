@@ -116,17 +116,16 @@ fun <T> Acerola.Component.SearchBar(
         expanded = expanded,
         onExpandedChange = onExpandedChange,
         shape = animatedShape,
-        colors =
-            SearchBarDefaults.colors(
-                containerColor =
-                    if (expanded) {
-                        MaterialTheme.colorScheme.surfaceContainerHigh
-                    } else {
-                        Color.Transparent
-                    },
-            ),
-        tonalElevation = 0.dp,
+        colors = SearchBarDefaults.colors(
+            containerColor = if (expanded) {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            } else {
+                MaterialTheme.colorScheme.surfaceContainer
+            },
+        ),
+        tonalElevation = if (expanded) 0.dp else 3.dp,
         shadowElevation = 0.dp,
+        windowInsets = androidx.compose.foundation.layout.WindowInsets(0.dp),
     ) {
         AnimatedVisibility(
             visible = expanded,
@@ -190,6 +189,8 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
             label = stringResource(R.string.common_search_transition),
         )
 
+    val collapsedRadius = 28.dp
+
     val cornerRadius by transition.animateDp(
         transitionSpec = {
             if (targetState) {
@@ -206,7 +207,7 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
         },
         label = stringResource(R.string.common_search_corner_radius),
     ) { isExpanded ->
-        if (isExpanded) 12.dp else 28.dp
+        if (isExpanded) 12.dp else collapsedRadius
     }
 
     return remember(cornerRadius) {

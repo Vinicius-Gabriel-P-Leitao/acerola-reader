@@ -52,8 +52,8 @@ class AnilistComicEngine
         private val anilistSearchByTitleSource: AnilistSearchByTitleSource,
         @param:ApplicationContext private val context: Context,
     ) : ComicSingleSyncGateway,
-    ComicLibraryScanGateway,
-    ComicReadOnlyGateway<ComicMetadataDto> {
+        ComicLibraryScanGateway,
+        ComicReadOnlyGateway<ComicMetadataDto> {
         private val _progress = MutableStateFlow(value = -1)
         override val progress: StateFlow<Int> = _progress.asStateFlow()
 

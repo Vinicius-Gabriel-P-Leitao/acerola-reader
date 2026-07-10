@@ -45,12 +45,14 @@ class PdfToCbzConverter
                     val pageCount = pdfRenderer.pageCount
 
                     AcerolaLogger.d(TAG, "PDF has $pageCount pages. Starting rendering...", LogSource.REPOSITORY)
-                    
-                    val cbzFile = folder.createFile("application/octet-stream", cbzFileName)
-                        ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
 
-                    val outputStream = context.contentResolver.openOutputStream(cbzFile.uri)
-                        ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
+                    val cbzFile =
+                        folder.createFile("application/octet-stream", cbzFileName)
+                            ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
+
+                    val outputStream =
+                        context.contentResolver.openOutputStream(cbzFile.uri)
+                            ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
 
                     ZipOutputStream(outputStream).use { zip ->
                         for (it in 0 until pageCount) {
@@ -70,10 +72,10 @@ class PdfToCbzConverter
 
                             val pageName = String.format(Locale.ENGLISH, "%04d.jpg", it + 1)
                             zip.putNextEntry(ZipEntry(pageName))
-                            
+
                             // Comprime direto para o disco
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, zip)
-                            
+
                             zip.closeEntry()
                             bitmap.recycle()
 

@@ -24,7 +24,6 @@ import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +43,8 @@ class ComicInfoComicEngine
         private val comicMetadataDao: ComicMetadataDao,
         private val comicInfoSourceDao: ComicInfoSourceDao,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
-    ) : ComicSingleSyncGateway, ComicLibraryScanGateway {
+    ) : ComicSingleSyncGateway,
+        ComicLibraryScanGateway {
         @Inject
         @ComicInfoSourceQualifier
         lateinit var comicInfoSourceService: MetadataProvider<ComicMetadataDto, String>

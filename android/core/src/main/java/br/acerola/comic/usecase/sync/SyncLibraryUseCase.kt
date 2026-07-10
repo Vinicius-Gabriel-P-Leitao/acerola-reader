@@ -21,8 +21,8 @@ class SyncLibraryUseCase
             type: SyncType,
             comicId: Long,
             baseUri: Uri?,
-        ): Either<LibrarySyncError, Unit> {
-            return when (type) {
+        ): Either<LibrarySyncError, Unit> =
+            when (type) {
                 SyncType.INCREMENTAL -> scanGateway.incrementalScan(baseUri)
                 SyncType.REFRESH -> scanGateway.refreshLibrary(baseUri)
                 SyncType.REBUILD -> rebuildGateway.rebuildLibrary(baseUri)
@@ -35,5 +35,4 @@ class SyncLibraryUseCase
                 }
                 else -> scanGateway.incrementalScan(baseUri)
             }
-        }
     }

@@ -102,9 +102,10 @@ abstract class BaseActivity : ComponentActivity() {
                                     },
                                     // Em landscape, o Scaffold M3 deve respeitar apenas os insets
                                     // do topo e da direita (a sidebar já cuida do lado esquerdo)
-                                    contentWindowInsets = WindowInsets.safeDrawing.only(
-                                        WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom,
-                                    ),
+                                    contentWindowInsets =
+                                        WindowInsets.safeDrawing.only(
+                                            WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom,
+                                        ),
                                 ) { padding ->
                                     val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
                                     val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)

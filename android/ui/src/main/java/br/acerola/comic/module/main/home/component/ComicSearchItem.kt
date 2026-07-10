@@ -47,65 +47,84 @@ fun Main.Home.Component.ComicSearchItem(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    
+
     val coverUri = comic.directory.coverUri ?: comic.directory.bannerUri
     val title = comic.remoteInfo?.title ?: comic.directory.name
-    
-    val score = comic.remoteInfo?.sources?.anilist?.averageScore?.let { it / 10f }
-    val status = comic.remoteInfo?.status?.lowercase()?.replaceFirstChar { it.uppercase() }
-    
-    val imageSize = with(density) { 
-        Size(width = 64.dp.toPx().toInt(), height = 96.dp.toPx().toInt())
-    }
 
-    val placeholderPainter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(context)
-            .data(R.raw.placeholder_comic)
-            .size(SizeResolver(imageSize))
-            .build()
-    )
+    val score =
+        comic.remoteInfo
+            ?.sources
+            ?.anilist
+            ?.averageScore
+            ?.let { it / 10f }
+    val status =
+        comic.remoteInfo
+            ?.status
+            ?.lowercase()
+            ?.replaceFirstChar { it.uppercase() }
 
-    val coverPainter = rememberAsyncImagePainter(
-        placeholder = placeholderPainter,
-        fallback = placeholderPainter,
-        error = placeholderPainter,
-        model = ImageRequest.Builder(context)
-            .data(coverUri)
-            .memoryCacheKey("${coverUri}_${comic.directory.lastModified}")
-            .diskCacheKey("${coverUri}_${comic.directory.lastModified}")
-            .size(SizeResolver(imageSize))
-            .build()
-    )
+    val imageSize =
+        with(density) {
+            Size(width = 64.dp.toPx().toInt(), height = 96.dp.toPx().toInt())
+        }
+
+    val placeholderPainter =
+        rememberAsyncImagePainter(
+            model =
+                ImageRequest
+                    .Builder(context)
+                    .data(R.raw.placeholder_comic)
+                    .size(SizeResolver(imageSize))
+                    .build(),
+        )
+
+    val coverPainter =
+        rememberAsyncImagePainter(
+            placeholder = placeholderPainter,
+            fallback = placeholderPainter,
+            error = placeholderPainter,
+            model =
+                ImageRequest
+                    .Builder(context)
+                    .data(coverUri)
+                    .memoryCacheKey("${coverUri}_${comic.directory.lastModified}")
+                    .diskCacheKey("${coverUri}_${comic.directory.lastModified}")
+                    .size(SizeResolver(imageSize))
+                    .build(),
+        )
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(110.dp)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(110.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Acerola.Component.ImageCard(
             onClick = onClick,
             image = coverPainter,
-            modifier = Modifier
-                .width(64.dp)
-                .height(96.dp)
-                .clip(MaterialTheme.shapes.small),
+            modifier =
+                Modifier
+                    .width(64.dp)
+                    .height(96.dp)
+                    .clip(MaterialTheme.shapes.small),
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(vertical = 8.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = title,
@@ -114,7 +133,7 @@ fun Main.Home.Component.ComicSearchItem(
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                
+
                 if (status != null) {
                     Text(
                         text = status,
@@ -123,15 +142,15 @@ fun Main.Home.Component.ComicSearchItem(
                     )
                 }
             }
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 if (score != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Star,
@@ -146,11 +165,11 @@ fun Main.Home.Component.ComicSearchItem(
                         )
                     }
                 }
-                
+
                 if (chapterCount > 0) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.AutoStories,
@@ -165,13 +184,14 @@ fun Main.Home.Component.ComicSearchItem(
                         )
                     }
                 }
-                
-                val sourceIcon = when (comic.remoteInfo?.syncSource) {
-                    MetadataSource.MANGADEX -> R.drawable.mangadex_v2
-                    MetadataSource.ANILIST -> R.drawable.anilist
-                    else -> null
-                }
-                
+
+                val sourceIcon =
+                    when (comic.remoteInfo?.syncSource) {
+                        MetadataSource.MANGADEX -> R.drawable.mangadex_v2
+                        MetadataSource.ANILIST -> R.drawable.anilist
+                        else -> null
+                    }
+
                 if (sourceIcon != null) {
                     Icon(
                         painter = painterResource(id = sourceIcon),
