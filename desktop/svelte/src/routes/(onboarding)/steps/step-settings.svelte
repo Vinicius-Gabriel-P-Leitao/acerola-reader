@@ -39,7 +39,9 @@
 				<div class="mb-4 flex items-center justify-between">
 					<div class="flex items-center gap-3">
 						<FolderIcon class="text-chart-2" size={24} />
-						<h2 class="text-xl font-semibold text-foreground">{m['onboarding.settings.folder']()}</h2>
+						<h2 class="text-xl font-semibold text-foreground">
+							{m['onboarding.settings.folder']()}
+						</h2>
 					</div>
 					{#if folder.folderPath}
 						<div class="flex items-center gap-2 text-sm text-primary">

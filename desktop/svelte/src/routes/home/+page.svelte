@@ -86,7 +86,7 @@
 		{m['pages.home.loading']()}
 	</div>
 {:else if summary.comics && summary.comics.total > 0}
-	<div class="px-8 pb-8 pt-8">
+	<div class="px-8 pt-8 pb-8">
 		<div class="mb-4 flex items-center justify-between">
 			{#if selection.isSelectionMode}
 				<div class="flex items-center gap-2">
@@ -95,7 +95,12 @@
 					</span>
 					<AcerolaButton
 						ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
-						events={{ onClick: () => selection.selectAll(summary.comics?.comics.map(c => Number(c.relations.directoryId)) ?? []) }}
+						events={{
+							onClick: () =>
+								selection.selectAll(
+									summary.comics?.comics.map((c) => Number(c.relations.directoryId)) ?? []
+								)
+						}}
 					>
 						{m['pages.home.selection.select_all']()}
 					</AcerolaButton>
@@ -117,7 +122,9 @@
 					</AcerolaButton>
 
 					{#if showSortMenu}
-						<div class="absolute left-0 top-full z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg">
+						<div
+							class="absolute top-full left-0 z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg"
+						>
 							<div class="p-2">
 								<AcerolaButton
 									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -166,14 +173,16 @@
 							</div>
 						</div>
 					{/if}
-			</div>
-		{/if}
-	</div>
+				</div>
+			{/if}
+		</div>
 
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 			{#each summary.comics.comics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
-				{@const bookmarkColor = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)?.color}
+				{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
+					comic.relations.directoryId
+				)?.color}
 				{@const isSelected = selection.isSelected(Number(comic.relations.directoryId))}
 				<AcerolaCardImage
 					data={{
@@ -222,15 +231,19 @@
 
 					{#snippet overlay()}
 						{#if isSelected}
-							<div class="absolute inset-0 flex items-center justify-center bg-primary/30 rounded-xl">
+							<div
+								class="absolute inset-0 flex items-center justify-center rounded-xl bg-primary/30"
+							>
 								<div class="rounded-full bg-primary p-2">
 									<Check size={24} class="text-primary-foreground" />
 								</div>
 							</div>
 						{:else if selection.isSelectionMode}
-							<div class="absolute inset-0 flex items-center justify-center bg-surface/50 rounded-xl">
+							<div
+								class="absolute inset-0 flex items-center justify-center rounded-xl bg-surface/50"
+							>
 								<div class="rounded-full border-2 border-muted-foreground p-2">
-									<div class="w-6 h-6"></div>
+									<div class="h-6 w-6"></div>
 								</div>
 							</div>
 						{/if}
@@ -253,4 +266,3 @@
 		{m['pages.home.no_comics']()}
 	</div>
 {/if}
-

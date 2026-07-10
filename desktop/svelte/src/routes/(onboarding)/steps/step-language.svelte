@@ -11,7 +11,8 @@
 
 	const localeOptions = locales.map((locale) => ({
 		value: locale,
-		label: locale === 'pt-br' ? 'Português (BR)' : locale === 'en' ? 'English' : locale.toUpperCase()
+		label:
+			locale === 'pt-br' ? 'Português (BR)' : locale === 'en' ? 'English' : locale.toUpperCase()
 	}));
 
 	function handleLocaleChange(locale: string) {
@@ -32,11 +33,7 @@
 		<p class="text-center text-muted-foreground">{m['onboarding.language.desc']()}</p>
 
 		<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
-			<Select.Root
-				type="single"
-				value={selectedLocale}
-				onValueChange={handleLocaleChange}
-			>
+			<Select.Root type="single" value={selectedLocale} onValueChange={handleLocaleChange}>
 				<Select.Trigger class="w-full rounded-xl">
 					{localeOptions.find((l) => l.value === selectedLocale)?.label || selectedLocale}
 				</Select.Trigger>

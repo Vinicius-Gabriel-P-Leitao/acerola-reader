@@ -56,13 +56,7 @@
 		await goto('/home');
 	}
 
-	const steps = [
-		StepWelcome,
-		StepLanguage,
-		StepFormats,
-		StepSettings,
-		StepComplete
-	];
+	const steps = [StepWelcome, StepLanguage, StepFormats, StepSettings, StepComplete];
 
 	let currentStepIndex = $derived(onboarding.currentStep);
 </script>
@@ -70,34 +64,33 @@
 <div class="flex h-full w-full flex-col">
 	<div class="border-b border-border/30 bg-background/95 px-8 py-4">
 		<div class="flex items-center justify-center gap-2">
-			{#each STEPS as step, i}
+			{#each STEPS as step, it}
 				<div
 					class="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all duration-300
-						{i === onboarding.currentStep
-							? 'bg-primary text-primary-foreground'
-							: i < onboarding.currentStep
-								? 'bg-muted text-muted-foreground'
-								: 'bg-transparent text-muted-foreground/50'}"
+						{it === onboarding.currentStep
+						? 'bg-primary text-primary-foreground'
+						: it < onboarding.currentStep
+							? 'bg-muted text-muted-foreground'
+							: 'bg-transparent text-muted-foreground/50'}"
 				>
-					<span class="flex size-5 items-center justify-center rounded-full
-						{i <= onboarding.currentStep ? 'bg-background/20' : 'bg-muted/30'}">
-						{i + 1}
+					<span
+						class="flex size-5 items-center justify-center rounded-full
+						{it <= onboarding.currentStep ? 'bg-background/20' : 'bg-muted/30'}"
+					>
+						{it + 1}
 					</span>
 					<span class="hidden sm:inline">{step.label()}</span>
 				</div>
-				{#if i < STEPS.length - 1}
+				{#if it < STEPS.length - 1}
 					<div class="h-px w-8 bg-border/30"></div>
 				{/if}
 			{/each}
 		</div>
 	</div>
 
-	<div class="flex-1 overflow-hidden relative">
+	<div class="relative flex-1 overflow-hidden">
 		{#key currentStepIndex}
-			<div
-				class="absolute inset-0 overflow-y-auto"
-				in:fly={{ duration: 300, x: direction * 100 }}
-			>
+			<div class="absolute inset-0 overflow-y-auto" in:fly={{ duration: 300, x: direction * 100 }}>
 				{#if currentStepIndex === 0}
 					<StepWelcome onNext={handleNext} />
 				{:else if currentStepIndex === 1}

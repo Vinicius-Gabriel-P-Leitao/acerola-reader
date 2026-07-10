@@ -43,17 +43,17 @@ describe('useBookmarks', () => {
 	});
 
 	it('loads bookmarks successfully', async () => {
-		const mockBookmarks = [{ id: 1, name: 'Favoritos', color: 0xFFF44336 }];
+		const mockBookmarks = [{ id: 1, name: 'Favoritos', color: 0xfff44336 }];
 		const mockAssignments = [{ id: 1, comic_directory_fk: 123, category_id: 1 }];
-		
+
 		invokeMock.mockResolvedValueOnce(mockBookmarks);
 		invokeMock.mockResolvedValueOnce(mockAssignments);
 
 		const hook = await renderBookmarksHook();
-		
+
 		expect(hook.isLoading).toBe(false);
 		await hook.loadBookmarks();
-		
+
 		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getCategories);
 		expect(hook.bookmarks).toEqual(mockBookmarks);
 		expect(hook.isLoading).toBe(false);
@@ -65,7 +65,7 @@ describe('useBookmarks', () => {
 
 		const hook = await renderBookmarksHook();
 		await hook.loadBookmarks();
-		
+
 		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getCategories);
 		expect(errorMock).toHaveBeenCalledWith('Failed to load bookmarks: Network error');
 		expect(hook.bookmarks).toEqual([]);
@@ -73,20 +73,23 @@ describe('useBookmarks', () => {
 	});
 
 	it('creates bookmark and adds it to the list', async () => {
-		const newBookmark = { id: 2, name: 'Lidos', color: 0xFFE91E63 };
+		const newBookmark = { id: 2, name: 'Lidos', color: 0xffe91e63 };
 		invokeMock.mockResolvedValueOnce(newBookmark);
 
 		const hook = await renderBookmarksHook();
-		
-		const result = await hook.createBookmark('Lidos', 0xFFE91E63);
-		
-		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.createCategory, { name: 'Lidos', color: 0xFFE91E63 });
+
+		const result = await hook.createBookmark('Lidos', 0xffe91e63);
+
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.createCategory, {
+			name: 'Lidos',
+			color: 0xffe91e63
+		});
 		expect(result).toEqual(newBookmark);
 		expect(hook.bookmarks).toContainEqual(newBookmark);
 	});
 
 	it('deletes bookmark and removes it from the list', async () => {
-		const mockBookmarks = [{ id: 1, name: 'Fav', color: 0xFFF44336 }];
+		const mockBookmarks = [{ id: 1, name: 'Fav', color: 0xfff44336 }];
 		invokeMock.mockResolvedValueOnce(mockBookmarks);
 		invokeMock.mockResolvedValueOnce([]);
 
@@ -97,7 +100,7 @@ describe('useBookmarks', () => {
 		invokeMock.mockResolvedValueOnce(undefined); // delete_category
 
 		await hook.deleteBookmark(1);
-		
+
 		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.deleteCategory, { id: 1 });
 		expect(hook.bookmarks).toHaveLength(0);
 	});
@@ -109,9 +112,14 @@ describe('useBookmarks', () => {
 
 		const hook = await renderBookmarksHook();
 		const result = await hook.assignToComic(123, 1);
-		
-		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: '123' });
-		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.assignCategoryToComic, { comicId: '123', categoryId: 1 });
+
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.removeCategoryFromComic, {
+			comicId: '123'
+		});
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.assignCategoryToComic, {
+			comicId: '123',
+			categoryId: 1
+		});
 		expect(result).toEqual(assignment);
 	});
 
@@ -120,18 +128,22 @@ describe('useBookmarks', () => {
 
 		const hook = await renderBookmarksHook();
 		await hook.removeComicBookmark(123);
-		
-		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: '123' });
+
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.removeCategoryFromComic, {
+			comicId: '123'
+		});
 	});
 
 	it('gets comic bookmark', async () => {
-		const mockBookmark = { id: 1, name: 'Fav', color: 0xFFF44336 };
+		const mockBookmark = { id: 1, name: 'Fav', color: 0xfff44336 };
 		invokeMock.mockResolvedValueOnce(mockBookmark); // get_comic_category
 
 		const hook = await renderBookmarksHook();
 		const result = await hook.getComicBookmark(123);
-		
-		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getComicCategory, { comicId: '123' });
+
+		expect(invokeMock).toHaveBeenCalledWith(BOOKMARKS_COMMANDS.getComicCategory, {
+			comicId: '123'
+		});
 		expect(result).toEqual(mockBookmark);
 	});
 });

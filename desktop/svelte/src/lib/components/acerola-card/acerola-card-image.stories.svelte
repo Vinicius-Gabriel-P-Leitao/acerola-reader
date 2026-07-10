@@ -39,7 +39,9 @@
 		}}
 	>
 		{#snippet floatingBadge()}
-			<div class="absolute -top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-md">
+			<div
+				class="absolute -top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-md"
+			>
 				N
 			</div>
 		{/snippet}

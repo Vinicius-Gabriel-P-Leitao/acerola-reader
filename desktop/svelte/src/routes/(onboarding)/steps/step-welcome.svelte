@@ -9,7 +9,9 @@
 <div class="flex h-full w-full items-center justify-center">
 	<div class="max-w-md space-y-8 text-center">
 		<div class="flex justify-center">
-			<div class="flex size-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+			<div
+				class="flex size-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground"
+			>
 				<BookOpenIcon size={48} />
 			</div>
 		</div>

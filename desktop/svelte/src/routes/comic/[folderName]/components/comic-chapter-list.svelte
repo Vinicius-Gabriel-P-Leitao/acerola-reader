@@ -140,7 +140,9 @@
 								{#snippet icon()}
 									<div class={chapter.isRead ? '' : 'text-primary'}>
 										{#if chapter.isRead}
-											<div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust">
+											<div
+												class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust"
+											>
 												<Check size={16} strokeWidth={3} />
 											</div>
 										{:else}
@@ -152,8 +154,12 @@
 								{#snippet action()}
 									<div class="flex items-center gap-2">
 										{#if chapter.isRead}
-											<span class="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black tracking-widest text-primary uppercase">
-												{m['pages.comic.metadata.completed'] ? m['pages.comic.metadata.completed']() : 'LIDO'}
+											<span
+												class="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black tracking-widest text-primary uppercase"
+											>
+												{m['pages.comic.metadata.completed']
+													? m['pages.comic.metadata.completed']()
+													: 'LIDO'}
 											</span>
 										{/if}
 										<AcerolaButtonIcon

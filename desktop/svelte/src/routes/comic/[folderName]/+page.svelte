@@ -45,7 +45,9 @@
 	let currentBookmarkId = $state<number | null>(null);
 
 	let activeTab = $state('content');
-	let sortBy = $state<'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc'>('number_asc');
+	let sortBy = $state<'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc'>(
+		'number_asc'
+	);
 	let searchQuery = $state('');
 	let showSortMenu = $state(false);
 
@@ -91,7 +93,8 @@
 		goto('/reader', {
 			state: {
 				chapter: readerChapter,
-				comicDirectoryId: activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId,
+				comicDirectoryId:
+					activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId,
 				...getReaderProgress(chapter)
 			}
 		});
@@ -113,15 +116,19 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (id) {
 			isHistoryLoading = true;
-			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(() => null);
-			const fetchRead = invoke<string[]>('history_get_read_chapters', { comicId: id.toString() }).catch(() => []);
+			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(
+				() => null
+			);
+			const fetchRead = invoke<string[]>('history_get_read_chapters', {
+				comicId: id.toString()
+			}).catch(() => []);
 			const fetchBookmark = bookmarkStore.getComicBookmark(id);
-			
+
 			const [history, read, bookmark] = await Promise.all([fetchHistory, fetchRead, fetchBookmark]);
 			readingHistory = history;
 			readChapters = read;
 			currentBookmarkId = bookmark?.id ?? null;
-			
+
 			isHistoryLoading = false;
 		}
 	});
@@ -329,13 +336,13 @@
 				chaptersCount: manga.chaptersCount,
 				description: manga.metadata.description,
 				cover: manga.cover,
-				bookmarkColor: bookmarkStore.bookmarks.find(b => b.id === currentBookmarkId)?.color
+				bookmarkColor: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.color
 			}}
 			state={{
 				isResuming: !!readingHistory,
 				isLoading: isHistoryLoading
 			}}
-			events={{ 
+			events={{
 				onBack,
 				onReadNow: handleReadNow
 			}}
@@ -428,11 +435,18 @@
 								</AcerolaButton>
 
 								{#if showSortMenu}
-									<div class="absolute right-0 top-full z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg">
+									<div
+										class="absolute top-full right-0 z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg"
+									>
 										<div class="p-2">
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'number_asc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'number_asc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'number_asc'}
 													<Check size={16} />
@@ -443,7 +457,12 @@
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'number_desc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'number_desc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'number_desc'}
 													<Check size={16} />
@@ -454,7 +473,12 @@
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'modified_desc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'modified_desc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'modified_desc'}
 													<Check size={16} />
@@ -465,7 +489,12 @@
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'modified_asc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'modified_asc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'modified_asc'}
 													<Check size={16} />
@@ -527,9 +556,10 @@
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value),
 								onBookmarkChange: async (value) => {
-									const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+									const id =
+										activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 									if (!id) return;
-									
+
 									if (value) {
 										await bookmarkStore.assignToComic(id, value);
 									} else {

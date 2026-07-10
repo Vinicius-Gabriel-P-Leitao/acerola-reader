@@ -80,10 +80,10 @@ describe('Reader Navigation E2E', () => {
 		const backBtn = await firstDisplayed('button[title="Voltar"]', 5_000);
 		await backBtn.click();
 
-		await browser.waitUntil(
-			async () => !(await getPathname()).startsWith('/reader'),
-			{ timeout: 5_000, timeoutMsg: 'Nao saiu do reader.' }
-		);
+		await browser.waitUntil(async () => !(await getPathname()).startsWith('/reader'), {
+			timeout: 5_000,
+			timeoutMsg: 'Nao saiu do reader.'
+		});
 
 		// 5. Vai para o historico e verifica que a entrada existe
 		await navigateTo('/history');
@@ -136,7 +136,11 @@ describe('Reader Navigation E2E', () => {
 				const btn = await browser.$('//*[normalize-space()="Capítulo anterior"]');
 				return !(await btn.isExisting());
 			},
-			{ timeout: 5_000, interval: 100, timeoutMsg: '"Capítulo anterior" aparece indevidamente no capitulo 1.' }
+			{
+				timeout: 5_000,
+				interval: 100,
+				timeoutMsg: '"Capítulo anterior" aparece indevidamente no capitulo 1.'
+			}
 		);
 	});
 });

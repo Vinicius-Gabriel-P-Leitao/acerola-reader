@@ -15,7 +15,7 @@
 
 		<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
 			<p class="mb-4 text-muted-foreground">{m['onboarding.formats.desc']()}</p>
-			
+
 			<div class="grid grid-cols-1 gap-4">
 				<div class="rounded-xl border border-border/40 bg-background/50 p-4">
 					<h3 class="font-semibold text-foreground">CBZ</h3>

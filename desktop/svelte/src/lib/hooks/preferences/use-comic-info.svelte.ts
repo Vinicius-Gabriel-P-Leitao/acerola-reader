@@ -7,7 +7,7 @@ export function useComicInfoPreference() {
 
 	async function selectComicInfoPreference(value?: boolean) {
 		const newValue = value ?? !comicInfoPreference;
-		
+
 		const store = await load(STORE_FILE);
 		await store.set(STORE_KEYS.comicInfoPreference, newValue);
 		await store.save();

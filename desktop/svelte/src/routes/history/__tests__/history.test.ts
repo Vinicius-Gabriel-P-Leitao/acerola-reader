@@ -66,7 +66,7 @@ describe('HistoryPage', () => {
 		await waitFor(() => {
 			expect(mockInvoke).toHaveBeenCalledWith('history_get_all', undefined);
 		});
-		
+
 		expect(screen.getByText(/Nenhum histórico encontrado/i)).toBeInTheDocument();
 	});
 

@@ -52,7 +52,7 @@
 	});
 </script>
 
-<div class="flex flex-col h-full overflow-hidden">
+<div class="flex h-full flex-col overflow-hidden">
 	<div class="flex shrink-0 items-center justify-between px-8 py-6">
 		<h2 class="text-2xl font-bold tracking-tight">{m['pages.history.title']()}</h2>
 		{#if history.items.length > 0}
@@ -87,42 +87,66 @@
 		{@const heroCover = resolveArtworkPath(heroItem.comicCover)}
 
 		<div class="flex-1 overflow-auto pb-8">
-			<div class="relative w-full shrink-0 mb-8 overflow-hidden h-100 rounded-b-3xl">
+			<div class="relative mb-8 h-100 w-full shrink-0 overflow-hidden rounded-b-3xl">
 				{#if heroCover}
-					<img src={heroCover} class="absolute inset-0 w-full h-full object-cover" referrerpolicy="no-referrer" alt="background" />
+					<img
+						src={heroCover}
+						class="absolute inset-0 h-full w-full object-cover"
+						referrerpolicy="no-referrer"
+						alt="background"
+					/>
 				{:else}
 					<div class="absolute inset-0 bg-linear-to-b from-primary/20 via-base/50 to-base"></div>
 				{/if}
 				<div class="absolute inset-0 bg-linear-to-t from-base via-base/40 to-transparent"></div>
-				<div class="absolute inset-0 hidden bg-linear-to-l from-transparent via-transparent to-base/80 lg:block"></div>
+				<div
+					class="absolute inset-0 hidden bg-linear-to-l from-transparent via-transparent to-base/80 lg:block"
+				></div>
 
-				<div class="absolute bottom-8 left-8 right-8 flex items-end gap-8">
+				<div class="absolute right-8 bottom-8 left-8 flex items-end gap-8">
 					{#if heroCover}
-						<button class="relative w-48 h-64 rounded-xl shadow-2xl ring-1 ring-surface overflow-hidden hover:scale-105 transition-transform" onclick={() => openComic(heroItem)}>
-							<img src={heroCover} class="w-full h-full object-cover" referrerpolicy="no-referrer" alt={heroItem.comicName} />
+						<button
+							class="relative h-64 w-48 overflow-hidden rounded-xl shadow-2xl ring-1 ring-surface transition-transform hover:scale-105"
+							onclick={() => openComic(heroItem)}
+						>
+							<img
+								src={heroCover}
+								class="h-full w-full object-cover"
+								referrerpolicy="no-referrer"
+								alt={heroItem.comicName}
+							/>
 						</button>
 					{:else}
-						<button class="w-48 h-64 rounded-xl bg-surface flex items-center justify-center text-muted-foreground hover:scale-105 transition-transform" onclick={() => openComic(heroItem)}>
-							<PlaceholderManga class="w-24 h-24" />
+						<button
+							class="flex h-64 w-48 items-center justify-center rounded-xl bg-surface text-muted-foreground transition-transform hover:scale-105"
+							onclick={() => openComic(heroItem)}
+						>
+							<PlaceholderManga class="h-24 w-24" />
 						</button>
 					{/if}
 
 					<div class="flex-1 space-y-4 pb-2">
-						<button class="text-left hover:opacity-80 transition-opacity" onclick={() => openComic(heroItem)}>
-							<h3 class="text-5xl font-black tracking-tight text-white drop-shadow-md">{heroItem.comicName}</h3>
+						<button
+							class="text-left transition-opacity hover:opacity-80"
+							onclick={() => openComic(heroItem)}
+						>
+							<h3 class="text-5xl font-black tracking-tight text-white drop-shadow-md">
+								{heroItem.comicName}
+							</h3>
 						</button>
-						
-						<div class="flex items-center gap-2 text-lg text-white/80 font-medium">
+
+						<div class="flex items-center gap-2 text-lg font-medium text-white/80">
 							<BookOpen size={20} />
 							<span>{m['pages.history.chapter_label']({ chapter: heroItem.chapterName })}</span>
-							<span class="opacity-50 mx-2">•</span>
+							<span class="mx-2 opacity-50">•</span>
 							<span>{m['pages.history.page_label']({ page: heroItem.lastPage + 1 })}</span>
 						</div>
 
 						<AcerolaButton
 							events={{ onClick: () => resumeReading(heroItem) }}
 							ui={{
-								class: 'mt-4 px-8 py-6 rounded-full font-black tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20'
+								class:
+									'mt-4 px-8 py-6 rounded-full font-black tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20'
 							}}
 						>
 							{m['pages.history.resume']()}
@@ -133,31 +157,37 @@
 
 			{#if history.items.length > 1}
 				<div class="px-8">
-					<h3 class="text-xl font-bold tracking-tight mb-6 opacity-80">{m['pages.history.older']()}</h3>
+					<h3 class="mb-6 text-xl font-bold tracking-tight opacity-80">
+						{m['pages.history.older']()}
+					</h3>
 					<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 						{#each history.items.slice(1) as item (item.comicDirectoryId)}
 							{@const cover = resolveArtworkPath(item.comicCover) || undefined}
-							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(item.comicDirectoryId)?.color}
+							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
+								item.comicDirectoryId
+							)?.color}
 							<AcerolaCardImage
-								data={{ 
-									title: item.comicName, 
-									cover,
+								data={{
+									title: item.comicName,
+									cover
 								}}
 								events={{ onClick: () => openComic(item) }}
 							>
 								{#snippet footer()}
 									<div class="mt-1 flex flex-col gap-1">
-										<span class="text-overlay flex items-center gap-1 text-[10px] font-black tracking-wider uppercase">
+										<span
+											class="text-overlay flex items-center gap-1 text-[10px] font-black tracking-wider uppercase"
+										>
 											<BookOpen size={10} class="shrink-0" />
 											<span class="truncate">
 												{m['pages.history.chapter_label']({ chapter: item.chapterName })}
 											</span>
 										</span>
-										
+
 										<span class="text-overlay text-[10px] opacity-80">
 											{m['pages.history.page_label']({ page: item.lastPage + 1 })}
 										</span>
-									</div>	
+									</div>
 								{/snippet}
 
 								{#snippet floatingBadge()}

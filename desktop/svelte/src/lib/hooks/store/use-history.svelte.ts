@@ -43,7 +43,12 @@ export function useHistory() {
 		}
 	}
 
-	async function updateReading(comicId: string, chapterId: string, lastPage: number, isCompleted: boolean) {
+	async function updateReading(
+		comicId: string,
+		chapterId: string,
+		lastPage: number,
+		isCompleted: boolean
+	) {
 		try {
 			await invoke(HISTORY_COMMANDS.updateReading, {
 				comicId,

@@ -225,9 +225,8 @@ mod app_bootstrap {
 pub fn run() {
     use pdfium_render::prelude::Pdfium;
 
-    let pdfium_path = std::env::current_exe()
-        .ok()
-        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()));
+    let pdfium_path =
+        std::env::current_exe().ok().and_then(|exe| exe.parent().map(|p| p.to_path_buf()));
 
     let pdfium_bindings = if let Some(ref exe_dir) = pdfium_path {
         let resource_dir = exe_dir.join("_up_").join(".bin");

@@ -16,18 +16,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
 	args: {
-		color: 0xFFF44336 // Red color
+		color: 0xfff44336 // Red color
 	}
 };
 
 export const BlueRibbon: Story = {
 	args: {
-		color: 0xFF2196F3 // Blue color
+		color: 0xff2196f3 // Blue color
 	}
 };
 
 export const GreenRibbon: Story = {
 	args: {
-		color: 0xFF4CAF50 // Green color
+		color: 0xff4caf50 // Green color
 	}
 };

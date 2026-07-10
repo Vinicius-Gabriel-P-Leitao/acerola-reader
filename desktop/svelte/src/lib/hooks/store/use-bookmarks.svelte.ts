@@ -10,10 +10,10 @@ let isInitialized = false;
 
 // ONLY FOR TESTING
 export function _resetBookmarksState() {
-    bookmarks = [];
-    assignments = [];
-    isInitialized = false;
-    isLoading = false;
+	bookmarks = [];
+	assignments = [];
+	isInitialized = false;
+	isLoading = false;
 }
 
 /**
@@ -24,103 +24,110 @@ export function _resetBookmarksState() {
  * @returns An object containing the bookmarks state and mutation methods.
  */
 export function useBookmarks() {
+	async function loadBookmarks() {
+		if (isInitialized) return;
+		isLoading = true;
+		try {
+			const [fetchedBookmarks, fetchedAssignments] = await Promise.all([
+				invoke<Category[]>(BOOKMARKS_COMMANDS.getCategories),
+				invoke<MangaCategory[]>(BOOKMARKS_COMMANDS.getAllComicCategories)
+			]);
+			bookmarks = fetchedBookmarks;
+			assignments = fetchedAssignments;
+			isInitialized = true;
+		} catch (err) {
+			error(`Failed to load bookmarks: ${err}`);
+		} finally {
+			isLoading = false;
+		}
+	}
 
-    async function loadBookmarks() {
-        if (isInitialized) return;
-        isLoading = true;
-        try {
-            const [fetchedBookmarks, fetchedAssignments] = await Promise.all([
-                invoke<Category[]>(BOOKMARKS_COMMANDS.getCategories),
-                invoke<MangaCategory[]>(BOOKMARKS_COMMANDS.getAllComicCategories)
-            ]);
-            bookmarks = fetchedBookmarks;
-            assignments = fetchedAssignments;
-            isInitialized = true;
-        } catch (err) {
-            error(`Failed to load bookmarks: ${err}`);
-        } finally {
-            isLoading = false;
-        }
-    }
+	async function createBookmark(name: string, color: number) {
+		try {
+			const newBookmark = await invoke<Category>(BOOKMARKS_COMMANDS.createCategory, {
+				name,
+				color
+			});
+			bookmarks = [...bookmarks, newBookmark];
+			return newBookmark;
+		} catch (err) {
+			error(`Failed to create bookmark: ${err}`);
+			throw err;
+		}
+	}
 
-    async function createBookmark(name: string, color: number) {
-        try {
-            const newBookmark = await invoke<Category>(BOOKMARKS_COMMANDS.createCategory, { name, color });
-            bookmarks = [...bookmarks, newBookmark];
-            return newBookmark;
-        } catch (err) {
-            error(`Failed to create bookmark: ${err}`);
-            throw err;
-        }
-    }
+	async function deleteBookmark(id: number) {
+		try {
+			await invoke(BOOKMARKS_COMMANDS.deleteCategory, { id: Number(id) });
+			bookmarks = bookmarks.filter((bookmark) => bookmark.id !== id);
+		} catch (err) {
+			error(`Failed to delete bookmark: ${err}`);
+			throw err;
+		}
+	}
 
-    async function deleteBookmark(id: number) {
-        try {
-            await invoke(BOOKMARKS_COMMANDS.deleteCategory, { id: Number(id) });
-            bookmarks = bookmarks.filter((bookmark) => bookmark.id !== id);
-        } catch (err) {
-            error(`Failed to delete bookmark: ${err}`);
-            throw err;
-        }
-    }
+	async function assignToComic(comicId: string | number, categoryId: number) {
+		try {
+			await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
+			const assignment = await invoke<MangaCategory>(BOOKMARKS_COMMANDS.assignCategoryToComic, {
+				comicId: comicId.toString(),
+				categoryId: Number(categoryId)
+			});
 
-    async function assignToComic(comicId: string | number, categoryId: number) {
-        try {
-            await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
-            const assignment = await invoke<MangaCategory>(BOOKMARKS_COMMANDS.assignCategoryToComic, { 
-                comicId: comicId.toString(), 
-                categoryId: Number(categoryId) 
-            });
-            
-            const comicIdNum = Number(comicId);
-            assignments = [
-                ...assignments.filter(a => a.comic_directory_fk !== comicIdNum),
-                assignment
-            ];
-            return assignment;
-        } catch (err) {
-            error(`Failed to assign bookmark: ${err}`);
-            throw err;
-        }
-    }
+			const comicIdNum = Number(comicId);
+			assignments = [...assignments.filter((a) => a.comic_directory_fk !== comicIdNum), assignment];
+			return assignment;
+		} catch (err) {
+			error(`Failed to assign bookmark: ${err}`);
+			throw err;
+		}
+	}
 
-    async function removeComicBookmark(comicId: string | number) {
-        try {
-            await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
-            const comicIdNum = Number(comicId);
-            assignments = assignments.filter(a => a.comic_directory_fk !== comicIdNum);
-        } catch (err) {
-            error(`Failed to remove bookmark from comic: ${err}`);
-            throw err;
-        }
-    }
+	async function removeComicBookmark(comicId: string | number) {
+		try {
+			await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
+			const comicIdNum = Number(comicId);
+			assignments = assignments.filter((a) => a.comic_directory_fk !== comicIdNum);
+		} catch (err) {
+			error(`Failed to remove bookmark from comic: ${err}`);
+			throw err;
+		}
+	}
 
-    async function getComicBookmark(comicId: string | number) {
-        try {
-            return await invoke<Category | null>(BOOKMARKS_COMMANDS.getComicCategory, { comicId: comicId.toString() });
-        } catch (err) {
-            error(`Failed to get comic bookmark: ${err}`);
-            return null;
-        }
-    }
+	async function getComicBookmark(comicId: string | number) {
+		try {
+			return await invoke<Category | null>(BOOKMARKS_COMMANDS.getComicCategory, {
+				comicId: comicId.toString()
+			});
+		} catch (err) {
+			error(`Failed to get comic bookmark: ${err}`);
+			return null;
+		}
+	}
 
-    function getBookmarkForComic(comicId: string | number) {
-        const comicIdNum = Number(comicId);
-        const assignment = assignments.find(a => a.comic_directory_fk === comicIdNum);
-        if (!assignment) return null;
-        return bookmarks.find(b => b.id === assignment.category_id) ?? null;
-    }
+	function getBookmarkForComic(comicId: string | number) {
+		const comicIdNum = Number(comicId);
+		const assignment = assignments.find((a) => a.comic_directory_fk === comicIdNum);
+		if (!assignment) return null;
+		return bookmarks.find((b) => b.id === assignment.category_id) ?? null;
+	}
 
-    return {
-        get bookmarks() { return bookmarks; },
-        get assignments() { return assignments; },
-        get isLoading() { return isLoading; },
-        loadBookmarks,
-        createBookmark,
-        deleteBookmark,
-        assignToComic,
-        removeComicBookmark,
-        getComicBookmark,
-        getBookmarkForComic
-    };
+	return {
+		get bookmarks() {
+			return bookmarks;
+		},
+		get assignments() {
+			return assignments;
+		},
+		get isLoading() {
+			return isLoading;
+		},
+		loadBookmarks,
+		createBookmark,
+		deleteBookmark,
+		assignToComic,
+		removeComicBookmark,
+		getComicBookmark,
+		getBookmarkForComic
+	};
 }

@@ -57,11 +57,16 @@
 </script>
 
 <Select type="single" bind:value>
-	<SelectTrigger class={cn('h-10 w-auto min-w-48 justify-between border-surface/30 bg-surface/20 transition-all hover:bg-surface/40', ui?.class)}>
+	<SelectTrigger
+		class={cn(
+			'h-10 w-auto min-w-48 justify-between border-surface/30 bg-surface/20 transition-all hover:bg-surface/40',
+			ui?.class
+		)}
+	>
 		<div class="flex items-center gap-2">
 			{#if selectedOption?.color != null}
-				{@const hex = (selectedOption.color & 0xFFFFFF).toString(16).padStart(6, '0')}
-				<div 
+				{@const hex = (selectedOption.color & 0xffffff).toString(16).padStart(6, '0')}
+				<div
 					class="flex items-center gap-2 rounded-md border px-2 py-0.5 shadow-sm"
 					style="background-color: #{hex}15; border-color: #{hex}30; color: #{hex}"
 				>
@@ -79,8 +84,8 @@
 			<SelectItem value={option.value} label={option.label} class="cursor-pointer">
 				<div class="flex items-center gap-2 py-0.5">
 					{#if option.color != null}
-						{@const hex = (option.color & 0xFFFFFF).toString(16).padStart(6, '0')}
-						<div 
+						{@const hex = (option.color & 0xffffff).toString(16).padStart(6, '0')}
+						<div
 							class="flex items-center gap-2 rounded-md px-2 py-0.5 transition-colors"
 							style="background-color: #{hex}15; color: #{hex}"
 						>

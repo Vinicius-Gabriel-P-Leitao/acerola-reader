@@ -38,7 +38,7 @@
 	)}
 	onclick={events?.onClick}
 >
-	<div class="flex flex-1 min-w-0 items-center gap-4">
+	<div class="flex min-w-0 flex-1 items-center gap-4">
 		{#if icon}
 			<Item.Media
 				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-foreground transition-colors group-hover:text-primary"
@@ -53,7 +53,8 @@
 			</Item.Title>
 
 			{#if data?.description}
-				<Item.Description class="block w-full truncate text-sm text-muted-foreground">{data.description}</Item.Description
+				<Item.Description class="block w-full truncate text-sm text-muted-foreground"
+					>{data.description}</Item.Description
 				>
 			{/if}
 		</Item.Content>

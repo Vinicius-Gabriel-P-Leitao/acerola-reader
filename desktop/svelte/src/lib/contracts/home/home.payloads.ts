@@ -39,4 +39,3 @@ export type SortConfig = {
 	sortBy: SortBy;
 	sortOrder: SortOrder;
 };
-
