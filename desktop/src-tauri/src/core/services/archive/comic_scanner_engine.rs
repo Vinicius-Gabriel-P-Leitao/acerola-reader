@@ -909,7 +909,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn refresh_library_pre_converts_pdfs() {
+    async fn atualizar_biblioteca_pre_converte_pdfs() {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
 
         let root = tempfile::tempdir().unwrap();
