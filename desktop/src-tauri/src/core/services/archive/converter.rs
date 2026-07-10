@@ -156,6 +156,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore = "requires pdfium DLL which is not available in CI"]
     async fn teste_converter_pdf_para_cbz() {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
 
