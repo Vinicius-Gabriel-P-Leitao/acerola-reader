@@ -54,7 +54,8 @@ class MangadexChapterEngine
         private val chapterMetadataDao: ChapterMetadataDao,
         private val metadataExportService: MetadataExporter,
         private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
-    ) : ChapterSyncGateway, ChapterReadGateway<ChapterRemoteInfoPageDto> {
+    ) : ChapterSyncGateway,
+        ChapterReadGateway<ChapterRemoteInfoPageDto> {
         @Inject
         @MangadexSource
         lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>

@@ -61,7 +61,7 @@ class ReaderViewModelTest {
         every { ReadingModePreference.readingModeFlow(any()) } returns flowOf(ReadingMode.HORIZONTAL)
 
         mockkObject(ChapterSortPreference)
-        every { ChapterSortPreference.sortFlow(any()) } returns 
+        every { ChapterSortPreference.sortFlow(any()) } returns
             flowOf(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
 
         readerUseCase = ReaderUseCase(processor)

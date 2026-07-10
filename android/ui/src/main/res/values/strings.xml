@@ -164,7 +164,7 @@
     <string name="label_history_hero_continue">CONTINUAR LENDO</string>
     <string name="label_banner_continue_reading">Continuar Lendo</string>
     <string name="label_banner_chapter_progress">Capítulo %1$s</string>
-    <string name="label_banner_continue">Continuar</string>
+    <string name="label_banner_continue">Continuar Lendo</string>
     <string name="description_icon_collapse_banner">Colapsar banner</string>
     <string name="description_icon_home_search">Pesquisar</string>
     <string name="label_reader_config_title">Modo de Leitura</string>

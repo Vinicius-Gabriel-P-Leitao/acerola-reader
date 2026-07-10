@@ -15,7 +15,6 @@ import br.acerola.comic.usecase.AnilistCase
 import br.acerola.comic.usecase.ComicInfoCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
-import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
 import br.acerola.comic.worker.contract.SyncType
 import dagger.assisted.Assisted
@@ -103,11 +102,12 @@ class MetadataSyncWorker
                     }
 
                 try {
-                    val result = syncMetadataUseCase.execute(
-                        source = source,
-                        type = syncType,
-                        directoryId = if (directoryId != -1L) directoryId else null
-                    )
+                    val result =
+                        syncMetadataUseCase.execute(
+                            source = source,
+                            type = syncType,
+                            directoryId = if (directoryId != -1L) directoryId else null,
+                        )
 
                     progressJob.cancel()
 

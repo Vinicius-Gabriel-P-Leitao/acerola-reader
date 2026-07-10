@@ -12,7 +12,6 @@ import arrow.core.Either
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
-import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
 import br.acerola.comic.worker.contract.SyncType
 import br.acerola.comic.worker.sync.MetadataSyncWorker
@@ -85,7 +84,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.MANGADEX,
                     SyncType.SYNC,
-                    42L
+                    42L,
                 )
             } returns Either.Right(Unit)
 
@@ -104,7 +103,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.MANGADEX,
                     SyncType.SYNC,
-                    42L
+                    42L,
                 )
             }
         }
@@ -116,7 +115,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.MANGADEX,
                     SyncType.SYNC,
-                    42L
+                    42L,
                 )
             } returns Either.Left(LibrarySyncError.SyncNetworkError())
 
@@ -140,7 +139,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.ANILIST,
                     SyncType.SYNC,
-                    42L
+                    42L,
                 )
             } returns Either.Right(Unit)
 
@@ -164,7 +163,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.COMIC_INFO,
                     SyncType.SYNC,
-                    42L
+                    42L,
                 )
             } returns Either.Right(Unit)
 
@@ -189,7 +188,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.MANGADEX,
                     SyncType.SYNC,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 
@@ -213,7 +212,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.MANGADEX,
                     SyncType.SYNC,
-                    null
+                    null,
                 )
             } returns Either.Left(LibrarySyncError.SyncNetworkError())
 
@@ -237,7 +236,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.ANILIST,
                     SyncType.RESCAN,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 
@@ -261,7 +260,7 @@ class MetadataSyncWorkerTest {
                 syncMetadataUseCase.execute(
                     MetadataSource.COMIC_INFO,
                     SyncType.SYNC,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 

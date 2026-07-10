@@ -43,11 +43,12 @@ fun Acerola.Component.AdaptiveSheet(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val scrollModifier = if (isScrollable) {
-        Modifier.verticalScroll(rememberScrollState())
-    } else {
-        Modifier
-    }
+    val scrollModifier =
+        if (isScrollable) {
+            Modifier.verticalScroll(rememberScrollState())
+        } else {
+            Modifier
+        }
 
     if (isLandscape) {
         Dialog(

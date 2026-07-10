@@ -44,4 +44,3 @@ interface ChapterReadGateway<T> {
         isAscending: Boolean = true,
     ): T
 }
-

@@ -20,8 +20,10 @@ import org.junit.Test
 class SyncLibraryUseCaseTest {
     @MockK
     lateinit var singleSync: ComicSingleSyncGateway
+
     @MockK
     lateinit var scanGateway: ComicLibraryScanGateway
+
     @MockK
     lateinit var rebuildGateway: ComicRebuildGateway
 
@@ -34,56 +36,61 @@ class SyncLibraryUseCaseTest {
     }
 
     @Test
-    fun `execute INCREMENTAL deve chamar scanGateway incrementalScan`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { scanGateway.incrementalScan(uri) } returns Either.Right(Unit)
+    fun `execute INCREMENTAL deve chamar scanGateway incrementalScan`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { scanGateway.incrementalScan(uri) } returns Either.Right(Unit)
 
-        val result = useCase.execute(SyncType.INCREMENTAL, -1L, uri)
+            val result = useCase.execute(SyncType.INCREMENTAL, -1L, uri)
 
-        assertTrue(result.isRight())
-        coVerify { scanGateway.incrementalScan(uri) }
-    }
-
-    @Test
-    fun `execute REFRESH deve chamar scanGateway refreshLibrary`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { scanGateway.refreshLibrary(uri) } returns Either.Right(Unit)
-
-        val result = useCase.execute(SyncType.REFRESH, -1L, uri)
-
-        assertTrue(result.isRight())
-        coVerify { scanGateway.refreshLibrary(uri) }
-    }
-
-    @Test
-    fun `execute REBUILD deve chamar rebuildGateway rebuildLibrary`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { rebuildGateway.rebuildLibrary(uri) } returns Either.Right(Unit)
-
-        val result = useCase.execute(SyncType.REBUILD, -1L, uri)
-
-        assertTrue(result.isRight())
-        coVerify { rebuildGateway.rebuildLibrary(uri) }
-    }
-
-    @Test
-    fun `execute SPECIFIC com id valido deve chamar singleSync refreshManga`() = runTest {
-        val uri = mockk<Uri>()
-        coEvery { singleSync.refreshManga(42L, uri) } returns Either.Right(Unit)
-
-        val result = useCase.execute(SyncType.SPECIFIC, 42L, uri)
-
-        assertTrue(result.isRight())
-        coVerify { singleSync.refreshManga(42L, uri) }
-    }
-
-    @Test
-    fun `execute SPECIFIC com id invalido deve retornar erro`() = runTest {
-        val result = useCase.execute(SyncType.SPECIFIC, -1L, null)
-
-        assertTrue(result.isLeft())
-        result.onLeft {
-            assertTrue(it is LibrarySyncError.UnexpectedError)
+            assertTrue(result.isRight())
+            coVerify { scanGateway.incrementalScan(uri) }
         }
-    }
+
+    @Test
+    fun `execute REFRESH deve chamar scanGateway refreshLibrary`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { scanGateway.refreshLibrary(uri) } returns Either.Right(Unit)
+
+            val result = useCase.execute(SyncType.REFRESH, -1L, uri)
+
+            assertTrue(result.isRight())
+            coVerify { scanGateway.refreshLibrary(uri) }
+        }
+
+    @Test
+    fun `execute REBUILD deve chamar rebuildGateway rebuildLibrary`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { rebuildGateway.rebuildLibrary(uri) } returns Either.Right(Unit)
+
+            val result = useCase.execute(SyncType.REBUILD, -1L, uri)
+
+            assertTrue(result.isRight())
+            coVerify { rebuildGateway.rebuildLibrary(uri) }
+        }
+
+    @Test
+    fun `execute SPECIFIC com id valido deve chamar singleSync refreshManga`() =
+        runTest {
+            val uri = mockk<Uri>()
+            coEvery { singleSync.refreshManga(42L, uri) } returns Either.Right(Unit)
+
+            val result = useCase.execute(SyncType.SPECIFIC, 42L, uri)
+
+            assertTrue(result.isRight())
+            coVerify { singleSync.refreshManga(42L, uri) }
+        }
+
+    @Test
+    fun `execute SPECIFIC com id invalido deve retornar erro`() =
+        runTest {
+            val result = useCase.execute(SyncType.SPECIFIC, -1L, null)
+
+            assertTrue(result.isLeft())
+            result.onLeft {
+                assertTrue(it is LibrarySyncError.UnexpectedError)
+            }
+        }
 }
