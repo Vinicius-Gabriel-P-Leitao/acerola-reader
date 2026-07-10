@@ -7,5 +7,6 @@ export const STORE_KEYS = {
 	comicInfoPreference: 'comic_info_preference',
 	chaptersPerPage: 'chapters_per_page',
 	volumeViewMode: 'volume_view_mode',
-	readerMode: 'reader_mode'
+	readerMode: 'reader_mode',
+	onboardingCompleted: 'onboarding_completed'
 } as const;

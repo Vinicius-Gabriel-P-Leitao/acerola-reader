@@ -155,8 +155,8 @@
 					<AcerolaSwitch
 						state={{ checked: comicInfoPreference.comicInfoPreference ?? false }}
 						events={{
-							onCheckedChange: async () => {
-								await comicInfoPreference.selectComicInfoPreference();
+							onCheckedChange: async (checked) => {
+								await comicInfoPreference.selectComicInfoPreference(checked);
 							}
 						}}
 					/>

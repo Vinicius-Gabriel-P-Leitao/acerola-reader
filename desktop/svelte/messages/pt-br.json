@@ -301,5 +301,43 @@
 			}
 		}
 	},
+	"onboarding": {
+		"welcome": "Bem-vindo ao Acerola, seu leitor de quadrinhos.",
+		"start": "Começar",
+		"back": "Voltar",
+		"next": "Próximo",
+		"step": {
+			"welcome": "Boas-vindas",
+			"language": "Idioma",
+			"formats": "Formatos",
+			"settings": "Configurações",
+			"complete": "Concluir"
+		},
+		"language": {
+			"title": "Selecionar Idioma",
+			"desc": "Escolha o idioma preferido para a aplicação."
+		},
+		"formats": {
+			"title": "Formatos Suportados",
+			"desc": "O Acerola suporta os seguintes formatos:",
+			"cbz": "Formato Comic Book.",
+			"cbr": "Formato Comic Book.",
+			"pdf": "PDFs são convertidos para CBZ. Tratados como capítulos únicos, páginas não são separadas automaticamente."
+		},
+		"settings": {
+			"title": "Configuração Inicial",
+			"theme": "Tema",
+			"folder": "Pasta dos Quadrinhos",
+			"folder_desc": "Selecione a pasta onde seus quadrinhos estão armazenados.",
+			"folder_select": "Selecionar Pasta",
+			"folder_selected": "Pasta selecionada"
+		},
+		"complete": {
+			"title": "Tudo Pronto!",
+			"desc": "Seu Acerola está pronto para uso.",
+			"note": "Você pode alterar essas configurações a qualquer momento na página de Configurações.",
+			"button": "Ir para Início"
+		}
+	},
 	"pages.reader.fallback.loading": "Carregando..."
 }

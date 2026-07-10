@@ -38,6 +38,7 @@
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
+	import { useOnboarding } from '$lib/hooks/onboarding/use-onboarding.svelte';
 	import { setComicContext } from '$lib/state/comic-context.svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
@@ -57,6 +58,7 @@
 	import AcerolaNotification from '$lib/components/acerola-notification/acerola-notification.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
+	import Onboarding from './(onboarding)/onboarding.svelte';
 	import '$theme/layout.css';
 	import Search from '@lucide/svelte/icons/search';
 
@@ -70,6 +72,7 @@
 	const folder = useSelectFolder();
 	const summary = useComicSummary();
 	const bookmarkStore = useBookmarks();
+	const onboarding = useOnboarding();
 
 	const incrementalScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.incrementalScan,
@@ -197,6 +200,13 @@
 			</AcerolaSidebar>
 
 			<main class="flex-1 overflow-y-auto">
+				{#if onboarding.isLoading}
+					<div class="flex h-full w-full items-center justify-center text-muted-foreground">
+						Loading...
+					</div>
+				{:else if !onboarding.isCompleted}
+					<Onboarding />
+				{:else}
 				<header
 					class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl"
 				>
@@ -229,7 +239,8 @@
 					</div>
 				</header>
 
-				{@render children()}
+					{@render children()}
+				{/if}
 			</main>
 		</SidebarProvider>
 	</div>

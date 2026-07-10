@@ -301,5 +301,43 @@
 			}
 		}
 	},
+	"onboarding": {
+		"welcome": "Welcome to Acerola, your comic reader.",
+		"start": "Get Started",
+		"back": "Back",
+		"next": "Next",
+		"step": {
+			"welcome": "Welcome",
+			"language": "Language",
+			"formats": "Formats",
+			"settings": "Settings",
+			"complete": "Finish"
+		},
+		"language": {
+			"title": "Select Language",
+			"desc": "Choose your preferred language for the application."
+		},
+		"formats": {
+			"title": "Supported Formats",
+			"desc": "Acerola supports the following formats:",
+			"cbz": "Comic Book format.",
+			"cbr": "Comic Book format.",
+			"pdf": "PDFs are converted to CBZ format. Treated as single chapters, pages are not automatically separated."
+		},
+		"settings": {
+			"title": "Initial Setup",
+			"theme": "Theme",
+			"folder": "Comics Folder",
+			"folder_desc": "Select the folder where your comics are stored.",
+			"folder_select": "Select Folder",
+			"folder_selected": "Folder selected"
+		},
+		"complete": {
+			"title": "All Set!",
+			"desc": "Your Acerola is ready to use.",
+			"note": "You can always change these settings later in the Settings page.",
+			"button": "Go to Home"
+		}
+	},
 	"pages.reader.fallback.loading": "Loading..."
 }
