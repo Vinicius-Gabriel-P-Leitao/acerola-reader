@@ -50,6 +50,7 @@ import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.comic.common.viewmodel.network.P2pViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
+import br.acerola.comic.service.PeerAddress
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.component.GlobalCategoryManager
 import br.acerola.comic.module.main.config.component.LanguageSettings
@@ -321,9 +322,12 @@ private fun SectionHeader(title: String) {
 @Composable
 fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
     val localId = remember(p2pViewModel) { p2pViewModel.getLocalId() }
+    val localAddress = remember(p2pViewModel) { p2pViewModel.getLocalAddress() }
     val mode = remember(p2pViewModel) { p2pViewModel.getMode() }
     val clipboardManager = LocalClipboardManager.current
     var remotePeerId by remember { mutableStateOf("") }
+    var remoteDeviceId by remember { mutableStateOf("") }
+    var remoteAddrs by remember { mutableStateOf("") }
 
     SectionHeader("P2P Demo")
     Column(modifier = Modifier.padding(horizontal = SpacingTokens.Large)) {
@@ -347,7 +351,32 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
 
         Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
-        Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, "acerola/handshake/1".toByteArray()) }) {
+        OutlinedTextField(
+            value = remoteDeviceId,
+            onValueChange = { remoteDeviceId = it },
+            label = { Text("Remote Device ID (optional)") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
+
+        OutlinedTextField(
+            value = remoteAddrs,
+            onValueChange = { remoteAddrs = it },
+            label = { Text("Remote Addrs (base64)") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
+
+        Button(onClick = {
+            val address = PeerAddress(
+                id = remotePeerId,
+                deviceId = remoteDeviceId.ifBlank { null },
+                addrs = remoteAddrs.toByteArray()
+            )
+            p2pViewModel.connectToPeer(address, "acerola/handshake/1".toByteArray())
+        }) {
             Text("Connect")
         }
 

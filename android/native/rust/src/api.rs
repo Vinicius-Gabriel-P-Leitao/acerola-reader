@@ -7,6 +7,7 @@ use acerola_p2p::api::{
     guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
     identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
     network::NetworkMode,
+    peer::{PeerAddr, PeerIdentity},
     transport::IrohTransportBuilder,
 };
 
@@ -19,6 +20,13 @@ use std::collections::HashMap;
 #[uniffi::export(with_foreign)]
 pub trait P2PCallback: Send + Sync {
     fn on_event(&self, event: String, data: String);
+}
+
+#[derive(uniffi::Record)]
+pub struct FfiPeerAddr {
+    pub id: String,
+    pub device_id: Option<String>,
+    pub addrs: Vec<u8>,
 }
 
 #[derive(uniffi::Object)]
@@ -70,10 +78,26 @@ impl P2PNode {
         self.node.local_id().to_string()
     }
 
-    pub fn connect(&self, peer_id: String, alpn: Vec<u8>) {
+    pub fn get_local_addr(&self) -> FfiPeerAddr {
+        let addr = self.node.local_addr();
+        FfiPeerAddr {
+            id: addr.id.id.clone(),
+            device_id: addr.id.device_id.clone(),
+            addrs: addr.addrs.clone(),
+        }
+    }
+
+    pub fn connect(&self, peer_addr: FfiPeerAddr, alpn: Vec<u8>) {
         let node = Arc::clone(&self.node);
+        let addr = PeerAddr {
+            id: PeerIdentity {
+                id: peer_addr.id,
+                device_id: peer_addr.device_id,
+            },
+            addrs: peer_addr.addrs,
+        };
         self.runtime.spawn(async move {
-            let _ = node.connect(&peer_id, &alpn).await;
+            let _ = node.connect(addr, &alpn).await;
         });
     }
 
