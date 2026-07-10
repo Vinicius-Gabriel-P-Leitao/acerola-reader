@@ -316,12 +316,16 @@
     <string name="tutorial_desc_welcome">Seu leitor de quadrinhos locais. Vamos mostrar como organizar sua biblioteca para o app funcionar perfeitamente.</string>
     <string name="tutorial_title_folder">Organize suas pastas</string>
     <string name="tutorial_desc_folder">Crie uma pasta raiz para a biblioteca. Dentro dela, cada quadrinho deve ter sua própria subpasta contendo os capítulos.</string>
-    <string name="tutorial_title_files">Formatos suportados</string>
+    <string name="tutorial_title_files">Formatos Suportados</string>
     <string name="tutorial_desc_files">O Acerola suporta arquivos .cbz e .cbr. PDFs são convertidos automaticamente para .cbz. Organize os capítulos numericamente dentro da pasta do quadrinho para melhor experiência.</string>
+    <string name="tutorial_title_settings">Configurações Iniciais</string>
+    <string name="tutorial_title_complete">Tudo Pronto!</string>
+    <string name="tutorial_desc_complete">O Acerola está pronto para uso.</string>
+    <string name="tutorial_note_complete">Você pode alterar essas configurações a qualquer momento na página de Configurações.</string>
     <string name="tutorial_action_next">Próximo</string>
-    <string name="tutorial_action_previous">Anterior</string>
+    <string name="tutorial_action_previous">Voltar</string>
     <string name="tutorial_action_skip">Pular</string>
-    <string name="tutorial_action_finish">Começar</string>
+    <string name="tutorial_action_finish">Ir para Início</string>
     <string name="tutorial_content_description_slide">Imagem ilustrativa do tutorial</string>
 
 </resources>
