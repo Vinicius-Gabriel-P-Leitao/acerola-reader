@@ -11,7 +11,7 @@ class ArchiveValidator
             targetCbzName: String,
             existingNames: Set<String>,
             chapterRegex: Regex,
-        ): Boolean = !existingNames.contains(targetCbzName)
+        ): Boolean = !existingNames.contains(targetCbzName) && chapterRegex.matches(targetCbzName)
 
         fun isDuplicateSort(
             processedSorts: Set<String>,
