@@ -1,6 +1,7 @@
 package br.acerola.comic.common.viewmodel.network
 
 import br.acerola.comic.service.NetworkMode
+import br.acerola.comic.service.PeerAddress
 import br.acerola.comic.usecase.network.P2pUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
@@ -26,9 +27,14 @@ class P2pViewModelTest {
 
     @Test
     fun `deve delegar conexao para o use case`() {
+        val peerAddress = PeerAddress(
+            id = "peer-1",
+            deviceId = "device-1",
+            addrs = byteArrayOf()
+        )
         val alpn = "test".toByteArray()
-        viewModel.connectToPeer("peer-1", alpn)
-        verify { p2pUseCase.connect("peer-1", alpn) }
+        viewModel.connectToPeer(peerAddress, alpn)
+        verify { p2pUseCase.connect(peerAddress, alpn) }
     }
 
     @Test
