@@ -18,7 +18,7 @@ vi.mock('@tauri-apps/plugin-log', () => ({
 
 // Mock do element.animate para jsdom
 if (!window.HTMLElement.prototype.animate) {
-	window.HTMLElement.prototype.animate = function() {
+	window.HTMLElement.prototype.animate = function () {
 		const self = {} as Animation;
 		return {
 			finished: Promise.resolve(self),
@@ -96,7 +96,7 @@ describe('AcerolaComicActionDialog', () => {
 
 	it('chama onHide quando o botão Hide é clicado', async () => {
 		mockOnHide.mockResolvedValueOnce(undefined);
-		
+
 		render(AcerolaComicActionDialog, {
 			props: {
 				selectedIds: [1, 2],
@@ -135,7 +135,7 @@ describe('AcerolaComicActionDialog', () => {
 
 	it('chama onDelete quando confirmado no dialog', async () => {
 		mockOnDelete.mockResolvedValueOnce(undefined);
-		
+
 		render(AcerolaComicActionDialog, {
 			props: {
 				selectedIds: [1, 2],
@@ -179,7 +179,7 @@ describe('AcerolaComicActionDialog', () => {
 
 	it('chama onBookmark com o categoryId correto', async () => {
 		mockOnBookmark.mockResolvedValueOnce(undefined);
-		
+
 		render(AcerolaComicActionDialog, {
 			props: {
 				selectedIds: [1, 2],
@@ -222,8 +222,8 @@ describe('AcerolaComicActionDialog', () => {
 	});
 
 	it('desabilita botões durante processamento', async () => {
-		mockOnHide.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
-		
+		mockOnHide.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+
 		render(AcerolaComicActionDialog, {
 			props: {
 				selectedIds: [1, 2],

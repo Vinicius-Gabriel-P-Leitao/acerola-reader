@@ -38,10 +38,7 @@ export function mockedTauriResponse(
 	};
 }
 
-export async function installTauriMocks(
-	page: Page,
-	handlers: Record<string, MockedTauriHandler>
-) {
+export async function installTauriMocks(page: Page, handlers: Record<string, MockedTauriHandler>) {
 	await page.route('http://asset.localhost/**', (route) =>
 		route.fulfill({
 			status: 200,
@@ -50,15 +47,18 @@ export async function installTauriMocks(
 		})
 	);
 
-	await page.exposeFunction('__acerolaTauriHandleCommand', async (command: string, args?: unknown) => {
-		if (!(command in handlers)) {
-			throw new Error(`unmocked: ${command}`);
+	await page.exposeFunction(
+		'__acerolaTauriHandleCommand',
+		async (command: string, args?: unknown) => {
+			if (!(command in handlers)) {
+				throw new Error(`unmocked: ${command}`);
+			}
+
+			const handler = handlers[command];
+
+			return typeof handler === 'function' ? await handler(args, command) : handler;
 		}
-
-		const handler = handlers[command];
-
-		return typeof handler === 'function' ? await handler(args, command) : handler;
-	});
+	);
 
 	const tauriMocksSource = await readFile(tauriMocksPath, 'utf8');
 

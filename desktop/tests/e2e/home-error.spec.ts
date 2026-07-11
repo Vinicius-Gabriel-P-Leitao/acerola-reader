@@ -33,7 +33,9 @@ test.describe('erro IPC na home', () => {
 
 		await expect(page.getByText('db_error')).toBeVisible();
 		await expect(page).not.toHaveURL(/\/comic\//);
-		await expect.poll(() => tauriCommandCalls(page, HOME_COMMANDS.getComicSummary)).toBeLessThanOrEqual(1);
+		await expect
+			.poll(() => tauriCommandCalls(page, HOME_COMMANDS.getComicSummary))
+			.toBeLessThanOrEqual(1);
 		expect(consoleErrors).toEqual([]);
 	});
 });

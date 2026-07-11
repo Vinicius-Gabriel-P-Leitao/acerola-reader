@@ -58,7 +58,7 @@
 			>
 				{#snippet floatingBadge()}
 					{#if data.bookmarkColor != null}
-						<AcerolaBookmarkRibbon color={data.bookmarkColor} class="-top-1.5 left-5 w-6 h-10" />
+						<AcerolaBookmarkRibbon color={data.bookmarkColor} class="-top-1.5 left-5 h-10 w-6" />
 					{/if}
 				{/snippet}
 
@@ -112,8 +112,10 @@
 					}}
 				>
 					<Play size={24} fill="currentColor" />
-					{state?.isResuming 
-						? (m['pages.history.resume'] ? m['pages.history.resume']() : 'Continue Reading') 
+					{state?.isResuming
+						? m['pages.history.resume']
+							? m['pages.history.resume']()
+							: 'Continue Reading'
 						: m['pages.comic.metadata.read_now']()}
 				</AcerolaButton>
 

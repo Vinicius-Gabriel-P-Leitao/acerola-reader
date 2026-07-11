@@ -38,12 +38,13 @@
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
+	import { useOnboarding } from '$lib/hooks/onboarding/use-onboarding.svelte';
 	import { setComicContext } from '$lib/state/comic-context.svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { resolveCover } from '$lib/utils/artwork.utils';
-	
+
 	import AcerolaModePicker from '$lib/components/acerola-mode-picker/acerola-mode-picker.svelte';
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
 	import AcerolaSidebar from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
@@ -57,6 +58,7 @@
 	import AcerolaNotification from '$lib/components/acerola-notification/acerola-notification.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
+	import Onboarding from './(onboarding)/onboarding.svelte';
 	import '$theme/layout.css';
 	import Search from '@lucide/svelte/icons/search';
 
@@ -70,6 +72,7 @@
 	const folder = useSelectFolder();
 	const summary = useComicSummary();
 	const bookmarkStore = useBookmarks();
+	const onboarding = useOnboarding();
 
 	const incrementalScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.incrementalScan,
@@ -81,13 +84,13 @@
 		const { getCurrentWindow } = await import('@tauri-apps/api/window');
 		const { invoke } = await import('@tauri-apps/api/core');
 		const { error: logError } = await import('@tauri-apps/plugin-log');
-		
+
 		await folder.loadSavedPath();
 		await bookmarkStore.loadBookmarks();
 
 		try {
 			const packageFamilyName = await invoke<string>('get_package_family_name');
-			if (packageFamilyName !== "No package identity" && !packageFamilyName.startsWith("Error")) {
+			if (packageFamilyName !== 'No package identity' && !packageFamilyName.startsWith('Error')) {
 				packageIdentity = `Package: ${packageFamilyName}`;
 			} else {
 				packageIdentity = `Not running with package identity`;
@@ -197,39 +200,47 @@
 			</AcerolaSidebar>
 
 			<main class="flex-1 overflow-y-auto">
-				<header
-					class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl"
-				>
-				<div class="max-w-xl flex-1">
-					<button
-						aria-label={m['layout.search_placeholder']()}
-						class="group relative w-full cursor-text text-left"
-						onclick={() => {
-							isSearchDialogOpen = true;
-							if (!summary.comics) summary.fetch();
-						}}
-					>
-						<Search
-							class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
-							size={20}
-						/>
-						<div
-							class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
-						>
-							{m['layout.search_placeholder']()}
-						</div>
-					</button>
-				</div>
-
-					<div class="mx-8 flex items-center gap-4">
-						{#if packageIdentity}
-							<span class="text-xs text-muted-foreground">{packageIdentity}</span>
-						{/if}
-						<AcerolaNotification />
+				{#if onboarding.isLoading}
+					<div class="flex h-full w-full items-center justify-center text-muted-foreground">
+						Loading...
 					</div>
-				</header>
+				{:else if !onboarding.isCompleted}
+					<Onboarding />
+				{:else}
+					<header
+						class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl"
+					>
+						<div class="max-w-xl flex-1">
+							<button
+								aria-label={m['layout.search_placeholder']()}
+								class="group relative w-full cursor-text text-left"
+								onclick={() => {
+									isSearchDialogOpen = true;
+									if (!summary.comics) summary.fetch();
+								}}
+							>
+								<Search
+									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
+									size={20}
+								/>
+								<div
+									class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
+								>
+									{m['layout.search_placeholder']()}
+								</div>
+							</button>
+						</div>
 
-				{@render children()}
+						<div class="mx-8 flex items-center gap-4">
+							{#if packageIdentity}
+								<span class="text-xs text-muted-foreground">{packageIdentity}</span>
+							{/if}
+							<AcerolaNotification />
+						</div>
+					</header>
+
+					{@render children()}
+				{/if}
 			</main>
 		</SidebarProvider>
 	</div>
@@ -238,7 +249,11 @@
 <AcerolaDialog
 	state={{ open: isSearchDialogOpen }}
 	events={{ onOpenChange: (open) => (isSearchDialogOpen = open) }}
-	ui={{ contentClass: 'p-0 border border-surface/50 overflow-hidden w-full max-w-4xl sm:max-w-4xl bg-base/95 backdrop-blur-xl shadow-2xl', showCloseButton: false }}
+	ui={{
+		contentClass:
+			'p-0 border border-surface/50 overflow-hidden w-full max-w-4xl sm:max-w-4xl bg-base/95 backdrop-blur-xl shadow-2xl',
+		showCloseButton: false
+	}}
 >
 	<AcerolaCommand>
 		<div class="border-b border-surface/50 p-4">
@@ -249,7 +264,7 @@
 				/>
 				<CommandPrimitive.Input
 					placeholder={m['layout.search_placeholder']()}
-					class="placeholder:text-overlay/50 h-16 w-full rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-14 text-xl font-medium outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/50"
+					class="placeholder:text-overlay/50 h-16 w-full rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-14 text-xl font-medium transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/50"
 				/>
 			</div>
 		</div>
@@ -258,41 +273,45 @@
 				Nenhum quadrinho encontrado.
 			</Command.Empty>
 			{#if summary.comics && summary.comics.total > 0}
-				<Command.Group heading="Biblioteca" class="text-muted-foreground px-2">
+				<Command.Group heading="Biblioteca" class="px-2 text-muted-foreground">
 					<div class="flex flex-col gap-2">
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
-							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)?.color}
-						<Command.Item
-							value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
-							onSelect={() => {
-								isSearchDialogOpen = false;
-								import('$app/navigation').then((n) => n.goto(`/comic/${comic.filesystem.folderName}`));
-							}}
-							class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
-						>
-							<AcerolaCardImage
-								data={{
-									title: comic.metadata.title ?? comic.filesystem.folderName,
-									cover
+							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
+								comic.relations.directoryId
+							)?.color}
+							<Command.Item
+								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
+								onSelect={() => {
+									isSearchDialogOpen = false;
+									import('$app/navigation').then((n) =>
+										n.goto(`/comic/${comic.filesystem.folderName}`)
+									);
 								}}
-								ui={{ size: 'sm', hideTitle: true }}
+								class="flex cursor-pointer items-center gap-6 rounded-2xl px-4 py-4 transition-colors data-[selected=true]:bg-surface/50"
 							>
-								{#snippet floatingBadge()}
-									{#if bookmarkColor != null}
-										<AcerolaBookmarkRibbon color={bookmarkColor} />
-									{/if}
-								{/snippet}
-							</AcerolaCardImage>
-							<div class="flex flex-col gap-2 overflow-hidden">
-								<span class="truncate text-xl font-bold text-foreground">
-									{comic.metadata.title ?? comic.filesystem.folderName}
-								</span>
-								<span class="truncate text-sm font-medium text-muted-foreground">
-									{comic.filesystem.folderName}
-								</span>
-							</div>
-						</Command.Item>
+								<AcerolaCardImage
+									data={{
+										title: comic.metadata.title ?? comic.filesystem.folderName,
+										cover
+									}}
+									ui={{ size: 'sm', hideTitle: true }}
+								>
+									{#snippet floatingBadge()}
+										{#if bookmarkColor != null}
+											<AcerolaBookmarkRibbon color={bookmarkColor} />
+										{/if}
+									{/snippet}
+								</AcerolaCardImage>
+								<div class="flex flex-col gap-2 overflow-hidden">
+									<span class="truncate text-xl font-bold text-foreground">
+										{comic.metadata.title ?? comic.filesystem.folderName}
+									</span>
+									<span class="truncate text-sm font-medium text-muted-foreground">
+										{comic.filesystem.folderName}
+									</span>
+								</div>
+							</Command.Item>
 						{/each}
 					</div>
 				</Command.Group>

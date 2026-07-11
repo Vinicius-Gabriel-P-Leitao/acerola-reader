@@ -8,7 +8,7 @@ O projeto adota uma arquitetura em duas camadas principais: um **Frontend** reat
 
 ### 1. Backend (Rust & Tauri) - `src-tauri/src/`
 
-A camada Rust é fortemente estruturada utilizando princípios de Clean Architecture. 
+A camada Rust é fortemente estruturada utilizando princípios de Clean Architecture.
 
 - `cmd/`: Agrupa todos os `#[tauri::command]`. É a porta de entrada para o Frontend. Esses comandos nunca devem possuir regras de negócio ou executar SQL; eles apenas chamam os serviços correspondentes em `core/services`.
 - `core/services/`: Contém a regra de negócio do aplicativo. Os serviços agrupam as chamadas de repositórios, consolidam dados (ex.: juntar metadados com as contagens de capítulos) e retornam estruturas seguras para o Frontend.
@@ -30,9 +30,8 @@ A camada Rust é fortemente estruturada utilizando princípios de Clean Architec
 
 Ao contribuir, é estritamente proibido desobedecer às seguintes restrições:
 
-1. **SQL Apenas em Repositórios**: 
+1. **SQL Apenas em Repositórios**:
    Nunca escreva SQL nas camadas `cmd/` ou `core/services/`. Se um novo filtro for adicionado, deve-se modificar os métodos no `Repository` específico para construir a query em `sqlx`.
-   
 2. **Uso das Abstrações Já Feitas**:
    Não reinvente a roda. Use a View `comic_summary_view` se precisar iterar na Home. Não crie novos models que desrespeitem o Trait `Entity`.
 
