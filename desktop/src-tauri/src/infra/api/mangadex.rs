@@ -12,7 +12,7 @@ pub struct MangadexResponse<T> {
     pub total: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MangaData {
     pub id: String,
     #[serde(rename = "type")]
@@ -22,7 +22,7 @@ pub struct MangaData {
     pub relationships: Vec<Relationship>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MangaAttributes {
     pub title: HashMap<String, String>,
@@ -40,7 +40,7 @@ pub struct MangaAttributes {
     pub latest_uploaded_chapter: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Links {
     pub al: Option<String>,
     pub ap: Option<String>,
@@ -53,7 +53,7 @@ pub struct Links {
     pub engtl: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tag {
     pub id: String,
     #[serde(rename = "type")]
@@ -61,14 +61,14 @@ pub struct Tag {
     pub attributes: TagAttributes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TagAttributes {
     pub name: HashMap<String, String>,
     pub group: String,
     pub version: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Relationship {
     pub id: String,
     #[serde(rename = "type")]
@@ -77,12 +77,13 @@ pub struct Relationship {
     pub attributes: Option<RelationshipAttributes>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationshipAttributes {
     pub name: Option<String>,
     pub volume: Option<String>,
     pub file_name: Option<String>,
+    pub locale: Option<String>,
 }
 
 pub struct MangadexClient {
@@ -97,7 +98,7 @@ impl MangadexClient {
     pub async fn search_manga_by_title(&self, title: &str) -> Result<MangadexResponse<MangaData>, String> {
         let res = self.client.get("https://api.mangadex.org/manga")
             .header("User-Agent", "AcerolaMangaApp/1.0 (Acerola Desktop)")
-            .query(&[("title", title), ("includes[]", "author")])
+            .query(&[("title", title), ("includes[]", "author"), ("includes[]", "cover_art")])
             .send()
             .await
             .map_err(|e| e.to_string())?
@@ -123,6 +124,10 @@ impl MangadexClient {
             .await
             .map_err(|e| e.to_string())?;
         Ok(res)
+    }
+
+    pub fn get_cover_url(manga_id: &str, file_name: &str) -> String {
+        format!("https://uploads.mangadex.org/covers/{}/{}", manga_id, file_name)
     }
 }
 

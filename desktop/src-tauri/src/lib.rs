@@ -120,7 +120,8 @@ mod app_bootstrap {
         handle.manage(pool.clone());
         handle.manage(crate::core::services::history::HistoryService::new(pool.clone()));
         handle.manage(crate::cmd::features::metadata::MetadataState {
-            service: std::sync::Arc::new(crate::core::services::metadata::MetadataService::new(pool)),
+            service: std::sync::Arc::new(crate::core::services::metadata::MetadataService::new(pool.clone())),
+            repo: crate::data::repositories::metadata::MetadataRepository::new(pool),
         });
     }
 

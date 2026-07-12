@@ -2,7 +2,7 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::metadata::{author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata, page::ChapterPage},
+        models::metadata::{author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata, page::ChapterPage, cover::Cover, banner::Banner},
         repositories::{Entity, Repository},
     },
     infra::error::DbError,
@@ -14,6 +14,8 @@ pub struct MetadataRepository {
     pub chapter_repo: Repository<ChapterMetadata>,
     pub page_repo: Repository<ChapterPage>,
     pub author_repo: Repository<AuthorMetadata>,
+    pub cover_repo: Repository<Cover>,
+    pub banner_repo: Repository<Banner>,
     pool: SqlitePool,
 }
 
@@ -24,6 +26,8 @@ impl MetadataRepository {
             chapter_repo: Repository::new(pool.clone()),
             page_repo: Repository::new(pool.clone()),
             author_repo: Repository::new(pool.clone()),
+            cover_repo: Repository::new(pool.clone()),
+            banner_repo: Repository::new(pool.clone()),
             pool,
         }
     }
@@ -67,6 +71,36 @@ impl MetadataRepository {
         ))
         .bind(metadata_id)
         .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn get_cover_by_comic_metadata_id(&self, metadata_id: i64) -> Result<Option<Cover>, DbError> {
+        let table = Cover::table_name();
+        let cols = Cover::columns().join(", ");
+
+        let result = sqlx::query_as::<_, Cover>(&format!(
+            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
+            cols, table
+        ))
+        .bind(metadata_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn get_banner_by_comic_metadata_id(&self, metadata_id: i64) -> Result<Option<Banner>, DbError> {
+        let table = Banner::table_name();
+        let cols = Banner::columns().join(", ");
+
+        let result = sqlx::query_as::<_, Banner>(&format!(
+            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
+            cols, table
+        ))
+        .bind(metadata_id)
+        .fetch_optional(&self.pool)
         .await?;
 
         Ok(result)

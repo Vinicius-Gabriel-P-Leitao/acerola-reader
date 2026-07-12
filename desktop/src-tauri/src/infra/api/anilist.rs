@@ -7,53 +7,77 @@ pub struct AnilistResponse<T> {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnilistData {
-    #[serde(rename = "Media")]
-    pub media: AnilistMedia,
+pub struct AnilistSearchData {
+    #[serde(rename = "Page")]
+    pub page: AnilistPage,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct AnilistPage {
+    pub media: Vec<AnilistMedia>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AnilistMedia {
-    pub id: i64,
+    pub id: i32,
     pub title: AnilistTitle,
+    #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
     pub status: Option<String>,
+    #[serde(default)]
     pub staff: Option<AnilistStaff>,
+    #[serde(default)]
+    pub cover_image: Option<AnilistCoverImage>,
+    #[serde(default)]
+    pub banner_image: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AnilistTitle {
+    #[serde(default)]
+    pub romaji: Option<String>,
+    #[serde(default)]
+    pub english: Option<String>,
+    #[serde(default)]
+    pub user_preferred: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AnilistCoverImage {
+    #[serde(default)]
+    pub large: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AnilistStaff {
+    #[serde(default)]
     pub edges: Vec<AnilistStaffEdge>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AnilistStaffEdge {
+    #[serde(default)]
     pub role: String,
     pub node: AnilistStaffNode,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AnilistStaffNode {
     pub name: AnilistStaffName,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AnilistStaffName {
+    #[serde(default)]
     pub full: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnilistTitle {
-    pub romaji: Option<String>,
-    pub english: Option<String>,
-    pub native: Option<String>,
 }
 
 pub struct AnilistClient {
@@ -62,34 +86,45 @@ pub struct AnilistClient {
 
 impl AnilistClient {
     pub fn new() -> Self {
-        Self { client: reqwest::Client::new() }
+        Self { 
+            client: reqwest::Client::builder()
+                .user_agent("AcerolaMangaApp/1.0 (Acerola Desktop)")
+                .build()
+                .unwrap()
+        }
     }
 
-    pub async fn search_manga_by_title(&self, title: &str) -> Result<AnilistResponse<AnilistData>, String> {
-        let query = "
-            query ($search: String) {
-              Media (search: $search, type: MANGA) {
-                id
-                title {
-                  romaji
-                  english
-                  native
-                }
-                description
-                status
-                staff {
-                  edges {
-                    role
-                    node {
-                      name {
-                        full
+    pub async fn search_manga_by_title(&self, title: &str) -> Result<AnilistResponse<AnilistSearchData>, String> {
+        let query = r#"
+            query MediaSearch($search: String) {
+              Page(page: 1, perPage: 1) {
+                media(search: $search, type: MANGA, sort: POPULARITY_DESC) {
+                  id
+                  title {
+                    userPreferred
+                    romaji
+                    english
+                  }
+                  description(asHtml: false)
+                  status
+                  staff(sort: RELEVANCE) {
+                    edges {
+                      role
+                      node {
+                        name {
+                          full
+                        }
                       }
                     }
                   }
+                  coverImage {
+                    large
+                  }
+                  bannerImage
                 }
               }
             }
-        ";
+        "#;
 
         let body = json!({
             "query": query,
@@ -98,15 +133,21 @@ impl AnilistClient {
             }
         });
 
-        let res = self.client.post("https://graphql.anilist.co")
+        let response = self.client
+            .post("https://graphql.anilist.co")
             .json(&body)
             .send()
             .await
-            .map_err(|e| e.to_string())?
-            .json::<AnilistResponse<AnilistData>>()
-            .await
-            .map_err(|e| e.to_string())?;
-            
-        Ok(res)
+            .map_err(|error| format!("Request failed: {}", error))?;
+
+        let status = response.status();
+        let response_text = response.text().await.map_err(|error| format!("Failed to read response: {}", error))?;
+
+        if !status.is_success() {
+            return Err(format!("HTTP error {}: {}", status, response_text));
+        }
+
+        serde_json::from_str(&response_text)
+            .map_err(|error| format!("JSON decode failed: {}. Response: {}", error, response_text))
     }
 }
