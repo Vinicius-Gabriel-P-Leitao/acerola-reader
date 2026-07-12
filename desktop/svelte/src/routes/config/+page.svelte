@@ -12,6 +12,7 @@
 	import { m } from '$lib/paraglide/messages';
 
 	import { useComicInfoPreference } from '$lib/hooks/preferences/use-comic-info.svelte';
+	import { useMetadataLanguage } from '$lib/hooks/preferences/use-metadata-language.svelte';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
@@ -49,11 +50,11 @@
 	let newBookmarkColor = $state<number>(CATEGORY_COLORS[0]);
 
 	let metadataLanguagePopoverOpen = $state(false);
-	let selectedMetadataLanguage = $state<LanguageCode>('pt-br');
+	const metadataLanguageStore = useMetadataLanguage();
 
 	const selectedMetadataLanguageLabel = $derived(
-		LANGUAGES.find((lang) => lang.code === selectedMetadataLanguage)?.label ??
-			selectedMetadataLanguage
+		LANGUAGES.find((lang) => lang.code === metadataLanguageStore.metadataLanguage)?.label ??
+			metadataLanguageStore.metadataLanguage
 	);
 
 	const refreshScanner = useLibraryScanner(
@@ -67,10 +68,8 @@
 	);
 
 	function selectMetadataLanguage(code: LanguageCode) {
-		// FIXME: Criar hook que salva isso no sistema.
-		selectedMetadataLanguage = code;
+		metadataLanguageStore.selectMetadataLanguage(code);
 		metadataLanguagePopoverOpen = false;
-		console.log(code);
 	}
 
 	onMount(async () => {
@@ -84,6 +83,10 @@
 
 	$effect(() => {
 		comicInfoPreference.loadSavedComicInfoPreference();
+	});
+
+	$effect(() => {
+		metadataLanguageStore.loadSavedMetadataLanguage();
 	});
 </script>
 
@@ -287,7 +290,7 @@
 									</div>
 								</div>
 
-								<AcerolaCommand state={{ value: selectedMetadataLanguage }}>
+								<AcerolaCommand state={{ value: metadataLanguageStore.metadataLanguage }}>
 									<Command.Input
 										placeholder={m['pages.config.metadata.lang.search_placeholder']()}
 									/>

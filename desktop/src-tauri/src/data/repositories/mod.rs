@@ -12,6 +12,7 @@ pub mod archive;
 pub mod category;
 pub mod history;
 pub mod views;
+pub mod metadata;
 
 pub trait Entity {
     fn columns() -> &'static [&'static str];
@@ -104,6 +105,14 @@ impl<T: Entity> Repository<T> {
         let table = T::table_name();
         query(&format!("DELETE FROM {} WHERE id = ?", table)).bind(id).execute(&self.pool).await?;
         Ok(())
+    }
+
+    pub async fn get_next_id(&self) -> Result<i64, DbError> {
+        let table = T::table_name();
+        let result: (Option<i64>,) = query_as(&format!("SELECT MAX(id) FROM {}", table))
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(result.0.unwrap_or(0) + 1)
     }
 }
 

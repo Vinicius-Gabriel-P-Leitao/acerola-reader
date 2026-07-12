@@ -8,5 +8,6 @@ export const STORE_KEYS = {
 	chaptersPerPage: 'chapters_per_page',
 	volumeViewMode: 'volume_view_mode',
 	readerMode: 'reader_mode',
-	onboardingCompleted: 'onboarding_completed'
+	onboardingCompleted: 'onboarding_completed',
+	metadataLanguage: 'metadata_language'
 } as const;

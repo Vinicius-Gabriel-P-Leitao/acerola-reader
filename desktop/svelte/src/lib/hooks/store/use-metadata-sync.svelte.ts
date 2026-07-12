@@ -1,0 +1,56 @@
+import { invoke } from '@tauri-apps/api/core';
+import { error } from '@tauri-apps/plugin-log';
+import { METADATA_COMMANDS } from '$lib/contracts/metadata/metadata.commands';
+import type { ComicMetadataEvent } from '$lib/contracts/metadata/metadata.payloads';
+import { load } from '@tauri-apps/plugin-store';
+import { STORE_FILE, STORE_KEYS } from '$lib/constants/store-plugin';
+
+export function useMetadataSync() {
+	let isSyncing = $state(false);
+
+	async function syncMangadex(title: string, comicId: string): Promise<ComicMetadataEvent | null> {
+		isSyncing = true;
+		try {
+			const store = await load(STORE_FILE);
+			const language = await store.get<string>(STORE_KEYS.metadataLanguage) || 'pt-br';
+			const result = await invoke<ComicMetadataEvent>(METADATA_COMMANDS.syncMangadex, {
+				title,
+				comicId,
+				language
+			});
+			return result;
+		} catch (err) {
+			error(`Failed to sync MangaDex: ${JSON.stringify(err)}`);
+			throw err;
+		} finally {
+			isSyncing = false;
+		}
+	}
+
+	async function syncAnilist(title: string, comicId: string): Promise<ComicMetadataEvent | null> {
+		isSyncing = true;
+		try {
+			const store = await load(STORE_FILE);
+			const language = await store.get<string>(STORE_KEYS.metadataLanguage) || 'pt-br';
+			const result = await invoke<ComicMetadataEvent>(METADATA_COMMANDS.syncAnilist, {
+				title,
+				comicId,
+				language
+			});
+			return result;
+		} catch (err) {
+			error(`Failed to sync AniList: ${JSON.stringify(err)}`);
+			throw err;
+		} finally {
+			isSyncing = false;
+		}
+	}
+
+	return {
+		get isSyncing() {
+			return isSyncing;
+		},
+		syncMangadex,
+		syncAnilist
+	};
+}

@@ -13,6 +13,8 @@ export type ChapterFilePayload = {
 	volumeName: string | null;
 	isSpecial: boolean;
 	lastModified: number;
+	metaTitle?: string;
+	metaScanlation?: string;
 };
 
 export type VolumeArchivePayload = {

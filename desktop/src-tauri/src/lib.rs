@@ -10,6 +10,7 @@ use cmd::features::{
     comic as comic_cmd, history as history_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
     network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
+    metadata as metadata_cmd,
 };
 use tauri::Manager;
 
@@ -79,6 +80,9 @@ mod app_bootstrap {
             comic_cmd::update_comics_visibility,
             comic_cmd::delete_comics,
             system_cmd::open_filesystem_access_settings,
+            metadata_cmd::sync_metadata_mangadex,
+            metadata_cmd::sync_metadata_anilist,
+            metadata_cmd::read_comic_info,
         ])
     }
 
@@ -114,7 +118,10 @@ mod app_bootstrap {
         )).await.unwrap();
 
         handle.manage(pool.clone());
-        handle.manage(crate::core::services::history::HistoryService::new(pool));
+        handle.manage(crate::core::services::history::HistoryService::new(pool.clone()));
+        handle.manage(crate::cmd::features::metadata::MetadataState {
+            service: std::sync::Arc::new(crate::core::services::metadata::MetadataService::new(pool)),
+        });
     }
 
     async fn setup_scopes_from_store(handle: &tauri::AppHandle) {
