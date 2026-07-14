@@ -55,7 +55,7 @@ impl MetadataService {
         }
     }
 
-    pub async fn sync_comic_mangadex(&self, title: &str, comic_directory_fk: i64, language: &str) -> Result<ComicMetadata, ComicError> {
+    pub async fn sync_comic_mangadex(&self, title: &str, comic_directory_fk: i64, language: &str, generate_comic_info: bool) -> Result<ComicMetadata, ComicError> {
         let manga = self.fetch_manga_from_mangadex(title).await?;
         let metadata = self.build_metadata_from_mangadex(&manga, comic_directory_fk, language).await?;
         let saved = self.upsert_metadata(metadata, comic_directory_fk).await?;
@@ -64,10 +64,14 @@ impl MetadataService {
         self.process_mangadex_cover(&manga, comic_directory_fk, saved.id).await?;
         self.process_mangadex_chapters(&manga.id, comic_directory_fk, saved.id, language).await?;
 
+        if generate_comic_info {
+            self.generate_and_save_comic_info(comic_directory_fk, saved.id).await?;
+        }
+
         Ok(saved)
     }
 
-    pub async fn sync_comic_anilist(&self, title: &str, comic_directory_fk: i64, _language: &str) -> Result<ComicMetadata, ComicError> {
+    pub async fn sync_comic_anilist(&self, title: &str, comic_directory_fk: i64, _language: &str, generate_comic_info: bool) -> Result<ComicMetadata, ComicError> {
         let media = self.fetch_media_from_anilist(title).await?;
         let metadata = self.build_metadata_from_anilist(&media, comic_directory_fk).await?;
         let saved = self.upsert_metadata(metadata, comic_directory_fk).await?;
@@ -75,6 +79,10 @@ impl MetadataService {
         self.process_anilist_author(&media, saved.id).await?;
         self.process_anilist_images(&media, comic_directory_fk, saved.id).await?;
         self.process_anilist_chapters(comic_directory_fk, saved.id).await?;
+
+        if generate_comic_info {
+            self.generate_and_save_comic_info(comic_directory_fk, saved.id).await?;
+        }
 
         Ok(saved)
     }
@@ -183,6 +191,53 @@ impl MetadataService {
             has_comic_info: false,
             comic_directory_fk: Some(comic_directory_fk),
         })
+    }
+
+    async fn generate_and_save_comic_info(&self, comic_directory_fk: i64, metadata_id: i64) -> Result<(), ComicError> {
+        let comic_dir = self.comic_directory_repo.find_by_id(comic_directory_fk).await?.ok_or(ComicError::NotFound)?;
+        let metadata = self.repo.get_comic_metadata_by_comic_id(comic_directory_fk).await?.ok_or(ComicError::NotFound)?;
+        
+        let authors = self.repo.get_author_metadata_by_comic_metadata_id(metadata_id).await.unwrap_or_default();
+        let writer = authors.iter().map(|a| a.name.clone()).collect::<Vec<_>>().join(", ");
+        
+        let comic_info = comic_info::ComicInfo {
+            title: Some(metadata.title),
+            series: None,
+            number: None,
+            summary: Some(metadata.description),
+            writer: if writer.is_empty() { None } else { Some(writer) },
+            penciller: None,
+            inker: None,
+            colorist: None,
+            letterer: None,
+            cover_artist: None,
+            editor: None,
+            publisher: None,
+            genre: None,
+            web: None,
+            page_count: None,
+            language_iso: None,
+            format: None,
+            black_and_white: None,
+            manga: None,
+            characters: None,
+            teams: None,
+            locations: None,
+            scan_information: None,
+            story_arc: None,
+            series_group: None,
+            age_rating: None,
+            pages: None,
+        };
+
+        let xml_str = quick_xml::se::to_string(&comic_info).map_err(|e| ComicError::SystemFailure(e.to_string()))?;
+        let xml_str = xml_str.replace("<ComicInfo>", "<ComicInfo xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">");
+        let xml_final = format!("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n{}", xml_str);
+        
+        let file_path = PathBuf::from(&comic_dir.path).join("ComicInfo.xml");
+        std::fs::write(&file_path, xml_final).map_err(|e| ComicError::SystemFailure(e.to_string()))?;
+
+        Ok(())
     }
 
     async fn build_metadata_from_comic_info(&self, comic_info: &comic_info::ComicInfo, comic_directory_fk: i64) -> Result<ComicMetadata, ComicError> {
