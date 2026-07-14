@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, afterNavigate } from '$app/navigation';
+	import { goto, afterNavigate, invalidateAll } from '$app/navigation';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
@@ -114,7 +114,7 @@
 		try {
 			await metadataSync.syncMangadex(manga.title, id.toString());
 			toast.success(m['pages.comic.metadata.sync']?.() ?? "Metadados sincronizados!");
-			window.location.reload();
+			await invalidateAll();
 		} catch (err: any) {
 			const msg = err && typeof err === 'object' && 'message' in err ? err.message : "Falha ao sincronizar metadados";
 			toast.error(`MangaDex: ${msg}`);
@@ -127,7 +127,7 @@
 		try {
 			await metadataSync.syncAnilist(manga.title, id.toString());
 			toast.success(m['pages.comic.metadata.sync']?.() ?? "Metadados sincronizados!");
-			window.location.reload();
+			await invalidateAll();
 		} catch (err: any) {
 			const msg = err && typeof err === 'object' && 'message' in err ? err.message : "Falha ao sincronizar metadados";
 			toast.error(`AniList: ${msg}`);
@@ -282,8 +282,8 @@
 				.map((comic, index) => ({
 					id: comic.id.toString(),
 					name: comic.name,
-					title: comic.name,
-					fileName: comic.name,
+					title: comic.metaTitle || comic.name,
+					fileName: comic.metaScanlation ? `${comic.name} • ${comic.metaScanlation}` : comic.name,
 					isRead: readChapters.includes(comic.id.toString()),
 					chapterSort: comic.chapterSort,
 					path: comic.path,

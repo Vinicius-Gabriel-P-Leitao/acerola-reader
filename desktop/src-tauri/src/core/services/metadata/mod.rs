@@ -74,6 +74,7 @@ impl MetadataService {
 
         self.process_anilist_author(&media, saved.id).await?;
         self.process_anilist_images(&media, comic_directory_fk, saved.id).await?;
+        self.process_anilist_chapters(comic_directory_fk, saved.id).await?;
 
         Ok(saved)
     }
@@ -299,15 +300,33 @@ impl MetadataService {
     }
 
     async fn save_chapter(&self, title: Option<String>, number: &str, page_count: Option<i32>, metadata_id: i64) -> Result<(), ComicError> {
-        let chapter = ChapterMetadata {
-            id: self.repo.chapter_repo.get_next_id().await?,
-            title,
-            chapter: number.to_string(),
-            page_count: page_count.map(|count| count as i64),
-            scanlation: None,
-            comic_metadata_fk: metadata_id,
-        };
-        self.repo.chapter_repo.insert(&chapter).await?;
+        let existing_chapters = self.repo.get_chapter_metadata_by_comic_metadata_id(metadata_id).await?;
+        let existing = existing_chapters.into_iter().find(|c| c.chapter == number);
+
+        match existing {
+            Some(found) => {
+                let chapter = ChapterMetadata {
+                    id: found.id,
+                    title: title.or(found.title),
+                    chapter: number.to_string(),
+                    page_count: page_count.map(|count| count as i64).or(found.page_count),
+                    scanlation: found.scanlation,
+                    comic_metadata_fk: metadata_id,
+                };
+                self.repo.chapter_repo.update(&chapter).await?;
+            }
+            None => {
+                let chapter = ChapterMetadata {
+                    id: self.repo.chapter_repo.get_next_id().await?,
+                    title,
+                    chapter: number.to_string(),
+                    page_count: page_count.map(|count| count as i64),
+                    scanlation: None,
+                    comic_metadata_fk: metadata_id,
+                };
+                self.repo.chapter_repo.insert(&chapter).await?;
+            }
+        }
         Ok(())
     }
 }
@@ -327,7 +346,7 @@ impl MetadataService {
         self.upsert_cover_metadata(&cover_url, metadata_id).await?;
         
         let mut updated_dir = comic_dir.clone();
-        updated_dir.cover = Some("cover.jpg".to_string());
+        updated_dir.cover = Some(PathBuf::from(&comic_dir.path).join("cover.jpg").to_string_lossy().to_string());
         self.comic_directory_repo.update(&updated_dir).await?;
 
         Ok(())
@@ -344,7 +363,7 @@ impl MetadataService {
             self.upsert_cover_metadata(&url, metadata_id).await?;
             
             let mut updated_dir = comic_dir.clone();
-            updated_dir.cover = Some("cover.jpg".to_string());
+            updated_dir.cover = Some(PathBuf::from(&comic_dir.path).join("cover.jpg").to_string_lossy().to_string());
             self.comic_directory_repo.update(&updated_dir).await?;
         }
 
@@ -353,7 +372,7 @@ impl MetadataService {
             self.upsert_banner_metadata(banner_url, metadata_id).await?;
             
             let mut updated_dir = comic_dir.clone();
-            updated_dir.banner = Some("banner.jpg".to_string());
+            updated_dir.banner = Some(PathBuf::from(&comic_dir.path).join("banner.jpg").to_string_lossy().to_string());
             self.comic_directory_repo.update(&updated_dir).await?;
         }
 
@@ -457,6 +476,18 @@ impl MetadataService {
         Ok(())
     }
 
+    async fn process_anilist_chapters(&self, comic_directory_fk: i64, metadata_id: i64) -> Result<(), ComicError> {
+        let local_chapters = self.archive_chapter_repo.get_chapters_by_directory(
+            comic_directory_fk, 10000, 0, ChapterSortCriteria::NumberAsc
+        ).await?;
+
+        for local_chapter in local_chapters {
+            self.save_chapter(None, &local_chapter.chapter, None, metadata_id).await?;
+        }
+
+        Ok(())
+    }
+
     fn build_chapter_map(chapters: Vec<ChapterData>) -> HashMap<String, ChapterData> {
         chapters.into_iter()
             .filter_map(|chapter_data| {
@@ -480,16 +511,34 @@ impl MetadataService {
             .and_then(|rel| rel.attributes.as_ref())
             .and_then(|attr| attr.name.clone());
 
-        let chapter_metadata = ChapterMetadata {
-            id: self.repo.chapter_repo.get_next_id().await?,
-            title: remote.attributes.title.clone(),
-            chapter: local_chapter.chapter.clone(),
-            page_count: remote.attributes.pages.map(|page| page as i64),
-            scanlation,
-            comic_metadata_fk: metadata_id,
-        };
+        let existing_chapters = self.repo.get_chapter_metadata_by_comic_metadata_id(metadata_id).await?;
+        let existing = existing_chapters.into_iter().find(|c| c.chapter == local_chapter.chapter);
 
-        self.repo.chapter_repo.insert(&chapter_metadata).await?;
+        match existing {
+            Some(found) => {
+                let chapter_metadata = ChapterMetadata {
+                    id: found.id,
+                    title: remote.attributes.title.clone().or(found.title),
+                    chapter: local_chapter.chapter.clone(),
+                    page_count: remote.attributes.pages.map(|page| page as i64).or(found.page_count),
+                    scanlation: scanlation.or(found.scanlation),
+                    comic_metadata_fk: metadata_id,
+                };
+                self.repo.chapter_repo.update(&chapter_metadata).await?;
+            }
+            None => {
+                let chapter_metadata = ChapterMetadata {
+                    id: self.repo.chapter_repo.get_next_id().await?,
+                    title: remote.attributes.title.clone(),
+                    chapter: local_chapter.chapter.clone(),
+                    page_count: remote.attributes.pages.map(|page| page as i64),
+                    scanlation,
+                    comic_metadata_fk: metadata_id,
+                };
+                self.repo.chapter_repo.insert(&chapter_metadata).await?;
+            }
+        }
+
         Ok(())
     }
 }
