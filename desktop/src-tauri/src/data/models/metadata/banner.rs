@@ -5,12 +5,7 @@ use crate::data::repositories::{Bindable, Entity};
 
 impl Entity for Banner {
     fn columns() -> &'static [&'static str] {
-        &[
-            "id",
-            "file_name",
-            "url",
-            "comic_metadata_fk",
-        ]
+        &["id", "file_name", "url", "comic_metadata_fk"]
     }
     fn table_name() -> &'static str {
         "banner"
@@ -24,21 +19,13 @@ impl Bindable for Banner {
     fn bind_insert<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
-        query
-            .bind(self.id)
-            .bind(&self.file_name)
-            .bind(&self.url)
-            .bind(self.comic_metadata_fk)
+        query.bind(self.id).bind(&self.file_name).bind(&self.url).bind(self.comic_metadata_fk)
     }
 
     fn bind_update<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
-        query
-            .bind(&self.file_name)
-            .bind(&self.url)
-            .bind(self.comic_metadata_fk)
-            .bind(self.id)
+        query.bind(&self.file_name).bind(&self.url).bind(self.comic_metadata_fk).bind(self.id)
     }
 }
 

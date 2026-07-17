@@ -72,6 +72,25 @@ impl ComicRepository {
         Ok(result)
     }
 
+    /// Atualiza o status de sincronizacao externa de um quadrinho especifico.
+    pub async fn update_external_sync_enabled(
+        &self, id: i64, external_sync_enabled: bool,
+    ) -> Result<ComicDirectory, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "UPDATE {} SET external_sync_enabled = ? WHERE id = ? RETURNING {}",
+            table, cols
+        ))
+        .bind(external_sync_enabled)
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     /// Atualiza o status de visibilidade de multiplos quadrinhos em batch.
     pub async fn update_hidden_status_batch(
         &self, ids: &[i64], hidden: bool,

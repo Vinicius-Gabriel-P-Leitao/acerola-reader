@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MangadexResponse<T> {
@@ -95,34 +96,42 @@ impl MangadexClient {
         Self { client: reqwest::Client::new() }
     }
 
-    pub async fn search_manga_by_title(&self, title: &str) -> Result<MangadexResponse<MangaData>, String> {
-        let res = self.client.get("https://api.mangadex.org/manga")
+    pub async fn search_manga_by_title(
+        &self, title: &str,
+    ) -> Result<MangadexResponse<MangaData>, String> {
+        let res = self
+            .client
+            .get("https://api.mangadex.org/manga")
             .header("User-Agent", "AcerolaMangaApp/1.0 (Acerola Desktop)")
             .query(&[("title", title), ("includes[]", "author"), ("includes[]", "cover_art")])
             .send()
             .await
-            .map_err(|e| e.to_string())?
+            .map_err(|err| err.to_string())?
             .json::<MangadexResponse<MangaData>>()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|err| err.to_string())?;
         Ok(res)
     }
 
-    pub async fn get_manga_chapters(&self, manga_id: &str, language: &str) -> Result<MangadexResponse<ChapterData>, String> {
-        let res = self.client.get(format!("https://api.mangadex.org/manga/{}/feed", manga_id))
+    pub async fn get_manga_chapters(
+        &self, manga_id: &str, language: &str,
+    ) -> Result<MangadexResponse<ChapterData>, String> {
+        let res = self
+            .client
+            .get(format!("https://api.mangadex.org/manga/{}/feed", manga_id))
             .header("User-Agent", "AcerolaMangaApp/1.0 (Acerola Desktop)")
             .query(&[
                 ("limit", "100"),
                 ("includes[]", "scanlation_group"),
                 ("order[chapter]", "asc"),
-                ("translatedLanguage[]", language)
+                ("translatedLanguage[]", language),
             ])
             .send()
             .await
-            .map_err(|e| e.to_string())?
+            .map_err(|err| err.to_string())?
             .json::<MangadexResponse<ChapterData>>()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|err| err.to_string())?;
         Ok(res)
     }
 

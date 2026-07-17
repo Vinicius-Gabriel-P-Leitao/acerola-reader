@@ -9,9 +9,16 @@ use cmd::features::{
     category::category_cmd,
     comic as comic_cmd, history as history_cmd,
     library::{comic_scanner_cmd, select_folder_cmd},
-    network as network_cmd, reader as reader_cmd, summary as comic_summary_cmd,
-    metadata as metadata_cmd,
+    metadata as metadata_cmd, network as network_cmd, reader as reader_cmd,
+    summary as comic_summary_cmd,
 };
+use cmd::features::metadata::MetadataState;
+use core::services::{
+    history::HistoryService,
+    metadata::MetadataService,
+};
+use data::repositories::metadata::MetadataRepository;
+use infra::db::get_migrations;
 use tauri::Manager;
 
 #[cfg(test)]
@@ -79,9 +86,12 @@ mod app_bootstrap {
             comic_cmd::get_comic_summary_sorted,
             comic_cmd::update_comics_visibility,
             comic_cmd::delete_comics,
+            comic_cmd::toggle_comic_external_sync,
             system_cmd::open_filesystem_access_settings,
             metadata_cmd::sync_metadata_mangadex,
             metadata_cmd::sync_metadata_anilist,
+            metadata_cmd::sync_all_metadata_mangadex,
+            metadata_cmd::sync_all_metadata_anilist,
             metadata_cmd::read_comic_info,
         ])
     }
@@ -105,7 +115,7 @@ mod app_bootstrap {
     fn setup_sql(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         builder.plugin(
             tauri_plugin_sql::Builder::new()
-                .add_migrations("sqlite:acerola.db", crate::infra::db::get_migrations())
+                .add_migrations("sqlite:acerola.db", get_migrations())
                 .build(),
         )
     }
@@ -118,10 +128,12 @@ mod app_bootstrap {
         )).await.unwrap();
 
         handle.manage(pool.clone());
-        handle.manage(crate::core::services::history::HistoryService::new(pool.clone()));
-        handle.manage(crate::cmd::features::metadata::MetadataState {
-            service: std::sync::Arc::new(crate::core::services::metadata::MetadataService::new(pool.clone())),
-            repo: crate::data::repositories::metadata::MetadataRepository::new(pool),
+        handle.manage(HistoryService::new(pool.clone()));
+        handle.manage(MetadataState {
+            service: std::sync::Arc::new(MetadataService::new(
+                pool.clone(),
+            )),
+            repo: MetadataRepository::new(pool),
         });
     }
 
@@ -144,11 +156,11 @@ mod app_bootstrap {
 
                     match handle.fs_scope().allow_directory(&path, true) {
                         Ok(_) => tracing::info!("fs_scope OK"),
-                        Err(e) => tracing::error!("fs_scope falhou: {}", e),
+                        Err(err) => tracing::error!("fs_scope falhou: {}", err),
                     }
                     match handle.asset_protocol_scope().allow_directory(&path, true) {
                         Ok(_) => tracing::info!("asset_protocol_scope OK"),
-                        Err(e) => tracing::error!("asset_protocol_scope falhou: {}", e),
+                        Err(err) => tracing::error!("asset_protocol_scope falhou: {}", err),
                     }
                 } else {
                     tracing::warn!("Chave 'library_path' não encontrada no JSON: {:?}", json);

@@ -5,14 +5,7 @@ use crate::data::repositories::{Bindable, Entity};
 
 impl Entity for ChapterMetadata {
     fn columns() -> &'static [&'static str] {
-        &[
-            "id",
-            "title",
-            "chapter",
-            "page_count",
-            "scanlation",
-            "comic_metadata_fk",
-        ]
+        &["id", "title", "chapter", "page_count", "scanlation", "comic_metadata_fk"]
     }
     fn table_name() -> &'static str {
         "chapter_metadata"

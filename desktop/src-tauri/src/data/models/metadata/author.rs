@@ -27,20 +27,12 @@ impl Bindable for AuthorMetadata {
     fn bind_insert<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
-        query
-            .bind(self.id)
-            .bind(&self.name)
-            .bind(&self.r#type)
-            .bind(self.comic_metadata_fk)
+        query.bind(self.id).bind(&self.name).bind(&self.r#type).bind(self.comic_metadata_fk)
     }
 
     fn bind_update<'query>(
         &'query self, query: Query<'query, Sqlite, SqliteArguments<'query>>,
     ) -> Query<'query, Sqlite, SqliteArguments<'query>> {
-        query
-            .bind(&self.name)
-            .bind(&self.r#type)
-            .bind(self.comic_metadata_fk)
-            .bind(self.id)
+        query.bind(&self.name).bind(&self.r#type).bind(self.comic_metadata_fk).bind(self.id)
     }
 }

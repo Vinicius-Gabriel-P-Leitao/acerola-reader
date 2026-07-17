@@ -17,6 +17,8 @@
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { invoke } from '@tauri-apps/api/core';
+	import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
+	import { HISTORY_COMMANDS } from '$lib/contracts/history/history.commands';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -113,11 +115,11 @@
 		if (!id || !manga?.title) return;
 		try {
 			await metadataSync.syncMangadex(manga.title, id.toString());
-			toast.success(m['pages.comic.metadata.sync']?.() ?? "Metadados sincronizados!");
+			toast.success(m['pages.comic.toast.sync_success']());
 			await invalidateAll();
 		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message : "Falha ao sincronizar metadados";
-			toast.error(`MangaDex: ${msg}`);
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.mangadex_error']({ msg }));
 		}
 	}
 
@@ -126,11 +128,27 @@
 		if (!id || !manga?.title) return;
 		try {
 			await metadataSync.syncAnilist(manga.title, id.toString());
-			toast.success(m['pages.comic.metadata.sync']?.() ?? "Metadados sincronizados!");
+			toast.success(m['pages.comic.toast.sync_success']());
 			await invalidateAll();
 		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message : "Falha ao sincronizar metadados";
-			toast.error(`AniList: ${msg}`);
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.anilist_error']({ msg }));
+		}
+	}
+
+	async function handleExternalSyncChange(value: boolean) {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			await invoke(HOME_COMMANDS.toggleComicExternalSync, { id: id.toString(), enabled: value });
+			if (manga) {
+				manga.metadata.externalSync = value;
+			}
+			toast.success(value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.sync_toggle_error']({ msg }));
 		}
 	}
 
@@ -146,10 +164,10 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (id) {
 			isHistoryLoading = true;
-			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(
+			const fetchHistory = invoke(HISTORY_COMMANDS.getComic, { comicId: id.toString() }).catch(
 				() => null
 			);
-			const fetchRead = invoke<string[]>('history_get_read_chapters', {
+			const fetchRead = invoke<string[]>(HISTORY_COMMANDS.getReadChapters, {
 				comicId: id.toString()
 			}).catch(() => []);
 			const fetchBookmark = bookmarkStore.getComicBookmark(id);
@@ -333,6 +351,7 @@
 				author: item.metadata.author || m['pages.comic.metadata.unknown_author'](),
 				status: item.metadata.status || m['pages.comic.metadata.unknown_status'](),
 				source: item.metadata.activeSource || 'LOCAL',
+				externalSync: item.metadata.externalSync,
 				genres: []
 			}
 		};
@@ -580,7 +599,8 @@
 							state={{
 								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode,
-								bookmarkId: currentBookmarkId
+								bookmarkId: currentBookmarkId,
+								externalSyncEnabled: manga.metadata.externalSync
 							}}
 							events={{
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
@@ -597,6 +617,7 @@
 									}
 									currentBookmarkId = value;
 								},
+								onExternalSyncChange: handleExternalSyncChange,
 								onSyncMangadex: handleSyncMangadex,
 								onSyncAnilist: handleSyncAnilist
 							}}

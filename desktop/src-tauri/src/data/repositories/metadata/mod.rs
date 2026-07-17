@@ -2,7 +2,10 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::metadata::{author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata, page::ChapterPage, cover::Cover, banner::Banner},
+        models::metadata::{
+            author::AuthorMetadata, banner::Banner, chapter::ChapterMetadata, comic::ComicMetadata,
+            cover::Cover, page::ChapterPage,
+        },
         repositories::{Entity, Repository},
     },
     infra::error::DbError,
@@ -32,7 +35,9 @@ impl MetadataRepository {
         }
     }
 
-    pub async fn get_comic_metadata_by_comic_id(&self, comic_id: i64) -> Result<Option<ComicMetadata>, DbError> {
+    pub async fn get_comic_metadata_by_comic_id(
+        &self, comic_id: i64,
+    ) -> Result<Option<ComicMetadata>, DbError> {
         let table = ComicMetadata::table_name();
         let cols = ComicMetadata::columns().join(", ");
 
@@ -47,7 +52,9 @@ impl MetadataRepository {
         Ok(result)
     }
 
-    pub async fn get_chapter_metadata_by_comic_metadata_id(&self, metadata_id: i64) -> Result<Vec<ChapterMetadata>, DbError> {
+    pub async fn get_chapter_metadata_by_comic_metadata_id(
+        &self, metadata_id: i64,
+    ) -> Result<Vec<ChapterMetadata>, DbError> {
         let table = ChapterMetadata::table_name();
         let cols = ChapterMetadata::columns().join(", ");
 
@@ -61,7 +68,9 @@ impl MetadataRepository {
         Ok(result)
     }
 
-    pub async fn get_author_metadata_by_comic_metadata_id(&self, metadata_id: i64) -> Result<Vec<AuthorMetadata>, DbError> {
+    pub async fn get_author_metadata_by_comic_metadata_id(
+        &self, metadata_id: i64,
+    ) -> Result<Vec<AuthorMetadata>, DbError> {
         let table = AuthorMetadata::table_name();
         let cols = AuthorMetadata::columns().join(", ");
 
@@ -76,7 +85,9 @@ impl MetadataRepository {
         Ok(result)
     }
 
-    pub async fn get_cover_by_comic_metadata_id(&self, metadata_id: i64) -> Result<Option<Cover>, DbError> {
+    pub async fn get_cover_by_comic_metadata_id(
+        &self, metadata_id: i64,
+    ) -> Result<Option<Cover>, DbError> {
         let table = Cover::table_name();
         let cols = Cover::columns().join(", ");
 
@@ -91,7 +102,9 @@ impl MetadataRepository {
         Ok(result)
     }
 
-    pub async fn get_banner_by_comic_metadata_id(&self, metadata_id: i64) -> Result<Option<Banner>, DbError> {
+    pub async fn get_banner_by_comic_metadata_id(
+        &self, metadata_id: i64,
+    ) -> Result<Option<Banner>, DbError> {
         let table = Banner::table_name();
         let cols = Banner::columns().join(", ");
 
@@ -144,13 +157,13 @@ mod tests {
     #[tokio::test]
     async fn deve_inserir_e_buscar_comic_metadata() {
         let repo = setup().await;
-        
+
         let metadata = fake_comic_metadata();
-        
+
         let inserted = repo.comic_repo.insert(&metadata).await.unwrap();
         assert_eq!(inserted.id, 1);
         assert_eq!(inserted.title, "Berserk");
-        
+
         let all = repo.comic_repo.find_all().await.unwrap();
         assert_eq!(all.len(), 1);
     }
@@ -158,15 +171,15 @@ mod tests {
     #[tokio::test]
     async fn deve_buscar_comic_metadata_pelo_id() {
         let repo = setup().await;
-        
+
         let mut metadata = fake_comic_metadata();
         metadata.comic_directory_fk = Some(999);
         repo.comic_repo.insert(&metadata).await.unwrap();
-        
+
         let result = repo.get_comic_metadata_by_comic_id(999).await.unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap().title, "Berserk");
-        
+
         let not_found = repo.get_comic_metadata_by_comic_id(123).await.unwrap();
         assert!(not_found.is_none());
     }
@@ -174,15 +187,15 @@ mod tests {
     #[tokio::test]
     async fn deve_inserir_e_buscar_chapter_metadata() {
         let repo = setup().await;
-        
+
         let metadata = fake_comic_metadata();
         repo.comic_repo.insert(&metadata).await.unwrap();
-        
+
         let chapter = fake_chapter_metadata();
         let inserted = repo.chapter_repo.insert(&chapter).await.unwrap();
         assert_eq!(inserted.id, 1);
         assert_eq!(inserted.chapter, "1");
-        
+
         let chapters = repo.get_chapter_metadata_by_comic_metadata_id(1).await.unwrap();
         assert_eq!(chapters.len(), 1);
         assert_eq!(chapters[0].chapter, "1");

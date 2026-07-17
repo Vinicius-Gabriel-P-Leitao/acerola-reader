@@ -8,11 +8,13 @@
 			chaptersPerPage: string;
 			volumeViewMode: 'cover' | 'banner';
 			bookmarkId: number | null;
+			externalSyncEnabled: boolean;
 		};
 		events: {
 			onChaptersPerPageChange: (value: string) => void;
 			onVolumeViewModeChange: (value: 'cover' | 'banner') => void;
 			onBookmarkChange: (value: number | null) => void;
+			onExternalSyncChange: (value: boolean) => void;
 			onSyncMangadex?: () => void;
 			onSyncAnilist?: () => void;
 		};
@@ -32,9 +34,11 @@
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import CloudSync from '@lucide/svelte/icons/cloud-sync';
+	import Link from '@lucide/svelte/icons/link';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 
 	let { data, events, state }: ComicPreferencesProps = $props();
 </script>
@@ -162,6 +166,24 @@
 		</div>
 
 		<div class="grid gap-4">
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.external_sync'](),
+					description: m['pages.comic.preferences.external_sync_desc']()
+				}}
+			>
+				{#snippet icon()}
+					<Link class="text-chart-1" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaSwitch
+						state={{ checked: state.externalSyncEnabled }}
+						events={{ onCheckedChange: events.onExternalSyncChange }}
+					/>
+				{/snippet}
+			</AcerolaHeroButton>
+
 			<AcerolaHeroButton
 				data={{
 					title: m['pages.config.metadata.mangadex.title'](),

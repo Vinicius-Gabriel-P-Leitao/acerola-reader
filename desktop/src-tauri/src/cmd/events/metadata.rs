@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::data::models::metadata::{comic::ComicMetadata, cover::Cover, banner::Banner};
+use crate::data::models::metadata::{banner::Banner, comic::ComicMetadata, cover::Cover};
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

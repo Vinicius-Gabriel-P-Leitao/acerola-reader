@@ -9,12 +9,12 @@ describe('ComicPreferences', () => {
 			state: {
 				chaptersPerPage: '100',
 				volumeViewMode: 'cover' as const,
-				bookmarkId: null
+				bookmarkId: null, externalSyncEnabled: true
 			},
 			events: {
 				onChaptersPerPageChange: vi.fn(),
 				onVolumeViewModeChange: vi.fn(),
-				onBookmarkChange: vi.fn()
+				onBookmarkChange: vi.fn(), onExternalSyncChange: vi.fn()
 			}
 		};
 	}
@@ -90,3 +90,4 @@ describe('ComicPreferences', () => {
 		expect(screen.getByText('25')).toBeInTheDocument();
 	});
 });
+

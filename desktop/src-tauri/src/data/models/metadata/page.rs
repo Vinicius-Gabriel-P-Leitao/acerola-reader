@@ -5,13 +5,7 @@ use crate::data::repositories::{Bindable, Entity};
 
 impl Entity for ChapterPage {
     fn columns() -> &'static [&'static str] {
-        &[
-            "id",
-            "page_number",
-            "image_url",
-            "downloaded",
-            "chapter_fk",
-        ]
+        &["id", "page_number", "image_url", "downloaded", "chapter_fk"]
     }
     fn table_name() -> &'static str {
         "chapter_page"

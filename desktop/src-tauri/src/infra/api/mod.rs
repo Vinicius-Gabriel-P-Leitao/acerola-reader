@@ -1,2 +1,2 @@
-pub mod mangadex;
 pub mod anilist;
+pub mod mangadex;

@@ -86,15 +86,17 @@ pub struct AnilistClient {
 
 impl AnilistClient {
     pub fn new() -> Self {
-        Self { 
+        Self {
             client: reqwest::Client::builder()
                 .user_agent("AcerolaMangaApp/1.0 (Acerola Desktop)")
                 .build()
-                .unwrap()
+                .unwrap(),
         }
     }
 
-    pub async fn search_manga_by_title(&self, title: &str) -> Result<AnilistResponse<AnilistSearchData>, String> {
+    pub async fn search_manga_by_title(
+        &self, title: &str,
+    ) -> Result<AnilistResponse<AnilistSearchData>, String> {
         let query = r#"
             query MediaSearch($search: String) {
               Page(page: 1, perPage: 1) {
@@ -133,7 +135,8 @@ impl AnilistClient {
             }
         });
 
-        let response = self.client
+        let response = self
+            .client
             .post("https://graphql.anilist.co")
             .json(&body)
             .send()
@@ -141,7 +144,8 @@ impl AnilistClient {
             .map_err(|error| format!("Request failed: {}", error))?;
 
         let status = response.status();
-        let response_text = response.text().await.map_err(|error| format!("Failed to read response: {}", error))?;
+        let response_text =
+            response.text().await.map_err(|error| format!("Failed to read response: {}", error))?;
 
         if !status.is_success() {
             return Err(format!("HTTP error {}: {}", status, response_text));

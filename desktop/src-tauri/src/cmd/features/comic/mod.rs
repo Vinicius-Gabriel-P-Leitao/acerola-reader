@@ -1,11 +1,11 @@
-use sqlx::SqlitePool;
-use tauri::{AppHandle, Emitter, Runtime, State};
-
+use crate::infra::error::ComicError;
 use crate::{
     cmd::events::{shared::ErrorPayload, summary::ComicSummaryPayload},
     core::services::{summary::HomeService, ComicService},
     data::repositories::views::SortCriteria,
 };
+use sqlx::SqlitePool;
+use tauri::{AppHandle, Emitter, Runtime, State};
 
 /// Comando Tauri para buscar quadrinhos com ordenação específica.
 #[tauri::command]
@@ -56,4 +56,21 @@ pub async fn delete_comics(
 ) -> Result<usize, ErrorPayload> {
     let service = ComicService::new(pool.inner().clone());
     service.delete_batch(&ids).await.map_err(|error| ErrorPayload::from(&error))
+}
+
+/// Comando Tauri para atualizar status de sincronização externa de um quadrinho.
+#[tauri::command]
+pub async fn toggle_comic_external_sync(
+    id: String, enabled: bool, pool: State<'_, SqlitePool>,
+) -> Result<(), ErrorPayload> {
+    let parsed_id = id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    let service = ComicService::new(pool.inner().clone());
+    service
+        .update_external_sync_enabled(parsed_id, enabled)
+        .await
+        .map(|_| ())
+        .map_err(|error| ErrorPayload::from(&error))
 }

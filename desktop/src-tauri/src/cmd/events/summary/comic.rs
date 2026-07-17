@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use chrono::Local;
 use serde::Serialize;
 
-use crate::data::models::views::ComicSummaryView;
+use crate::data::models::{
+    metadata::{author::AuthorMetadata, comic::ComicMetadata},
+    views::ComicSummaryView,
+};
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,7 +58,10 @@ pub struct ComicSummaryPayload {
 }
 
 impl ComicSummaryPayload {
-    pub fn from(comics: Vec<ComicSummaryView>, counts: HashMap<i64, i64>, metadata_map: HashMap<i64, (crate::data::models::metadata::comic::ComicMetadata, Option<crate::data::models::metadata::author::AuthorMetadata>)>) -> Self {
+    pub fn from(
+        comics: Vec<ComicSummaryView>, counts: HashMap<i64, i64>,
+        metadata_map: HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
+    ) -> Self {
         let items = comics
             .into_iter()
             .map(|view| {
@@ -75,7 +81,10 @@ impl ComicSummaryPayload {
 }
 
 impl ComicSummaryItem {
-    pub fn from_view(view: ComicSummaryView, chapter_count: i64, full_metadata: Option<(crate::data::models::metadata::comic::ComicMetadata, Option<crate::data::models::metadata::author::AuthorMetadata>)>) -> Self {
+    pub fn from_view(
+        view: ComicSummaryView, chapter_count: i64,
+        full_metadata: Option<(ComicMetadata, Option<AuthorMetadata>)>,
+    ) -> Self {
         Self {
             relations: ComicSummaryRelations {
                 directory_id: view.directory_id.to_string(),
@@ -89,7 +98,9 @@ impl ComicSummaryItem {
                 chapter_count,
                 description: full_metadata.as_ref().map(|(m, _)| m.description.clone()),
                 status: full_metadata.as_ref().map(|(m, _)| m.status.clone()),
-                author: full_metadata.as_ref().and_then(|(_, a)| a.as_ref().map(|a| a.name.clone())),
+                author: full_metadata
+                    .as_ref()
+                    .and_then(|(_, a)| a.as_ref().map(|a| a.name.clone())),
             },
             artwork: ComicSummaryArtwork { cover: view.folder_cover, banner: view.folder_banner },
         }

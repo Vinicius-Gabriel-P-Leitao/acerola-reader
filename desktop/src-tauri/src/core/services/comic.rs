@@ -25,6 +25,16 @@ impl ComicService {
         self.repo.update_hidden_status(id, hidden).await.map_err(ComicError::from)
     }
 
+    /// Atualiza o status de sincronizacao externa de um quadrinho específico.
+    pub async fn update_external_sync_enabled(
+        &self, id: i64, external_sync_enabled: bool,
+    ) -> Result<ComicDirectory, ComicError> {
+        self.repo
+            .update_external_sync_enabled(id, external_sync_enabled)
+            .await
+            .map_err(ComicError::from)
+    }
+
     /// Atualiza o status de visibilidade de multiplos quadrinhos em batch.
     pub async fn update_hidden_status_batch(
         &self, ids: &[i64], hidden: bool,
