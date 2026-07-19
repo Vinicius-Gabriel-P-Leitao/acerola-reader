@@ -55,3 +55,21 @@ impl From<PathError> for ComicError {
         }
     }
 }
+
+impl From<reqwest::Error> for ComicError {
+    fn from(err: reqwest::Error) -> Self {
+        ComicError::SystemFailure(format!("HTTP request failed: {}", err))
+    }
+}
+
+impl From<quick_xml::DeError> for ComicError {
+    fn from(err: quick_xml::DeError) -> Self {
+        ComicError::InvalidRequest(format!("XML parse error: {}", err))
+    }
+}
+
+impl From<String> for ComicError {
+    fn from(err: String) -> Self {
+        ComicError::SystemFailure(err)
+    }
+}

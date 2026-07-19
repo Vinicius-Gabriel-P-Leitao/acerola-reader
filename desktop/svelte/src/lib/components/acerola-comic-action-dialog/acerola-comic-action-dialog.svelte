@@ -7,6 +7,7 @@
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import X from '@lucide/svelte/icons/x';
 	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import type { Category } from '$lib/contracts/bookmarks/bookmarks.payloads';
 
 	export type ComicActionDialogProps = {
@@ -33,7 +34,7 @@
 			onClose();
 		} catch (err) {
 			error(`Failed to hide comics: ${err}`);
-			toast.error('Failed to hide comics');
+			toast.error(m['pages.home.toast.hide_error']());
 		} finally {
 			isProcessing = false;
 		}
@@ -48,7 +49,7 @@
 			onClose();
 		} catch (err) {
 			error(`Failed to delete comics: ${err}`);
-			toast.error('Failed to delete comics');
+			toast.error(m['pages.home.toast.delete_error']());
 		} finally {
 			isProcessing = false;
 		}
@@ -63,7 +64,7 @@
 			onClose();
 		} catch (err) {
 			error(`Failed to bookmark comics: ${err}`);
-			toast.error('Failed to bookmark comics');
+			toast.error(m['pages.home.toast.bookmark_error']());
 		} finally {
 			isProcessing = false;
 		}

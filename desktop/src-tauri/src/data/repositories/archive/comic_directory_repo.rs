@@ -34,6 +34,25 @@ impl ComicRepository {
         Ok(result)
     }
 
+    pub async fn find_by_id(&self, id: i64) -> Result<Option<ComicDirectory>, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "SELECT {} FROM {} WHERE id = ?",
+            cols, table
+        ))
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn update(&self, entity: &ComicDirectory) -> Result<ComicDirectory, DbError> {
+        self.base.update(entity).await
+    }
+
     /// Atualiza o status de visibilidade de um quadrinho especifico.
     pub async fn update_hidden_status(
         &self, id: i64, hidden: bool,
@@ -46,6 +65,25 @@ impl ComicRepository {
             table, cols
         ))
         .bind(hidden)
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Atualiza o status de sincronizacao externa de um quadrinho especifico.
+    pub async fn update_external_sync_enabled(
+        &self, id: i64, external_sync_enabled: bool,
+    ) -> Result<ComicDirectory, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "UPDATE {} SET external_sync_enabled = ? WHERE id = ? RETURNING {}",
+            table, cols
+        ))
+        .bind(external_sync_enabled)
         .bind(id)
         .fetch_one(&self.pool)
         .await?;

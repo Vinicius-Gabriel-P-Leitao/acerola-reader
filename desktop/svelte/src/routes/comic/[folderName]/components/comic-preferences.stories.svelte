@@ -29,12 +29,13 @@
 		state={{
 			chaptersPerPage,
 			volumeViewMode,
-			bookmarkId: null
+			bookmarkId: null, externalSyncEnabled: true
 		}}
 		events={{
 			onChaptersPerPageChange: (value) => (chaptersPerPage = value),
 			onVolumeViewModeChange: (value) => (volumeViewMode = value),
-			onBookmarkChange: () => {}
+			onBookmarkChange: () => {}, onExternalSyncChange: () => {}
 		}}
 	/>
 </Story>
+

@@ -12,13 +12,18 @@
 	import { m } from '$lib/paraglide/messages';
 
 	import { useComicInfoPreference } from '$lib/hooks/preferences/use-comic-info.svelte';
+	import { useMetadataLanguage } from '$lib/hooks/preferences/use-metadata-language.svelte';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
+	import { METADATA_COMMANDS } from '$lib/contracts/metadata/metadata.commands';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useTheme } from '$lib/hooks/theme/use-theme.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { onMount } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
+	import { invoke } from '@tauri-apps/api/core';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+	import { toast } from 'svelte-sonner';
 
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
@@ -49,11 +54,11 @@
 	let newBookmarkColor = $state<number>(CATEGORY_COLORS[0]);
 
 	let metadataLanguagePopoverOpen = $state(false);
-	let selectedMetadataLanguage = $state<LanguageCode>('pt-br');
+	const metadataLanguageStore = useMetadataLanguage();
 
 	const selectedMetadataLanguageLabel = $derived(
-		LANGUAGES.find((lang) => lang.code === selectedMetadataLanguage)?.label ??
-			selectedMetadataLanguage
+		LANGUAGES.find((lang) => lang.code === metadataLanguageStore.metadataLanguage)?.label ??
+			metadataLanguageStore.metadataLanguage
 	);
 
 	const refreshScanner = useLibraryScanner(
@@ -67,15 +72,64 @@
 	);
 
 	function selectMetadataLanguage(code: LanguageCode) {
-		// FIXME: Criar hook que salva isso no sistema.
-		selectedMetadataLanguage = code;
+		metadataLanguageStore.selectMetadataLanguage(code);
 		metadataLanguagePopoverOpen = false;
-		console.log(code);
 	}
 
-	onMount(async () => {
-		await folder.loadSavedPath();
-		await bookmarkStore.loadBookmarks();
+	async function handleSyncAllMangadex() {
+		try {
+			toast.info(m['pages.config.toast.sync_start_mangadex']());
+			await invoke(METADATA_COMMANDS.syncAllMangadex, { 
+				language: metadataLanguageStore.metadataLanguage,
+				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
+			});
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.config.toast.sync_error_mangadex']({ msg }));
+		}
+	}
+
+	async function handleSyncAllAnilist() {
+		try {
+			toast.info(m['pages.config.toast.sync_start_anilist']());
+			await invoke(METADATA_COMMANDS.syncAllAnilist, { 
+				language: metadataLanguageStore.metadataLanguage,
+				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
+			});
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.config.toast.sync_error_anilist']({ msg }));
+		}
+	}
+
+	onMount(() => {
+		let unlistenProgress: UnlistenFn | undefined;
+		let unlistenComplete: UnlistenFn | undefined;
+		let unlistenError: UnlistenFn | undefined;
+
+		(async () => {
+			await folder.loadSavedPath();
+			await bookmarkStore.loadBookmarks();
+
+			unlistenProgress = await listen<string>('metadata:sync_all:progress', (event) => {
+				toast.info(m['pages.config.toast.sync_progress']({ name: event.payload }));
+			});
+			
+			unlistenComplete = await listen('metadata:sync_all:complete', () => {
+				toast.success(m['pages.config.toast.sync_complete']());
+			});
+
+			unlistenError = await listen<any>('metadata:sync_all:error', (event) => {
+				const msg = event.payload?.message || event.payload;
+				toast.error(m['pages.config.toast.sync_error']({ msg }));
+			});
+		})();
+
+		return () => {
+			if (unlistenProgress) unlistenProgress();
+			if (unlistenComplete) unlistenComplete();
+			if (unlistenError) unlistenError();
+		};
 	});
 
 	$effect(() => {
@@ -84,6 +138,10 @@
 
 	$effect(() => {
 		comicInfoPreference.loadSavedComicInfoPreference();
+	});
+
+	$effect(() => {
+		metadataLanguageStore.loadSavedMetadataLanguage();
 	});
 </script>
 
@@ -287,7 +345,7 @@
 									</div>
 								</div>
 
-								<AcerolaCommand state={{ value: selectedMetadataLanguage }}>
+								<AcerolaCommand state={{ value: metadataLanguageStore.metadataLanguage }}>
 									<Command.Input
 										placeholder={m['pages.config.metadata.lang.search_placeholder']()}
 									/>
@@ -327,8 +385,7 @@
 					title: m['pages.config.metadata.mangadex.title'](),
 					description: m['pages.config.metadata.mangadex.desc']()
 				}}
-				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
-				events={{ onClick: () => console.log('sync') }}
+				events={{ onClick: handleSyncAllMangadex }}
 			>
 				{#snippet icon()}
 					<span style="all: unset; display: inline-flex;">
@@ -354,8 +411,7 @@
 					title: m['pages.config.metadata.anilist.title'](),
 					description: m['pages.config.metadata.anilist.desc']()
 				}}
-				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
-				events={{ onClick: () => console.log('sync') }}
+				events={{ onClick: handleSyncAllAnilist }}
 			>
 				{#snippet icon()}
 					<span style="all: unset; display: inline-flex;">

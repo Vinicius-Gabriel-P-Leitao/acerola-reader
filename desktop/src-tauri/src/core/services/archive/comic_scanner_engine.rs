@@ -426,7 +426,7 @@ impl ComicScannerService {
             banner: comic_banner,
             last_modified: modified_secs(&directory_metadata),
             archive_template_fk: template_fk,
-            external_sync_enabled: false,
+            external_sync_enabled: true,
             hidden: false,
         };
 

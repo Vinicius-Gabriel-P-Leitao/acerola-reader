@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, afterNavigate } from '$app/navigation';
+	import { goto, afterNavigate, invalidateAll } from '$app/navigation';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
@@ -12,10 +12,13 @@
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 
 	import { useComicContext } from '$lib/state/comic-context.svelte';
+	import { useMetadataSync } from '$lib/hooks/store/use-metadata-sync.svelte';
 
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { invoke } from '@tauri-apps/api/core';
+	import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
+	import { HISTORY_COMMANDS } from '$lib/contracts/history/history.commands';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -25,6 +28,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
+	import { toast } from 'svelte-sonner';
 
 	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
@@ -40,6 +44,7 @@
 	const chaptersPreference = useChaptersPerPage();
 	const volumeViewPreference = useVolumeViewMode();
 	const bookmarkStore = useBookmarks();
+	const metadataSync = useMetadataSync();
 
 	let expandedVolumeId = $state<string | null>(null);
 	let currentBookmarkId = $state<number | null>(null);
@@ -103,6 +108,49 @@
 	let readingHistory = $state<any | null>(null);
 	let readChapters = $state<string[]>([]);
 	let isHistoryLoading = $state(false);
+	let isSyncing = $state(false);
+
+	async function handleSyncMangadex() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id || !manga?.title) return;
+		try {
+			await metadataSync.syncMangadex(manga.title, id.toString());
+			toast.success(m['pages.comic.toast.sync_success']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.mangadex_error']({ msg }));
+		}
+	}
+
+	async function handleSyncAnilist() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id || !manga?.title) return;
+		try {
+			await metadataSync.syncAnilist(manga.title, id.toString());
+			toast.success(m['pages.comic.toast.sync_success']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.anilist_error']({ msg }));
+		}
+	}
+
+	async function handleExternalSyncChange(value: boolean) {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			await invoke(HOME_COMMANDS.toggleComicExternalSync, { id: id.toString(), enabled: value });
+			if (manga) {
+				manga.metadata.externalSync = value;
+			}
+			toast.success(value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.sync_toggle_error']({ msg }));
+		}
+	}
 
 	onMount(async () => {
 		await Promise.all([
@@ -116,10 +164,10 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (id) {
 			isHistoryLoading = true;
-			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(
+			const fetchHistory = invoke(HISTORY_COMMANDS.getComic, { comicId: id.toString() }).catch(
 				() => null
 			);
-			const fetchRead = invoke<string[]>('history_get_read_chapters', {
+			const fetchRead = invoke<string[]>(HISTORY_COMMANDS.getReadChapters, {
 				comicId: id.toString()
 			}).catch(() => []);
 			const fetchBookmark = bookmarkStore.getComicBookmark(id);
@@ -252,8 +300,8 @@
 				.map((comic, index) => ({
 					id: comic.id.toString(),
 					name: comic.name,
-					title: comic.name,
-					fileName: comic.name,
+					title: comic.metaTitle || comic.name,
+					fileName: comic.metaScanlation ? `${comic.name} • ${comic.metaScanlation}` : comic.name,
 					isRead: readChapters.includes(comic.id.toString()),
 					chapterSort: comic.chapterSort,
 					path: comic.path,
@@ -299,10 +347,11 @@
 			volumes,
 			pageSize,
 			metadata: {
-				description: m['pages.comic.metadata.description_unavailable'](),
-				author: m['pages.comic.metadata.unknown_author'](),
-				status: m['pages.comic.metadata.unknown_status'](),
+				description: item.metadata.description || m['pages.comic.metadata.description_unavailable'](),
+				author: item.metadata.author || m['pages.comic.metadata.unknown_author'](),
+				status: item.metadata.status || m['pages.comic.metadata.unknown_status'](),
 				source: item.metadata.activeSource || 'LOCAL',
+				externalSync: item.metadata.externalSync,
 				genres: []
 			}
 		};
@@ -550,7 +599,8 @@
 							state={{
 								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode,
-								bookmarkId: currentBookmarkId
+								bookmarkId: currentBookmarkId,
+								externalSyncEnabled: manga.metadata.externalSync
 							}}
 							events={{
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
@@ -566,7 +616,10 @@
 										await bookmarkStore.removeComicBookmark(id);
 									}
 									currentBookmarkId = value;
-								}
+								},
+								onExternalSyncChange: handleExternalSyncChange,
+								onSyncMangadex: handleSyncMangadex,
+								onSyncAnilist: handleSyncAnilist
 							}}
 						/>
 					{/if}
