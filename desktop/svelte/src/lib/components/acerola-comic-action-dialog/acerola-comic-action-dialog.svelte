@@ -7,6 +7,7 @@
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import X from '@lucide/svelte/icons/x';
 	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import type { Category } from '$lib/contracts/bookmarks/bookmarks.payloads';
 
 	export type ComicActionDialogProps = {
@@ -18,14 +19,8 @@
 		onClose: () => void;
 	};
 
-	let {
-		selectedIds,
-		bookmarks,
-		onHide,
-		onDelete,
-		onBookmark,
-		onClose
-	}: ComicActionDialogProps = $props();
+	let { selectedIds, bookmarks, onHide, onDelete, onBookmark, onClose }: ComicActionDialogProps =
+		$props();
 
 	let showDeleteDialog = $state(false);
 	let showBookmarkMenu = $state(false);
@@ -39,7 +34,7 @@
 			onClose();
 		} catch (err) {
 			error(`Failed to hide comics: ${err}`);
-			toast.error('Failed to hide comics');
+			toast.error(m['pages.home.toast.hide_error']());
 		} finally {
 			isProcessing = false;
 		}
@@ -54,7 +49,7 @@
 			onClose();
 		} catch (err) {
 			error(`Failed to delete comics: ${err}`);
-			toast.error('Failed to delete comics');
+			toast.error(m['pages.home.toast.delete_error']());
 		} finally {
 			isProcessing = false;
 		}
@@ -69,7 +64,7 @@
 			onClose();
 		} catch (err) {
 			error(`Failed to bookmark comics: ${err}`);
-			toast.error('Failed to bookmark comics');
+			toast.error(m['pages.home.toast.bookmark_error']());
 		} finally {
 			isProcessing = false;
 		}
@@ -95,7 +90,7 @@
 				<div class="h-8 w-px bg-border"></div>
 
 				<button
-					class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors hover:bg-surface-hover"
+					class="hover:bg-surface-hover flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors"
 					onclick={handleHide}
 					disabled={isProcessing}
 				>
@@ -114,7 +109,7 @@
 
 				<div class="relative">
 					<button
-						class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors hover:bg-surface-hover"
+						class="hover:bg-surface-hover flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors"
 						onclick={() => (showBookmarkMenu = !showBookmarkMenu)}
 						disabled={isProcessing}
 					>
@@ -130,7 +125,7 @@
 							<div class="p-2">
 								{#each bookmarks as category}
 									<button
-										class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-surface-hover"
+										class="hover:bg-surface-hover flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors"
 										onclick={() => handleBookmark(category.id)}
 									>
 										<span
@@ -146,7 +141,7 @@
 				</div>
 
 				<button
-					class="ml-2 rounded-full p-2 transition-colors hover:bg-surface-hover"
+					class="hover:bg-surface-hover ml-2 rounded-full p-2 transition-colors"
 					onclick={onClose}
 				>
 					<X size={16} />
@@ -160,7 +155,8 @@
 	state={{ open: showDeleteDialog }}
 	data={{
 		title: 'Delete Comics',
-		description: 'Are you sure you want to delete the selected comics? This will only remove them from the database, the files will remain unchanged.',
+		description:
+			'Are you sure you want to delete the selected comics? This will only remove them from the database, the files will remain unchanged.',
 		cancelText: 'Cancel',
 		actionText: 'Delete'
 	}}

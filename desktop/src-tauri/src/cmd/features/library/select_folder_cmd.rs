@@ -23,12 +23,12 @@ pub async fn select_folder(app: AppHandle) -> Result<String, String> {
 
     match app.fs_scope().allow_directory(&path, true) {
         Ok(_) => tracing::info!("fs_scope liberado para: {:?}", path),
-        Err(e) => tracing::error!("falha ao liberar fs_scope: {}", e),
+        Err(err) => tracing::error!("falha ao liberar fs_scope: {}", err),
     }
 
     match app.asset_protocol_scope().allow_directory(&path, true) {
         Ok(_) => tracing::info!("asset_protocol_scope liberado para: {:?}", path),
-        Err(e) => tracing::error!("falha ao liberar asset_protocol_scope: {}", e),
+        Err(err) => tracing::error!("falha ao liberar asset_protocol_scope: {}", err),
     }
 
     Ok(path.to_string_lossy().to_string())

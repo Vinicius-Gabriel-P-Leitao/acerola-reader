@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, afterNavigate } from '$app/navigation';
+	import { goto, afterNavigate, invalidateAll } from '$app/navigation';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
@@ -12,10 +12,13 @@
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 
 	import { useComicContext } from '$lib/state/comic-context.svelte';
+	import { useMetadataSync } from '$lib/hooks/store/use-metadata-sync.svelte';
 
 	import { resolveArtworkPath, resolveBanner, resolveCover } from '$lib/utils/artwork.utils';
 	import type { ReaderChapterPayload } from '$lib/contracts/reader/reader.payloads';
 	import { invoke } from '@tauri-apps/api/core';
+	import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
+	import { HISTORY_COMMANDS } from '$lib/contracts/history/history.commands';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -25,6 +28,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
+	import { toast } from 'svelte-sonner';
 
 	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
@@ -40,12 +44,15 @@
 	const chaptersPreference = useChaptersPerPage();
 	const volumeViewPreference = useVolumeViewMode();
 	const bookmarkStore = useBookmarks();
+	const metadataSync = useMetadataSync();
 
 	let expandedVolumeId = $state<string | null>(null);
 	let currentBookmarkId = $state<number | null>(null);
 
 	let activeTab = $state('content');
-	let sortBy = $state<'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc'>('number_asc');
+	let sortBy = $state<'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc'>(
+		'number_asc'
+	);
 	let searchQuery = $state('');
 	let showSortMenu = $state(false);
 
@@ -91,7 +98,8 @@
 		goto('/reader', {
 			state: {
 				chapter: readerChapter,
-				comicDirectoryId: activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId,
+				comicDirectoryId:
+					activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId,
 				...getReaderProgress(chapter)
 			}
 		});
@@ -100,6 +108,49 @@
 	let readingHistory = $state<any | null>(null);
 	let readChapters = $state<string[]>([]);
 	let isHistoryLoading = $state(false);
+	let isSyncing = $state(false);
+
+	async function handleSyncMangadex() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id || !manga?.title) return;
+		try {
+			await metadataSync.syncMangadex(manga.title, id.toString());
+			toast.success(m['pages.comic.toast.sync_success']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.mangadex_error']({ msg }));
+		}
+	}
+
+	async function handleSyncAnilist() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id || !manga?.title) return;
+		try {
+			await metadataSync.syncAnilist(manga.title, id.toString());
+			toast.success(m['pages.comic.toast.sync_success']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.anilist_error']({ msg }));
+		}
+	}
+
+	async function handleExternalSyncChange(value: boolean) {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			await invoke(HOME_COMMANDS.toggleComicExternalSync, { id: id.toString(), enabled: value });
+			if (manga) {
+				manga.metadata.externalSync = value;
+			}
+			toast.success(value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']());
+			await invalidateAll();
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.comic.toast.sync_toggle_error']({ msg }));
+		}
+	}
 
 	onMount(async () => {
 		await Promise.all([
@@ -113,15 +164,19 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (id) {
 			isHistoryLoading = true;
-			const fetchHistory = invoke('history_get_comic', { comicId: id.toString() }).catch(() => null);
-			const fetchRead = invoke<string[]>('history_get_read_chapters', { comicId: id.toString() }).catch(() => []);
+			const fetchHistory = invoke(HISTORY_COMMANDS.getComic, { comicId: id.toString() }).catch(
+				() => null
+			);
+			const fetchRead = invoke<string[]>(HISTORY_COMMANDS.getReadChapters, {
+				comicId: id.toString()
+			}).catch(() => []);
 			const fetchBookmark = bookmarkStore.getComicBookmark(id);
-			
+
 			const [history, read, bookmark] = await Promise.all([fetchHistory, fetchRead, fetchBookmark]);
 			readingHistory = history;
 			readChapters = read;
 			currentBookmarkId = bookmark?.id ?? null;
-			
+
 			isHistoryLoading = false;
 		}
 	});
@@ -245,8 +300,8 @@
 				.map((comic, index) => ({
 					id: comic.id.toString(),
 					name: comic.name,
-					title: comic.name,
-					fileName: comic.name,
+					title: comic.metaTitle || comic.name,
+					fileName: comic.metaScanlation ? `${comic.name} • ${comic.metaScanlation}` : comic.name,
 					isRead: readChapters.includes(comic.id.toString()),
 					chapterSort: comic.chapterSort,
 					path: comic.path,
@@ -292,10 +347,11 @@
 			volumes,
 			pageSize,
 			metadata: {
-				description: m['pages.comic.metadata.description_unavailable'](),
-				author: m['pages.comic.metadata.unknown_author'](),
-				status: m['pages.comic.metadata.unknown_status'](),
+				description: item.metadata.description || m['pages.comic.metadata.description_unavailable'](),
+				author: item.metadata.author || m['pages.comic.metadata.unknown_author'](),
+				status: item.metadata.status || m['pages.comic.metadata.unknown_status'](),
 				source: item.metadata.activeSource || 'LOCAL',
+				externalSync: item.metadata.externalSync,
 				genres: []
 			}
 		};
@@ -329,13 +385,13 @@
 				chaptersCount: manga.chaptersCount,
 				description: manga.metadata.description,
 				cover: manga.cover,
-				bookmarkColor: bookmarkStore.bookmarks.find(b => b.id === currentBookmarkId)?.color
+				bookmarkColor: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.color
 			}}
 			state={{
 				isResuming: !!readingHistory,
 				isLoading: isHistoryLoading
 			}}
-			events={{ 
+			events={{
 				onBack,
 				onReadNow: handleReadNow
 			}}
@@ -428,11 +484,18 @@
 								</AcerolaButton>
 
 								{#if showSortMenu}
-									<div class="absolute right-0 top-full z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg">
+									<div
+										class="absolute top-full right-0 z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg"
+									>
 										<div class="p-2">
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'number_asc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'number_asc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'number_asc'}
 													<Check size={16} />
@@ -443,7 +506,12 @@
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'number_desc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'number_desc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'number_desc'}
 													<Check size={16} />
@@ -454,7 +522,12 @@
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'modified_desc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'modified_desc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'modified_desc'}
 													<Check size={16} />
@@ -465,7 +538,12 @@
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{ onClick: () => { sortBy = 'modified_asc'; showSortMenu = false; } }}
+												events={{
+													onClick: () => {
+														sortBy = 'modified_asc';
+														showSortMenu = false;
+													}
+												}}
 											>
 												{#if sortBy === 'modified_asc'}
 													<Check size={16} />
@@ -521,22 +599,27 @@
 							state={{
 								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode,
-								bookmarkId: currentBookmarkId
+								bookmarkId: currentBookmarkId,
+								externalSyncEnabled: manga.metadata.externalSync
 							}}
 							events={{
 								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value),
 								onBookmarkChange: async (value) => {
-									const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+									const id =
+										activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 									if (!id) return;
-									
+
 									if (value) {
 										await bookmarkStore.assignToComic(id, value);
 									} else {
 										await bookmarkStore.removeComicBookmark(id);
 									}
 									currentBookmarkId = value;
-								}
+								},
+								onExternalSyncChange: handleExternalSyncChange,
+								onSyncMangadex: handleSyncMangadex,
+								onSyncAnilist: handleSyncAnilist
 							}}
 						/>
 					{/if}

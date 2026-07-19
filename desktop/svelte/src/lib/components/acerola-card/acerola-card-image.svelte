@@ -57,7 +57,7 @@
 
 <div
 	class={cn(
-		'relative group transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.02]',
+		'group relative transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.02]',
 		sizeClasses[size],
 		ui?.class
 	)}

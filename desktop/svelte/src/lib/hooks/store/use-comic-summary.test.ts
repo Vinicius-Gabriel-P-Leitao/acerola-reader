@@ -12,7 +12,7 @@ import type { ComicSummaryPayload } from '$lib/contracts/home/home.payloads';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 import { useComicSummary, _resetComicSummaryState } from './use-comic-summary.svelte';
 
-const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn()

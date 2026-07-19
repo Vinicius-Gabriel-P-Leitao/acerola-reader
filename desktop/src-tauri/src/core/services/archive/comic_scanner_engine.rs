@@ -426,7 +426,7 @@ impl ComicScannerService {
             banner: comic_banner,
             last_modified: modified_secs(&directory_metadata),
             archive_template_fk: template_fk,
-            external_sync_enabled: false,
+            external_sync_enabled: true,
             hidden: false,
         };
 
@@ -909,7 +909,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn refresh_library_pre_converts_pdfs() {
+    #[ignore = "requires pdfium DLL which is not available in CI"]
+    async fn atualizar_biblioteca_pre_converte_pdfs() {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
 
         let root = tempfile::tempdir().unwrap();

@@ -35,9 +35,10 @@ pub async fn delete_category(id: i64, pool: State<'_, SqlitePool>) -> Result<(),
 pub async fn assign_category_to_comic(
     comic_id: String, category_id: i64, pool: State<'_, SqlitePool>,
 ) -> Result<ComicCategory, ErrorPayload> {
-    let comic_id = comic_id
-        .parse::<i64>()
-        .map_err(|e| ErrorPayload { error_type: "ParseError".into(), message: e.to_string() })?;
+    let comic_id = comic_id.parse::<i64>().map_err(|err| ErrorPayload {
+        error_type: "ParseError".into(),
+        message: err.to_string(),
+    })?;
     let service = CategoryService::new(pool.inner().clone());
     service
         .assign_category_to_comic(comic_id, category_id)
@@ -50,9 +51,10 @@ pub async fn assign_category_to_comic(
 pub async fn remove_category_from_comic(
     comic_id: String, pool: State<'_, SqlitePool>,
 ) -> Result<(), ErrorPayload> {
-    let comic_id = comic_id
-        .parse::<i64>()
-        .map_err(|e| ErrorPayload { error_type: "ParseError".into(), message: e.to_string() })?;
+    let comic_id = comic_id.parse::<i64>().map_err(|err| ErrorPayload {
+        error_type: "ParseError".into(),
+        message: err.to_string(),
+    })?;
     let service = CategoryService::new(pool.inner().clone());
     service
         .remove_category_from_comic(comic_id)
@@ -65,9 +67,10 @@ pub async fn remove_category_from_comic(
 pub async fn get_comic_category(
     comic_id: String, pool: State<'_, SqlitePool>,
 ) -> Result<Option<Category>, ErrorPayload> {
-    let comic_id = comic_id
-        .parse::<i64>()
-        .map_err(|e| ErrorPayload { error_type: "ParseError".into(), message: e.to_string() })?;
+    let comic_id = comic_id.parse::<i64>().map_err(|err| ErrorPayload {
+        error_type: "ParseError".into(),
+        message: err.to_string(),
+    })?;
     let service = CategoryService::new(pool.inner().clone());
     service.get_comic_category(comic_id).await.map_err(|error| ErrorPayload::from(&error.into()))
 }

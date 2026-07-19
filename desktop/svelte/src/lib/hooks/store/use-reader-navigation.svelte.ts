@@ -47,7 +47,7 @@ export function useReaderNavigation() {
 
 	$effect(() => {
 		const pageState = (page.state ?? {}) as ReaderNavigationState;
-		
+
 		if (Object.keys(pageState).length > 0 && pageState.chapter) {
 			state = pageState;
 			sessionStorage.setItem(SESSION_KEYS.readerState, JSON.stringify(pageState));
@@ -85,20 +85,20 @@ export function useReaderNavigation() {
 				if (pendingAction === 'load') {
 					const items = payload.archive.items;
 					const idx = items.findIndex((item) => item.id === state.chapter?.id);
-					
+
 					if (idx !== -1) {
 						state.chapterIndex = idx;
 						state.totalChapters = payload.archive.total ?? items.length;
 						sessionStorage.setItem(SESSION_KEYS.readerState, JSON.stringify(state));
 					}
-					
+
 					pendingAction = null;
 					return;
 				}
 
 				if (pendingAction === 'navigate' && pendingTargetIndex !== null) {
 					const nextChapterData = payload.archive.items[0];
-					
+
 					if (!nextChapterData) {
 						initializing = false;
 						pendingAction = null;
@@ -128,7 +128,7 @@ export function useReaderNavigation() {
 
 					state = newState;
 					replaceState(page.url, newState);
-					
+
 					initializing = false;
 					pendingAction = null;
 					pendingTargetIndex = null;

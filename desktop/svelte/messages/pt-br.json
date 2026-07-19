@@ -1,305 +1,365 @@
 {
-	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"theme": {
-		"catppuccin": {
-			"name": "Catppuccin",
-			"desc": "Paleta pastel suave com tons roxos e rosados"
-		},
-		"nord": {
-			"name": "Nord",
-			"desc": "Paleta ártica inspirada no norte escandinavo"
-		},
-		"dracula": {
-			"name": "Dracula",
-			"desc": "Cores vibrantes sobre fundo escuro ou claro"
-		}
-	},
-	"components": {
-		"hero_button": {
-			"default_title": "Sem título"
-		},
-		"select": {
-			"placeholder": "Selecione uma opção"
-		},
-		"popover": {
-			"close": "Fechar"
-		},
-		"dialog": {
-			"close": "Fechar"
-		},
-		"sidebar": {
-			"toggle": "Alternar Barra Lateral"
-		},
-		"command": {
-			"placeholder": "Pesquisar...",
-			"title": "Paleta de Comandos",
-			"desc": "Pesquise por um comando para executar..."
-		},
-		"notification": {
-			"title": "Notificações",
-			"empty": "Nenhuma notificação",
-			"clear_all": "Limpar tudo"
-		},
-		"mode_picker": {
-			"title": "Mudar tema"
-		}
-	},
-	"hooks": {
-		"comic_scanner": {
-			"no_folder": "Sem pasta selecionada.",
-			"in_progress": "Scan em andamento...",
-			"success": "Scan concluído!",
-			"error_title": "Falha no scan"
-		},
-		"comic_summary": {
-			"error_title": "Erro ao carregar biblioteca"
-		},
-		"select_folder": {
-			"success": "Pasta salva com sucesso."
-		},
-		"comic_chapters": {
-			"error_load": "Erro ao carregar capítulos",
-			"error_request": "Erro ao solicitar capítulos"
-		}
-	},
-	"tauri_errors": {
-		"comic": {
-			"already_exists": {
-				"label": "Este quadrinho já existe na sua biblioteca."
-			},
-			"not_found": {
-				"label": "Quadrinho não encontrado."
-			},
-			"invalid_request": {
-				"label": "Dado inválido enviado."
-			},
-			"integrity_violation": {
-				"label": "Erro de integridade: referência inválida ou ausente."
-			},
-			"system_failure": {
-				"label": "Falha no sistema ao processar o quadrinho."
-			},
-			"io_error": {
-				"label": "Erro ao acessar o sistema de arquivos."
-			}
-		}
-	},
-	"layout": {
-		"search_placeholder": "Buscar quadrinho...",
-		"buttons": {
-			"minimize": "Minimizar",
-			"maximize": "Maximizar",
-			"close": "Fechar"
-		}
-	},
-	"routes": {
-		"home": "Início",
-		"history": "Histórico",
-		"config": "Configurações"
-	},
-	"pages": {
-		"home": {
-			"loading": "Carregando...",
-			"no_comics": "Nenhum quadrinho encontrado.",
-			"sort": {
-				"button": "Ordenar",
-				"title_asc": "Título (A-Z)",
-				"title_desc": "Título (Z-A)",
-				"chapter_asc": "Capítulos (Menor para Maior)",
-				"chapter_desc": "Capítulos (Maior para Menor)"
-			},
-			"selection": {
-				"selected": "{count} selecionado(s)",
-				"select_all": "Selecionar todos",
-				"cancel": "Cancelar"
-			},
-			"toast": {
-				"hidden": "{count} quadrinho(s) ocultado(s)",
-				"deleted": "{count} quadrinho(s) excluído(s)",
-				"bookmarked": "{count} quadrinho(s) marcado(s)"
-			}
-		},
-		"comic": {
-			"loading": "Carregando...",
-			"tabs": {
-				"volumes": "Volumes",
-				"chapters": "Capítulos",
-				"preferences": "Preferências"
-			},
-			"filter_placeholder": "FILTRAR...",
-			"sort": {
-				"button": "Ordenar",
-				"number_asc": "Número (Menor para Maior)",
-				"number_desc": "Número (Maior para Menor)",
-				"modified_asc": "Mais Antigo",
-				"modified_desc": "Mais Recente"
-			},
-			"banner": {
-				"popular": "Popular"
-			},
-			"metadata": {
-				"description_unavailable": "Descrição indisponível.",
-				"unknown_author": "Autor Desconhecido",
-				"unknown_status": "Desconhecido",
-				"synopsis": "Sinopse",
-				"chapters_count": "{count} Caps",
-				"read_now": "LER AGORA",
-				"save": "SALVAR",
-				"sync": "SYNC",
-				"completed": "CONCLUÍDO"
-			},
-			"preferences": {
-				"reading": "Leitura",
-				"volume_highlight": "Destaque do Volume",
-				"volume_highlight_desc": "Escolha como os volumes são destacados: como capas ou banners.",
-				"volume_highlight_cover": "Capa",
-				"volume_highlight_banner": "Banner",
-				"chapters_per_page": "Capítulos por página",
-				"chapters_per_page_desc": "Número de capítulos exibidos por página.",
-				"bookmark": "Marcador",
-				"bookmark_desc": "Atribua um marcador a este quadrinho.",
-				"bookmark_none": "Nenhum"
-			},
-			"volume": {
-				"chapters_included": "{count} capítulos inclusos",
-				"no_chapters": "Nenhum capítulo disponível.",
-				"no_volumes": "Nenhum volume indexado ainda."
-			}
-		},
-		"reader": {
-			"fallback": {
-				"chapter_unavailable": "Capítulo indisponível"
-			},
-			"progress": {
-				"chapter_unavailable": "Progresso do capítulo",
-				"chapter_count": "Capítulo {current} de {total}",
-				"remaining_unavailable": "Capítulos restantes indisponíveis",
-				"remaining_one": "1 capítulo restante",
-				"remaining_many": "{count} capítulos restantes",
-				"subtitle": "{scope} - {current} / {total} páginas",
-				"read_percent": "{percent}% lido"
-			},
-			"modes": {
-				"vertical": "Paginado vertical",
-				"horizontal": "Paginado horizontal",
-				"webtoon": "Webtoon",
-				"vertical_short": "Vertical",
-				"horizontal_short": "Horizontal"
-			},
-			"actions": {
-				"back": "Voltar",
-				"apply_zoom": "Aplicar zoom",
-				"reset_zoom": "Resetar zoom",
-				"zoom_mode": "Modo zoom",
-				"commands": "Comandos",
-				"previous_page": "Página anterior",
-				"next_page": "Próxima página",
-				"previous_chapter": "Capítulo anterior",
-				"next_chapter": "Próximo capítulo",
-				"page_navigation_locked": "Desative o zoom para trocar de página",
-				"close_commands": "Fechar comandos"
-			},
-			"pages": {
-				"label": "Página {page}",
-				"image_alt": "Página {page}"
-			},
-			"command": {
-				"placeholder": "Comandos do leitor...",
-				"zoom_group": "Zoom",
-				"reading_group": "Leitura",
-				"toggle_zoom_search": "alternar modo zoom",
-				"zoom_in_search": "aumentar zoom",
-				"zoom_out_search": "reduzir zoom",
-				"reset_zoom_search": "resetar zoom",
-				"vertical_search": "paginado vertical",
-				"horizontal_search": "paginado horizontal",
-				"webtoon_search": "webtoon",
-				"enable_zoom_mode": "Ativar modo zoom",
-				"disable_zoom_mode": "Desativar modo zoom",
-				"zoom_in": "Aumentar zoom",
-				"zoom_out": "Reduzir zoom",
-				"reset_zoom": "Resetar zoom"
-			},
-			"zoom": {
-				"status": "Zoom {zoom}",
-				"scroll_status": "Zoom {zoom} - scroll ajusta"
-			}
-		},
-		"history": {
-			"title": "Histórico",
-			"clear_history": "Limpar Histórico",
-			"clear_history_title": "Tem certeza absoluta?",
-			"clear_history_desc": "Essa ação não pode ser desfeita. Todo o histórico de leitura será apagado permanentemente.",
-			"clear_history_cancel": "Cancelar",
-			"clear_history_confirm": "Sim, limpar tudo",
-			"loading": "Carregando...",
-			"no_events": "Nenhum histórico encontrado.",
-			"resume": "Continuar Lendo",
-			"chapter_label": "Capítulo {chapter}",
-			"page_label": "Página {page}",
-			"older": "Mais Antigos"
-		},
-		"config": {
-			"title": "Configurações",
-			"desc": "Personalize sua experiência de leitura.",
-			"file_system": {
-				"title": "Configuração dos Arquivos",
-				"comic_path": {
-					"title": "Pasta dos quadrinhos",
-					"desc": "Pasta onde será buscado e salvo: {path}"
-				},
-				"comic_info": {
-					"title": "Gerar ComicInfo.xml",
-					"desc": "Criar arquivo de metadados na pasta ao sincronizar."
-				},
-				"sync": {
-					"fast": {
-						"title": "Sincronização rápida",
-						"desc": "Atualiza apenas arquivos alterados."
-					},
-					"deep": {
-						"title": "Sincronização profunda",
-						"desc": "Reescreve todos os arquivos do banco de dados."
-					}
-				}
-			},
-			"metadata": {
-				"title": "Configuração de metadados",
-				"lang": {
-					"title": "Idioma",
-					"desc": "Selecione o idioma padrão para os metadados.",
-					"popover_title": "Idioma dos metadados",
-					"popover_desc": "Atual: {language}",
-					"search_placeholder": "Buscar idioma...",
-					"group_title": "Idiomas disponíveis",
-					"empty": "Nenhum idioma encontrado.",
-					"item_desc": "Código {code}"
-				},
-				"mangadex": {
-					"title": "Sincronização com MangaDex",
-					"desc": "Sincroniza metadados com o MangaDex."
-				},
-				"anilist": {
-					"title": "Sincronização com AniList",
-					"desc": "Sincroniza metadados com o AniList."
-				}
-			},
-			"components": {
-				"theme_piker": "Aparência"
-			},
-			"library": {
-				"title": "Biblioteca"
-			},
-			"bookmarks": {
-				"title": "Marcadores",
-				"desc": "Crie marcadores personalizados para categorizar seus quadrinhos.",
-				"add": "Adicionar Marcador",
-				"name": "Nome do marcador",
-				"color": "Cor",
-				"create": "Criar",
-				"empty": "Nenhum marcador criado."
-			}
-		}
-	},
-	"pages.reader.fallback.loading": "Carregando..."
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "theme": {
+    "catppuccin": {
+      "name": "Catppuccin",
+      "desc": "Paleta pastel suave com tons roxos e rosados"
+    },
+    "nord": {
+      "name": "Nord",
+      "desc": "Paleta ártica inspirada no norte escandinavo"
+    },
+    "dracula": {
+      "name": "Dracula",
+      "desc": "Cores vibrantes sobre fundo escuro ou claro"
+    }
+  },
+  "components": {
+    "hero_button": {
+      "default_title": "Sem título"
+    },
+    "select": {
+      "placeholder": "Selecione uma opção"
+    },
+    "popover": {
+      "close": "Fechar"
+    },
+    "dialog": {
+      "close": "Fechar"
+    },
+    "sidebar": {
+      "toggle": "Alternar Barra Lateral"
+    },
+    "command": {
+      "placeholder": "Pesquisar...",
+      "title": "Paleta de Comandos",
+      "desc": "Pesquise por um comando para executar..."
+    },
+    "notification": {
+      "title": "Notificações",
+      "empty": "Nenhuma notificação",
+      "clear_all": "Limpar tudo"
+    },
+    "mode_picker": {
+      "title": "Mudar tema"
+    }
+  },
+  "hooks": {
+    "comic_scanner": {
+      "no_folder": "Sem pasta selecionada.",
+      "in_progress": "Scan em andamento...",
+      "success": "Scan concluído!",
+      "error_title": "Falha no scan"
+    },
+    "comic_summary": {
+      "error_title": "Erro ao carregar biblioteca"
+    },
+    "select_folder": {
+      "success": "Pasta salva com sucesso."
+    },
+    "comic_chapters": {
+      "error_load": "Erro ao carregar capítulos",
+      "error_request": "Erro ao solicitar capítulos"
+    }
+  },
+  "tauri_errors": {
+    "comic": {
+      "already_exists": {
+        "label": "Este quadrinho já existe na sua biblioteca."
+      },
+      "not_found": {
+        "label": "Quadrinho não encontrado."
+      },
+      "invalid_request": {
+        "label": "Dado inválido enviado."
+      },
+      "integrity_violation": {
+        "label": "Erro de integridade: referência inválida ou ausente."
+      },
+      "system_failure": {
+        "label": "Falha no sistema ao processar o quadrinho."
+      },
+      "io_error": {
+        "label": "Erro ao acessar o sistema de arquivos."
+      }
+    }
+  },
+  "layout": {
+    "search_placeholder": "Buscar quadrinho...",
+    "buttons": {
+      "minimize": "Minimizar",
+      "maximize": "Maximizar",
+      "close": "Fechar"
+    }
+  },
+  "routes": {
+    "home": "Início",
+    "history": "Histórico",
+    "config": "Configurações"
+  },
+  "pages": {
+    "home": {
+      "loading": "Carregando...",
+      "no_comics": "Nenhum quadrinho encontrado.",
+      "sort": {
+        "button": "Ordenar",
+        "title_asc": "Título (A-Z)",
+        "title_desc": "Título (Z-A)",
+        "chapter_asc": "Capítulos (Menor para Maior)",
+        "chapter_desc": "Capítulos (Maior para Menor)"
+      },
+      "selection": {
+        "selected": "{count} selecionado(s)",
+        "select_all": "Selecionar todos",
+        "cancel": "Cancelar"
+      },
+      "toast": {
+        "hidden": "{count} quadrinho(s) ocultado(s)",
+        "deleted": "{count} quadrinho(s) excluído(s)",
+        "bookmarked": "{count} quadrinho(s) marcado(s)",
+        "hide_error": "Falha ao ocultar quadrinhos",
+        "delete_error": "Falha ao excluir quadrinhos",
+        "bookmark_error": "Falha ao marcar quadrinhos"
+      }
+    },
+    "comic": {
+      "loading": "Carregando...",
+      "tabs": {
+        "volumes": "Volumes",
+        "chapters": "Capítulos",
+        "preferences": "Preferências"
+      },
+      "filter_placeholder": "FILTRAR...",
+      "sort": {
+        "button": "Ordenar",
+        "number_asc": "Número (Menor para Maior)",
+        "number_desc": "Número (Maior para Menor)",
+        "modified_asc": "Mais Antigo",
+        "modified_desc": "Mais Recente"
+      },
+      "banner": {
+        "popular": "Popular"
+      },
+      "metadata": {
+        "description_unavailable": "Descrição indisponível.",
+        "unknown_author": "Autor Desconhecido",
+        "unknown_status": "Desconhecido",
+        "synopsis": "Sinopse",
+        "chapters_count": "{count} Caps",
+        "read_now": "LER AGORA",
+        "save": "SALVAR",
+        "sync": "SYNC",
+        "completed": "CONCLUÍDO"
+      },
+      "preferences": {
+        "reading": "Leitura",
+        "volume_highlight": "Destaque do Volume",
+        "volume_highlight_desc": "Escolha como os volumes são destacados: como capas ou banners.",
+        "volume_highlight_cover": "Capa",
+        "volume_highlight_banner": "Banner",
+        "chapters_per_page": "Capítulos por página",
+        "chapters_per_page_desc": "Número de capítulos exibidos por página.",
+        "bookmark": "Marcador",
+        "bookmark_desc": "Atribua um marcador a este quadrinho.",
+        "bookmark_none": "Nenhum",
+        "external_sync": "Sincronização Externa",
+        "external_sync_desc": "Permitir que este quadrinho seja atualizado automaticamente nas sincronizações em lote."
+      },
+      "volume": {
+        "chapters_included": "{count} capítulos inclusos",
+        "no_chapters": "Nenhum capítulo disponível.",
+        "no_volumes": "Nenhum volume indexado ainda."
+      },
+      "toast": {
+        "mangadex_error": "MangaDex: {msg}",
+        "sync_disabled": "Sincronização externa desativada",
+        "sync_toggle_error": "Erro ao alterar sincronização externa: {msg}",
+        "anilist_error": "AniList: {msg}",
+        "sync_enabled": "Sincronização externa ativada",
+        "sync_success": "Metadados sincronizados!"
+      }
+    },
+    "reader": {
+      "fallback": {
+        "chapter_unavailable": "Capítulo indisponível"
+      },
+      "progress": {
+        "chapter_unavailable": "Progresso do capítulo",
+        "chapter_count": "Capítulo {current} de {total}",
+        "remaining_unavailable": "Capítulos restantes indisponíveis",
+        "remaining_one": "1 capítulo restante",
+        "remaining_many": "{count} capítulos restantes",
+        "subtitle": "{scope} - {current} / {total} páginas",
+        "read_percent": "{percent}% lido"
+      },
+      "modes": {
+        "vertical": "Paginado vertical",
+        "horizontal": "Paginado horizontal",
+        "webtoon": "Webtoon",
+        "vertical_short": "Vertical",
+        "horizontal_short": "Horizontal"
+      },
+      "actions": {
+        "back": "Voltar",
+        "apply_zoom": "Aplicar zoom",
+        "reset_zoom": "Resetar zoom",
+        "zoom_mode": "Modo zoom",
+        "commands": "Comandos",
+        "previous_page": "Página anterior",
+        "next_page": "Próxima página",
+        "previous_chapter": "Capítulo anterior",
+        "next_chapter": "Próximo capítulo",
+        "page_navigation_locked": "Desative o zoom para trocar de página",
+        "close_commands": "Fechar comandos"
+      },
+      "pages": {
+        "label": "Página {page}",
+        "image_alt": "Página {page}"
+      },
+      "command": {
+        "placeholder": "Comandos do leitor...",
+        "zoom_group": "Zoom",
+        "reading_group": "Leitura",
+        "toggle_zoom_search": "alternar modo zoom",
+        "zoom_in_search": "aumentar zoom",
+        "zoom_out_search": "reduzir zoom",
+        "reset_zoom_search": "resetar zoom",
+        "vertical_search": "paginado vertical",
+        "horizontal_search": "paginado horizontal",
+        "webtoon_search": "webtoon",
+        "enable_zoom_mode": "Ativar modo zoom",
+        "disable_zoom_mode": "Desativar modo zoom",
+        "zoom_in": "Aumentar zoom",
+        "zoom_out": "Reduzir zoom",
+        "reset_zoom": "Resetar zoom"
+      },
+      "zoom": {
+        "status": "Zoom {zoom}",
+        "scroll_status": "Zoom {zoom} - scroll ajusta"
+      }
+    },
+    "history": {
+      "title": "Histórico",
+      "clear_history": "Limpar Histórico",
+      "clear_history_title": "Tem certeza absoluta?",
+      "clear_history_desc": "Essa ação não pode ser desfeita. Todo o histórico de leitura será apagado permanentemente.",
+      "clear_history_cancel": "Cancelar",
+      "clear_history_confirm": "Sim, limpar tudo",
+      "loading": "Carregando...",
+      "no_events": "Nenhum histórico encontrado.",
+      "resume": "Continuar Lendo",
+      "chapter_label": "Capítulo {chapter}",
+      "page_label": "Página {page}",
+      "older": "Mais Antigos"
+    },
+    "config": {
+      "title": "Configurações",
+      "desc": "Personalize sua experiência de leitura.",
+      "file_system": {
+        "title": "Configuração dos Arquivos",
+        "comic_path": {
+          "title": "Pasta dos quadrinhos",
+          "desc": "Pasta onde será buscado e salvo: {path}"
+        },
+        "comic_info": {
+          "title": "Gerar ComicInfo.xml",
+          "desc": "Criar arquivo de metadados na pasta ao sincronizar."
+        },
+        "sync": {
+          "fast": {
+            "title": "Sincronização rápida",
+            "desc": "Atualiza apenas arquivos alterados."
+          },
+          "deep": {
+            "title": "Sincronização profunda",
+            "desc": "Reescreve todos os arquivos do banco de dados."
+          }
+        }
+      },
+      "metadata": {
+        "title": "Configuração de metadados",
+        "lang": {
+          "title": "Idioma",
+          "desc": "Selecione o idioma padrão para os metadados.",
+          "popover_title": "Idioma dos metadados",
+          "popover_desc": "Atual: {language}",
+          "search_placeholder": "Buscar idioma...",
+          "group_title": "Idiomas disponíveis",
+          "empty": "Nenhum idioma encontrado.",
+          "item_desc": "Código {code}"
+        },
+        "mangadex": {
+          "title": "Sincronização com MangaDex",
+          "desc": "Sincroniza metadados com o MangaDex."
+        },
+        "anilist": {
+          "title": "Sincronização com AniList",
+          "desc": "Sincroniza metadados com o AniList."
+        }
+      },
+      "components": {
+        "theme_piker": "Aparência"
+      },
+      "library": {
+        "title": "Biblioteca"
+      },
+      "bookmarks": {
+        "title": "Marcadores",
+        "desc": "Crie marcadores personalizados para categorizar seus quadrinhos.",
+        "add": "Adicionar Marcador",
+        "name": "Nome do marcador",
+        "color": "Cor",
+        "create": "Criar",
+        "empty": "Nenhum marcador criado."
+      },
+      "toast": {
+        "sync_complete": "Sincronização em lote finalizada com sucesso!",
+        "sync_error": "Erro na sincronização em lote: {msg}",
+        "sync_start_anilist": "Iniciando sincronização em lote com AniList... Acompanhe no console ou aguarde.",
+        "sync_error_anilist": "Erro ao iniciar sync AniList: {msg}",
+        "sync_start_mangadex": "Iniciando sincronização em lote com MangaDex... Acompanhe no console ou aguarde.",
+        "sync_error_mangadex": "Erro ao iniciar sync Mangadex: {msg}",
+        "sync_progress": "Sincronizando: {name}"
+      }
+    }
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo ao Acerola, seu leitor de quadrinhos.",
+    "start": "Começar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "step": {
+      "welcome": "Boas-vindas",
+      "language": "Idioma",
+      "formats": "Formatos",
+      "settings": "Configurações",
+      "complete": "Concluir"
+    },
+    "language": {
+      "title": "Selecionar Idioma",
+      "desc": "Escolha o idioma preferido para a aplicação."
+    },
+    "formats": {
+      "title": "Formatos Suportados",
+      "desc": "O Acerola suporta os seguintes formatos:",
+      "cbz": "Formato Comic Book.",
+      "cbr": "Formato Comic Book.",
+      "pdf": "PDFs são convertidos para CBZ. Tratados como capítulos únicos, páginas não são separadas automaticamente."
+    },
+    "settings": {
+      "title": "Configuração Inicial",
+      "theme": "Tema",
+      "folder": "Pasta dos Quadrinhos",
+      "folder_desc": "Selecione a pasta onde seus quadrinhos estão armazenados.",
+      "folder_select": "Selecionar Pasta",
+      "folder_selected": "Pasta selecionada"
+    },
+    "complete": {
+      "title": "Tudo Pronto!",
+      "desc": "Seu Acerola está pronto para uso.",
+      "note": "Você pode alterar essas configurações a qualquer momento na página de Configurações.",
+      "button": "Ir para Início"
+    }
+  },
+  "pages.reader.fallback.loading": "Carregando..."
 }

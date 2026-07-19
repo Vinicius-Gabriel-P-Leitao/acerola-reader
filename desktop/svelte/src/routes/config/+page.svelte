@@ -12,13 +12,18 @@
 	import { m } from '$lib/paraglide/messages';
 
 	import { useComicInfoPreference } from '$lib/hooks/preferences/use-comic-info.svelte';
+	import { useMetadataLanguage } from '$lib/hooks/preferences/use-metadata-language.svelte';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
+	import { METADATA_COMMANDS } from '$lib/contracts/metadata/metadata.commands';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useTheme } from '$lib/hooks/theme/use-theme.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { onMount } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
+	import { invoke } from '@tauri-apps/api/core';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+	import { toast } from 'svelte-sonner';
 
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
@@ -40,21 +45,20 @@
 	const bookmarkStore = useBookmarks();
 
 	const CATEGORY_COLORS = [
-		0xFFF44336, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7, 0xFF3F51B5,
-		0xFF2196F3, 0xFF03A9F4, 0xFF00BCD4, 0xFF009688, 0xFF4CAF50,
-		0xFF8BC34A, 0xFFCDDC39, 0xFFFFEB3B, 0xFFFFC107, 0xFFFF9800,
-		0xFFFF5722, 0xFF795548, 0xFF9E9E9E, 0xFF607D8B
+		0xfff44336, 0xffe91e63, 0xff9c27b0, 0xff673ab7, 0xff3f51b5, 0xff2196f3, 0xff03a9f4, 0xff00bcd4,
+		0xff009688, 0xff4caf50, 0xff8bc34a, 0xffcddc39, 0xffffeb3b, 0xffffc107, 0xffff9800, 0xffff5722,
+		0xff795548, 0xff9e9e9e, 0xff607d8b
 	];
 
 	let newBookmarkName = $state('');
 	let newBookmarkColor = $state<number>(CATEGORY_COLORS[0]);
 
 	let metadataLanguagePopoverOpen = $state(false);
-	let selectedMetadataLanguage = $state<LanguageCode>('pt-br');
+	const metadataLanguageStore = useMetadataLanguage();
 
 	const selectedMetadataLanguageLabel = $derived(
-		LANGUAGES.find((lang) => lang.code === selectedMetadataLanguage)?.label ??
-			selectedMetadataLanguage
+		LANGUAGES.find((lang) => lang.code === metadataLanguageStore.metadataLanguage)?.label ??
+			metadataLanguageStore.metadataLanguage
 	);
 
 	const refreshScanner = useLibraryScanner(
@@ -68,15 +72,64 @@
 	);
 
 	function selectMetadataLanguage(code: LanguageCode) {
-		// FIXME: Criar hook que salva isso no sistema.
-		selectedMetadataLanguage = code;
+		metadataLanguageStore.selectMetadataLanguage(code);
 		metadataLanguagePopoverOpen = false;
-		console.log(code);
 	}
 
-	onMount(async () => {
-		await folder.loadSavedPath();
-		await bookmarkStore.loadBookmarks();
+	async function handleSyncAllMangadex() {
+		try {
+			toast.info(m['pages.config.toast.sync_start_mangadex']());
+			await invoke(METADATA_COMMANDS.syncAllMangadex, { 
+				language: metadataLanguageStore.metadataLanguage,
+				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
+			});
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.config.toast.sync_error_mangadex']({ msg }));
+		}
+	}
+
+	async function handleSyncAllAnilist() {
+		try {
+			toast.info(m['pages.config.toast.sync_start_anilist']());
+			await invoke(METADATA_COMMANDS.syncAllAnilist, { 
+				language: metadataLanguageStore.metadataLanguage,
+				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
+			});
+		} catch (err: any) {
+			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+			toast.error(m['pages.config.toast.sync_error_anilist']({ msg }));
+		}
+	}
+
+	onMount(() => {
+		let unlistenProgress: UnlistenFn | undefined;
+		let unlistenComplete: UnlistenFn | undefined;
+		let unlistenError: UnlistenFn | undefined;
+
+		(async () => {
+			await folder.loadSavedPath();
+			await bookmarkStore.loadBookmarks();
+
+			unlistenProgress = await listen<string>('metadata:sync_all:progress', (event) => {
+				toast.info(m['pages.config.toast.sync_progress']({ name: event.payload }));
+			});
+			
+			unlistenComplete = await listen('metadata:sync_all:complete', () => {
+				toast.success(m['pages.config.toast.sync_complete']());
+			});
+
+			unlistenError = await listen<any>('metadata:sync_all:error', (event) => {
+				const msg = event.payload?.message || event.payload;
+				toast.error(m['pages.config.toast.sync_error']({ msg }));
+			});
+		})();
+
+		return () => {
+			if (unlistenProgress) unlistenProgress();
+			if (unlistenComplete) unlistenComplete();
+			if (unlistenError) unlistenError();
+		};
 	});
 
 	$effect(() => {
@@ -86,11 +139,11 @@
 	$effect(() => {
 		comicInfoPreference.loadSavedComicInfoPreference();
 	});
-</script>
 
-<style>
-	/* SVG icons use inline fill attributes - no CSS override needed */
-</style>
+	$effect(() => {
+		metadataLanguageStore.loadSavedMetadataLanguage();
+	});
+</script>
 
 <div class="max-w-5xl space-y-12 p-8">
 	<!-- Header -->
@@ -155,8 +208,8 @@
 					<AcerolaSwitch
 						state={{ checked: comicInfoPreference.comicInfoPreference ?? false }}
 						events={{
-							onCheckedChange: async () => {
-								await comicInfoPreference.selectComicInfoPreference();
+							onCheckedChange: async (checked) => {
+								await comicInfoPreference.selectComicInfoPreference(checked);
 							}
 						}}
 					/>
@@ -292,7 +345,7 @@
 									</div>
 								</div>
 
-								<AcerolaCommand state={{ value: selectedMetadataLanguage }}>
+								<AcerolaCommand state={{ value: metadataLanguageStore.metadataLanguage }}>
 									<Command.Input
 										placeholder={m['pages.config.metadata.lang.search_placeholder']()}
 									/>
@@ -332,14 +385,13 @@
 					title: m['pages.config.metadata.mangadex.title'](),
 					description: m['pages.config.metadata.mangadex.desc']()
 				}}
-				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
-				events={{ onClick: () => console.log('sync') }}
+				events={{ onClick: handleSyncAllMangadex }}
 			>
-{#snippet icon()}
-	<span style="all: unset; display: inline-flex;">
-		<MangaDexIcon class="h-6 w-6 rounded-lg" />
-	</span>
-{/snippet}
+				{#snippet icon()}
+					<span style="all: unset; display: inline-flex;">
+						<MangaDexIcon class="h-6 w-6 rounded-lg" />
+					</span>
+				{/snippet}
 
 				{#snippet action()}
 					<AcerolaButtonIcon
@@ -359,14 +411,13 @@
 					title: m['pages.config.metadata.anilist.title'](),
 					description: m['pages.config.metadata.anilist.desc']()
 				}}
-				/* FIXME: Criar hook que vai chamar invoke do tauri e salvar os dados */
-				events={{ onClick: () => console.log('sync') }}
+				events={{ onClick: handleSyncAllAnilist }}
 			>
-{#snippet icon()}
-	<span style="all: unset; display: inline-flex;">
-		<AniListIcon class="h-6 w-6 rounded-lg" />
-	</span>
-{/snippet}
+				{#snippet icon()}
+					<span style="all: unset; display: inline-flex;">
+						<AniListIcon class="h-6 w-6 rounded-lg" />
+					</span>
+				{/snippet}
 
 				{#snippet action()}
 					<AcerolaButtonIcon
@@ -394,20 +445,22 @@
 		<div class="grid gap-4">
 			<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
 				<p class="mb-4 text-sm text-muted-foreground">{m['pages.config.bookmarks.desc']()}</p>
-				
+
 				<div class="mb-6 space-y-6">
 					<!-- Row 1: Name and Button -->
 					<div class="flex items-end gap-4">
 						<div class="flex-1 space-y-1">
-							<label for="bookmarkName" class="text-xs font-semibold">{m['pages.config.bookmarks.name']()}</label>
-							<Input 
-								id="bookmarkName" 
-								placeholder={m['pages.config.bookmarks.name']()} 
-								bind:value={newBookmarkName} 
+							<label for="bookmarkName" class="text-xs font-semibold"
+								>{m['pages.config.bookmarks.name']()}</label
+							>
+							<Input
+								id="bookmarkName"
+								placeholder={m['pages.config.bookmarks.name']()}
+								bind:value={newBookmarkName}
 								class="h-10 bg-background text-foreground"
 							/>
 						</div>
-						<Button 
+						<Button
 							disabled={!newBookmarkName.trim() || bookmarkStore.isLoading}
 							onclick={async () => {
 								await bookmarkStore.createBookmark(newBookmarkName, newBookmarkColor);
@@ -428,12 +481,14 @@
 								<button
 									type="button"
 									class="relative h-8 w-8 cursor-pointer rounded-full transition-transform hover:scale-110"
-									style="background-color: #{((hexColor & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+									style="background-color: #{(hexColor & 0xffffff).toString(16).padStart(6, '0')}"
 									onclick={() => (newBookmarkColor = hexColor)}
 									aria-label="Color"
 								>
 									{#if newBookmarkColor === hexColor}
-										<div class="absolute inset-0 rounded-full border-2 border-primary ring-2 ring-background"></div>
+										<div
+											class="absolute inset-0 rounded-full border-2 border-primary ring-2 ring-background"
+										></div>
 									{/if}
 								</button>
 							{/each}
@@ -443,22 +498,28 @@
 
 				<div class="space-y-2">
 					{#if bookmarkStore.bookmarks.length === 0}
-						<div class="rounded-xl border border-dashed border-border/40 p-8 text-center text-sm text-muted-foreground">
+						<div
+							class="rounded-xl border border-dashed border-border/40 p-8 text-center text-sm text-muted-foreground"
+						>
 							{m['pages.config.bookmarks.empty']()}
 						</div>
 					{:else}
 						{#each bookmarkStore.bookmarks as bookmark (bookmark.id)}
-							<div class="flex items-center justify-between rounded-xl border border-border/40 bg-background/50 p-3 transition-colors hover:bg-muted/50">
+							<div
+								class="flex items-center justify-between rounded-xl border border-border/40 bg-background/50 p-3 transition-colors hover:bg-muted/50"
+							>
 								<div class="flex items-center gap-3">
-									<div 
-										class="h-6 w-6 rounded-full shadow-inner" 
-										style="background-color: #{((bookmark.color & 0xFFFFFF).toString(16).padStart(6, '0'))}"
+									<div
+										class="h-6 w-6 rounded-full shadow-inner"
+										style="background-color: #{(bookmark.color & 0xffffff)
+											.toString(16)
+											.padStart(6, '0')}"
 									></div>
 									<span class="font-medium">{bookmark.name}</span>
 								</div>
-								<Button 
-									variant="ghost" 
-									size="icon" 
+								<Button
+									variant="ghost"
+									size="icon"
 									class="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
 									onclick={() => bookmarkStore.deleteBookmark(bookmark.id)}
 								>
@@ -472,3 +533,7 @@
 		</div>
 	</section>
 </div>
+
+<style>
+	/* SVG icons use inline fill attributes - no CSS override needed */
+</style>

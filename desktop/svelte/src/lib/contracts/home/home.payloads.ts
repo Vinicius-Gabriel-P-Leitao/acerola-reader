@@ -12,6 +12,9 @@ export type ComicSummaryMetadataPayload = {
 	externalSync: boolean;
 	activeSource: string | null;
 	chapterCount: number;
+	description?: string | null;
+	status?: string | null;
+	author?: string | null;
 };
 
 export type ComicSummaryArtworkPayload = {
@@ -39,4 +42,3 @@ export type SortConfig = {
 	sortBy: SortBy;
 	sortOrder: SortOrder;
 };
-

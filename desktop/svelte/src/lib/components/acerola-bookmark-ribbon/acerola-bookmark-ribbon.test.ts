@@ -4,8 +4,8 @@ import AcerolaBookmarkRibbon from './acerola-bookmark-ribbon.svelte';
 
 describe('AcerolaBookmarkRibbon', () => {
 	it('should render correctly with a valid color', () => {
-		const { container } = render(AcerolaBookmarkRibbon, { color: 0xFFF44336 });
-		
+		const { container } = render(AcerolaBookmarkRibbon, { color: 0xfff44336 });
+
 		const div = container.querySelector('div');
 		expect(div).not.toBeNull();
 		// O componente converte 0xFFF44336 para #f44336 e o aplica como background-color
@@ -13,16 +13,16 @@ describe('AcerolaBookmarkRibbon', () => {
 	});
 
 	it('should parse colors safely even with full alpha', () => {
-		const { container } = render(AcerolaBookmarkRibbon, { color: 0xFFFFFFFF });
-		
+		const { container } = render(AcerolaBookmarkRibbon, { color: 0xffffffff });
+
 		const div = container.querySelector('div');
 		expect(div).not.toBeNull();
 		expect(div?.style.backgroundColor).toBe('rgb(255, 255, 255)');
 	});
 
 	it('should apply additional classes passed to the component', () => {
-		const { container } = render(AcerolaBookmarkRibbon, { color: 0xFF000000, class: 'test-class' });
-		
+		const { container } = render(AcerolaBookmarkRibbon, { color: 0xff000000, class: 'test-class' });
+
 		const div = container.querySelector('div');
 		expect(div?.classList.contains('test-class')).toBe(true);
 	});

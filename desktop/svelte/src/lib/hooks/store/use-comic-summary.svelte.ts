@@ -90,9 +90,7 @@ export function useComicSummary() {
 			if (hidden && comics) {
 				comics = {
 					...comics,
-					comics: comics.comics.filter(
-						(c) => !ids.includes(Number(c.relations.directoryId))
-					),
+					comics: comics.comics.filter((c) => !ids.includes(Number(c.relations.directoryId))),
 					total: comics.total - count
 				};
 			}
@@ -110,9 +108,7 @@ export function useComicSummary() {
 			if (comics) {
 				comics = {
 					...comics,
-					comics: comics.comics.filter(
-						(c) => !ids.includes(Number(c.relations.directoryId))
-					),
+					comics: comics.comics.filter((c) => !ids.includes(Number(c.relations.directoryId))),
 					total: comics.total - count
 				};
 			}

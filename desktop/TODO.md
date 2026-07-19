@@ -28,7 +28,7 @@
 - [x] **Agrupar capítulos por volume** - Agrupamento e renderização dos dados que possuem `volumeId` formatados no Rust.
 - [x] **Trocar estilo de exibição de capítulos/volumes** - O frontend muda o layout de list para volume baseado nas preferências da store do Svelte.
 - [x] **Configurar paginação da lista de capítulos** - Parametrização customizável gravada nas preferências que quebra requisições grandes pro Rust.
-- [ ] **Atribuir categoria ao quadrinho** - Modal/Dropdown no Svelte que dispara o update do quadrinho no banco.
+- [x] **Atribuir categoria ao quadrinho** - Modal/Dropdown no Svelte que dispara o update do quadrinho no banco.
 - [ ] **Ativar/desativar sync externo por quadrinho** - Toggle na UI repassado para o backend que anula ou permite metadados online específicos.
 - [ ] **Sincronizar capítulos locais (rescaneamento manual/folder watch)** - Chamada de comando Tauri que instrui o Rust a recarregar apenas essa pasta pontual do File System.
 - [ ] **Reescanear quadrinho completo** - Invalida metadados atuais do banco e extrai tudo de novo daquele subdiretório.
@@ -102,7 +102,7 @@
 
 ## Onboarding
 
-- [ ] **Tutorial de primeira abertura** - Rota vazia caso DB esteja cru guiando o user pela seleção da primeira pasta no Tauri FS open API.
+- [x] **Tutorial de primeira abertura** - Rota vazia caso DB esteja cru guiando o user pela seleção da primeira pasta no Tauri FS open API.
 
 ---
 

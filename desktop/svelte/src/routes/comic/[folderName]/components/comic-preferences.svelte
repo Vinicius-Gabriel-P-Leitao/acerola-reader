@@ -8,11 +8,15 @@
 			chaptersPerPage: string;
 			volumeViewMode: 'cover' | 'banner';
 			bookmarkId: number | null;
+			externalSyncEnabled: boolean;
 		};
 		events: {
 			onChaptersPerPageChange: (value: string) => void;
 			onVolumeViewModeChange: (value: 'cover' | 'banner') => void;
 			onBookmarkChange: (value: number | null) => void;
+			onExternalSyncChange: (value: boolean) => void;
+			onSyncMangadex?: () => void;
+			onSyncAnilist?: () => void;
 		};
 	};
 </script>
@@ -28,6 +32,13 @@
 	import Layers from '@lucide/svelte/icons/layers';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import CloudSync from '@lucide/svelte/icons/cloud-sync';
+	import Link from '@lucide/svelte/icons/link';
+	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
+	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
+	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 
 	let { data, events, state }: ComicPreferencesProps = $props();
 </script>
@@ -140,6 +151,86 @@
 							onValueChange: (v) => events.onBookmarkChange(v === 'none' ? null : parseInt(v))
 						}}
 					/>
+				{/snippet}
+			</AcerolaHeroButton>
+		</div>
+	</section>
+
+	<!-- Metadata Sync Section -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<CloudSync size={16} />
+			{m['pages.config.metadata.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.external_sync'](),
+					description: m['pages.comic.preferences.external_sync_desc']()
+				}}
+			>
+				{#snippet icon()}
+					<Link class="text-chart-1" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaSwitch
+						state={{ checked: state.externalSyncEnabled }}
+						events={{ onCheckedChange: events.onExternalSyncChange }}
+					/>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.config.metadata.mangadex.title'](),
+					description: m['pages.config.metadata.mangadex.desc']()
+				}}
+				events={{ onClick: events.onSyncMangadex }}
+			>
+				{#snippet icon()}
+					<span style="all: unset; display: inline-flex;">
+						<MangaDexIcon class="h-6 w-6 rounded-lg" />
+					</span>
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.config.metadata.anilist.title'](),
+					description: m['pages.config.metadata.anilist.desc']()
+				}}
+				events={{ onClick: events.onSyncAnilist }}
+			>
+				{#snippet icon()}
+					<span style="all: unset; display: inline-flex;">
+						<AniListIcon class="h-6 w-6 rounded-lg" />
+					</span>
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
 				{/snippet}
 			</AcerolaHeroButton>
 		</div>
