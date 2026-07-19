@@ -28,12 +28,6 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const capabilities: TauriCapability[] = [
 	{
 		browserName: process.platform === 'win32' ? 'chrome' : 'wry',
-		'goog:chromeOptions': {
-			args: ['--no-sandbox', '--disable-gpu']
-		},
-		'ms:edgeOptions': {
-			args: ['--no-sandbox', '--disable-gpu']
-		},
 		'tauri:options': {
 			application: appPath
 		}
