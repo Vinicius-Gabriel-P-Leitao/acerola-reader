@@ -122,10 +122,17 @@ mod app_bootstrap {
 
     async fn setup_database(handle: &tauri::AppHandle, db_path: PathBuf) {
         #[rustfmt::skip]
-        let pool = sqlx::SqlitePool::connect(&format!(
-            "sqlite:{}?mode=rwc",
-            db_path.to_string_lossy()
-        )).await.unwrap();
+        let pool = match tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            sqlx::SqlitePool::connect(&format!(
+                "sqlite:{}?mode=rwc",
+                db_path.to_string_lossy()
+            ))
+        ).await {
+            Ok(Ok(p)) => p,
+            Ok(Err(e)) => panic!("Failed to connect to db: {:?}", e),
+            Err(_) => panic!("TIMEOUT waiting for SqlitePool::connect!"),
+        };
 
         handle.manage(pool.clone());
         handle.manage(HistoryService::new(pool.clone()));
@@ -187,11 +194,16 @@ mod app_bootstrap {
             .provide()
             .expect("Failed to read device info");
 
-        let node = AcerolaP2p::builder(emit, transport, device)
-            .guard(TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator())
-            .build()
-            .await
-            .expect("Failed to start the p2p node");
+        let node = match tokio::time::timeout(
+            std::time::Duration::from_secs(10),
+            AcerolaP2p::builder(emit, transport, device)
+                .guard(TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator())
+                .build()
+        ).await {
+            Ok(Ok(n)) => n,
+            Ok(Err(e)) => panic!("Failed to start p2p node: {:?}", e),
+            Err(_) => panic!("TIMEOUT waiting for AcerolaP2p::build()!"),
+        };
 
         let service: Arc<dyn NetworkServiceApi> = Arc::new(NetworkService::new(Arc::new(node)));
         handle.manage(service);
@@ -212,7 +224,6 @@ mod app_bootstrap {
                         path: log_dir,
                         file_name: None,
                     }),
-                    #[cfg(debug_assertions)]
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
                 ])
                 .level(tauri_plugin_log::log::LevelFilter::Warn)
