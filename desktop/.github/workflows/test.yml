@@ -223,18 +223,7 @@ jobs:
           New-Item -ItemType Directory -Force "src-tauri/target/release/.bin" | Out-Null
           Copy-Item -Force "src-tauri/.bin/pdfium.dll" "src-tauri/target/release/.bin/"
 
-      - name: Debug Run Acerola
-        run: |
-          $process = Start-Process -FilePath "src-tauri/target/release/acerola.exe" -PassThru -NoNewWindow -RedirectStandardError "acerola_err.log" -RedirectStandardOutput "acerola_out.log"
-          Start-Sleep -Seconds 10
-          if ($process.HasExited) {
-            Write-Host "Process exited with code $($process.ExitCode)"
-          } else {
-            Write-Host "Process is still running. Killing it..."
-            Stop-Process -Id $process.Id -Force
-          }
-          if (Test-Path "acerola_err.log") { Write-Host "STDERR:"; Get-Content "acerola_err.log" }
-          if (Test-Path "acerola_out.log") { Write-Host "STDOUT:"; Get-Content "acerola_out.log" }
-
       - name: Run WebdriverIO tests
         run: npm run test:wdio
+        env:
+          WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: --no-sandbox --disable-gpu
