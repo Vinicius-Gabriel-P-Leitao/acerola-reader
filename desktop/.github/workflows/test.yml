@@ -218,5 +218,10 @@ jobs:
       - name: Build Tauri app
         run: npm run tauri -- build --no-bundle
 
+      - name: Copy Pdfium DLL
+        run: |
+          New-Item -ItemType Directory -Force "src-tauri/target/release/.bin" | Out-Null
+          Copy-Item -Force "src-tauri/.bin/pdfium.dll" "src-tauri/target/release/.bin/"
+
       - name: Run WebdriverIO tests
         run: npm run test:wdio
