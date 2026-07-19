@@ -80,10 +80,13 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				LOCALAPPDATA: appDataDir,
 				XDG_DATA_HOME: appDataDir
 			},
-			stdio: ['ignore', 'pipe', 'pipe'],
-			shell: process.platform === 'win32'
+			stdio: ['ignore', 'pipe', 'pipe']
 		});
 		tauriDriver = driver;
+
+		driver.stdout.on('data', (chunk) => {
+			process.stdout.write(`[tauri-driver] ${chunk}`);
+		});
 
 		driver.stderr.on('data', (chunk) => {
 			process.stderr.write(`[tauri-driver] ${chunk}`);

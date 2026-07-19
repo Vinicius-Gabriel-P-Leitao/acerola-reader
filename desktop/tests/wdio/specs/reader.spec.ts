@@ -74,13 +74,6 @@ describe('reader nativo', () => {
 	it('abre capítulo fixture, navega páginas e bloqueia paginação enquanto zoom está ativo', async () => {
 		const fixture = await openReaderWithFixture();
 
-		await waitForText('Ch. 1', 10_000);
-		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
-		await waitForTextContaining('33%', 10_000);
-
-		const firstPage = await browser.$('img[alt="Página 1"]');
-		await firstPage.waitForDisplayed({ timeout: 10_000 });
-
 		// Ensure we are in Paginated mode (in case a previous test left it in Webtoon)
 		try {
 			const paginadoBtn = await firstDisplayed('[title="Paginado horizontal"]', 2000);
@@ -88,6 +81,15 @@ describe('reader nativo', () => {
 				await paginadoBtn.click();
 			}
 		} catch (e) {}
+
+		await waitForText('Ch. 1', 10_000);
+		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
+		await waitForTextContaining('33%', 10_000);
+
+		const firstPage = await browser.$('img[alt="Página 1"]');
+		await firstPage.waitForDisplayed({ timeout: 10_000 });
+
+
 
 		await (await firstDisplayed('[title="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
