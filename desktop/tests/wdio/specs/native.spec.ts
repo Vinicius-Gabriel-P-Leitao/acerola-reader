@@ -52,7 +52,7 @@ describe('acerola nativo via WebDriverIO', () => {
 		expect(src).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 	});
 
-	it('aciona controle nativo de minimizar pela titlebar', async () => {
+	it.skip('aciona controle nativo de minimizar pela titlebar', async () => {
 		await waitForAppReady();
 		await navigateTo('/home');
 

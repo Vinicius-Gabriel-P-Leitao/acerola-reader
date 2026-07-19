@@ -136,28 +136,26 @@ describe('useComicInfoPreference', () => {
 		vi.clearAllMocks();
 	});
 
-	it('salva preferência escolhida quando IPC retorna verdadeiro', async () => {
+	it('salva preferência com valor explícito', async () => {
 		const store = mockStore();
-		invokeMock.mockResolvedValue(true);
 		const hook = await renderHook(useComicInfoPreference);
 
-		await hook.selectComicInfoPreference();
+		await hook.selectComicInfoPreference(true);
 
-		expect(invokeMock).toHaveBeenCalledWith(LIBRARY_COMMANDS.comicInfoPreference);
 		expect(hook.comicInfoPreference).toBe(true);
 		expect(store.set).toHaveBeenCalledWith(STORE_KEYS.comicInfoPreference, true);
 		expect(store.save).toHaveBeenCalledOnce();
 	});
 
-	it('mantém indefinido quando IPC retorna falso', async () => {
+	it('alterna preferência quando valor não é passado', async () => {
 		const store = mockStore();
-		invokeMock.mockResolvedValue(false);
 		const hook = await renderHook(useComicInfoPreference);
 
 		await hook.selectComicInfoPreference();
 
-		expect(hook.comicInfoPreference).toBeUndefined();
-		expect(store.set).not.toHaveBeenCalled();
+		expect(hook.comicInfoPreference).toBe(true);
+		expect(store.set).toHaveBeenCalledWith(STORE_KEYS.comicInfoPreference, true);
+		expect(store.save).toHaveBeenCalledOnce();
 	});
 
 	it('carrega preferência salva de comic info', async () => {

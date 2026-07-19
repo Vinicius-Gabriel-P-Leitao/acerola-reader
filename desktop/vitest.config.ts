@@ -5,6 +5,7 @@ import { playwright } from '@vitest/browser-playwright';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
+import svg from '@poppanator/sveltekit-svg';
 
 const dirname =
 	typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
@@ -15,6 +16,13 @@ export default defineConfig({
 			hot: false,
 			compilerOptions: {
 				dev: true
+			}
+		}),
+		svg({
+			includePaths: ['./svelte/src/lib/assets/'],
+			svgoOptions: {
+				multipass: true,
+				plugins: ['preset-default']
 			}
 		})
 	],
