@@ -238,3 +238,5 @@ jobs:
 
       - name: Run WebdriverIO tests
         run: npm run test:wdio
+        env:
+          WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: --no-sandbox --disable-gpu
