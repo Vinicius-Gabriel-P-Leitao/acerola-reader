@@ -123,10 +123,14 @@ impl MetadataRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::tests::utils::setup_test_db::{setup_test_db, setup_test_db_with_comic};
 
     async fn setup() -> MetadataRepository {
         MetadataRepository::new(setup_test_db().await)
+    }
+
+    async fn setup_with_comic() -> MetadataRepository {
+        MetadataRepository::new(setup_test_db_with_comic().await)
     }
 
     fn fake_comic_metadata() -> ComicMetadata {
@@ -170,13 +174,13 @@ mod tests {
 
     #[tokio::test]
     async fn deve_buscar_comic_metadata_pelo_id() {
-        let repo = setup().await;
+        let repo = setup_with_comic().await;
 
         let mut metadata = fake_comic_metadata();
-        metadata.comic_directory_fk = Some(999);
+        metadata.comic_directory_fk = Some(1);
         repo.comic_repo.insert(&metadata).await.unwrap();
 
-        let result = repo.get_comic_metadata_by_comic_id(999).await.unwrap();
+        let result = repo.get_comic_metadata_by_comic_id(1).await.unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap().title, "Berserk");
 

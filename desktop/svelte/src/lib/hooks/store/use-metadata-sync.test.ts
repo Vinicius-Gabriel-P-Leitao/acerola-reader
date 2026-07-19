@@ -15,6 +15,12 @@ vi.mock('@tauri-apps/plugin-log', () => ({
 	error: vi.fn()
 }));
 
+vi.mock('@tauri-apps/plugin-store', () => ({
+	load: vi.fn().mockResolvedValue({
+		get: vi.fn().mockResolvedValue('test')
+	})
+}));
+
 const invokeMock = vi.mocked(invoke);
 const errorMock = vi.mocked(tauriError);
 
@@ -52,7 +58,9 @@ describe('useMetadataSync', () => {
 
 		expect(invokeMock).toHaveBeenCalledWith(METADATA_COMMANDS.syncMangadex, {
 			title: 'Naruto',
-			comicId: 123
+			comicId: '123',
+			generateComicInfo: 'test',
+			language: 'test'
 		});
 		expect(result).toEqual(mockResponse);
 		expect(hook.isSyncing).toBe(false);
@@ -67,7 +75,9 @@ describe('useMetadataSync', () => {
 
 		expect(invokeMock).toHaveBeenCalledWith(METADATA_COMMANDS.syncMangadex, {
 			title: 'Naruto',
-			comicId: 123
+			comicId: '123',
+			generateComicInfo: 'test',
+			language: 'test'
 		});
 		expect(errorMock).toHaveBeenCalledWith('Failed to sync MangaDex: "Network error"');
 		expect(hook.isSyncing).toBe(false);
@@ -84,7 +94,9 @@ describe('useMetadataSync', () => {
 
 		expect(invokeMock).toHaveBeenCalledWith(METADATA_COMMANDS.syncAnilist, {
 			title: 'Bleach',
-			comicId: 456
+			comicId: '456',
+			generateComicInfo: 'test',
+			language: 'test'
 		});
 		expect(result).toEqual(mockResponse);
 		expect(hook.isSyncing).toBe(false);
@@ -99,7 +111,9 @@ describe('useMetadataSync', () => {
 
 		expect(invokeMock).toHaveBeenCalledWith(METADATA_COMMANDS.syncAnilist, {
 			title: 'Bleach',
-			comicId: 456
+			comicId: '456',
+			generateComicInfo: 'test',
+			language: 'test'
 		});
 		expect(errorMock).toHaveBeenCalledWith('Failed to sync AniList: "API error"');
 		expect(hook.isSyncing).toBe(false);
