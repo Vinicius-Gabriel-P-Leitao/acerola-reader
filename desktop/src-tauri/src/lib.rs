@@ -236,8 +236,12 @@ mod app_bootstrap {
 
         tauri::async_runtime::block_on(async move {
             setup_database(&handle, db_path).await;
-            setup_network(&handle).await;
             setup_scopes_from_store(&handle).await;
+        });
+
+        let handle_network = app.handle().clone();
+        tauri::async_runtime::spawn(async move {
+            setup_network(&handle_network).await;
         });
 
         Ok(())
