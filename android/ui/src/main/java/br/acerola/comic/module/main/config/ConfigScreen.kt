@@ -145,9 +145,9 @@ fun Main.Config.Template.Screen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier =
-                    Modifier
+                modifier = Modifier
                         .padding(paddingValues)
+                        .padding(bottom = 64.dp)
                         .fillMaxSize()
                         .verticalScroll(scrollState),
             ) {

@@ -96,7 +96,7 @@ fun Main.History.Template.Screen(viewModel: HistoryViewModel = hiltViewModel()) 
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp + 64.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item {

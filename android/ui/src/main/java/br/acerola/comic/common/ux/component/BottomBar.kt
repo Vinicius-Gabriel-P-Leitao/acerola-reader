@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -29,12 +30,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import br.acerola.comic.common.navigation.Destination
 import br.acerola.comic.common.ux.Acerola
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 
 private val navDestinations =
     listOf(
@@ -44,21 +50,36 @@ private val navDestinations =
     )
 
 @Composable
-fun Acerola.Component.BottomBar(navController: NavHostController) {
+fun Acerola.Component.BottomBar(
+    navController: NavHostController,
+    hazeState: HazeState,
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val glassColor = MaterialTheme.colorScheme.surface
 
     NavigationBar(
-        modifier = Modifier,
+        modifier = Modifier
+            .height(64.dp)
+            .hazeEffect(
+                state = hazeState,
+                style = HazeStyle(
+                    backgroundColor = Color.Transparent,
+                    tints = listOf(
+                        HazeTint(color = glassColor.copy(alpha = 0.90f))
+                    ),
+                    blurRadius = 20.dp,
+                ),
+            ),
         windowInsets = NavigationBarDefaults.windowInsets,
-        containerColor = NavigationBarDefaults.containerColor,
+        containerColor = Color.Transparent,
     ) {
         navDestinations.forEach { destination ->
             val routeString = stringResource(id = destination.route)
 
             NavigationBarItem(
                 selected = currentRoute == routeString,
-                label = { Text(text = stringResource(id = destination.label)) },
+                label = null,
                 onClick = {
                     if (currentRoute != routeString) {
                         navController.navigate(routeString) {

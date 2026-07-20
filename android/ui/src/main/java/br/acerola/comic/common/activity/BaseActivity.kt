@@ -46,6 +46,9 @@ import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.viewmodel.progress.GlobalProgressViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 @AndroidEntryPoint
 abstract class BaseActivity : ComponentActivity() {
@@ -128,6 +131,7 @@ abstract class BaseActivity : ComponentActivity() {
                     } else {
                         // Em modo portrait: layout original com bottom bar
                         Acerola.Component.Scaffold {
+                            val hazeState = rememberHazeState()
                             Scaffold(
                                 topBar = { TopBar(navController) },
                                 snackbarHost = {
@@ -140,13 +144,17 @@ abstract class BaseActivity : ComponentActivity() {
                                         }
                                     }
                                 },
-                                bottomBar = { BottomBar(navController) },
+                                bottomBar = { BottomBar(navController, hazeState) },
                             ) { padding ->
                                 val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
                                 val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
 
                                 val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
-                                Box(modifier = Modifier.padding(paddingValues = contentPadding)) {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(paddingValues = contentPadding)
+                                        .hazeSource(hazeState),
+                                ) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
                                     Acerola.Component.Progress(
                                         modifier =
@@ -170,7 +178,10 @@ abstract class BaseActivity : ComponentActivity() {
     }
 
     @Composable
-    open fun BottomBar(navController: NavHostController) {
+    open fun BottomBar(
+        navController: NavHostController,
+        hazeState: HazeState,
+    ) {
     }
 
     @Composable

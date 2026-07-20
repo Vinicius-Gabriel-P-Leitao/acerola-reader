@@ -180,7 +180,7 @@ fun Main.Home.Template.Screen(
                                 start = SpacingTokens.Small,
                                 top = gridTopPadding,
                                 end = SpacingTokens.Small,
-                                bottom = 80.dp,
+                                bottom = SpacingTokens.Small + 64.dp,
                             ),
                     ) {
                         if (lastComic != null && lastHistory != null) {
@@ -232,6 +232,7 @@ fun Main.Home.Template.Screen(
         }
 
         Acerola.Component.FabGroup(
+            modifier = Modifier.padding(bottom = 64.dp),
             icon = {
                 Icon(
                     imageVector = Icons.Default.Edit,
