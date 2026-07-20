@@ -78,7 +78,8 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				...process.env,
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
-				XDG_DATA_HOME: appDataDir
+				XDG_DATA_HOME: appDataDir,
+				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--headless'
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
 			shell: process.platform === 'win32'
