@@ -254,6 +254,10 @@ mod app_bootstrap {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    std::panic::set_hook(Box::new(|info| {
+        let msg = format!("Panic occurred: {:?}", info);
+        let _ = std::fs::write("PANIC_LOG.txt", msg);
+    }));
     use pdfium_render::prelude::Pdfium;
 
     let pdfium_path =
