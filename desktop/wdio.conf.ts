@@ -73,7 +73,6 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				: [];
 
 		const isCI = !!process.env.CI;
-		const webview2Args = isCI ? '--disable-gpu' : undefined;
 
 		const driver = spawn('tauri-driver', tauriDriverArgs, {
 			cwd: __dirname,
@@ -81,8 +80,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				...process.env,
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
-				XDG_DATA_HOME: appDataDir,
-				...(webview2Args ? { WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: webview2Args } : {})
+				XDG_DATA_HOME: appDataDir
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
 			shell: false
