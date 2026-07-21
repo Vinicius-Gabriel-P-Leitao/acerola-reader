@@ -45,8 +45,8 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 	framework: 'mocha',
 	reporters: ['spec'],
 	waitforTimeout: 30_000,
-	connectionRetryTimeout: 30_000,
-	connectionRetryCount: 1,
+	connectionRetryTimeout: 120_000,
+	connectionRetryCount: 3,
 	mochaOpts: {
 		ui: 'bdd',
 		timeout: 30_000
@@ -73,12 +73,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				: [];
 
 		const isCI = !!process.env.CI;
-
-		// In CI (Windows Server without GPU), WebView2 needs extra flags to run headlessly.
-		// --disable-gpu prevents GPU-related hangs, --no-sandbox avoids permission issues in restricted environments.
-		const webview2Args = isCI
-			? '--headless --disable-gpu --no-sandbox'
-			: '--headless';
+		const webview2Args = isCI ? '--disable-gpu' : undefined;
 
 		const driver = spawn('tauri-driver', tauriDriverArgs, {
 			cwd: __dirname,
@@ -87,10 +82,10 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
 				XDG_DATA_HOME: appDataDir,
-				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: webview2Args
+				...(webview2Args ? { WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: webview2Args } : {})
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
-			shell: process.platform === 'win32'
+			shell: false
 		});
 		tauriDriver = driver;
 
@@ -105,8 +100,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 			console.error('[tauri-driver] erro ao iniciar:', error);
 		});
 
-		// Give tauri-driver more time to initialize in CI (no GPU, slower startup)
-		await wait(isCI ? 5_000 : 2_000);
+		await wait(isCI ? 8_000 : 2_000);
 	},
 	onComplete: () => {
 		if (tauriDriver && !tauriDriver.killed) {
