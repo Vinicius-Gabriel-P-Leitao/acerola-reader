@@ -72,6 +72,14 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				? ['--native-driver', localNativeDriverPath]
 				: [];
 
+		const isCI = !!process.env.CI;
+
+		// In CI (Windows Server without GPU), WebView2 needs extra flags to run headlessly.
+		// --disable-gpu prevents GPU-related hangs, --no-sandbox avoids permission issues in restricted environments.
+		const webview2Args = isCI
+			? '--headless --disable-gpu --no-sandbox'
+			: '--headless';
+
 		const driver = spawn('tauri-driver', tauriDriverArgs, {
 			cwd: __dirname,
 			env: {
@@ -79,7 +87,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
 				XDG_DATA_HOME: appDataDir,
-				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--headless'
+				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: webview2Args
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
 			shell: process.platform === 'win32'
@@ -97,7 +105,8 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 			console.error('[tauri-driver] erro ao iniciar:', error);
 		});
 
-		await wait(2_000);
+		// Give tauri-driver more time to initialize in CI (no GPU, slower startup)
+		await wait(isCI ? 5_000 : 2_000);
 	},
 	onComplete: () => {
 		if (tauriDriver && !tauriDriver.killed) {
