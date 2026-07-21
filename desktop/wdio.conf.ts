@@ -81,6 +81,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
 				XDG_DATA_HOME: appDataDir,
+				WEBVIEW2_USER_DATA_FOLDER: appDataDir,
 				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-allow-origins=* --disable-gpu'
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
