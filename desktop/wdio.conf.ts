@@ -27,7 +27,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const capabilities: TauriCapability[] = [
 	{
-		browserName: process.platform === 'win32' ? 'chrome' : 'wry',
+		browserName: 'wry',
 		'tauri:options': {
 			application: appPath
 		}
@@ -80,10 +80,11 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				...process.env,
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
-				XDG_DATA_HOME: appDataDir
+				XDG_DATA_HOME: appDataDir,
+				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-allow-origins=* --disable-gpu'
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
-			shell: false
+			shell: true
 		});
 		tauriDriver = driver;
 
