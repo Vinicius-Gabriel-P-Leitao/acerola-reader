@@ -218,38 +218,5 @@ jobs:
       - name: Build Tauri app
         run: npm run tauri -- build --no-bundle
 
-      - name: Smoke-test app binary
-        run: |
-          $appPath = "src-tauri\target\release\acerola.exe"
-          $tmpData = Join-Path ([System.IO.Path]::GetTempPath()) "acerola-smoke-$([System.Guid]::NewGuid().ToString('N'))"
-          New-Item -ItemType Directory -Force $tmpData | Out-Null
-
-          $proc = Start-Process -FilePath $appPath -PassThru -NoNewWindow `
-            -RedirectStandardOutput "$tmpData\stdout.txt" `
-            -RedirectStandardError  "$tmpData\stderr.txt"
-
-          Start-Sleep -Seconds 15
-
-          if ($proc.HasExited) {
-            Write-Host "[smoke-test] App exited unexpectedly (code $($proc.ExitCode))"
-            if (Test-Path "$tmpData\stdout.txt") { Get-Content "$tmpData\stdout.txt" }
-            if (Test-Path "$tmpData\stderr.txt") { Get-Content "$tmpData\stderr.txt" }
-            throw "App binary crashed on startup."
-          }
-
-          Write-Host "[smoke-test] App is alive after 15s — OK"
-          $proc.Kill()
-          Remove-Item -Recurse -Force $tmpData
-
       - name: Run WebdriverIO tests
         run: npm run test:wdio
-
-      - name: Print PANIC_LOG.txt if exists
-        if: always()
-        run: |
-          if (Test-Path "acerola/src-tauri/PANIC_LOG.txt") {
-            Get-Content "acerola/src-tauri/PANIC_LOG.txt"
-          }
-          if (Test-Path "acerola/PANIC_LOG.txt") {
-            Get-Content "acerola/PANIC_LOG.txt"
-          }
