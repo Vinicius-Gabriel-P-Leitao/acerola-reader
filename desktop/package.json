@@ -8,6 +8,9 @@
 		"email": "contato@acerola-comic.com"
 	},
 	"description": "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais.",
+	"overrides": {
+		"@wdio/native-utils": "^2.5.0"
+	},
 	"scripts": {
 		"tauri": "tauri",
 		"pack:msix": "npm run make cd",
@@ -71,6 +74,7 @@
 		"@wdio/cli": "^9.27.2",
 		"@wdio/local-runner": "^9.27.2",
 		"@wdio/mocha-framework": "^7.7.3",
+		"@wdio/native-utils": "^2.5.0",
 		"@wdio/spec-reporter": "^9.27.2",
 		"@wdio/tauri-service": "^1.2.0",
 		"@wdio/types": "^9.27.2",

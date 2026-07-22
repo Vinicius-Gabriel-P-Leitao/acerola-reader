@@ -26,7 +26,8 @@ export const config: Options.Testrunner = {
 		[
 			'tauri',
 			{
-				appBinaryPath: appPath
+				appBinaryPath: appPath,
+				driverProvider: 'external'
 			}
 		]
 	],
@@ -39,5 +40,12 @@ export const config: Options.Testrunner = {
 	mochaOpts: {
 		ui: 'bdd',
 		timeout: 30_000
+	},
+	beforeSession: (_config, _capabilities, specs) => {
+		specs.forEach((spec, index) => {
+			if (spec.startsWith('file://')) {
+				specs[index] = fileURLToPath(spec);
+			}
+		});
 	}
 };
