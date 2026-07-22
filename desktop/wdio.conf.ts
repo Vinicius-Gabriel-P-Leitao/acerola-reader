@@ -17,6 +17,7 @@ const localNativeDriverPath =
 type TauriCapability = WebdriverIO.Capabilities & {
 	'tauri:options': {
 		application: string;
+		args?: string[];
 	};
 };
 
@@ -29,7 +30,8 @@ const capabilities: TauriCapability[] = [
 	{
 		browserName: 'wry',
 		'tauri:options': {
-			application: appPath
+			application: appPath,
+			args: ['--remote-allow-origins=*', '--disable-gpu', '--no-sandbox']
 		}
 	}
 ];
@@ -81,8 +83,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				APPDATA: appDataDir,
 				LOCALAPPDATA: appDataDir,
 				XDG_DATA_HOME: appDataDir,
-				WEBVIEW2_USER_DATA_FOLDER: appDataDir,
-				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-allow-origins=* --disable-gpu'
+				WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-allow-origins=* --disable-gpu --no-sandbox'
 			},
 			stdio: ['ignore', 'pipe', 'pipe'],
 			shell: true
