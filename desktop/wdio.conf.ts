@@ -59,7 +59,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 		}
 	},
 	onPrepare: async () => {
-		const binaryPath = path.resolve(__dirname, appPath);
+		const binaryPath = appPath;
 
 		if (!existsSync(binaryPath)) {
 			throw new Error(`Binário não encontrado em: ${binaryPath}\nRode: cargo tauri build`);

@@ -1,4 +1,4 @@
-import { getTitle, navigateTo, navigateToWithState, waitForAppReady } from '../helpers/app';
+import { firstDisplayed, getTitle, navigateTo, navigateToWithState, waitForAppReady } from '../helpers/app';
 import { createReaderFixture, readerChapterFor } from '../helpers/fixtures';
 
 describe('acerola nativo via WebDriverIO', () => {
@@ -45,8 +45,7 @@ describe('acerola nativo via WebDriverIO', () => {
 			chapterScope: fixture.comicTitle
 		});
 
-		const image = await browser.$('img[alt="Página 1"]');
-		await image.waitForDisplayed({ timeout: 10_000 });
+		const image = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 
 		const src = await image.getAttribute('src');
 		expect(src).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);

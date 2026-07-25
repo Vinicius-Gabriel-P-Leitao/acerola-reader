@@ -4,16 +4,16 @@ Esta suite testa o binário Tauri nativo via `tauri-driver`. Ela é separada dos
 
 ## Build
 
-Antes de rodar, gere o binário debug:
+Antes de rodar, gere o binário de release:
 
 ```sh
-cargo tauri build --debug
+cargo tauri build
 ```
 
 O config espera:
 
-- Windows: `src-tauri/target/debug/acerola.exe`
-- Linux: `src-tauri/target/debug/acerola`
+- Windows: `src-tauri/target/release/acerola.exe`
+- Linux: `src-tauri/target/release/acerola`
 
 ## Windows
 

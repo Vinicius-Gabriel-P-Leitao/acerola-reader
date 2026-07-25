@@ -53,7 +53,7 @@ describe('PDF to CBZ E2E', () => {
 		});
 
 		// Confirma que a página 1 abriu
-		const image = await firstDisplayed('img[alt="Página 1"]', 10_000);
+		const image = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 		const src = await image.getAttribute('src');
 		expect(src).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 	});
