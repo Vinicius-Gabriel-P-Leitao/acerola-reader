@@ -8,9 +8,8 @@ import { m } from '$lib/paraglide/messages';
 
 const { notify } = notificationStore;
 
-let folderPath = $state<string | undefined>(undefined);
-
 export function useSelectFolder() {
+	let folderPath = $state<string | undefined>(undefined);
 
 	async function selectFolder() {
 		const path = await invoke<string>(LIBRARY_COMMANDS.selectFolder);

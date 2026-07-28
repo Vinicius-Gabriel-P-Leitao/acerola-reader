@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockStoreMethods = {
+const mockStoreMethods = vi.hoisted(() => ({
 	get: vi.fn(() => Promise.resolve(null)),
 	set: vi.fn(() => Promise.resolve()),
 	save: vi.fn(() => Promise.resolve())
-};
+}));
 
 vi.mock('@tauri-apps/plugin-store', () => ({
 	load: vi.fn(() => mockStoreMethods),
