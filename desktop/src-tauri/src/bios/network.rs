@@ -5,7 +5,7 @@ use acerola_p2p::api::{
     AcerolaP2p,
 };
 use rand::RngCore;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tauri::{Emitter, Manager};
 
@@ -15,7 +15,7 @@ use crate::{
 };
 
 /// Obtém ou gera um seed de 32 bytes dinamicamente e o persiste em `p2p-seed.key`
-fn get_or_create_p2p_seed(app_data_directory: &PathBuf) -> Result<[u8; 32], ComicError> {
+fn get_or_create_p2p_seed(app_data_directory: &Path) -> Result<[u8; 32], ComicError> {
     let seed_file_path = app_data_directory.join("p2p-seed.key");
 
     if seed_file_path.exists() {
@@ -36,7 +36,7 @@ fn get_or_create_p2p_seed(app_data_directory: &PathBuf) -> Result<[u8; 32], Comi
     let mut new_generated_seed = [0u8; 32];
     rand::thread_rng().fill_bytes(&mut new_generated_seed);
 
-    if let Err(write_error) = std::fs::write(&seed_file_path, &new_generated_seed) {
+    if let Err(write_error) = std::fs::write(&seed_file_path, new_generated_seed) {
         tracing::error!("[Bios::Network] Failed to save p2p-seed.key: {}", write_error);
     } else {
         tracing::info!("[Bios::Network] Generated and saved new P2P seed at {:?}", seed_file_path);

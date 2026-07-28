@@ -5,11 +5,11 @@ import { load, LazyStore } from '@tauri-apps/plugin-store';
 import { STORE_KEYS } from '$lib/constants/store-plugin';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
 
-const mockStoreMethods = {
+const mockStoreMethods = vi.hoisted(() => ({
 	get: vi.fn((_key: string) => Promise.resolve(null)),
 	set: vi.fn((_key: string, _value: unknown) => Promise.resolve()),
 	save: vi.fn(() => Promise.resolve())
-};
+}));
 
 vi.mock('@tauri-apps/plugin-store', () => ({
 	load: vi.fn(),
