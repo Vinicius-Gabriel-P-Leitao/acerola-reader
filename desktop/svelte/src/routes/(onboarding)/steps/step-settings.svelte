@@ -17,7 +17,9 @@
 		folder.loadSavedPath();
 	});
 
-	let canProceed = $derived(!!folder.folderPath);
+	$effect(() => {
+		folder.loadSavedPath();
+	});
 
 	let { onNext, onPrev } = $props<{ onNext: () => void; onPrev: () => void }>();
 </script>
@@ -67,7 +69,7 @@
 			<Button onclick={onPrev} variant="outline" class="rounded-xl">
 				{m['onboarding.back']()}
 			</Button>
-			<Button onclick={onNext} disabled={!canProceed} class="rounded-xl">
+			<Button onclick={onNext} disabled={!folder.folderPath} class="rounded-xl">
 				{m['onboarding.next']()}
 			</Button>
 		</div>
