@@ -10,7 +10,9 @@ const mockStoreMethods = vi.hoisted(() => ({
 
 vi.mock('@tauri-apps/plugin-store', () => ({
 	load: vi.fn(() => mockStoreMethods),
-	LazyStore: vi.fn().mockImplementation(() => mockStoreMethods)
+	LazyStore: vi.fn().mockImplementation(function () {
+		return mockStoreMethods;
+	})
 }));
 
 vi.mock('$app/navigation', () => ({
@@ -22,10 +24,12 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 import Onboarding from './onboarding.svelte';
+import { useOnboarding } from '$lib/hooks/onboarding/use-onboarding.svelte';
 
 describe('Onboarding Component', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		useOnboarding().setStep(0);
 	});
 
 	it('renderiza o primeiro passo (Boas-vindas) por padrão', () => {

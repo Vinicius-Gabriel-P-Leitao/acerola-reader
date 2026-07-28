@@ -7,6 +7,18 @@ if (typeof window !== 'undefined') {
 	window.HTMLElement.prototype.hasPointerCapture = vi.fn();
 	window.HTMLElement.prototype.releasePointerCapture = vi.fn();
 	window.HTMLElement.prototype.scrollIntoView = vi.fn();
+	if (!Element.prototype.animate) {
+		Element.prototype.animate = vi.fn().mockImplementation(() => ({
+			finished: Promise.resolve(),
+			cancel: vi.fn(),
+			finish: vi.fn(),
+			pause: vi.fn(),
+			play: vi.fn(),
+			reverse: vi.fn(),
+			onfinish: null,
+			oncancel: null
+		}));
+	}
 	// @ts-ignore: Mock simples para testes que resolve o hasPointerCapture
 	window.PointerEvent = class PointerEvent extends Event {};
 

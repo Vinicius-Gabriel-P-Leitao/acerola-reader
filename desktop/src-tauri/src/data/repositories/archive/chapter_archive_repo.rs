@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_counts() {
+    async fn teste_contagens() {
         let pool = setup_test_db_with_volumes().await;
         let repo = ChapterRepository::new(pool);
         repo.base.insert(&chapter(1, "1")).await.unwrap();
