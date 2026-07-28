@@ -111,6 +111,23 @@
       "selection": {
         "selected": "{count} selecionado(s)",
         "select_all": "Selecionar todos",
+        "deselect_all": "Desmarcar todos",
+        "select_all_total": "Selecionar todos ({total})",
+        "actions_button": "Ações ({count})",
+        "cancel": "Cancelar"
+      },
+      "actions": {
+        "title": "Ações do Quadrinho",
+        "description": "{count} quadrinho(s) selecionado(s)",
+        "bookmark": "Adicionar Bookmark",
+        "hide": "Ocultar",
+        "delete": "Deletar",
+        "hide_confirm_title": "Ocultar Quadrinhos",
+        "hide_confirm_desc": "Tem certeza de que deseja ocultar o(s) quadrinho(s) selecionado(s)? Eles serão ocultados da biblioteca.",
+        "hide_confirm_action": "Ocultar",
+        "delete_confirm_title": "Excluir Quadrinhos",
+        "delete_confirm_desc": "Tem certeza de que deseja excluir o(s) quadrinho(s) selecionado(s)? Isso removerá apenas do banco de dados, os arquivos físicos não serão alterados.",
+        "delete_confirm_action": "Excluir",
         "cancel": "Cancelar"
       },
       "toast": {

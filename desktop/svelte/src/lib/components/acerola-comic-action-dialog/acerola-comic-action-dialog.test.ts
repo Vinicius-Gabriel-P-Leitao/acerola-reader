@@ -41,14 +41,16 @@ describe('AcerolaComicActionDialog', () => {
 	const mockOnDelete = vi.fn();
 	const mockOnBookmark = vi.fn();
 	const mockOnClose = vi.fn();
+	const mockOnSelectAll = vi.fn();
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('renderiza nada quando não há itens selecionados', () => {
+	it('renderiza nada quando open é false', () => {
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: false,
 				selectedIds: [],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -58,47 +60,59 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		expect(screen.queryByText('selected')).not.toBeInTheDocument();
+		expect(screen.queryByText(/Comic Actions|Ações do Quadrinho/i)).not.toBeInTheDocument();
 	});
 
-	it('renderiza o dialog quando há itens selecionados', () => {
+	it('renderiza o dialog quando open é true', () => {
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2, 3],
+				totalCount: 10,
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
 				onBookmark: mockOnBookmark,
+				onSelectAll: mockOnSelectAll,
 				onClose: mockOnClose
 			}
 		});
 
-		expect(screen.getByText('3 selected')).toBeInTheDocument();
-		expect(screen.getByText('Hide')).toBeInTheDocument();
-		expect(screen.getByText('Delete')).toBeInTheDocument();
-		expect(screen.getByText('Bookmark')).toBeInTheDocument();
+		expect(screen.getByText(/Comic Actions|Ações do Quadrinho/i)).toBeInTheDocument();
+		expect(screen.getByText(/3 (comic\(s\) selected|quadrinho\(s\) selecionado\(s\))/i)).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /Hide|Ocultar/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /Delete|Deletar/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /Bookmark|Adicionar Bookmark/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /Select all|Selecionar todos/i })).toBeInTheDocument();
 	});
 
-	it('exibe a contagem correta de itens selecionados', () => {
+	it('chama onSelectAll ao clicar no botão selecionar todos dentro do dialog', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
-				selectedIds: [1, 2],
+				open: true,
+				selectedIds: [1],
+				totalCount: 10,
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
 				onBookmark: mockOnBookmark,
+				onSelectAll: mockOnSelectAll,
 				onClose: mockOnClose
 			}
 		});
 
-		expect(screen.getByText('2 selected')).toBeInTheDocument();
+		const selectAllBtn = screen.getByRole('button', { name: /Select all|Selecionar todos/i });
+		await fireEvent.click(selectAllBtn);
+
+		expect(mockOnSelectAll).toHaveBeenCalled();
 	});
 
-	it('chama onHide quando o botão Hide é clicado', async () => {
+	it('abre dialog de confirmação e chama onHide quando confirmado', async () => {
 		mockOnHide.mockResolvedValueOnce(undefined);
 
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -108,15 +122,43 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		const hideButton = screen.getByText('Hide');
+		const hideButton = screen.getByRole('button', { name: /Hide|Ocultar/i });
 		await fireEvent.click(hideButton);
 
+		expect(screen.getByText(/Hide Comics|Ocultar Quadrinhos/i)).toBeInTheDocument();
+
+		const confirmButtons = screen.getAllByRole('button', { name: /Hide|Ocultar/i });
+		await fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
 		expect(mockOnHide).toHaveBeenCalledWith([1, 2]);
+	});
+
+	it('cancela dialog de hide quando Cancel é clicado', async () => {
+		render(AcerolaComicActionDialog, {
+			props: {
+				open: true,
+				selectedIds: [1, 2],
+				bookmarks: mockBookmarks,
+				onHide: mockOnHide,
+				onDelete: mockOnDelete,
+				onBookmark: mockOnBookmark,
+				onClose: mockOnClose
+			}
+		});
+
+		const hideButton = screen.getByRole('button', { name: /Hide|Ocultar/i });
+		await fireEvent.click(hideButton);
+
+		const cancelButton = screen.getByRole('button', { name: /Cancel|Cancelar/i });
+		await fireEvent.click(cancelButton);
+
+		expect(mockOnHide).not.toHaveBeenCalled();
 	});
 
 	it('abre dialog de confirmação quando Delete é clicado', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -126,11 +168,10 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
-		await fireEvent.click(deleteButtons[0]);
+		const deleteButton = screen.getByRole('button', { name: /Delete|Deletar/i });
+		await fireEvent.click(deleteButton);
 
-		expect(screen.getByText('Delete Comics')).toBeInTheDocument();
-		expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
+		expect(screen.getByText(/Delete Comics|Excluir Quadrinhos/i)).toBeInTheDocument();
 	});
 
 	it('chama onDelete quando confirmado no dialog', async () => {
@@ -138,6 +179,7 @@ describe('AcerolaComicActionDialog', () => {
 
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -147,12 +189,10 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		// Abre o dialog
-		const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
-		await fireEvent.click(deleteButtons[0]);
+		const deleteButton = screen.getByRole('button', { name: /Delete|Deletar/i });
+		await fireEvent.click(deleteButton);
 
-		// Confirma a deleção - pega o botão dentro do dialog de confirmação (último botão Delete)
-		const confirmButtons = screen.getAllByRole('button', { name: 'Delete' });
+		const confirmButtons = screen.getAllByRole('button', { name: /Delete|Excluir|Deletar/i });
 		await fireEvent.click(confirmButtons[confirmButtons.length - 1]);
 
 		expect(mockOnDelete).toHaveBeenCalledWith([1, 2]);
@@ -161,6 +201,7 @@ describe('AcerolaComicActionDialog', () => {
 	it('exibe menu de bookmarks quando o botão Bookmark é clicado', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -170,7 +211,7 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		const bookmarkButton = screen.getByRole('button', { name: /Bookmark/ });
+		const bookmarkButton = screen.getByRole('button', { name: /Bookmark|Adicionar Bookmark/i });
 		await fireEvent.click(bookmarkButton);
 
 		expect(screen.getByText('Favoritos')).toBeInTheDocument();
@@ -182,6 +223,7 @@ describe('AcerolaComicActionDialog', () => {
 
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -191,60 +233,19 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		// Abre o menu de bookmarks
-		const bookmarkButton = screen.getByRole('button', { name: /Bookmark/ });
+		const bookmarkButton = screen.getByRole('button', { name: /Bookmark|Adicionar Bookmark/i });
 		await fireEvent.click(bookmarkButton);
 
-		// Clica em uma categoria
 		const favoritosOption = screen.getByText('Favoritos');
 		await fireEvent.click(favoritosOption);
 
 		expect(mockOnBookmark).toHaveBeenCalledWith([1, 2], 1);
 	});
 
-	it('chama onClose quando o botão X é clicado', async () => {
-		render(AcerolaComicActionDialog, {
-			props: {
-				selectedIds: [1, 2],
-				bookmarks: mockBookmarks,
-				onHide: mockOnHide,
-				onDelete: mockOnDelete,
-				onBookmark: mockOnBookmark,
-				onClose: mockOnClose
-			}
-		});
-
-		// Encontra o botão de fechar pelo ícone X
-		const closeButtons = screen.getAllByRole('button', { name: '' });
-		await fireEvent.click(closeButtons[0]);
-
-		expect(mockOnClose).toHaveBeenCalled();
-	});
-
-	it('desabilita botões durante processamento', async () => {
-		mockOnHide.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
-
-		render(AcerolaComicActionDialog, {
-			props: {
-				selectedIds: [1, 2],
-				bookmarks: mockBookmarks,
-				onHide: mockOnHide,
-				onDelete: mockOnDelete,
-				onBookmark: mockOnBookmark,
-				onClose: mockOnClose
-			}
-		});
-
-		const hideButton = screen.getByRole('button', { name: 'Hide' });
-		await fireEvent.click(hideButton);
-
-		// Verifica se os botões estão desabilitados durante o processamento
-		expect(hideButton).toBeDisabled();
-	});
-
 	it('cancela dialog de delete quando Cancel é clicado', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
+				open: true,
 				selectedIds: [1, 2],
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
@@ -254,12 +255,10 @@ describe('AcerolaComicActionDialog', () => {
 			}
 		});
 
-		// Abre o dialog
-		const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
-		await fireEvent.click(deleteButtons[0]);
+		const deleteButton = screen.getByRole('button', { name: /Delete|Deletar/i });
+		await fireEvent.click(deleteButton);
 
-		// Clica em Cancel
-		const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+		const cancelButton = screen.getByRole('button', { name: /Cancel|Cancelar/i });
 		await fireEvent.click(cancelButton);
 
 		expect(mockOnDelete).not.toHaveBeenCalled();

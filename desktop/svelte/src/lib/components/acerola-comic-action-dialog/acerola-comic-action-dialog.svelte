@@ -1,39 +1,59 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import { error } from '@tauri-apps/plugin-log';
-	import { toast } from 'svelte-sonner';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import X from '@lucide/svelte/icons/x';
+	import CheckSquare from '@lucide/svelte/icons/check-square';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronUp from '@lucide/svelte/icons/chevron-up';
+	import { error } from '@tauri-apps/plugin-log';
+	import { toast } from 'svelte-sonner';
+	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
 	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
+	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import type { Category } from '$lib/contracts/bookmarks/bookmarks.payloads';
 
 	export type ComicActionDialogProps = {
+		open?: boolean;
 		selectedIds: number[];
+		totalCount?: number;
 		bookmarks: Category[];
 		onHide: (ids: number[]) => Promise<void>;
 		onDelete: (ids: number[]) => Promise<void>;
 		onBookmark: (ids: number[], categoryId: number) => Promise<void>;
+		onSelectAll?: () => void;
 		onClose: () => void;
 	};
 
-	let { selectedIds, bookmarks, onHide, onDelete, onBookmark, onClose }: ComicActionDialogProps =
-		$props();
+	let {
+		open = false,
+		selectedIds,
+		totalCount = 0,
+		bookmarks,
+		onHide,
+		onDelete,
+		onBookmark,
+		onSelectAll,
+		onClose
+	}: ComicActionDialogProps = $props();
 
+	let showHideDialog = $state(false);
 	let showDeleteDialog = $state(false);
 	let showBookmarkMenu = $state(false);
 	let isProcessing = $state(false);
+
+	const isAllSelected = $derived(totalCount > 0 && selectedIds.length === totalCount);
 
 	async function handleHide() {
 		if (isProcessing) return;
 		isProcessing = true;
 		try {
 			await onHide(selectedIds);
+			showHideDialog = false;
 			onClose();
-		} catch (err) {
-			error(`Failed to hide comics: ${err}`);
+		} catch (err: unknown) {
+			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
+			error(`Failed to hide comics: ${msg}`);
 			toast.error(m['pages.home.toast.hide_error']());
 		} finally {
 			isProcessing = false;
@@ -47,8 +67,9 @@
 			await onDelete(selectedIds);
 			showDeleteDialog = false;
 			onClose();
-		} catch (err) {
-			error(`Failed to delete comics: ${err}`);
+		} catch (err: unknown) {
+			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
+			error(`Failed to delete comics: ${msg}`);
 			toast.error(m['pages.home.toast.delete_error']());
 		} finally {
 			isProcessing = false;
@@ -62,12 +83,17 @@
 			await onBookmark(selectedIds, categoryId);
 			showBookmarkMenu = false;
 			onClose();
-		} catch (err) {
-			error(`Failed to bookmark comics: ${err}`);
+		} catch (err: unknown) {
+			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
+			error(`Failed to bookmark comics: ${msg}`);
 			toast.error(m['pages.home.toast.bookmark_error']());
 		} finally {
 			isProcessing = false;
 		}
+	}
+
+	function handleHideClick() {
+		showHideDialog = true;
 	}
 
 	function handleDeleteClick() {
@@ -75,90 +101,127 @@
 	}
 </script>
 
-{#if selectedIds.length > 0}
-	<div
-		class="fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
-		in:fly={{ y: 20, duration: 200 }}
-		out:fly={{ y: 20, duration: 200 }}
-	>
-		<div class="rounded-2xl bg-surface/95 shadow-2xl backdrop-blur-sm">
-			<div class="flex items-center gap-2 p-3">
-				<span class="px-3 text-sm font-medium text-muted-foreground">
-					{selectedIds.length} selected
+<AcerolaDialog
+	state={{ open }}
+	data={{
+		title: m['pages.home.actions.title'](),
+		description: m['pages.home.actions.description']({ count: selectedIds.length })
+	}}
+	events={{
+		onOpenChange: (isOpen) => {
+			if (!isOpen) onClose();
+		}
+	}}
+>
+	<div class="flex flex-col gap-3 py-2">
+		<!-- Select All Option inside Dialog -->
+		{#if onSelectAll && totalCount > 0}
+			<AcerolaButton
+				ui={{ variant: 'outline', class: 'w-full justify-start rounded-xl font-medium', disabled: isProcessing }}
+				events={{ onClick: onSelectAll }}
+			>
+				<CheckSquare size={18} class="mr-2" />
+				<span>
+					{isAllSelected
+						? m['pages.home.selection.deselect_all']()
+						: m['pages.home.selection.select_all_total']({ total: totalCount })}
 				</span>
+			</AcerolaButton>
+		{/if}
 
-				<div class="h-8 w-px bg-border"></div>
+		<!-- Bookmark Section -->
+		<div class="rounded-xl border border-border bg-surface/50 p-2">
+			<AcerolaButton
+				ui={{ variant: 'ghost', class: 'w-full justify-between rounded-lg', disabled: isProcessing || selectedIds.length === 0 }}
+				events={{ onClick: () => (showBookmarkMenu = !showBookmarkMenu) }}
+			>
+				<div class="flex items-center gap-2">
+					<Bookmark size={18} />
+					<span>{m['pages.home.actions.bookmark']()}</span>
+				</div>
+				{#if showBookmarkMenu}
+					<ChevronUp size={16} />
+				{:else}
+					<ChevronDown size={16} />
+				{/if}
+			</AcerolaButton>
 
-				<button
-					class="hover:bg-surface-hover flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors"
-					onclick={handleHide}
-					disabled={isProcessing}
-				>
-					<EyeOff size={16} />
-					<span>Hide</span>
-				</button>
-
-				<button
-					class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
-					onclick={handleDeleteClick}
-					disabled={isProcessing}
-				>
-					<Trash2 size={16} />
-					<span>Delete</span>
-				</button>
-
-				<div class="relative">
-					<button
-						class="hover:bg-surface-hover flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors"
-						onclick={() => (showBookmarkMenu = !showBookmarkMenu)}
-						disabled={isProcessing}
-					>
-						<Bookmark size={16} />
-						<span>Bookmark</span>
-					</button>
-
-					{#if showBookmarkMenu}
-						<div
-							class="absolute bottom-full left-0 mb-2 min-w-48 rounded-xl bg-surface shadow-lg"
-							in:fly={{ y: 10, duration: 150 }}
-						>
-							<div class="p-2">
-								{#each bookmarks as category}
-									<button
-										class="hover:bg-surface-hover flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors"
-										onclick={() => handleBookmark(category.id)}
-									>
-										<span
-											class="h-3 w-3 rounded-full"
-											style="background-color: #{category.color.toString(16).padStart(6, '0')}"
-										></span>
-										<span>{category.name}</span>
-									</button>
-								{/each}
-							</div>
-						</div>
+			{#if showBookmarkMenu}
+				<div class="mt-2 flex flex-col gap-1 border-t border-border pt-2">
+					{#if bookmarks.length === 0}
+						<span class="px-3 py-1 text-xs text-muted-foreground">
+							No bookmark categories available
+						</span>
+					{:else}
+						{#each bookmarks as category}
+							<AcerolaButton
+								ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg text-sm', disabled: isProcessing || selectedIds.length === 0 }}
+								events={{ onClick: () => handleBookmark(category.id) }}
+							>
+								<span
+									class="mr-2 h-3 w-3 rounded-full"
+									style="background-color: #{category.color.toString(16).padStart(6, '0')}"
+								></span>
+								<span>{category.name}</span>
+							</AcerolaButton>
+						{/each}
 					{/if}
 				</div>
-
-				<button
-					class="hover:bg-surface-hover ml-2 rounded-full p-2 transition-colors"
-					onclick={onClose}
-				>
-					<X size={16} />
-				</button>
-			</div>
+			{/if}
 		</div>
-	</div>
-{/if}
 
+		<!-- Hide Action (Destructive Confirmation Alert) -->
+		<AcerolaButton
+			ui={{
+				variant: 'outline',
+				class: 'w-full justify-start rounded-xl text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 border-amber-500/30',
+				disabled: isProcessing || selectedIds.length === 0
+			}}
+			events={{ onClick: handleHideClick }}
+		>
+			<EyeOff size={18} class="mr-2" />
+			<span>{m['pages.home.actions.hide']()}</span>
+		</AcerolaButton>
+
+		<!-- Delete Action (Destructive Confirmation Alert) -->
+		<AcerolaButton
+			ui={{
+				variant: 'destructive',
+				class: 'w-full justify-start rounded-xl',
+				disabled: isProcessing || selectedIds.length === 0
+			}}
+			events={{ onClick: handleDeleteClick }}
+		>
+			<Trash2 size={18} class="mr-2" />
+			<span>{m['pages.home.actions.delete']()}</span>
+		</AcerolaButton>
+	</div>
+</AcerolaDialog>
+
+<!-- Hide Confirmation Alert Dialog -->
+<AcerolaAlertDialog
+	state={{ open: showHideDialog }}
+	data={{
+		title: m['pages.home.actions.hide_confirm_title'](),
+		description: m['pages.home.actions.hide_confirm_desc'](),
+		cancelText: m['pages.home.actions.cancel'](),
+		actionText: m['pages.home.actions.hide_confirm_action']()
+	}}
+	events={{
+		onAction: handleHide,
+		onCancel: () => (showHideDialog = false)
+	}}
+	ui={{ variant: 'destructive' }}
+/>
+
+<!-- Delete Confirmation Alert Dialog -->
 <AcerolaAlertDialog
 	state={{ open: showDeleteDialog }}
 	data={{
-		title: 'Delete Comics',
-		description:
-			'Are you sure you want to delete the selected comics? This will only remove them from the database, the files will remain unchanged.',
-		cancelText: 'Cancel',
-		actionText: 'Delete'
+		title: m['pages.home.actions.delete_confirm_title'](),
+		description: m['pages.home.actions.delete_confirm_desc'](),
+		cancelText: m['pages.home.actions.cancel'](),
+		actionText: m['pages.home.actions.delete_confirm_action']()
 	}}
 	events={{
 		onAction: handleDelete,

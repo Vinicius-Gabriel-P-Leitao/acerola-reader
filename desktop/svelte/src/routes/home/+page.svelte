@@ -12,6 +12,7 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
 	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useComicContext } from '$lib/state/comic-context.svelte';
@@ -29,6 +30,7 @@
 
 	let unlistenScan: (() => void) | undefined;
 	let showSortMenu = $state(false);
+	let showActionDialog = $state(false);
 
 	onMount(async () => {
 		await bookmarkStore.loadBookmarks();
@@ -44,20 +46,40 @@
 	});
 
 	async function handleHide(ids: number[]) {
-		const count = await summary.updateVisibility(ids, true);
+		const validIds = ids.filter((id) => Number.isFinite(id) && id > 0);
+		if (validIds.length === 0) return;
+		const count = await summary.updateVisibility(validIds, true);
 		toast.success(m['pages.home.toast.hidden']({ count }));
+		selection.exitSelectionMode();
+		showActionDialog = false;
 	}
 
 	async function handleDelete(ids: number[]) {
-		const count = await summary.deleteComics(ids);
+		const validIds = ids.filter((id) => Number.isFinite(id) && id > 0);
+		if (validIds.length === 0) return;
+		const count = await summary.deleteComics(validIds);
 		toast.success(m['pages.home.toast.deleted']({ count }));
+		selection.exitSelectionMode();
+		showActionDialog = false;
 	}
 
 	async function handleBookmark(ids: number[], categoryId: number) {
-		for (const id of ids) {
-			await bookmarkStore.assignToComic(id, categoryId);
+		const validIds = ids.filter((id) => Number.isFinite(id) && id > 0);
+		if (validIds.length === 0) return;
+		let successCount = 0;
+		for (const id of validIds) {
+			try {
+				await bookmarkStore.assignToComic(id, categoryId);
+				successCount++;
+			} catch (err) {
+				console.error(`Failed to assign bookmark to comic ${id}:`, err);
+			}
 		}
-		toast.success(m['pages.home.toast.bookmarked']({ count: ids.length }));
+		if (successCount > 0) {
+			toast.success(m['pages.home.toast.bookmarked']({ count: successCount }));
+		}
+		selection.exitSelectionMode();
+		showActionDialog = false;
 	}
 
 	function handleCardClick(comic: ComicSummaryItemPayload, cover: string | null) {
@@ -71,7 +93,19 @@
 
 	function handleActionClick(event: MouseEvent, comicId: number) {
 		event.stopPropagation();
-		selection.selectSingle(comicId);
+		if (!selection.isSelected(comicId)) {
+			selection.toggleSelection(comicId);
+		}
+		showActionDialog = true;
+	}
+
+	function handleSelectAllToggle() {
+		const allIds = summary.comics?.comics.map((c) => Number(c.relations.directoryId)) ?? [];
+		if (selection.selectedCount === allIds.length && allIds.length > 0) {
+			selection.deselectAll();
+		} else {
+			selection.selectAll(allIds);
+		}
 	}
 
 	function handleSort(sortBy: 'title' | 'chapterCount', sortOrder: 'asc' | 'desc') {
@@ -90,20 +124,26 @@
 		<div class="mb-4 flex items-center justify-between">
 			{#if selection.isSelectionMode}
 				<div class="flex items-center gap-2">
-					<span class="text-sm text-muted-foreground">
+					<span class="text-sm font-medium text-muted-foreground">
 						{m['pages.home.selection.selected']({ count: selection.selectedCount })}
 					</span>
 					<AcerolaButton
 						ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
-						events={{
-							onClick: () =>
-								selection.selectAll(
-									summary.comics?.comics.map((c) => Number(c.relations.directoryId)) ?? []
-								)
-						}}
+						events={{ onClick: handleSelectAllToggle }}
 					>
-						{m['pages.home.selection.select_all']()}
+						{selection.selectedCount === (summary.comics?.comics.length ?? 0)
+							? m['pages.home.selection.deselect_all']()
+							: m['pages.home.selection.select_all']()}
 					</AcerolaButton>
+
+					<AcerolaButton
+						ui={{ variant: 'secondary', size: 'sm', class: 'rounded-lg font-semibold gap-1.5' }}
+						events={{ onClick: () => (showActionDialog = true) }}
+					>
+						<SlidersHorizontal size={14} />
+						{m['pages.home.selection.actions_button']({ count: selection.selectedCount })}
+					</AcerolaButton>
+
 					<AcerolaButton
 						ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
 						events={{ onClick: () => selection.exitSelectionMode() }}
@@ -254,12 +294,15 @@
 	</div>
 
 	<AcerolaComicActionDialog
+		open={showActionDialog}
 		selectedIds={selection.selectedIdsArray}
+		totalCount={summary.comics?.comics.length ?? 0}
 		bookmarks={bookmarkStore.bookmarks}
 		onHide={handleHide}
 		onDelete={handleDelete}
 		onBookmark={handleBookmark}
-		onClose={() => selection.exitSelectionMode()}
+		onSelectAll={handleSelectAllToggle}
+		onClose={() => (showActionDialog = false)}
 	/>
 {:else}
 	<div class="flex items-center justify-center p-8 text-muted-foreground">
