@@ -14,9 +14,9 @@ use crate::{
     infra::error::ComicError,
 };
 
-/// Obtém ou gera um seed de 32 bytes dinamicamente e o persiste em `p2p_seed.key`
+/// Obtém ou gera um seed de 32 bytes dinamicamente e o persiste em `p2p-seed.key`
 fn get_or_create_p2p_seed(app_data_directory: &PathBuf) -> Result<[u8; 32], ComicError> {
-    let seed_file_path = app_data_directory.join("p2p_seed.key");
+    let seed_file_path = app_data_directory.join("p2p-seed.key");
 
     if seed_file_path.exists() {
         if let Ok(file_bytes) = std::fs::read(&seed_file_path) {
@@ -37,7 +37,7 @@ fn get_or_create_p2p_seed(app_data_directory: &PathBuf) -> Result<[u8; 32], Comi
     rand::thread_rng().fill_bytes(&mut new_generated_seed);
 
     if let Err(write_error) = std::fs::write(&seed_file_path, &new_generated_seed) {
-        tracing::error!("[Bios::Network] Failed to save p2p_seed.key: {}", write_error);
+        tracing::error!("[Bios::Network] Failed to save p2p-seed.key: {}", write_error);
     } else {
         tracing::info!("[Bios::Network] Generated and saved new P2P seed at {:?}", seed_file_path);
     }

@@ -105,3 +105,101 @@ jobs:
       - name: Run Svelte tests
         run: npm run test
 
+  wdio:
+    name: WebdriverIO Tests
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: acerola
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25.9.0
+          cache: npm
+          cache-dependency-path: acerola/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('acerola/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache tauri-driver & msedgedriver-tool
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/tauri-driver.exe
+            ~/.cargo/bin/msedgedriver-tool.exe
+          key: ${{ runner.os }}-tauri-webdriver-tools-v1
+
+      - name: Install tauri-driver & msedgedriver-tool
+        run: |
+          $cargoBin = "$HOME/.cargo/bin"
+          New-Item -ItemType Directory -Force $cargoBin | Out-Null
+
+          if (!(Test-Path "$cargoBin/tauri-driver.exe")) {
+            cargo install tauri-driver --locked
+          }
+
+          if (!(Test-Path "$cargoBin/msedgedriver-tool.exe")) {
+            cargo install --git https://github.com/chippers/msedgedriver-tool
+          }
+
+          Add-Content -Path $env:GITHUB_PATH -Value $cargoBin
+
+      - name: Detect Edge version & Setup msedgedriver
+        run: |
+          $edgePaths = @(
+            "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+            "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe"
+          )
+          $edgePath = $edgePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+          if (!$edgePath) { throw "Microsoft Edge was not found." }
+
+          $nativeDriverDir = ".\.bin\windows"
+          $nativeDriverPath = "$nativeDriverDir\msedgedriver.exe"
+          New-Item -ItemType Directory -Force $nativeDriverDir | Out-Null
+
+          if (!(Test-Path $nativeDriverPath)) {
+            & "$HOME/.cargo/bin/msedgedriver-tool.exe"
+            if (Test-Path ".\msedgedriver.exe") {
+              Move-Item -Force ".\msedgedriver.exe" $nativeDriverPath
+            }
+          }
+
+          if (!(Test-Path $nativeDriverPath)) {
+            throw "msedgedriver.exe não foi gerado em .\.bin\windows\msedgedriver.exe"
+          }
+
+          Add-Content -Path $env:GITHUB_PATH -Value (Resolve-Path $nativeDriverDir)
+
+      - name: Cache Cargo target
+        uses: actions/cache@v4
+        with:
+          path: acerola/src-tauri/target
+          key: ${{ runner.os }}-cargo-target-wdio-${{ hashFiles('acerola/src-tauri/Cargo.lock', 'acerola/src-tauri/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-wdio-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri App
+        run: npm run tauri -- build --no-bundle
+
+      - name: Run WebdriverIO tests
+        run: npm run test:wdio

@@ -97,13 +97,47 @@ export async function navigateToWithState(route: string, state: Record<string, u
 	);
 }
 
-export async function waitForAppReady() {
+export async function setStoreValue(key: string, value: unknown) {
+	const state = await getAppState();
+	if (!APP_ORIGINS.some((origin) => state.href.startsWith(origin))) {
+		await navigateTo('/home');
+	}
+
+	await browser.execute(
+		async ({ key: k, value: v }) => {
+			const tauriWindow = window as typeof window & {
+				__TAURI_INTERNALS__?: {
+					invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
+				};
+			};
+			if (tauriWindow.__TAURI_INTERNALS__) {
+				const rid = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|load', {
+					path: 'settings.json'
+				});
+				await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|set', { rid, key: k, value: v });
+				await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|save', { rid });
+			}
+		},
+		{ key, value }
+	);
+}
+
+export async function ensureOnboardingCompleted() {
+	await waitForTauriReady();
+	await setStoreValue('onboarding_completed', true);
+}
+
+export async function waitForAppReady(skipOnboardingComplete = false) {
 	// __TAURI_INTERNALS__ fica disponivel ainda em about:blank; carregue a rota real primeiro.
 	await waitForTauriReady();
 
 	const state = await getAppState();
 	if (!state.hasAppLayout && !APP_ORIGINS.some((origin) => state.href.startsWith(origin))) {
 		await navigateTo('/home');
+	}
+
+	if (!skipOnboardingComplete) {
+		await setStoreValue('onboarding_completed', true);
 	}
 
 	try {

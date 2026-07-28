@@ -8,8 +8,14 @@
 	import { useTheme, type ThemeColor } from '$lib/hooks/theme/use-theme.svelte';
 	import ThemePicker from '../../config/components/theme-picker.svelte';
 
+	import { onMount } from 'svelte';
+
 	const themeCtx = useTheme();
 	const folder = useSelectFolder();
+
+	onMount(() => {
+		folder.loadSavedPath();
+	});
 
 	let canProceed = $derived(!!folder.folderPath);
 

@@ -29,12 +29,12 @@
 - [x] **Trocar estilo de exibição de capítulos/volumes** - O frontend muda o layout de list para volume baseado nas preferências da store do Svelte.
 - [x] **Configurar paginação da lista de capítulos** - Parametrização customizável gravada nas preferências que quebra requisições grandes pro Rust.
 - [x] **Atribuir categoria ao quadrinho** - Modal/Dropdown no Svelte que dispara o update do quadrinho no banco.
-- [ ] **Ativar/desativar sync externo por quadrinho** - Toggle na UI repassado para o backend que anula ou permite metadados online específicos.
+- [x] **Ativar/desativar sync externo por quadrinho** - Toggle na UI repassado para o backend que anula ou permite metadados online específicos.
 - [ ] **Sincronizar capítulos locais (rescaneamento manual/folder watch)** - Chamada de comando Tauri que instrui o Rust a recarregar apenas essa pasta pontual do File System.
 - [ ] **Reescanear quadrinho completo** - Invalida metadados atuais do banco e extrai tudo de novo daquele subdiretório.
-- [ ] **Sincronizar metadados pelo MangaDex** - Endpoint no Rust com um HTTP Client para buscar cover/banner/tags da API externa.
-- [ ] **Sincronizar metadados pelo AniList** - Endpoint no Rust utilizando queries GraphQL pro serviço.
-- [ ] **Sincronizar metadados pelo ComicInfo.xml** - O Rust decodifica e carrega o arquivo XML para popular o banco interno.
+- [x] **Sincronizar metadados pelo MangaDex** - Endpoint no Rust com um HTTP Client para buscar cover/banner/tags da API externa.
+- [x] **Sincronizar metadados pelo AniList** - Endpoint no Rust utilizando queries GraphQL pro serviço.
+- [x] **Sincronizar metadados pelo ComicInfo.xml** - O Rust decodifica e carrega o arquivo XML para popular o banco interno.
 - [ ] **Sincronizar capítulos pelo ComicInfo.xml** - O Rust associa as `Pages` e informações estruturais de capítulo via parse do XML.
 - [ ] **(validar se faz sentido nesse caso) Extrair primeira página de capítulo como capa do quadrinho** - Rust abre o `cbz/rar`, processa a page 0 e salva em disco como miniatura persistente.
 - [ ] **(validar se faz sentido nesse caso) Extrair capa do volume a partir do primeiro capítulo do volume** - O Rust resolve o primeiro item do volume local e exporta uma thumb isolada na pasta correspondente.
@@ -60,12 +60,12 @@
 
 ## Metadados
 
-- [ ] **Sincronizar metadados de toda a biblioteca pelo MangaDex** - Task de background no Rust processa recursivamente toda biblioteca em lotes (pool) buscando atualizações.
-- [ ] **Sincronizar metadados de toda a biblioteca pelo AniList** - Rotina similar ao anterior no backend usando GraphQL batch queries.
-- [ ] **(validar se faz sentido nesse caso) Salvar capa na pasta do quadrinho** - Rust realiza a operação de FS:I/O na mesma pasta do arquivo original com uma thumb otimizada (ex: resize jpeg).
-- [ ] **(validar se faz sentido nesse caso) Salvar banner na pasta do quadrinho** - Similar à escrita local, focado na imagem `banner.jpg` extraída ou da web.
-- [ ] **Exportar metadados como ComicInfo.xml** - Rotina do Rust que agrupa as tabelas do SQLite num formatador XML e injeta na pasta raíz caso configurado.
-- [ ] **Ler metadados de ComicInfo.xml** - Parser Rust que intercepta o ComicInfo durante o rescan incremental e sobrescreve as propriedades.
+- [x] **Sincronizar metadados de toda a biblioteca pelo MangaDex** - Task de background no Rust processa recursivamente toda biblioteca em lotes (pool) buscando atualizações.
+- [x] **Sincronizar metadados de toda a biblioteca pelo AniList** - Rotina similar ao anterior no backend usando GraphQL batch queries.
+- [x] **(validar se faz sentido nesse caso) Salvar capa na pasta do quadrinho** - Rust realiza a operação de FS:I/O na mesma pasta do arquivo original com uma thumb otimizada (ex: resize jpeg).
+- [x] **(validar se faz sentido nesse caso) Salvar banner na pasta do quadrinho** - Similar à escrita local, focado na imagem `banner.jpg` extraída ou da web.
+- [x] **Exportar metadados como ComicInfo.xml** - Rotina do Rust que agrupa as tabelas do SQLite num formatador XML e injeta na pasta raíz caso configurado.
+- [x] **Ler metadados de ComicInfo.xml** - Parser Rust que intercepta o ComicInfo durante o rescan incremental e sobrescreve as propriedades.
 
 ---
 
@@ -89,7 +89,7 @@
 - [ ] **Editar template** - Update das tabelas locais relacionadas via Tauri Invoke.
 - [ ] **Deletar template** - Delete row.
 - [ ] **Listar templates** - O backend lista os templates ordenados que o usuário fez pra parser.
-- [ ] **Detecção automática de template no scan** - O parser de texto nativo no Rust intercepta arquivos de nome que não possuem um padrão pré-descrito, associando as strings corretas.
+- [x] **Detecção automática de template no scan** - O parser de texto nativo no Rust intercepta arquivos de nome que não possuem um padrão pré-descrito, associando as strings corretas.
 
 ---
 
@@ -109,13 +109,13 @@
 ## Pendente
 
 - [ ] **Marcar quadrinho / capítulo como concluído manualmente** - Ação direta pro Tauri alterar a prop bool no banco.
-- [ ] **Seleção múltipla de quadrinhos e capítulos (multi-select)** - Manter Set Array/Map ativo na memória do Svelte UI pra realizar highlights com shift/ctrl cliques (mouse interaction).
-- [ ] **Ações em lote sobre seleção múltipla** - Loopar actions de API e passar Listas para queries batch do SQLite (Tauri) otimizando deletes.
+- [x] **Seleção múltipla de quadrinhos e capítulos (multi-select)** - Manter Set Array/Map ativo na memória do Svelte UI pra realizar highlights com shift/ctrl cliques (mouse interaction).
+- [x] **Ações em lote sobre seleção múltipla** - Loopar actions de API e passar Listas para queries batch do SQLite (Tauri) otimizando deletes.
 
 ---
 
 ## Arquitetura & Infraestrutura (Rust)
 
-- [ ] **Gerar seed dinâmico para nó P2P** - (validar se é a melhor forma) Substituir o seed hardcoded por geração de 32 bytes aleatórios persistidos em arquivo local (.key) ou SQLite para cada instalação ter sua identidade P2P isolada.
-- [ ] **Tratamento gracioso de erro na inicialização assíncrona do Rust** - Substituir o uso de `panic!` na inicialização de serviços assíncronos (banco de dados SQLite, nó de rede P2P) por retornos de `Result` e exibição de alerta gráfico ao usuário.
-- [ ] **Otimizar e dinamizar o gerenciamento de escopos do File System (fs_scope)** - Substituir a leitura crua do settings.json via std::fs pelo plugin tauri-plugin-store e atualizar dinamicamente as permissões do fs_scope quando o usuário alterar a pasta da biblioteca em runtime.
+- [x] **Gerar seed dinâmico para nó P2P** - (validar se é a melhor forma) Substituir o seed hardcoded por geração de 32 bytes aleatórios persistidos em arquivo local (.key) ou SQLite para cada instalação ter sua identidade P2P isolada.
+- [x] **Tratamento gracioso de erro na inicialização assíncrona do Rust** - Substituir o uso de `panic!` na inicialização de serviços assíncronos (banco de dados SQLite, nó de rede P2P) por retornos de `Result` e exibição de alerta gráfico ao usuário.
+- [x] **Otimizar e dinamizar o gerenciamento de escopos do File System (fs_scope)** - Substituir a leitura crua do settings.json via std::fs pelo plugin tauri-plugin-store e atualizar dinamicamente as permissões do fs_scope quando o usuário alterar a pasta da biblioteca em runtime.
