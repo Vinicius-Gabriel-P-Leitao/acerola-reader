@@ -111,6 +111,23 @@
       "selection": {
         "selected": "{count} selected",
         "select_all": "Select all",
+        "deselect_all": "Deselect all",
+        "select_all_total": "Select all ({total})",
+        "actions_button": "Actions ({count})",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "title": "Comic Actions",
+        "description": "{count} comic(s) selected",
+        "bookmark": "Add Bookmark",
+        "hide": "Hide",
+        "delete": "Delete",
+        "hide_confirm_title": "Hide Comics",
+        "hide_confirm_desc": "Are you sure you want to hide the selected comic(s)? They will be hidden from the library.",
+        "hide_confirm_action": "Hide",
+        "delete_confirm_title": "Delete Comics",
+        "delete_confirm_desc": "Are you sure you want to delete the selected comic(s)? This will only remove them from the database, the physical files will remain untouched.",
+        "delete_confirm_action": "Delete",
         "cancel": "Cancel"
       },
       "toast": {

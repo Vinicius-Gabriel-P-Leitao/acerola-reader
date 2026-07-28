@@ -8,8 +8,9 @@ import { m } from '$lib/paraglide/messages';
 
 const { notify } = notificationStore;
 
+let folderPath = $state<string | undefined>(undefined);
+
 export function useSelectFolder() {
-	let folderPath = $state<string | undefined>(undefined);
 
 	async function selectFolder() {
 		const path = await invoke<string>(LIBRARY_COMMANDS.selectFolder);
@@ -26,8 +27,14 @@ export function useSelectFolder() {
 	}
 
 	async function loadSavedPath() {
-		const store = await load(STORE_FILE);
-		folderPath = (await store.get<string>(STORE_KEYS.libraryPath)) ?? undefined;
+		try {
+			const store = await load(STORE_FILE);
+			await store.reload();
+			const val = await store.get<string>(STORE_KEYS.libraryPath);
+			folderPath = val || undefined;
+		} catch (err) {
+			console.error('[useSelectFolder.loadSavedPath] error:', err);
+		}
 	}
 
 	return {

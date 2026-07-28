@@ -8,10 +8,18 @@
 	import { useTheme, type ThemeColor } from '$lib/hooks/theme/use-theme.svelte';
 	import ThemePicker from '../../config/components/theme-picker.svelte';
 
+	import { onMount } from 'svelte';
+
 	const themeCtx = useTheme();
 	const folder = useSelectFolder();
 
-	let canProceed = $derived(!!folder.folderPath);
+	onMount(() => {
+		folder.loadSavedPath();
+	});
+
+	$effect(() => {
+		folder.loadSavedPath();
+	});
 
 	let { onNext, onPrev } = $props<{ onNext: () => void; onPrev: () => void }>();
 </script>
@@ -61,7 +69,7 @@
 			<Button onclick={onPrev} variant="outline" class="rounded-xl">
 				{m['onboarding.back']()}
 			</Button>
-			<Button onclick={onNext} disabled={!canProceed} class="rounded-xl">
+			<Button onclick={onNext} disabled={!folder.folderPath} class="rounded-xl">
 				{m['onboarding.next']()}
 			</Button>
 		</div>

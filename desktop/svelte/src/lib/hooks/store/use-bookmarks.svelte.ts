@@ -77,8 +77,9 @@ export function useBookmarks() {
 			const comicIdNum = Number(comicId);
 			assignments = [...assignments.filter((a) => a.comic_directory_fk !== comicIdNum), assignment];
 			return assignment;
-		} catch (err) {
-			error(`Failed to assign bookmark: ${err}`);
+		} catch (err: unknown) {
+			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
+			error(`Failed to assign bookmark: ${msg}`);
 			throw err;
 		}
 	}

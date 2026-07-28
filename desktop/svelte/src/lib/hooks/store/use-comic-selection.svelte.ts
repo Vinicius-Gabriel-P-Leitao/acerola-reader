@@ -9,20 +9,18 @@ let isSelectionMode = $state(false);
  */
 export function useComicSelection() {
 	function toggleSelection(id: number): void {
-		if (selectedIds.has(id)) {
-			selectedIds.delete(id);
-			if (selectedIds.size === 0) {
-				isSelectionMode = false;
-			}
+		const next = new Set(selectedIds);
+		if (next.has(id)) {
+			next.delete(id);
 		} else {
-			selectedIds.add(id);
-			isSelectionMode = true;
+			next.add(id);
 		}
+		selectedIds = next;
+		isSelectionMode = selectedIds.size > 0;
 	}
 
 	function selectSingle(id: number): void {
-		selectedIds.clear();
-		selectedIds.add(id);
+		selectedIds = new Set([id]);
 		isSelectionMode = true;
 	}
 
@@ -32,7 +30,7 @@ export function useComicSelection() {
 	}
 
 	function deselectAll(): void {
-		selectedIds.clear();
+		selectedIds = new Set();
 		isSelectionMode = false;
 	}
 
@@ -41,7 +39,7 @@ export function useComicSelection() {
 	}
 
 	function exitSelectionMode(): void {
-		selectedIds.clear();
+		selectedIds = new Set();
 		isSelectionMode = false;
 	}
 
