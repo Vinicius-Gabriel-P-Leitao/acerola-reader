@@ -13,7 +13,9 @@ const mockStoreMethods = vi.hoisted(() => ({
 
 vi.mock('@tauri-apps/plugin-store', () => ({
 	load: vi.fn(),
-	LazyStore: vi.fn().mockImplementation(() => mockStoreMethods)
+	LazyStore: vi.fn().mockImplementation(function () {
+		return mockStoreMethods;
+	})
 }));
 
 import { useOnboarding } from './use-onboarding.svelte';
@@ -41,6 +43,7 @@ async function renderHook() {
 describe('useOnboarding', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		useOnboarding().setStep(0);
 	});
 
 	it('inicia com o passo 0 e gerencia o avanço e recuo de passos', async () => {

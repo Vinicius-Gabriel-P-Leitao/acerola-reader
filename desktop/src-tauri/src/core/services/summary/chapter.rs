@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_get_comic_chapters() {
+    async fn teste_obter_capitulos_da_hq() {
         let pool = setup_test_db_with_volumes().await;
         popular_dados(&pool).await;
 

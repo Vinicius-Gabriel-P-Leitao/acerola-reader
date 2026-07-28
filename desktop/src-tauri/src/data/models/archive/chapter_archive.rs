@@ -120,22 +120,22 @@ mod tests {
     // NOTE: Format sort
 
     #[test]
-    fn format_template_detectado() {
+    fn formatacao_template_detectado() {
         assert_eq!(ChapterArchive::format_sort(10, Some("1".to_string())), "10.1");
     }
 
     #[test]
-    fn format_sem_decimal() {
+    fn formatacao_sem_decimal() {
         assert_eq!(ChapterArchive::format_sort(10, None), "10");
     }
 
     #[test]
-    fn format_so_com_decimal() {
+    fn formatacao_so_com_decimal() {
         assert_eq!(ChapterArchive::format_sort(0, Some("10".to_string())), "0.10");
     }
 
     #[test]
-    fn format_preserva_leading_zero_decimal() {
+    fn formatacao_preserva_zero_a_esquerda_no_decimal() {
         assert_eq!(ChapterArchive::format_sort(0, Some("01".to_string())), "0.01");
     }
 
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn fallback_arquivo_com_letas() {
+    fn fallback_arquivo_com_letras() {
         assert_eq!(ChapterArchive::fallback_sort("abc", 0), "1");
     }
 
