@@ -115,6 +115,21 @@ class MangadexSourceMangaEngineTest {
             coEvery { mangadexMangaInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) } returns Either.Right(fetchResult)
             every { comicMetadataDao.observeComicByDirectoryId(comicId) } returns flowOf(null)
 
+            coEvery {
+                comicMetadataDao.upsertComicWithRelationsTransaction(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns 2L
             coEvery { comicMetadataDao.insert(any()) } returns 2L
             coEvery { mangadexSourceDao.insert(any()) } returns 1L
             coEvery { authorDao.insert(any()) } returns 1L

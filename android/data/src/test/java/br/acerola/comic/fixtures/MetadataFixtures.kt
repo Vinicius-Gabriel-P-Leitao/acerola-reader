@@ -18,6 +18,9 @@ import br.acerola.comic.local.entity.metadata.source.ComicInfoSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
 import br.acerola.comic.local.entity.relation.MetadataRelations
 
+import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
+import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
+
 object MetadataFixtures {
     fun createMangaRemoteInfo(
         id: Long = 10,
@@ -91,6 +94,7 @@ object MetadataFixtures {
         authors: AuthorDto? = null,
         genre: List<GenreDto> = emptyList(),
         cover: CoverDto? = null,
+        sources: ComicSourcesDto? = ComicSourcesDto(mangadex = MangadexSourceDto(mangadexId = "md-1")),
     ) = ComicMetadataDto(
         title = title,
         description = description,
@@ -99,6 +103,7 @@ object MetadataFixtures {
         authors = authors,
         genre = genre,
         cover = cover,
+        sources = sources,
     )
 
     fun createRemoteInfoRelations(

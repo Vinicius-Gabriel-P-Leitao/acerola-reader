@@ -66,12 +66,12 @@ class MangadexSourceChapterEngineTest {
     }
 
     @Test
-    fun `refreshMangaChapters deve retornar sucesso se não houver mangadexId`() =
+    fun `refreshComicChapters deve retornar erro se não houver mangadexId`() =
         runTest {
             every { comicMetadataDao.observeComicWithRelationsByDirectoryId(any()) } returns flowOf(null)
 
             val result = repository.refreshComicChapters(1L)
 
-            assertTrue(result.isRight())
+            assertTrue(result.isLeft())
         }
 }
