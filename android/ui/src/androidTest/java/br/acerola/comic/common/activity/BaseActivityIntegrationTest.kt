@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.Progress
 import br.acerola.comic.common.ux.component.SnackbarError
 import br.acerola.comic.common.ux.component.SnackbarSuccess
 import br.acerola.comic.common.ux.component.SnackbarVariant
@@ -69,19 +68,5 @@ class BaseActivityIntegrationTest {
         }
 
         composeTestRule.onNodeWithText("Sucesso!").assertIsDisplayed()
-    }
-
-    @Test
-    fun deve_exibir_indicador_de_progresso_global_quando_o_app_estiver_sincronizando() {
-        composeTestRule.setContent {
-            AcerolaTheme {
-                Acerola.Component.Progress(
-                    isLoading = true,
-                    progress = 0.5f,
-                )
-            }
-        }
-
-        composeTestRule.onNodeWithText("50%", substring = true).assertIsDisplayed()
     }
 }

@@ -42,6 +42,11 @@ private fun SectionHeader(title: String) {
 fun Comic.Template.configSection(
     scope: LazyListScope,
     uiState: ComicUiState,
+    activeSyncAction: ComicSyncAction? = null,
+    isChapterArchiveIndexing: Boolean = false,
+    isComicDirectoryIndexing: Boolean = false,
+    isComicMetadataIndexing: Boolean = false,
+    isChapterMetadataIndexing: Boolean = false,
     onAction: (ComicAction) -> Unit,
     onSyncAction: (ComicSyncAction) -> Unit,
 ) {
@@ -120,6 +125,10 @@ fun Comic.Template.configSection(
                 } else {
                     null
                 },
+            isSyncingChapters = (isChapterArchiveIndexing || isComicDirectoryIndexing) && activeSyncAction == ComicSyncAction.SyncChaptersLocal,
+            isRescanningCover = isComicDirectoryIndexing && activeSyncAction == ComicSyncAction.RescanComic,
+            isExtractingFirstPage = isComicDirectoryIndexing && activeSyncAction == ComicSyncAction.ExtractFirstPageAsCover,
+            isExtractingVolumeCovers = activeSyncAction == ComicSyncAction.ExtractVolumeCovers,
             modifier = itemModifier,
         )
     }
@@ -157,6 +166,11 @@ fun Comic.Template.configSection(
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },
             onSyncComicInfoChapters = { onSyncAction(ComicSyncAction.SyncComicInfoChapters) },
             onSyncAnilistInfo = { onSyncAction(ComicSyncAction.SyncAnilistInfo) },
+            isSyncingMangadexInfo = isComicMetadataIndexing && activeSyncAction == ComicSyncAction.SyncMangadexInfo,
+            isSyncingMangadexChapters = isChapterMetadataIndexing && activeSyncAction == ComicSyncAction.SyncMangadexChapters,
+            isSyncingAnilistInfo = isComicMetadataIndexing && activeSyncAction == ComicSyncAction.SyncAnilistInfo,
+            isSyncingComicInfo = isComicMetadataIndexing && activeSyncAction == ComicSyncAction.SyncComicInfo,
+            isSyncingComicInfoChapters = isChapterMetadataIndexing && activeSyncAction == ComicSyncAction.SyncComicInfoChapters,
             modifier = itemModifier,
         )
     }

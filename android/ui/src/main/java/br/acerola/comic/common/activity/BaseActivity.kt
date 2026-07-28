@@ -35,7 +35,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.Progress
 import br.acerola.comic.common.ux.component.Scaffold
 import br.acerola.comic.common.ux.component.SnackbarError
 import br.acerola.comic.common.ux.component.SnackbarSuccess
@@ -43,7 +42,6 @@ import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.SnackbarWarn
 import br.acerola.comic.common.ux.component.resolveSnackbarVariant
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.viewmodel.progress.GlobalProgressViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.haze.HazeState
@@ -57,7 +55,6 @@ abstract class BaseActivity : ComponentActivity() {
     open val applyScaffoldPadding: Boolean = true
 
     private val themeViewModel: ThemeViewModel by viewModels()
-    private val globalProgressViewModel: GlobalProgressViewModel by viewModels()
 
     open fun NavGraphBuilder.setupNavGraph(
         context: Context,
@@ -110,20 +107,9 @@ abstract class BaseActivity : ComponentActivity() {
                                             WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom,
                                         ),
                                 ) { padding ->
-                                    val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
-                                    val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
-
                                     val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
                                     Box(modifier = Modifier.padding(paddingValues = contentPadding)) {
                                         NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
-                                        Acerola.Component.Progress(
-                                            modifier =
-                                                Modifier
-                                                    .align(Alignment.BottomStart)
-                                                    .padding(all = 8.dp),
-                                            isLoading = isIndexing,
-                                            progress = progress,
-                                        )
                                     }
                                 }
                             }
@@ -146,9 +132,6 @@ abstract class BaseActivity : ComponentActivity() {
                                 },
                                 bottomBar = { BottomBar(navController, hazeState) },
                             ) { padding ->
-                                val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
-                                val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
-
                                 val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
                                 Box(
                                     modifier = Modifier
@@ -156,14 +139,6 @@ abstract class BaseActivity : ComponentActivity() {
                                         .hazeSource(hazeState),
                                 ) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
-                                    Acerola.Component.Progress(
-                                        modifier =
-                                            Modifier
-                                                .align(Alignment.BottomStart)
-                                                .padding(all = 8.dp),
-                                        isLoading = isIndexing,
-                                        progress = progress,
-                                    )
                                 }
                             }
                         }

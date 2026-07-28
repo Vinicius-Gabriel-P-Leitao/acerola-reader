@@ -111,6 +111,19 @@ fun ComicScreen(
     val volumeViewMode by comicViewModel.volumeViewMode.collectAsStateWithLifecycle()
     val activeVolumeId by comicViewModel.activeVolumeId.collectAsStateWithLifecycle()
 
+    val isChapterArchiveIndexing by chapterArchiveViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isComicDirectoryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isComicMetadataIndexing by comicMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isChapterMetadataIndexing by chapterMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
+
+    var activeSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
+
+    LaunchedEffect(isChapterArchiveIndexing, isComicDirectoryIndexing, isComicMetadataIndexing, isChapterMetadataIndexing) {
+        if (!isChapterArchiveIndexing && !isComicDirectoryIndexing && !isComicMetadataIndexing && !isChapterMetadataIndexing) {
+            activeSyncAction = null
+        }
+    }
+
     val currentManga = comicState ?: comic
     val totalChapters = chapterDto?.archive?.total ?: 0
     val currentPage = chapterDto?.archive?.page ?: 0
@@ -190,6 +203,7 @@ fun ComicScreen(
     }
 
     val onSyncAction: (ComicSyncAction) -> Unit = { action ->
+        activeSyncAction = action
         when (action) {
             ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.comic.directory.id)
             ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.comic.directory.id)
@@ -288,6 +302,11 @@ fun ComicScreen(
                         Comic.Template.configSection(
                             scope = this,
                             uiState = uiState,
+                            activeSyncAction = activeSyncAction,
+                            isChapterArchiveIndexing = isChapterArchiveIndexing,
+                            isComicDirectoryIndexing = isComicDirectoryIndexing,
+                            isComicMetadataIndexing = isComicMetadataIndexing,
+                            isChapterMetadataIndexing = isChapterMetadataIndexing,
                             onAction = onAction,
                             onSyncAction = onSyncAction,
                         )

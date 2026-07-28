@@ -104,6 +104,7 @@ class MainActivity(
             setOf(
                 getString(R.string.navigation_launcher),
                 getString(Destination.TUTORIAL.route),
+                getString(Destination.PATTERN.route),
             )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.BottomBar(navController, hazeState)
@@ -118,6 +119,7 @@ class MainActivity(
             setOf(
                 getString(R.string.navigation_launcher),
                 getString(Destination.TUTORIAL.route),
+                getString(Destination.PATTERN.route),
             )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.SideBar(navController)

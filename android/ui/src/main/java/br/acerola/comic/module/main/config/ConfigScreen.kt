@@ -38,6 +38,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
@@ -113,6 +114,16 @@ fun Main.Config.Template.Screen(
     val allCategories by comicDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
     val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
+    val isLibraryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isMetadataIndexing by comicDexViewModel.isIndexing.collectAsStateWithLifecycle(false)
+
+    var activeSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
+
+    LaunchedEffect(isLibraryIndexing, isMetadataIndexing) {
+        if (!isLibraryIndexing && !isMetadataIndexing) {
+            activeSyncAction = null
+        }
+    }
 
     val uiState =
         ConfigUiState(
@@ -129,10 +140,22 @@ fun Main.Config.Template.Screen(
             is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
             is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
             is ConfigAction.UpdateMetadataLanguage -> metadataSettingsViewModel.setMetadataLanguage(action.language)
-            ConfigAction.DeepScanLibrary -> comicDirectoryViewModel.deepScanLibrary()
-            ConfigAction.QuickSyncLibrary -> comicDirectoryViewModel.syncLibrary()
-            ConfigAction.SyncMangadexMetadata -> comicDexViewModel.rescanMangas()
-            ConfigAction.SyncAnilistMetadata -> comicDexViewModel.rescanAnilistMangas()
+            ConfigAction.DeepScanLibrary -> {
+                activeSyncAction = ConfigAction.DeepScanLibrary
+                comicDirectoryViewModel.deepScanLibrary()
+            }
+            ConfigAction.QuickSyncLibrary -> {
+                activeSyncAction = ConfigAction.QuickSyncLibrary
+                comicDirectoryViewModel.syncLibrary()
+            }
+            ConfigAction.SyncMangadexMetadata -> {
+                activeSyncAction = ConfigAction.SyncMangadexMetadata
+                comicDexViewModel.rescanMangas()
+            }
+            ConfigAction.SyncAnilistMetadata -> {
+                activeSyncAction = ConfigAction.SyncAnilistMetadata
+                comicDexViewModel.rescanAnilistMangas()
+            }
             is ConfigAction.CreateCategory -> comicDexViewModel.createCategory(action.name, action.color)
             is ConfigAction.DeleteCategory -> comicDexViewModel.deleteCategory(action.id)
             ConfigAction.NavigateToTemplateConfig -> onNavigateToTemplates()
@@ -192,6 +215,8 @@ fun Main.Config.Template.Screen(
                 Main.Config.Component.SyncLibraryArchive(
                     onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
                     onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) },
+                    isDeepScanning = isLibraryIndexing && activeSyncAction == ConfigAction.DeepScanLibrary,
+                    isQuickSyncing = isLibraryIndexing && activeSyncAction == ConfigAction.QuickSyncLibrary,
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -247,6 +272,7 @@ fun Main.Config.Template.Screen(
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) },
+                    isSyncing = isMetadataIndexing && activeSyncAction == ConfigAction.SyncMangadexMetadata,
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -254,6 +280,7 @@ fun Main.Config.Template.Screen(
 
                 Main.Config.Component.SyncAnilistData(
                     onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
+                    isSyncing = isMetadataIndexing && activeSyncAction == ConfigAction.SyncAnilistMetadata,
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 

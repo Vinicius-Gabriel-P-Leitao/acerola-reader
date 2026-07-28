@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.SearchBar
+import br.acerola.comic.common.ux.component.rememberSearchBarContentPadding
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.main.Main
@@ -22,6 +22,7 @@ fun Main.Home.Component.HomeSearchBar(
     comics: List<Triple<ComicDto, ReadingHistoryDto?, Int>>,
     onComicClick: (ComicDto) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = rememberSearchBarContentPadding(),
 ) {
     Acerola.Component.SearchBar(
         query = query,
@@ -33,7 +34,7 @@ fun Main.Home.Component.HomeSearchBar(
         placeholder = stringResource(R.string.label_home_search_placeholder),
         itemKey = { it.first.directory.id },
         modifier = modifier,
-        contentPadding = PaddingValues(bottom = 16.dp),
+        contentPadding = contentPadding,
         itemContent = { (comic, history, chapterCount) ->
             Main.Home.Component.ComicSearchItem(
                 comic = comic,

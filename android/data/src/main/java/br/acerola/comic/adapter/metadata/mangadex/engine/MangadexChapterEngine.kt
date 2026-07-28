@@ -87,7 +87,7 @@ class MangadexChapterEngine
                 if (remoteMangaRelations == null) {
                     AcerolaLogger.w(TAG, "Sync aborted: No remote info link for comic $comicId", LogSource.REPOSITORY)
                     _isIndexing.value = false
-                    return@withContext Either.Right(value = Unit)
+                    return@withContext Either.Left(value = LibrarySyncError.MetadataNotFound(source = "MangaDex", identifier = comicId.toString()))
                 }
 
                 val remoteManga = remoteMangaRelations.remoteInfo
@@ -95,7 +95,7 @@ class MangadexChapterEngine
                     remoteMangaRelations.mangadexSource?.mangadexId ?: run {
                         AcerolaLogger.w(TAG, "Sync aborted: No MangaDex source for comic ${remoteManga.id}", LogSource.REPOSITORY)
                         _isIndexing.value = false
-                        return@withContext Either.Right(value = Unit)
+                        return@withContext Either.Left(value = LibrarySyncError.MetadataNotFound(source = "MangaDex", identifier = remoteManga.id.toString()))
                     }
 
                 mangadexSourceChapterInfoService
