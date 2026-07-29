@@ -193,7 +193,9 @@
         "sync_toggle_error": "Error changing external sync: {msg}",
         "anilist_error": "AniList: {msg}",
         "sync_enabled": "External sync enabled",
-        "sync_success": "Metadata synchronized!"
+        "sync_success": "Metadata synchronized!",
+        "sync_start_mangadex": "Syncing metadata with MangaDex...",
+        "sync_start_anilist": "Syncing metadata with AniList..."
       }
     },
     "reader": {
@@ -332,9 +334,9 @@
       "toast": {
         "sync_complete": "Batch synchronization completed successfully!",
         "sync_error": "Batch synchronization error: {msg}",
-        "sync_start_anilist": "Starting AniList batch sync... Check the console or wait.",
+        "sync_start_anilist": "Starting AniList batch sync...",
         "sync_error_anilist": "Error starting AniList sync: {msg}",
-        "sync_start_mangadex": "Starting MangaDex batch sync... Check the console or wait.",
+        "sync_start_mangadex": "Starting MangaDex batch sync...",
         "sync_error_mangadex": "Error starting MangaDex sync: {msg}",
         "sync_progress": "Syncing: {name}"
       }

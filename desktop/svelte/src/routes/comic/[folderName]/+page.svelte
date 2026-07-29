@@ -29,6 +29,9 @@
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
+	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
+
+	const { notify } = notificationStore;
 
 	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
@@ -114,12 +117,19 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
+			const startMsg = m['pages.comic.toast.sync_start_mangadex']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
 			await metadataSync.syncMangadex(manga.title, id.toString());
-			toast.success(m['pages.comic.toast.sync_success']());
+			const successMsg = m['pages.comic.toast.sync_success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
 			await invalidateAll();
 		} catch (err: any) {
 			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.comic.toast.mangadex_error']({ msg }));
+			const errorMsg = m['pages.comic.toast.mangadex_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
@@ -127,12 +137,19 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
+			const startMsg = m['pages.comic.toast.sync_start_anilist']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
 			await metadataSync.syncAnilist(manga.title, id.toString());
-			toast.success(m['pages.comic.toast.sync_success']());
+			const successMsg = m['pages.comic.toast.sync_success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
 			await invalidateAll();
 		} catch (err: any) {
 			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.comic.toast.anilist_error']({ msg }));
+			const errorMsg = m['pages.comic.toast.anilist_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
@@ -144,11 +161,15 @@
 			if (manga) {
 				manga.metadata.externalSync = value;
 			}
-			toast.success(value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']());
+			const successMsg = value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
 			await invalidateAll();
 		} catch (err: any) {
 			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.comic.toast.sync_toggle_error']({ msg }));
+			const errorMsg = m['pages.comic.toast.sync_toggle_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 

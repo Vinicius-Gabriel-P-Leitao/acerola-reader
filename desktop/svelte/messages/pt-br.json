@@ -193,7 +193,9 @@
         "sync_toggle_error": "Erro ao alterar sincronização externa: {msg}",
         "anilist_error": "AniList: {msg}",
         "sync_enabled": "Sincronização externa ativada",
-        "sync_success": "Metadados sincronizados!"
+        "sync_success": "Metadados sincronizados!",
+        "sync_start_mangadex": "Sincronizando metadados com MangaDex...",
+        "sync_start_anilist": "Sincronizando metadados com AniList..."
       }
     },
     "reader": {
@@ -332,9 +334,9 @@
       "toast": {
         "sync_complete": "Sincronização em lote finalizada com sucesso!",
         "sync_error": "Erro na sincronização em lote: {msg}",
-        "sync_start_anilist": "Iniciando sincronização em lote com AniList... Acompanhe no console ou aguarde.",
+        "sync_start_anilist": "Iniciando sincronização em lote com AniList...",
         "sync_error_anilist": "Erro ao iniciar sync AniList: {msg}",
-        "sync_start_mangadex": "Iniciando sincronização em lote com MangaDex... Acompanhe no console ou aguarde.",
+        "sync_start_mangadex": "Iniciando sincronização em lote com MangaDex...",
         "sync_error_mangadex": "Erro ao iniciar sync Mangadex: {msg}",
         "sync_progress": "Sincronizando: {name}"
       }
