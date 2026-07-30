@@ -4,7 +4,10 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::{metadata::{author::AuthorMetadata, comic::ComicMetadata}, views::ComicSummaryView},
+        models::{
+            metadata::{author::AuthorMetadata, comic::ComicMetadata},
+            views::ComicSummaryView,
+        },
         repositories::{
             archive::chapter_archive_repo::ChapterRepository,
             metadata::MetadataRepository,
@@ -35,10 +38,7 @@ impl HomeService {
         (
             Vec<ComicSummaryView>,
             HashMap<i64, i64>,
-            HashMap<
-                i64,
-                (ComicMetadata, Option<AuthorMetadata>),
-            >,
+            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
         ),
         ComicError,
     > {
@@ -71,10 +71,7 @@ impl HomeService {
         (
             Vec<ComicSummaryView>,
             HashMap<i64, i64>,
-            HashMap<
-                i64,
-                (ComicMetadata, Option<AuthorMetadata>),
-            >,
+            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
         ),
         ComicError,
     > {
@@ -101,11 +98,7 @@ impl HomeService {
     pub async fn get_by_folder_name(
         &self, folder_name: &str,
     ) -> Result<
-        Option<(
-            ComicSummaryView,
-            i64,
-            Option<(ComicMetadata, Option<AuthorMetadata>)>,
-        )>,
+        Option<(ComicSummaryView, i64, Option<(ComicMetadata, Option<AuthorMetadata>)>)>,
         ComicError,
     > {
         let comics = self.repo.base.find_all().await?;

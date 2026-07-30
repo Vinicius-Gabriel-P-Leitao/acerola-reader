@@ -1,11 +1,12 @@
-use crate::infra::error::ComicError;
+use sqlx::SqlitePool;
+use tauri::{AppHandle, Emitter, Runtime, State};
+
 use crate::{
     cmd::events::{shared::ErrorPayload, summary::ComicSummaryPayload},
     core::services::{summary::HomeService, ComicService},
     data::repositories::views::SortCriteria,
+    infra::error::ComicError,
 };
-use sqlx::SqlitePool;
-use tauri::{AppHandle, Emitter, Runtime, State};
 
 /// Comando Tauri para buscar quadrinhos com ordenação específica.
 #[tauri::command]

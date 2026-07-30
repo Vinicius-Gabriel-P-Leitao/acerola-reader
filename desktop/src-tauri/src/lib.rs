@@ -18,19 +18,26 @@ pub fn run() {
 
     use pdfium_render::prelude::Pdfium;
 
-    let pdfium_executable_path =
-        std::env::current_exe().ok().and_then(|executable| executable.parent().map(|parent| parent.to_path_buf()));
+    let pdfium_executable_path = std::env::current_exe()
+        .ok()
+        .and_then(|executable| executable.parent().map(|parent| parent.to_path_buf()));
 
     let pdfium_bindings = if let Some(ref executable_directory) = pdfium_executable_path {
         let resource_directory = executable_directory.join("_up_").join(".bin");
         if resource_directory.exists() {
-            Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(&resource_directory))
+            Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(
+                &resource_directory,
+            ))
         } else {
             let local_bin_directory = executable_directory.join(".bin");
             if local_bin_directory.exists() {
-                Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(&local_bin_directory))
+                Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(
+                    &local_bin_directory,
+                ))
             } else {
-                Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(executable_directory))
+                Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(
+                    executable_directory,
+                ))
             }
         }
     } else {

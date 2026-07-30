@@ -1,3 +1,8 @@
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
+
 use acerola_p2p::api::{
     guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
     identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
@@ -5,8 +10,6 @@ use acerola_p2p::api::{
     AcerolaP2p,
 };
 use rand::RngCore;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use tauri::{Emitter, Manager};
 
 use crate::{

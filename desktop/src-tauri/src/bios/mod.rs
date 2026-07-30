@@ -3,6 +3,7 @@ pub mod network;
 pub mod scopes;
 
 use std::path::PathBuf;
+
 use tauri::Manager;
 
 use crate::{
@@ -68,6 +69,7 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         metadata_cmd::sync_all_metadata_mangadex,
         metadata_cmd::sync_all_metadata_anilist,
         metadata_cmd::read_comic_info,
+        metadata_cmd::sync_metadata_comic_info,
     ])
 }
 

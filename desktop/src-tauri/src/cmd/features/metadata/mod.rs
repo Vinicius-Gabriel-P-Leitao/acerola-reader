@@ -1,11 +1,13 @@
-use crate::infra::error::ComicError;
+use std::sync::Arc;
+
+use tauri::{command, State};
+
 use crate::{
     cmd::events::{metadata::ComicMetadataEvent, shared::ErrorPayload},
     core::services::metadata::MetadataService,
     data::repositories::metadata::MetadataRepository,
+    infra::error::ComicError,
 };
-use std::sync::Arc;
-use tauri::{command, State};
 
 pub struct MetadataState {
     pub service: Arc<MetadataService>,
@@ -59,6 +61,25 @@ pub async fn read_comic_info(
     let metadata = state
         .service
         .parse_and_sync_comic_info(&xml_content, comic_id)
+        .await
+        .map_err(|err| ErrorPayload::from(&err))?;
+
+    let cover = state.repo.get_cover_by_comic_metadata_id(metadata.id).await.ok().flatten();
+    let banner = state.repo.get_banner_by_comic_metadata_id(metadata.id).await.ok().flatten();
+
+    Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
+}
+
+#[command]
+pub async fn sync_metadata_comic_info(
+    comic_id: String, state: State<'_, MetadataState>,
+) -> Result<ComicMetadataEvent, ErrorPayload> {
+    let parsed_id = comic_id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+    let metadata = state
+        .service
+        .sync_comic_comic_info(parsed_id)
         .await
         .map_err(|err| ErrorPayload::from(&err))?;
 

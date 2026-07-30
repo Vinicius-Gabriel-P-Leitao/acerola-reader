@@ -80,17 +80,18 @@ export function useComicSummary() {
 		});
 	}
 
-	async function updateVisibility(ids: number[], hidden: boolean): Promise<number> {
+	async function updateVisibility(ids: (string | number)[], hidden: boolean): Promise<number> {
 		try {
 			const count = await invoke<number>(HOME_COMMANDS.updateComicsVisibility, {
-				ids,
+				ids: ids.map((id) => Number(id)),
 				hidden
 			});
 			// Remove hidden comics from the local state
 			if (hidden && comics) {
+				const idStrs = new Set(ids.map(String));
 				comics = {
 					...comics,
-					comics: comics.comics.filter((c) => !ids.includes(Number(c.relations.directoryId))),
+					comics: comics.comics.filter((c) => !idStrs.has(String(c.relations.directoryId))),
 					total: comics.total - count
 				};
 			}
@@ -101,14 +102,17 @@ export function useComicSummary() {
 		}
 	}
 
-	async function deleteComics(ids: number[]): Promise<number> {
+	async function deleteComics(ids: (string | number)[]): Promise<number> {
 		try {
-			const count = await invoke<number>(HOME_COMMANDS.deleteComics, { ids });
+			const count = await invoke<number>(HOME_COMMANDS.deleteComics, {
+				ids: ids.map((id) => Number(id))
+			});
 			// Remove deleted comics from the local state
 			if (comics) {
+				const idStrs = new Set(ids.map(String));
 				comics = {
 					...comics,
-					comics: comics.comics.filter((c) => !ids.includes(Number(c.relations.directoryId))),
+					comics: comics.comics.filter((c) => !idStrs.has(String(c.relations.directoryId))),
 					total: comics.total - count
 				};
 			}

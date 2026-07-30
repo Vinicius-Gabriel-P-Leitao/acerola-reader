@@ -5,7 +5,7 @@
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
-	import AcerolaComicActionDialog from '$lib/components/acerola-comic-action-dialog/acerola-comic-action-dialog.svelte';
+	import AcerolaComicActionDialog from './components/acerola-comic-action-dialog.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
@@ -33,9 +33,10 @@
 	let showActionDialog = $state(false);
 
 	onMount(async () => {
-		await bookmarkStore.loadBookmarks();
+		await bookmarkStore.loadBookmarks(true);
 		unlistenScan = await listen(LIBRARY_EVENTS.scanComplete, async () => {
 			await summary.fetch();
+			await bookmarkStore.loadBookmarks(true);
 		});
 
 		await summary.fetch();
@@ -45,8 +46,8 @@
 		unlistenScan?.();
 	});
 
-	async function handleHide(ids: number[]) {
-		const validIds = ids.filter((id) => Number.isFinite(id) && id > 0);
+	async function handleHide(ids: (string | number)[]) {
+		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
 		const count = await summary.updateVisibility(validIds, true);
 		toast.success(m['pages.home.toast.hidden']({ count }));
@@ -54,8 +55,8 @@
 		showActionDialog = false;
 	}
 
-	async function handleDelete(ids: number[]) {
-		const validIds = ids.filter((id) => Number.isFinite(id) && id > 0);
+	async function handleDelete(ids: (string | number)[]) {
+		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
 		const count = await summary.deleteComics(validIds);
 		toast.success(m['pages.home.toast.deleted']({ count }));
@@ -63,20 +64,27 @@
 		showActionDialog = false;
 	}
 
-	async function handleBookmark(ids: number[], categoryId: number) {
-		const validIds = ids.filter((id) => Number.isFinite(id) && id > 0);
+	async function handleBookmark(ids: (string | number)[], categoryId: number) {
+		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
 		let successCount = 0;
+		let failCount = 0;
 		for (const id of validIds) {
 			try {
 				await bookmarkStore.assignToComic(id, categoryId);
 				successCount++;
 			} catch (err) {
+				failCount++;
 				console.error(`Failed to assign bookmark to comic ${id}:`, err);
 			}
 		}
 		if (successCount > 0) {
 			toast.success(m['pages.home.toast.bookmarked']({ count: successCount }));
+		}
+		if (failCount > 0) {
+			toast.error(m['pages.home.toast.bookmark_error']());
+			await summary.fetch();
+			await bookmarkStore.loadBookmarks(true);
 		}
 		selection.exitSelectionMode();
 		showActionDialog = false;
@@ -84,14 +92,14 @@
 
 	function handleCardClick(comic: ComicSummaryItemPayload, cover: string | null) {
 		if (selection.isSelectionMode) {
-			selection.toggleSelection(Number(comic.relations.directoryId));
+			selection.toggleSelection(comic.relations.directoryId);
 		} else {
 			activeComic.set(comic, cover);
 			goto(`/comic/${comic.filesystem.folderName}`);
 		}
 	}
 
-	function handleActionClick(event: MouseEvent, comicId: number) {
+	function handleActionClick(event: MouseEvent, comicId: string | number) {
 		event.stopPropagation();
 		if (!selection.isSelected(comicId)) {
 			selection.toggleSelection(comicId);
@@ -100,7 +108,7 @@
 	}
 
 	function handleSelectAllToggle() {
-		const allIds = summary.comics?.comics.map((c) => Number(c.relations.directoryId)) ?? [];
+		const allIds = summary.comics?.comics.map((c) => c.relations.directoryId) ?? [];
 		if (selection.selectedCount === allIds.length && allIds.length > 0) {
 			selection.deselectAll();
 		} else {
@@ -223,7 +231,7 @@
 				{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
 					comic.relations.directoryId
 				)?.color}
-				{@const isSelected = selection.isSelected(Number(comic.relations.directoryId))}
+				{@const isSelected = selection.isSelected(comic.relations.directoryId)}
 				<AcerolaCardImage
 					data={{
 						title: comic.metadata.title ?? comic.filesystem.folderName,
@@ -235,7 +243,7 @@
 				>
 					{#snippet floatingBadge()}
 						{#if bookmarkColor != null}
-							<AcerolaBookmarkRibbon color={bookmarkColor} />
+							<AcerolaBookmarkRibbon color={bookmarkColor} class="-top-1.5 left-5 h-10 w-6" />
 						{/if}
 					{/snippet}
 
@@ -256,7 +264,7 @@
 								class: 'text-overlay bg-transparent transition-colors hover:text-primary'
 							}}
 							events={{
-								onClick: (e) => handleActionClick(e, Number(comic.relations.directoryId))
+								onClick: (e) => handleActionClick(e, comic.relations.directoryId)
 							}}
 						>
 							<MoreHorizontal size={16} />

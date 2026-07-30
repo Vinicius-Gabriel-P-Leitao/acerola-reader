@@ -195,7 +195,11 @@
         "sync_enabled": "Sincronização externa ativada",
         "sync_success": "Metadados sincronizados!",
         "sync_start_mangadex": "Sincronizando metadados com MangaDex...",
-        "sync_start_anilist": "Sincronizando metadados com AniList..."
+        "sync_start_anilist": "Sincronizando metadados com AniList...",
+        "sync_start_comic_info": "Sincronizando metadados com ComicInfo.xml...",
+        "comic_info_error": "ComicInfo.xml: {msg}",
+        "comic_info_title": "ComicInfo.xml",
+        "comic_info_desc": "Extrair metadados do arquivo ComicInfo.xml da pasta local"
       }
     },
     "reader": {

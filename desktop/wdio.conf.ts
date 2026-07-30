@@ -27,7 +27,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const capabilities: TauriCapability[] = [
 	{
-		browserName: process.platform === 'win32' ? 'chrome' : 'wry',
+		browserName: 'wry',
 		'tauri:options': {
 			application: appPath
 		}

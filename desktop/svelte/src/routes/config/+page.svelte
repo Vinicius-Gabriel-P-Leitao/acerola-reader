@@ -25,6 +25,7 @@
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { toast } from 'svelte-sonner';
 	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
+	import { extractErrorMessage } from '$lib/utils/error.utils';
 
 	const { notify } = notificationStore;
 
@@ -88,8 +89,8 @@
 				language: metadataLanguageStore.metadataLanguage,
 				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
 			});
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
 			const errorMsg = m['pages.config.toast.sync_error_mangadex']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
@@ -105,8 +106,8 @@
 				language: metadataLanguageStore.metadataLanguage,
 				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
 			});
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
 			const errorMsg = m['pages.config.toast.sync_error_anilist']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);

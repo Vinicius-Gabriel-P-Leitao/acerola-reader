@@ -24,8 +24,8 @@ export function _resetBookmarksState() {
  * @returns An object containing the bookmarks state and mutation methods.
  */
 export function useBookmarks() {
-	async function loadBookmarks() {
-		if (isInitialized) return;
+	async function loadBookmarks(force = false) {
+		if (isInitialized && !force) return;
 		isLoading = true;
 		try {
 			const [fetchedBookmarks, fetchedAssignments] = await Promise.all([
@@ -74,8 +74,11 @@ export function useBookmarks() {
 				categoryId: Number(categoryId)
 			});
 
-			const comicIdNum = Number(comicId);
-			assignments = [...assignments.filter((a) => a.comic_directory_fk !== comicIdNum), assignment];
+			const comicIdStr = String(comicId);
+			assignments = [
+				...assignments.filter((a) => String(a.comic_directory_fk) !== comicIdStr),
+				assignment
+			];
 			return assignment;
 		} catch (err: unknown) {
 			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
@@ -87,8 +90,8 @@ export function useBookmarks() {
 	async function removeComicBookmark(comicId: string | number) {
 		try {
 			await invoke(BOOKMARKS_COMMANDS.removeCategoryFromComic, { comicId: comicId.toString() });
-			const comicIdNum = Number(comicId);
-			assignments = assignments.filter((a) => a.comic_directory_fk !== comicIdNum);
+			const comicIdStr = String(comicId);
+			assignments = assignments.filter((a) => String(a.comic_directory_fk) !== comicIdStr);
 		} catch (err) {
 			error(`Failed to remove bookmark from comic: ${err}`);
 			throw err;
@@ -107,10 +110,10 @@ export function useBookmarks() {
 	}
 
 	function getBookmarkForComic(comicId: string | number) {
-		const comicIdNum = Number(comicId);
-		const assignment = assignments.find((a) => a.comic_directory_fk === comicIdNum);
+		const comicIdStr = String(comicId);
+		const assignment = assignments.find((a) => String(a.comic_directory_fk) === comicIdStr);
 		if (!assignment) return null;
-		return bookmarks.find((b) => b.id === assignment.category_id) ?? null;
+		return bookmarks.find((b) => Number(b.id) === Number(assignment.category_id)) ?? null;
 	}
 
 	return {

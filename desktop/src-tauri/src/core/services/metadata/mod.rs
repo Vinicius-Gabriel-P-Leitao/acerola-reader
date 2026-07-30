@@ -3,6 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use sqlx::SqlitePool;
 
 use crate::{
+    core::services::archive::files_guard::{ArchiveFileGuard, FileGuard, MetadataFileGuard},
     data::{
         models::{
             metadata::{
@@ -29,6 +30,48 @@ use crate::{
 };
 
 pub mod comic_info;
+
+fn find_xml_file_on_disk(directory: &std::path::Path) -> Option<String> {
+    let metadata_guard = MetadataFileGuard;
+    let entries = std::fs::read_dir(directory).ok()?;
+
+    entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .find(|path| metadata_guard.is_allowed(path).is_ok())
+        .and_then(|path| std::fs::read_to_string(path).ok())
+}
+
+fn find_xml_inside_archive(archive_path: &std::path::Path) -> Option<String> {
+    let metadata_guard = MetadataFileGuard;
+    let file = std::fs::File::open(archive_path).ok()?;
+    let mut archive = zip::ZipArchive::new(file).ok()?;
+
+    (0..archive.len()).find_map(|index| {
+        let mut entry_file = archive.by_index(index).ok()?;
+        let entry_path = std::path::Path::new(entry_file.name());
+        if metadata_guard.is_allowed(entry_path).is_ok() {
+            use std::io::Read;
+            let mut content = String::new();
+            entry_file.read_to_string(&mut content).ok().map(|_| content)
+        } else {
+            None
+        }
+    })
+}
+
+fn find_xml_in_directory_archives(directory: &std::path::Path) -> Option<String> {
+    let archive_guard = ArchiveFileGuard;
+    let entries = std::fs::read_dir(directory).ok()?;
+
+    entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .filter(|path| archive_guard.is_allowed(path).is_ok())
+        .find_map(|archive_path| find_xml_inside_archive(&archive_path))
+}
 
 pub struct MetadataService {
     repo: MetadataRepository,
@@ -102,6 +145,24 @@ impl MetadataService {
         self.process_comic_info_chapter(&comic_info, saved.id).await?;
 
         Ok(saved)
+    }
+
+    pub async fn sync_comic_comic_info(
+        &self, comic_directory_fk: i64,
+    ) -> Result<ComicMetadata, ComicError> {
+        let comic_dir = self
+            .comic_directory_repo
+            .find_by_id(comic_directory_fk)
+            .await?
+            .ok_or(ComicError::NotFound)?;
+
+        let directory_path = PathBuf::from(&comic_dir.path);
+
+        let xml_content = find_xml_file_on_disk(&directory_path)
+            .or_else(|| find_xml_in_directory_archives(&directory_path))
+            .ok_or(ComicError::ComicInfoNotFound)?;
+
+        self.parse_and_sync_comic_info(&xml_content, comic_directory_fk).await
     }
 
     pub async fn sync_all_comics_mangadex<F>(
@@ -314,32 +375,9 @@ impl MetadataService {
 
         let comic_info = comic_info::ComicInfo {
             title: Some(metadata.title),
-            series: None,
-            number: None,
             summary: Some(metadata.description),
             writer: if writer.is_empty() { None } else { Some(writer) },
-            penciller: None,
-            inker: None,
-            colorist: None,
-            letterer: None,
-            cover_artist: None,
-            editor: None,
-            publisher: None,
-            genre: None,
-            web: None,
-            page_count: None,
-            language_iso: None,
-            format: None,
-            black_and_white: None,
-            manga: None,
-            characters: None,
-            teams: None,
-            locations: None,
-            scan_information: None,
-            story_arc: None,
-            series_group: None,
-            age_rating: None,
-            pages: None,
+            ..Default::default()
         };
 
         let xml_str = quick_xml::se::to_string(&comic_info)
@@ -790,5 +828,96 @@ impl MetadataService {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+
+    use tempfile::tempdir;
+    use zip::write::SimpleFileOptions;
+
+    use super::*;
+    use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
+
+    #[test]
+    fn teste_find_xml_file_on_disk_case_insensitive() {
+        let temp_directory = tempdir().expect("Failed to create temp directory");
+        let target_xml_path = temp_directory.path().join("comicinfo.xml");
+        let xml_payload = "<ComicInfo><Title>Case Insensitive Test</Title></ComicInfo>";
+        std::fs::write(&target_xml_path, xml_payload).expect("Failed to write test XML file");
+
+        let extracted_content = find_xml_file_on_disk(temp_directory.path());
+        assert_eq!(extracted_content, Some(xml_payload.to_string()));
+    }
+
+    #[test]
+    fn teste_find_xml_inside_cbz_archive() {
+        let temp_directory = tempdir().expect("Failed to create temp directory");
+        let cbz_file_path = temp_directory.path().join("chapter1.cbz");
+        let archive_file =
+            std::fs::File::create(&cbz_file_path).expect("Failed to create cbz file");
+        let mut zip_writer = zip::ZipWriter::new(archive_file);
+
+        let options = SimpleFileOptions::default();
+        zip_writer
+            .start_file("subfolder/ComicInfo.xml", options)
+            .expect("Failed to start zip entry");
+        let xml_payload = "<ComicInfo><Title>Zip Test Comic</Title></ComicInfo>";
+        zip_writer.write_all(xml_payload.as_bytes()).expect("Failed to write zip content");
+        zip_writer.finish().expect("Failed to finish zip file");
+
+        let extracted_content = find_xml_in_directory_archives(temp_directory.path());
+        assert_eq!(extracted_content, Some(xml_payload.to_string()));
+    }
+
+    #[tokio::test]
+    async fn teste_sync_comic_info_sucesso() {
+        let pool = setup_test_db_with_comic().await;
+        let service = MetadataService::new(pool.clone());
+
+        let temp_directory = tempdir().expect("Failed to create temp directory");
+        let xml_file_path = temp_directory.path().join("ComicInfo.xml");
+        let xml_payload = r#"<?xml version="1.0" encoding="utf-8"?>
+<ComicInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Title>Test ComicInfo Title</Title>
+  <Summary>Test Summary from ComicInfo XML</Summary>
+  <Writer>Test Writer</Writer>
+</ComicInfo>"#;
+        std::fs::write(&xml_file_path, xml_payload).expect("Failed to write XML file");
+
+        let comic_repository = ComicRepository::new(pool.clone());
+        let mut comic = comic_repository
+            .find_by_id(1)
+            .await
+            .expect("Failed to fetch comic")
+            .expect("Comic #1 should exist");
+        comic.path = temp_directory.path().to_string_lossy().to_string();
+        comic_repository.update(&comic).await.expect("Failed to update comic path");
+
+        let metadata = service.sync_comic_comic_info(1).await.expect("Failed to sync comic_info");
+        assert_eq!(metadata.title, "Test ComicInfo Title");
+        assert_eq!(metadata.description, "Test Summary from ComicInfo XML");
+        assert_eq!(metadata.sync_source, Some("ComicInfo".to_string()));
+    }
+
+    #[tokio::test]
+    async fn teste_sync_comic_info_quando_arquivo_ausente_retorna_erro() {
+        let pool = setup_test_db_with_comic().await;
+        let service = MetadataService::new(pool.clone());
+
+        let temp_directory = tempdir().expect("Failed to create temp directory");
+        let comic_repository = ComicRepository::new(pool.clone());
+        let mut comic = comic_repository
+            .find_by_id(1)
+            .await
+            .expect("Failed to fetch comic")
+            .expect("Comic #1 should exist");
+        comic.path = temp_directory.path().to_string_lossy().to_string();
+        comic_repository.update(&comic).await.expect("Failed to update comic path");
+
+        let sync_result = service.sync_comic_comic_info(1).await;
+        assert!(matches!(sync_result, Err(ComicError::ComicInfoNotFound)));
     }
 }

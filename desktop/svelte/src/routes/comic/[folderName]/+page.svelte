@@ -30,6 +30,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
 	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
+	import { extractErrorMessage } from '$lib/utils/error.utils';
 
 	const { notify } = notificationStore;
 
@@ -125,8 +126,8 @@
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
 			const errorMsg = m['pages.comic.toast.mangadex_error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
@@ -145,9 +146,29 @@
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
 			const errorMsg = m['pages.comic.toast.anilist_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
+	async function handleSyncComicInfo() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			const startMsg = m['pages.comic.toast.sync_start_comic_info']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
+			await metadataSync.syncComicInfo(id.toString());
+			const successMsg = m['pages.comic.toast.sync_success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.comic_info_error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
 		}
@@ -165,8 +186,8 @@
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
 			const errorMsg = m['pages.comic.toast.sync_toggle_error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
@@ -640,7 +661,8 @@
 								},
 								onExternalSyncChange: handleExternalSyncChange,
 								onSyncMangadex: handleSyncMangadex,
-								onSyncAnilist: handleSyncAnilist
+								onSyncAnilist: handleSyncAnilist,
+								onSyncComicInfo: handleSyncComicInfo
 							}}
 						/>
 					{/if}
