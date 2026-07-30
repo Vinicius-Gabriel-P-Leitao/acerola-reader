@@ -47,7 +47,7 @@ class LocalHistoryEngineTest {
 
             repository.upsertHistory(dto)
 
-            coVerify { readingHistoryDao.upsertHistory(match { it.comicDirectoryId == 1L && it.chapterSort == "10" }) }
+            coVerify { readingHistoryDao.upsertHistory(match { it.comicDirectoryFk == 1L && it.chapterSort == "10" }) }
         }
 
     @Test
@@ -60,7 +60,7 @@ class LocalHistoryEngineTest {
 
             repository.markChapterAsRead(comicId, chapterSort, chapterId)
 
-            coVerify { readingHistoryDao.upsertChapterRead(match { it.comicDirectoryId == comicId && it.chapterSort == chapterSort }) }
+            coVerify { readingHistoryDao.upsertChapterRead(match { it.comicDirectoryFk == comicId && it.chapterSort == chapterSort }) }
         }
 
     @Test

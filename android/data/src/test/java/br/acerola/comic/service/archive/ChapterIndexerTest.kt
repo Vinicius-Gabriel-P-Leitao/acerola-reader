@@ -26,13 +26,8 @@ class ChapterIndexerTest {
         val comicId = 10L
         val fileUri = "uri/to/file"
         val chapterSort = "1"
-        val fastHash = "hash"
         val volumeIdFk = 5L
         val isSpecial = false
-
-        // Mocking the extension function toChapterArchiveEntity if needed,
-        // but it's better to test the real mapping if it's pure.
-        // Let's check how it's implemented in ChapterIndexer.
 
         val result =
             indexer.buildEntity(
@@ -40,7 +35,6 @@ class ChapterIndexerTest {
                 comicId = comicId,
                 fileUri = fileUri,
                 chapterSort = chapterSort,
-                fastHash = fastHash,
                 volumeIdFk = volumeIdFk,
                 isSpecial = isSpecial,
             )
@@ -48,7 +42,6 @@ class ChapterIndexerTest {
         assertEquals(comicId, result.folderPathFk)
         assertEquals(fileUri, result.path)
         assertEquals(chapterSort, result.chapterSort)
-        assertEquals(fastHash, result.fastHash)
         assertEquals(volumeIdFk, result.volumeIdFk)
         assertEquals(isSpecial, result.isSpecial)
         assertEquals("cap01.cbz", result.chapter)

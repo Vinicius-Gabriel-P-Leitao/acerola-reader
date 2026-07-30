@@ -56,12 +56,7 @@ class WorkManagerLibrarySyncScheduler
                     WorkerContract.TAG_LIBRARY_SYNC
                 }
 
-            val policy =
-                if (type == LibrarySyncWorker.SYNC_TYPE_SPECIFIC || type == LibrarySyncWorker.SYNC_TYPE_REFRESH) {
-                    ExistingWorkPolicy.REPLACE
-                } else {
-                    ExistingWorkPolicy.KEEP
-                }
+            val policy = ExistingWorkPolicy.REPLACE
 
             workManager.enqueueUniqueWork(
                 uniqueName,

@@ -41,7 +41,7 @@ class CategoryManager
                 categoryDao.insertComicCategory(
                     ComicCategory(
                         comicDirectoryFk = directoryId,
-                        categoryId = categoryId,
+                        categoryFk = categoryId,
                     ),
                 )
             }

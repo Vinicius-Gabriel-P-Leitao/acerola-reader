@@ -26,16 +26,6 @@ data class MangadexSource(
     val id: Long = 0,
     @ColumnInfo(name = "mangadex_id")
     val mangadexId: String,
-    @ColumnInfo(name = "anilist_id")
-    val anilistId: String?,
-    @ColumnInfo(name = "amazon_url")
-    val amazonUrl: String?,
-    @ColumnInfo(name = "ebookjapan_url")
-    val ebookjapanUrl: String?,
-    @ColumnInfo(name = "raw_url")
-    val rawUrl: String?,
-    @ColumnInfo(name = "engtl_url")
-    val engtlUrl: String?,
     @ColumnInfo(name = "comic_metadata_fk")
     val comicRemoteInfoFk: Long,
 )

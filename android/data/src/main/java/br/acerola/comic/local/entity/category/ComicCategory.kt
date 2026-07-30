@@ -11,7 +11,7 @@ import br.acerola.comic.local.entity.archive.ComicDirectory
     tableName = "comic_category",
     indices = [
         Index(value = ["comic_directory_fk"], unique = true),
-        Index(value = ["category_id"]),
+        Index(value = ["category_fk"]),
     ],
     foreignKeys = [
         ForeignKey(
@@ -23,7 +23,7 @@ import br.acerola.comic.local.entity.archive.ComicDirectory
         ForeignKey(
             entity = Category::class,
             parentColumns = ["id"],
-            childColumns = ["category_id"],
+            childColumns = ["category_fk"],
             onDelete = ForeignKey.Companion.CASCADE,
         ),
     ],
@@ -33,7 +33,6 @@ data class ComicCategory(
     val id: Long = 0,
     @ColumnInfo(name = "comic_directory_fk")
     val comicDirectoryFk: Long,
-    // FIXME: Trocar _id por _fk
-    @ColumnInfo(name = "category_id")
-    val categoryId: Long,
+    @ColumnInfo(name = "category_fk")
+    val categoryFk: Long,
 )

@@ -19,6 +19,7 @@ class NotificationHelper
             const val SYNC_CHANNEL_ID = "sync_channel"
             const val SYNC_NOTIFICATION_ID = 1001
             const val DOWNLOAD_NOTIFICATION_ID = 1002
+            const val METADATA_NOTIFICATION_ID = 1003
         }
 
         private val notificationManager =

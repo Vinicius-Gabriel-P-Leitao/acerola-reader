@@ -10,11 +10,13 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.comic.data.R
+import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.AnilistCase
 import br.acerola.comic.usecase.ComicInfoCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
+import br.acerola.comic.usecase.sync.SyncMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
 import br.acerola.comic.worker.contract.SyncType
 import dagger.assisted.Assisted
@@ -29,10 +31,10 @@ class MetadataSyncWorker
     constructor(
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
-        private val syncMetadataUseCase: br.acerola.comic.usecase.sync.SyncMetadataUseCase,
-        @param:AnilistCase private val anilistSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
-        @param:MangadexCase private val mangadexSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
-        @param:ComicInfoCase private val comicInfoSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
+        private val syncMetadataUseCase: SyncMetadataUseCase,
+        @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase,
+        @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase,
+        @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
         companion object {
@@ -77,13 +79,17 @@ class MetadataSyncWorker
                         title,
                         context.getString(R.string.sync_metadata_description_fetching),
                     )
-                setForeground(
-                    ForegroundInfo(
-                        NotificationHelper.SYNC_NOTIFICATION_ID,
-                        builder.build(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
-                    ),
-                )
+                try {
+                    setForeground(
+                        ForegroundInfo(
+                            NotificationHelper.METADATA_NOTIFICATION_ID,
+                            builder.build(),
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+                        ),
+                    )
+                } catch (exception: Exception) {
+                    AcerolaLogger.w("MetadataSyncWorker", "Unable to start foreground service", throwable = exception)
+                }
 
                 val progressJob =
                     launch {
@@ -96,7 +102,7 @@ class MetadataSyncWorker
                             }
 
                         progressFlow.collectLatest { progress ->
-                            notificationHelper.updateProgress(builder, progress)
+                            notificationHelper.updateProgress(builder, progress, notificationId = NotificationHelper.METADATA_NOTIFICATION_ID)
                             setProgress(workDataOf("progress" to progress))
                         }
                     }
@@ -110,13 +116,14 @@ class MetadataSyncWorker
                         )
 
                     progressJob.cancel()
-
+    
                     result.fold(
                         ifLeft = {
                             val errorMsg = it.uiMessage.asString(context)
                             notificationHelper.showFinishedNotification(
                                 context.getString(R.string.sync_metadata_error_title),
                                 errorMsg,
+                                notificationId = NotificationHelper.METADATA_NOTIFICATION_ID,
                             )
                             Result.failure(workDataOf("error" to errorMsg))
                         },
@@ -124,16 +131,19 @@ class MetadataSyncWorker
                             notificationHelper.showFinishedNotification(
                                 context.getString(R.string.sync_metadata_success_title),
                                 context.getString(R.string.sync_metadata_success_message),
+                                notificationId = NotificationHelper.METADATA_NOTIFICATION_ID,
                             )
                             Result.success()
                         },
                     )
                 } catch (exception: Exception) {
+                    if (exception is kotlinx.coroutines.CancellationException) throw exception
                     progressJob.cancel()
                     val errorMsg = exception.message ?: context.getString(R.string.sync_metadata_fetching_error)
                     notificationHelper.showFinishedNotification(
-                        context.getString(R.string.sync_library_fatal_error_title),
+                        context.getString(R.string.sync_metadata_error_title),
                         errorMsg,
+                        notificationId = NotificationHelper.METADATA_NOTIFICATION_ID,
                     )
                     Result.failure(workDataOf("error" to errorMsg))
                 }

@@ -7,13 +7,11 @@ import br.acerola.comic.local.dao.BaseDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
-import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
 import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
-import br.acerola.comic.local.entity.metadata.source.ComicInfoSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
 import br.acerola.comic.local.entity.relation.MetadataRelations
 import kotlinx.coroutines.flow.Flow
@@ -52,12 +50,10 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
         genres: List<Genre>,
         mangadexSource: MangadexSource? = null,
         anilistSource: AnilistSource? = null,
-        comicInfoSource: ComicInfoSource? = null,
         authorDao: AuthorDao,
         genreDao: GenreDao,
         mangadexDao: MangadexSourceDao? = null,
         anilistDao: AnilistSourceDao? = null,
-        comicInfoDao: ComicInfoSourceDao? = null,
     ): Long {
         val existing = observeComicByDirectoryId(metadata.comicDirectoryFk!!).firstOrNull()
 
@@ -78,7 +74,6 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
 
             mangadexSource?.let { mangadexDao?.insert(it.copy(comicRemoteInfoFk = comicId)) }
             anilistSource?.let { anilistDao?.insert(it.copy(comicRemoteInfoFk = comicId)) }
-            comicInfoSource?.let { comicInfoDao?.insert(it.copy(comicRemoteInfoFk = comicId)) }
         }
 
         return comicId

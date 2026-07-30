@@ -53,7 +53,6 @@ class ChapterSyncService
                 }
                 processedSorts.add(sortResult.normalizedSort)
 
-                val currentFastHash = "${file.name}|${file.size}|${file.lastModified}"
                 val fileUri =
                     if (baseUri != null) {
                         DocumentsContract.buildDocumentUriUsingTree(baseUri, file.id).toString()
@@ -62,7 +61,7 @@ class ChapterSyncService
                     }
 
                 val existing = existingChaptersMap[fileUri]
-                if (existing != null && existing.fastHash == currentFastHash && existing.volumeIdFk == volumeId) {
+                if (existing != null && existing.lastModified == file.lastModified && existing.volumeIdFk == volumeId) {
                     chaptersToDelete.remove(existing)
                     return@forEachIndexed
                 }
@@ -74,7 +73,6 @@ class ChapterSyncService
                             comicId = comicId,
                             fileUri = fileUri,
                             chapterSort = sortResult.normalizedSort,
-                            fastHash = currentFastHash,
                             volumeIdFk = volumeId,
                             isSpecial = sortResult.isSpecial,
                         ),

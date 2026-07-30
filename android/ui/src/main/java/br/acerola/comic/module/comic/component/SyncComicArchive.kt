@@ -1,6 +1,5 @@
 package br.acerola.comic.module.comic.component
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,15 +10,16 @@ import androidx.compose.material.icons.filled.AutoAwesomeMotion
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material.icons.filled.SyncAlt
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.HeroButton
+import br.acerola.comic.common.ux.component.SyncActionIcon
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
@@ -30,13 +30,17 @@ fun Comic.Component.SyncMangaArchive(
     onRescanCover: () -> Unit,
     onExtractFirstPageAsCover: () -> Unit,
     onExtractVolumeCovers: (() -> Unit)? = null,
-    isSyncingChapters: Boolean = false,
-    isRescanningCover: Boolean = false,
-    isExtractingFirstPage: Boolean = false,
-    isExtractingVolumeCovers: Boolean = false,
+    syncChaptersState: SyncActionVisualState = SyncActionVisualState.IDLE,
+    rescanCoverState: SyncActionVisualState = SyncActionVisualState.IDLE,
+    extractFirstPageState: SyncActionVisualState = SyncActionVisualState.IDLE,
+    extractVolumeCoversState: SyncActionVisualState = SyncActionVisualState.IDLE,
     modifier: Modifier = Modifier,
 ) {
-    val anyLoading = isSyncingChapters || isRescanningCover || isExtractingFirstPage || isExtractingVolumeCovers
+    val anyLoading =
+        syncChaptersState == SyncActionVisualState.LOADING ||
+            rescanCoverState == SyncActionVisualState.LOADING ||
+            extractFirstPageState == SyncActionVisualState.LOADING ||
+            extractVolumeCoversState == SyncActionVisualState.LOADING
 
     Column(modifier = modifier.fillMaxWidth()) {
         Acerola.Component.HeroButton(
@@ -45,24 +49,16 @@ fun Comic.Component.SyncMangaArchive(
             iconBackground = MaterialTheme.colorScheme.secondaryContainer,
             onClick = if (anyLoading) null else onSyncChapters,
             icon = {
-                AnimatedContent(
-                    targetState = isSyncingChapters,
-                    label = "syncChaptersLoadingAnimation",
-                ) { loading ->
-                    if (loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 2.5.dp,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.SyncAlt,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(SizeTokens.IconMedium),
-                        )
-                    }
+                Acerola.Component.SyncActionIcon(
+                    state = syncChaptersState,
+                    defaultBackground = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SyncAlt,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(SizeTokens.IconMedium),
+                    )
                 }
             },
         )
@@ -75,24 +71,16 @@ fun Comic.Component.SyncMangaArchive(
             iconBackground = MaterialTheme.colorScheme.secondaryContainer,
             onClick = if (anyLoading) null else onRescanCover,
             icon = {
-                AnimatedContent(
-                    targetState = isRescanningCover,
-                    label = "rescanCoverLoadingAnimation",
-                ) { loading ->
-                    if (loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 2.5.dp,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Collections,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(SizeTokens.IconMedium),
-                        )
-                    }
+                Acerola.Component.SyncActionIcon(
+                    state = rescanCoverState,
+                    defaultBackground = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Collections,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(SizeTokens.IconMedium),
+                    )
                 }
             },
         )
@@ -105,24 +93,16 @@ fun Comic.Component.SyncMangaArchive(
             iconBackground = MaterialTheme.colorScheme.secondaryContainer,
             onClick = if (anyLoading) null else onExtractFirstPageAsCover,
             icon = {
-                AnimatedContent(
-                    targetState = isExtractingFirstPage,
-                    label = "extractFirstPageLoadingAnimation",
-                ) { loading ->
-                    if (loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 2.5.dp,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.ImageSearch,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(SizeTokens.IconMedium),
-                        )
-                    }
+                Acerola.Component.SyncActionIcon(
+                    state = extractFirstPageState,
+                    defaultBackground = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ImageSearch,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(SizeTokens.IconMedium),
+                    )
                 }
             },
         )
@@ -136,24 +116,16 @@ fun Comic.Component.SyncMangaArchive(
                 iconBackground = MaterialTheme.colorScheme.secondaryContainer,
                 onClick = if (anyLoading) null else onExtractVolumeCovers,
                 icon = {
-                    AnimatedContent(
-                        targetState = isExtractingVolumeCovers,
-                        label = "extractVolumeCoversLoadingAnimation",
-                    ) { loading ->
-                        if (loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 2.5.dp,
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesomeMotion,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.size(SizeTokens.IconMedium),
-                            )
-                        }
+                    Acerola.Component.SyncActionIcon(
+                        state = extractVolumeCoversState,
+                        defaultBackground = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesomeMotion,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(SizeTokens.IconMedium),
+                        )
                     }
                 },
             )

@@ -14,6 +14,7 @@ import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.util.sort.normalizeSort
+import br.acerola.comic.worker.contract.WorkerContract
 import br.acerola.comic.worker.sync.MetadataSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -21,9 +22,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,9 +36,15 @@ class ChapterMetadataViewModel
         private val workManager: WorkManager,
         @param:MangadexCase private val getMangadexChaptersUseCase: ObserveChaptersUseCase<ChapterRemoteInfoPageDto>,
     ) : ViewModel() {
+        private val _workerIndexing = MutableStateFlow(false)
+
         val isIndexing: StateFlow<Boolean> =
-            getMangadexChaptersUseCase.isIndexing
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+            combine(
+                getMangadexChaptersUseCase.isIndexing,
+                _workerIndexing,
+            ) { useCaseIndexing, workerBusy ->
+                useCaseIndexing || workerBusy
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
         val progress: StateFlow<Int> =
             getMangadexChaptersUseCase.progress
@@ -127,10 +136,29 @@ class ChapterMetadataViewModel
                         .build()
 
                 workManager.enqueueUniqueWork(
-                    "metadata_sync_$directoryId",
-                    ExistingWorkPolicy.KEEP,
+                    "metadata_sync_${source}_$directoryId",
+                    ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
+
+                observeWorkProgress(syncRequest.id)
+            }
+        }
+
+        private fun observeWorkProgress(workerId: UUID) {
+            viewModelScope.launch {
+                workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                    if (workInfo != null) {
+                        _workerIndexing.value = !workInfo.state.isFinished
+
+                        if (workInfo.state == androidx.work.WorkInfo.State.FAILED) {
+                            val errorMessage = workInfo.outputData.getString(WorkerContract.KEY_ERROR)
+                            if (errorMessage != null) {
+                                _uiEvents.send(UserMessage.Raw(errorMessage))
+                            }
+                        }
+                    }
+                }
             }
         }
 

@@ -5,11 +5,13 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
+import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexSource
 import br.acerola.comic.config.preference.ComicDirectoryPreference
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
@@ -54,6 +56,7 @@ class MangadexComicEngine
         private val metadataExportService: MetadataExporter,
         @param:ApplicationContext private val context: Context,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
+        @param:MangadexEngine private val mangadexChapterEngine: ChapterSyncGateway,
     ) : ComicSingleSyncGateway,
         ComicLibraryScanGateway,
         ComicReadOnlyGateway<ComicMetadataDto> {
@@ -167,13 +170,12 @@ class MangadexComicEngine
             _progress.value = 0
 
             val rootPath = baseUri?.toString() ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
-            if (rootPath.isNullOrBlank()) {
-                AcerolaLogger.w(TAG, "Sync aborted: root library path is null", LogSource.REPOSITORY)
-                _progress.value = -1
-                return Either.Left(LibrarySyncError.UnexpectedError(cause = Exception("Root library path is null or blank")))
+            val rootUri = if (!rootPath.isNullOrBlank()) {
+                rootPath.toUri()
+            } else {
+                AcerolaLogger.w(TAG, "Root library path is blank or null for MangaDex sync. Cover download will fallback to internal storage if needed.", LogSource.REPOSITORY)
+                Uri.EMPTY
             }
-
-            val rootUri = rootPath.toUri()
             var networkErrorCount = 0
 
             folders.forEachIndexed { index, current ->
@@ -239,6 +241,8 @@ class MangadexComicEngine
                                 )
 
                                 metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
+
+                                mangadexChapterEngine.refreshComicChapters(comicId = current.id, baseUri = rootUri)
                             }
                         } else {
                             AcerolaLogger.d(TAG, "No MangaDex match found for: $title", LogSource.REPOSITORY)

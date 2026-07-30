@@ -5,8 +5,8 @@ import br.acerola.comic.local.entity.history.ReadingHistory
 
 fun ReadingHistoryDto.toEntity() =
     ReadingHistory(
-        comicDirectoryId = comicDirectoryId,
-        chapterArchiveId = chapterArchiveId,
+        comicDirectoryFk = comicDirectoryId,
+        chapterArchiveFk = chapterArchiveId,
         chapterSort = chapterSort,
         lastPage = lastPage,
         isCompleted = isCompleted,

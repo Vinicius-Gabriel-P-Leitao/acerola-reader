@@ -45,13 +45,13 @@ class ChapterMetadataViewModelTest {
     @Test
     fun `deve enfileirar trabalho de sincronizacao do mangadex`() {
         viewModel.syncChaptersByMangadex(1L)
-        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.KEEP, any<OneTimeWorkRequest>()) }
+        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.REPLACE, any<OneTimeWorkRequest>()) }
     }
 
     @Test
     fun `deve enfileirar trabalho de sincronizacao do comicinfo`() {
         viewModel.syncChaptersByComicInfo(1L)
-        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.KEEP, any<OneTimeWorkRequest>()) }
+        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.REPLACE, any<OneTimeWorkRequest>()) }
     }
 
     @Test

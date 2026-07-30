@@ -16,6 +16,8 @@ import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.type.UiText
+import br.acerola.comic.infra.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
@@ -58,6 +60,20 @@ class ComicDirectoryViewModel
 
         private val _isIndexing = MutableStateFlow(value = false)
         val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
+
+        val activeSyncType: StateFlow<String?> =
+            workManager
+                .getWorkInfosByTagFlow(WorkerContract.TAG_LIBRARY_SYNC)
+                .map { list ->
+                    val running = list.firstOrNull { !it.state.isFinished } ?: return@map null
+                    when {
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_REBUILD}") -> LibrarySyncWorker.SYNC_TYPE_REBUILD
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_INCREMENTAL}") -> LibrarySyncWorker.SYNC_TYPE_INCREMENTAL
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_REFRESH}") -> LibrarySyncWorker.SYNC_TYPE_REFRESH
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_SPECIFIC}") -> LibrarySyncWorker.SYNC_TYPE_SPECIFIC
+                        else -> null
+                    }
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -141,13 +157,12 @@ class ComicDirectoryViewModel
         ) {
             AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
             viewModelScope.launch {
-                val uri =
-                    getFolderUri() ?: if (type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
-                        AcerolaLogger.w(TAG, "Sync aborted: base folder URI not found", LogSource.VIEWMODEL)
-                        return@launch
-                    } else {
-                        null
-                    }
+                val uri = getFolderUri()
+                if (uri == null && type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
+                    AcerolaLogger.w(TAG, "Sync aborted: Base folder URI not set or SAF permission missing", LogSource.VIEWMODEL)
+                    _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.description_file_system_access_error)))
+                    return@launch
+                }
 
                 val syncRequest =
                     OneTimeWorkRequestBuilder<LibrarySyncWorker>()
@@ -158,20 +173,21 @@ class ComicDirectoryViewModel
                                 LibrarySyncWorker.KEY_MANGA_ID to (comicId ?: -1L),
                             ),
                         ).addTag(WorkerContract.TAG_LIBRARY_SYNC)
+                        .addTag("type_$type")
                         .build()
 
                 val workName =
-                    if (comicId !=
-                        null
-                    ) {
+                    if (comicId != null) {
                         "${WorkerContract.TAG_LIBRARY_SYNC}_$comicId"
                     } else {
                         "${WorkerContract.TAG_LIBRARY_SYNC}_unique"
                     }
 
+                _isIndexing.value = true
+
                 workManager.enqueueUniqueWork(
                     workName,
-                    ExistingWorkPolicy.KEEP,
+                    ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
 

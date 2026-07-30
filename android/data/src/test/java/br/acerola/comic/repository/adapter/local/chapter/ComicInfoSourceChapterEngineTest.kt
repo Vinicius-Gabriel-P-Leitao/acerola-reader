@@ -5,7 +5,6 @@ import br.acerola.comic.adapter.metadata.comicinfo.engine.ComicInfoChapterEngine
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import io.mockk.MockKAnnotations
@@ -28,8 +27,6 @@ class ComicInfoSourceChapterEngineTest {
 
     @MockK lateinit var chapterMetadataDao: ChapterMetadataDao
 
-    @MockK lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
-
     @MockK lateinit var comicInfoSourceService: MetadataProvider<ChapterMetadataDto, String>
 
     private lateinit var repository: ComicInfoChapterEngine
@@ -43,7 +40,6 @@ class ComicInfoSourceChapterEngineTest {
                 chapterArchiveDao,
                 comicMetadataDao,
                 chapterMetadataDao,
-                chapterDownloadSourceDao,
             )
         repository.comicInfoSourceService = comicInfoSourceService
     }

@@ -51,12 +51,12 @@ class ComicMetadataViewModelTest {
     @Test
     fun `deve enfileirar sincronizacao do mangadex`() {
         viewModel.syncFromMangadex(1L)
-        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.KEEP, any<OneTimeWorkRequest>()) }
+        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.REPLACE, any<OneTimeWorkRequest>()) }
     }
 
     @Test
     fun `deve enfileirar sincronizacao do anilist`() {
         viewModel.syncFromAnilist(1L)
-        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.KEEP, any<OneTimeWorkRequest>()) }
+        verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.REPLACE, any<OneTimeWorkRequest>()) }
     }
 }

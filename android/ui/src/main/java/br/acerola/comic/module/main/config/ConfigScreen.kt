@@ -31,6 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import br.acerola.comic.common.state.SyncActionVisualState
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -40,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.worker.sync.LibrarySyncWorker
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.tokens.ShapeTokens
@@ -116,14 +121,47 @@ fun Main.Config.Template.Screen(
     val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
     val isLibraryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
     val isMetadataIndexing by comicDexViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val activeLibrarySyncType by comicDirectoryViewModel.activeSyncType.collectAsStateWithLifecycle(null)
+    val activeMetadataSource by comicDexViewModel.activeSyncSource.collectAsStateWithLifecycle(null)
 
     var activeSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
+    var successSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
+    var isCurrentlyIndexing by remember { mutableStateOf(false) }
+    val isAnyIndexing = isLibraryIndexing || isMetadataIndexing
 
-    LaunchedEffect(isLibraryIndexing, isMetadataIndexing) {
-        if (!isLibraryIndexing && !isMetadataIndexing) {
+    LaunchedEffect(isAnyIndexing) {
+        if (isAnyIndexing) {
+            isCurrentlyIndexing = true
+            return@LaunchedEffect
+        }
+
+        if (isCurrentlyIndexing && activeSyncAction != null) {
+            val finishedAction = activeSyncAction
+            activeSyncAction = null
+            isCurrentlyIndexing = false
+            successSyncAction = finishedAction
+
+            delay(1800.milliseconds)
+
+            if (successSyncAction == finishedAction) {
+                successSyncAction = null
+            }
+        } else {
+            isCurrentlyIndexing = false
             activeSyncAction = null
         }
     }
+
+    fun getSyncActionVisualState(action: ConfigAction): SyncActionVisualState =
+        when {
+            activeSyncAction == action -> SyncActionVisualState.LOADING
+            action == ConfigAction.QuickSyncLibrary && activeLibrarySyncType == LibrarySyncWorker.SYNC_TYPE_INCREMENTAL -> SyncActionVisualState.LOADING
+            action == ConfigAction.DeepScanLibrary && activeLibrarySyncType == LibrarySyncWorker.SYNC_TYPE_REBUILD -> SyncActionVisualState.LOADING
+            action == ConfigAction.SyncMangadexMetadata && activeMetadataSource == MetadataSyncWorker.SOURCE_MANGADEX -> SyncActionVisualState.LOADING
+            action == ConfigAction.SyncAnilistMetadata && activeMetadataSource == MetadataSyncWorker.SOURCE_ANILIST -> SyncActionVisualState.LOADING
+            successSyncAction == action -> SyncActionVisualState.SUCCESS
+            else -> SyncActionVisualState.IDLE
+        }
 
     val uiState =
         ConfigUiState(
@@ -215,8 +253,8 @@ fun Main.Config.Template.Screen(
                 Main.Config.Component.SyncLibraryArchive(
                     onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
                     onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) },
-                    isDeepScanning = isLibraryIndexing && activeSyncAction == ConfigAction.DeepScanLibrary,
-                    isQuickSyncing = isLibraryIndexing && activeSyncAction == ConfigAction.QuickSyncLibrary,
+                    deepScanState = getSyncActionVisualState(ConfigAction.DeepScanLibrary),
+                    quickSyncState = getSyncActionVisualState(ConfigAction.QuickSyncLibrary),
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -272,7 +310,7 @@ fun Main.Config.Template.Screen(
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) },
-                    isSyncing = isMetadataIndexing && activeSyncAction == ConfigAction.SyncMangadexMetadata,
+                    state = getSyncActionVisualState(ConfigAction.SyncMangadexMetadata),
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -280,7 +318,7 @@ fun Main.Config.Template.Screen(
 
                 Main.Config.Component.SyncAnilistData(
                     onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
-                    isSyncing = isMetadataIndexing && activeSyncAction == ConfigAction.SyncAnilistMetadata,
+                    state = getSyncActionVisualState(ConfigAction.SyncAnilistMetadata),
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 

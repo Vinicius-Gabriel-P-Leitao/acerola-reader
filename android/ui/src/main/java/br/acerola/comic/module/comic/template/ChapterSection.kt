@@ -34,7 +34,7 @@ fun Comic.Template.chapterSection(
             chapters.archive.volumeSections.isNotEmpty()
 
     if (useVolumeSections) {
-        val sortedSections = chapters.archive.volumeSections.sortedBy { it.volume.isSpecial }
+        val sortedSections = chapters.archive.volumeSections
 
         sortedSections.forEach { group ->
             val isExpanded = activeVolumeId == group.volume.id

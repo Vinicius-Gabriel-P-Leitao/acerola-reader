@@ -15,12 +15,10 @@ import br.acerola.comic.error.exception.MangadexRequestException
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.relation.ChapterVolumeJoin
-import br.acerola.comic.local.translator.persistence.toDownloadSourcesEntities
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.local.translator.ui.toViewDto
 import br.acerola.comic.local.translator.ui.toViewPageDto
@@ -53,7 +51,6 @@ class MangadexChapterEngine
         private val comicMetadataDao: ComicMetadataDao,
         private val chapterMetadataDao: ChapterMetadataDao,
         private val metadataExportService: MetadataExporter,
-        private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
     ) : ChapterSyncGateway,
         ChapterReadGateway<ChapterRemoteInfoPageDto> {
         @Inject
@@ -131,11 +128,12 @@ class MangadexChapterEngine
                                 }
 
                                 chapterPairs.forEach { (archive, remote) ->
-                                    val chapterRemoteInfoEntity = remote.toEntity(comicRemoteInfoFk = remoteManga.id)
-                                    val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
-
-                                    val downloadSourceEntities = remote.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
-                                    chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
+                                    val chapterRemoteInfoEntity =
+                                        remote.toEntity(
+                                            comicRemoteInfoFk = remoteManga.id,
+                                            chapterArchiveFk = archive.id,
+                                        )
+                                    chapterMetadataDao.insert(chapterRemoteInfoEntity)
                                 }
 
                                 metadataExportService.exportFull(
@@ -168,16 +166,7 @@ class MangadexChapterEngine
             chapterMetadataDao
                 .observeChaptersByMetadataId(comicId)
                 .flatMapLatest { chapters ->
-                    val chapterIds = chapters.map { it.id }
-
                     flow {
-                        val sources =
-                            chapterIds
-                                .takeIf { it.isNotEmpty() }
-                                ?.let {
-                                    chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
-                                }.orEmpty()
-
                         // Add simple in-memory sort for remote metadata to match local
                         val baseList =
                             if (sortType == "LAST_UPDATE") {
@@ -188,7 +177,7 @@ class MangadexChapterEngine
                             }
 
                         val finalList = if (isAscending) baseList else baseList.reversed()
-                        emit(value = finalList.toViewPageDto(sources = sources))
+                        emit(value = finalList.toViewPageDto())
                     }
                 }.stateIn(
                     started = SharingStarted.Lazily,
@@ -213,9 +202,6 @@ class MangadexChapterEngine
                     chapterMetadataDao.countChaptersByMetadataId(comicId)
                 }
 
-            // Para informações remotas, se for algo além de simples DESC/ASC em id/número, buscamos tudo e classificamos.
-            // Mas geralmente as sincronizações de metadados são pequenas o suficiente para serem gerenciadas.
-            // Seguiremos o mesmo padrão local: NUMBER ASC usa SQL, outros usam memória.
             val chapters =
                 if (sortType == "NUMBER" && isAscending) {
                     chapterMetadataDao.getChaptersByMetadataPaged(comicId, pageSize, offset)
@@ -230,16 +216,7 @@ class MangadexChapterEngine
                     if (start < sorted.size) sorted.subList(start, end) else emptyList()
                 }
 
-            val sources =
-                chapters
-                    .takeIf { it.isNotEmpty() }
-                    ?.map { it.id }
-                    ?.let {
-                        chapterDownloadSourceDao.observeChapterDownloadSourcesByChapterIds(it).first()
-                    }.orEmpty()
-
             return chapters.toViewPageDto(
-                sources = sources,
                 pageSize = pageSize,
                 total = realTotal,
                 page = page,
@@ -250,6 +227,15 @@ class MangadexChapterEngine
             remote: List<ChapterMetadataDto>,
             local: List<ChapterVolumeJoin>,
         ): List<Pair<ChapterArchive, ChapterMetadataDto>> {
+            val remoteByVolumeAndChapter =
+                remote.mapNotNull { dto ->
+                    val chKey = dto.chapter?.normalizeSort() ?: return@mapNotNull null
+                    val volKey = dto.volume?.normalizeSort()
+                    if (volKey != null) {
+                        "${volKey}_${chKey}" to dto
+                    } else null
+                }.toMap()
+
             val remoteByChapter =
                 remote
                     .mapNotNull { dto ->
@@ -262,8 +248,23 @@ class MangadexChapterEngine
 
             return local.mapNotNull { join ->
                 val archive = join.chapter
+                val volume = join.volume
                 val chapterKey = archive.chapterSort.normalizeSort()
-                val remoteInfo = remoteByChapter[chapterKey] ?: return@mapNotNull null
+                val volumeKey = volume?.volumeSort?.normalizeSort()
+
+                val exactMatch =
+                    if (volumeKey != null) {
+                        remoteByVolumeAndChapter["${volumeKey}_${chapterKey}"]
+                    } else null
+
+                val remoteInfo = exactMatch ?: remoteByChapter[chapterKey] ?: return@mapNotNull null
+
+                if (volumeKey != null && remoteInfo.volume != null) {
+                    val remoteVolumeKey = remoteInfo.volume.normalizeSort()
+                    if (volumeKey != remoteVolumeKey && exactMatch == null) {
+                        return@mapNotNull null
+                    }
+                }
 
                 archive to remoteInfo
             }

@@ -16,8 +16,6 @@ import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
-import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
-import br.acerola.comic.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
@@ -41,7 +39,6 @@ class ComicInfoComicEngine
         private val directoryDao: ComicDirectoryDao,
         private val coverService: CoverSaver,
         private val comicMetadataDao: ComicMetadataDao,
-        private val comicInfoSourceDao: ComicInfoSourceDao,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
     ) : ComicSingleSyncGateway,
         ComicLibraryScanGateway {
@@ -93,10 +90,8 @@ class ComicInfoComicEngine
                                     metadata = comicToSave,
                                     authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
                                     genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
-                                    comicInfoSource = bestMatch.toComicInfoSourceEntity(comicRemoteInfoFk = 0L),
                                     authorDao = authorDao,
                                     genreDao = genreDao,
-                                    comicInfoDao = comicInfoSourceDao,
                                 )
 
                             if (remoteId != -1L) {
