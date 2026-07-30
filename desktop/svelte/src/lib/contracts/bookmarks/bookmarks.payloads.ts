@@ -6,6 +6,6 @@ export type Category = {
 
 export type MangaCategory = {
 	id: number;
-	comic_directory_fk: number;
+	comic_directory_fk: string;
 	category_id: number;
 };

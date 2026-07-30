@@ -33,10 +33,9 @@
 	let showActionDialog = $state(false);
 
 	onMount(async () => {
-		await bookmarkStore.loadBookmarks(true);
+		await bookmarkStore.loadBookmarks();
 		unlistenScan = await listen(LIBRARY_EVENTS.scanComplete, async () => {
 			await summary.fetch();
-			await bookmarkStore.loadBookmarks(true);
 		});
 
 		await summary.fetch();
@@ -80,11 +79,11 @@
 		}
 		if (successCount > 0) {
 			toast.success(m['pages.home.toast.bookmarked']({ count: successCount }));
+			await summary.fetch();
 		}
 		if (failCount > 0) {
 			toast.error(m['pages.home.toast.bookmark_error']());
 			await summary.fetch();
-			await bookmarkStore.loadBookmarks(true);
 		}
 		selection.exitSelectionMode();
 		showActionDialog = false;
@@ -108,7 +107,7 @@
 	}
 
 	function handleSelectAllToggle() {
-		const allIds = summary.comics?.comics.map((c) => c.relations.directoryId) ?? [];
+		const allIds = summary.comics?.comics.map((comicItem) => comicItem.relations.directoryId) ?? [];
 		if (selection.selectedCount === allIds.length && allIds.length > 0) {
 			selection.deselectAll();
 		} else {
@@ -228,9 +227,7 @@
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 			{#each summary.comics.comics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
-				{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
-					comic.relations.directoryId
-				)?.color}
+				{@const bookmarkColor = comic.bookmark?.color}
 				{@const isSelected = selection.isSelected(comic.relations.directoryId)}
 				<AcerolaCardImage
 					data={{
@@ -243,7 +240,7 @@
 				>
 					{#snippet floatingBadge()}
 						{#if bookmarkColor != null}
-							<AcerolaBookmarkRibbon color={bookmarkColor} class="-top-1.5 left-5 h-10 w-6" />
+							<AcerolaBookmarkRibbon color={bookmarkColor} class="-top-1.5 left-5 h-7 w-4" />
 						{/if}
 					{/snippet}
 
@@ -264,7 +261,7 @@
 								class: 'text-overlay bg-transparent transition-colors hover:text-primary'
 							}}
 							events={{
-								onClick: (e) => handleActionClick(e, comic.relations.directoryId)
+								onClick: (event) => handleActionClick(event, comic.relations.directoryId)
 							}}
 						>
 							<MoreHorizontal size={16} />

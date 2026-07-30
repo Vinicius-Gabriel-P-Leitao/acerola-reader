@@ -22,11 +22,18 @@ export type ComicSummaryArtworkPayload = {
 	banner: string | null;
 };
 
+export type ComicSummaryBookmarkPayload = {
+	id: number;
+	name: string;
+	color: number;
+};
+
 export type ComicSummaryItemPayload = {
 	relations: ComicSummaryRelationsPayload;
 	filesystem: ComicSummaryFilesystemPayload;
 	metadata: ComicSummaryMetadataPayload;
 	artwork: ComicSummaryArtworkPayload;
+	bookmark?: ComicSummaryBookmarkPayload | null;
 };
 
 export type ComicSummaryPayload = {

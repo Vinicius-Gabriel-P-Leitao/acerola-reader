@@ -24,8 +24,8 @@ export function _resetBookmarksState() {
  * @returns An object containing the bookmarks state and mutation methods.
  */
 export function useBookmarks() {
-	async function loadBookmarks(force = false) {
-		if (isInitialized && !force) return;
+	async function loadBookmarks() {
+		if (isInitialized) return;
 		isLoading = true;
 		try {
 			const [fetchedBookmarks, fetchedAssignments] = await Promise.all([
@@ -113,7 +113,7 @@ export function useBookmarks() {
 		const comicIdStr = String(comicId);
 		const assignment = assignments.find((a) => String(a.comic_directory_fk) === comicIdStr);
 		if (!assignment) return null;
-		return bookmarks.find((b) => Number(b.id) === Number(assignment.category_id)) ?? null;
+		return bookmarks.find((b) => b.id === assignment.category_id) ?? null;
 	}
 
 	return {
