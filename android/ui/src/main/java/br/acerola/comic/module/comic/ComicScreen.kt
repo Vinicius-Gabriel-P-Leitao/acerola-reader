@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.state.SyncActionVisualState
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
@@ -116,13 +119,40 @@ fun ComicScreen(
     val isComicMetadataIndexing by comicMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
     val isChapterMetadataIndexing by chapterMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
 
-    var activeSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
+    val isExtractingVolumeCovers by comicViewModel.isExtractingVolumeCovers.collectAsStateWithLifecycle(false)
 
-    LaunchedEffect(isChapterArchiveIndexing, isComicDirectoryIndexing, isComicMetadataIndexing, isChapterMetadataIndexing) {
-        if (!isChapterArchiveIndexing && !isComicDirectoryIndexing && !isComicMetadataIndexing && !isChapterMetadataIndexing) {
-            activeSyncAction = null
+    var activeSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
+    var successSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
+    var isCurrentlyIndexing by remember { mutableStateOf(false) }
+
+    val isAnyIndexing = isChapterArchiveIndexing || isComicDirectoryIndexing || isComicMetadataIndexing || isChapterMetadataIndexing || isExtractingVolumeCovers
+
+    LaunchedEffect(isAnyIndexing) {
+        if (isAnyIndexing) {
+            isCurrentlyIndexing = true
+            return@LaunchedEffect
+        }
+
+        if (!isCurrentlyIndexing) return@LaunchedEffect
+
+        val finishedAction = activeSyncAction ?: return@LaunchedEffect
+        activeSyncAction = null
+        isCurrentlyIndexing = false
+        successSyncAction = finishedAction
+
+        delay(1800.milliseconds)
+
+        if (successSyncAction == finishedAction) {
+            successSyncAction = null
         }
     }
+
+    fun getSyncActionVisualState(action: ComicSyncAction): SyncActionVisualState =
+        when {
+            activeSyncAction == action && isAnyIndexing -> SyncActionVisualState.LOADING
+            successSyncAction == action -> SyncActionVisualState.SUCCESS
+            else -> SyncActionVisualState.IDLE
+        }
 
     val currentManga = comicState ?: comic
     val totalChapters = chapterDto?.archive?.total ?: 0
@@ -297,11 +327,7 @@ fun ComicScreen(
                         Comic.Template.configSection(
                             scope = this,
                             uiState = uiState,
-                            activeSyncAction = activeSyncAction,
-                            isChapterArchiveIndexing = isChapterArchiveIndexing,
-                            isComicDirectoryIndexing = isComicDirectoryIndexing,
-                            isComicMetadataIndexing = isComicMetadataIndexing,
-                            isChapterMetadataIndexing = isChapterMetadataIndexing,
+                            getSyncActionVisualState = ::getSyncActionVisualState,
                             onAction = onAction,
                             onSyncAction = onSyncAction,
                         )

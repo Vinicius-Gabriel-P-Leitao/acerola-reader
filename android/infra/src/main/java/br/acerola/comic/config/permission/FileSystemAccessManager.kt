@@ -62,9 +62,7 @@ class FileSystemAccessManager
 
             val persistedUris = context.contentResolver.persistedUriPermissions
             return persistedUris.any { permission ->
-                permission.uri == uri &&
-                    permission.isReadPermission &&
-                    permission.isWritePermission
+                permission.uri == uri && permission.isReadPermission
             }
         }
     }

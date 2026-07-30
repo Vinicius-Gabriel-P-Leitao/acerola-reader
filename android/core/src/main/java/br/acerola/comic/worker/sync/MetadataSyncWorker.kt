@@ -10,11 +10,13 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import br.acerola.comic.data.R
+import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.AnilistCase
 import br.acerola.comic.usecase.ComicInfoCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
+import br.acerola.comic.usecase.sync.SyncMetadataUseCase
 import br.acerola.comic.util.notification.NotificationHelper
 import br.acerola.comic.worker.contract.SyncType
 import dagger.assisted.Assisted
@@ -29,10 +31,10 @@ class MetadataSyncWorker
     constructor(
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
-        private val syncMetadataUseCase: br.acerola.comic.usecase.sync.SyncMetadataUseCase,
-        @param:AnilistCase private val anilistSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
-        @param:MangadexCase private val mangadexSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
-        @param:ComicInfoCase private val comicInfoSyncUseCase: br.acerola.comic.usecase.library.SyncLibraryUseCase,
+        private val syncMetadataUseCase: SyncMetadataUseCase,
+        @param:AnilistCase private val anilistSyncUseCase: SyncLibraryUseCase,
+        @param:MangadexCase private val mangadexSyncUseCase: SyncLibraryUseCase,
+        @param:ComicInfoCase private val comicInfoSyncUseCase: SyncLibraryUseCase,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
         companion object {
@@ -77,13 +79,17 @@ class MetadataSyncWorker
                         title,
                         context.getString(R.string.sync_metadata_description_fetching),
                     )
-                setForeground(
-                    ForegroundInfo(
-                        NotificationHelper.SYNC_NOTIFICATION_ID,
-                        builder.build(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
-                    ),
-                )
+                try {
+                    setForeground(
+                        ForegroundInfo(
+                            NotificationHelper.SYNC_NOTIFICATION_ID,
+                            builder.build(),
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+                        ),
+                    )
+                } catch (exception: Exception) {
+                    AcerolaLogger.w("MetadataSyncWorker", "Unable to start foreground service", throwable = exception)
+                }
 
                 val progressJob =
                     launch {
