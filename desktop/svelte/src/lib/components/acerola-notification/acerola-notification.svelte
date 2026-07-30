@@ -74,6 +74,9 @@
 
 <AcerolaPopover
 	ui={{
+		align: 'end',
+		sideOffset: 8,
+		collisionPadding: 16,
 		contentClass:
 			'p-0 w-84 overflow-hidden rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl'
 	}}

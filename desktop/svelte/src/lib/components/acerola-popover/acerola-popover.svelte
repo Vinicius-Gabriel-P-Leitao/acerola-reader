@@ -10,6 +10,10 @@
 		};
 		ui?: {
 			contentClass?: string;
+			align?: 'start' | 'center' | 'end';
+			side?: 'top' | 'right' | 'bottom' | 'left';
+			sideOffset?: number;
+			collisionPadding?: number | { top?: number; right?: number; bottom?: number; left?: number };
 		};
 	};
 
@@ -57,7 +61,13 @@
 		{@render trigger()}
 	</Popover.Trigger>
 
-	<Popover.Content class={ui?.contentClass}>
+	<Popover.Content
+		align={ui?.align}
+		side={ui?.side}
+		sideOffset={ui?.sideOffset}
+		collisionPadding={ui?.collisionPadding}
+		class={ui?.contentClass}
+	>
 		{@render content()}
 	</Popover.Content>
 </Popover.Root>
