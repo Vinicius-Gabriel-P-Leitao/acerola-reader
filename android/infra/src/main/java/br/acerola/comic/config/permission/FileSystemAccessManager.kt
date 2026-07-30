@@ -47,12 +47,8 @@ class FileSystemAccessManager
                 .folderUriFlow(context)
                 .firstOrNull()
                 ?.let { uriString ->
-                    val uri = uriString.toUri()
-                    if (hasPermission(uri)) {
-                        folderUri = uri
-                    } else {
-                        ComicDirectoryPreference.clearFolderUri(context)
-                        folderUri = null
+                    if (uriString.isNotBlank()) {
+                        folderUri = uriString.toUri()
                     }
                 }
         }

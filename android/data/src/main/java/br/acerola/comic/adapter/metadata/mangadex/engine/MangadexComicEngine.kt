@@ -167,13 +167,7 @@ class MangadexComicEngine
             _progress.value = 0
 
             val rootPath = baseUri?.toString() ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
-            if (rootPath.isNullOrBlank()) {
-                AcerolaLogger.w(TAG, "Sync aborted: root library path is null", LogSource.REPOSITORY)
-                _progress.value = -1
-                return Either.Left(LibrarySyncError.UnexpectedError(cause = Exception("Root library path is null or blank")))
-            }
-
-            val rootUri = rootPath.toUri()
+            val rootUri = rootPath?.toUri() ?: Uri.EMPTY
             var networkErrorCount = 0
 
             folders.forEachIndexed { index, current ->

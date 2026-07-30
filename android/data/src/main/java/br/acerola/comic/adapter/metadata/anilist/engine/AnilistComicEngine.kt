@@ -206,9 +206,8 @@ class AnilistComicEngine
             val rootPath =
                 baseUri?.toString()
                     ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
-                    ?: return
 
-            val rootUri = rootPath.toUri()
+            val rootUri = rootPath?.toUri() ?: Uri.EMPTY
 
             dto.sources?.anilist?.coverImage?.let { url ->
                 coverFetcher.searchMedia(url).onRight { bytes ->

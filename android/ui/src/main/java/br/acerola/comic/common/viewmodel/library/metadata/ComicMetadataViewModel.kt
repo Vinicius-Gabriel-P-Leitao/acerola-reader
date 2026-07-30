@@ -24,6 +24,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.work.WorkInfo
+import br.acerola.comic.worker.contract.WorkerContract
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import java.util.UUID
+
 @HiltViewModel
 class ComicMetadataViewModel
     @Inject
@@ -32,9 +38,15 @@ class ComicMetadataViewModel
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
         @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
     ) : ViewModel() {
+        private val _workerIndexing = MutableStateFlow(false)
+
         val isIndexing: StateFlow<Boolean> =
-            observeLibraryUseCase.isIndexing
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+            combine(
+                observeLibraryUseCase.isIndexing,
+                _workerIndexing,
+            ) { repoIndexing, workerBusy ->
+                repoIndexing || workerBusy
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
         val progress: StateFlow<Int> =
             observeLibraryUseCase.progress
@@ -160,6 +172,25 @@ class ComicMetadataViewModel
                     ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
+
+                observeWorkProgress(syncRequest.id)
+            }
+        }
+
+        private fun observeWorkProgress(workerId: UUID) {
+            viewModelScope.launch {
+                workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                    if (workInfo != null) {
+                        _workerIndexing.value = !workInfo.state.isFinished
+
+                        if (workInfo.state == WorkInfo.State.FAILED) {
+                            val errorMessage = workInfo.outputData.getString(WorkerContract.KEY_ERROR)
+                            if (errorMessage != null) {
+                                _uiEvents.send(UserMessage.Raw(errorMessage))
+                            }
+                        }
+                    }
+                }
             }
         }
 

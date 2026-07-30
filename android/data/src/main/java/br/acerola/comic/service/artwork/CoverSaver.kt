@@ -42,41 +42,49 @@ class CoverSaver
                         directoryDao.getDirectoryById(comicId = folderId)
                             ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
-                    val comicDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
+                    val comicDir = runCatching { DocumentFile.fromTreeUri(context, directory.path.toUri()) }.getOrNull()
 
-                    if (comicDir == null || !comicDir.isDirectory) {
-                        AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)
-                        return@withContext IoError.FileNotFound("Cominc directory not accessible").left()
-                    }
+                    if (comicDir != null && comicDir.isDirectory) {
+                        AcerolaLogger.d(TAG, "Saving cover to directory: ${comicDir.uri}", LogSource.REPOSITORY)
 
-                    AcerolaLogger.d(TAG, "Saving cover to directory: ${comicDir.uri}", LogSource.REPOSITORY)
-
-                    // Delete existing covers
-                    comicDir.listFiles().forEach { file ->
-                        val fileName = file.name ?: return@forEach
-                        if (MediaFile.isCover(fileName)) {
-                            file.delete()
-                        }
-                    }
-
-                    val fileName = MediaFile.COVER.defaultFileName
-
-                    fileStorageHandler
-                        .saveFile(
-                            folder = comicDir,
-                            fileName = fileName,
-                            mimeType = "image/jpeg",
-                            bytes = bytes,
-                        ).flatMap {
-                            val savedFile = comicDir.findFile(fileName)
-                            val savedUriString = savedFile?.uri?.toString()
-
-                            if (savedUriString != null) {
-                                directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
+                        comicDir.listFiles().forEach { file ->
+                            val fileName = file.name ?: return@forEach
+                            if (MediaFile.isCover(fileName)) {
+                                file.delete()
                             }
+                        }
 
+                        val fileName = MediaFile.COVER.defaultFileName
+
+                        fileStorageHandler
+                            .saveFile(
+                                folder = comicDir,
+                                fileName = fileName,
+                                mimeType = "image/jpeg",
+                                bytes = bytes,
+                            ).flatMap {
+                                val savedFile = comicDir.findFile(fileName)
+                                val savedUriString = savedFile?.uri?.toString() ?: coverUrl
+
+                                directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
+                                folderId.right()
+                            }
+                    } else {
+                        val internalStorageResult = runCatching {
+                            val internalDir = java.io.File(context.filesDir, "covers")
+                            if (!internalDir.exists()) internalDir.mkdirs()
+                            val coverFile = java.io.File(internalDir, "${folderId}.jpg")
+                            coverFile.writeBytes(bytes)
+                            val savedUriString = Uri.fromFile(coverFile).toString()
+                            directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
                             folderId.right()
                         }
+
+                        internalStorageResult.getOrElse {
+                            AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)
+                            IoError.FileNotFound("Comic directory not accessible").left()
+                        }
+                    }
                 } catch (exception: Exception) {
                     AcerolaLogger.e(TAG, "Critical error processing cover for $comicFolderName", LogSource.REPOSITORY, exception)
                     IoError.FileWriteError(comicFolderName, exception).left()

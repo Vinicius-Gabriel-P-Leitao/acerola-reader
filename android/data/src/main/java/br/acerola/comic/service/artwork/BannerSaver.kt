@@ -42,40 +42,49 @@ class BannerSaver
                         directoryDao.getDirectoryById(comicId = folderId)
                             ?: return@withContext IoError.FileNotFound("Directory not found in database").left()
 
-                    val comicDir = DocumentFile.fromTreeUri(context, directory.path.toUri())
+                    val comicDir = runCatching { DocumentFile.fromTreeUri(context, directory.path.toUri()) }.getOrNull()
 
-                    if (comicDir == null || !comicDir.isDirectory) {
-                        AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)
-                        return@withContext IoError.FileNotFound("Comic directory not accessible").left()
-                    }
+                    if (comicDir != null && comicDir.isDirectory) {
+                        AcerolaLogger.d(TAG, "Saving banner to directory: ${comicDir.uri}", LogSource.REPOSITORY)
 
-                    AcerolaLogger.d(TAG, "Saving banner to directory: ${comicDir.uri}", LogSource.REPOSITORY)
-
-                    comicDir.listFiles().forEach { file ->
-                        val fileName = file.name ?: return@forEach
-                        if (MediaFile.isBanner(fileName)) {
-                            file.delete()
-                        }
-                    }
-
-                    val fileName = MediaFile.BANNER.defaultFileName
-
-                    fileStorageHandler
-                        .saveFile(
-                            folder = comicDir,
-                            fileName = fileName,
-                            mimeType = "image/jpeg",
-                            bytes = bytes,
-                        ).flatMap {
-                            val savedFile = comicDir.findFile(fileName)
-                            val savedUriString = savedFile?.uri?.toString()
-
-                            if (savedUriString != null) {
-                                directoryDao.update(directory.copy(banner = savedUriString))
+                        comicDir.listFiles().forEach { file ->
+                            val fileName = file.name ?: return@forEach
+                            if (MediaFile.isBanner(fileName)) {
+                                file.delete()
                             }
+                        }
 
+                        val fileName = MediaFile.BANNER.defaultFileName
+
+                        fileStorageHandler
+                            .saveFile(
+                                folder = comicDir,
+                                fileName = fileName,
+                                mimeType = "image/jpeg",
+                                bytes = bytes,
+                            ).flatMap {
+                                val savedFile = comicDir.findFile(fileName)
+                                val savedUriString = savedFile?.uri?.toString() ?: bannerUrl
+
+                                directoryDao.update(directory.copy(banner = savedUriString))
+                                folderId.right()
+                            }
+                    } else {
+                        val internalStorageResult = runCatching {
+                            val internalDir = java.io.File(context.filesDir, "banners")
+                            if (!internalDir.exists()) internalDir.mkdirs()
+                            val bannerFile = java.io.File(internalDir, "${folderId}.jpg")
+                            bannerFile.writeBytes(bytes)
+                            val savedUriString = Uri.fromFile(bannerFile).toString()
+                            directoryDao.update(directory.copy(banner = savedUriString))
                             folderId.right()
                         }
+
+                        internalStorageResult.getOrElse {
+                            AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)
+                            IoError.FileNotFound("Comic directory not accessible").left()
+                        }
+                    }
                 } catch (exception: Exception) {
                     AcerolaLogger.e(
                         TAG,

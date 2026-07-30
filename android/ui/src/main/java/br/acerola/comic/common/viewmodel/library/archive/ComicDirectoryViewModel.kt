@@ -16,6 +16,8 @@ import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.type.UiText
+import br.acerola.comic.ui.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
@@ -141,13 +143,7 @@ class ComicDirectoryViewModel
         ) {
             AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
             viewModelScope.launch {
-                val uri =
-                    getFolderUri() ?: if (type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
-                        AcerolaLogger.w(TAG, "Sync aborted: base folder URI not found", LogSource.VIEWMODEL)
-                        return@launch
-                    } else {
-                        null
-                    }
+                val uri = getFolderUri()
 
                 val syncRequest =
                     OneTimeWorkRequestBuilder<LibrarySyncWorker>()

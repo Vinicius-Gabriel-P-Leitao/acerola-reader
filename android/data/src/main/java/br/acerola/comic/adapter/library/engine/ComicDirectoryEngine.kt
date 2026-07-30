@@ -153,7 +153,7 @@ class ComicDirectoryEngine
                             val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
                             if (rootUri == null) {
                                 _progress.value = -1
-                                return@catch
+                                throw SecurityException("Base folder URI not set. Please select a folder.")
                             }
 
                             val templates = templateService.getTemplates()
@@ -218,7 +218,7 @@ class ComicDirectoryEngine
                             val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
                             if (rootUri == null) {
                                 _progress.value = -1
-                                return@catch
+                                throw SecurityException("Base folder URI not set. Please select a folder.")
                             }
 
                             val templates = templateService.getTemplates()
