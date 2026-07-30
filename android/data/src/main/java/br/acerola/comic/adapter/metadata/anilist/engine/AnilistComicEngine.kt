@@ -207,7 +207,12 @@ class AnilistComicEngine
                 baseUri?.toString()
                     ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
 
-            val rootUri = rootPath?.toUri() ?: Uri.EMPTY
+            val rootUri = if (!rootPath.isNullOrBlank()) {
+                rootPath.toUri()
+            } else {
+                AcerolaLogger.w(TAG, "Root library path is blank or null for AniList sync. Media download will fallback to internal storage if needed.", LogSource.REPOSITORY)
+                Uri.EMPTY
+            }
 
             dto.sources?.anilist?.coverImage?.let { url ->
                 coverFetcher.searchMedia(url).onRight { bytes ->

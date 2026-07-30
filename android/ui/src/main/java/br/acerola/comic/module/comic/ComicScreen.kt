@@ -133,23 +133,23 @@ fun ComicScreen(
             return@LaunchedEffect
         }
 
-        if (!isCurrentlyIndexing) return@LaunchedEffect
+        if (isCurrentlyIndexing && activeSyncAction != null) {
+            val finishedAction = activeSyncAction
+            activeSyncAction = null
+            isCurrentlyIndexing = false
+            successSyncAction = finishedAction
 
-        val finishedAction = activeSyncAction ?: return@LaunchedEffect
-        activeSyncAction = null
-        isCurrentlyIndexing = false
-        successSyncAction = finishedAction
+            delay(1800.milliseconds)
 
-        delay(1800.milliseconds)
-
-        if (successSyncAction == finishedAction) {
-            successSyncAction = null
+            if (successSyncAction == finishedAction) {
+                successSyncAction = null
+            }
         }
     }
 
     fun getSyncActionVisualState(action: ComicSyncAction): SyncActionVisualState =
         when {
-            activeSyncAction == action && isAnyIndexing -> SyncActionVisualState.LOADING
+            activeSyncAction == action -> SyncActionVisualState.LOADING
             successSyncAction == action -> SyncActionVisualState.SUCCESS
             else -> SyncActionVisualState.IDLE
         }

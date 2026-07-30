@@ -7,6 +7,8 @@ import androidx.core.net.toUri
 import arrow.core.Either
 import br.acerola.comic.config.preference.ComicDirectoryPreference
 import br.acerola.comic.error.message.LibrarySyncError
+import br.acerola.comic.logging.AcerolaLogger
+import br.acerola.comic.logging.LogSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -48,7 +50,13 @@ class FileSystemAccessManager
                 .firstOrNull()
                 ?.let { uriString ->
                     if (uriString.isNotBlank()) {
-                        folderUri = uriString.toUri()
+                        val uri = uriString.toUri()
+                        if (hasPermission(uri)) {
+                            folderUri = uri
+                        } else {
+                            AcerolaLogger.w(TAG, "Persisted read permission invalid or revoked for URI: $uriString", LogSource.VIEWMODEL)
+                            folderUri = null
+                        }
                     }
                 }
         }
@@ -60,5 +68,9 @@ class FileSystemAccessManager
             return persistedUris.any { permission ->
                 permission.uri == uri && permission.isReadPermission
             }
+        }
+
+        companion object {
+            private const val TAG = "FileSystemAccessManager"
         }
     }

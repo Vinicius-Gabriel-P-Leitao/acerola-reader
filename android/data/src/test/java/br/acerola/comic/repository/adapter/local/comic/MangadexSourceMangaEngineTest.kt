@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import arrow.core.Either
 import arrow.core.right
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
 import br.acerola.comic.adapter.metadata.mangadex.engine.MangadexComicEngine
@@ -66,6 +67,8 @@ class MangadexSourceMangaEngineTest {
 
     @MockK lateinit var mangadexChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
 
+    @MockK lateinit var mangadexChapterEngine: ChapterSyncGateway
+
     private lateinit var repository: MangadexComicEngine
     private val testDispatcher = StandardTestDispatcher()
 
@@ -85,9 +88,11 @@ class MangadexSourceMangaEngineTest {
                 metadataExportService,
                 context,
                 downloadCoverService,
+                mangadexChapterEngine,
             )
         repository.mangadexSourceMangaInfoService = mangadexMangaInfoService
         repository.mangadexSourceChapterInfoService = mangadexChapterInfoService
+        coEvery { mangadexChapterEngine.refreshComicChapters(any(), any()) } returns Either.Right(Unit)
 
         mockkObject(ComicDirectoryPreference)
         mockkStatic(Uri::class)

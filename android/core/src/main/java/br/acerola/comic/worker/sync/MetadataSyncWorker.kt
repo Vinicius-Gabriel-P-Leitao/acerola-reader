@@ -135,10 +135,11 @@ class MetadataSyncWorker
                         },
                     )
                 } catch (exception: Exception) {
+                    if (exception is kotlinx.coroutines.CancellationException) throw exception
                     progressJob.cancel()
                     val errorMsg = exception.message ?: context.getString(R.string.sync_metadata_fetching_error)
                     notificationHelper.showFinishedNotification(
-                        context.getString(R.string.sync_library_fatal_error_title),
+                        context.getString(R.string.sync_metadata_error_title),
                         errorMsg,
                     )
                     Result.failure(workDataOf("error" to errorMsg))

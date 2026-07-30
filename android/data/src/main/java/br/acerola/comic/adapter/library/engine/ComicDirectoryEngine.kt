@@ -143,19 +143,19 @@ class ComicDirectoryEngine
                 }
             }
 
-        override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-            AcerolaLogger.i(TAG, "Starting incremental library scan", LogSource.REPOSITORY)
-            _isIndexing.value = true
-            try {
-                return withContext(context = Dispatchers.IO) {
-                    Either
-                        .catch {
-                            val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                            if (rootUri == null) {
+        override suspend fun incrementalScan(baseUri: Uri?): Either<LibrarySyncError, Unit> =
+            withContext(context = Dispatchers.IO) {
+                _isIndexing.value = true
+                try {
+                    val rootUri =
+                        baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
+                            ?: run {
                                 _progress.value = -1
-                                throw SecurityException("Base folder URI not set. Please select a folder.")
+                                return@withContext Either.Left(LibrarySyncError.FolderAccessDenied())
                             }
 
+                    Either
+                        .catch {
                             val templates = templateService.getTemplates()
                             val discoveredFolders: List<ComicDirectory> = directoryScanner.buildLibrary(rootUri, templates)
                             val databaseFolders: List<ComicDirectory> =
@@ -202,25 +202,24 @@ class ComicDirectoryEngine
                                 else -> LibrarySyncError.UnexpectedError(cause = exception)
                             }
                         }
+                } finally {
+                    _isIndexing.value = false
                 }
-            } finally {
-                _isIndexing.value = false
             }
-        }
 
-        override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
-            AcerolaLogger.i(TAG, "Starting refresh library scan", LogSource.REPOSITORY)
-            _isIndexing.value = true
-            try {
-                return withContext(context = Dispatchers.IO) {
-                    Either
-                        .catch {
-                            val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                            if (rootUri == null) {
+        override suspend fun refreshLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> =
+            withContext(context = Dispatchers.IO) {
+                _isIndexing.value = true
+                try {
+                    val rootUri =
+                        baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
+                            ?: run {
                                 _progress.value = -1
-                                throw SecurityException("Base folder URI not set. Please select a folder.")
+                                return@withContext Either.Left(LibrarySyncError.FolderAccessDenied())
                             }
 
+                    Either
+                        .catch {
                             val templates = templateService.getTemplates()
                             val foldersToProcess: List<ComicDirectory> = directoryScanner.buildLibrary(rootUri, templates)
                             if (foldersToProcess.isEmpty()) {
@@ -240,11 +239,10 @@ class ComicDirectoryEngine
                                 else -> LibrarySyncError.UnexpectedError(cause = exception)
                             }
                         }
+                } finally {
+                    _isIndexing.value = false
                 }
-            } finally {
-                _isIndexing.value = false
             }
-        }
 
         override suspend fun rebuildLibrary(baseUri: Uri?): Either<LibrarySyncError, Unit> {
             AcerolaLogger.i(TAG, "Starting deep rebuild of library", LogSource.REPOSITORY)

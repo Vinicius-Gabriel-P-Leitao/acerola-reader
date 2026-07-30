@@ -110,10 +110,11 @@ class LibrarySyncWorker
                         },
                     )
                 } catch (exception: Exception) {
+                    if (exception is kotlinx.coroutines.CancellationException) throw exception
                     progressJob.cancel()
                     val errorMsg = exception.message ?: context.getString(R.string.sync_library_unexpected_error)
                     notificationHelper.showFinishedNotification(
-                        context.getString(R.string.sync_library_fatal_error_title),
+                        context.getString(R.string.sync_library_error_title),
                         errorMsg,
                     )
                     Result.failure(workDataOf(WorkerContract.KEY_ERROR to errorMsg))

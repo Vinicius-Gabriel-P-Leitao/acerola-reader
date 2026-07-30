@@ -17,7 +17,7 @@ import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.type.UiText
-import br.acerola.comic.ui.R
+import br.acerola.comic.infra.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
@@ -144,6 +144,11 @@ class ComicDirectoryViewModel
             AcerolaLogger.d(TAG, "Enqueuing sync: $type", LogSource.VIEWMODEL)
             viewModelScope.launch {
                 val uri = getFolderUri()
+                if (uri == null && type != LibrarySyncWorker.SYNC_TYPE_SPECIFIC) {
+                    AcerolaLogger.w(TAG, "Sync aborted: Base folder URI not set or SAF permission missing", LogSource.VIEWMODEL)
+                    _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.description_file_system_access_error)))
+                    return@launch
+                }
 
                 val syncRequest =
                     OneTimeWorkRequestBuilder<LibrarySyncWorker>()
