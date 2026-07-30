@@ -227,6 +227,15 @@ class MangadexChapterEngine
             remote: List<ChapterMetadataDto>,
             local: List<ChapterVolumeJoin>,
         ): List<Pair<ChapterArchive, ChapterMetadataDto>> {
+            val remoteByVolumeAndChapter =
+                remote.mapNotNull { dto ->
+                    val chKey = dto.chapter?.normalizeSort() ?: return@mapNotNull null
+                    val volKey = dto.volume?.normalizeSort()
+                    if (volKey != null) {
+                        "${volKey}_${chKey}" to dto
+                    } else null
+                }.toMap()
+
             val remoteByChapter =
                 remote
                     .mapNotNull { dto ->
@@ -239,8 +248,23 @@ class MangadexChapterEngine
 
             return local.mapNotNull { join ->
                 val archive = join.chapter
+                val volume = join.volume
                 val chapterKey = archive.chapterSort.normalizeSort()
-                val remoteInfo = remoteByChapter[chapterKey] ?: return@mapNotNull null
+                val volumeKey = volume?.volumeSort?.normalizeSort()
+
+                val exactMatch =
+                    if (volumeKey != null) {
+                        remoteByVolumeAndChapter["${volumeKey}_${chapterKey}"]
+                    } else null
+
+                val remoteInfo = exactMatch ?: remoteByChapter[chapterKey] ?: return@mapNotNull null
+
+                if (volumeKey != null && remoteInfo.volume != null) {
+                    val remoteVolumeKey = remoteInfo.volume.normalizeSort()
+                    if (volumeKey != remoteVolumeKey && exactMatch == null) {
+                        return@mapNotNull null
+                    }
+                }
 
                 archive to remoteInfo
             }

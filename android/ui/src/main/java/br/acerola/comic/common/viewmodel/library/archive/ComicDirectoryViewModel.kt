@@ -61,6 +61,20 @@ class ComicDirectoryViewModel
         private val _isIndexing = MutableStateFlow(value = false)
         val isIndexing: StateFlow<Boolean> = _isIndexing.asStateFlow()
 
+        val activeSyncType: StateFlow<String?> =
+            workManager
+                .getWorkInfosByTagFlow(WorkerContract.TAG_LIBRARY_SYNC)
+                .map { list ->
+                    val running = list.firstOrNull { !it.state.isFinished } ?: return@map null
+                    when {
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_REBUILD}") -> LibrarySyncWorker.SYNC_TYPE_REBUILD
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_INCREMENTAL}") -> LibrarySyncWorker.SYNC_TYPE_INCREMENTAL
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_REFRESH}") -> LibrarySyncWorker.SYNC_TYPE_REFRESH
+                        running.tags.contains("type_${LibrarySyncWorker.SYNC_TYPE_SPECIFIC}") -> LibrarySyncWorker.SYNC_TYPE_SPECIFIC
+                        else -> null
+                    }
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
@@ -159,16 +173,17 @@ class ComicDirectoryViewModel
                                 LibrarySyncWorker.KEY_MANGA_ID to (comicId ?: -1L),
                             ),
                         ).addTag(WorkerContract.TAG_LIBRARY_SYNC)
+                        .addTag("type_$type")
                         .build()
 
                 val workName =
-                    if (comicId !=
-                        null
-                    ) {
+                    if (comicId != null) {
                         "${WorkerContract.TAG_LIBRARY_SYNC}_$comicId"
                     } else {
                         "${WorkerContract.TAG_LIBRARY_SYNC}_unique"
                     }
+
+                _isIndexing.value = true
 
                 workManager.enqueueUniqueWork(
                     workName,

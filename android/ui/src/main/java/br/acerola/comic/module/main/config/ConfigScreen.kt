@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.worker.sync.LibrarySyncWorker
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.tokens.ShapeTokens
@@ -119,6 +121,8 @@ fun Main.Config.Template.Screen(
     val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
     val isLibraryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
     val isMetadataIndexing by comicDexViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val activeLibrarySyncType by comicDirectoryViewModel.activeSyncType.collectAsStateWithLifecycle(null)
+    val activeMetadataSource by comicDexViewModel.activeSyncSource.collectAsStateWithLifecycle(null)
 
     var activeSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
     var successSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
@@ -142,12 +146,19 @@ fun Main.Config.Template.Screen(
             if (successSyncAction == finishedAction) {
                 successSyncAction = null
             }
+        } else {
+            isCurrentlyIndexing = false
+            activeSyncAction = null
         }
     }
 
     fun getSyncActionVisualState(action: ConfigAction): SyncActionVisualState =
         when {
             activeSyncAction == action -> SyncActionVisualState.LOADING
+            action == ConfigAction.QuickSyncLibrary && activeLibrarySyncType == LibrarySyncWorker.SYNC_TYPE_INCREMENTAL -> SyncActionVisualState.LOADING
+            action == ConfigAction.DeepScanLibrary && activeLibrarySyncType == LibrarySyncWorker.SYNC_TYPE_REBUILD -> SyncActionVisualState.LOADING
+            action == ConfigAction.SyncMangadexMetadata && activeMetadataSource == MetadataSyncWorker.SOURCE_MANGADEX -> SyncActionVisualState.LOADING
+            action == ConfigAction.SyncAnilistMetadata && activeMetadataSource == MetadataSyncWorker.SOURCE_ANILIST -> SyncActionVisualState.LOADING
             successSyncAction == action -> SyncActionVisualState.SUCCESS
             else -> SyncActionVisualState.IDLE
         }

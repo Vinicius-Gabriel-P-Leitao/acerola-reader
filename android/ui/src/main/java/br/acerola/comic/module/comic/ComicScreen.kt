@@ -45,6 +45,7 @@ import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.module.comic.state.MainTab
 import br.acerola.comic.module.comic.template.Header
 import br.acerola.comic.module.comic.template.Tabs
@@ -121,6 +122,9 @@ fun ComicScreen(
 
     val isExtractingVolumeCovers by comicViewModel.isExtractingVolumeCovers.collectAsStateWithLifecycle(false)
 
+    val activeLibrarySyncType by comicDirectoryViewModel.activeSyncType.collectAsStateWithLifecycle(null)
+    val activeMetadataSource by comicMetadataViewModel.activeSyncSource.collectAsStateWithLifecycle(null)
+
     var activeSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
     var successSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
     var isCurrentlyIndexing by remember { mutableStateOf(false) }
@@ -144,12 +148,19 @@ fun ComicScreen(
             if (successSyncAction == finishedAction) {
                 successSyncAction = null
             }
+        } else {
+            isCurrentlyIndexing = false
+            activeSyncAction = null
         }
     }
 
     fun getSyncActionVisualState(action: ComicSyncAction): SyncActionVisualState =
         when {
             activeSyncAction == action -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.RescanComic && activeLibrarySyncType != null -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.SyncMangadexInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_MANGADEX -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.SyncAnilistInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_ANILIST -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.SyncComicInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_COMICINFO -> SyncActionVisualState.LOADING
             successSyncAction == action -> SyncActionVisualState.SUCCESS
             else -> SyncActionVisualState.IDLE
         }

@@ -82,7 +82,7 @@ class MetadataSyncWorker
                 try {
                     setForeground(
                         ForegroundInfo(
-                            NotificationHelper.SYNC_NOTIFICATION_ID,
+                            NotificationHelper.METADATA_NOTIFICATION_ID,
                             builder.build(),
                             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
                         ),
@@ -102,7 +102,7 @@ class MetadataSyncWorker
                             }
 
                         progressFlow.collectLatest { progress ->
-                            notificationHelper.updateProgress(builder, progress)
+                            notificationHelper.updateProgress(builder, progress, notificationId = NotificationHelper.METADATA_NOTIFICATION_ID)
                             setProgress(workDataOf("progress" to progress))
                         }
                     }
@@ -116,13 +116,14 @@ class MetadataSyncWorker
                         )
 
                     progressJob.cancel()
-
+    
                     result.fold(
                         ifLeft = {
                             val errorMsg = it.uiMessage.asString(context)
                             notificationHelper.showFinishedNotification(
                                 context.getString(R.string.sync_metadata_error_title),
                                 errorMsg,
+                                notificationId = NotificationHelper.METADATA_NOTIFICATION_ID,
                             )
                             Result.failure(workDataOf("error" to errorMsg))
                         },
@@ -130,6 +131,7 @@ class MetadataSyncWorker
                             notificationHelper.showFinishedNotification(
                                 context.getString(R.string.sync_metadata_success_title),
                                 context.getString(R.string.sync_metadata_success_message),
+                                notificationId = NotificationHelper.METADATA_NOTIFICATION_ID,
                             )
                             Result.success()
                         },
@@ -141,6 +143,7 @@ class MetadataSyncWorker
                     notificationHelper.showFinishedNotification(
                         context.getString(R.string.sync_metadata_error_title),
                         errorMsg,
+                        notificationId = NotificationHelper.METADATA_NOTIFICATION_ID,
                     )
                     Result.failure(workDataOf("error" to errorMsg))
                 }
