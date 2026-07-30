@@ -118,12 +118,24 @@
 		appWindow?.close();
 	}
 
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		const key = event.key.toLowerCase();
+		if ((event.ctrlKey || event.metaKey) && key === 'k') {
+			if ($page.url.pathname.startsWith('/reader')) return;
+			event.preventDefault();
+			isSearchDialogOpen = !isSearchDialogOpen;
+			if (isSearchDialogOpen && !summary.comics) summary.fetch();
+		}
+	}
+
 	$effect(() => {
 		setLocale(currentLocale as Locale);
 	});
 
 	const { children } = $props();
 </script>
+
+<svelte:window onkeydown={handleGlobalKeydown} />
 
 <div class="flex h-screen w-full flex-col overflow-hidden">
 	<!-- Titlebar Global -->
@@ -208,7 +220,7 @@
 					<Onboarding />
 				{:else}
 					<header
-						class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl"
+						class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl transition-all"
 					>
 						<div class="max-w-xl flex-1">
 							<button
@@ -221,12 +233,17 @@
 							>
 								<Search
 									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
-									size={20}
+									size={18}
 								/>
 								<div
-									class="text-overlay/50 flex w-full items-center rounded-2xl border border-surface bg-mantle py-3 pr-4 pl-12 transition-all group-hover:border-primary"
+									class="text-overlay/50 flex w-full items-center justify-between rounded-xl border border-surface bg-mantle py-2 pr-4 pl-11 text-sm transition-all group-hover:border-primary"
 								>
-									{m['layout.search_placeholder']()}
+									<span>{m['layout.search_placeholder']()}</span>
+									<kbd
+										class="pointer-events-none hidden select-none items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground sm:flex"
+									>
+										Ctrl+K
+									</kbd>
 								</div>
 							</button>
 						</div>

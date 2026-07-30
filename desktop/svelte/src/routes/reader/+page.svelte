@@ -435,6 +435,7 @@
 				}}
 				services={{
 					pageAt: reader.pageAt,
+					loadPage: reader.loadPage,
 					trackPage
 				}}
 			/>

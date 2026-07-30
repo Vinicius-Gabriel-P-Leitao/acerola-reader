@@ -8,11 +8,14 @@
 	import AcerolaComicActionDialog from './components/acerola-comic-action-dialog.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
+	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
 	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useComicContext } from '$lib/state/comic-context.svelte';
@@ -27,6 +30,7 @@
 	const activeComic = useComicContext();
 	const bookmarkStore = useBookmarks();
 	const selection = useComicSelection();
+	const folderStore = useSelectFolder();
 
 	let unlistenScan: (() => void) | undefined;
 	let showSortMenu = $state(false);
@@ -310,7 +314,37 @@
 		onClose={() => (showActionDialog = false)}
 	/>
 {:else}
-	<div class="flex items-center justify-center p-8 text-muted-foreground">
-		{m['pages.home.no_comics']()}
+	<div class="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center animate-in fade-in-50 duration-300">
+		<div class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner">
+			<FolderPlus size={32} />
+		</div>
+		<h3 class="text-xl font-bold tracking-tight text-foreground">
+			{m['pages.home.no_comics']()}
+		</h3>
+		<p class="mt-1.5 max-w-sm text-sm text-muted-foreground">
+			Sua biblioteca está vazia no momento. Selecione uma pasta contendo seus quadrinhos (.cbz, .cbr, .pdf) para começar.
+		</p>
+		<div class="mt-6 flex items-center gap-3">
+			<AcerolaButton
+				ui={{ variant: 'default', class: 'rounded-xl font-semibold gap-2 shadow-md hover:shadow-lg transition-all' }}
+				events={{
+					onClick: async () => {
+						await folderStore.selectFolder();
+						await summary.fetch();
+					}
+				}}
+			>
+				<FolderPlus size={18} />
+				Selecionar Pasta de Mangás
+			</AcerolaButton>
+
+			<AcerolaButton
+				ui={{ variant: 'outline', class: 'rounded-xl font-medium gap-2' }}
+				events={{ onClick: () => summary.fetch() }}
+			>
+				<RotateCcw size={16} />
+				Atualizar
+			</AcerolaButton>
+		</div>
 	</div>
 {/if}

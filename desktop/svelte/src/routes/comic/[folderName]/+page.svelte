@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, afterNavigate, invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
@@ -202,9 +202,15 @@
 		]);
 	});
 
-	afterNavigate(async () => {
-		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
-		if (id) {
+	const comicId = $derived(
+		activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId
+	);
+
+	$effect(() => {
+		const id = comicId;
+		if (!id) return;
+
+		untrack(() => {
 			isHistoryLoading = true;
 			const fetchHistory = invoke(HISTORY_COMMANDS.getComic, { comicId: id.toString() }).catch(
 				() => null
@@ -214,13 +220,13 @@
 			}).catch(() => []);
 			const fetchBookmark = bookmarkStore.getComicBookmark(id);
 
-			const [history, read, bookmark] = await Promise.all([fetchHistory, fetchRead, fetchBookmark]);
-			readingHistory = history;
-			readChapters = read;
-			currentBookmarkId = bookmark?.id ?? null;
-
-			isHistoryLoading = false;
-		}
+			Promise.all([fetchHistory, fetchRead, fetchBookmark]).then(([history, read, bookmark]) => {
+				readingHistory = history;
+				readChapters = read;
+				currentBookmarkId = bookmark?.id ?? null;
+				isHistoryLoading = false;
+			});
+		});
 	});
 
 	function handleReadNow() {
