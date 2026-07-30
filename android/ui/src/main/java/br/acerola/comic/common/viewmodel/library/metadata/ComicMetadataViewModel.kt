@@ -153,11 +153,11 @@ class ComicMetadataViewModel
                         ).addTag("metadata_sync")
                         .build()
 
-                val workName = if (directoryId == -1L) "metadata_sync_library_$source" else "metadata_sync_$directoryId"
+                val workName = if (directoryId == -1L) "metadata_sync_library_$source" else "metadata_sync_${source}_$directoryId"
 
                 workManager.enqueueUniqueWork(
                     workName,
-                    ExistingWorkPolicy.KEEP,
+                    ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
             }

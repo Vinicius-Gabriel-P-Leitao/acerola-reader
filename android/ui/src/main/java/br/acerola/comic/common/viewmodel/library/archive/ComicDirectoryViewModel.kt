@@ -171,7 +171,7 @@ class ComicDirectoryViewModel
 
                 workManager.enqueueUniqueWork(
                     workName,
-                    ExistingWorkPolicy.KEEP,
+                    ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
 

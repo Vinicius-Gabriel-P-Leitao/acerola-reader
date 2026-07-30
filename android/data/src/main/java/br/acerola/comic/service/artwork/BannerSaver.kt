@@ -10,8 +10,6 @@ import arrow.core.left
 import arrow.core.right
 import br.acerola.comic.error.message.IoError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.relationship.BannerDao
-import br.acerola.comic.local.entity.metadata.relationship.Banner
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.media.MediaFile
@@ -26,7 +24,6 @@ import javax.inject.Singleton
 class BannerSaver
     @Inject
     constructor(
-        private val bannerDao: BannerDao,
         private val directoryDao: ComicDirectoryDao,
         private val fileStorageHandler: FileStorageHandler,
         @param:ApplicationContext private val context: Context,
@@ -77,28 +74,7 @@ class BannerSaver
                                 directoryDao.update(directory.copy(banner = savedUriString))
                             }
 
-                            val bannerEntity =
-                                Banner(
-                                    fileName = fileName,
-                                    url = bannerUrl,
-                                    comicRemoteInfoFk = comicRemoteInfoFk,
-                                )
-
-                            val insertedId = bannerDao.insert(entity = bannerEntity)
-                            val finalId =
-                                if (insertedId != -1L) {
-                                    insertedId
-                                } else {
-                                    val existing =
-                                        bannerDao.getByFileNameAndMetadataId(
-                                            fileName = fileName,
-                                            comicRemoteInfoFk = comicRemoteInfoFk,
-                                        ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
-
-                                    bannerDao.update(existing.copy(url = bannerUrl, fileName = fileName))
-                                    existing.id
-                                }
-                            finalId.right()
+                            folderId.right()
                         }
                 } catch (exception: Exception) {
                     AcerolaLogger.e(

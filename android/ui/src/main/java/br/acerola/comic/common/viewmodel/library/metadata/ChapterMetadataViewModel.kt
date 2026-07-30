@@ -127,8 +127,8 @@ class ChapterMetadataViewModel
                         .build()
 
                 workManager.enqueueUniqueWork(
-                    "metadata_sync_$directoryId",
-                    ExistingWorkPolicy.KEEP,
+                    "metadata_sync_${source}_$directoryId",
+                    ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
             }

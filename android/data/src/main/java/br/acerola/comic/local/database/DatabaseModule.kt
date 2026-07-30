@@ -10,18 +10,15 @@ import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.dao.category.CategoryDao
 import br.acerola.comic.local.dao.history.ReadingHistoryDao
-import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
-import br.acerola.comic.local.dao.metadata.relationship.BannerDao
-import br.acerola.comic.local.dao.metadata.relationship.CoverDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
-import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.comic.local.dao.view.ComicSummaryDao
 import br.acerola.comic.local.database.migrations.MIGRATION_1_2
+import br.acerola.comic.local.database.migrations.MIGRATION_2_3
 import br.acerola.comic.local.database.seeds.seedArchiveTemplates
 import dagger.Module
 import dagger.Provides
@@ -50,7 +47,7 @@ object DatabaseModule {
                         seedArchiveTemplates(db)
                     }
                 },
-            ).addMigrations(MIGRATION_1_2)
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides
@@ -72,16 +69,7 @@ object DatabaseModule {
     fun provideChapterRemoteInfoDao(db: AcerolaDatabase): ChapterMetadataDao = db.chapterRemoteInfoDao()
 
     @Provides
-    fun provideChapterDownloadSourceDao(db: AcerolaDatabase): ChapterDownloadSourceDao = db.chapterDownloadSourceDao()
-
-    @Provides
     fun provideAuthorDao(db: AcerolaDatabase): AuthorDao = db.authorDao()
-
-    @Provides
-    fun provideCoverDao(db: AcerolaDatabase): CoverDao = db.coverDao()
-
-    @Provides
-    fun provideBannerDao(db: AcerolaDatabase): BannerDao = db.bannerDao()
 
     @Provides
     fun provideGenreDao(db: AcerolaDatabase): GenreDao = db.genreDao()
@@ -94,9 +82,6 @@ object DatabaseModule {
 
     @Provides
     fun provideAnilistSourceDao(db: AcerolaDatabase): AnilistSourceDao = db.anilistSourceDao()
-
-    @Provides
-    fun provideComicInfoSourceDao(db: AcerolaDatabase): ComicInfoSourceDao = db.comicInfoSourceDao()
 
     @Provides
     fun provideCategoryDao(db: AcerolaDatabase): CategoryDao = db.categoryDao()

@@ -126,8 +126,6 @@ class MangadexSourceMangaEngineTest {
                     any(),
                     any(),
                     any(),
-                    any(),
-                    any(),
                 )
             } returns 2L
             coEvery { comicMetadataDao.insert(any()) } returns 2L

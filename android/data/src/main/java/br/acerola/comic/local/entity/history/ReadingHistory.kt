@@ -13,21 +13,19 @@ import br.acerola.comic.local.entity.archive.ComicDirectory
         ForeignKey(
             entity = ComicDirectory::class,
             parentColumns = ["id"],
-            childColumns = ["comic_directory_id"],
+            childColumns = ["comic_directory_fk"],
             onDelete = ForeignKey.CASCADE,
         ),
     ],
 )
 data class ReadingHistory(
     @PrimaryKey
-    // FIXME: Trocar _id por _fk
-    @ColumnInfo(name = "comic_directory_id")
-    val comicDirectoryId: Long,
+    @ColumnInfo(name = "comic_directory_fk")
+    val comicDirectoryFk: Long,
     @ColumnInfo(name = "chapter_sort")
     val chapterSort: String,
-    // FIXME: Trocar _id por _fk
-    @ColumnInfo(name = "chapter_archive_id")
-    val chapterArchiveId: Long? = null,
+    @ColumnInfo(name = "chapter_archive_fk")
+    val chapterArchiveFk: Long? = null,
     @ColumnInfo(name = "last_page")
     val lastPage: Int,
     @ColumnInfo(name = "is_completed")

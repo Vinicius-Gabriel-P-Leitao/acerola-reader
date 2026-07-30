@@ -10,8 +10,6 @@ import arrow.core.left
 import arrow.core.right
 import br.acerola.comic.error.message.IoError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.relationship.CoverDao
-import br.acerola.comic.local.entity.metadata.relationship.Cover
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.media.MediaFile
@@ -26,7 +24,6 @@ import javax.inject.Singleton
 class CoverSaver
     @Inject
     constructor(
-        private val coverDao: CoverDao,
         private val directoryDao: ComicDirectoryDao,
         private val fileStorageHandler: FileStorageHandler,
         @param:ApplicationContext private val context: Context,
@@ -78,28 +75,7 @@ class CoverSaver
                                 directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
                             }
 
-                            val coverEntity =
-                                Cover(
-                                    url = coverUrl,
-                                    comicRemoteInfoFk = comicRemoteInfoFk,
-                                    fileName = fileName,
-                                )
-
-                            val insertedId = coverDao.insert(entity = coverEntity)
-                            val finalId =
-                                if (insertedId != -1L) {
-                                    insertedId
-                                } else {
-                                    val existing =
-                                        coverDao.getByFileNameAndMetadataId(
-                                            fileName = fileName,
-                                            comicRemoteInfoFk = comicRemoteInfoFk,
-                                        ) ?: return@flatMap IoError.FileWriteError(fileName, Exception("Database inconsistency")).left()
-
-                                    coverDao.update(existing.copy(url = coverUrl, fileName = fileName))
-                                    existing.id
-                                }
-                            finalId.right()
+                            folderId.right()
                         }
                 } catch (exception: Exception) {
                     AcerolaLogger.e(TAG, "Critical error processing cover for $comicFolderName", LogSource.REPOSITORY, exception)

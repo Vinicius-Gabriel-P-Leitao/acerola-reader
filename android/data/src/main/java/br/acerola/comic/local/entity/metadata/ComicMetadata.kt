@@ -28,8 +28,6 @@ data class ComicMetadata(
     val title: String,
     @ColumnInfo(name = "description")
     val description: String,
-    @ColumnInfo(name = "romanji")
-    val romanji: String,
     @ColumnInfo(name = "status")
     val status: String,
     @ColumnInfo(name = "publication")

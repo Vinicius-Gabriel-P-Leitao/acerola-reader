@@ -50,7 +50,6 @@ fun FastFileMetadata.toChapterArchiveEntity(
     comicId: Long,
     chapterSort: String,
     fileUri: String,
-    fastHash: String,
     volumeIdFk: Long? = null,
     isSpecial: Boolean = false,
 ): ChapterArchive =
@@ -58,7 +57,6 @@ fun FastFileMetadata.toChapterArchiveEntity(
         chapter = name,
         path = fileUri,
         checksum = null,
-        fastHash = fastHash,
         chapterSort = chapterSort,
         folderPathFk = comicId,
         volumeIdFk = volumeIdFk,
@@ -104,7 +102,6 @@ fun DocumentFile.toChapterArchiveEntity(
     comicId: Long,
     chapterSort: String,
     checksum: String?,
-    fastHash: String?,
     volumeIdFk: Long? = null,
     isSpecial: Boolean = false,
 ): ChapterArchive =
@@ -112,7 +109,6 @@ fun DocumentFile.toChapterArchiveEntity(
         chapter = name ?: "",
         path = uri.toString(),
         checksum = checksum,
-        fastHash = fastHash,
         chapterSort = chapterSort,
         folderPathFk = comicId,
         volumeIdFk = volumeIdFk,

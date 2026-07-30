@@ -150,10 +150,14 @@ class ComicDirectoryEngine
                 return withContext(context = Dispatchers.IO) {
                     Either
                         .catch {
-                            if (baseUri === null) return@catch
+                            val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
+                            if (rootUri == null) {
+                                _progress.value = -1
+                                return@catch
+                            }
 
                             val templates = templateService.getTemplates()
-                            val discoveredFolders: List<ComicDirectory> = directoryScanner.buildLibrary(baseUri, templates)
+                            val discoveredFolders: List<ComicDirectory> = directoryScanner.buildLibrary(rootUri, templates)
                             val databaseFolders: List<ComicDirectory> =
                                 directoryDao.getAllDirectories().firstOrNull() ?: emptyList()
 
@@ -187,7 +191,7 @@ class ComicDirectoryEngine
                             }
 
                             AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)
-                            processFolderList(foldersToProcess, baseUri = baseUri)
+                            processFolderList(foldersToProcess, baseUri = rootUri)
                         }.mapLeft { exception ->
                             AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, throwable = exception)
                             when (exception) {
@@ -211,17 +215,21 @@ class ComicDirectoryEngine
                 return withContext(context = Dispatchers.IO) {
                     Either
                         .catch {
-                            if (baseUri === null) return@catch
+                            val rootUri = baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
+                            if (rootUri == null) {
+                                _progress.value = -1
+                                return@catch
+                            }
 
                             val templates = templateService.getTemplates()
-                            val foldersToProcess: List<ComicDirectory> = directoryScanner.buildLibrary(baseUri, templates)
+                            val foldersToProcess: List<ComicDirectory> = directoryScanner.buildLibrary(rootUri, templates)
                             if (foldersToProcess.isEmpty()) {
                                 _progress.value = -1
                                 return@catch
                             }
 
                             AcerolaLogger.d(TAG, "Refreshing ${foldersToProcess.size} folders", LogSource.REPOSITORY)
-                            processFolderList(foldersToProcess, baseUri = baseUri)
+                            processFolderList(foldersToProcess, baseUri = rootUri)
                         }.mapLeft { exception ->
                             AcerolaLogger.e(TAG, "Refresh library failed", LogSource.REPOSITORY, throwable = exception)
                             when (exception) {

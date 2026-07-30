@@ -41,8 +41,6 @@ data class ChapterArchive(
     // NOTE: Campo vai manter um hash do arquivo, para se tiver quebrado, ele ignorar no frontend
     @ColumnInfo(name = "checksum")
     val checksum: String? = null,
-    @ColumnInfo(name = "fast_hash")
-    val fastHash: String? = null,
     @ColumnInfo(name = "comic_directory_fk")
     val folderPathFk: Long,
     @ColumnInfo(name = "volume_id_fk")

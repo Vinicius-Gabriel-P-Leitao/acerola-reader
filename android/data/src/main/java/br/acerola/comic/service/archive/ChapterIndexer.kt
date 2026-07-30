@@ -15,7 +15,6 @@ class ChapterIndexer
             comicId: Long,
             fileUri: String,
             chapterSort: String,
-            fastHash: String,
             volumeIdFk: Long?,
             isSpecial: Boolean,
         ): ChapterArchive =
@@ -23,7 +22,6 @@ class ChapterIndexer
                 comicId = comicId,
                 fileUri = fileUri,
                 chapterSort = chapterSort,
-                fastHash = fastHash,
                 volumeIdFk = volumeIdFk,
                 isSpecial = isSpecial,
             )

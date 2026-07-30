@@ -208,12 +208,7 @@ fun ComicScreen(
             ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.comic.directory.id)
             ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.comic.directory.id)
             ComicSyncAction.SyncMangadexInfo -> comicMetadataViewModel.syncFromMangadex(uiState.comic.directory.id)
-            ComicSyncAction.SyncMangadexChapters ->
-                uiState.comic.remoteInfo?.id?.let {
-                    chapterMetadataViewModel.syncChaptersByMangadex(
-                        it,
-                    )
-                }
+            ComicSyncAction.SyncMangadexChapters -> chapterMetadataViewModel.syncChaptersByMangadex(uiState.comic.directory.id)
             ComicSyncAction.SyncComicInfo -> comicMetadataViewModel.syncFromComicInfo(uiState.comic.directory.id)
             ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.comic.directory.id)
             ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.comic.directory.id)
