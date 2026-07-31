@@ -2,24 +2,48 @@ package br.acerola.comic.module.main.home
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,9 +54,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,8 +71,11 @@ import br.acerola.comic.common.ux.component.FabGroup
 import br.acerola.comic.common.ux.component.FabGroupItem
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
+import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
+import br.acerola.comic.common.viewmodel.archive.FileSystemAccessViewModel
+import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.comic.ComicActivity
@@ -59,18 +90,33 @@ import br.acerola.comic.module.main.home.state.HomeAction
 import br.acerola.comic.module.main.home.state.HomeUiState
 import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun Main.Home.Template.Screen(
     homeViewModel: HomeViewModel = hiltViewModel(),
+    fileSystemAccessViewModel: FileSystemAccessViewModel = hiltViewModel(),
+    comicDirectoryViewModel: ComicDirectoryViewModel = hiltViewModel(),
     onNavigateToConfig: () -> Unit,
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
 
     LaunchedEffect(Unit) {
-        homeViewModel.uiEvents.collect { message ->
-            snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
+        launch {
+            homeViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
+            }
+        }
+        launch {
+            fileSystemAccessViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
+            }
+        }
+        launch {
+            comicDirectoryViewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
+            }
         }
     }
 
@@ -137,7 +183,16 @@ fun Main.Home.Template.Screen(
 
         when {
             comicList == null -> Unit
-            comicList.isEmpty() && !uiState.isIndexing -> EmptyState()
+            comicList.isEmpty() -> EmptyState(
+                isIndexing = uiState.isIndexing,
+                onQuickSync = { comicDirectoryViewModel.syncLibrary() },
+                onFolderSelected = { uri ->
+                    if (uri != null) {
+                        fileSystemAccessViewModel.saveFolderUri(uri)
+                        comicDirectoryViewModel.syncLibrary()
+                    }
+                },
+            )
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Main.Home.Component.HomeSearchBar(
@@ -303,16 +358,174 @@ fun Main.Home.Template.Screen(
 }
 
 @Composable
-private fun EmptyState() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
+private fun EmptyState(
+    isIndexing: Boolean,
+    onQuickSync: () -> Unit,
+    onFolderSelected: (Uri?) -> Unit,
+) {
+    val launcher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree(),
+            onResult = { uri ->
+                onFolderSelected(uri)
+            },
+        )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "sync_spin")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "spin_angle",
+    )
+
+    val scrollState = rememberScrollState()
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(SpacingTokens.Large),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        val isNarrow = maxWidth < 400.dp
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .widthIn(max = 440.dp)
+                .fillMaxWidth(),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(ShapeTokens.Large)
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FolderOpen,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(SpacingTokens.Medium))
+
             Text(
                 text = stringResource(id = R.string.description_text_home_empty_state),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
             )
+
+            Spacer(modifier = Modifier.height(SpacingTokens.ExtraSmall))
+
+            Text(
+                text = stringResource(id = R.string.description_text_home_empty_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = SpacingTokens.Small),
+            )
+
+            Spacer(modifier = Modifier.height(SpacingTokens.Large))
+
+            if (isNarrow) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(SpacingTokens.Small),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Button(
+                        onClick = onQuickSync,
+                        shape = ShapeTokens.Medium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 44.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .graphicsLayer { rotationZ = if (isIndexing) angle else 0f },
+                        )
+                        Spacer(modifier = Modifier.width(SpacingTokens.Small))
+                        Text(
+                            text = stringResource(id = R.string.action_home_quick_sync),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { launcher.launch(null) },
+                        shape = ShapeTokens.Medium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 44.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(modifier = Modifier.width(SpacingTokens.Small))
+                        Text(
+                            text = stringResource(id = R.string.action_home_select_folder),
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Button(
+                        onClick = onQuickSync,
+                        shape = ShapeTokens.Medium,
+                        modifier = Modifier.heightIn(min = 44.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .graphicsLayer { rotationZ = if (isIndexing) angle else 0f },
+                        )
+                        Spacer(modifier = Modifier.width(SpacingTokens.Small))
+                        Text(
+                            text = stringResource(id = R.string.action_home_quick_sync),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { launcher.launch(null) },
+                        shape = ShapeTokens.Medium,
+                        modifier = Modifier.heightIn(min = 44.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(modifier = Modifier.width(SpacingTokens.Small))
+                        Text(
+                            text = stringResource(id = R.string.action_home_select_folder),
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
