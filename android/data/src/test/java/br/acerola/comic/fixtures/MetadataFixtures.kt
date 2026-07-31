@@ -1,13 +1,11 @@
 package br.acerola.comic.fixtures
 
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.CoverDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
 import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
 import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
-import br.acerola.comic.local.entity.metadata.ChapterMetadata
 import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
 import br.acerola.comic.local.entity.metadata.relationship.Genre
@@ -37,35 +35,7 @@ object MetadataFixtures {
         hasComicInfo = hasComicInfo,
     )
 
-    fun createChapterRemoteInfo(
-        id: Long = 100,
-        title: String? = "Episode 1",
-        chapter: String = "1",
-        pageCount: Int = 20,
-        scanlation: String? = "ScanGroup",
-        comicRemoteInfoFk: Long = 10,
-        chapterArchiveFk: Long? = null,
-    ) = ChapterMetadata(
-        id = id,
-        title = title,
-        chapter = chapter,
-        pageCount = pageCount,
-        scanlation = scanlation,
-        comicRemoteInfoFk = comicRemoteInfoFk,
-        chapterArchiveFk = chapterArchiveFk,
-    )
 
-    fun createChapterRemoteInfoDto(
-        id: String = "ch-1",
-        chapter: String = "1",
-        mangadexVersion: Int = 1,
-        title: String? = null,
-    ) = ChapterMetadataDto(
-        id = id,
-        chapter = chapter,
-        mangadexVersion = mangadexVersion,
-        title = title,
-    )
 
     fun createMangaRemoteInfoDto(
         title: String = "Naruto",

@@ -4,7 +4,6 @@ import br.acerola.comic.fixtures.MetadataFixtures
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.local.translator.ui.toViewDto
-import br.acerola.comic.local.translator.ui.toViewPageDto
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -38,20 +37,10 @@ class MetadataMapperTest {
         assertEquals(entity.name, dto.name)
         assertEquals("author", dto.type)
 
-        val backToModel = dto.toEntity(comicId = 99)
+        val backToModel = dto.toEntity(comicRemoteInfoFk = 99L)
         assertEquals(dto.name, backToModel.name)
         assertEquals(TypeAuthor.AUTHOR, backToModel.type)
         assertEquals(99L, backToModel.comicRemoteInfoFk)
-    }
-
-    @Test
-    fun `ChapterMetadata toViewDto deve mapear dto corretamente`() {
-        val chapter = MetadataFixtures.createChapterRemoteInfo()
-
-        val dto = chapter.toViewDto()
-
-        assertEquals(chapter.id, dto.id)
-        assertEquals(chapter.chapter, dto.chapter)
     }
 
     @Test
@@ -62,18 +51,5 @@ class MetadataMapperTest {
 
         assertEquals("Test", entity.title)
         assertEquals(2024, entity.publication)
-    }
-
-    @Test
-    fun `List ChapterMetadata toViewPageDto deve paginar lista`() {
-        val chapters =
-            listOf(
-                MetadataFixtures.createChapterRemoteInfo(id = 1),
-                MetadataFixtures.createChapterRemoteInfo(id = 2),
-            )
-
-        val page = chapters.toViewPageDto()
-
-        assertEquals(2, page.items.size)
     }
 }

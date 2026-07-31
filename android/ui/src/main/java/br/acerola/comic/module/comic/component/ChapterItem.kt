@@ -41,14 +41,12 @@ import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.archive.ChapterFileDto
-import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Comic.Component.ChapterItem(
-    chapterRemoteInfoDto: ChapterFeedDto?,
     chapterFileDto: ChapterFileDto,
     modifier: Modifier = Modifier,
     onToggleRead: () -> Unit = {},
@@ -58,9 +56,8 @@ fun Comic.Component.ChapterItem(
     var showDetails by remember { mutableStateOf(value = false) }
     val stableOnClick = remember(key1 = chapterFileDto.id) { onClick }
 
-    val chapterNumber = chapterRemoteInfoDto?.chapter ?: chapterFileDto.chapterSort
-    val mainTitle = stringResource(id = R.string.title_chapter_item_chapter_number, chapterNumber)
-    val subtitle = chapterRemoteInfoDto?.title?.takeIf { it.isNotBlank() } ?: chapterFileDto.name
+    val mainTitle = stringResource(id = R.string.title_chapter_item_chapter_number, chapterFileDto.chapterSort)
+    val subtitle = chapterFileDto.name
 
     val iconBackground =
         if (isRead) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
@@ -121,19 +118,6 @@ fun Comic.Component.ChapterItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (chapterRemoteInfoDto?.scanlation?.isNotBlank() == true) {
-                    Text(
-                        text =
-                            stringResource(
-                                id = R.string.label_chapter_scanlation_prefix,
-                                chapterRemoteInfoDto.scanlation,
-                            ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
 
             IconButton(onClick = { showDetails = true }) {
@@ -163,22 +147,6 @@ fun Comic.Component.ChapterItem(
                         label = stringResource(id = R.string.label_chapter_detail_file),
                         value = chapterFileDto.name,
                     )
-                    chapterRemoteInfoDto?.let { remote ->
-                        if (remote.title.isNotBlank()) {
-                            DetailRow(
-                                label = stringResource(id = R.string.label_chapter_detail_title),
-                                value = remote.title,
-                            )
-                        }
-                        DetailRow(
-                            label = stringResource(id = R.string.label_chapter_detail_scanlation),
-                            value = remote.scanlation,
-                        )
-                        DetailRow(
-                            label = stringResource(id = R.string.label_chapter_detail_pages),
-                            value = "${remote.pageCount ?: "?"}",
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(SpacingTokens.Large))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))

@@ -10,7 +10,6 @@ import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.archive.VolumeArchiveDao
 import br.acerola.comic.local.dao.category.CategoryDao
 import br.acerola.comic.local.dao.history.ReadingHistoryDao
-import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
@@ -19,6 +18,7 @@ import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
 import br.acerola.comic.local.dao.view.ComicSummaryDao
 import br.acerola.comic.local.database.migrations.MIGRATION_1_2
 import br.acerola.comic.local.database.migrations.MIGRATION_2_3
+import br.acerola.comic.local.database.migrations.MIGRATION_3_4
 import br.acerola.comic.local.database.seeds.seedArchiveTemplates
 import dagger.Module
 import dagger.Provides
@@ -47,7 +47,7 @@ object DatabaseModule {
                         seedArchiveTemplates(db)
                     }
                 },
-            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
 
     @Provides
@@ -64,9 +64,6 @@ object DatabaseModule {
 
     @Provides
     fun provideMangaRemoteInfoDao(db: AcerolaDatabase): ComicMetadataDao = db.comicRemoteInfoDao()
-
-    @Provides
-    fun provideChapterRemoteInfoDao(db: AcerolaDatabase): ChapterMetadataDao = db.chapterRemoteInfoDao()
 
     @Provides
     fun provideAuthorDao(db: AcerolaDatabase): AuthorDao = db.authorDao()

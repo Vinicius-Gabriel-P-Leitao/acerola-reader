@@ -1,8 +1,6 @@
 package br.acerola.comic.local.translator.ui
 
 import br.acerola.comic.dto.metadata.category.CategoryDto
-import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
@@ -11,7 +9,6 @@ import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
 import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
 import br.acerola.comic.dto.view.ComicSummaryDto
 import br.acerola.comic.local.entity.category.Category
-import br.acerola.comic.local.entity.metadata.ChapterMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
 import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
@@ -92,26 +89,4 @@ fun Genre.toViewDto(): GenreDto =
     GenreDto(
         id = id.toString(),
         name = genre,
-    )
-
-fun ChapterMetadata.toViewDto(): ChapterFeedDto =
-    ChapterFeedDto(
-        id = id,
-        title = title.orEmpty(),
-        chapter = chapter,
-        pageCount = pageCount,
-        scanlation = scanlation.orEmpty(),
-        source = emptyList(),
-    )
-
-fun List<ChapterMetadata>.toViewPageDto(
-    pageSize: Int = this.size,
-    total: Int = this.size,
-    page: Int = 0,
-): ChapterRemoteInfoPageDto =
-    ChapterRemoteInfoPageDto(
-        items = this.map { it.toViewDto() },
-        pageSize = pageSize,
-        total = total,
-        page = page,
     )

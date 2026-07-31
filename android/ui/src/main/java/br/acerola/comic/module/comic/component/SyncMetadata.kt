@@ -37,30 +37,21 @@ fun Comic.Component.SyncMetadata(
     remoteInfo: ComicMetadataDto?,
     externalSyncEnabled: Boolean,
     onSyncMangadexInfo: () -> Unit,
-    onSyncMangadexChapters: () -> Unit,
     onSyncComicInfo: () -> Unit,
-    onSyncComicInfoChapters: () -> Unit,
     onSyncAnilistInfo: () -> Unit,
     mangadexInfoState: SyncActionVisualState = SyncActionVisualState.IDLE,
-    mangadexChaptersState: SyncActionVisualState = SyncActionVisualState.IDLE,
     anilistInfoState: SyncActionVisualState = SyncActionVisualState.IDLE,
     comicInfoState: SyncActionVisualState = SyncActionVisualState.IDLE,
-    comicInfoChaptersState: SyncActionVisualState = SyncActionVisualState.IDLE,
     modifier: Modifier = Modifier,
 ) {
     val syncSource = remoteInfo?.syncSource
-    val hasMangadexSource = remoteInfo?.sources?.mangadex?.mangadexId != null
-    val hasComicInfoSource = remoteInfo?.sources?.comicInfo?.localHash != null
 
     Column(modifier = modifier) {
         if (externalSyncEnabled) {
             MangadexSection(
                 isActive = syncSource == MetadataSource.MANGADEX,
-                hasChapters = hasMangadexSource && remoteInfo.id != null,
                 onSyncInfo = onSyncMangadexInfo,
-                onSyncChapters = onSyncMangadexChapters,
                 infoState = mangadexInfoState,
-                chaptersState = mangadexChaptersState,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -76,11 +67,8 @@ fun Comic.Component.SyncMetadata(
 
         ComicInfoSection(
             isActive = syncSource == MetadataSource.COMIC_INFO,
-            hasChapters = hasComicInfoSource,
             onSyncInfo = onSyncComicInfo,
-            onSyncChapters = onSyncComicInfoChapters,
             infoState = comicInfoState,
-            chaptersState = comicInfoChaptersState,
         )
     }
 }
@@ -88,13 +76,10 @@ fun Comic.Component.SyncMetadata(
 @Composable
 private fun MangadexSection(
     isActive: Boolean,
-    hasChapters: Boolean,
     onSyncInfo: () -> Unit,
-    onSyncChapters: () -> Unit,
     infoState: SyncActionVisualState = SyncActionVisualState.IDLE,
-    chaptersState: SyncActionVisualState = SyncActionVisualState.IDLE,
 ) {
-    val anyLoading = infoState == SyncActionVisualState.LOADING || chaptersState == SyncActionVisualState.LOADING
+    val anyLoading = infoState == SyncActionVisualState.LOADING
 
     Acerola.Component.GroupedHeroButton(
         title = stringResource(id = R.string.label_mangadex_group),
@@ -113,34 +98,6 @@ private fun MangadexSection(
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp),
-                    )
-                }
-            } else {
-                null
-            },
-        nestedItem =
-            if (hasChapters && isActive) {
-                {
-                    Acerola.Component.HeroNestedButton(
-                        title = stringResource(id = R.string.title_sync_chapters),
-                        description = stringResource(id = R.string.description_sync_chapters_remote),
-                        iconBackground = MaterialTheme.colorScheme.primaryContainer,
-                        onClick = { if (!anyLoading) onSyncChapters() },
-                        icon = {
-                            Acerola.Component.SyncActionIcon(
-                                state = chaptersState,
-                                containerSize = 40.dp,
-                                iconSize = 20.dp,
-                                defaultBackground = MaterialTheme.colorScheme.primaryContainer,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                        },
                     )
                 }
             } else {
@@ -181,13 +138,10 @@ private fun AnilistSection(
 @Composable
 private fun ComicInfoSection(
     isActive: Boolean,
-    hasChapters: Boolean,
     onSyncInfo: () -> Unit,
-    onSyncChapters: () -> Unit,
     infoState: SyncActionVisualState = SyncActionVisualState.IDLE,
-    chaptersState: SyncActionVisualState = SyncActionVisualState.IDLE,
 ) {
-    val anyLoading = infoState == SyncActionVisualState.LOADING || chaptersState == SyncActionVisualState.LOADING
+    val anyLoading = infoState == SyncActionVisualState.LOADING
 
     Acerola.Component.GroupedHeroButton(
         title = stringResource(id = R.string.title_sync_comic_info),
@@ -201,34 +155,6 @@ private fun ComicInfoSection(
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp),
-                    )
-                }
-            } else {
-                null
-            },
-        nestedItem =
-            if (hasChapters && isActive) {
-                {
-                    Acerola.Component.HeroNestedButton(
-                        title = stringResource(id = R.string.title_sync_chapters),
-                        description = stringResource(id = R.string.description_sync_chapters_internal),
-                        iconBackground = MaterialTheme.colorScheme.primaryContainer,
-                        onClick = { if (!anyLoading) onSyncChapters() },
-                        icon = {
-                            Acerola.Component.SyncActionIcon(
-                                state = chaptersState,
-                                containerSize = 40.dp,
-                                iconSize = 20.dp,
-                                defaultBackground = MaterialTheme.colorScheme.primaryContainer,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.AutoStories,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                        },
                     )
                 }
             } else {

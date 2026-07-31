@@ -5,16 +5,13 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
-import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexSource
 import br.acerola.comic.config.preference.ComicDirectoryPreference
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
@@ -56,14 +53,9 @@ class MangadexComicEngine
         private val metadataExportService: MetadataExporter,
         @param:ApplicationContext private val context: Context,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
-        @param:MangadexEngine private val mangadexChapterEngine: ChapterSyncGateway,
     ) : ComicSingleSyncGateway,
         ComicLibraryScanGateway,
         ComicReadOnlyGateway<ComicMetadataDto> {
-        @Inject
-        @MangadexSource
-        lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
-
         @Inject
         @MangadexSource
         lateinit var mangadexSourceMangaInfoService: MetadataProvider<ComicMetadataDto, String>
@@ -206,8 +198,8 @@ class MangadexComicEngine
                             val comicId =
                                 comicMetadataDao.upsertComicWithRelationsTransaction(
                                     metadata = comicToSave,
-                                    authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
-                                    genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
+                                    authors = bestMatch.authors?.let { listOf(it.toEntity(comicRemoteInfoFk = 0L)) } ?: emptyList(),
+                                    genres = bestMatch.genre.map { it.toEntity(comicRemoteInfoFk = 0L) },
                                     mangadexSource = bestMatch.toMangadexSourceEntity(comicRemoteInfoFk = 0L),
                                     authorDao = authorDao,
                                     genreDao = genreDao,
@@ -241,8 +233,6 @@ class MangadexComicEngine
                                 )
 
                                 metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
-
-                                mangadexChapterEngine.refreshComicChapters(comicId = current.id, baseUri = rootUri)
                             }
                         } else {
                             AcerolaLogger.d(TAG, "No MangaDex match found for: $title", LogSource.REPOSITORY)

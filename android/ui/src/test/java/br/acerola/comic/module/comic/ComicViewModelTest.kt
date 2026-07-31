@@ -21,7 +21,6 @@ import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
@@ -65,7 +64,6 @@ class ComicViewModelTest {
     private val mangadexRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
     private val directoryRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
     private val directoryChapterReadRepo = mockk<ChapterReadGateway<ChapterPageDto>>(relaxed = true)
-    private val mangadexChapterReadRepo = mockk<ChapterReadGateway<ChapterRemoteInfoPageDto>>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
     private lateinit var observeComicHistoryUseCase: ObserveComicHistoryUseCase
@@ -78,7 +76,6 @@ class ComicViewModelTest {
     private val cacheHandler = mockk<ChapterCacheHandler>(relaxed = true)
 
     private val localChaptersFlow = MutableStateFlow(ChapterPageDto(emptyList(), emptyList(), 20, 0, 0))
-    private val remoteChaptersFlow = MutableStateFlow(ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0))
     private val hasRootChaptersFlow = MutableStateFlow(true)
     private val volumeSectionsFlow = MutableStateFlow<List<VolumeChapterGroupDto>>(emptyList())
 
@@ -148,7 +145,6 @@ class ComicViewModelTest {
                 val showHeaders = page.volumes.size > 1 && !hasRootChaptersFlow.value
                 ChapterDto(
                     archive = page.copy(items = sortedItems),
-                    remoteInfo = remoteChaptersFlow.value,
                     showVolumeHeaders = showHeaders,
                     hasVolumeStructure = page.volumes.size > 1,
                     effectiveViewMode = VolumeViewType.CHAPTER,

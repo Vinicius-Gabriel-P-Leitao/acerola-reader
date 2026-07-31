@@ -108,8 +108,8 @@ class AnilistComicEngine
                                     val remoteInfoId =
                                         comicMetadataDao.upsertComicWithRelationsTransaction(
                                             metadata = comicToSave,
-                                            authors = dto.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
-                                            genres = dto.genre.map { it.toEntity(comicId = 0L) },
+                                            authors = dto.authors?.let { listOf(it.toEntity(comicRemoteInfoFk = 0L)) } ?: emptyList(),
+                                            genres = dto.genre.map { it.toEntity(comicRemoteInfoFk = 0L) },
                                             anilistSource = dto.toAnilistSourceEntity(comicRemoteInfoFk = 0L),
                                             authorDao = authorDao,
                                             genreDao = genreDao,

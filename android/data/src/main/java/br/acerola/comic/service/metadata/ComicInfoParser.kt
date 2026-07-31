@@ -5,11 +5,9 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.message.ComicInfoError
 import br.acerola.comic.local.translator.infra.ComicInfoMapper
-import br.acerola.comic.local.translator.infra.toChapterDto
 import br.acerola.comic.local.translator.infra.toMangaDto
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
@@ -68,47 +66,6 @@ class ComicInfoParser
                         summary = summary,
                         year = year,
                     ).toMangaDto().right()
-                }.mapLeft { ComicInfoError.InvalidXmlFormat(it) }
-                .flatMap { it }
-
-        fun parseChapterInfo(inputStream: InputStream): Either<ComicInfoError, ChapterMetadataDto> =
-            Either
-                .catch {
-                    val parser = Xml.newPullParser()
-                    parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-                    parser.setInput(inputStream, null)
-
-                    var title = ""
-                    var number = ""
-                    var volume = ""
-                    var pageCount = 0
-
-                    var eventType = parser.eventType
-                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                        if (eventType == XmlPullParser.START_TAG) {
-                            if (parser.name == "ComicInfo") {
-                                processComicInfo(parser) { tag, value ->
-                                    when (tag) {
-                                        "Title" -> title = value
-                                        "Number" -> number = value
-                                        "Volume" -> volume = value
-                                        "PageCount" -> pageCount = value.toIntOrNull() ?: 0
-                                    }
-                                }
-                                break
-                            } else {
-                                return ComicInfoError.MissingRootElement.left()
-                            }
-                        }
-                        eventType = parser.next()
-                    }
-
-                    ComicInfoMapper(
-                        title = title,
-                        number = number,
-                        volume = volume,
-                        pageCount = pageCount,
-                    ).toChapterDto().right()
                 }.mapLeft { ComicInfoError.InvalidXmlFormat(it) }
                 .flatMap { it }
 

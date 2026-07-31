@@ -88,8 +88,8 @@ class ComicInfoComicEngine
                             val remoteId =
                                 comicMetadataDao.upsertComicWithRelationsTransaction(
                                     metadata = comicToSave,
-                                    authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
-                                    genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
+                                    authors = bestMatch.authors?.let { listOf(it.toEntity(comicRemoteInfoFk = 0L)) } ?: emptyList(),
+                                    genres = bestMatch.genre.map { it.toEntity(comicRemoteInfoFk = 0L) },
                                     authorDao = authorDao,
                                     genreDao = genreDao,
                                 )

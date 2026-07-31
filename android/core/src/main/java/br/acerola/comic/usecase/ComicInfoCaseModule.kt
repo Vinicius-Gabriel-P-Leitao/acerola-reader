@@ -1,6 +1,5 @@
 package br.acerola.comic.usecase
 
-import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
@@ -9,7 +8,6 @@ import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.comic.dto.view.ComicSummaryDto
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
-import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
@@ -30,11 +28,9 @@ object ComicInfoCaseModule {
     @ComicInfoCase
     fun provideSyncLibraryUseCase(
         @ComicInfoEngine scanGateway: ComicLibraryScanGateway,
-        @ComicInfoEngine chapterGateway: ChapterSyncGateway,
     ): SyncLibraryUseCase =
         SyncLibraryUseCase(
             scanGateway = scanGateway,
-            chapterGateway = chapterGateway,
         )
 
     @Provides
@@ -58,27 +54,14 @@ object ComicInfoCaseModule {
         )
 
     @Provides
-    @ComicInfoCase
-    fun provideRescanComicChaptersUseCase(
-        @ComicInfoEngine chapterOps: ChapterSyncGateway,
-    ): RescanComicChaptersUseCase =
-        RescanComicChaptersUseCase(
-            chapterRepository = chapterOps,
-        )
-
-    @Provides
     fun provideSyncComicMetadataUseCase(
         @AnilistEngine anilistMangaRepo: ComicSingleSyncGateway,
         @MangadexEngine mangadexMangaRepo: ComicSingleSyncGateway,
-        @MangadexEngine mangadexChapterRepo: ChapterSyncGateway,
         @ComicInfoEngine comicInfoMangaRepo: ComicSingleSyncGateway,
-        @ComicInfoEngine comicInfoChapterRepo: ChapterSyncGateway,
     ): SyncComicMetadataUseCase =
         SyncComicMetadataUseCase(
             anilistMangaRepo,
             mangadexMangaRepo,
-            mangadexChapterRepo,
             comicInfoMangaRepo,
-            comicInfoChapterRepo,
         )
 }

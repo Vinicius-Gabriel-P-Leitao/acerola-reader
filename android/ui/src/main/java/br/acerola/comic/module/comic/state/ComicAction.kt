@@ -55,11 +55,7 @@ sealed interface ComicSyncAction {
 
     data object SyncMangadexInfo : ComicSyncAction
 
-    data object SyncMangadexChapters : ComicSyncAction
-
     data object SyncComicInfo : ComicSyncAction
-
-    data object SyncComicInfoChapters : ComicSyncAction
 
     data object SyncAnilistInfo : ComicSyncAction
 

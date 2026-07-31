@@ -3,10 +3,6 @@ package br.acerola.comic.local.mapper
 import android.content.Context
 import br.acerola.comic.data.R
 import br.acerola.comic.local.translator.remote.toViewDto
-import br.acerola.comic.remote.mangadex.dto.chapter.ChapterAttributes
-import br.acerola.comic.remote.mangadex.dto.chapter.ChapterMangadexDto
-import br.acerola.comic.remote.mangadex.dto.chapter.ChapterPage
-import br.acerola.comic.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.comic.remote.mangadex.dto.comic.MangaAttributes
 import br.acerola.comic.remote.mangadex.dto.comic.MangaMangadexDto
 import br.acerola.comic.remote.mangadex.dto.comic.Relationship
@@ -16,7 +12,6 @@ import br.acerola.comic.remote.mangadex.dto.comic.TagAttributes
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MangadexSourceMapperTest {
@@ -51,33 +46,5 @@ class MangadexSourceMapperTest {
         assertEquals("cover.jpg", dto.cover?.fileName)
         assertEquals(1, dto.genre.size)
         assertEquals("Action", dto.genre[0].name)
-    }
-
-    @Test
-    fun `ChapterMangadexDto toViewDto deve construir URLs de paginas quando source fornecido`() {
-        val attr = ChapterAttributes("1", "1", "Ch 1", pages = 20, version = 1)
-        val chapterRaw = ChapterMangadexDto("ch1", "chapter", attr, emptyList())
-
-        val source =
-            ChapterSourceMangadexDto(
-                baseUrl = "https://server.com",
-                chapter = ChapterPage("hash123", data = listOf("1.jpg", "2.jpg")),
-            )
-
-        val dto = chapterRaw.toViewDto(source)
-
-        assertEquals(2, dto.pageUrls.size)
-        assertEquals("https://server.com/data/hash123/1.jpg", dto.pageUrls[0])
-        assertEquals("https://server.com/data/hash123/2.jpg", dto.pageUrls[1])
-    }
-
-    @Test
-    fun `ChapterMangadexDto toViewDto deve retornar lista vazia de URLs se source for nulo`() {
-        val attr = ChapterAttributes("1", "1", "Ch 1", pages = 20, version = 1)
-        val chapterRaw = ChapterMangadexDto("ch1", "chapter", attr, emptyList())
-
-        val dto = chapterRaw.toViewDto(null)
-
-        assertTrue(dto.pageUrls.isEmpty())
     }
 }

@@ -11,7 +11,6 @@ import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.fixtures.ComicFixtures
 import br.acerola.comic.module.comic.Comic
 import org.junit.Rule
@@ -29,7 +28,6 @@ class ChapterSectionTest {
                     ComicFixtures.createChapterArchivePageDto(
                         items = ComicFixtures.createChapterList(2),
                     ),
-                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
             )
 
         composeTestRule.setContent {
@@ -39,7 +37,7 @@ class ChapterSectionTest {
                     chapters = chapters,
                     currentPage = 0,
                     totalPages = 1,
-                    onChapterClick = { _, _ -> },
+                    onChapterClick = { _ -> },
                     onToggleRead = {},
                     onPageChange = {},
                 )
@@ -78,7 +76,6 @@ class ChapterSectionTest {
                                     ),
                                 ),
                         ),
-                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = true,
             )
 
@@ -89,7 +86,7 @@ class ChapterSectionTest {
                     chapters = chapters,
                     currentPage = 0,
                     totalPages = 1,
-                    onChapterClick = { _, _ -> },
+                    onChapterClick = { _ -> },
                     onToggleRead = {},
                     onPageChange = {},
                     volumeViewMode = VolumeViewType.VOLUME,
@@ -119,7 +116,6 @@ class ChapterSectionTest {
                                     ChapterFileDto(id = 2L, name = "Cap. 2", path = "", chapterSort = "2", volumeId = 10L),
                                 ),
                         ).copy(volumes = listOf(volume1)),
-                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = false,
             )
 
@@ -130,7 +126,7 @@ class ChapterSectionTest {
                     chapters = chapters,
                     currentPage = 0,
                     totalPages = 1,
-                    onChapterClick = { _, _ -> },
+                    onChapterClick = { _ -> },
                     onToggleRead = {},
                     onPageChange = {},
                     volumeViewMode = VolumeViewType.CHAPTER,

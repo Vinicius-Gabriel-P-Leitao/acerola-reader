@@ -1,38 +1,14 @@
 package br.acerola.comic.local.translator.persistence
 
-import br.acerola.comic.dto.metadata.category.CategoryDto
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
-import br.acerola.comic.local.entity.category.Category
-import br.acerola.comic.local.entity.metadata.ChapterMetadata
 import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
 import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
-
-fun CategoryDto.toEntity(): Category =
-    Category(
-        id = id,
-        name = name,
-        color = color,
-    )
-
-fun AuthorDto.toEntity(comicId: Long): Author =
-    Author(
-        name = name,
-        type = TypeAuthor.getByType(type),
-        comicRemoteInfoFk = comicId,
-    )
-
-fun GenreDto.toEntity(comicId: Long): Genre =
-    Genre(
-        genre = name,
-        comicRemoteInfoFk = comicId,
-    )
 
 fun ComicMetadataDto.toEntity(
     comicDirectoryFk: Long? = this.comicDirectoryFk,
@@ -48,17 +24,17 @@ fun ComicMetadataDto.toEntity(
         syncSource = syncSource,
     )
 
-fun ChapterMetadataDto.toEntity(
-    comicRemoteInfoFk: Long,
-    chapterArchiveFk: Long? = null,
-): ChapterMetadata =
-    ChapterMetadata(
-        chapter = chapter!!,
-        title = title,
-        pageCount = pages,
-        scanlation = scanlator,
+fun AuthorDto.toEntity(comicRemoteInfoFk: Long): Author =
+    Author(
+        name = name,
+        type = TypeAuthor.getByType(type),
         comicRemoteInfoFk = comicRemoteInfoFk,
-        chapterArchiveFk = chapterArchiveFk,
+    )
+
+fun GenreDto.toEntity(comicRemoteInfoFk: Long): Genre =
+    Genre(
+        genre = name,
+        comicRemoteInfoFk = comicRemoteInfoFk,
     )
 
 fun ComicMetadataDto.toMangadexSourceEntity(comicRemoteInfoFk: Long): MangadexSource {

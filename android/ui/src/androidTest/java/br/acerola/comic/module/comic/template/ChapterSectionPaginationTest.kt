@@ -10,7 +10,6 @@ import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.fixtures.ComicFixtures
 import br.acerola.comic.module.comic.Comic
 import org.junit.Assert.assertTrue
@@ -47,7 +46,6 @@ class ChapterSectionPaginationTest {
                                 ),
                             ),
                     ),
-                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = true,
             )
 
@@ -59,7 +57,7 @@ class ChapterSectionPaginationTest {
                     chapters = chapters,
                     currentPage = 0,
                     totalPages = 1,
-                    onChapterClick = { _, _ -> },
+                    onChapterClick = { _ -> },
                     onToggleRead = {},
                     onPageChange = {},
                     volumeViewMode = VolumeViewType.VOLUME,
@@ -101,7 +99,6 @@ class ChapterSectionPaginationTest {
                                 ),
                             ),
                     ),
-                remoteInfo = ChapterRemoteInfoPageDto(emptyList(), 20, 0, 0),
                 showVolumeHeaders = true,
             )
 
@@ -113,7 +110,7 @@ class ChapterSectionPaginationTest {
                     chapters = chapters,
                     currentPage = 0,
                     totalPages = 1,
-                    onChapterClick = { _, _ -> },
+                    onChapterClick = { _ -> },
                     onToggleRead = {},
                     onPageChange = {},
                     volumeViewMode = VolumeViewType.VOLUME,
@@ -124,12 +121,5 @@ class ChapterSectionPaginationTest {
         }
 
         composeTestRule.waitForIdle()
-
-        // Se o problema de cascata existir, calls terá muitos itens rapidamente
-        // ou pelo menos mais de 1 se o estado recompor rápido.
-        // No entanto, em um teste unitário/instrumentado, o estado 'chapters' é estático aqui.
-        // Para simular a cascata real, o 'onLoadVolumeChaptersPage' teria que atualizar um estado que refaz o compose.
-
-        // Mas o teste acima (altura 200dp) já deve pegar se o trigger está sendo composto indevidamente.
     }
 }
