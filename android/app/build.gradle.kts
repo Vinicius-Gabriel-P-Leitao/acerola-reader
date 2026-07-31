@@ -16,8 +16,8 @@ android {
     defaultConfig {
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.2.3 beta"
+        versionCode = 11
+        versionName = "0.2.4 beta"
         applicationId = "br.acerola.comic"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
