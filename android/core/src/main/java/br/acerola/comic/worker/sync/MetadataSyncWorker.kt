@@ -116,7 +116,7 @@ class MetadataSyncWorker
                         )
 
                     progressJob.cancel()
-    
+
                     result.fold(
                         ifLeft = {
                             val errorMsg = it.uiMessage.asString(context)

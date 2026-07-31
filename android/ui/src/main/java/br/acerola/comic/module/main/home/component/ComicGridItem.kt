@@ -1,6 +1,7 @@
 package br.acerola.comic.module.main.home.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +14,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.AutoStories
-import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
@@ -32,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -56,6 +60,9 @@ fun Main.Home.Component.ComicGridItem(
     comic: ComicDto,
     history: ReadingHistoryDto? = null,
     chapterCount: Int = 0,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
     onShowActions: () -> Unit = {},
     onClick: () -> Unit,
 ) {
@@ -121,6 +128,7 @@ fun Main.Home.Component.ComicGridItem(
         ) {
             Acerola.Component.ImageCard(
                 onClick = onClick,
+                onLongClick = onLongClick,
                 image = coverPainter,
                 modifier =
                     Modifier
@@ -193,6 +201,62 @@ fun Main.Home.Component.ComicGridItem(
                             ).padding(2.dp),
                 )
             }
+
+            if (isSelectionMode) {
+                if (isSelected) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = SpacingTokens.Small)
+                                .clip(ShapeTokens.Medium)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(44.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = CircleShape,
+                                    ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = SpacingTokens.Small)
+                                .clip(ShapeTokens.Medium)
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(36.dp)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.3f),
+                                        shape = CircleShape,
+                                    ).border(
+                                        width = 2.dp,
+                                        color = Color.White.copy(alpha = 0.8f),
+                                        shape = CircleShape,
+                                    ),
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(SpacingTokens.Small))
@@ -263,8 +327,8 @@ fun Main.Home.Component.ComicGridItem(
                 modifier = Modifier.size(SizeTokens.IconMedium),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.MoreHoriz,
-                    contentDescription = null,
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

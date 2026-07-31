@@ -38,8 +38,6 @@ object MetadataFixtures {
         hasComicInfo = hasComicInfo,
     )
 
-
-
     fun createMangaRemoteInfoDto(
         title: String = "Naruto",
         description: String = "Desc",

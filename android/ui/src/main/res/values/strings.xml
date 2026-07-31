@@ -255,6 +255,13 @@
     <string name="dialog_unhide_message">Este quadrinho voltará a ser exibido na biblioteca principal.</string>
     <string name="dialog_delete_title">Deletar quadrinho?</string>
     <string name="dialog_delete_message">Esta ação remove o quadrinho do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
+    <string name="label_selection_count">%1$d selecionado(s)</string>
+    <string name="action_select_all">Selecionar tudo</string>
+    <string name="action_deselect_all">Desmarcar tudo</string>
+    <string name="dialog_batch_hide_title">Ocultar %1$d quadrinhos?</string>
+    <string name="dialog_batch_hide_message">Os quadrinhos selecionados serão ocultados da biblioteca. Você pode usar o filtro para ver quadrinhos ocultos.</string>
+    <string name="dialog_batch_delete_title">Deletar %1$d quadrinhos?</string>
+    <string name="dialog_batch_delete_message">Esta ação removerá %1$d quadrinhos selecionados do banco de dados e apagará suas pastas do dispositivo. Não pode ser desfeita.</string>
 
     <!-- Dialog Actions -->
     <string name="action_confirm">Confirmar</string>

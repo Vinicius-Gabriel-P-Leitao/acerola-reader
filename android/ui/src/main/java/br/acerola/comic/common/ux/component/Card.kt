@@ -1,6 +1,8 @@
 package br.acerola.comic.common.ux.component
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -26,45 +28,70 @@ import androidx.compose.ui.text.style.TextAlign
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.tokens.SpacingTokens
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Acerola.Component.ImageCard(
     image: Painter,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
     title: String? = null,
     footer: String? = null,
     colors: CardColors = CardDefaults.elevatedCardColors(),
     elevation: CardElevation = CardDefaults.elevatedCardElevation(),
 ) {
-    ElevatedCard(
-        colors = colors,
-        onClick = onClick,
-        modifier = modifier,
-        elevation = elevation,
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = image,
-                contentDescription = title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+    if (onLongClick != null) {
+        ElevatedCard(
+            colors = colors,
+            modifier =
+                modifier.combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                ),
+            elevation = elevation,
+        ) {
+            ImageCardContent(image = image, title = title, footer = footer)
+        }
+    } else {
+        ElevatedCard(
+            colors = colors,
+            onClick = onClick,
+            modifier = modifier,
+            elevation = elevation,
+        ) {
+            ImageCardContent(image = image, title = title, footer = footer)
+        }
+    }
+}
 
-            if (footer != null) {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .background(Color.Black.copy(alpha = 0.6f))
-                            .padding(horizontal = SpacingTokens.Medium, vertical = SpacingTokens.Small),
-                ) {
-                    Text(
-                        text = footer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
+@Composable
+private fun ImageCardContent(
+    image: Painter,
+    title: String?,
+    footer: String?,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = image,
+            contentDescription = title,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        if (footer != null) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .padding(horizontal = SpacingTokens.Medium, vertical = SpacingTokens.Small),
+            ) {
+                Text(
+                    text = footer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
             }
         }
     }

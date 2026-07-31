@@ -1,6 +1,7 @@
 package br.acerola.comic.module.main.common.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.AutoStories
-import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
@@ -58,6 +61,9 @@ fun Main.Common.Component.ComicListItem(
     subtitle: String? = null,
     chapterCount: Int = 0,
     isCompleted: Boolean = false,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
     onPlayClick: (() -> Unit)? = null,
     onShowActions: (() -> Unit)? = null,
     onClick: () -> Unit,
@@ -119,6 +125,7 @@ fun Main.Common.Component.ComicListItem(
         ) {
             Acerola.Component.ImageCard(
                 onClick = onClick,
+                onLongClick = onLongClick,
                 image = coverPainter,
                 modifier =
                     Modifier
@@ -193,6 +200,62 @@ fun Main.Common.Component.ComicListItem(
                                 shape = ShapeTokens.ExtraSmall,
                             ).padding(2.dp),
                 )
+            }
+
+            if (isSelectionMode) {
+                if (isSelected) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = SpacingTokens.ExtraSmall)
+                                .clip(ShapeTokens.Medium)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(38.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = CircleShape,
+                                    ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = SpacingTokens.ExtraSmall)
+                                .clip(ShapeTokens.Medium)
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.3f),
+                                        shape = CircleShape,
+                                    ).border(
+                                        width = 2.dp,
+                                        color = Color.White.copy(alpha = 0.8f),
+                                        shape = CircleShape,
+                                    ),
+                        )
+                    }
+                }
             }
         }
 
@@ -307,8 +370,8 @@ fun Main.Common.Component.ComicListItem(
                         .size(SpacingTokens.Giant),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.MoreHoriz,
-                    contentDescription = null,
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
                     modifier = Modifier.size(SizeTokens.IconSmall),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

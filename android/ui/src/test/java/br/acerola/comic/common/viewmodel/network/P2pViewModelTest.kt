@@ -27,11 +27,12 @@ class P2pViewModelTest {
 
     @Test
     fun `deve delegar conexao para o use case`() {
-        val peerAddress = PeerAddress(
-            id = "peer-1",
-            deviceId = "device-1",
-            addrs = byteArrayOf()
-        )
+        val peerAddress =
+            PeerAddress(
+                id = "peer-1",
+                deviceId = "device-1",
+                addrs = byteArrayOf(),
+            )
         val alpn = "test".toByteArray()
         viewModel.connectToPeer(peerAddress, alpn)
         verify { p2pUseCase.connect(peerAddress, alpn) }

@@ -82,9 +82,10 @@ fun Main.Tutorial.Template.Screen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = SpacingTokens.Large, horizontal = SpacingTokens.Large),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = SpacingTokens.Large, horizontal = SpacingTokens.Large),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -96,10 +97,11 @@ fun Main.Tutorial.Template.Screen(
                 val textColor = if (isSelected || isPast) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(ShapeTokens.Full)
-                        .background(bgColor),
+                    modifier =
+                        Modifier
+                            .size(32.dp)
+                            .clip(ShapeTokens.Full)
+                            .background(bgColor),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(text = "${index + 1}", color = textColor, fontWeight = FontWeight.Bold)
@@ -107,10 +109,19 @@ fun Main.Tutorial.Template.Screen(
 
                 if (index < pages.lastIndex) {
                     Box(
-                        modifier = Modifier
-                            .width(24.dp)
-                            .height(2.dp)
-                            .background(if (isSelected || isPast) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                        modifier =
+                            Modifier
+                                .width(24.dp)
+                                .height(2.dp)
+                                .background(
+                                    if (isSelected ||
+                                        isPast
+                                    ) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                                ),
                     )
                 }
             }
@@ -130,10 +141,11 @@ fun Main.Tutorial.Template.Screen(
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = SpacingTokens.Large)
-                .padding(bottom = SpacingTokens.Large),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SpacingTokens.Large)
+                    .padding(bottom = SpacingTokens.Large),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -174,9 +186,10 @@ fun Main.Tutorial.Template.Screen(
 @Composable
 fun WelcomeSlide() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = SpacingTokens.Giant),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = SpacingTokens.Giant),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -201,18 +214,20 @@ fun FormatsSlide() {
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(56.dp)
-                .clip(ShapeTokens.Large)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+            modifier =
+                Modifier
+                    .size(56.dp)
+                    .clip(ShapeTokens.Large)
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
         ) {
             Icon(
                 imageVector = Icons.Default.FolderZip,
@@ -248,10 +263,11 @@ fun FormatsSlide() {
             name = stringResource(id = R.string.tutorial_formats_cbz_title),
             badge = stringResource(id = R.string.tutorial_formats_cbz_badge),
             description = stringResource(id = R.string.tutorial_formats_cbz_desc),
-            features = listOf(
-                stringResource(id = R.string.tutorial_formats_cbz_feat_1),
-                stringResource(id = R.string.tutorial_formats_cbz_feat_2),
-            ),
+            features =
+                listOf(
+                    stringResource(id = R.string.tutorial_formats_cbz_feat_1),
+                    stringResource(id = R.string.tutorial_formats_cbz_feat_2),
+                ),
             icon = Icons.Default.FolderZip,
             isPrimary = true,
         )
@@ -263,10 +279,11 @@ fun FormatsSlide() {
             name = stringResource(id = R.string.tutorial_formats_cbr_title),
             badge = stringResource(id = R.string.tutorial_formats_cbr_badge),
             description = stringResource(id = R.string.tutorial_formats_cbr_desc),
-            features = listOf(
-                stringResource(id = R.string.tutorial_formats_cbr_feat_1),
-                stringResource(id = R.string.tutorial_formats_cbr_feat_2),
-            ),
+            features =
+                listOf(
+                    stringResource(id = R.string.tutorial_formats_cbr_feat_1),
+                    stringResource(id = R.string.tutorial_formats_cbr_feat_2),
+                ),
             icon = Icons.Default.Layers,
             isPrimary = false,
         )
@@ -278,10 +295,11 @@ fun FormatsSlide() {
             name = stringResource(id = R.string.tutorial_formats_pdf_title),
             badge = stringResource(id = R.string.tutorial_formats_pdf_badge),
             description = stringResource(id = R.string.tutorial_formats_pdf_desc),
-            features = listOf(
-                stringResource(id = R.string.tutorial_formats_pdf_feat_1),
-                stringResource(id = R.string.tutorial_formats_pdf_feat_2),
-            ),
+            features =
+                listOf(
+                    stringResource(id = R.string.tutorial_formats_pdf_feat_1),
+                    stringResource(id = R.string.tutorial_formats_pdf_feat_2),
+                ),
             icon = Icons.Default.PictureAsPdf,
             isPrimary = false,
         )
@@ -290,9 +308,10 @@ fun FormatsSlide() {
 
         OutlinedCard(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-            ),
+            colors =
+                CardDefaults.outlinedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                ),
             shape = ShapeTokens.Medium,
         ) {
             Row(
@@ -301,10 +320,11 @@ fun FormatsSlide() {
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(ShapeTokens.Medium)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .clip(ShapeTokens.Medium)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                 ) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
@@ -316,13 +336,14 @@ fun FormatsSlide() {
 
                 Spacer(modifier = Modifier.width(SpacingTokens.Medium))
 
-                val annotatedText = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)) {
-                        append(stringResource(id = R.string.tutorial_formats_sync_note_title))
+                val annotatedText =
+                    buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)) {
+                            append(stringResource(id = R.string.tutorial_formats_sync_note_title))
+                        }
+                        append(" ")
+                        append(stringResource(id = R.string.tutorial_formats_sync_note_content))
                     }
-                    append(" ")
-                    append(stringResource(id = R.string.tutorial_formats_sync_note_content))
-                }
 
                 Text(
                     text = annotatedText,
@@ -346,8 +367,22 @@ private fun FormatCard(
     isPrimary: Boolean,
 ) {
     val borderColor = if (isPrimary) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant
-    val containerBg = if (isPrimary) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-    val badgeBg = if (isPrimary) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+    val containerBg =
+        if (isPrimary) {
+            MaterialTheme.colorScheme.primaryContainer.copy(
+                alpha = 0.15f,
+            )
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        }
+    val badgeBg =
+        if (isPrimary) {
+            MaterialTheme.colorScheme.primary.copy(
+                alpha = 0.15f,
+            )
+        } else {
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+        }
     val badgeTextColor = if (isPrimary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
 
     OutlinedCard(
@@ -364,10 +399,11 @@ private fun FormatCard(
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(ShapeTokens.Medium)
-                        .background(badgeBg),
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .clip(ShapeTokens.Medium)
+                            .background(badgeBg),
                 ) {
                     Icon(
                         imageVector = icon,
@@ -453,9 +489,10 @@ fun SettingsSlide(
     val selectedTheme by themeViewModel.currentTheme.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = SpacingTokens.Large),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = SpacingTokens.Large),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -485,9 +522,10 @@ fun SettingsSlide(
 @Composable
 fun CompleteSlide() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = SpacingTokens.Giant),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = SpacingTokens.Giant),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

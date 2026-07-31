@@ -269,7 +269,7 @@ fun Main.Common.Component.ComicActionsSheet(
 }
 
 @Composable
-private fun ComicCategorySheet(
+fun Main.Common.Component.ComicCategorySheet(
     categories: List<CategoryDto>,
     selectedCategoryId: Long?,
     onSelect: (categoryId: Long?) -> Unit,

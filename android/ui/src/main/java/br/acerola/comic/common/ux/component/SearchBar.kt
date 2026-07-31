@@ -44,7 +44,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -122,16 +121,20 @@ fun <T> Acerola.Component.SearchBar(
         expanded = expanded,
         onExpandedChange = onExpandedChange,
         shape = animatedShape,
-        colors = SearchBarDefaults.colors(
-            containerColor = if (expanded) {
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            } else {
-                MaterialTheme.colorScheme.surfaceContainer
-            },
-        ),
+        colors =
+            SearchBarDefaults.colors(
+                containerColor =
+                    if (expanded) {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    },
+            ),
         tonalElevation = if (expanded) 0.dp else 3.dp,
         shadowElevation = 0.dp,
-        windowInsets = androidx.compose.foundation.layout.WindowInsets(0.dp),
+        windowInsets =
+            androidx.compose.foundation.layout
+                .WindowInsets(0.dp),
     ) {
         AnimatedVisibility(
             visible = expanded,
@@ -222,9 +225,7 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
 }
 
 @Composable
-fun rememberSearchBarContentPadding(
-    additionalBottomPadding: Dp = 16.dp,
-): PaddingValues {
+fun rememberSearchBarContentPadding(additionalBottomPadding: Dp = 16.dp): PaddingValues {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -237,4 +238,3 @@ fun rememberSearchBarContentPadding(
         bottom = bottomBarHeight + bottomInset + additionalBottomPadding,
     )
 }
-

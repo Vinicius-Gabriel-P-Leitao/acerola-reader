@@ -41,7 +41,6 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.androidx.compose.foundation)
 
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.coroutines.android)
