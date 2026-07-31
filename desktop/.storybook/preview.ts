@@ -2,7 +2,7 @@
 import type { Preview } from '@storybook/sveltekit';
 import './storybook.css';
 
-const DARK_THEMES = ['catppuccin-mocha', 'nord-dark', 'dracula'];
+const DARK_THEMES = ['catppuccin-mocha', 'nord-dark', 'dracula', 'tokyo-night-storm'];
 
 export const globalTypes = {
 	theme: {
@@ -16,7 +16,9 @@ export const globalTypes = {
 				{ value: 'nord-dark', title: 'Nord Dark' },
 				{ value: 'nord-light', title: 'Nord Light' },
 				{ value: 'dracula', title: 'Dracula (Dark)' },
-				{ value: 'alucard', title: 'Alucard (Light)' }
+				{ value: 'alucard', title: 'Alucard (Light)' },
+				{ value: 'tokyo-night-storm', title: 'Tokyo Night Storm (Dark)' },
+				{ value: 'tokyo-night-day', title: 'Tokyo Night Day (Light)' }
 			],
 			dynamicTitle: true
 		}

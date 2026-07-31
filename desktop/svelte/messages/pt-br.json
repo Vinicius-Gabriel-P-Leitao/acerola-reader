@@ -12,6 +12,10 @@
     "dracula": {
       "name": "Dracula",
       "desc": "Cores vibrantes sobre fundo escuro ou claro"
+    },
+    "tokyo-night": {
+      "name": "Tokyo Night",
+      "desc": "Tema escuro e claro limpo inspirado pelas luzes neon de Tóquio"
     }
   },
   "components": {
@@ -52,6 +56,7 @@
     "comic_scanner": {
       "no_folder": "Sem pasta selecionada.",
       "in_progress": "Scan em andamento...",
+      "converting": "Convertendo arquivos para cbz...",
       "success": "Scan concluído!",
       "error": {
         "title": "Falha no scan"
@@ -111,6 +116,11 @@
     "home": {
       "loading": "Carregando...",
       "no_comics": "Nenhum quadrinho encontrado.",
+      "empty": {
+        "desc": "Sua biblioteca está vazia no momento. Execute uma sincronização rápida na pasta atual ou selecione outra pasta contendo seus quadrinhos (.cbz, .cbr, .pdf).",
+        "quick_sync": "Sincronização Rápida",
+        "select_folder": "Selecionar Pasta"
+      },
       "sort": {
         "button": "Ordenar",
         "title": {

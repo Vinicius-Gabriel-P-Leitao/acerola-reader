@@ -9,7 +9,7 @@
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
-	import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
+	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
 	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
@@ -45,6 +45,7 @@
 	let showActionDialog = $state(false);
 
 	onMount(async () => {
+		await folderStore.loadSavedPath();
 		await bookmarkStore.loadBookmarks();
 		unlistenScan = await listen(LIBRARY_EVENTS.scanComplete, async () => {
 			await summary.fetch();
@@ -112,10 +113,7 @@
 
 	function handleActionClick(event: MouseEvent, comicId: string | number) {
 		event.stopPropagation();
-		if (!selection.isSelected(comicId)) {
-			selection.toggleSelection(comicId);
-		}
-		showActionDialog = true;
+		selection.toggleSelection(comicId);
 	}
 
 	function handleSelectAllToggle() {
@@ -270,13 +268,13 @@
 					{#snippet action()}
 						<AcerolaButtonIcon
 							ui={{
-								class: 'text-overlay bg-transparent transition-colors hover:text-primary'
+								class: 'text-overlay bg-transparent transition-colors hover:text-primary translate-x-1.5 -mr-1.5'
 							}}
 							events={{
 								onClick: (event) => handleActionClick(event, comic.relations.directoryId)
 							}}
 						>
-							<MoreHorizontal size={16} />
+							<MoreVertical size={16} />
 						</AcerolaButtonIcon>
 					{/snippet}
 
@@ -330,7 +328,7 @@
 			{m['pages.home.no_comics']()}
 		</h3>
 		<p class="mt-1.5 max-w-md text-sm text-muted-foreground">
-			Sua biblioteca está vazia no momento. Execute uma sincronização rápida na pasta atual ou selecione outra pasta contendo seus quadrinhos (.cbz, .cbr, .pdf).
+			{m['pages.home.empty.desc']()}
 		</p>
 		<div class="mt-6 flex flex-wrap items-center justify-center gap-3">
 			<AcerolaButton
@@ -338,7 +336,7 @@
 				events={{ onClick: () => refreshScanner.start() }}
 			>
 				<RefreshCw size={18} class={refreshScanner.scanning ? 'animate-spin' : ''} />
-				Sincronização Rápida
+				{m['pages.home.empty.quick_sync']()}
 			</AcerolaButton>
 
 			<AcerolaButton
@@ -351,7 +349,7 @@
 				}}
 			>
 				<FolderPlus size={16} />
-				Selecionar Pasta
+				{m['pages.home.empty.select_folder']()}
 			</AcerolaButton>
 		</div>
 	</div>

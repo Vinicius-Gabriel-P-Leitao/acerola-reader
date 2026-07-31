@@ -39,6 +39,7 @@
 				</div>
 				<ThemePicker
 					data={{ theme: themeCtx.theme, mode: themeCtx.resolved }}
+					ui={{ showHeader: false }}
 					events={{ onSelect: (name: ThemeColor) => themeCtx.setTheme(name) }}
 				/>
 			</div>

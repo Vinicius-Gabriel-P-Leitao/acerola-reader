@@ -12,6 +12,10 @@
     "dracula": {
       "name": "Dracula",
       "desc": "Vibrant colors on dark or light background"
+    },
+    "tokyo-night": {
+      "name": "Tokyo Night",
+      "desc": "Clean dark and light theme inspired by Tokyo neon lights"
     }
   },
   "components": {
@@ -52,6 +56,7 @@
     "comic_scanner": {
       "no_folder": "No folder selected.",
       "in_progress": "Scan in progress...",
+      "converting": "Converting files to CBZ...",
       "success": "Scan complete!",
       "error": {
         "title": "Scan failed"
@@ -111,6 +116,11 @@
     "home": {
       "loading": "Loading...",
       "no_comics": "No comics found.",
+      "empty": {
+        "desc": "Your library is empty right now. Perform a quick sync in the current folder or select another folder containing your comics (.cbz, .cbr, .pdf).",
+        "quick_sync": "Quick Sync",
+        "select_folder": "Select Folder"
+      },
       "sort": {
         "button": "Sort",
         "title": {
