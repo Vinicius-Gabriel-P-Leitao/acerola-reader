@@ -51,11 +51,7 @@ pub struct ComicSummaryBookmark {
 
 impl From<Category> for ComicSummaryBookmark {
     fn from(c: Category) -> Self {
-        Self {
-            id: c.id.unwrap_or(0),
-            name: c.name,
-            color: c.color,
-        }
+        Self { id: c.id.unwrap_or(0), name: c.name, color: c.color }
     }
 }
 
@@ -105,8 +101,7 @@ impl ComicSummaryPayload {
 impl ComicSummaryItem {
     pub fn from_view(
         view: ComicSummaryView, chapter_count: i64,
-        full_metadata: Option<(ComicMetadata, Option<AuthorMetadata>)>,
-        bookmark: Option<Category>,
+        full_metadata: Option<(ComicMetadata, Option<AuthorMetadata>)>, bookmark: Option<Category>,
     ) -> Self {
         Self {
             relations: ComicSummaryRelations {

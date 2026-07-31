@@ -28,9 +28,12 @@ pub async fn get_comic_summary_sorted<R: Runtime>(
         let service = HomeService::new(pool);
 
         match service.get_all_sorted(criteria).await {
-            Ok((comics, counts, meta_map, bookmark_map)) => {
-                app.emit("home:data", ComicSummaryPayload::from(comics, counts, meta_map, bookmark_map)).unwrap()
-            },
+            Ok((comics, counts, meta_map, bookmark_map)) => app
+                .emit(
+                    "home:data",
+                    ComicSummaryPayload::from(comics, counts, meta_map, bookmark_map),
+                )
+                .unwrap(),
             Err(err) => app.emit("home:error", ErrorPayload::from(&err)).unwrap(),
         }
     });

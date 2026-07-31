@@ -364,10 +364,30 @@
     },
     "formats": {
       "title": "Supported Formats",
-      "desc": "Acerola supports the following formats:",
-      "cbz": "Comic Book format.",
-      "cbr": "Comic Book format.",
-      "pdf": "PDFs are converted to CBZ format. Treated as single chapters, pages are not automatically separated."
+      "desc": "Acerola supports the following reading formats:",
+      "cbz": {
+        "title": "Comic Book ZIP",
+        "badge": "Recommended",
+        "desc": "Random access ZIP container. Instant reading with smart in-memory caching and prefetching.",
+        "feature_1": "Direct random access",
+        "feature_2": "In-memory LRU cache"
+      },
+      "cbr": {
+        "title": "Comic Book RAR",
+        "badge": "Native (Unrar)",
+        "desc": "Native support via Unrar in Rust. On-demand page extraction directly into memory with zero temporary files.",
+        "feature_1": "On-demand reading",
+        "feature_2": "No disk clutter"
+      },
+      "pdf": {
+        "title": "PDF Document",
+        "badge": "Auto-Conversion",
+        "desc": "Automatically converted to CBZ via Pdfium engine in background for optimal reader performance.",
+        "feature_1": "High resolution",
+        "feature_2": "Conversion to CBZ"
+      },
+      "sync_note_title": "Automatic Sync:",
+      "sync_note": "Acerola scans and indexes your files in these formats without needing manual extraction."
     },
     "settings": {
       "title": "Initial Setup",

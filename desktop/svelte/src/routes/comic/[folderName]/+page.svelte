@@ -182,7 +182,9 @@
 			if (manga) {
 				manga.metadata.externalSync = value;
 			}
-			const successMsg = value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']();
+			const successMsg = value
+				? m['pages.comic.toast.sync_enabled']()
+				: m['pages.comic.toast.sync_disabled']();
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
@@ -348,9 +350,9 @@
 				.map((comic, index) => ({
 					id: comic.id.toString(),
 					name: comic.name,
-					title: comic.metaTitle || comic.name,
-					fileName: comic.metaScanlation ? `${comic.name} • ${comic.metaScanlation}` : comic.name,
-					isRead: readChapters.includes(comic.id.toString()),
+					title: comic.name,
+					fileName: comic.name,
+					isRead: Array.isArray(readChapters) ? readChapters.includes(comic.id.toString()) : false,
 					chapterSort: comic.chapterSort,
 					path: comic.path,
 					volumeId: comic.volumeId,
@@ -395,7 +397,8 @@
 			volumes,
 			pageSize,
 			metadata: {
-				description: item.metadata.description || m['pages.comic.metadata.description_unavailable'](),
+				description:
+					item.metadata.description || m['pages.comic.metadata.description_unavailable'](),
 				author: item.metadata.author || m['pages.comic.metadata.unknown_author'](),
 				status: item.metadata.status || m['pages.comic.metadata.unknown_status'](),
 				source: item.metadata.activeSource || 'LOCAL',

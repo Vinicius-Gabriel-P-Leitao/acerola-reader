@@ -61,14 +61,7 @@ impl CategoryRepository {
 
         let mut map = std::collections::HashMap::new();
         for (comic_directory_fk, id, name, color) in rows {
-            map.insert(
-                comic_directory_fk,
-                Category {
-                    id,
-                    name,
-                    color,
-                },
-            );
+            map.insert(comic_directory_fk, Category { id, name, color });
         }
         Ok(map)
     }

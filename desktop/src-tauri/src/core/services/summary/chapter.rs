@@ -92,19 +92,6 @@ impl ChapterService {
             (items, count)
         };
 
-        let chapter_metas = if let Ok(Some(comic_meta)) =
-            self.metadata_repo.get_comic_metadata_by_comic_id(comic_directory_fk).await
-        {
-            self.metadata_repo
-                .get_chapter_metadata_by_comic_metadata_id(comic_meta.id)
-                .await
-                .unwrap_or_default()
-        } else {
-            Vec::new()
-        };
-
-        let get_meta = |ch: &String| chapter_metas.iter().find(|m| &m.chapter == ch);
-
         let chapter_items = chapters_with_volume
             .iter()
             .map(|chapter| ChapterFileDto {
@@ -116,8 +103,6 @@ impl ChapterService {
                 volume_name: chapter.volume_name.clone(),
                 is_special: chapter.is_special,
                 last_modified: chapter.last_modified,
-                meta_title: get_meta(&chapter.chapter).and_then(|m| m.title.clone()),
-                meta_scanlation: get_meta(&chapter.chapter).and_then(|m| m.scanlation.clone()),
             })
             .collect::<Vec<_>>();
 
@@ -151,9 +136,6 @@ impl ChapterService {
                         volume_name: chapter.volume_name.clone(),
                         is_special: chapter.is_special,
                         last_modified: chapter.last_modified,
-                        meta_title: get_meta(&chapter.chapter).and_then(|m| m.title.clone()),
-                        meta_scanlation: get_meta(&chapter.chapter)
-                            .and_then(|m| m.scanlation.clone()),
                     })
                     .collect::<Vec<_>>();
 

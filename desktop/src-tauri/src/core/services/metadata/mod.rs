@@ -5,22 +5,15 @@ use sqlx::SqlitePool;
 use crate::{
     core::services::archive::files_guard::{ArchiveFileGuard, FileGuard, MetadataFileGuard},
     data::{
-        models::{
-            metadata::{author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata},
-            relations::chapter_with_volume::ChapterArchiveWithVolume,
-        },
+        models::metadata::{author::AuthorMetadata, comic::ComicMetadata},
         repositories::{
-            archive::{
-                chapter_archive_repo::{ChapterRepository, ChapterSortCriteria},
-                comic_directory_repo::ComicRepository,
-            },
-            metadata::MetadataRepository,
+            archive::comic_directory_repo::ComicRepository, metadata::MetadataRepository,
         },
     },
     infra::{
         api::{
             anilist::{AnilistClient, AnilistMedia},
-            mangadex::{ChapterData, MangaData, MangadexClient, Relationship},
+            mangadex::{MangaData, MangadexClient, Relationship},
         },
         error::ComicError,
     },
@@ -73,7 +66,6 @@ fn find_xml_in_directory_archives(directory: &std::path::Path) -> Option<String>
 pub struct MetadataService {
     repo: MetadataRepository,
     comic_directory_repo: ComicRepository,
-    archive_chapter_repo: ChapterRepository,
     mangadex_client: MangadexClient,
     anilist_client: AnilistClient,
     http_client: reqwest::Client,
@@ -83,8 +75,7 @@ impl MetadataService {
     pub fn new(pool: SqlitePool) -> Self {
         Self {
             repo: MetadataRepository::new(pool.clone()),
-            comic_directory_repo: ComicRepository::new(pool.clone()),
-            archive_chapter_repo: ChapterRepository::new(pool),
+            comic_directory_repo: ComicRepository::new(pool),
             mangadex_client: MangadexClient::new(),
             anilist_client: AnilistClient::new(),
             http_client: reqwest::Client::builder()
@@ -114,7 +105,6 @@ impl MetadataService {
 
         self.process_mangadex_author(&manga.relationships, saved.id).await?;
         self.process_mangadex_cover(&manga, comic_directory_fk, saved.id).await?;
-        self.process_mangadex_chapters(&manga.id, comic_directory_fk, saved.id, language).await?;
 
         if generate_comic_info {
             self.generate_and_save_comic_info(comic_directory_fk, saved.id).await?;
@@ -132,7 +122,6 @@ impl MetadataService {
 
         self.process_anilist_author(&media, saved.id).await?;
         self.process_anilist_images(&media, comic_directory_fk, saved.id).await?;
-        self.process_anilist_chapters(comic_directory_fk, saved.id).await?;
 
         if generate_comic_info {
             self.generate_and_save_comic_info(comic_directory_fk, saved.id).await?;
@@ -149,7 +138,6 @@ impl MetadataService {
         let saved = self.upsert_metadata(metadata, comic_directory_fk).await?;
 
         self.process_comic_info_author(&comic_info, saved.id).await?;
-        self.process_comic_info_chapter(&comic_info, saved.id).await?;
 
         Ok(saved)
     }
@@ -522,54 +510,6 @@ impl MetadataService {
         self.upsert_author(name, author_type, metadata_id).await
     }
 
-    async fn process_comic_info_chapter(
-        &self, comic_info: &comic_info::ComicInfo, metadata_id: i64,
-    ) -> Result<(), ComicError> {
-        if let Some(number) = comic_info.number.as_ref().filter(|text| !text.trim().is_empty()) {
-            self.save_chapter(comic_info.title.clone(), number, comic_info.page_count, metadata_id, None)
-                .await?;
-        }
-        Ok(())
-    }
-
-    async fn save_chapter(
-        &self, title: Option<String>, number: &str, page_count: Option<i32>, metadata_id: i64, chapter_archive_fk: Option<i64>,
-    ) -> Result<(), ComicError> {
-        let existing_chapters =
-            self.repo.get_chapter_metadata_by_comic_metadata_id(metadata_id).await?;
-        let existing = existing_chapters.into_iter().find(|c| c.chapter == number);
-
-        match existing {
-            Some(found) => {
-                let chapter = ChapterMetadata {
-                    id: found.id,
-                    title: title.or(found.title),
-                    chapter: number.to_string(),
-                    page_count: page_count.map(|count| count as i64).or(found.page_count),
-                    scanlation: found.scanlation,
-                    comic_metadata_fk: metadata_id,
-                    chapter_archive_fk: chapter_archive_fk.or(found.chapter_archive_fk),
-                };
-                self.repo.chapter_repo.update(&chapter).await?;
-            },
-            None => {
-                let chapter = ChapterMetadata {
-                    id: self.repo.chapter_repo.get_next_id().await?,
-                    title,
-                    chapter: number.to_string(),
-                    page_count: page_count.map(|count| count as i64),
-                    scanlation: None,
-                    comic_metadata_fk: metadata_id,
-                    chapter_archive_fk,
-                };
-                self.repo.chapter_repo.insert(&chapter).await?;
-            },
-        }
-        Ok(())
-    }
-}
-
-impl MetadataService {
     async fn process_mangadex_cover(
         &self, manga: &MangaData, comic_directory_fk: i64, _metadata_id: i64,
     ) -> Result<(), ComicError> {
@@ -651,111 +591,6 @@ impl MetadataService {
         tracing::info!("Downloaded {} bytes from {}", bytes.len(), url);
 
         tokio::fs::write(&file_path, &bytes).await?;
-
-        Ok(())
-    }
-}
-
-impl MetadataService {
-    async fn process_mangadex_chapters(
-        &self, manga_id: &str, comic_directory_fk: i64, metadata_id: i64, language: &str,
-    ) -> Result<(), ComicError> {
-        let chapters_response = self.mangadex_client.get_manga_chapters(manga_id, language).await?;
-        let local_chapters = self
-            .archive_chapter_repo
-            .get_chapters_by_directory(comic_directory_fk, 10000, 0, ChapterSortCriteria::NumberAsc)
-            .await?;
-
-        let remote_map = Self::build_chapter_map(chapters_response.data);
-        self.sync_matching_chapters(local_chapters, &remote_map, metadata_id).await?;
-
-        Ok(())
-    }
-
-    async fn process_anilist_chapters(
-        &self, comic_directory_fk: i64, metadata_id: i64,
-    ) -> Result<(), ComicError> {
-        let local_chapters = self
-            .archive_chapter_repo
-            .get_chapters_by_directory(comic_directory_fk, 10000, 0, ChapterSortCriteria::NumberAsc)
-            .await?;
-
-        for local_chapter in local_chapters {
-            self.save_chapter(None, &local_chapter.chapter, None, metadata_id, Some(local_chapter.id)).await?;
-        }
-
-        Ok(())
-    }
-
-    fn build_chapter_map(chapters: Vec<ChapterData>) -> HashMap<String, ChapterData> {
-        chapters
-            .into_iter()
-            .filter_map(|chapter_data| {
-                chapter_data
-                    .attributes
-                    .chapter
-                    .clone()
-                    .map(|chapter_number| (chapter_number, chapter_data))
-            })
-            .collect()
-    }
-
-    async fn sync_matching_chapters(
-        &self, local_chapters: Vec<ChapterArchiveWithVolume>,
-        remote_map: &HashMap<String, ChapterData>, metadata_id: i64,
-    ) -> Result<(), ComicError> {
-        for local_chapter in local_chapters {
-            if let Some(remote) = remote_map.get(&local_chapter.chapter_sort) {
-                self.save_chapter_metadata(remote, &local_chapter, metadata_id).await?;
-            }
-        }
-        Ok(())
-    }
-
-    async fn save_chapter_metadata(
-        &self, remote: &ChapterData, local_chapter: &ChapterArchiveWithVolume, metadata_id: i64,
-    ) -> Result<(), ComicError> {
-        let scanlation = remote
-            .relationships
-            .iter()
-            .find(|rel| rel.kind == "scanlation_group")
-            .and_then(|rel| rel.attributes.as_ref())
-            .and_then(|attr| attr.name.clone());
-
-        let existing_chapters =
-            self.repo.get_chapter_metadata_by_comic_metadata_id(metadata_id).await?;
-        let existing = existing_chapters.into_iter().find(|c| c.chapter == local_chapter.chapter);
-
-        match existing {
-            Some(found) => {
-                let chapter_metadata = ChapterMetadata {
-                    id: found.id,
-                    title: remote.attributes.title.clone().or(found.title),
-                    chapter: local_chapter.chapter.clone(),
-                    page_count: remote
-                        .attributes
-                        .pages
-                        .map(|page| page as i64)
-                        .or(found.page_count),
-                    scanlation: scanlation.or(found.scanlation),
-                    comic_metadata_fk: metadata_id,
-                    chapter_archive_fk: Some(local_chapter.id),
-                };
-                self.repo.chapter_repo.update(&chapter_metadata).await?;
-            },
-            None => {
-                let chapter_metadata = ChapterMetadata {
-                    id: self.repo.chapter_repo.get_next_id().await?,
-                    title: remote.attributes.title.clone(),
-                    chapter: local_chapter.chapter.clone(),
-                    page_count: remote.attributes.pages.map(|page| page as i64),
-                    scanlation,
-                    comic_metadata_fk: metadata_id,
-                    chapter_archive_fk: Some(local_chapter.id),
-                };
-                self.repo.chapter_repo.insert(&chapter_metadata).await?;
-            },
-        }
 
         Ok(())
     }

@@ -2,9 +2,7 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::metadata::{
-            author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata,
-        },
+        models::metadata::{author::AuthorMetadata, comic::ComicMetadata},
         repositories::{Entity, Repository},
     },
     infra::error::DbError,
@@ -13,7 +11,6 @@ use crate::{
 #[derive(Clone)]
 pub struct MetadataRepository {
     pub comic_repo: Repository<ComicMetadata>,
-    pub chapter_repo: Repository<ChapterMetadata>,
     pub author_repo: Repository<AuthorMetadata>,
     pool: SqlitePool,
 }
@@ -22,7 +19,6 @@ impl MetadataRepository {
     pub fn new(pool: SqlitePool) -> Self {
         Self {
             comic_repo: Repository::new(pool.clone()),
-            chapter_repo: Repository::new(pool.clone()),
             author_repo: Repository::new(pool.clone()),
             pool,
         }
@@ -42,22 +38,6 @@ impl MetadataRepository {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(result)
-    }
-
-    pub async fn get_chapter_metadata_by_comic_metadata_id(
-        &self, metadata_id: i64,
-    ) -> Result<Vec<ChapterMetadata>, DbError> {
-        let table = ChapterMetadata::table_name();
-        let cols = ChapterMetadata::columns().join(", ");
-
-        let result = sqlx::query_as::<_, ChapterMetadata>(&format!(
-            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
-            cols, table
-        ))
-        .bind(metadata_id)
-        .fetch_all(&self.pool)
-        .await?;
         Ok(result)
     }
 
@@ -105,18 +85,6 @@ mod tests {
         }
     }
 
-    fn fake_chapter_metadata() -> ChapterMetadata {
-        ChapterMetadata {
-            id: 1,
-            title: Some("The Black Swordsman".to_string()),
-            chapter: "1".to_string(),
-            page_count: Some(50),
-            scanlation: Some("Evil Genius".to_string()),
-            comic_metadata_fk: 1,
-            chapter_archive_fk: None,
-        }
-    }
-
     #[tokio::test]
     async fn deve_inserir_e_buscar_comic_metadata() {
         let repo = setup().await;
@@ -145,22 +113,5 @@ mod tests {
 
         let not_found = repo.get_comic_metadata_by_comic_id(123).await.unwrap();
         assert!(not_found.is_none());
-    }
-
-    #[tokio::test]
-    async fn deve_inserir_e_buscar_chapter_metadata() {
-        let repo = setup().await;
-
-        let metadata = fake_comic_metadata();
-        repo.comic_repo.insert(&metadata).await.unwrap();
-
-        let chapter = fake_chapter_metadata();
-        let inserted = repo.chapter_repo.insert(&chapter).await.unwrap();
-        assert_eq!(inserted.id, 1);
-        assert_eq!(inserted.chapter, "1");
-
-        let chapters = repo.get_chapter_metadata_by_comic_metadata_id(1).await.unwrap();
-        assert_eq!(chapters.len(), 1);
-        assert_eq!(chapters[0].chapter, "1");
     }
 }

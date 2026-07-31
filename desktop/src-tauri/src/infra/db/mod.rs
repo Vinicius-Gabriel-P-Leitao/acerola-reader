@@ -78,6 +78,12 @@ fn metadata_migrations() -> Vec<Migration> {
             sql: include_str!("./migrations/models/metadata/relationship/004_create_author.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 17,
+            description: "drop_chapter_metadata",
+            sql: "DROP TABLE IF EXISTS chapter_metadata;",
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

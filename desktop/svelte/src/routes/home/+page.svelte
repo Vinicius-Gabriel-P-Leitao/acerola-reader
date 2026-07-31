@@ -16,7 +16,10 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
+	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
+	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { useComicSummary } from '$lib/hooks/store/use-comic-summary.svelte';
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 	import { resolveCover } from '$lib/utils/artwork.utils';
@@ -31,6 +34,11 @@
 	const bookmarkStore = useBookmarks();
 	const selection = useComicSelection();
 	const folderStore = useSelectFolder();
+
+	const refreshScanner = useLibraryScanner(
+		DIRECTORY_SCAN_COMMANDS.refreshLibrary,
+		() => folderStore.folderPath
+	);
 
 	let unlistenScan: (() => void) | undefined;
 	let showSortMenu = $state(false);
@@ -321,12 +329,20 @@
 		<h3 class="text-xl font-bold tracking-tight text-foreground">
 			{m['pages.home.no_comics']()}
 		</h3>
-		<p class="mt-1.5 max-w-sm text-sm text-muted-foreground">
-			Sua biblioteca está vazia no momento. Selecione uma pasta contendo seus quadrinhos (.cbz, .cbr, .pdf) para começar.
+		<p class="mt-1.5 max-w-md text-sm text-muted-foreground">
+			Sua biblioteca está vazia no momento. Execute uma sincronização rápida na pasta atual ou selecione outra pasta contendo seus quadrinhos (.cbz, .cbr, .pdf).
 		</p>
-		<div class="mt-6 flex items-center gap-3">
+		<div class="mt-6 flex flex-wrap items-center justify-center gap-3">
 			<AcerolaButton
 				ui={{ variant: 'default', class: 'rounded-xl font-semibold gap-2 shadow-md hover:shadow-lg transition-all' }}
+				events={{ onClick: () => refreshScanner.start() }}
+			>
+				<RefreshCw size={18} class={refreshScanner.scanning ? 'animate-spin' : ''} />
+				Sincronização Rápida
+			</AcerolaButton>
+
+			<AcerolaButton
+				ui={{ variant: 'outline', class: 'rounded-xl font-medium gap-2' }}
 				events={{
 					onClick: async () => {
 						await folderStore.selectFolder();
@@ -334,16 +350,8 @@
 					}
 				}}
 			>
-				<FolderPlus size={18} />
-				Selecionar Pasta de Mangás
-			</AcerolaButton>
-
-			<AcerolaButton
-				ui={{ variant: 'outline', class: 'rounded-xl font-medium gap-2' }}
-				events={{ onClick: () => summary.fetch() }}
-			>
-				<RotateCcw size={16} />
-				Atualizar
+				<FolderPlus size={16} />
+				Selecionar Pasta
 			</AcerolaButton>
 		</div>
 	</div>

@@ -179,10 +179,14 @@
 
 	<!-- Conteúdo Principal da Aplicação -->
 	<div class="relative flex flex-1 overflow-hidden">
-		<SidebarProvider class="h-full min-h-0">
+		<SidebarProvider open={onboarding.isCompleted} class="h-full min-h-0">
 			<AcerolaSonner />
 
-			<AcerolaSidebar data={{ items: sidebarItems }} ui={{ class: 'absolute h-full' }}>
+			<AcerolaSidebar
+				collapsible={!onboarding.isCompleted ? 'offcanvas' : 'icon'}
+				data={{ items: sidebarItems }}
+				ui={{ class: 'absolute h-full' }}
+			>
 				{#snippet header()}
 					<div class="flex items-center gap-3">
 						<div
