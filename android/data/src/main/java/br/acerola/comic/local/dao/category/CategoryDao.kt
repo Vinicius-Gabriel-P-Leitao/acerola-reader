@@ -27,7 +27,7 @@ interface CategoryDao : BaseDao<Category> {
     @Query(
         """
         SELECT category.* FROM category
-        INNER JOIN comic_category ON category.id = comic_category.category_id
+        INNER JOIN comic_category ON category.id = comic_category.category_fk
         WHERE comic_category.comic_directory_fk = :comicId
         """,
     )
@@ -36,7 +36,7 @@ interface CategoryDao : BaseDao<Category> {
     @Query(
         """
         SELECT comic_category.comic_directory_fk, category.* FROM category
-        INNER JOIN comic_category ON category.id = comic_category.category_id
+        INNER JOIN comic_category ON category.id = comic_category.category_fk
         """,
     )
     fun observeAllComicCategoriesJoined(): Flow<List<AssignedCategory>>

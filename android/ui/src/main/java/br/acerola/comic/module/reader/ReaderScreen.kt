@@ -20,9 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.Progress
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.config.preference.types.ReadingMode
@@ -101,7 +102,14 @@ fun ReaderScreen(
     }
 
     if (state.isLoading || state.pageCount == 0) {
-        Acerola.Component.Progress(isLoading = true)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         return
     }
 

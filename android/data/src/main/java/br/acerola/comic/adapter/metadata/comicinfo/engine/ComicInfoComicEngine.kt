@@ -16,15 +16,12 @@ import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
-import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
-import br.acerola.comic.local.translator.persistence.toComicInfoSourceEntity
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.service.artwork.CoverSaver
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,9 +39,9 @@ class ComicInfoComicEngine
         private val directoryDao: ComicDirectoryDao,
         private val coverService: CoverSaver,
         private val comicMetadataDao: ComicMetadataDao,
-        private val comicInfoSourceDao: ComicInfoSourceDao,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
-    ) : ComicSingleSyncGateway, ComicLibraryScanGateway {
+    ) : ComicSingleSyncGateway,
+        ComicLibraryScanGateway {
         @Inject
         @ComicInfoSourceQualifier
         lateinit var comicInfoSourceService: MetadataProvider<ComicMetadataDto, String>
@@ -93,10 +90,8 @@ class ComicInfoComicEngine
                                     metadata = comicToSave,
                                     authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
                                     genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
-                                    comicInfoSource = bestMatch.toComicInfoSourceEntity(comicRemoteInfoFk = 0L),
                                     authorDao = authorDao,
                                     genreDao = genreDao,
-                                    comicInfoDao = comicInfoSourceDao,
                                 )
 
                             if (remoteId != -1L) {

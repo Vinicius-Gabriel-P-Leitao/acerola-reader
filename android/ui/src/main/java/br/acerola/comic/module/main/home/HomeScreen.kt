@@ -1,13 +1,16 @@
 package br.acerola.comic.module.main.home
 
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -20,36 +23,38 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.FabGroup
 import br.acerola.comic.common.ux.component.FabGroupItem
-import br.acerola.comic.common.ux.component.SearchBar
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.dto.ComicDto
-import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.comic.ComicActivity
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.common.component.ComicActionsSheet
 import br.acerola.comic.module.main.common.component.ComicListItem
 import br.acerola.comic.module.main.home.component.ComicGridItem
+import br.acerola.comic.module.main.home.component.HomeContinueBanner
 import br.acerola.comic.module.main.home.component.HomeFilterSheet
+import br.acerola.comic.module.main.home.component.HomeSearchBar
 import br.acerola.comic.module.main.home.state.HomeAction
 import br.acerola.comic.module.main.home.state.HomeUiState
 import br.acerola.comic.module.reader.ReaderActivity
@@ -75,6 +80,14 @@ fun Main.Home.Template.Screen(
     val allCategories by homeViewModel.allCategories.collectAsStateWithLifecycle()
     val sortSettings by homeViewModel.sortSettings.collectAsStateWithLifecycle()
     val filterSettings by homeViewModel.filterSettings.collectAsStateWithLifecycle()
+    val searchQuery by homeViewModel.searchQuery.collectAsStateWithLifecycle()
+    val isSearchExpanded by homeViewModel.isSearchExpanded.collectAsStateWithLifecycle()
+
+    val lastRead by remember(comics) {
+        derivedStateOf {
+            comics?.filter { it.second != null }?.maxByOrNull { it.second?.updatedAt ?: 0L }
+        }
+    }
 
     val uiState =
         HomeUiState(
@@ -86,24 +99,9 @@ fun Main.Home.Template.Screen(
             filter = filterSettings,
         )
 
-    var selectedMangaForActions by remember { mutableStateOf<ComicDto?>(null) }
     var showFilterSheet by remember { mutableStateOf(false) }
-
-    var query by rememberSaveable { mutableStateOf("") }
-    var searchExpanded by rememberSaveable { mutableStateOf(false) }
-
-    val filteredMangas =
-        remember(query, uiState.comics) {
-            val list = uiState.comics ?: return@remember emptyList()
-            if (query.isEmpty()) {
-                list
-            } else {
-                list.filter { (comic, _, _) ->
-                    comic.directory.name.contains(query, ignoreCase = true) ||
-                        comic.remoteInfo?.title?.contains(query, ignoreCase = true) == true
-                }
-            }
-        }
+    var selectedMangaForActions by remember { mutableStateOf<ComicDto?>(null) }
+    var isBannerExpanded by remember { mutableStateOf(true) }
 
     val onAction: (HomeAction) -> Unit = { action ->
         when (action) {
@@ -115,6 +113,7 @@ fun Main.Home.Template.Screen(
                     }
                 context.startActivity(intent)
             }
+
             is HomeAction.ClickContinue -> {
                 val intent =
                     Intent(context, ReaderActivity::class.java).apply {
@@ -130,130 +129,153 @@ fun Main.Home.Template.Screen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         val comicList = uiState.comics
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        val searchBarTopPadding = if (isLandscape) SpacingTokens.Medium else SpacingTokens.ExtraLarge
+        val gridTopPadding = if (isLandscape) 96.dp else 120.dp
+
         when {
             comicList == null -> Unit
             comicList.isEmpty() && !uiState.isIndexing -> EmptyState()
             else -> {
-                val gridCells =
-                    when (uiState.layout) {
-                        HomeLayoutType.GRID -> GridCells.Adaptive(minSize = SizeTokens.ComicGridMinSize)
-                        HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
-                    }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Main.Home.Component.HomeSearchBar(
+                        query = searchQuery,
+                        onQueryChange = { homeViewModel.updateSearchQuery(it) },
+                        onSearch = { homeViewModel.updateSearchQuery(it) },
+                        expanded = isSearchExpanded,
+                        onExpandedChange = { homeViewModel.setSearchExpanded(it) },
+                        comics = comicList,
+                        onComicClick = { comic ->
+                            homeViewModel.setSearchExpanded(false)
+                            onAction(HomeAction.ClickManga(comic))
+                        },
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopCenter)
+                                .zIndex(1f)
+                                .fillMaxWidth(if (isLandscape) 0.7f else 1f)
+                                .padding(
+                                    start = if (isLandscape) 32.dp else SpacingTokens.Small,
+                                    end = if (isLandscape) 32.dp else SpacingTokens.Small,
+                                    top = searchBarTopPadding,
+                                ),
+                    )
 
-                LazyVerticalGrid(
-                    columns = gridCells,
-                    verticalArrangement = Arrangement.spacedBy(space = SpacingTokens.Small),
-                    horizontalArrangement = Arrangement.spacedBy(space = SpacingTokens.Small),
-                    contentPadding =
-                        PaddingValues(
-                            start = SpacingTokens.Small,
-                            top = 72.dp,
-                            end = SpacingTokens.Small,
-                            bottom = 80.dp,
-                        ),
-                ) {
-                    items(
-                        items = if (searchExpanded) filteredMangas else comicList,
-                        key = { (comic, _, _) -> "manga_${comic.directory.id}" },
-                    ) { (comic, history, chapterCount) ->
+                    val (lastComic, lastHistory, _) = lastRead ?: Triple(null, null, 0)
+
+                    val gridCells =
                         when (uiState.layout) {
-                            HomeLayoutType.GRID ->
-                                Main.Home.Component.ComicGridItem(
-                                    comic = comic,
-                                    history = history,
-                                    chapterCount = chapterCount,
-                                    onShowActions = { selectedMangaForActions = comic },
-                                    onClick = { onAction(HomeAction.ClickManga(comic)) },
-                                )
+                            HomeLayoutType.GRID -> GridCells.Adaptive(minSize = SizeTokens.ComicGridMinSize)
+                            HomeLayoutType.LIST -> GridCells.Fixed(count = 1)
+                        }
 
-                            HomeLayoutType.LIST ->
-                                Main.Common.Component.ComicListItem(
-                                    comic = comic,
-                                    chapterCount = chapterCount,
-                                    subtitle = comic.remoteInfo?.authors?.name,
-                                    onClick = { onAction(HomeAction.ClickManga(comic)) },
-                                    onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(comic, it)) } },
-                                    onShowActions = { selectedMangaForActions = comic },
+                    LazyVerticalGrid(
+                        columns = gridCells,
+                        verticalArrangement = Arrangement.spacedBy(space = SpacingTokens.Small),
+                        horizontalArrangement = Arrangement.spacedBy(space = SpacingTokens.Small),
+                        contentPadding =
+                            PaddingValues(
+                                start = SpacingTokens.Small,
+                                top = gridTopPadding,
+                                end = SpacingTokens.Small,
+                                bottom = SpacingTokens.Small + 64.dp,
+                            ),
+                    ) {
+                        if (lastComic != null && lastHistory != null) {
+                            item(
+                                key = "continue_banner",
+                                span = { GridItemSpan(maxLineSpan) },
+                            ) {
+                                Main.Home.Component.HomeContinueBanner(
+                                    comic = lastComic,
+                                    history = lastHistory,
+                                    isExpanded = isBannerExpanded && !isLandscape,
+                                    onExpandedChange = { isBannerExpanded = it },
+                                    onContinueClick = { onAction(HomeAction.ClickContinue(lastComic, lastHistory)) },
+                                    onComicClick = { onAction(HomeAction.ClickManga(lastComic)) },
+                                    isLandscape = isLandscape,
+                                    modifier = Modifier.padding(bottom = SpacingTokens.Small),
                                 )
+                            }
+                        }
+
+                        items(
+                            items = comicList,
+                            key = { (comic, _, _) -> "manga_${comic.directory.id}" },
+                        ) { (comic, history, chapterCount) ->
+                            when (uiState.layout) {
+                                HomeLayoutType.GRID ->
+                                    Main.Home.Component.ComicGridItem(
+                                        comic = comic,
+                                        history = history,
+                                        chapterCount = chapterCount,
+                                        onShowActions = { selectedMangaForActions = comic },
+                                        onClick = { onAction(HomeAction.ClickManga(comic)) },
+                                    )
+
+                                HomeLayoutType.LIST ->
+                                    Main.Common.Component.ComicListItem(
+                                        comic = comic,
+                                        chapterCount = chapterCount,
+                                        subtitle = comic.remoteInfo?.authors?.name,
+                                        onClick = { onAction(HomeAction.ClickManga(comic)) },
+                                        onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(comic, it)) } },
+                                        onShowActions = { selectedMangaForActions = comic },
+                                    )
+                            }
                         }
                     }
                 }
             }
         }
 
-        Acerola.Component.SearchBar<Triple<ComicDto, ReadingHistoryDto?, Int>>(
-            query = query,
-            items = filteredMangas,
-            expanded = searchExpanded,
-            onQueryChange = { query = it },
-            onSearch = { searchExpanded = false },
-            onExpandedChange = { searchExpanded = it },
-            contentPadding = PaddingValues(bottom = SpacingTokens.Large),
-            itemKey = { (comic, _, _) -> comic.directory.id },
-            placeholder = stringResource(id = R.string.description_text_home_search_placeholder),
-            modifier =
-                Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(horizontal = SpacingTokens.Large)
-                    .padding(top = SpacingTokens.Small),
-            itemContent = { (comic, history, chapterCount) ->
-                Main.Common.Component.ComicListItem(
-                    comic = comic,
-                    chapterCount = chapterCount,
-                    onPlayClick = history?.let { { onAction(HomeAction.ClickContinue(comic, it)) } },
-                    onClick = { onAction(HomeAction.ClickManga(comic)) },
+        Acerola.Component.FabGroup(
+            modifier = Modifier.padding(bottom = 64.dp),
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub),
                 )
             },
-        )
-
-        if (!searchExpanded) {
-            Acerola.Component.FabGroup(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(id = R.string.description_icon_home_floating_tool_hub),
-                    )
-                },
-                items =
-                    listOf(
-                        FabGroupItem(
-                            onClick = {
-                                onAction(
-                                    HomeAction.UpdateLayout(
-                                        layout =
-                                            when (uiState.layout) {
-                                                HomeLayoutType.LIST -> HomeLayoutType.GRID
-                                                HomeLayoutType.GRID -> HomeLayoutType.LIST
-                                            },
-                                    ),
-                                )
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector =
-                                        if (uiState.layout ==
-                                            HomeLayoutType.GRID
-                                        ) {
-                                            Icons.AutoMirrored.Filled.ViewList
-                                        } else {
-                                            Icons.Default.GridView
+            items =
+                listOf(
+                    FabGroupItem(
+                        onClick = {
+                            onAction(
+                                HomeAction.UpdateLayout(
+                                    layout =
+                                        when (uiState.layout) {
+                                            HomeLayoutType.LIST -> HomeLayoutType.GRID
+                                            HomeLayoutType.GRID -> HomeLayoutType.LIST
                                         },
-                                    contentDescription = stringResource(id = R.string.description_icon_home_change_layout),
-                                )
-                            },
-                        ),
-                        FabGroupItem(
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.FilterList,
-                                    contentDescription = stringResource(id = R.string.description_icon_home_filter),
-                                )
-                            },
-                            onClick = { showFilterSheet = true },
-                        ),
+                                ),
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector =
+                                    if (uiState.layout == HomeLayoutType.GRID) {
+                                        Icons.AutoMirrored.Filled.ViewList
+                                    } else {
+                                        Icons.Default.GridView
+                                    },
+                                contentDescription = stringResource(id = R.string.description_icon_home_change_layout),
+                            )
+                        },
                     ),
-            )
-        }
+                    FabGroupItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = stringResource(id = R.string.description_icon_home_filter),
+                            )
+                        },
+                        onClick = { showFilterSheet = true },
+                    ),
+                ),
+        )
 
         val activeManga = selectedMangaForActions
         if (activeManga != null) {

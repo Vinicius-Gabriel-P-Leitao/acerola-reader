@@ -14,6 +14,7 @@ data class SortResult(
     val decimalPart: Int,
     val isSpecial: Boolean,
     val normalizedSort: String,
+    val rawDecimal: String = "",
 )
 
 object SortNormalizer {
@@ -29,14 +30,16 @@ object SortNormalizer {
 
             if (match != null) {
                 val integerPart = match.groupValues[1].toInt()
-                val decimalPart = match.groupValues.getOrNull(2)?.toIntOrNull() ?: 0
+                val rawDecimal = match.groupValues.getOrNull(2) ?: ""
+                val decimalPart = rawDecimal.toIntOrNull() ?: 0
 
                 return SortResult(
                     type = type,
                     integerPart = integerPart,
                     decimalPart = decimalPart,
-                    isSpecial = SpecialArchive.isSpecial(name),
-                    normalizedSort = formatSort(integerPart, decimalPart),
+                    rawDecimal = rawDecimal,
+                    isSpecial = false,
+                    normalizedSort = formatSort(integerPart, rawDecimal),
                 )
             }
         }
@@ -47,19 +50,22 @@ object SortNormalizer {
 
         return if (fallbackMatch != null) {
             val integerPart = fallbackMatch.groupValues[1].toInt()
-            val decimalPart = fallbackMatch.groupValues.getOrNull(2)?.toIntOrNull() ?: 0
+            val rawDecimal = fallbackMatch.groupValues.getOrNull(2) ?: ""
+            val decimalPart = rawDecimal.toIntOrNull() ?: 0
 
             SortResult(
                 type = type,
                 integerPart = integerPart,
                 decimalPart = decimalPart,
-                isSpecial = SpecialArchive.isSpecial(name),
-                normalizedSort = formatSort(integerPart, decimalPart),
+                rawDecimal = rawDecimal,
+                isSpecial = false,
+                normalizedSort = formatSort(integerPart, rawDecimal),
             )
         } else {
             SortResult(
                 type = type,
                 decimalPart = 0,
+                rawDecimal = "",
                 integerPart = fallbackIndex,
                 normalizedSort = fallbackIndex.toString(),
                 isSpecial = SpecialArchive.isSpecial(name),
@@ -69,6 +75,13 @@ object SortNormalizer {
 
     private fun formatSort(
         integer: Int,
-        decimal: Int,
-    ): String = if (decimal == 0) "$integer" else "$integer.$decimal"
+        rawDecimal: String,
+    ): String {
+        val cleanDecimal = rawDecimal.trim()
+        return if (cleanDecimal.isEmpty() || cleanDecimal.all { it == '0' }) {
+            "$integer"
+        } else {
+            "$integer.$cleanDecimal"
+        }
+    }
 }

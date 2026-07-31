@@ -52,9 +52,9 @@ class LocalHistoryEngine
             AcerolaLogger.d(TAG, "Marking chapter $chapterSort (ID: $chapterId) as read for comic $comicId", LogSource.REPOSITORY)
             readingHistoryDao.upsertChapterRead(
                 ChapterRead(
-                    comicDirectoryId = comicId,
+                    comicDirectoryFk = comicId,
                     chapterSort = chapterSort,
-                    chapterArchiveId = chapterId,
+                    chapterArchiveFk = chapterId,
                 ),
             )
         }

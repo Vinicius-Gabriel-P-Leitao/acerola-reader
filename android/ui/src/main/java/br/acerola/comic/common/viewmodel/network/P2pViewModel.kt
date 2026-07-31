@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.service.NetworkMode
+import br.acerola.comic.service.PeerAddress
 import br.acerola.comic.usecase.network.P2pUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,12 +21,18 @@ class P2pViewModel
             return id
         }
 
+        fun getLocalAddress(): PeerAddress {
+            val addr = p2pUseCase.getLocalAddress()
+            AcerolaLogger.d("P2pViewModel", "getLocalAddress: ${addr.id}", LogSource.UI)
+            return addr
+        }
+
         fun connectToPeer(
-            peerId: String,
+            peerAddress: PeerAddress,
             alpn: ByteArray,
         ) {
-            AcerolaLogger.i("P2pViewModel", "Connecting to peer: $peerId", LogSource.UI)
-            p2pUseCase.connect(peerId, alpn)
+            AcerolaLogger.i("P2pViewModel", "Connecting to peer: ${peerAddress.id}", LogSource.UI)
+            p2pUseCase.connect(peerAddress, alpn)
         }
 
         fun switchToLocal() {

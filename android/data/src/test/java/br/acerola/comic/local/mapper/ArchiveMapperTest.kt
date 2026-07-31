@@ -67,7 +67,6 @@ class ArchiveMapperTest {
                 path = "path",
                 chapterSort = "10",
                 checksum = "hash",
-                fastHash = "hash",
                 folderPathFk = 1,
                 lastModified = 500L,
             )
@@ -111,7 +110,6 @@ class ArchiveMapperTest {
                             path = "p1",
                             chapterSort = "1",
                             checksum = null,
-                            fastHash = "10",
                             folderPathFk = 1,
                         ),
                     volume = null,
@@ -124,7 +122,6 @@ class ArchiveMapperTest {
                             path = "p2",
                             chapterSort = "2",
                             checksum = null,
-                            fastHash = "10",
                             folderPathFk = 1,
                         ),
                     volume = null,

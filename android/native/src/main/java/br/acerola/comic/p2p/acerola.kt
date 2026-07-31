@@ -756,6 +756,8 @@ internal open class UniffiVTableCallbackInterfaceP2pCallback(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -790,9 +792,11 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_acerola_fn_constructor_p2pnode_new(`callback`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
-    fun uniffi_acerola_fn_method_p2pnode_connect(`ptr`: Pointer,`peerId`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_method_p2pnode_connect(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_method_p2pnode_get_connected_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_acerola_fn_method_p2pnode_get_local_addr(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_acerola_fn_method_p2pnode_get_local_id(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -922,6 +926,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_get_connected_peers(
     ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_get_local_addr(
+    ): Short
     fun uniffi_acerola_checksum_method_p2pnode_get_local_id(
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_get_mode(
@@ -954,10 +960,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_acerola_checksum_method_p2pcallback_on_event() != 37231.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_p2pnode_connect() != 44925.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_connect() != 27942.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_get_connected_peers() != 36858.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_get_local_addr() != 37359.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_get_local_id() != 1168.toShort()) {
@@ -1566,9 +1575,11 @@ public object FfiConverterTypeP2PCallback: FfiConverter<P2pCallback, Pointer> {
 
 public interface P2pNodeInterface {
     
-    fun `connect`(`peerId`: kotlin.String, `alpn`: kotlin.ByteArray)
+    fun `connect`(`peerAddr`: FfiPeerAddr, `alpn`: kotlin.ByteArray)
     
     fun `getConnectedPeers`(): Map<kotlin.String, List<kotlin.ByteArray>>
+    
+    fun `getLocalAddr`(): FfiPeerAddr
     
     fun `getLocalId`(): kotlin.String
     
@@ -1671,12 +1682,12 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         }
     }
 
-    override fun `connect`(`peerId`: kotlin.String, `alpn`: kotlin.ByteArray)
+    override fun `connect`(`peerAddr`: FfiPeerAddr, `alpn`: kotlin.ByteArray)
         = 
     callWithPointer {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_connect(
-        it, FfiConverterString.lower(`peerId`),FfiConverterByteArray.lower(`alpn`),_status)
+        it, FfiConverterTypeFfiPeerAddr.lower(`peerAddr`),FfiConverterByteArray.lower(`alpn`),_status)
 }
     }
     
@@ -1687,6 +1698,18 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     callWithPointer {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_connected_peers(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    override fun `getLocalAddr`(): FfiPeerAddr {
+            return FfiConverterTypeFfiPeerAddr.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_local_addr(
         it, _status)
 }
     }
@@ -1789,6 +1812,42 @@ public object FfiConverterTypeP2PNode: FfiConverter<P2pNode, Pointer> {
 
 
 
+data class FfiPeerAddr (
+    var `id`: kotlin.String, 
+    var `deviceId`: kotlin.String?, 
+    var `addrs`: kotlin.ByteArray
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiPeerAddr: FfiConverterRustBuffer<FfiPeerAddr> {
+    override fun read(buf: ByteBuffer): FfiPeerAddr {
+        return FfiPeerAddr(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterByteArray.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiPeerAddr) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceId`) +
+            FfiConverterByteArray.allocationSize(value.`addrs`)
+    )
+
+    override fun write(value: FfiPeerAddr, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterOptionalString.write(value.`deviceId`, buf)
+            FfiConverterByteArray.write(value.`addrs`, buf)
+    }
+}
+
+
+
 
 enum class FfiNetworkMode {
     
@@ -1816,6 +1875,38 @@ public object FfiConverterTypeFfiNetworkMode: FfiConverterRustBuffer<FfiNetworkM
 }
 
 
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?> {
+    override fun read(buf: ByteBuffer): kotlin.String? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterString.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.String?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterString.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.String?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterString.write(value, buf)
+        }
+    }
+}
 
 
 

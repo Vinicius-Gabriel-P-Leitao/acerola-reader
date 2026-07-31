@@ -3,7 +3,6 @@ package br.acerola.comic.usecase
 import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
 import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
-import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicRebuildGateway

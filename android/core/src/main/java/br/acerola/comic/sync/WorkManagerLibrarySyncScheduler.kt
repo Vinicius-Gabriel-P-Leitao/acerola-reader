@@ -56,9 +56,11 @@ class WorkManagerLibrarySyncScheduler
                     WorkerContract.TAG_LIBRARY_SYNC
                 }
 
+            val policy = ExistingWorkPolicy.REPLACE
+
             workManager.enqueueUniqueWork(
                 uniqueName,
-                ExistingWorkPolicy.KEEP,
+                policy,
                 syncRequest,
             )
         }

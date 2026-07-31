@@ -82,7 +82,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.haze)
     implementation(libs.androidx.navigation.compose)
+
 
     // --- DI ---
     implementation(libs.hilt.android)

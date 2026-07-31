@@ -31,6 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import br.acerola.comic.common.state.SyncActionVisualState
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,7 +41,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.worker.sync.LibrarySyncWorker
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.tokens.ShapeTokens
@@ -50,6 +56,7 @@ import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.comic.common.viewmodel.network.P2pViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
+import br.acerola.comic.service.PeerAddress
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.component.GlobalCategoryManager
 import br.acerola.comic.module.main.config.component.LanguageSettings
@@ -112,6 +119,49 @@ fun Main.Config.Template.Screen(
     val allCategories by comicDexViewModel.allCategories.collectAsState()
     val folderName by fileSystemAccessViewModel.folderName.collectAsState()
     val tutorialShown by fileSystemAccessViewModel.tutorialShown.collectAsState()
+    val isLibraryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isMetadataIndexing by comicDexViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val activeLibrarySyncType by comicDirectoryViewModel.activeSyncType.collectAsStateWithLifecycle(null)
+    val activeMetadataSource by comicDexViewModel.activeSyncSource.collectAsStateWithLifecycle(null)
+
+    var activeSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
+    var successSyncAction by remember { mutableStateOf<ConfigAction?>(null) }
+    var isCurrentlyIndexing by remember { mutableStateOf(false) }
+    val isAnyIndexing = isLibraryIndexing || isMetadataIndexing
+
+    LaunchedEffect(isAnyIndexing) {
+        if (isAnyIndexing) {
+            isCurrentlyIndexing = true
+            return@LaunchedEffect
+        }
+
+        if (isCurrentlyIndexing && activeSyncAction != null) {
+            val finishedAction = activeSyncAction
+            activeSyncAction = null
+            isCurrentlyIndexing = false
+            successSyncAction = finishedAction
+
+            delay(1800.milliseconds)
+
+            if (successSyncAction == finishedAction) {
+                successSyncAction = null
+            }
+        } else {
+            isCurrentlyIndexing = false
+            activeSyncAction = null
+        }
+    }
+
+    fun getSyncActionVisualState(action: ConfigAction): SyncActionVisualState =
+        when {
+            activeSyncAction == action -> SyncActionVisualState.LOADING
+            action == ConfigAction.QuickSyncLibrary && activeLibrarySyncType == LibrarySyncWorker.SYNC_TYPE_INCREMENTAL -> SyncActionVisualState.LOADING
+            action == ConfigAction.DeepScanLibrary && activeLibrarySyncType == LibrarySyncWorker.SYNC_TYPE_REBUILD -> SyncActionVisualState.LOADING
+            action == ConfigAction.SyncMangadexMetadata && activeMetadataSource == MetadataSyncWorker.SOURCE_MANGADEX -> SyncActionVisualState.LOADING
+            action == ConfigAction.SyncAnilistMetadata && activeMetadataSource == MetadataSyncWorker.SOURCE_ANILIST -> SyncActionVisualState.LOADING
+            successSyncAction == action -> SyncActionVisualState.SUCCESS
+            else -> SyncActionVisualState.IDLE
+        }
 
     val uiState =
         ConfigUiState(
@@ -128,10 +178,22 @@ fun Main.Config.Template.Screen(
             is ConfigAction.SelectFolder -> fileSystemAccessViewModel.saveFolderUri(action.uri)
             is ConfigAction.UpdateGenerateComicInfo -> metadataSettingsViewModel.setGenerateComicInfo(action.enabled)
             is ConfigAction.UpdateMetadataLanguage -> metadataSettingsViewModel.setMetadataLanguage(action.language)
-            ConfigAction.DeepScanLibrary -> comicDirectoryViewModel.deepScanLibrary()
-            ConfigAction.QuickSyncLibrary -> comicDirectoryViewModel.syncLibrary()
-            ConfigAction.SyncMangadexMetadata -> comicDexViewModel.rescanMangas()
-            ConfigAction.SyncAnilistMetadata -> comicDexViewModel.rescanAnilistMangas()
+            ConfigAction.DeepScanLibrary -> {
+                activeSyncAction = ConfigAction.DeepScanLibrary
+                comicDirectoryViewModel.deepScanLibrary()
+            }
+            ConfigAction.QuickSyncLibrary -> {
+                activeSyncAction = ConfigAction.QuickSyncLibrary
+                comicDirectoryViewModel.syncLibrary()
+            }
+            ConfigAction.SyncMangadexMetadata -> {
+                activeSyncAction = ConfigAction.SyncMangadexMetadata
+                comicDexViewModel.rescanMangas()
+            }
+            ConfigAction.SyncAnilistMetadata -> {
+                activeSyncAction = ConfigAction.SyncAnilistMetadata
+                comicDexViewModel.rescanAnilistMangas()
+            }
             is ConfigAction.CreateCategory -> comicDexViewModel.createCategory(action.name, action.color)
             is ConfigAction.DeleteCategory -> comicDexViewModel.deleteCategory(action.id)
             ConfigAction.NavigateToTemplateConfig -> onNavigateToTemplates()
@@ -144,9 +206,9 @@ fun Main.Config.Template.Screen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier =
-                    Modifier
+                modifier = Modifier
                         .padding(paddingValues)
+                        .padding(bottom = 64.dp)
                         .fillMaxSize()
                         .verticalScroll(scrollState),
             ) {
@@ -191,6 +253,8 @@ fun Main.Config.Template.Screen(
                 Main.Config.Component.SyncLibraryArchive(
                     onDeepScan = { onAction(ConfigAction.DeepScanLibrary) },
                     onQuickSync = { onAction(ConfigAction.QuickSyncLibrary) },
+                    deepScanState = getSyncActionVisualState(ConfigAction.DeepScanLibrary),
+                    quickSyncState = getSyncActionVisualState(ConfigAction.QuickSyncLibrary),
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -246,6 +310,7 @@ fun Main.Config.Template.Screen(
 
                 Main.Config.Component.SyncMangadexData(
                     onRescan = { onAction(ConfigAction.SyncMangadexMetadata) },
+                    state = getSyncActionVisualState(ConfigAction.SyncMangadexMetadata),
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -253,6 +318,7 @@ fun Main.Config.Template.Screen(
 
                 Main.Config.Component.SyncAnilistData(
                     onRescan = { onAction(ConfigAction.SyncAnilistMetadata) },
+                    state = getSyncActionVisualState(ConfigAction.SyncAnilistMetadata),
                     modifier = Modifier.padding(horizontal = SpacingTokens.Large),
                 )
 
@@ -264,7 +330,7 @@ fun Main.Config.Template.Screen(
                 )
 
                 // FIXME: Só descomentar quando tiver pronto a função.
-                // P2pDemoSection()
+                P2pDemoSection()
 
                 Spacer(modifier = Modifier.height(SizeTokens.ClickTarget))
             }
@@ -321,9 +387,12 @@ private fun SectionHeader(title: String) {
 @Composable
 fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
     val localId = remember(p2pViewModel) { p2pViewModel.getLocalId() }
+    val localAddress = remember(p2pViewModel) { p2pViewModel.getLocalAddress() }
     val mode = remember(p2pViewModel) { p2pViewModel.getMode() }
     val clipboardManager = LocalClipboardManager.current
     var remotePeerId by remember { mutableStateOf("") }
+    var remoteDeviceId by remember { mutableStateOf("") }
+    var remoteAddrs by remember { mutableStateOf("") }
 
     SectionHeader("P2P Demo")
     Column(modifier = Modifier.padding(horizontal = SpacingTokens.Large)) {
@@ -347,7 +416,32 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
 
         Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
-        Button(onClick = { p2pViewModel.connectToPeer(remotePeerId, byteArrayOf()) }) {
+        OutlinedTextField(
+            value = remoteDeviceId,
+            onValueChange = { remoteDeviceId = it },
+            label = { Text("Remote Device ID (optional)") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
+
+        OutlinedTextField(
+            value = remoteAddrs,
+            onValueChange = { remoteAddrs = it },
+            label = { Text("Remote Addrs (base64)") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
+
+        Button(onClick = {
+            val address = PeerAddress(
+                id = remotePeerId,
+                deviceId = remoteDeviceId.ifBlank { null },
+                addrs = remoteAddrs.toByteArray()
+            )
+            p2pViewModel.connectToPeer(address, "acerola/handshake/1".toByteArray())
+        }) {
             Text("Connect")
         }
 

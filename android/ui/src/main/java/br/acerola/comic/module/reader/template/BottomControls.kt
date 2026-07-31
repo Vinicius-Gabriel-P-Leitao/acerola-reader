@@ -196,7 +196,7 @@ private fun ChapterNavigation(
 
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             NextChapterButton(
-                visible = isChapterRead && hasNextChapter,
+                visible = hasNextChapter,
                 isLoading = isLoading,
                 onClick = onNextChapterClick,
             )

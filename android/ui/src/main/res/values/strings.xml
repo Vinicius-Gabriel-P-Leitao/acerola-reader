@@ -38,6 +38,7 @@
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
     <string name="description_icon_home_filter">Filtro</string>
+    <string name="label_home_search_placeholder">Buscar quadrinhos...</string>
 
     <!-- Text title -->
     <string name="title_text_archive_configs_in_app">Configuração dos arquivos</string>
@@ -161,6 +162,11 @@
     <string name="label_history_chapter_progress">Capítulo %1$s - Pág. %2$d</string>
     <string name="label_history_hero_most_recent">MAIS RECENTE</string>
     <string name="label_history_hero_continue">CONTINUAR LENDO</string>
+    <string name="label_banner_continue_reading">Continuar Lendo</string>
+    <string name="label_banner_chapter_progress">Capítulo %1$s</string>
+    <string name="label_banner_continue">Continuar Lendo</string>
+    <string name="description_icon_collapse_banner">Colapsar banner</string>
+    <string name="description_icon_home_search">Pesquisar</string>
     <string name="label_reader_config_title">Modo de Leitura</string>
     <string name="label_reader_pages_prefix">Páginas</string>
     <string name="label_reader_next_chapter">Próximo</string>
@@ -184,6 +190,9 @@
     <string name="subtitle_settings_vampire_theme">Vampire</string>
     <string name="subtitle_settings_nord_dark_theme">Arctic Night</string>
     <string name="subtitle_settings_nord_light_theme">Snow Storm</string>
+    <string name="title_settings_tokyo_night_theme">Tokyo Night</string>
+    <string name="subtitle_settings_tokyo_night_dark_theme">Night</string>
+    <string name="subtitle_settings_tokyo_night_light_theme">Day</string>
 
     <string name="label_settings_see_more_themes">Ver mais</string>
     <string name="label_settings_see_less_themes">Ver menos</string>
@@ -310,12 +319,16 @@
     <string name="tutorial_desc_welcome">Seu leitor de quadrinhos locais. Vamos mostrar como organizar sua biblioteca para o app funcionar perfeitamente.</string>
     <string name="tutorial_title_folder">Organize suas pastas</string>
     <string name="tutorial_desc_folder">Crie uma pasta raiz para a biblioteca. Dentro dela, cada quadrinho deve ter sua própria subpasta contendo os capítulos.</string>
-    <string name="tutorial_title_files">Formatos suportados</string>
+    <string name="tutorial_title_files">Formatos Suportados</string>
     <string name="tutorial_desc_files">O Acerola suporta arquivos .cbz e .cbr. PDFs são convertidos automaticamente para .cbz. Organize os capítulos numericamente dentro da pasta do quadrinho para melhor experiência.</string>
+    <string name="tutorial_title_settings">Configurações Iniciais</string>
+    <string name="tutorial_title_complete">Tudo Pronto!</string>
+    <string name="tutorial_desc_complete">O Acerola está pronto para uso.</string>
+    <string name="tutorial_note_complete">Você pode alterar essas configurações a qualquer momento na página de Configurações.</string>
     <string name="tutorial_action_next">Próximo</string>
-    <string name="tutorial_action_previous">Anterior</string>
+    <string name="tutorial_action_previous">Voltar</string>
     <string name="tutorial_action_skip">Pular</string>
-    <string name="tutorial_action_finish">Começar</string>
+    <string name="tutorial_action_finish">Ir para Início</string>
     <string name="tutorial_content_description_slide">Imagem ilustrativa do tutorial</string>
 
 </resources>

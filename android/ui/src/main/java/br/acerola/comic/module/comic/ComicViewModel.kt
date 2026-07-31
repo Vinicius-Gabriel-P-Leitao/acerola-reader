@@ -20,9 +20,9 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.service.cache.ChapterCacheHandler
 import br.acerola.comic.type.UiText
 import br.acerola.comic.ui.R
-import br.acerola.comic.service.cache.ChapterCacheHandler
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
@@ -90,6 +90,9 @@ class ComicViewModel
 
         private val _isLoadingMoreVolume = MutableStateFlow(false)
         val isLoadingMoreVolume: StateFlow<Boolean> = _isLoadingMoreVolume.asStateFlow()
+
+        private val _isExtractingVolumeCovers = MutableStateFlow(false)
+        val isExtractingVolumeCovers: StateFlow<Boolean> = _isExtractingVolumeCovers.asStateFlow()
 
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -406,16 +409,21 @@ class ComicViewModel
         fun extractAllVolumeCovers() {
             val comicId = selectedDirectoryId.value ?: return
             viewModelScope.launch {
-                extractAllVolumeCoversUseCase(comicId).fold(
-                    ifLeft = { error ->
-                        AcerolaLogger.e(TAG, "Failed to extract some volume covers: $error", LogSource.VIEWMODEL)
-                        _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.message_path_not_found)))
-                    },
-                    ifRight = {
-                        AcerolaLogger.i(TAG, "Successfully extracted all volume covers", LogSource.VIEWMODEL)
-                        cacheHandler.clear()
-                    },
-                )
+                _isExtractingVolumeCovers.value = true
+                try {
+                    extractAllVolumeCoversUseCase(comicId).fold(
+                        ifLeft = { error ->
+                            AcerolaLogger.e(TAG, "Failed to extract some volume covers: $error", LogSource.VIEWMODEL)
+                            _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.message_path_not_found)))
+                        },
+                        ifRight = {
+                            AcerolaLogger.i(TAG, "Successfully extracted all volume covers", LogSource.VIEWMODEL)
+                            cacheHandler.clear()
+                        },
+                    )
+                } finally {
+                    _isExtractingVolumeCovers.value = false
+                }
             }
         }
 

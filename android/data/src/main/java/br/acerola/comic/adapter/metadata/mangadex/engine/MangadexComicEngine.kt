@@ -5,11 +5,13 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import androidx.core.net.toUri
 import arrow.core.Either
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.contract.provider.ImageProvider
 import br.acerola.comic.adapter.contract.provider.MetadataProvider
+import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexSource
 import br.acerola.comic.config.preference.ComicDirectoryPreference
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
@@ -54,9 +56,10 @@ class MangadexComicEngine
         private val metadataExportService: MetadataExporter,
         @param:ApplicationContext private val context: Context,
         @param:MangadexSource private val downloadCoverService: ImageProvider<String>,
+        @param:MangadexEngine private val mangadexChapterEngine: ChapterSyncGateway,
     ) : ComicSingleSyncGateway,
-    ComicLibraryScanGateway,
-    ComicReadOnlyGateway<ComicMetadataDto> {
+        ComicLibraryScanGateway,
+        ComicReadOnlyGateway<ComicMetadataDto> {
         @Inject
         @MangadexSource
         lateinit var mangadexSourceChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
@@ -87,16 +90,13 @@ class MangadexComicEngine
                         return@withContext Either.Left(LibrarySyncError.ExternalSyncDisabled)
                     }
 
-                    Either
-                        .catch {
-                            executeSync(folders = listOf(directory), baseUri = baseUri)
-                        }.mapLeft { exception ->
-                            AcerolaLogger.e(TAG, "Refresh specific MangaDex metadata failed", LogSource.REPOSITORY, throwable = exception)
-                            when (exception) {
-                                is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                                else -> LibrarySyncError.UnexpectedError(cause = exception)
-                            }
-                        }
+                    executeSync(folders = listOf(directory), baseUri = baseUri)
+                } catch (exception: Exception) {
+                    AcerolaLogger.e(TAG, "Refresh specific MangaDex metadata failed", LogSource.REPOSITORY, throwable = exception)
+                    when (exception) {
+                        is SQLiteException -> Either.Left(LibrarySyncError.DatabaseError(cause = exception))
+                        else -> Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
+                    }
                 } finally {
                     _isIndexing.value = false
                 }
@@ -117,7 +117,6 @@ class MangadexComicEngine
                         }
 
                     executeSync(folders = foldersToSync, baseUri = baseUri)
-                    Either.Right(value = Unit)
                 } catch (exception: Exception) {
                     AcerolaLogger.e(TAG, "Incremental MangaDex scan failed", LogSource.REPOSITORY, throwable = exception)
                     when (exception) {
@@ -135,19 +134,16 @@ class MangadexComicEngine
             _isIndexing.value = true
             return try {
                 withContext(context = Dispatchers.IO) {
-                    Either
-                        .catch {
-                            val allFolders =
-                                (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
-                                    .filter { it.externalSyncEnabled }
-                            executeSync(folders = allFolders, baseUri = baseUri)
-                        }.mapLeft { exception ->
-                            AcerolaLogger.e(TAG, "Full MangaDex refresh failed", LogSource.REPOSITORY, throwable = exception)
-                            when (exception) {
-                                is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
-                                else -> LibrarySyncError.UnexpectedError(cause = exception)
-                            }
-                        }
+                    val allFolders =
+                        (directoryDao.getVisibleDirectories().firstOrNull() ?: emptyList())
+                            .filter { it.externalSyncEnabled }
+                    executeSync(folders = allFolders, baseUri = baseUri)
+                }
+            } catch (exception: Exception) {
+                AcerolaLogger.e(TAG, "Full MangaDex refresh failed", LogSource.REPOSITORY, throwable = exception)
+                when (exception) {
+                    is SQLiteException -> Either.Left(LibrarySyncError.DatabaseError(cause = exception))
+                    else -> Either.Left(LibrarySyncError.UnexpectedError(cause = exception))
                 }
             } finally {
                 _isIndexing.value = false
@@ -163,89 +159,107 @@ class MangadexComicEngine
         private suspend fun executeSync(
             folders: List<ComicDirectory>,
             baseUri: Uri?,
-        ) {
+        ): Either<LibrarySyncError, Unit> {
+            if (folders.isEmpty()) {
+                AcerolaLogger.w(TAG, "Sync completed: No folders to sync", LogSource.REPOSITORY)
+                _progress.value = -1
+                return Either.Right(Unit)
+            }
+
             val total = folders.size
             _progress.value = 0
 
             val rootPath = baseUri?.toString() ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
-            if (rootPath.isNullOrBlank()) {
-                AcerolaLogger.w(TAG, "Sync aborted: root library path is null", LogSource.REPOSITORY)
-                _progress.value = -1
-                return
+            val rootUri = if (!rootPath.isNullOrBlank()) {
+                rootPath.toUri()
+            } else {
+                AcerolaLogger.w(TAG, "Root library path is blank or null for MangaDex sync. Cover download will fallback to internal storage if needed.", LogSource.REPOSITORY)
+                Uri.EMPTY
             }
+            var networkErrorCount = 0
 
-            val rootUri = rootPath.toUri()
             folders.forEachIndexed { index, current ->
-                Either.catch {
-                    val title = current.name
-                    val folderNameNormalized = normalizeName(name = title)
+                val title = current.name
+                val folderNameNormalized = normalizeName(name = title)
 
-                    val fetchedListResult = mangadexSourceMangaInfoService.searchInfo(comic = title)
-                    val fetchedList = fetchedListResult.getOrNull() ?: emptyList()
+                mangadexSourceMangaInfoService.searchInfo(comic = title).fold(
+                    ifLeft = { error ->
+                        AcerolaLogger.e(TAG, "API error fetching MangaDex info for '$title': $error", LogSource.REPOSITORY)
+                        networkErrorCount++
+                    },
+                    ifRight = { fetchedList ->
+                        val bestMatch =
+                            fetchedList.find { candidate ->
+                                normalizeName(name = candidate.title) == folderNameNormalized ||
+                                    normalizeName(name = candidate.romanji.orEmpty()) == folderNameNormalized
+                            } ?: fetchedList.firstOrNull()
 
-                    val bestMatch =
-                        fetchedList.find { candidate ->
-                            normalizeName(name = candidate.title) == folderNameNormalized ||
-                                normalizeName(name = candidate.romanji.orEmpty()) == folderNameNormalized
-                        } ?: fetchedList.firstOrNull()
+                        if (bestMatch != null) {
+                            AcerolaLogger.v(TAG, "Found best match for '$title' -> '${bestMatch.title}'", LogSource.REPOSITORY)
 
-                    if (bestMatch != null) {
-                        AcerolaLogger.v(TAG, "Found best match for '$title' -> '${bestMatch.title}'", LogSource.REPOSITORY)
+                            val comicToSave =
+                                bestMatch.toEntity().copy(
+                                    comicDirectoryFk = current.id,
+                                    syncSource = MetadataSource.MANGADEX.source,
+                                )
 
-                        val comicToSave =
-                            bestMatch.toEntity().copy(
-                                comicDirectoryFk = current.id,
-                                syncSource = MetadataSource.MANGADEX.source,
-                            )
+                            val comicId =
+                                comicMetadataDao.upsertComicWithRelationsTransaction(
+                                    metadata = comicToSave,
+                                    authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
+                                    genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
+                                    mangadexSource = bestMatch.toMangadexSourceEntity(comicRemoteInfoFk = 0L),
+                                    authorDao = authorDao,
+                                    genreDao = genreDao,
+                                    mangadexDao = mangadexSourceDao,
+                                )
 
-                        val comicId =
-                            comicMetadataDao.upsertComicWithRelationsTransaction(
-                                metadata = comicToSave,
-                                authors = bestMatch.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
-                                genres = bestMatch.genre.map { it.toEntity(comicId = 0L) },
-                                mangadexSource = bestMatch.toMangadexSourceEntity(comicRemoteInfoFk = 0L),
-                                authorDao = authorDao,
-                                genreDao = genreDao,
-                                mangadexDao = mangadexSourceDao,
-                            )
+                            if (comicId != -1L) {
+                                bestMatch.cover?.let { dto ->
+                                    AcerolaLogger.d(TAG, "Syncing cover for ${current.name}", LogSource.REPOSITORY)
+                                    downloadCoverService
+                                        .searchMedia(dto.url)
+                                        .onRight { bytes ->
+                                            coverService.processCover(
+                                                rootUri = rootUri,
+                                                folderId = current.id,
+                                                bytes = bytes,
+                                                coverUrl = dto.url,
+                                                comicFolderName = current.name,
+                                                comicRemoteInfoFk = comicId,
+                                            )
+                                        }.onLeft {
+                                            AcerolaLogger.e(TAG, "Failed to download cover for ${current.name}", LogSource.REPOSITORY)
+                                        }
+                                }
 
-                        if (comicId != -1L) {
-                            bestMatch.cover?.let { dto ->
-                                AcerolaLogger.d(TAG, "Syncing cover for ${current.name}", LogSource.REPOSITORY)
-                                downloadCoverService
-                                    .searchMedia(dto.url)
-                                    .onRight { bytes ->
-                                        coverService.processCover(
-                                            rootUri = rootUri,
-                                            folderId = current.id,
-                                            bytes = bytes,
-                                            coverUrl = dto.url,
-                                            comicFolderName = current.name,
-                                            comicRemoteInfoFk = comicId,
-                                        )
-                                    }.onLeft {
-                                        AcerolaLogger.e(TAG, "Failed to download cover for ${current.name}", LogSource.REPOSITORY)
-                                    }
+                                AcerolaLogger.audit(
+                                    TAG,
+                                    "Successfully synced MangaDex metadata",
+                                    LogSource.REPOSITORY,
+                                    mapOf("comicId" to current.id.toString(), "mangadexId" to (bestMatch.sources?.mangadex?.mangadexId ?: "")),
+                                )
+
+                                metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
+
+                                mangadexChapterEngine.refreshComicChapters(comicId = current.id, baseUri = rootUri)
                             }
-
-                            AcerolaLogger.audit(
-                                TAG,
-                                "Successfully synced MangaDex metadata",
-                                LogSource.REPOSITORY,
-                                mapOf("comicId" to current.id.toString(), "mangadexId" to (bestMatch.sources?.mangadex?.mangadexId ?: "")),
-                            )
-
-                            metadataExportService.exportMangaMetadata(directoryId = current.id, remoteInfo = bestMatch)
+                        } else {
+                            AcerolaLogger.d(TAG, "No MangaDex match found for: $title", LogSource.REPOSITORY)
                         }
-                    } else {
-                        AcerolaLogger.d(TAG, "No MangaDex match found for: $title", LogSource.REPOSITORY)
-                    }
-                }
+                    },
+                )
 
                 _progress.value = ((index + 1) * 100 / total)
             }
 
             _progress.value = -1
+
+            return if (networkErrorCount > 0 && networkErrorCount == total) {
+                Either.Left(LibrarySyncError.SyncNetworkError(cause = null))
+            } else {
+                Either.Right(Unit)
+            }
         }
 
         private fun normalizeName(name: String): String = name.filter { it.isLetterOrDigit() }.lowercase()

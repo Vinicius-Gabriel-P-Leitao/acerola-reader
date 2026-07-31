@@ -6,7 +6,6 @@ import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
 import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoEngine
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
-import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.message.LibrarySyncError
 import javax.inject.Inject
 

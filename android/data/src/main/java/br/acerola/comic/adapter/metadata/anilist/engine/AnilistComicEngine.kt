@@ -52,8 +52,8 @@ class AnilistComicEngine
         private val anilistSearchByTitleSource: AnilistSearchByTitleSource,
         @param:ApplicationContext private val context: Context,
     ) : ComicSingleSyncGateway,
-    ComicLibraryScanGateway,
-    ComicReadOnlyGateway<ComicMetadataDto> {
+        ComicLibraryScanGateway,
+        ComicReadOnlyGateway<ComicMetadataDto> {
         private val _progress = MutableStateFlow(value = -1)
         override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -206,9 +206,13 @@ class AnilistComicEngine
             val rootPath =
                 baseUri?.toString()
                     ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
-                    ?: return
 
-            val rootUri = rootPath.toUri()
+            val rootUri = if (!rootPath.isNullOrBlank()) {
+                rootPath.toUri()
+            } else {
+                AcerolaLogger.w(TAG, "Root library path is blank or null for AniList sync. Media download will fallback to internal storage if needed.", LogSource.REPOSITORY)
+                Uri.EMPTY
+            }
 
             dto.sources?.anilist?.coverImage?.let { url ->
                 coverFetcher.searchMedia(url).onRight { bytes ->

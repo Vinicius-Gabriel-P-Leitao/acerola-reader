@@ -6,10 +6,10 @@ import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.usecase.AnilistCase
 import br.acerola.comic.usecase.ComicInfoCase
 import br.acerola.comic.usecase.MangadexCase
-import br.acerola.comic.usecase.library.SyncLibraryUseCase as LegacySyncLibraryUseCase
 import br.acerola.comic.usecase.metadata.SyncComicMetadataUseCase
 import br.acerola.comic.worker.contract.SyncType
 import javax.inject.Inject
+import br.acerola.comic.usecase.library.SyncLibraryUseCase as LegacySyncLibraryUseCase
 
 class SyncMetadataUseCase
     @Inject
@@ -23,8 +23,8 @@ class SyncMetadataUseCase
             source: MetadataSource,
             type: SyncType,
             directoryId: Long?,
-        ): Either<LibrarySyncError, Unit> {
-            return if (directoryId != null && directoryId != -1L) {
+        ): Either<LibrarySyncError, Unit> =
+            if (directoryId != null && directoryId != -1L) {
                 // Single comic sync
                 when (source) {
                     MetadataSource.MANGADEX -> syncComicMetadataUseCase.syncFromMangadex(directoryId)
@@ -46,5 +46,4 @@ class SyncMetadataUseCase
                     else -> useCase.sync(baseUri = null)
                 }
             }
-        }
     }

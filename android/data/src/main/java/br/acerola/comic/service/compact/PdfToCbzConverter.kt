@@ -15,8 +15,9 @@ import br.acerola.comic.logging.LogSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +25,6 @@ import javax.inject.Singleton
 class PdfToCbzConverter
     @Inject
     constructor(
-        private val archiveCompactService: CbzCompressor,
         @param:ApplicationContext private val context: Context,
     ) {
         suspend fun convertPdfToCbz(
@@ -43,40 +43,50 @@ class PdfToCbzConverter
                     pdfRenderer = PdfRenderer(fileDescriptor)
 
                     val pageCount = pdfRenderer.pageCount
-                    val pageEntries = mutableListOf<Pair<String, ByteArray>>()
 
                     AcerolaLogger.d(TAG, "PDF has $pageCount pages. Starting rendering...", LogSource.REPOSITORY)
-                    for (it in 0 until pageCount) {
-                        val page = pdfRenderer.openPage(it)
 
-                        // Increase scale for better reading quality
-                        val width = (page.width * 2.0).toInt()
-                        val height = (page.height * 2.0).toInt()
+                    val cbzFile =
+                        folder.createFile("application/octet-stream", cbzFileName)
+                            ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
 
-                        val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    val outputStream =
+                        context.contentResolver.openOutputStream(cbzFile.uri)
+                            ?: return@withContext Either.Left(IoError.FileWriteError(path = cbzFileName))
 
-                        val canvas = Canvas(bitmap)
-                        canvas.drawColor(Color.WHITE)
+                    ZipOutputStream(outputStream).use { zip ->
+                        for (it in 0 until pageCount) {
+                            val page = pdfRenderer.openPage(it)
 
-                        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                        page.close()
+                            // Increase scale for better reading quality
+                            val width = (page.width * 2.0).toInt()
+                            val height = (page.height * 2.0).toInt()
 
-                        val outputStream = ByteArrayOutputStream()
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                            val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
 
-                        val byteArray = outputStream.toByteArray()
-                        bitmap.recycle()
+                            val canvas = Canvas(bitmap)
+                            canvas.drawColor(Color.WHITE)
 
-                        val pageName = String.format(Locale.ENGLISH, "%04d.jpg", it + 1)
-                        pageEntries.add(Pair(pageName, byteArray))
+                            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            page.close()
 
-                        if ((it + 1) % 10 == 0 || it + 1 == pageCount) {
-                            AcerolaLogger.v(TAG, "Rendered ${it + 1}/$pageCount pages", LogSource.REPOSITORY)
+                            val pageName = String.format(Locale.ENGLISH, "%04d.jpg", it + 1)
+                            zip.putNextEntry(ZipEntry(pageName))
+
+                            // Comprime direto para o disco
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, zip)
+
+                            zip.closeEntry()
+                            bitmap.recycle()
+
+                            if ((it + 1) % 10 == 0 || it + 1 == pageCount) {
+                                AcerolaLogger.v(TAG, "Rendered ${it + 1}/$pageCount pages", LogSource.REPOSITORY)
+                            }
                         }
                     }
 
-                    AcerolaLogger.d(TAG, "Rendering complete. Creating CBZ file...", LogSource.REPOSITORY)
-                    archiveCompactService.createCbz(folder, cbzFileName, pageEntries)
+                    AcerolaLogger.d(TAG, "Rendering complete. CBZ file created successfully.", LogSource.REPOSITORY)
+                    Either.Right(Unit)
                 } catch (exception: Exception) {
                     AcerolaLogger.e(TAG, "PDF conversion failed: ${exception.message}", LogSource.REPOSITORY, throwable = exception)
                     Either.Left(IoError.FileWriteError(cbzFileName, exception))

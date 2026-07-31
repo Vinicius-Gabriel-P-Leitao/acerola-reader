@@ -1,5 +1,6 @@
 package br.acerola.comic.common.ux.component
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -14,8 +15,11 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,13 +28,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Surface
@@ -41,8 +45,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.ui.R
@@ -61,14 +67,14 @@ fun <T> Acerola.Component.SearchBar(
     placeholder: String,
     itemKey: (T) -> Any,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(bottom = 16.dp),
+    contentPadding: PaddingValues = rememberSearchBarContentPadding(),
     itemContent: @Composable (T) -> Unit,
 ) {
     val internalBackClick = onBackClick ?: { onExpandedChange(false) }
 
     val animatedShape = rememberSearchBarShape(expanded)
 
-    DockedSearchBar(
+    SearchBar(
         modifier = modifier.animateContentSize(),
         inputField = {
             InputField(
@@ -116,17 +122,16 @@ fun <T> Acerola.Component.SearchBar(
         expanded = expanded,
         onExpandedChange = onExpandedChange,
         shape = animatedShape,
-        colors =
-            SearchBarDefaults.colors(
-                containerColor =
-                    if (expanded) {
-                        MaterialTheme.colorScheme.surfaceContainerHigh
-                    } else {
-                        Color.Transparent
-                    },
-            ),
-        tonalElevation = 0.dp,
+        colors = SearchBarDefaults.colors(
+            containerColor = if (expanded) {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            } else {
+                MaterialTheme.colorScheme.surfaceContainer
+            },
+        ),
+        tonalElevation = if (expanded) 0.dp else 3.dp,
         shadowElevation = 0.dp,
+        windowInsets = androidx.compose.foundation.layout.WindowInsets(0.dp),
     ) {
         AnimatedVisibility(
             visible = expanded,
@@ -190,7 +195,9 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
             label = stringResource(R.string.common_search_transition),
         )
 
-    val bottomCornerRadius by transition.animateDp(
+    val collapsedRadius = 28.dp
+
+    val cornerRadius by transition.animateDp(
         transitionSpec = {
             if (targetState) {
                 tween(
@@ -206,16 +213,28 @@ private fun rememberSearchBarShape(expanded: Boolean): RoundedCornerShape {
         },
         label = stringResource(R.string.common_search_corner_radius),
     ) { isExpanded ->
-        // 🔥 Aqui está a correção real
-        if (isExpanded) 12.dp else 28.dp
+        if (isExpanded) 12.dp else collapsedRadius
     }
 
-    return remember(bottomCornerRadius) {
-        RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp,
-            bottomStart = bottomCornerRadius,
-            bottomEnd = bottomCornerRadius,
-        )
+    return remember(cornerRadius) {
+        RoundedCornerShape(cornerRadius)
     }
 }
+
+@Composable
+fun rememberSearchBarContentPadding(
+    additionalBottomPadding: Dp = 16.dp,
+): PaddingValues {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomBarHeight = if (isLandscape) 0.dp else 64.dp
+
+    return PaddingValues(
+        start = 0.dp,
+        top = 0.dp,
+        end = 0.dp,
+        bottom = bottomBarHeight + bottomInset + additionalBottomPadding,
+    )
+}
+

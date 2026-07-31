@@ -5,16 +5,14 @@ import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.CoverDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
-import br.acerola.comic.local.entity.metadata.ChapterDownloadSource
+import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
+import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
 import br.acerola.comic.local.entity.metadata.ChapterMetadata
 import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
-import br.acerola.comic.local.entity.metadata.relationship.Banner
-import br.acerola.comic.local.entity.metadata.relationship.Cover
 import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
-import br.acerola.comic.local.entity.metadata.source.ComicInfoSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
 import br.acerola.comic.local.entity.relation.MetadataRelations
 
@@ -23,7 +21,6 @@ object MetadataFixtures {
         id: Long = 10,
         title: String = "Naruto",
         description: String = "Ninja story",
-        romanji: String = "Naruto",
         status: String = "ongoing",
         publication: Int = 1999,
         comicDirectoryFk: Long? = null,
@@ -33,7 +30,6 @@ object MetadataFixtures {
         id = id,
         title = title,
         description = description,
-        romanji = romanji,
         status = status,
         publication = publication,
         comicDirectoryFk = comicDirectoryFk,
@@ -48,6 +44,7 @@ object MetadataFixtures {
         pageCount: Int = 20,
         scanlation: String? = "ScanGroup",
         comicRemoteInfoFk: Long = 10,
+        chapterArchiveFk: Long? = null,
     ) = ChapterMetadata(
         id = id,
         title = title,
@@ -55,20 +52,7 @@ object MetadataFixtures {
         pageCount = pageCount,
         scanlation = scanlation,
         comicRemoteInfoFk = comicRemoteInfoFk,
-    )
-
-    fun createChapterDownloadSource(
-        id: Long = 1000,
-        pageNumber: Int = 0,
-        imageUrl: String = "http://img.com/1.jpg",
-        downloaded: Boolean = false,
-        chapterFk: Long = 100,
-    ) = ChapterDownloadSource(
-        id = id,
-        pageNumber = pageNumber,
-        imageUrl = imageUrl,
-        downloaded = downloaded,
-        chapterFk = chapterFk,
+        chapterArchiveFk = chapterArchiveFk,
     )
 
     fun createChapterRemoteInfoDto(
@@ -91,6 +75,7 @@ object MetadataFixtures {
         authors: AuthorDto? = null,
         genre: List<GenreDto> = emptyList(),
         cover: CoverDto? = null,
+        sources: ComicSourcesDto? = ComicSourcesDto(mangadex = MangadexSourceDto(mangadexId = "md-1")),
     ) = ComicMetadataDto(
         title = title,
         description = description,
@@ -99,25 +84,20 @@ object MetadataFixtures {
         authors = authors,
         genre = genre,
         cover = cover,
+        sources = sources,
     )
 
     fun createRemoteInfoRelations(
         remoteInfo: ComicMetadata = createMangaRemoteInfo(),
         mangadexSource: MangadexSource? = null,
         anilistSource: AnilistSource? = null,
-        comicInfoSource: ComicInfoSource? = null,
         authors: List<Author> = emptyList(),
-        covers: List<Cover> = emptyList(),
-        banners: List<Banner> = emptyList(),
         genres: List<Genre> = emptyList(),
     ) = MetadataRelations(
         remoteInfo = remoteInfo,
         mangadexSource = mangadexSource,
         anilistSource = anilistSource,
-        comicInfoSource = comicInfoSource,
         author = authors,
-        cover = covers,
-        banner = banners,
         genre = genres,
     )
 
@@ -133,11 +113,4 @@ object MetadataFixtures {
         genre: String = "Shonen",
         comicId: Long = 10,
     ) = Genre(id = id, genre = genre, comicRemoteInfoFk = comicId)
-
-    fun createCover(
-        id: Long = 1,
-        url: String = "http://cover.jpg",
-        fileName: String = "cover.jpg",
-        comicId: Long = 10,
-    ) = Cover(id = id, url = url, fileName = fileName, comicRemoteInfoFk = comicId)
 }

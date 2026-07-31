@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.state.SyncActionVisualState
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
@@ -42,6 +45,7 @@ import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.module.comic.state.MainTab
 import br.acerola.comic.module.comic.template.Header
 import br.acerola.comic.module.comic.template.Tabs
@@ -110,6 +114,56 @@ fun ComicScreen(
     val allCategories by comicMetadataViewModel.allCategories.collectAsStateWithLifecycle()
     val volumeViewMode by comicViewModel.volumeViewMode.collectAsStateWithLifecycle()
     val activeVolumeId by comicViewModel.activeVolumeId.collectAsStateWithLifecycle()
+
+    val isChapterArchiveIndexing by chapterArchiveViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isComicDirectoryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isComicMetadataIndexing by comicMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
+    val isChapterMetadataIndexing by chapterMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
+
+    val isExtractingVolumeCovers by comicViewModel.isExtractingVolumeCovers.collectAsStateWithLifecycle(false)
+
+    val activeLibrarySyncType by comicDirectoryViewModel.activeSyncType.collectAsStateWithLifecycle(null)
+    val activeMetadataSource by comicMetadataViewModel.activeSyncSource.collectAsStateWithLifecycle(null)
+
+    var activeSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
+    var successSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
+    var isCurrentlyIndexing by remember { mutableStateOf(false) }
+
+    val isAnyIndexing = isChapterArchiveIndexing || isComicDirectoryIndexing || isComicMetadataIndexing || isChapterMetadataIndexing || isExtractingVolumeCovers
+
+    LaunchedEffect(isAnyIndexing) {
+        if (isAnyIndexing) {
+            isCurrentlyIndexing = true
+            return@LaunchedEffect
+        }
+
+        if (isCurrentlyIndexing && activeSyncAction != null) {
+            val finishedAction = activeSyncAction
+            activeSyncAction = null
+            isCurrentlyIndexing = false
+            successSyncAction = finishedAction
+
+            delay(1800.milliseconds)
+
+            if (successSyncAction == finishedAction) {
+                successSyncAction = null
+            }
+        } else {
+            isCurrentlyIndexing = false
+            activeSyncAction = null
+        }
+    }
+
+    fun getSyncActionVisualState(action: ComicSyncAction): SyncActionVisualState =
+        when {
+            activeSyncAction == action -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.RescanComic && activeLibrarySyncType != null -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.SyncMangadexInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_MANGADEX -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.SyncAnilistInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_ANILIST -> SyncActionVisualState.LOADING
+            action == ComicSyncAction.SyncComicInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_COMICINFO -> SyncActionVisualState.LOADING
+            successSyncAction == action -> SyncActionVisualState.SUCCESS
+            else -> SyncActionVisualState.IDLE
+        }
 
     val currentManga = comicState ?: comic
     val totalChapters = chapterDto?.archive?.total ?: 0
@@ -190,16 +244,12 @@ fun ComicScreen(
     }
 
     val onSyncAction: (ComicSyncAction) -> Unit = { action ->
+        activeSyncAction = action
         when (action) {
             ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.comic.directory.id)
             ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.comic.directory.id)
             ComicSyncAction.SyncMangadexInfo -> comicMetadataViewModel.syncFromMangadex(uiState.comic.directory.id)
-            ComicSyncAction.SyncMangadexChapters ->
-                uiState.comic.remoteInfo?.id?.let {
-                    chapterMetadataViewModel.syncChaptersByMangadex(
-                        it,
-                    )
-                }
+            ComicSyncAction.SyncMangadexChapters -> chapterMetadataViewModel.syncChaptersByMangadex(uiState.comic.directory.id)
             ComicSyncAction.SyncComicInfo -> comicMetadataViewModel.syncFromComicInfo(uiState.comic.directory.id)
             ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.comic.directory.id)
             ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.comic.directory.id)
@@ -288,6 +338,7 @@ fun ComicScreen(
                         Comic.Template.configSection(
                             scope = this,
                             uiState = uiState,
+                            getSyncActionVisualState = ::getSyncActionVisualState,
                             onAction = onAction,
                             onSyncAction = onSyncAction,
                         )

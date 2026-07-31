@@ -75,6 +75,12 @@ class HomeViewModel
         private val _filterSettings = MutableStateFlow(FilterSettings())
         val filterSettings: StateFlow<FilterSettings> = _filterSettings.asStateFlow()
 
+        private val _searchQuery = MutableStateFlow("")
+        val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+        private val _isSearchExpanded = MutableStateFlow(false)
+        val isSearchExpanded: StateFlow<Boolean> = _isSearchExpanded.asStateFlow()
+
         val allCategories: StateFlow<List<CategoryDto>> =
             manageCategoriesUseCase
                 .getAllCategories()
@@ -96,7 +102,8 @@ class HomeViewModel
                 },
                 _sortSettings,
                 _filterSettings,
-            ) { args, sort, filter ->
+                _searchQuery,
+            ) { args, sort, filter, query ->
                 val remoteInfoMap =
                     args.remoteMangaInfo
                         .filter { it.comicDirectoryFk != null }
@@ -119,7 +126,10 @@ class HomeViewModel
                                     else -> source == filter.metadataSource
                                 }
 
-                            matchesHidden && matchesCategory && matchesSource
+                            val title = remoteInfoMap[directory.id]?.title ?: directory.name
+                            val matchesQuery = query.isEmpty() || title.contains(query, ignoreCase = true)
+
+                            matchesHidden && matchesCategory && matchesSource && matchesQuery
                         }.map { directory ->
                             val comic =
                                 ComicDto(
@@ -130,7 +140,6 @@ class HomeViewModel
                             Triple(comic, historyMap[directory.id], args.chapterCounts[directory.id] ?: 0)
                         }
 
-                // Apply Sorting
                 val sortedList =
                     when (sort.type) {
                         ComicSortType.TITLE -> list.sortedBy { it.first.remoteInfo?.title ?: it.first.directory.name }
@@ -205,6 +214,17 @@ class HomeViewModel
                 viewModelScope.launch {
                     HomeFilterPreference.saveShowHidden(context, filter.showHidden)
                 }
+            }
+        }
+
+        fun updateSearchQuery(query: String) {
+            _searchQuery.value = query
+        }
+
+        fun setSearchExpanded(expanded: Boolean) {
+            _isSearchExpanded.value = expanded
+            if (!expanded) {
+                _searchQuery.value = ""
             }
         }
 

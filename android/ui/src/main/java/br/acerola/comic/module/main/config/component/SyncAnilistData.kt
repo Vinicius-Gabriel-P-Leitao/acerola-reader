@@ -8,28 +8,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.HeroButton
+import br.acerola.comic.common.ux.component.SyncActionIcon
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 
 @Composable
 fun Main.Config.Component.SyncAnilistData(
     onRescan: () -> Unit,
+    state: SyncActionVisualState = SyncActionVisualState.IDLE,
     modifier: Modifier = Modifier,
 ) {
     Acerola.Component.HeroButton(
         title = stringResource(id = R.string.title_sync_anilist_remote_info),
         description = stringResource(id = R.string.description_sync_anilist_remote_info),
         iconBackground = MaterialTheme.colorScheme.tertiaryContainer,
-        onClick = onRescan,
+        onClick = if (state == SyncActionVisualState.LOADING) null else onRescan,
         modifier = modifier,
         icon = {
-            Image(
-                painter = painterResource(id = R.drawable.anilist),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-            )
+            Acerola.Component.SyncActionIcon(
+                state = state,
+                defaultBackground = MaterialTheme.colorScheme.tertiaryContainer,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.anilist),
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         },
     )
 }

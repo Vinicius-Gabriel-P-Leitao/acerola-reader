@@ -3,7 +3,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import br.acerola.comic.dto.metadata.category.CategoryDto
@@ -18,15 +17,20 @@ import br.acerola.comic.worker.sync.MetadataSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
+
+import androidx.work.WorkInfo
+import br.acerola.comic.worker.contract.WorkerContract
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 @HiltViewModel
 class ComicMetadataViewModel
@@ -36,9 +40,40 @@ class ComicMetadataViewModel
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
         @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
     ) : ViewModel() {
+        private val _workerIndexing = MutableStateFlow(false)
+
+        val activeSyncSource: StateFlow<String?> =
+            workManager
+                .getWorkInfosByTagFlow("metadata_sync")
+                .map { list ->
+                    val running = list.firstOrNull { !it.state.isFinished } ?: return@map null
+                    when {
+                        running.tags.contains("source_${MetadataSyncWorker.SOURCE_MANGADEX}") -> MetadataSyncWorker.SOURCE_MANGADEX
+                        running.tags.contains("source_${MetadataSyncWorker.SOURCE_ANILIST}") -> MetadataSyncWorker.SOURCE_ANILIST
+                        running.tags.contains("source_${MetadataSyncWorker.SOURCE_COMICINFO}") -> MetadataSyncWorker.SOURCE_COMICINFO
+                        else -> null
+                    }
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+        val activeSyncType: StateFlow<String?> =
+            workManager
+                .getWorkInfosByTagFlow("metadata_sync")
+                .map { list ->
+                    val running = list.firstOrNull { !it.state.isFinished } ?: return@map null
+                    when {
+                        running.tags.contains("type_${MetadataSyncWorker.SYNC_TYPE_RESCAN}") -> MetadataSyncWorker.SYNC_TYPE_RESCAN
+                        running.tags.contains("type_${MetadataSyncWorker.SYNC_TYPE_SYNC}") -> MetadataSyncWorker.SYNC_TYPE_SYNC
+                        else -> null
+                    }
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
         val isIndexing: StateFlow<Boolean> =
-            observeLibraryUseCase.isIndexing
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+            combine(
+                observeLibraryUseCase.isIndexing,
+                _workerIndexing,
+            ) { repoIndexing, workerBusy ->
+                repoIndexing || workerBusy
+            }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
         val progress: StateFlow<Int> =
             observeLibraryUseCase.progress
@@ -155,15 +190,38 @@ class ComicMetadataViewModel
                                 MetadataSyncWorker.KEY_DIRECTORY_ID to directoryId,
                             ),
                         ).addTag("metadata_sync")
+                        .addTag("source_$source")
+                        .addTag("type_$type")
                         .build()
 
-                val workName = if (directoryId == -1L) "metadata_sync_library_$source" else "metadata_sync_$directoryId"
+                val workName = if (directoryId == -1L) "metadata_sync_library_$source" else "metadata_sync_${source}_$directoryId"
+
+                _workerIndexing.value = true
 
                 workManager.enqueueUniqueWork(
                     workName,
-                    ExistingWorkPolicy.KEEP,
+                    ExistingWorkPolicy.REPLACE,
                     syncRequest,
                 )
+
+                observeWorkProgress(syncRequest.id)
+            }
+        }
+
+        private fun observeWorkProgress(workerId: UUID) {
+            viewModelScope.launch {
+                workManager.getWorkInfoByIdFlow(workerId).collect { workInfo ->
+                    if (workInfo != null) {
+                        _workerIndexing.value = !workInfo.state.isFinished
+
+                        if (workInfo.state == WorkInfo.State.FAILED) {
+                            val errorMessage = workInfo.outputData.getString(WorkerContract.KEY_ERROR)
+                            if (errorMessage != null) {
+                                _uiEvents.send(UserMessage.Raw(errorMessage))
+                            }
+                        }
+                    }
+                }
             }
         }
 

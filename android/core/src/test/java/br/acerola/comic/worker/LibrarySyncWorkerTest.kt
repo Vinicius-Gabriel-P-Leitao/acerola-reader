@@ -76,7 +76,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.SPECIFIC,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Left(LibrarySyncError.UnexpectedError(Exception("Comic ID not found")))
 
@@ -100,7 +100,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.SPECIFIC,
                     42L,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 
@@ -119,7 +119,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.SPECIFIC,
                     42L,
-                    null
+                    null,
                 )
             }
         }
@@ -131,7 +131,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.SPECIFIC,
                     42L,
-                    null
+                    null,
                 )
             } returns Either.Left(LibrarySyncError.DatabaseError())
 
@@ -157,7 +157,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.INCREMENTAL,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 
@@ -178,7 +178,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.INCREMENTAL,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Left(LibrarySyncError.FolderAccessDenied())
 
@@ -201,7 +201,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.REFRESH,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 
@@ -222,7 +222,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.REFRESH,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Left(LibrarySyncError.SyncNetworkError())
 
@@ -245,7 +245,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.REBUILD,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 
@@ -266,7 +266,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.REBUILD,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Left(LibrarySyncError.MalformedLibrary())
 
@@ -289,7 +289,7 @@ class LibrarySyncWorkerTest {
                 syncLibraryUseCase.execute(
                     SyncType.INCREMENTAL,
                     -1L,
-                    null
+                    null,
                 )
             } returns Either.Right(Unit)
 

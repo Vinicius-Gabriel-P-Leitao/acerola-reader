@@ -2,6 +2,7 @@ package br.acerola.comic.service
 
 import android.util.Log
 import p2p.FfiNetworkMode
+import p2p.FfiPeerAddr
 import p2p.P2pCallback
 import p2p.P2pNode
 import java.io.Closeable
@@ -10,6 +11,12 @@ enum class NetworkMode {
     LOCAL,
     RELAY,
 }
+
+data class PeerAddress(
+    val id: String,
+    val deviceId: String?,
+    val addrs: ByteArray,
+)
 
 class P2pService(
     private val eventListener: (event: String, data: String) -> Unit,
@@ -33,12 +40,26 @@ class P2pService(
 
     fun getLocalId(): String = p2pNode.getLocalId()
 
+    fun getLocalAddress(): PeerAddress {
+        val addr = p2pNode.getLocalAddr()
+        return PeerAddress(
+            id = addr.id,
+            deviceId = addr.deviceId,
+            addrs = addr.addrs,
+        )
+    }
+
     fun connect(
-        peerId: String,
+        peerAddress: PeerAddress,
         alpn: ByteArray,
     ) {
-        Log.d("P2pService", "Connecting to peer: $peerId")
-        p2pNode.connect(peerId, alpn)
+        Log.d("P2pService", "Connecting to peer: ${peerAddress.id}")
+        val ffiAddr = FfiPeerAddr(
+            id = peerAddress.id,
+            deviceId = peerAddress.deviceId,
+            addrs = peerAddress.addrs,
+        )
+        p2pNode.connect(ffiAddr, alpn)
     }
 
     fun switchToLocal() {

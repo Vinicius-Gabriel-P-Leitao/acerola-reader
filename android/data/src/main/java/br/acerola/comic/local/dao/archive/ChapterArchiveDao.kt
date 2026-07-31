@@ -40,18 +40,31 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
         LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
         WHERE chapter_archive.comic_directory_fk = :folderId 
         ORDER BY 
-            -- 1. Prioridade Máxima: Não-especiais primeiro (0 < 1)
             (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC,
-            -- 2. Volume: Garante que volumes numéricos venham antes de textos (CAST falha p/ texto -> 0)
-            -- Para evitar que texto 'special' (0) ganhe de 'Volume 1' (1), usamos um peso
             (CASE WHEN volume_archive.volume_sort GLOB '*[0-9]*' THEN 0 ELSE 1 END) ASC,
-            CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) ASC,
-            -- 3. Chapter: Ordem numérica (1, 2, 10)
-            CAST(chapter_archive.chapter_sort AS INTEGER) ASC, 
+            CAST(COALESCE(volume_archive.volume_sort, '0') AS REAL) ASC,
+            CAST(chapter_archive.chapter_sort AS REAL) ASC, 
             chapter_archive.chapter_sort ASC
     """,
     )
     fun getChaptersByDirectoryId(folderId: Long): Flow<List<ChapterVolumeJoin>>
+
+    @Transaction
+    @Query(
+        value = """
+        SELECT *
+        FROM chapter_archive
+        LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
+        WHERE chapter_archive.comic_directory_fk = :folderId 
+        ORDER BY 
+            (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC,
+            (CASE WHEN volume_archive.volume_sort GLOB '*[0-9]*' THEN 0 ELSE 1 END) ASC,
+            CAST(COALESCE(volume_archive.volume_sort, '0') AS REAL) DESC,
+            CAST(chapter_archive.chapter_sort AS REAL) DESC, 
+            chapter_archive.chapter_sort DESC
+    """,
+    )
+    fun getChaptersByDirectoryIdDesc(folderId: Long): Flow<List<ChapterVolumeJoin>>
 
     @Transaction
     @Query(
@@ -61,28 +74,10 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
             LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
             WHERE chapter_archive.comic_directory_fk = :folderId
             ORDER BY 
-                -- 1. Volume Parte Inteira
-                CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) ASC,
-                -- 2. Volume Parte Decimal
-                CAST(
-                    CASE 
-                        WHEN volume_archive.volume_sort LIKE '%.%' 
-                        THEN SUBSTR(volume_archive.volume_sort, INSTR(volume_archive.volume_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) ASC,
-                -- 3. Chapter Parte Inteira
-                CAST(chapter_archive.chapter_sort AS INTEGER) ASC, 
-                -- 4. Chapter Parte Decimal
-                CAST(
-                    CASE 
-                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
-                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) ASC,
-                -- 5. Especiais por último como critério de desempate
-                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC,
+                (CASE WHEN volume_archive.volume_sort GLOB '*[0-9]*' THEN 0 ELSE 1 END) ASC,
+                CAST(COALESCE(volume_archive.volume_sort, '0') AS REAL) ASC,
+                CAST(chapter_archive.chapter_sort AS REAL) ASC
             LIMIT :pageSize OFFSET :offset
         """,
     )
@@ -100,28 +95,10 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
             LEFT JOIN volume_archive ON chapter_archive.volume_id_fk = volume_archive.id
             WHERE chapter_archive.comic_directory_fk = :folderId
             ORDER BY 
-                -- 1. Volume Parte Inteira
-                CAST(COALESCE(volume_archive.volume_sort, '0') AS INTEGER) DESC,
-                -- 2. Volume Parte Decimal
-                CAST(
-                    CASE 
-                        WHEN volume_archive.volume_sort LIKE '%.%' 
-                        THEN SUBSTR(volume_archive.volume_sort, INSTR(volume_archive.volume_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) DESC,
-                -- 3. Chapter Parte Inteira
-                CAST(chapter_archive.chapter_sort AS INTEGER) DESC, 
-                -- 4. Chapter Parte Decimal
-                CAST(
-                    CASE 
-                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
-                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) DESC,
-                -- 5. Especiais por último como critério de desempate
-                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
+                (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC,
+                (CASE WHEN volume_archive.volume_sort GLOB '*[0-9]*' THEN 0 ELSE 1 END) ASC,
+                CAST(COALESCE(volume_archive.volume_sort, '0') AS REAL) DESC,
+                CAST(chapter_archive.chapter_sort AS REAL) DESC
             LIMIT :pageSize OFFSET :offset
         """,
     )
@@ -140,14 +117,7 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
             WHERE chapter_archive.comic_directory_fk = :comicId
               AND chapter_archive.volume_id_fk = :volumeId
             ORDER BY 
-                CAST(chapter_archive.chapter_sort AS INTEGER) ASC,
-                CAST(
-                    CASE 
-                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
-                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) ASC,
+                CAST(chapter_archive.chapter_sort AS REAL) ASC,
                 (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
             LIMIT :pageSize OFFSET :offset
         """,
@@ -168,14 +138,7 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
             WHERE chapter_archive.comic_directory_fk = :comicId
               AND chapter_archive.volume_id_fk = :volumeId
             ORDER BY 
-                CAST(chapter_archive.chapter_sort AS INTEGER) DESC,
-                CAST(
-                    CASE 
-                        WHEN chapter_archive.chapter_sort LIKE '%.%' 
-                        THEN SUBSTR(chapter_archive.chapter_sort, INSTR(chapter_archive.chapter_sort, '.') + 1) 
-                        ELSE 0 
-                    END AS INTEGER
-                ) DESC,
+                CAST(chapter_archive.chapter_sort AS REAL) DESC,
                 (chapter_archive.is_special OR COALESCE(volume_archive.is_special, 0)) ASC
             LIMIT :pageSize OFFSET :offset
         """,

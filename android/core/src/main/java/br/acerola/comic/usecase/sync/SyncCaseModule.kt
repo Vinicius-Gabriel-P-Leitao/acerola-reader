@@ -13,16 +13,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SyncCaseModule {
+    @Binds
+    @Singleton
+    abstract fun bindLibrarySyncScheduler(scheduler: WorkManagerLibrarySyncScheduler): LibrarySyncScheduler
 
     @Binds
     @Singleton
-    abstract fun bindLibrarySyncScheduler(
-        scheduler: WorkManagerLibrarySyncScheduler
-    ): LibrarySyncScheduler
-
-    @Binds
-    @Singleton
-    abstract fun bindLibrarySyncStatusRepository(
-        repository: WorkManagerLibrarySyncStatusRepository
-    ): LibrarySyncStatusRepository
+    abstract fun bindLibrarySyncStatusRepository(repository: WorkManagerLibrarySyncStatusRepository): LibrarySyncStatusRepository
 }

@@ -4,6 +4,7 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.service.NetworkMode
 import br.acerola.comic.service.P2pService
+import br.acerola.comic.service.PeerAddress
 import java.io.Closeable
 import javax.inject.Inject
 
@@ -18,12 +19,18 @@ class P2pUseCase
             return id
         }
 
+        fun getLocalAddress(): PeerAddress {
+            val addr = p2pService.getLocalAddress()
+            AcerolaLogger.d("P2pUseCase", "getLocalAddress: ${addr.id}", LogSource.NETWORK)
+            return addr
+        }
+
         fun connect(
-            peerId: String,
+            peerAddress: PeerAddress,
             alpn: ByteArray,
         ) {
-            AcerolaLogger.i("P2pUseCase", "Connecting to peer: $peerId", LogSource.NETWORK)
-            p2pService.connect(peerId, alpn)
+            AcerolaLogger.i("P2pUseCase", "Connecting to peer: ${peerAddress.id}", LogSource.NETWORK)
+            p2pService.connect(peerAddress, alpn)
         }
 
         fun switchToLocal() {

@@ -10,10 +10,8 @@ import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.error.message.LibrarySyncError
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
-import br.acerola.comic.local.translator.persistence.toDownloadSourcesEntities
 import br.acerola.comic.local.translator.persistence.toEntity
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
@@ -35,7 +33,6 @@ class ComicInfoChapterEngine
         private val chapterArchiveDao: ChapterArchiveDao,
         private val comicMetadataDao: ComicMetadataDao,
         private val chapterMetadataDao: ChapterMetadataDao,
-        private val chapterDownloadSourceDao: ChapterDownloadSourceDao,
     ) : ChapterSyncGateway {
         @Inject
         @ComicInfoSourceQualifier
@@ -84,11 +81,12 @@ class ComicInfoChapterEngine
 
                             if (result != null) {
                                 AcerolaLogger.v(TAG, "Match found in ComicInfo for chapter: ${archive.chapter.chapter}", LogSource.REPOSITORY)
-                                val chapterRemoteInfoEntity = result.toEntity(comicRemoteInfoFk = remoteManga.id)
-                                val chapterRemoteInfoId = chapterMetadataDao.insert(chapterRemoteInfoEntity)
-
-                                val downloadSourceEntities = result.toDownloadSourcesEntities(chapterFk = chapterRemoteInfoId)
-                                chapterDownloadSourceDao.insertAll(*downloadSourceEntities.toTypedArray())
+                                val chapterRemoteInfoEntity =
+                                    result.toEntity(
+                                        comicRemoteInfoFk = remoteManga.id,
+                                        chapterArchiveFk = archive.chapter.id,
+                                    )
+                                chapterMetadataDao.insert(chapterRemoteInfoEntity)
                             }
 
                             _progress.value = ((index + 1).toFloat() / total.toFloat() * 100).toInt()

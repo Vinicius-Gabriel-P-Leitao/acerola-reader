@@ -13,7 +13,6 @@ import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
-import br.acerola.comic.local.dao.metadata.source.ComicInfoSourceDao
 import br.acerola.comic.service.artwork.CoverSaver
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,7 +32,6 @@ class ComicInfoSourceMangaEngineTest {
     private val directoryDao = mockk<ComicDirectoryDao>(relaxed = true)
     private val coverService = mockk<CoverSaver>(relaxed = true)
     private val comicMetadataDao = mockk<ComicMetadataDao>(relaxed = true)
-    private val comicInfoSourceDao = mockk<ComicInfoSourceDao>(relaxed = true)
     private val downloadCoverService = mockk<ImageProvider<String>>(relaxed = true)
     private val comicInfoSourceService = mockk<MetadataProvider<ComicMetadataDto, String>>(relaxed = true)
 
@@ -53,7 +51,6 @@ class ComicInfoSourceMangaEngineTest {
                 directoryDao = directoryDao,
                 coverService = coverService,
                 comicMetadataDao = comicMetadataDao,
-                comicInfoSourceDao = comicInfoSourceDao,
                 downloadCoverService = downloadCoverService,
             )
         repository.comicInfoSourceService = comicInfoSourceService
@@ -78,10 +75,6 @@ class ComicInfoSourceMangaEngineTest {
 
             coEvery {
                 comicMetadataDao.upsertComicWithRelationsTransaction(
-                    any(),
-                    any(),
-                    any(),
-                    any(),
                     any(),
                     any(),
                     any(),

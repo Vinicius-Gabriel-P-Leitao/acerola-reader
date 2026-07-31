@@ -38,7 +38,9 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":infra"))
+    implementation(libs.haze)
     implementation(libs.androidx.compose.foundation)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.collections.immutable)

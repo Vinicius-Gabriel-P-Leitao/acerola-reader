@@ -1,4 +1,5 @@
 package br.acerola.comic.common.activity
+
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
@@ -9,7 +10,12 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -29,7 +35,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.Acerola
-import br.acerola.comic.common.ux.component.Progress
 import br.acerola.comic.common.ux.component.Scaffold
 import br.acerola.comic.common.ux.component.SnackbarError
 import br.acerola.comic.common.ux.component.SnackbarSuccess
@@ -37,9 +42,11 @@ import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.SnackbarWarn
 import br.acerola.comic.common.ux.component.resolveSnackbarVariant
 import br.acerola.comic.common.ux.theme.AcerolaTheme
-import br.acerola.comic.common.viewmodel.progress.GlobalProgressViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 @AndroidEntryPoint
 abstract class BaseActivity : ComponentActivity() {
@@ -48,7 +55,6 @@ abstract class BaseActivity : ComponentActivity() {
     open val applyScaffoldPadding: Boolean = true
 
     private val themeViewModel: ThemeViewModel by viewModels()
-    private val globalProgressViewModel: GlobalProgressViewModel by viewModels()
 
     open fun NavGraphBuilder.setupNavGraph(
         context: Context,
@@ -74,38 +80,65 @@ abstract class BaseActivity : ComponentActivity() {
                 CompositionLocalProvider(
                     value = LocalSnackbarHostState provides snackbarHostState,
                 ) {
-                    Acerola.Component.Scaffold {
-                        Scaffold(
-                            topBar = { TopBar(navController) },
-                            snackbarHost = {
-                                SnackbarHost(hostState = snackbarHostState) { snackbarData ->
-                                    val message = snackbarData.visuals.message
-                                    when (resolveSnackbarVariant(snackbarData.visuals)) {
-                                        SnackbarVariant.Error -> Acerola.Component.SnackbarError(message)
-                                        SnackbarVariant.Success -> Acerola.Component.SnackbarSuccess(message)
-                                        SnackbarVariant.Warn -> Acerola.Component.SnackbarWarn(message)
+                    if (isLandscape) {
+                        // Em modo landscape: sidebar fora do Scaffold para ocupar toda a altura
+                        // (status bar + conteúdo + nav bar), igual ao Spotify
+                        // applyStatusBarPadding=false para que a sidebar gerencie seus próprios insets
+                        Acerola.Component.Scaffold(applyStatusBarPadding = false) {
+                            Row(modifier = Modifier.fillMaxHeight()) {
+                                SideBar(navController)
+                                Scaffold(
+                                    modifier = Modifier.weight(1f),
+                                    topBar = { TopBar(navController) },
+                                    snackbarHost = {
+                                        SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+                                            val message = snackbarData.visuals.message
+                                            when (resolveSnackbarVariant(snackbarData.visuals)) {
+                                                SnackbarVariant.Error -> Acerola.Component.SnackbarError(message)
+                                                SnackbarVariant.Success -> Acerola.Component.SnackbarSuccess(message)
+                                                SnackbarVariant.Warn -> Acerola.Component.SnackbarWarn(message)
+                                            }
+                                        }
+                                    },
+                                    // Em landscape, o Scaffold M3 deve respeitar apenas os insets
+                                    // do topo e da direita (a sidebar já cuida do lado esquerdo)
+                                    contentWindowInsets =
+                                        WindowInsets.safeDrawing.only(
+                                            WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom,
+                                        ),
+                                ) { padding ->
+                                    val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
+                                    Box(modifier = Modifier.padding(paddingValues = contentPadding)) {
+                                        NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
                                     }
                                 }
-                            },
-                            bottomBar = { if (!isLandscape) BottomBar(navController) },
-                        ) { padding ->
-
-                            val isIndexing by globalProgressViewModel.isIndexing.collectAsStateWithLifecycle(false)
-                            val progress by globalProgressViewModel.progress.collectAsStateWithLifecycle(null)
-
-                            val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
-                            Row(modifier = Modifier.padding(paddingValues = contentPadding)) {
-                                if (isLandscape) SideBar(navController)
-                                Box(modifier = Modifier.weight(1f)) {
+                            }
+                        }
+                    } else {
+                        // Em modo portrait: layout original com bottom bar
+                        Acerola.Component.Scaffold {
+                            val hazeState = rememberHazeState()
+                            Scaffold(
+                                topBar = { TopBar(navController) },
+                                snackbarHost = {
+                                    SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+                                        val message = snackbarData.visuals.message
+                                        when (resolveSnackbarVariant(snackbarData.visuals)) {
+                                            SnackbarVariant.Error -> Acerola.Component.SnackbarError(message)
+                                            SnackbarVariant.Success -> Acerola.Component.SnackbarSuccess(message)
+                                            SnackbarVariant.Warn -> Acerola.Component.SnackbarWarn(message)
+                                        }
+                                    }
+                                },
+                                bottomBar = { BottomBar(navController, hazeState) },
+                            ) { padding ->
+                                val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .padding(paddingValues = contentPadding)
+                                        .hazeSource(hazeState),
+                                ) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
-                                    Acerola.Component.Progress(
-                                        modifier =
-                                            Modifier
-                                                .align(Alignment.BottomStart)
-                                                .padding(all = 8.dp),
-                                        isLoading = isIndexing,
-                                        progress = progress,
-                                    )
                                 }
                             }
                         }
@@ -120,7 +153,10 @@ abstract class BaseActivity : ComponentActivity() {
     }
 
     @Composable
-    open fun BottomBar(navController: NavHostController) {
+    open fun BottomBar(
+        navController: NavHostController,
+        hazeState: HazeState,
+    ) {
     }
 
     @Composable

@@ -8,7 +8,6 @@ import br.acerola.comic.error.message.IoError
 import br.acerola.comic.fixtures.LookupFixtures
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.relationship.CoverDao
 import br.acerola.comic.service.artwork.CoverSaver
 import br.acerola.comic.service.file.FileStorageHandler
 import io.mockk.MockKAnnotations
@@ -29,8 +28,6 @@ import org.junit.Test
 class CoverSaverTest {
     @MockK lateinit var context: Context
 
-    @MockK lateinit var coverDao: CoverDao
-
     @MockK lateinit var directoryDao: ComicDirectoryDao
 
     @MockK lateinit var fileStorageHandler: FileStorageHandler
@@ -40,7 +37,7 @@ class CoverSaverTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        service = CoverSaver(coverDao, directoryDao, fileStorageHandler, context)
+        service = CoverSaver(directoryDao, fileStorageHandler, context)
         mockkStatic(DocumentFile::class)
     }
 
@@ -72,14 +69,13 @@ class CoverSaverTest {
             coEvery { fileStorageHandler.saveFile(any(), any(), any(), any()) } returns "content://cover/1".right()
             coEvery { directoryDao.getDirectoryById(1) } returns comicDir
             coEvery { directoryDao.update(any()) } returns Unit
-            coEvery { coverDao.insert(any()) } returns 10L
 
             // Act
             val result = service.processCover(rootUri, 1, bytes, coverDto.url, "One Piece", 100)
 
             // Assert
             assertTrue(result.isRight())
-            result.onRight { assertEquals(10L, it) }
+            result.onRight { assertEquals(1L, it) }
             coVerify { fileStorageHandler.saveFile(comicDoc, "cover.jpg", "image/jpeg", bytes) }
             coVerify { directoryDao.update(match { it.cover == "content://cover/1" }) }
         }

@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ComicCategorySelector
@@ -42,6 +43,7 @@ private fun SectionHeader(title: String) {
 fun Comic.Template.configSection(
     scope: LazyListScope,
     uiState: ComicUiState,
+    getSyncActionVisualState: (ComicSyncAction) -> SyncActionVisualState = { SyncActionVisualState.IDLE },
     onAction: (ComicAction) -> Unit,
     onSyncAction: (ComicSyncAction) -> Unit,
 ) {
@@ -120,6 +122,10 @@ fun Comic.Template.configSection(
                 } else {
                     null
                 },
+            syncChaptersState = getSyncActionVisualState(ComicSyncAction.SyncChaptersLocal),
+            rescanCoverState = getSyncActionVisualState(ComicSyncAction.RescanComic),
+            extractFirstPageState = getSyncActionVisualState(ComicSyncAction.ExtractFirstPageAsCover),
+            extractVolumeCoversState = getSyncActionVisualState(ComicSyncAction.ExtractVolumeCovers),
             modifier = itemModifier,
         )
     }
@@ -157,6 +163,11 @@ fun Comic.Template.configSection(
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },
             onSyncComicInfoChapters = { onSyncAction(ComicSyncAction.SyncComicInfoChapters) },
             onSyncAnilistInfo = { onSyncAction(ComicSyncAction.SyncAnilistInfo) },
+            mangadexInfoState = getSyncActionVisualState(ComicSyncAction.SyncMangadexInfo),
+            mangadexChaptersState = getSyncActionVisualState(ComicSyncAction.SyncMangadexChapters),
+            anilistInfoState = getSyncActionVisualState(ComicSyncAction.SyncAnilistInfo),
+            comicInfoState = getSyncActionVisualState(ComicSyncAction.SyncComicInfo),
+            comicInfoChaptersState = getSyncActionVisualState(ComicSyncAction.SyncComicInfoChapters),
             modifier = itemModifier,
         )
     }

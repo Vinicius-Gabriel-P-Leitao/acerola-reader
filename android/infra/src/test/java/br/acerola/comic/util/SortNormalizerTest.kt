@@ -55,6 +55,9 @@ class SortNormalizerTest {
                 "Chapter 10.5.cbz" to "10.5",
                 "1.10.cbz" to "1.10",
                 "001.cbz" to "1",
+                "Ch. 0.01.cbz" to "0.01",
+                "Ch. 0.02.cbz" to "0.02",
+                "Ch. 0.10.cbz" to "0.10",
             )
 
         cases.forEach { (input, expected) ->
@@ -64,12 +67,18 @@ class SortNormalizerTest {
     }
 
     @Test
-    fun `should detect special archives`() {
-        val specials = listOf("Oneshot", "Special 1", "Extra story", "Especial 2")
+    fun `should detect special archives only when no numbers exist`() {
+        val specials = listOf("Oneshot", "Extra story")
 
         specials.forEach { input ->
             val result = SortNormalizer.normalize(input, SortType.CHAPTER, chapterTemplates)
             assertEquals("Should be special: $input", true, result.isSpecial)
+        }
+
+        val nonSpecials = listOf("Ch. 3.5 - Extras.cbz", "Special 1.cbz")
+        nonSpecials.forEach { input ->
+            val result = SortNormalizer.normalize(input, SortType.CHAPTER, chapterTemplates)
+            assertEquals("Should NOT be special: $input", false, result.isSpecial)
         }
     }
 
@@ -87,5 +96,38 @@ class SortNormalizerTest {
 
         assertEquals(1, v1.decimalPart)
         assertEquals(10, v10.decimalPart)
+    }
+
+    @Test
+    fun `should sort decimal chapters in strict numerical order`() {
+        val rawList = listOf(
+            "Capitulo 41.cbz",
+            "Capitulo 3.5.cbz",
+            "Capitulo 10.5.cbz",
+            "Ch. 0.01.cbz",
+            "Ch. 0.02.cbz",
+            "Capitulo 1.cbz",
+            "Capitulo 3.cbz",
+        )
+
+        val normalized = rawList.map { name ->
+            name to SortNormalizer.normalize(name, SortType.CHAPTER, chapterTemplates)
+        }
+
+        val sortedNames = normalized.sortedBy { (_, result) ->
+            result.normalizedSort.toDoubleOrNull() ?: 0.0
+        }.map { it.first }
+
+        val expectedOrder = listOf(
+            "Ch. 0.01.cbz",
+            "Ch. 0.02.cbz",
+            "Capitulo 1.cbz",
+            "Capitulo 3.cbz",
+            "Capitulo 3.5.cbz",
+            "Capitulo 10.5.cbz",
+            "Capitulo 41.cbz",
+        )
+
+        assertEquals(expectedOrder, sortedNames)
     }
 }

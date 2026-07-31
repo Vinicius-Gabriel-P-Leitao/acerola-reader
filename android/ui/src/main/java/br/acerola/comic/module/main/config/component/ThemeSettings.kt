@@ -46,6 +46,8 @@ import br.acerola.comic.common.ux.theme.color.CatppuccinLatte
 import br.acerola.comic.common.ux.theme.color.CatppuccinMocha
 import br.acerola.comic.common.ux.theme.color.Dracula
 import br.acerola.comic.common.ux.theme.color.NordDark
+import br.acerola.comic.common.ux.theme.color.TokyoNightDark
+import br.acerola.comic.common.ux.theme.color.TokyoNightDay
 import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
@@ -134,6 +136,7 @@ private fun getThemeTitle(
                 stringResource(R.string.title_settings_alucard_theme)
             }
         AppTheme.DYNAMIC -> stringResource(R.string.title_settings_dynamic_color)
+        AppTheme.TOKYO_NIGHT -> stringResource(R.string.title_settings_tokyo_night_theme)
     }
 
 @Composable
@@ -167,6 +170,12 @@ private fun getThemeSubtitle(
                 stringResource(R.string.subtitle_settings_dracula_theme)
             }
         AppTheme.DYNAMIC -> stringResource(R.string.subtitle_settings_dynamic_color)
+        AppTheme.TOKYO_NIGHT ->
+            if (isDark) {
+                stringResource(R.string.subtitle_settings_tokyo_night_dark_theme)
+            } else {
+                stringResource(R.string.subtitle_settings_tokyo_night_light_theme)
+            }
     }
 
 @Composable
@@ -194,6 +203,12 @@ private fun getThemeColors(
                 listOf(NordDark.Primary, NordDark.Secondary, NordDark.Tertiary)
             } else {
                 listOf(Color(0xFF88C0D0), Color(0xFF81A1C1), Color(0xFF8FBCBB))
+            }
+        AppTheme.TOKYO_NIGHT ->
+            if (isDark) {
+                listOf(TokyoNightDark.Blue, TokyoNightDark.Purple, TokyoNightDark.Cyan)
+            } else {
+                listOf(TokyoNightDay.Blue, TokyoNightDay.Purple, TokyoNightDay.Cyan)
             }
     }
 

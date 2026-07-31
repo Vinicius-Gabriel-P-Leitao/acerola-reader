@@ -25,6 +25,7 @@ import br.acerola.comic.common.navigation.Destination
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.BottomBar
 import br.acerola.comic.common.ux.component.SideBar
+import dev.chrisbanes.haze.HazeState
 import br.acerola.comic.config.preference.OnboardingPreference
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.Screen
@@ -39,6 +40,8 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity(
     override val startDestinationRes: Int = R.string.navigation_launcher,
 ) : BaseActivity() {
+    override val applyScaffoldPadding: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -91,16 +94,20 @@ class MainActivity(
     }
 
     @Composable
-    override fun BottomBar(navController: NavHostController) {
+    override fun BottomBar(
+        navController: NavHostController,
+        hazeState: HazeState,
+    ) {
         val currentEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentEntry?.destination?.route
         val hiddenRoutes =
             setOf(
                 getString(R.string.navigation_launcher),
                 getString(Destination.TUTORIAL.route),
+                getString(Destination.PATTERN.route),
             )
         if (currentRoute !in hiddenRoutes) {
-            Acerola.Component.BottomBar(navController)
+            Acerola.Component.BottomBar(navController, hazeState)
         }
     }
 
@@ -112,6 +119,7 @@ class MainActivity(
             setOf(
                 getString(R.string.navigation_launcher),
                 getString(Destination.TUTORIAL.route),
+                getString(Destination.PATTERN.route),
             )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.SideBar(navController)

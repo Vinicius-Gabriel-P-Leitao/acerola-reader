@@ -33,6 +33,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,6 +44,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
@@ -58,7 +63,8 @@ class ChapterArchiveEngine
         private val archiveValidator: ArchiveValidator,
         private val volumeSyncService: VolumeSyncService,
         private val chapterSyncService: ChapterSyncService,
-    ) : ChapterSyncGateway, ChapterReadGateway<ChapterPageDto> {
+    ) : ChapterSyncGateway,
+        ChapterReadGateway<ChapterPageDto> {
         private val _progress = MutableStateFlow(value = -1)
         override val progress: StateFlow<Int> = _progress.asStateFlow()
 
@@ -137,30 +143,42 @@ class ChapterArchiveEngine
                                 AcerolaLogger.d(TAG, "Checking ${pdfFiles.size} PDF files in: ${dir.name}", LogSource.REPOSITORY)
                                 val cbzNames = children.map { it.name }.toSet()
 
-                                pdfFiles.forEach { pdf ->
-                                    val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormat.CBZ.extension
-                                    if (!archiveValidator.isPdfConversionEligible(targetCbzName, cbzNames, chapterRegex)) {
-                                        AcerolaLogger.v(TAG, "Skipping PDF conversion: ${pdf.name}", LogSource.REPOSITORY)
-                                        return@forEach
-                                    }
+                                val semaphore = Semaphore(3)
+                                coroutineScope {
+                                    pdfFiles
+                                        .map { pdf ->
+                                            async {
+                                                semaphore.withPermit {
+                                                    val targetCbzName = pdf.name.substringBeforeLast('.') + ArchiveFormat.CBZ.extension
+                                                    if (!archiveValidator.isPdfConversionEligible(targetCbzName, cbzNames, chapterRegex)) {
+                                                        AcerolaLogger.v(TAG, "Skipping PDF conversion: ${pdf.name}", LogSource.REPOSITORY)
+                                                        return@withPermit
+                                                    }
 
-                                    val pdfDocUri =
-                                        if (baseUri != null) {
-                                            DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
-                                        } else {
-                                            pdf.id.toUri()
-                                        }
-                                    val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri) ?: return@forEach
+                                                    val pdfDocUri =
+                                                        if (baseUri != null) {
+                                                            DocumentsContract.buildDocumentUriUsingTree(baseUri, pdf.id)
+                                                        } else {
+                                                            pdf.id.toUri()
+                                                        }
+                                                    val pdfDoc = DocumentFile.fromSingleUri(context, pdfDocUri) ?: return@withPermit
 
-                                    AcerolaLogger.i(TAG, "Converting: ${pdf.name} -> $targetCbzName in ${dir.name}", LogSource.REPOSITORY)
-                                    pdfToCbzConverterService
-                                        .convertPdfToCbz(dir, pdfDoc, targetCbzName)
-                                        .onRight {
-                                            AcerolaLogger.i(TAG, "Converted: $targetCbzName", LogSource.REPOSITORY)
-                                            needsGlobalRefresh = true
-                                        }.onLeft {
-                                            AcerolaLogger.e(TAG, "PDF conversion failed: ${pdf.name}", LogSource.REPOSITORY)
-                                        }
+                                                    AcerolaLogger.i(
+                                                        TAG,
+                                                        "Converting: ${pdf.name} -> $targetCbzName in ${dir.name}",
+                                                        LogSource.REPOSITORY,
+                                                    )
+                                                    pdfToCbzConverterService
+                                                        .convertPdfToCbz(dir, pdfDoc, targetCbzName)
+                                                        .onRight {
+                                                            AcerolaLogger.i(TAG, "Converted: $targetCbzName", LogSource.REPOSITORY)
+                                                            needsGlobalRefresh = true
+                                                        }.onLeft {
+                                                            AcerolaLogger.e(TAG, "PDF conversion failed: ${pdf.name}", LogSource.REPOSITORY)
+                                                        }
+                                                }
+                                            }
+                                        }.awaitAll()
                                 }
                             }
 
@@ -267,24 +285,31 @@ class ChapterArchiveEngine
             comicId: Long,
             sortType: String,
             isAscending: Boolean,
-        ): StateFlow<ChapterPageDto> =
-            chapterArchiveDao
-                .getChaptersByDirectoryId(folderId = comicId)
+        ): StateFlow<ChapterPageDto> {
+            val sourceFlow =
+                if (sortType == "NUMBER") {
+                    if (isAscending) {
+                        chapterArchiveDao.getChaptersByDirectoryId(folderId = comicId)
+                    } else {
+                        chapterArchiveDao.getChaptersByDirectoryIdDesc(folderId = comicId)
+                    }
+                } else {
+                    chapterArchiveDao.getChaptersByDirectoryId(folderId = comicId).map { list ->
+                        val sortedList = list.sortedBy { it.chapter.lastModified }
+                        if (isAscending) sortedList else sortedList.reversed()
+                    }
+                }
+
+            return sourceFlow
                 .map { list ->
                     AcerolaLogger.d(TAG, "Observed chapter list update: ${list.size} chapters", LogSource.REPOSITORY)
-                    val finalList =
-                        if (sortType == "LAST_UPDATE") {
-                            val base = list.sortedBy { it.chapter.lastModified }
-                            if (isAscending) base else base.reversed()
-                        } else {
-                            if (isAscending) list else list.reversed()
-                        }
-                    finalList.toChapterPageDto()
+                    list.toChapterPageDto()
                 }.stateIn(
                     started = SharingStarted.Lazily,
                     scope = CoroutineScope(context = Dispatchers.IO + SupervisorJob()),
                     initialValue = ChapterPageDto(items = emptyList(), pageSize = -1, total = 0, page = 0),
                 )
+        }
 
         override suspend fun getChapterPage(
             comicId: Long,

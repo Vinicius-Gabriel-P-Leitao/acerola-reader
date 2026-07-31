@@ -5,7 +5,6 @@ import br.acerola.comic.adapter.metadata.mangadex.engine.MangadexChapterEngine
 import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
-import br.acerola.comic.local.dao.metadata.ChapterDownloadSourceDao
 import br.acerola.comic.local.dao.metadata.ChapterMetadataDao
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.service.metadata.MetadataExporter
@@ -34,8 +33,6 @@ class MangadexSourceChapterEngineTest {
 
     @MockK lateinit var chapterMetadataDao: ChapterMetadataDao
 
-    @MockK lateinit var chapterDownloadSourceDao: ChapterDownloadSourceDao
-
     @MockK lateinit var metadataExportService: MetadataExporter
 
     @MockK lateinit var mangadexChapterInfoService: MetadataProvider<ChapterMetadataDto, String>
@@ -55,7 +52,6 @@ class MangadexSourceChapterEngineTest {
                 comicMetadataDao,
                 chapterMetadataDao,
                 metadataExportService,
-                chapterDownloadSourceDao,
             )
         repository.mangadexSourceChapterInfoService = mangadexChapterInfoService
     }
@@ -66,12 +62,12 @@ class MangadexSourceChapterEngineTest {
     }
 
     @Test
-    fun `refreshMangaChapters deve retornar sucesso se não houver mangadexId`() =
+    fun `refreshComicChapters deve retornar erro se não houver mangadexId`() =
         runTest {
             every { comicMetadataDao.observeComicWithRelationsByDirectoryId(any()) } returns flowOf(null)
 
             val result = repository.refreshComicChapters(1L)
 
-            assertTrue(result.isRight())
+            assertTrue(result.isLeft())
         }
 }

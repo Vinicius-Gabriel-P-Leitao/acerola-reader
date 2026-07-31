@@ -10,11 +10,10 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
-import br.acerola.comic.adapter.contract.gateway.ComicRebuildGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.library.DirectoryEngine
 import br.acerola.comic.data.R
+import br.acerola.comic.usecase.sync.SyncLibraryUseCase
 import br.acerola.comic.util.notification.NotificationHelper
 import br.acerola.comic.worker.contract.SyncType
 import br.acerola.comic.worker.contract.WorkerContract
@@ -30,7 +29,7 @@ class LibrarySyncWorker
     constructor(
         @Assisted private val context: Context,
         @Assisted workerParams: WorkerParameters,
-        private val syncLibraryUseCase: br.acerola.comic.usecase.sync.SyncLibraryUseCase,
+        private val syncLibraryUseCase: SyncLibraryUseCase,
         @param:DirectoryEngine private val progressGateway: ComicSingleSyncGateway,
         private val notificationHelper: NotificationHelper,
     ) : CoroutineWorker(context, workerParams) {
@@ -67,13 +66,17 @@ class LibrarySyncWorker
                         title,
                         context.getString(R.string.sync_library_description_scanning),
                     )
-                setForeground(
-                    ForegroundInfo(
-                        NotificationHelper.SYNC_NOTIFICATION_ID,
-                        builder.build(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
-                    ),
-                )
+                try {
+                    setForeground(
+                        ForegroundInfo(
+                            NotificationHelper.SYNC_NOTIFICATION_ID,
+                            builder.build(),
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+                        ),
+                    )
+                } catch (exception: Exception) {
+                    br.acerola.comic.logging.AcerolaLogger.w("LibrarySyncWorker", "Unable to start foreground service", throwable = exception)
+                }
 
                 // Usamos progressGateway para observar o progresso
                 val progressJob =
@@ -107,10 +110,11 @@ class LibrarySyncWorker
                         },
                     )
                 } catch (exception: Exception) {
+                    if (exception is kotlinx.coroutines.CancellationException) throw exception
                     progressJob.cancel()
                     val errorMsg = exception.message ?: context.getString(R.string.sync_library_unexpected_error)
                     notificationHelper.showFinishedNotification(
-                        context.getString(R.string.sync_library_fatal_error_title),
+                        context.getString(R.string.sync_library_error_title),
                         errorMsg,
                     )
                     Result.failure(workDataOf(WorkerContract.KEY_ERROR to errorMsg))

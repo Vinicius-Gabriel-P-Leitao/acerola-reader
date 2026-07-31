@@ -11,6 +11,7 @@ import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.HazeState
 
 @AndroidEntryPoint
 class ReaderActivity(
@@ -64,7 +65,10 @@ class ReaderActivity(
     }
 
     @Composable
-    override fun BottomBar(navController: NavHostController) = Unit
+    override fun BottomBar(
+        navController: NavHostController,
+        hazeState: HazeState,
+    ) = Unit
 
     @Composable
     override fun TopBar(navController: NavHostController) = Unit
