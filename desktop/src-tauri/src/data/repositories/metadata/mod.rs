@@ -3,8 +3,7 @@ use sqlx::SqlitePool;
 use crate::{
     data::{
         models::metadata::{
-            author::AuthorMetadata, banner::Banner, chapter::ChapterMetadata, comic::ComicMetadata,
-            cover::Cover, page::ChapterPage,
+            author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata,
         },
         repositories::{Entity, Repository},
     },
@@ -15,10 +14,7 @@ use crate::{
 pub struct MetadataRepository {
     pub comic_repo: Repository<ComicMetadata>,
     pub chapter_repo: Repository<ChapterMetadata>,
-    pub page_repo: Repository<ChapterPage>,
     pub author_repo: Repository<AuthorMetadata>,
-    pub cover_repo: Repository<Cover>,
-    pub banner_repo: Repository<Banner>,
     pool: SqlitePool,
 }
 
@@ -27,10 +23,7 @@ impl MetadataRepository {
         Self {
             comic_repo: Repository::new(pool.clone()),
             chapter_repo: Repository::new(pool.clone()),
-            page_repo: Repository::new(pool.clone()),
             author_repo: Repository::new(pool.clone()),
-            cover_repo: Repository::new(pool.clone()),
-            banner_repo: Repository::new(pool.clone()),
             pool,
         }
     }
@@ -84,40 +77,6 @@ impl MetadataRepository {
 
         Ok(result)
     }
-
-    pub async fn get_cover_by_comic_metadata_id(
-        &self, metadata_id: i64,
-    ) -> Result<Option<Cover>, DbError> {
-        let table = Cover::table_name();
-        let cols = Cover::columns().join(", ");
-
-        let result = sqlx::query_as::<_, Cover>(&format!(
-            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
-            cols, table
-        ))
-        .bind(metadata_id)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(result)
-    }
-
-    pub async fn get_banner_by_comic_metadata_id(
-        &self, metadata_id: i64,
-    ) -> Result<Option<Banner>, DbError> {
-        let table = Banner::table_name();
-        let cols = Banner::columns().join(", ");
-
-        let result = sqlx::query_as::<_, Banner>(&format!(
-            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
-            cols, table
-        ))
-        .bind(metadata_id)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(result)
-    }
 }
 
 #[cfg(test)]
@@ -138,7 +97,6 @@ mod tests {
             id: 1,
             title: "Berserk".to_string(),
             description: "Dark fantasy".to_string(),
-            romanji: "Berserk".to_string(),
             status: "Ongoing".to_string(),
             publication: Some(1989),
             sync_source: Some("MangaDex".to_string()),
@@ -155,6 +113,7 @@ mod tests {
             page_count: Some(50),
             scanlation: Some("Evil Genius".to_string()),
             comic_metadata_fk: 1,
+            chapter_archive_fk: None,
         }
     }
 

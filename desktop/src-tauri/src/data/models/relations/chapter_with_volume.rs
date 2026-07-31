@@ -6,7 +6,6 @@ pub struct ChapterArchiveWithVolume {
     pub chapter_sort: String,
     pub is_special: bool,
     pub checksum: Option<String>,
-    pub fast_hash: Option<String>,
     pub comic_directory_fk: i64,
     pub volume_id_fk: Option<i64>,
     pub last_modified: i64,

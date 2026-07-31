@@ -5,7 +5,7 @@ use crate::data::repositories::{Bindable, Entity};
 
 impl Entity for ChapterMetadata {
     fn columns() -> &'static [&'static str] {
-        &["id", "title", "chapter", "page_count", "scanlation", "comic_metadata_fk"]
+        &["id", "title", "chapter", "page_count", "scanlation", "comic_metadata_fk", "chapter_archive_fk"]
     }
     fn table_name() -> &'static str {
         "chapter_metadata"
@@ -26,6 +26,7 @@ impl Bindable for ChapterMetadata {
             .bind(self.page_count)
             .bind(&self.scanlation)
             .bind(self.comic_metadata_fk)
+            .bind(self.chapter_archive_fk)
     }
 
     fn bind_update<'query>(
@@ -37,6 +38,7 @@ impl Bindable for ChapterMetadata {
             .bind(self.page_count)
             .bind(&self.scanlation)
             .bind(self.comic_metadata_fk)
+            .bind(self.chapter_archive_fk)
             .bind(self.id) // WHERE id = ?
     }
 }
@@ -49,4 +51,5 @@ pub struct ChapterMetadata {
     pub page_count: Option<i64>,
     pub scanlation: Option<String>,
     pub comic_metadata_fk: i64,
+    pub chapter_archive_fk: Option<i64>,
 }

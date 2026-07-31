@@ -167,7 +167,6 @@ mod tests {
             chapter_sort: chapter_sort.to_string(),
             is_special: false,
             checksum: None,
-            fast_hash: None,
             comic_directory_fk: 1,
             volume_id_fk: None,
             last_modified: 123456789,

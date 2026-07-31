@@ -6,10 +6,7 @@ use crate::{
     core::services::archive::files_guard::{ArchiveFileGuard, FileGuard, MetadataFileGuard},
     data::{
         models::{
-            metadata::{
-                author::AuthorMetadata, banner::Banner, chapter::ChapterMetadata,
-                comic::ComicMetadata, cover::Cover,
-            },
+            metadata::{author::AuthorMetadata, chapter::ChapterMetadata, comic::ComicMetadata},
             relations::chapter_with_volume::ChapterArchiveWithVolume,
         },
         repositories::{
@@ -94,6 +91,16 @@ impl MetadataService {
                 .user_agent("AcerolaMangaApp/1.0 (Acerola Desktop)")
                 .build()
                 .unwrap(),
+        }
+    }
+
+    pub async fn get_cover_and_banner(
+        &self, comic_directory_fk: i64,
+    ) -> (Option<String>, Option<String>) {
+        if let Ok(Some(dir)) = self.comic_directory_repo.find_by_id(comic_directory_fk).await {
+            (dir.cover, dir.banner)
+        } else {
+            (None, None)
         }
     }
 
@@ -315,13 +322,6 @@ impl MetadataService {
                 language,
                 lang_code,
             ),
-            romanji: manga
-                .attributes
-                .title
-                .get("ja-ro")
-                .or(manga.attributes.title.get("en"))
-                .cloned()
-                .unwrap_or_default(),
             status: manga.attributes.status.clone(),
             publication: manga.attributes.year,
             sync_source: Some("MangaDex".to_string()),
@@ -343,7 +343,6 @@ impl MetadataService {
                 .or(media.title.romaji.clone())
                 .unwrap_or_default(),
             description: media.description.clone().unwrap_or_default(),
-            romanji: media.title.romaji.clone().unwrap_or_default(),
             status: media.status.clone().unwrap_or_default(),
             publication: None,
             sync_source: Some("AniList".to_string()),
@@ -399,7 +398,6 @@ impl MetadataService {
             id: self.repo.comic_repo.get_next_id().await?,
             title: comic_info.title.clone().unwrap_or_default(),
             description: comic_info.summary.clone().unwrap_or_default(),
-            romanji: String::new(),
             status: String::new(),
             publication: None,
             sync_source: Some("ComicInfo".to_string()),
@@ -528,14 +526,14 @@ impl MetadataService {
         &self, comic_info: &comic_info::ComicInfo, metadata_id: i64,
     ) -> Result<(), ComicError> {
         if let Some(number) = comic_info.number.as_ref().filter(|text| !text.trim().is_empty()) {
-            self.save_chapter(comic_info.title.clone(), number, comic_info.page_count, metadata_id)
+            self.save_chapter(comic_info.title.clone(), number, comic_info.page_count, metadata_id, None)
                 .await?;
         }
         Ok(())
     }
 
     async fn save_chapter(
-        &self, title: Option<String>, number: &str, page_count: Option<i32>, metadata_id: i64,
+        &self, title: Option<String>, number: &str, page_count: Option<i32>, metadata_id: i64, chapter_archive_fk: Option<i64>,
     ) -> Result<(), ComicError> {
         let existing_chapters =
             self.repo.get_chapter_metadata_by_comic_metadata_id(metadata_id).await?;
@@ -550,6 +548,7 @@ impl MetadataService {
                     page_count: page_count.map(|count| count as i64).or(found.page_count),
                     scanlation: found.scanlation,
                     comic_metadata_fk: metadata_id,
+                    chapter_archive_fk: chapter_archive_fk.or(found.chapter_archive_fk),
                 };
                 self.repo.chapter_repo.update(&chapter).await?;
             },
@@ -561,6 +560,7 @@ impl MetadataService {
                     page_count: page_count.map(|count| count as i64),
                     scanlation: None,
                     comic_metadata_fk: metadata_id,
+                    chapter_archive_fk,
                 };
                 self.repo.chapter_repo.insert(&chapter).await?;
             },
@@ -571,7 +571,7 @@ impl MetadataService {
 
 impl MetadataService {
     async fn process_mangadex_cover(
-        &self, manga: &MangaData, comic_directory_fk: i64, metadata_id: i64,
+        &self, manga: &MangaData, comic_directory_fk: i64, _metadata_id: i64,
     ) -> Result<(), ComicError> {
         let comic_dir = self
             .comic_directory_repo
@@ -589,7 +589,6 @@ impl MetadataService {
 
         let cover_url = MangadexClient::get_cover_url(&manga.id, &file_name);
         self.download_and_save_image(&cover_url, &comic_dir.path, "cover.jpg").await?;
-        self.upsert_cover_metadata(&cover_url, metadata_id).await?;
 
         let mut updated_dir = comic_dir.clone();
         updated_dir.cover =
@@ -600,7 +599,7 @@ impl MetadataService {
     }
 
     async fn process_anilist_images(
-        &self, media: &AnilistMedia, comic_directory_fk: i64, metadata_id: i64,
+        &self, media: &AnilistMedia, comic_directory_fk: i64, _metadata_id: i64,
     ) -> Result<(), ComicError> {
         let comic_dir = self
             .comic_directory_repo
@@ -612,7 +611,6 @@ impl MetadataService {
 
         if let Some(url) = cover_url {
             self.download_and_save_image(&url, &comic_dir.path, "cover.jpg").await?;
-            self.upsert_cover_metadata(&url, metadata_id).await?;
 
             let mut updated_dir = comic_dir.clone();
             updated_dir.cover = Some(
@@ -623,7 +621,6 @@ impl MetadataService {
 
         if let Some(ref banner_url) = media.banner_image {
             self.download_and_save_image(banner_url, &comic_dir.path, "banner.jpg").await?;
-            self.upsert_banner_metadata(banner_url, metadata_id).await?;
 
             let mut updated_dir = comic_dir.clone();
             updated_dir.banner = Some(
@@ -657,75 +654,6 @@ impl MetadataService {
 
         Ok(())
     }
-
-    async fn upsert_cover_metadata(&self, url: &str, metadata_id: i64) -> Result<(), ComicError> {
-        let existing = self.repo.get_cover_by_comic_metadata_id(metadata_id).await?;
-
-        tracing::info!(
-            "Upsert cover for metadata_id: {}, existing: {:?}",
-            metadata_id,
-            existing.is_some()
-        );
-
-        match existing {
-            Some(found) => {
-                tracing::info!("Updating existing cover with id: {}", found.id);
-                let cover = Cover {
-                    id: found.id,
-                    file_name: "cover.jpg".to_string(),
-                    url: url.to_string(),
-                    comic_metadata_fk: metadata_id,
-                };
-                self.repo.cover_repo.update(&cover).await?;
-            },
-            None => {
-                let next_id = self.repo.cover_repo.get_next_id().await?;
-                tracing::info!("Inserting new cover with id: {}", next_id);
-                let cover = Cover {
-                    id: next_id,
-                    file_name: "cover.jpg".to_string(),
-                    url: url.to_string(),
-                    comic_metadata_fk: metadata_id,
-                };
-                self.repo.cover_repo.insert(&cover).await?;
-            },
-        }
-        Ok(())
-    }
-
-    async fn upsert_banner_metadata(&self, url: &str, metadata_id: i64) -> Result<(), ComicError> {
-        let existing = self.repo.get_banner_by_comic_metadata_id(metadata_id).await?;
-
-        match existing {
-            Some(found) => {
-                let banner = Banner {
-                    id: found.id,
-                    file_name: "banner.jpg".to_string(),
-                    url: url.to_string(),
-                    comic_metadata_fk: metadata_id,
-                };
-                self.repo.banner_repo.update(&banner).await?;
-            },
-            None => {
-                let banner = Banner {
-                    id: self.repo.banner_repo.get_next_id().await?,
-                    file_name: "banner.jpg".to_string(),
-                    url: url.to_string(),
-                    comic_metadata_fk: metadata_id,
-                };
-                self.repo.banner_repo.insert(&banner).await?;
-            },
-        }
-        Ok(())
-    }
-
-    async fn save_cover_metadata(&self, url: &str, metadata_id: i64) -> Result<(), ComicError> {
-        self.upsert_cover_metadata(url, metadata_id).await
-    }
-
-    async fn save_banner_metadata(&self, url: &str, metadata_id: i64) -> Result<(), ComicError> {
-        self.upsert_banner_metadata(url, metadata_id).await
-    }
 }
 
 impl MetadataService {
@@ -753,7 +681,7 @@ impl MetadataService {
             .await?;
 
         for local_chapter in local_chapters {
-            self.save_chapter(None, &local_chapter.chapter, None, metadata_id).await?;
+            self.save_chapter(None, &local_chapter.chapter, None, metadata_id, Some(local_chapter.id)).await?;
         }
 
         Ok(())
@@ -811,6 +739,7 @@ impl MetadataService {
                         .or(found.page_count),
                     scanlation: scanlation.or(found.scanlation),
                     comic_metadata_fk: metadata_id,
+                    chapter_archive_fk: Some(local_chapter.id),
                 };
                 self.repo.chapter_repo.update(&chapter_metadata).await?;
             },
@@ -822,6 +751,7 @@ impl MetadataService {
                     page_count: remote.attributes.pages.map(|page| page as i64),
                     scanlation,
                     comic_metadata_fk: metadata_id,
+                    chapter_archive_fk: Some(local_chapter.id),
                 };
                 self.repo.chapter_repo.insert(&chapter_metadata).await?;
             },

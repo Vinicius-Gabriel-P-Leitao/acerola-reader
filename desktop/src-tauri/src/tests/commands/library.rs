@@ -75,8 +75,8 @@ async fn seed_comic(pool: &SqlitePool, name: &str) -> Result<i64> {
     for index in 1..=3_i64 {
         sqlx::query(
             "INSERT INTO chapter_archive
-             (id, chapter, path, chapter_sort, is_special, checksum, fast_hash, comic_directory_fk, volume_id_fk, last_modified)
-             VALUES (?, ?, ?, ?, 0, NULL, NULL, ?, NULL, 0)",
+             (id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified)
+             VALUES (?, ?, ?, ?, 0, NULL, ?, NULL, 0)",
         )
         .bind(next_id * 100 + index)
         .bind(format!("Cap {index}"))
@@ -107,8 +107,8 @@ async fn seed_comic_with_volume(pool: &SqlitePool, name: &str) -> Result<(i64, i
     for index in 1..=2_i64 {
         sqlx::query(
             "INSERT INTO chapter_archive
-             (id, chapter, path, chapter_sort, is_special, checksum, fast_hash, comic_directory_fk, volume_id_fk, last_modified)
-             VALUES (?, ?, ?, ?, 0, NULL, NULL, ?, ?, 0)",
+             (id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified)
+             VALUES (?, ?, ?, ?, 0, NULL, ?, ?, 0)",
         )
         .bind(comic_id * 1000 + index)
         .bind(format!("Vol Cap {index}"))

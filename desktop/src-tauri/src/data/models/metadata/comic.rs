@@ -9,7 +9,6 @@ impl Entity for ComicMetadata {
             "id",
             "title",
             "description",
-            "romanji",
             "status",
             "publication",
             "sync_source",
@@ -33,7 +32,6 @@ impl Bindable for ComicMetadata {
             .bind(self.id)
             .bind(&self.title)
             .bind(&self.description)
-            .bind(&self.romanji)
             .bind(&self.status)
             .bind(self.publication)
             .bind(&self.sync_source)
@@ -47,7 +45,6 @@ impl Bindable for ComicMetadata {
         query
             .bind(&self.title)
             .bind(&self.description)
-            .bind(&self.romanji)
             .bind(&self.status)
             .bind(self.publication)
             .bind(&self.sync_source)
@@ -62,7 +59,6 @@ pub struct ComicMetadata {
     pub id: i64,
     pub title: String,
     pub description: String,
-    pub romanji: String,
     pub status: String,
     pub publication: Option<i64>,
     pub sync_source: Option<String>,

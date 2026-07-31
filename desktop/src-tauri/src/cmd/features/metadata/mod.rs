@@ -28,8 +28,10 @@ pub async fn sync_metadata_mangadex(
         .await
         .map_err(|err| ErrorPayload::from(&err))?;
 
-    let cover = state.repo.get_cover_by_comic_metadata_id(metadata.id).await.ok().flatten();
-    let banner = state.repo.get_banner_by_comic_metadata_id(metadata.id).await.ok().flatten();
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
 
     Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
 }
@@ -48,8 +50,10 @@ pub async fn sync_metadata_anilist(
         .await
         .map_err(|err| ErrorPayload::from(&err))?;
 
-    let cover = state.repo.get_cover_by_comic_metadata_id(metadata.id).await.ok().flatten();
-    let banner = state.repo.get_banner_by_comic_metadata_id(metadata.id).await.ok().flatten();
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
 
     Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
 }
@@ -64,8 +68,10 @@ pub async fn read_comic_info(
         .await
         .map_err(|err| ErrorPayload::from(&err))?;
 
-    let cover = state.repo.get_cover_by_comic_metadata_id(metadata.id).await.ok().flatten();
-    let banner = state.repo.get_banner_by_comic_metadata_id(metadata.id).await.ok().flatten();
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
 
     Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
 }
@@ -83,8 +89,10 @@ pub async fn sync_metadata_comic_info(
         .await
         .map_err(|err| ErrorPayload::from(&err))?;
 
-    let cover = state.repo.get_cover_by_comic_metadata_id(metadata.id).await.ok().flatten();
-    let banner = state.repo.get_banner_by_comic_metadata_id(metadata.id).await.ok().flatten();
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
 
     Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
 }

@@ -139,7 +139,7 @@ fn setup_runtime(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     });
 
     tracing::info!("[Bios] Runtime setup completed successfully");
-
+J
     Ok(())
 }
 

@@ -51,10 +51,8 @@ impl ChapterScannerService {
             .and_then(|it| it.to_str())
             .ok_or_else(|| ComicError::SystemFailure("File name is invalid".into()))?;
 
-        let file_size = meta.len();
         let file_modified = modified_secs(&meta);
 
-        let fast_hash = format!("{}|{}|{}", file_name, file_size, file_modified);
         let chapter_name = file.file_stem().and_then(|it| it.to_str()).unwrap_or("unknown").to_string();
 
         let chapter_sort = template
@@ -71,7 +69,6 @@ impl ChapterScannerService {
             chapter_sort,
             is_special: is_special_name(&chapter_name),
             checksum: None,
-            fast_hash: Some(fast_hash),
             comic_directory_fk: comic_id,
             volume_id_fk: volume_id,
             last_modified: file_modified,

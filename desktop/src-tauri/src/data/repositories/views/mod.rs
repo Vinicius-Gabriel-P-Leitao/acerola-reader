@@ -121,7 +121,7 @@ mod tests {
         .await
         .unwrap();
 
-        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, romanji, status) VALUES (?, ?, ?, '', '', '')")
+        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, status) VALUES (?, ?, ?, '', '')")
             .bind(id)
             .bind(id)
             .bind(title)
@@ -150,7 +150,7 @@ mod tests {
             .execute(&pool)
             .await
             .unwrap();
-        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, romanji, status) VALUES (1, 1, 'One Piece - Piratas', 'desc', 'romanji', 'status')")
+        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, status) VALUES (1, 1, 'One Piece - Piratas', 'desc', 'status')")
             .execute(&pool)
             .await
             .unwrap();
