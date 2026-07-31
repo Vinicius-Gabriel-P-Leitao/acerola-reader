@@ -20,6 +20,8 @@ import br.acerola.comic.common.ux.theme.color.CatppuccinMocha
 import br.acerola.comic.common.ux.theme.color.Dracula
 import br.acerola.comic.common.ux.theme.color.NordDark
 import br.acerola.comic.common.ux.theme.color.NordLight
+import br.acerola.comic.common.ux.theme.color.TokyoNightDark
+import br.acerola.comic.common.ux.theme.color.TokyoNightDay
 import br.acerola.comic.config.preference.types.AppTheme
 
 private val CatppuccinDarkColorScheme =
@@ -206,6 +208,66 @@ private val AlucardColorScheme =
         onError = Alucard.Foreground,
     )
 
+private val TokyoNightDarkColorScheme =
+    darkColorScheme(
+        primary = TokyoNightDark.Blue,
+        onPrimary = TokyoNightDark.Background,
+        primaryContainer = TokyoNightDark.Surface,
+        onPrimaryContainer = TokyoNightDark.Blue,
+        secondary = TokyoNightDark.Cyan,
+        onSecondary = TokyoNightDark.Background,
+        secondaryContainer = TokyoNightDark.Surface,
+        onSecondaryContainer = TokyoNightDark.Cyan,
+        tertiary = TokyoNightDark.Purple,
+        onTertiary = TokyoNightDark.Background,
+        tertiaryContainer = TokyoNightDark.Surface,
+        onTertiaryContainer = TokyoNightDark.Purple,
+        background = TokyoNightDark.Background,
+        onBackground = TokyoNightDark.Foreground,
+        surface = TokyoNightDark.Background,
+        onSurface = TokyoNightDark.Foreground,
+        surfaceVariant = TokyoNightDark.Surface,
+        onSurfaceVariant = TokyoNightDark.Comment,
+        surfaceContainerLowest = TokyoNightDark.Background,
+        surfaceContainerLow = TokyoNightDark.Background,
+        surfaceContainer = TokyoNightDark.Surface,
+        surfaceContainerHigh = TokyoNightDark.SurfaceHigh,
+        surfaceContainerHighest = TokyoNightDark.SurfaceHighest,
+        outline = TokyoNightDark.Comment,
+        error = TokyoNightDark.Red,
+        onError = TokyoNightDark.Foreground,
+    )
+
+private val TokyoNightLightColorScheme =
+    lightColorScheme(
+        primary = TokyoNightDay.Blue,
+        onPrimary = TokyoNightDay.Background,
+        primaryContainer = TokyoNightDay.Surface,
+        onPrimaryContainer = TokyoNightDay.Blue,
+        secondary = TokyoNightDay.Cyan,
+        onSecondary = TokyoNightDay.Background,
+        secondaryContainer = TokyoNightDay.Surface,
+        onSecondaryContainer = TokyoNightDay.Cyan,
+        tertiary = TokyoNightDay.Purple,
+        onTertiary = TokyoNightDay.Background,
+        tertiaryContainer = TokyoNightDay.Surface,
+        onTertiaryContainer = TokyoNightDay.Purple,
+        background = TokyoNightDay.Background,
+        onBackground = TokyoNightDay.Foreground,
+        surface = TokyoNightDay.Background,
+        onSurface = TokyoNightDay.Foreground,
+        surfaceVariant = TokyoNightDay.Surface,
+        onSurfaceVariant = TokyoNightDay.Comment,
+        surfaceContainerLowest = TokyoNightDay.Background,
+        surfaceContainerLow = TokyoNightDay.Background,
+        surfaceContainer = TokyoNightDay.Surface,
+        surfaceContainerHigh = TokyoNightDay.SurfaceHigh,
+        surfaceContainerHighest = TokyoNightDay.SurfaceHighest,
+        outline = TokyoNightDay.Comment,
+        error = TokyoNightDay.Red,
+        onError = TokyoNightDay.Background,
+    )
+
 val Typography =
     Typography(
         bodyLarge =
@@ -237,6 +299,7 @@ fun AcerolaTheme(
             AppTheme.NORD -> if (darkTheme) NordDarkColorScheme else NordLightColorScheme
             AppTheme.DRACULA -> if (darkTheme) DraculaColorScheme else AlucardColorScheme
             AppTheme.CATPPUCCIN -> if (darkTheme) CatppuccinDarkColorScheme else CatppuccinLightColorScheme
+            AppTheme.TOKYO_NIGHT -> if (darkTheme) TokyoNightDarkColorScheme else TokyoNightLightColorScheme
         }
 
     MaterialTheme(
