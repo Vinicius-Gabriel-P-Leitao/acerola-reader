@@ -72,7 +72,7 @@ export function useLibraryScanner(
 			}
 
 			const description = resolveErrorMessage(it.payload);
-			notify.error(m['hooks.comic_scanner.error_title'](), {
+			notify.error(m['hooks.comic_scanner.error.title'](), {
 				description,
 				duration: 0
 			});

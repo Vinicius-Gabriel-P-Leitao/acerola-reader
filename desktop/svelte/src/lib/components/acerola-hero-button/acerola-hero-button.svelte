@@ -49,7 +49,7 @@
 
 		<Item.Content class="min-w-0 flex-1 text-left">
 			<Item.Title class="block w-full truncate text-lg font-bold text-foreground">
-				{data?.title ?? m['components.hero_button.default_title']()}
+				{data?.title ?? m['components.hero_button.default.title']()}
 			</Item.Title>
 
 			{#if data?.description}

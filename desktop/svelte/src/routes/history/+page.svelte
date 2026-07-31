@@ -58,10 +58,10 @@
 		{#if history.items.length > 0}
 			<AcerolaAlertDialog
 				data={{
-					title: m['pages.history.clear_history_title'](),
-					description: m['pages.history.clear_history_desc'](),
-					cancelText: m['pages.history.clear_history_cancel'](),
-					actionText: m['pages.history.clear_history_confirm']()
+					title: m['pages.history.clear.title'](),
+					description: m['pages.history.clear.desc'](),
+					cancelText: m['pages.history.clear.cancel'](),
+					actionText: m['pages.history.clear.confirm']()
 				}}
 				ui={{ variant: 'destructive' }}
 				events={{
@@ -72,7 +72,7 @@
 					ui={{ variant: 'destructive', size: 'sm', class: 'gap-2 font-medium tracking-wide' }}
 				>
 					<Trash2 size={16} />
-					{m['pages.history.clear_history']()}
+					{m['pages.history.clear.button']()}
 				</AcerolaButton>
 			</AcerolaAlertDialog>
 		{/if}

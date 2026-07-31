@@ -52,7 +52,7 @@
 	{#snippet children()}
 		<ToggleGroupItem
 			value="vertical"
-			title={m['pages.reader.modes.vertical']()}
+			title={m['pages.reader.modes.vertical.full']()}
 			class={cn(
 				'h-9 gap-2 rounded-lg text-[10px] font-black tracking-widest uppercase data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
 				variant === 'desktop' && 'px-3'
@@ -60,15 +60,15 @@
 		>
 			<Rows2 size={15} />
 			{#if variant === 'desktop'}
-				<span class="hidden lg:inline">{m['pages.reader.modes.vertical_short']()}</span>
+				<span class="hidden lg:inline">{m['pages.reader.modes.vertical.short']()}</span>
 			{:else}
-				<span>{m['pages.reader.modes.vertical_short']()}</span>
+				<span>{m['pages.reader.modes.vertical.short']()}</span>
 			{/if}
 		</ToggleGroupItem>
 
 		<ToggleGroupItem
 			value="horizontal"
-			title={m['pages.reader.modes.horizontal']()}
+			title={m['pages.reader.modes.horizontal.full']()}
 			class={cn(
 				'h-9 gap-2 rounded-lg text-[10px] font-black tracking-widest uppercase data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
 				variant === 'desktop' && 'px-3'
@@ -76,9 +76,9 @@
 		>
 			<Columns2 size={15} />
 			{#if variant === 'desktop'}
-				<span class="hidden lg:inline">{m['pages.reader.modes.horizontal_short']()}</span>
+				<span class="hidden lg:inline">{m['pages.reader.modes.horizontal.short']()}</span>
 			{:else}
-				<span>{m['pages.reader.modes.horizontal_short']()}</span>
+				<span>{m['pages.reader.modes.horizontal.short']()}</span>
 			{/if}
 		</ToggleGroupItem>
 

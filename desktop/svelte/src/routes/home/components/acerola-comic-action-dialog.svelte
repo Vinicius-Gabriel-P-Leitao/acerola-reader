@@ -70,7 +70,7 @@
 		} catch (err: unknown) {
 			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
 			error(`Failed to hide comics: ${msg}`);
-			toast.error(m['pages.home.toast.hide_error']());
+			toast.error(m['pages.home.toast.error.hide']());
 		} finally {
 			isProcessing = false;
 			activeAction = null;
@@ -88,7 +88,7 @@
 		} catch (err: unknown) {
 			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
 			error(`Failed to delete comics: ${msg}`);
-			toast.error(m['pages.home.toast.delete_error']());
+			toast.error(m['pages.home.toast.error.delete']());
 		} finally {
 			isProcessing = false;
 			activeAction = null;
@@ -107,7 +107,7 @@
 		} catch (err: unknown) {
 			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
 			error(`Failed to bookmark comics: ${msg}`);
-			toast.error(m['pages.home.toast.bookmark_error']());
+			toast.error(m['pages.home.toast.error.bookmark']());
 		} finally {
 			isProcessing = false;
 			activeAction = null;
@@ -181,8 +181,8 @@
 						{/if}
 						<span class="truncate">
 							{isAllSelected
-								? m['pages.home.selection.deselect_all']()
-								: m['pages.home.selection.select_all_total']({ total: totalCount })}
+								? m['pages.home.selection.all.deselect']()
+								: m['pages.home.selection.all.select_total']({ total: totalCount })}
 						</span>
 					</AcerolaButton>
 				</div>
@@ -368,10 +368,10 @@
 <AcerolaAlertDialog
 	state={{ open: showHideDialog }}
 	data={{
-		title: m['pages.home.actions.hide_confirm_title'](),
-		description: m['pages.home.actions.hide_confirm_desc'](),
+		title: m['pages.home.actions.hide_confirm.title'](),
+		description: m['pages.home.actions.hide_confirm.desc'](),
 		cancelText: m['pages.home.actions.cancel'](),
-		actionText: m['pages.home.actions.hide_confirm_action']()
+		actionText: m['pages.home.actions.hide_confirm.action']()
 	}}
 	events={{
 		onAction: handleHide,
@@ -384,10 +384,10 @@
 <AcerolaAlertDialog
 	state={{ open: showDeleteDialog }}
 	data={{
-		title: m['pages.home.actions.delete_confirm_title'](),
-		description: m['pages.home.actions.delete_confirm_desc'](),
+		title: m['pages.home.actions.delete_confirm.title'](),
+		description: m['pages.home.actions.delete_confirm.desc'](),
 		cancelText: m['pages.home.actions.cancel'](),
-		actionText: m['pages.home.actions.delete_confirm_action']()
+		actionText: m['pages.home.actions.delete_confirm.action']()
 	}}
 	events={{
 		onAction: handleDelete,

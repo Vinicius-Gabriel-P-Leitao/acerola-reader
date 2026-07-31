@@ -94,7 +94,7 @@
 			await summary.fetch();
 		}
 		if (failCount > 0) {
-			toast.error(m['pages.home.toast.bookmark_error']());
+			toast.error(m['pages.home.toast.error.bookmark']());
 			await summary.fetch();
 		}
 		selection.exitSelectionMode();
@@ -151,8 +151,8 @@
 						events={{ onClick: handleSelectAllToggle }}
 					>
 						{selection.selectedCount === (summary.comics?.comics.length ?? 0)
-							? m['pages.home.selection.deselect_all']()
-							: m['pages.home.selection.select_all']()}
+							? m['pages.home.selection.all.deselect']()
+							: m['pages.home.selection.all.select']()}
 					</AcerolaButton>
 
 					<AcerolaButton
@@ -194,7 +194,7 @@
 									{:else}
 										<div class="w-4"></div>
 									{/if}
-									{m['pages.home.sort.title_asc']()}
+									{m['pages.home.sort.title.asc']()}
 								</AcerolaButton>
 								<AcerolaButton
 									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -205,7 +205,7 @@
 									{:else}
 										<div class="w-4"></div>
 									{/if}
-									{m['pages.home.sort.title_desc']()}
+									{m['pages.home.sort.title.desc']()}
 								</AcerolaButton>
 								<AcerolaButton
 									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -216,7 +216,7 @@
 									{:else}
 										<div class="w-4"></div>
 									{/if}
-									{m['pages.home.sort.chapter_asc']()}
+									{m['pages.home.sort.chapter.asc']()}
 								</AcerolaButton>
 								<AcerolaButton
 									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -227,7 +227,7 @@
 									{:else}
 										<div class="w-4"></div>
 									{/if}
-									{m['pages.home.sort.chapter_desc']()}
+									{m['pages.home.sort.chapter.desc']()}
 								</AcerolaButton>
 							</div>
 						</div>

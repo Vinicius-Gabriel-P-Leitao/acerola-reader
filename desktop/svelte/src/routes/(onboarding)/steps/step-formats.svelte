@@ -99,7 +99,7 @@
 				<SparklesIcon size={18} />
 			</div>
 			<p class="leading-normal">
-				<strong class="font-semibold text-foreground">{m['onboarding.formats.sync_note_title']()}</strong> {m['onboarding.formats.sync_note']()}
+				<strong class="font-semibold text-foreground">{m['onboarding.formats.sync_note.title']()}</strong> {m['onboarding.formats.sync_note.content']()}
 			</p>
 		</div>
 

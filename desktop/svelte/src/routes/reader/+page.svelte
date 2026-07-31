@@ -95,9 +95,9 @@
 	);
 
 	const modeLabel = $derived.by(() => {
-		if (readingMode === 'horizontal') return m['pages.reader.modes.horizontal']();
+		if (readingMode === 'horizontal') return m['pages.reader.modes.horizontal.full']();
 		if (readingMode === 'webtoon') return m['pages.reader.modes.webtoon']();
-		return m['pages.reader.modes.vertical']();
+		return m['pages.reader.modes.vertical.full']();
 	});
 
 	function leaveReader() {

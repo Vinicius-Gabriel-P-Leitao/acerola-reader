@@ -67,71 +67,71 @@
 					<Command.List class="p-1">
 						<Command.Group heading={m['pages.reader.command.zoom_group']()}>
 							<Command.Item
-								value={m['pages.reader.command.toggle_zoom_search']()}
+								value={m['pages.reader.command.search.toggle_zoom']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(events.onToggleZoomMode)}
 							>
 								<ZoomIn size={16} />
 								<span>
 									{data.zoomMode
-										? m['pages.reader.command.disable_zoom_mode']()
-										: m['pages.reader.command.enable_zoom_mode']()}
+										? m['pages.reader.command.mode.disable_zoom']()
+										: m['pages.reader.command.mode.enable_zoom']()}
 								</span>
 								<Command.Shortcut>Z</Command.Shortcut>
 							</Command.Item>
 
 							<Command.Item
-								value={m['pages.reader.command.zoom_in_search']()}
+								value={m['pages.reader.command.search.zoom_in']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(events.onZoomIn)}
 							>
 								<ZoomIn size={16} />
-								<span>{m['pages.reader.command.zoom_in']()}</span>
+								<span>{m['pages.reader.command.zoom.in']()}</span>
 								<Command.Shortcut>Ctrl +</Command.Shortcut>
 							</Command.Item>
 
 							<Command.Item
-								value={m['pages.reader.command.zoom_out_search']()}
+								value={m['pages.reader.command.search.zoom_out']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(events.onZoomOut)}
 							>
 								<ZoomOut size={16} />
-								<span>{m['pages.reader.command.zoom_out']()}</span>
+								<span>{m['pages.reader.command.zoom.out']()}</span>
 								<Command.Shortcut>Ctrl -</Command.Shortcut>
 							</Command.Item>
 
 							<Command.Item
-								value={m['pages.reader.command.reset_zoom_search']()}
+								value={m['pages.reader.command.search.reset_zoom']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(events.onResetZoom)}
 							>
 								<ZoomOut size={16} />
-								<span>{m['pages.reader.command.reset_zoom']()}</span>
+								<span>{m['pages.reader.command.zoom.reset']()}</span>
 								<Command.Shortcut>Ctrl 0</Command.Shortcut>
 							</Command.Item>
 						</Command.Group>
 
 						<Command.Group heading={m['pages.reader.command.reading_group']()}>
 							<Command.Item
-								value={m['pages.reader.command.vertical_search']()}
+								value={m['pages.reader.command.search.vertical']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(() => events.onReadingModeChange('vertical'))}
 							>
 								<Rows2 size={16} />
-								<span>{m['pages.reader.modes.vertical']()}</span>
+								<span>{m['pages.reader.modes.vertical.full']()}</span>
 							</Command.Item>
 
 							<Command.Item
-								value={m['pages.reader.command.horizontal_search']()}
+								value={m['pages.reader.command.search.horizontal']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(() => events.onReadingModeChange('horizontal'))}
 							>
 								<Columns2 size={16} />
-								<span>{m['pages.reader.modes.horizontal']()}</span>
+								<span>{m['pages.reader.modes.horizontal.full']()}</span>
 							</Command.Item>
 
 							<Command.Item
-								value={m['pages.reader.command.webtoon_search']()}
+								value={m['pages.reader.command.search.webtoon']()}
 								class="cursor-pointer"
 								onSelect={() => runCommand(() => events.onReadingModeChange('webtoon'))}
 							>

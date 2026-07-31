@@ -56,7 +56,7 @@ export function useComicSummary() {
 			const unlistenErr = await listen<ErrorPayload>(HOME_EVENTS.homeError, (event) => {
 				const description = resolveErrorMessage(event.payload);
 
-				notify.error(m['hooks.comic_summary.error_title'](), {
+				notify.error(m['hooks.comic_summary.error.title'](), {
 					description,
 					duration: 0
 				});

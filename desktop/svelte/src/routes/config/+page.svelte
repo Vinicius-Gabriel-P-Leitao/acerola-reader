@@ -82,7 +82,7 @@
 
 	async function handleSyncAllMangadex() {
 		try {
-			const startMsg = m['pages.config.toast.sync_start_mangadex']();
+			const startMsg = m['pages.config.toast.sync.mangadex.start']();
 			notify.info(startMsg, { duration: 5000 });
 			toast.info(startMsg);
 			await invoke(METADATA_COMMANDS.syncAllMangadex, { 
@@ -91,7 +91,7 @@
 			});
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.config.toast.sync_error_mangadex']({ msg });
+			const errorMsg = m['pages.config.toast.sync.mangadex.error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
 		}
@@ -99,7 +99,7 @@
 
 	async function handleSyncAllAnilist() {
 		try {
-			const startMsg = m['pages.config.toast.sync_start_anilist']();
+			const startMsg = m['pages.config.toast.sync.anilist.start']();
 			notify.info(startMsg, { duration: 5000 });
 			toast.info(startMsg);
 			await invoke(METADATA_COMMANDS.syncAllAnilist, { 
@@ -108,7 +108,7 @@
 			});
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.config.toast.sync_error_anilist']({ msg });
+			const errorMsg = m['pages.config.toast.sync.anilist.error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
 		}
@@ -124,20 +124,20 @@
 			await bookmarkStore.loadBookmarks();
 
 			unlistenProgress = await listen<string>('metadata:sync_all:progress', (event) => {
-				const progressMsg = m['pages.config.toast.sync_progress']({ name: event.payload });
+				const progressMsg = m['pages.config.toast.sync.progress']({ name: event.payload });
 				notify.info(progressMsg, { duration: 5000 });
 				toast.info(progressMsg);
 			});
 			
 			unlistenComplete = await listen('metadata:sync_all:complete', () => {
-				const completeMsg = m['pages.config.toast.sync_complete']();
+				const completeMsg = m['pages.config.toast.sync.complete']();
 				notify.success(completeMsg, { duration: 5000 });
 				toast.success(completeMsg);
 			});
 
 			unlistenError = await listen<any>('metadata:sync_all:error', (event) => {
 				const msg = event.payload?.message || event.payload;
-				const errorMsg = m['pages.config.toast.sync_error']({ msg });
+				const errorMsg = m['pages.config.toast.sync.error']({ msg });
 				notify.error(errorMsg, { duration: 5000 });
 				toast.error(errorMsg);
 			});

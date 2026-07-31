@@ -118,11 +118,11 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync_start_mangadex']();
+			const startMsg = m['pages.comic.toast.sync.start_mangadex']();
 			notify.info(startMsg, { duration: 5000 });
 			toast.info(startMsg);
 			await metadataSync.syncMangadex(manga.title, id.toString());
-			const successMsg = m['pages.comic.toast.sync_success']();
+			const successMsg = m['pages.comic.toast.sync.success']();
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
@@ -138,11 +138,11 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync_start_anilist']();
+			const startMsg = m['pages.comic.toast.sync.start_anilist']();
 			notify.info(startMsg, { duration: 5000 });
 			toast.info(startMsg);
 			await metadataSync.syncAnilist(manga.title, id.toString());
-			const successMsg = m['pages.comic.toast.sync_success']();
+			const successMsg = m['pages.comic.toast.sync.success']();
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
@@ -158,17 +158,17 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync_start_comic_info']();
+			const startMsg = m['pages.comic.toast.sync.start_comic_info']();
 			notify.info(startMsg, { duration: 5000 });
 			toast.info(startMsg);
 			await metadataSync.syncComicInfo(id.toString());
-			const successMsg = m['pages.comic.toast.sync_success']();
+			const successMsg = m['pages.comic.toast.sync.success']();
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.comic_info_error']({ msg });
+			const errorMsg = m['pages.comic.toast.comic_info.error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
 		}
@@ -183,14 +183,14 @@
 				manga.metadata.externalSync = value;
 			}
 			const successMsg = value
-				? m['pages.comic.toast.sync_enabled']()
-				: m['pages.comic.toast.sync_disabled']();
+				? m['pages.comic.toast.sync.enabled']()
+				: m['pages.comic.toast.sync.disabled']();
 			notify.success(successMsg, { duration: 5000 });
 			toast.success(successMsg);
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.sync_toggle_error']({ msg });
+			const errorMsg = m['pages.comic.toast.sync.toggle_error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
 		}
@@ -398,9 +398,9 @@
 			pageSize,
 			metadata: {
 				description:
-					item.metadata.description || m['pages.comic.metadata.description_unavailable'](),
-				author: item.metadata.author || m['pages.comic.metadata.unknown_author'](),
-				status: item.metadata.status || m['pages.comic.metadata.unknown_status'](),
+					item.metadata.description || m['pages.comic.metadata.description.unavailable'](),
+				author: item.metadata.author || m['pages.comic.metadata.unknown.author'](),
+				status: item.metadata.status || m['pages.comic.metadata.unknown.status'](),
 				source: item.metadata.activeSource || 'LOCAL',
 				externalSync: item.metadata.externalSync,
 				genres: []
@@ -553,7 +553,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.number_asc']()}
+												{m['pages.comic.sort.number.asc']()}
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -569,7 +569,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.number_desc']()}
+												{m['pages.comic.sort.number.desc']()}
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -585,7 +585,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.modified_desc']()}
+												{m['pages.comic.sort.modified.desc']()}
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -601,7 +601,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.modified_asc']()}
+												{m['pages.comic.sort.modified.asc']()}
 											</AcerolaButton>
 										</div>
 									</div>

@@ -113,8 +113,8 @@
 					variant: 'ghost',
 					disabled: !data.canPreviousPage || data.pageControlsDisabled,
 					title: data.pageControlsDisabled
-						? m['pages.reader.actions.page_navigation_locked']()
-						: `${m['pages.reader.actions.previous_page']()} (←)`
+						? m['pages.reader.actions.page.navigation_locked']()
+						: `${m['pages.reader.actions.page.previous']()} (←)`
 				}}
 			>
 				<ChevronLeft size={20} />
@@ -126,8 +126,8 @@
 					variant: 'ghost',
 					disabled: !data.canNextPage || data.pageControlsDisabled,
 					title: data.pageControlsDisabled
-						? m['pages.reader.actions.page_navigation_locked']()
-						: `${m['pages.reader.actions.next_page']()} (→)`
+						? m['pages.reader.actions.page.navigation_locked']()
+						: `${m['pages.reader.actions.page.next']()} (→)`
 				}}
 			>
 				<ChevronRight size={20} />

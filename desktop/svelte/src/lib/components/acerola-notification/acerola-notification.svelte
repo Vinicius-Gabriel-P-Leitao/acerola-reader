@@ -118,7 +118,7 @@
 						class="h-7 px-2 text-[10px] font-semibold hover:bg-destructive/10 hover:text-destructive"
 						onclick={clearAll}
 					>
-						{m['components.notification.clear_all']()}
+						{m['components.notification.clear.all']()}
 					</Button>
 				{/if}
 			</div>
