@@ -71,6 +71,11 @@ interface ComicGateway<T> :
  * Separada de MangaSyncGateway pois não são operações de sincronização.
  */
 interface ComicLibraryWriteGateway {
+    suspend fun setMangaHidden(
+        comicId: Long,
+        hidden: Boolean,
+    ): Either<LibrarySyncError, Unit>
+
     suspend fun hideManga(comicId: Long): Either<LibrarySyncError, Unit>
 
     suspend fun deleteManga(comicId: Long): Either<LibrarySyncError, Unit>

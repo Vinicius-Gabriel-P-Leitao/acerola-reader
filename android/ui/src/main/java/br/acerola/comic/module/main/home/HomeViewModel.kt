@@ -191,16 +191,24 @@ class HomeViewModel
             }
         }
 
-        fun hideSelectedComics() {
-            val idsToHide = _selectedComicIds.value
+        fun setHideSelectedComics(hidden: Boolean) {
+            val idsToUpdate = _selectedComicIds.value
             viewModelScope.launch {
-                idsToHide.forEach { id ->
-                    hideComicUseCase(id).onLeft { error ->
+                idsToUpdate.forEach { id ->
+                    hideComicUseCase(id, hidden = hidden).onLeft { error ->
                         _uiEvents.send(error)
                     }
                 }
                 clearComicSelection()
             }
+        }
+
+        fun hideSelectedComics() {
+            setHideSelectedComics(hidden = true)
+        }
+
+        fun unhideSelectedComics() {
+            setHideSelectedComics(hidden = false)
         }
 
         fun deleteComic(comicId: Long) {

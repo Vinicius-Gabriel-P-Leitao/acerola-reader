@@ -24,6 +24,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +36,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
@@ -321,6 +325,112 @@ fun Main.Common.Component.ComicCategorySheet(
                         )
                     },
                     modifier = Modifier.clickable { onSelect(category.id) },
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.navigationBarsPadding())
+    }
+}
+
+@Composable
+fun Main.Common.Component.BatchComicCategorySheet(
+    categories: List<CategoryDto>,
+    categoryCounts: Map<Long, Int>,
+    totalSelectedCount: Int,
+    onSelectCategory: (categoryId: Long) -> Unit,
+    onRemoveCategory: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Acerola.Component.AdaptiveSheet(
+        onDismissRequest = onDismiss,
+        isScrollable = false,
+    ) {
+        Text(
+            text = stringResource(id = R.string.action_bookmark),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
+        )
+
+        HorizontalDivider()
+
+        LazyColumn {
+            item {
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.BookmarkBorder,
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = { Text(text = stringResource(id = R.string.action_remove_bookmark)) },
+                    modifier =
+                        Modifier.clickable {
+                            onRemoveCategory()
+                        },
+                )
+            }
+
+            items(items = categories) { category ->
+                val count = categoryCounts[category.id] ?: 0
+                val state =
+                    when {
+                        totalSelectedCount > 0 && count == totalSelectedCount -> ToggleableState.On
+                        count > 0 -> ToggleableState.Indeterminate
+                        else -> ToggleableState.Off
+                    }
+
+                val stateDescription =
+                    when (state) {
+                        ToggleableState.On -> stringResource(id = R.string.description_batch_category_all)
+                        ToggleableState.Indeterminate -> stringResource(id = R.string.description_batch_category_mixed)
+                        ToggleableState.Off -> stringResource(id = R.string.description_batch_category_none)
+                    }
+
+                ListItem(
+                    leadingContent = {
+                        TriStateCheckbox(
+                            state = state,
+                            onClick = {
+                                if (state == ToggleableState.On) {
+                                    onRemoveCategory()
+                                } else {
+                                    onSelectCategory(category.id)
+                                }
+                            },
+                        )
+                    },
+                    headlineContent = { Text(text = category.name) },
+                    supportingContent = {
+                        if (state == ToggleableState.Indeterminate) {
+                            Text(
+                                text = stringResource(id = R.string.description_batch_category_mixed),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    trailingContent = {
+                        Spacer(
+                            modifier =
+                                Modifier
+                                    .size(SizeTokens.IconSmall)
+                                    .drawBehind {
+                                        drawCircle(color = Color(category.color))
+                                    },
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .semantics {
+                                this.stateDescription = stateDescription
+                            }.clickable {
+                                if (state == ToggleableState.On) {
+                                    onRemoveCategory()
+                                } else {
+                                    onSelectCategory(category.id)
+                                }
+                            },
                 )
             }
         }

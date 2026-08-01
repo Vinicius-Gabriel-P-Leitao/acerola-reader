@@ -47,6 +47,21 @@ class ComicLibraryStateEngine
                 }
             }
 
+        override suspend fun setMangaHidden(
+            comicId: Long,
+            hidden: Boolean,
+        ): Either<LibrarySyncError, Unit> =
+            withContext(context = Dispatchers.IO) {
+                AcerolaLogger.i(TAG, "Setting hidden state for comic: $comicId to $hidden", LogSource.REPOSITORY)
+                Either
+                    .catch {
+                        directoryDao.setDirectoryHidden(comicId, hidden = hidden)
+                    }.mapLeft { exception ->
+                        AcerolaLogger.e(TAG, "Failed to set hidden state for comic: $comicId", LogSource.REPOSITORY, throwable = exception)
+                        LibrarySyncError.UnexpectedError(cause = exception)
+                    }
+            }
+
         override suspend fun hideManga(comicId: Long): Either<LibrarySyncError, Unit> =
             withContext(context = Dispatchers.IO) {
                 AcerolaLogger.i(TAG, "Toggling hidden state for comic: $comicId", LogSource.REPOSITORY)

@@ -283,14 +283,27 @@ class HomeViewModelTest {
     @Test
     fun `deve ocultar quadrinhos selecionados em lote`() =
         runTest {
-            coEvery { hideComicUseCase(any()) } returns arrow.core.Either.Right(Unit)
+            coEvery { hideComicUseCase(any(), any()) } returns arrow.core.Either.Right(Unit)
 
             viewModel.selectAllComics(listOf(10L, 20L))
             viewModel.hideSelectedComics()
 
             assertThat(viewModel.selectedComicIds.value).isEmpty()
-            io.mockk.coVerify(exactly = 1) { hideComicUseCase(10L) }
-            io.mockk.coVerify(exactly = 1) { hideComicUseCase(20L) }
+            io.mockk.coVerify(exactly = 1) { hideComicUseCase(10L, hidden = true) }
+            io.mockk.coVerify(exactly = 1) { hideComicUseCase(20L, hidden = true) }
+        }
+
+    @Test
+    fun `deve reexibir quadrinhos selecionados em lote`() =
+        runTest {
+            coEvery { hideComicUseCase(any(), any()) } returns arrow.core.Either.Right(Unit)
+
+            viewModel.selectAllComics(listOf(10L, 20L))
+            viewModel.unhideSelectedComics()
+
+            assertThat(viewModel.selectedComicIds.value).isEmpty()
+            io.mockk.coVerify(exactly = 1) { hideComicUseCase(10L, hidden = false) }
+            io.mockk.coVerify(exactly = 1) { hideComicUseCase(20L, hidden = false) }
         }
 
     @Test

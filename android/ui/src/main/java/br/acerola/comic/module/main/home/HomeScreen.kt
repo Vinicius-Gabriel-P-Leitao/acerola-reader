@@ -52,6 +52,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -102,6 +103,7 @@ import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.comic.ComicActivity
 import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.common.component.BatchComicCategorySheet
 import br.acerola.comic.module.main.common.component.ComicActionsSheet
 import br.acerola.comic.module.main.common.component.ComicCategorySheet
 import br.acerola.comic.module.main.common.component.ComicListItem
@@ -160,6 +162,27 @@ fun Main.Home.Template.Screen(
     val selectedComicIds by homeViewModel.selectedComicIds.collectAsStateWithLifecycle()
 
     val isSelectionMode = selectedComicIds.isNotEmpty()
+
+    val selectedComics =
+        remember(comics, selectedComicIds) {
+            comics?.filter { selectedComicIds.contains(it.first.directory.id) } ?: emptyList()
+        }
+
+    val areAllSelectedHidden =
+        remember(selectedComics) {
+            selectedComics.isNotEmpty() && selectedComics.all { it.first.directory.hidden }
+        }
+
+    val selectedCategoryCounts =
+        remember(selectedComics) {
+            val counts = mutableMapOf<Long, Int>()
+            selectedComics.forEach { item ->
+                item.first.category?.id?.let { catId ->
+                    counts[catId] = (counts[catId] ?: 0) + 1
+                }
+            }
+            counts
+        }
 
     val lastRead by remember(comics) {
         derivedStateOf {
@@ -544,8 +567,8 @@ fun Main.Home.Template.Screen(
                     )
 
                     SelectionActionButton(
-                        icon = Icons.Rounded.VisibilityOff,
-                        label = stringResource(id = R.string.action_hide),
+                        icon = if (areAllSelectedHidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                        label = stringResource(id = if (areAllSelectedHidden) R.string.action_unhide else R.string.action_hide),
                         onClick = { showBatchHideDialog = true },
                         modifier = Modifier.weight(1f),
                     )
@@ -574,11 +597,16 @@ fun Main.Home.Template.Screen(
         }
 
         if (showBatchCategorySheet) {
-            Main.Common.Component.ComicCategorySheet(
+            Main.Common.Component.BatchComicCategorySheet(
                 categories = allCategories,
-                selectedCategoryId = null,
-                onSelect = { categoryId ->
+                categoryCounts = selectedCategoryCounts,
+                totalSelectedCount = selectedComicIds.size,
+                onSelectCategory = { categoryId ->
                     homeViewModel.setSelectedComicsCategory(categoryId)
+                    showBatchCategorySheet = false
+                },
+                onRemoveCategory = {
+                    homeViewModel.setSelectedComicsCategory(null)
                     showBatchCategorySheet = false
                 },
                 onDismiss = { showBatchCategorySheet = false },
@@ -589,13 +617,21 @@ fun Main.Home.Template.Screen(
             Acerola.Component.Dialog(
                 show = true,
                 onDismiss = { showBatchHideDialog = false },
-                title = stringResource(id = R.string.dialog_batch_hide_title, selectedComicIds.size),
+                title =
+                    stringResource(
+                        id = if (areAllSelectedHidden) R.string.dialog_batch_unhide_title else R.string.dialog_batch_hide_title,
+                        selectedComicIds.size,
+                    ),
                 confirmButtonContent = {
                     Acerola.Component.DialogButton(
-                        text = stringResource(id = R.string.action_hide),
+                        text = stringResource(id = if (areAllSelectedHidden) R.string.action_unhide else R.string.action_hide),
                         onClick = {
                             showBatchHideDialog = false
-                            homeViewModel.hideSelectedComics()
+                            if (areAllSelectedHidden) {
+                                homeViewModel.unhideSelectedComics()
+                            } else {
+                                homeViewModel.hideSelectedComics()
+                            }
                         },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -609,7 +645,14 @@ fun Main.Home.Template.Screen(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
-                content = { Text(text = stringResource(id = R.string.dialog_batch_hide_message)) },
+                content = {
+                    Text(
+                        text =
+                            stringResource(
+                                id = if (areAllSelectedHidden) R.string.dialog_batch_unhide_message else R.string.dialog_batch_hide_message,
+                            ),
+                    )
+                },
             )
         }
 
