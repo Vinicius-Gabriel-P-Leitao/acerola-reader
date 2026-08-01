@@ -28,8 +28,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.state.SyncActionVisualState
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
@@ -44,7 +42,6 @@ import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
-import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.module.comic.state.MainTab
 import br.acerola.comic.module.comic.template.Header
 import br.acerola.comic.module.comic.template.Tabs
@@ -52,9 +49,12 @@ import br.acerola.comic.module.comic.template.chapterSection
 import br.acerola.comic.module.comic.template.configSection
 import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ComicScreen(

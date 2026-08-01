@@ -25,7 +25,6 @@ import br.acerola.comic.common.navigation.Destination
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.BottomBar
 import br.acerola.comic.common.ux.component.SideBar
-import dev.chrisbanes.haze.HazeState
 import br.acerola.comic.config.preference.OnboardingPreference
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.Screen
@@ -35,6 +34,7 @@ import br.acerola.comic.module.main.pattern.FilePatternScreen
 import br.acerola.comic.module.main.tutorial.Screen
 import br.acerola.comic.ui.R
 import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.HazeState
 
 @AndroidEntryPoint
 class MainActivity(

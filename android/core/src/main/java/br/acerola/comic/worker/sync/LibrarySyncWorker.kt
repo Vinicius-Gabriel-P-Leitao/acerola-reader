@@ -75,7 +75,8 @@ class LibrarySyncWorker
                         ),
                     )
                 } catch (exception: Exception) {
-                    br.acerola.comic.logging.AcerolaLogger.w("LibrarySyncWorker", "Unable to start foreground service", throwable = exception)
+                    br.acerola.comic.logging.AcerolaLogger
+                        .w("LibrarySyncWorker", "Unable to start foreground service", throwable = exception)
                 }
 
                 // Usamos progressGateway para observar o progresso

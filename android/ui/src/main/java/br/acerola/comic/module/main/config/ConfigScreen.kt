@@ -31,9 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import br.acerola.comic.common.state.SyncActionVisualState
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -43,8 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
-import br.acerola.comic.worker.sync.LibrarySyncWorker
-import br.acerola.comic.worker.sync.MetadataSyncWorker
+import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.tokens.ShapeTokens
@@ -56,7 +52,6 @@ import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.common.viewmodel.metadata.MetadataSettingsViewModel
 import br.acerola.comic.common.viewmodel.network.P2pViewModel
 import br.acerola.comic.common.viewmodel.theme.ThemeViewModel
-import br.acerola.comic.service.PeerAddress
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.config.component.GlobalCategoryManager
 import br.acerola.comic.module.main.config.component.LanguageSettings
@@ -69,8 +64,13 @@ import br.acerola.comic.module.main.config.component.TemplateManager
 import br.acerola.comic.module.main.config.component.ThemeSettings
 import br.acerola.comic.module.main.config.state.ConfigAction
 import br.acerola.comic.module.main.config.state.ConfigUiState
+import br.acerola.comic.service.PeerAddress
 import br.acerola.comic.ui.R
+import br.acerola.comic.worker.sync.LibrarySyncWorker
+import br.acerola.comic.worker.sync.MetadataSyncWorker
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun Main.Config.Template.Screen(
@@ -206,7 +206,8 @@ fun Main.Config.Template.Screen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier
+                modifier =
+                    Modifier
                         .padding(paddingValues)
                         .padding(bottom = 64.dp)
                         .fillMaxSize()
@@ -435,11 +436,12 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
         Spacer(modifier = Modifier.height(SpacingTokens.Small))
 
         Button(onClick = {
-            val address = PeerAddress(
-                id = remotePeerId,
-                deviceId = remoteDeviceId.ifBlank { null },
-                addrs = remoteAddrs.toByteArray()
-            )
+            val address =
+                PeerAddress(
+                    id = remotePeerId,
+                    deviceId = remoteDeviceId.ifBlank { null },
+                    addrs = remoteAddrs.toByteArray(),
+                )
             p2pViewModel.connectToPeer(address, "acerola/handshake/1".toByteArray())
         }) {
             Text("Connect")

@@ -13,7 +13,7 @@ import javax.inject.Singleton
 class NotificationHelper
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
     ) {
         companion object {
             const val SYNC_CHANNEL_ID = "sync_channel"
@@ -47,7 +47,7 @@ class NotificationHelper
         ): NotificationCompat.Builder =
             NotificationCompat
                 .Builder(context, SYNC_CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_notify_sync)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(content)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -77,7 +77,7 @@ class NotificationHelper
             val builder =
                 NotificationCompat
                     .Builder(context, SYNC_CHANNEL_ID)
-                    .setSmallIcon(android.R.drawable.stat_notify_sync)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle(title)
                     .setContentText(content)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)

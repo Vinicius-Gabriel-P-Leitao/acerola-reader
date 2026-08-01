@@ -70,15 +70,16 @@ class BannerSaver
                                 folderId.right()
                             }
                     } else {
-                        val internalStorageResult = runCatching {
-                            val internalDir = java.io.File(context.filesDir, "banners")
-                            if (!internalDir.exists()) internalDir.mkdirs()
-                            val bannerFile = java.io.File(internalDir, "${folderId}.jpg")
-                            bannerFile.writeBytes(bytes)
-                            val savedUriString = Uri.fromFile(bannerFile).toString()
-                            directoryDao.update(directory.copy(banner = savedUriString))
-                            folderId.right()
-                        }
+                        val internalStorageResult =
+                            runCatching {
+                                val internalDir = java.io.File(context.filesDir, "banners")
+                                if (!internalDir.exists()) internalDir.mkdirs()
+                                val bannerFile = java.io.File(internalDir, "$folderId.jpg")
+                                bannerFile.writeBytes(bytes)
+                                val savedUriString = Uri.fromFile(bannerFile).toString()
+                                directoryDao.update(directory.copy(banner = savedUriString))
+                                folderId.right()
+                            }
 
                         internalStorageResult.getOrElse {
                             AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)

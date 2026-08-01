@@ -1,13 +1,13 @@
 package br.acerola.comic.local.database
 
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import br.acerola.comic.local.database.migrations.MIGRATION_2_3
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
-import androidx.sqlite.db.SupportSQLiteDatabase
 
 @RunWith(RobolectricTestRunner::class)
 class Migration2To3Test {

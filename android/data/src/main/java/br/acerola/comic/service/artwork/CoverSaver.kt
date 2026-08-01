@@ -70,15 +70,16 @@ class CoverSaver
                                 folderId.right()
                             }
                     } else {
-                        val internalStorageResult = runCatching {
-                            val internalDir = java.io.File(context.filesDir, "covers")
-                            if (!internalDir.exists()) internalDir.mkdirs()
-                            val coverFile = java.io.File(internalDir, "${folderId}.jpg")
-                            coverFile.writeBytes(bytes)
-                            val savedUriString = Uri.fromFile(coverFile).toString()
-                            directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
-                            folderId.right()
-                        }
+                        val internalStorageResult =
+                            runCatching {
+                                val internalDir = java.io.File(context.filesDir, "covers")
+                                if (!internalDir.exists()) internalDir.mkdirs()
+                                val coverFile = java.io.File(internalDir, "$folderId.jpg")
+                                coverFile.writeBytes(bytes)
+                                val savedUriString = Uri.fromFile(coverFile).toString()
+                                directoryDao.update(directory.copy(cover = savedUriString, lastModified = System.currentTimeMillis()))
+                                folderId.right()
+                            }
 
                         internalStorageResult.getOrElse {
                             AcerolaLogger.e(TAG, "Comic directory not accessible for ${directory.path}", LogSource.REPOSITORY)

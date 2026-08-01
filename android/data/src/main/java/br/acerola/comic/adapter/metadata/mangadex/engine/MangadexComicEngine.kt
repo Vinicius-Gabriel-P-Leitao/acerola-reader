@@ -162,12 +162,17 @@ class MangadexComicEngine
             _progress.value = 0
 
             val rootPath = baseUri?.toString() ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
-            val rootUri = if (!rootPath.isNullOrBlank()) {
-                rootPath.toUri()
-            } else {
-                AcerolaLogger.w(TAG, "Root library path is blank or null for MangaDex sync. Cover download will fallback to internal storage if needed.", LogSource.REPOSITORY)
-                Uri.EMPTY
-            }
+            val rootUri =
+                if (!rootPath.isNullOrBlank()) {
+                    rootPath.toUri()
+                } else {
+                    AcerolaLogger.w(
+                        TAG,
+                        "Root library path is blank or null for MangaDex sync. Cover download will fallback to internal storage if needed.",
+                        LogSource.REPOSITORY,
+                    )
+                    Uri.EMPTY
+                }
             var networkErrorCount = 0
 
             folders.forEachIndexed { index, current ->

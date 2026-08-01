@@ -14,10 +14,10 @@ import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.error.UserMessage
+import br.acerola.comic.infra.R
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.type.UiText
-import br.acerola.comic.infra.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.CoverFromChapterUseCase

@@ -1,7 +1,6 @@
 package br.acerola.comic.usecase.metadata
 
 import arrow.core.Either
-import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.metadata.anilist.AnilistEngine
 import br.acerola.comic.adapter.metadata.comicinfo.ComicInfoEngine

@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.Icon
@@ -25,7 +23,6 @@ import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GroupedHeroButton
 import br.acerola.comic.common.ux.component.HeroButton
-import br.acerola.comic.common.ux.component.HeroNestedButton
 import br.acerola.comic.common.ux.component.SyncActionIcon
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
