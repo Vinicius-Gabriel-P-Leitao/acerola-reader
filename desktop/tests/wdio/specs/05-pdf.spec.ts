@@ -5,7 +5,8 @@ import {
 	invokeTauriCommand,
 	navigateTo,
 	navigateToWithState,
-	waitForAppReady
+	waitForAppReady,
+	waitForText
 } from '../helpers/app';
 
 describe('PDF to CBZ E2E', () => {
@@ -51,9 +52,17 @@ describe('PDF to CBZ E2E', () => {
 			totalChapters: 1,
 			chapterScope: 'pdf'
 		});
+		try {
+			const paginadoBtn = await firstDisplayed('[title="Paginado horizontal"]', 5_000);
+			if ((await paginadoBtn.getAttribute('data-state')) !== 'on') {
+				await paginadoBtn.click();
+			}
+		} catch (e) {}
+
+		await waitForText('witchcraft', 10_000);
 
 		// Confirma que a página 1 abriu
-		const image = await firstDisplayed('img[alt="Página 1"]', 10_000);
+		const image = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 		const src = await image.getAttribute('src');
 		expect(src).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 	});

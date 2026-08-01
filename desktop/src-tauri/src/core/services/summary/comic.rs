@@ -4,9 +4,14 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::{metadata::{author::AuthorMetadata, comic::ComicMetadata}, views::ComicSummaryView},
+        models::{
+            category::category::Category,
+            metadata::{author::AuthorMetadata, comic::ComicMetadata},
+            views::ComicSummaryView,
+        },
         repositories::{
             archive::chapter_archive_repo::ChapterRepository,
+            category::category_repo::CategoryRepository,
             metadata::MetadataRepository,
             views::{HomeRepository, SortCriteria},
         },
@@ -18,6 +23,7 @@ pub struct HomeService {
     repo: HomeRepository,
     chapter_repo: ChapterRepository,
     metadata_repo: MetadataRepository,
+    category_repo: CategoryRepository,
 }
 
 impl HomeService {
@@ -25,7 +31,8 @@ impl HomeService {
         Self {
             repo: HomeRepository::new(pool.clone()),
             chapter_repo: ChapterRepository::new(pool.clone()),
-            metadata_repo: MetadataRepository::new(pool),
+            metadata_repo: MetadataRepository::new(pool.clone()),
+            category_repo: CategoryRepository::new(pool),
         }
     }
 
@@ -35,10 +42,8 @@ impl HomeService {
         (
             Vec<ComicSummaryView>,
             HashMap<i64, i64>,
-            HashMap<
-                i64,
-                (ComicMetadata, Option<AuthorMetadata>),
-            >,
+            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
+            HashMap<i64, Category>,
         ),
         ComicError,
     > {
@@ -62,23 +67,23 @@ impl HomeService {
             }
         }
 
-        Ok((comics, counts, meta_map))
+        let bookmark_map = self.category_repo.get_all_comic_bookmarks().await?;
+
+        Ok((comics, counts, meta_map, bookmark_map))
     }
 
     pub async fn get_all_sorted(
-        &self, criteria: SortCriteria,
+        &self, criteria: SortCriteria, show_hidden: bool, metadata_source: Option<String>,
     ) -> Result<
         (
             Vec<ComicSummaryView>,
             HashMap<i64, i64>,
-            HashMap<
-                i64,
-                (ComicMetadata, Option<AuthorMetadata>),
-            >,
+            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
+            HashMap<i64, Category>,
         ),
         ComicError,
     > {
-        let comics = self.repo.find_all_sorted(criteria).await?;
+        let comics = self.repo.find_all_sorted(criteria, show_hidden, metadata_source).await?;
         let counts = self.chapter_repo.get_all_counts().await?;
 
         let all_meta = self.metadata_repo.comic_repo.find_all().await?;
@@ -95,7 +100,9 @@ impl HomeService {
             }
         }
 
-        Ok((comics, counts, meta_map))
+        let bookmark_map = self.category_repo.get_all_comic_bookmarks().await?;
+
+        Ok((comics, counts, meta_map, bookmark_map))
     }
 
     pub async fn get_by_folder_name(
@@ -105,6 +112,7 @@ impl HomeService {
             ComicSummaryView,
             i64,
             Option<(ComicMetadata, Option<AuthorMetadata>)>,
+            Option<Category>,
         )>,
         ComicError,
     > {
@@ -123,7 +131,8 @@ impl HomeService {
             } else {
                 None
             };
-            Ok(Some((view, count, meta.map(|m| (m, author)))))
+            let bookmark = self.category_repo.get_comic_category(view.directory_id).await?;
+            Ok(Some((view, count, meta.map(|m| (m, author)), bookmark)))
         } else {
             Ok(None)
         }

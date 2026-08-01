@@ -55,7 +55,8 @@ function mockStore(values: Record<string, unknown> = {}) {
 			data[key] = value;
 			return Promise.resolve();
 		}),
-		save: vi.fn(() => Promise.resolve())
+		save: vi.fn(() => Promise.resolve()),
+		reload: vi.fn(() => Promise.resolve())
 	};
 
 	loadMock.mockResolvedValue(store as never);

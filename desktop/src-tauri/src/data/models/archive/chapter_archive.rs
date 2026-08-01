@@ -13,7 +13,6 @@ impl Entity for ChapterArchive {
             "chapter_sort",
             "is_special",
             "checksum",
-            "fast_hash",
             "comic_directory_fk",
             "volume_id_fk",
             "last_modified",
@@ -39,7 +38,6 @@ impl Bindable for ChapterArchive {
             .bind(&self.chapter_sort)
             .bind(self.is_special)
             .bind(&self.checksum)
-            .bind(&self.fast_hash)
             .bind(self.comic_directory_fk)
             .bind(self.volume_id_fk)
             .bind(self.last_modified)
@@ -54,7 +52,6 @@ impl Bindable for ChapterArchive {
             .bind(&self.chapter_sort)
             .bind(self.is_special)
             .bind(&self.checksum)
-            .bind(&self.fast_hash)
             .bind(self.comic_directory_fk)
             .bind(self.volume_id_fk)
             .bind(self.last_modified)
@@ -105,7 +102,6 @@ pub struct ChapterArchive {
     pub chapter_sort: String,
     pub is_special: bool,
     pub checksum: Option<String>,
-    pub fast_hash: Option<String>,
     pub comic_directory_fk: i64,
     pub volume_id_fk: Option<i64>,
     pub last_modified: i64,
@@ -120,22 +116,22 @@ mod tests {
     // NOTE: Format sort
 
     #[test]
-    fn format_template_detectado() {
+    fn formatacao_template_detectado() {
         assert_eq!(ChapterArchive::format_sort(10, Some("1".to_string())), "10.1");
     }
 
     #[test]
-    fn format_sem_decimal() {
+    fn formatacao_sem_decimal() {
         assert_eq!(ChapterArchive::format_sort(10, None), "10");
     }
 
     #[test]
-    fn format_so_com_decimal() {
+    fn formatacao_so_com_decimal() {
         assert_eq!(ChapterArchive::format_sort(0, Some("10".to_string())), "0.10");
     }
 
     #[test]
-    fn format_preserva_leading_zero_decimal() {
+    fn formatacao_preserva_zero_a_esquerda_no_decimal() {
         assert_eq!(ChapterArchive::format_sort(0, Some("01".to_string())), "0.01");
     }
 
@@ -147,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn fallback_arquivo_com_letas() {
+    fn fallback_arquivo_com_letras() {
         assert_eq!(ChapterArchive::fallback_sort("abc", 0), "1");
     }
 

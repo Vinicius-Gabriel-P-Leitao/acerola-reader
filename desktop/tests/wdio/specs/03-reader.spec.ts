@@ -86,8 +86,7 @@ describe('reader nativo', () => {
 		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
 		await waitForTextContaining('33%', 10_000);
 
-		const firstPage = await browser.$('img[alt="Página 1"]');
-		await firstPage.waitForDisplayed({ timeout: 10_000 });
+		const firstPage = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 
 
 

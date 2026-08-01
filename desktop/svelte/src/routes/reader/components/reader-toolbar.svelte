@@ -75,8 +75,8 @@
 				variant: data.zoomLevel > 1 ? 'secondary' : 'ghost',
 				title:
 					data.zoomLevel > 1
-						? m['pages.reader.actions.reset_zoom']()
-						: m['pages.reader.actions.apply_zoom']()
+						? `${m['pages.reader.actions.reset_zoom']()} (Ctrl+0)`
+						: `${m['pages.reader.actions.apply_zoom']()} (Ctrl++)`
 			}}
 		>
 			{#if data.zoomLevel > 1}
@@ -90,7 +90,7 @@
 			events={{ onClick: events.onToggleZoomMode }}
 			ui={{
 				variant: data.zoomMode ? 'default' : 'ghost',
-				title: m['pages.reader.actions.zoom_mode']()
+				title: `${m['pages.reader.actions.zoom_mode']()} (Z)`
 			}}
 		>
 			<ZoomIn size={20} />
@@ -100,7 +100,7 @@
 			events={{ onClick: events.onOpenCommandPalette }}
 			ui={{
 				variant: 'ghost',
-				title: m['pages.reader.actions.commands']()
+				title: `${m['pages.reader.actions.commands']()} (Ctrl+K)`
 			}}
 		>
 			<CommandIcon size={20} />
@@ -113,8 +113,8 @@
 					variant: 'ghost',
 					disabled: !data.canPreviousPage || data.pageControlsDisabled,
 					title: data.pageControlsDisabled
-						? m['pages.reader.actions.page_navigation_locked']()
-						: m['pages.reader.actions.previous_page']()
+						? m['pages.reader.actions.page.navigation_locked']()
+						: `${m['pages.reader.actions.page.previous']()} (←)`
 				}}
 			>
 				<ChevronLeft size={20} />
@@ -126,8 +126,8 @@
 					variant: 'ghost',
 					disabled: !data.canNextPage || data.pageControlsDisabled,
 					title: data.pageControlsDisabled
-						? m['pages.reader.actions.page_navigation_locked']()
-						: m['pages.reader.actions.next_page']()
+						? m['pages.reader.actions.page.navigation_locked']()
+						: `${m['pages.reader.actions.page.next']()} (→)`
 				}}
 			>
 				<ChevronRight size={20} />

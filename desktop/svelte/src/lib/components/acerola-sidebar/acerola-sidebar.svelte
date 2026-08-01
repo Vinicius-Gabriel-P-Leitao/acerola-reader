@@ -15,6 +15,7 @@
 		ui?: {
 			class?: string;
 		};
+		collapsible?: 'offcanvas' | 'icon' | 'none';
 	};
 
 	export type AcerolaSidebarSnippets = {
@@ -27,10 +28,10 @@
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
-	let { data, ui, header, footer }: AcerolaSidebarProps & AcerolaSidebarSnippets = $props();
+	let { data, ui, collapsible = 'icon', header, footer }: AcerolaSidebarProps & AcerolaSidebarSnippets = $props();
 </script>
 
-<Sidebar.Root collapsible="icon" class={ui?.class}>
+<Sidebar.Root {collapsible} class={ui?.class}>
 	{#if header}
 		<Sidebar.Header class="p-6">
 			{@render header()}

@@ -36,6 +36,15 @@
 				light: ['#2D005F', '#6272A4', '#005A5F', '#F8F8F2'],
 				dark: ['#BD93F9', '#FF79C6', '#8BE9FD', '#282A36']
 			}
+		},
+		{
+			id: 'tokyo-night',
+			name: m['theme.tokyo-night.name'],
+			description: m['theme.tokyo-night.desc'],
+			colors: {
+				light: ['#2E7DE9', '#7847BD', '#007197', '#E1E2E7'],
+				dark: ['#7AA2F7', '#BB9AF7', '#7DCFFF', '#24283B']
+			}
 		}
 	];
 
@@ -44,6 +53,9 @@
 			theme: ThemeColor;
 			mode: ThemeMode;
 		};
+		ui?: {
+			showHeader?: boolean;
+		};
 		events: {
 			onSelect: (name: ThemeColor) => void;
 		};
@@ -51,48 +63,58 @@
 </script>
 
 <script lang="ts">
+	import CheckIcon from '@lucide/svelte/icons/check';
 	import PaletteIcon from '@lucide/svelte/icons/palette';
-	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 
-	let { data, events }: ThemePickerComponentProps = $props();
+	let { data, ui = { showHeader: true }, events }: ThemePickerComponentProps = $props();
+	let showHeader = $derived(ui.showHeader ?? true);
 </script>
 
 <section class="space-y-4">
-	<div
-		class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
-	>
-		<PaletteIcon size={16} />
-		{m['pages.config.components.theme_piker']()}
-	</div>
+	{#if showHeader}
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<PaletteIcon size={16} />
+			{m['pages.config.components.theme_piker']()}
+		</div>
+	{/if}
 
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+	<div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
 		{#each themes as it}
 			<button
+				type="button"
 				onclick={() => events.onSelect(it.id)}
-				class="relative cursor-pointer overflow-hidden rounded-3xl border-2 p-6 text-left transition-all
+				class="group relative flex flex-col justify-between cursor-pointer overflow-hidden rounded-2xl border-2 p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98]
           {data.theme === it.id
-					? 'border-primary bg-primary/5 shadow-xl shadow-primary/10'
-					: 'border-border bg-card hover:border-muted-foreground'}"
+					? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+					: 'border-border/60 bg-card hover:border-muted-foreground/50 hover:bg-card/90 hover:shadow-sm'}"
 			>
-				<div class="mb-4 flex items-center gap-4">
-					<div class="flex -space-x-2">
-						{#each it.colors[data.mode] as color}
-							<div
-								class="h-8 w-8 rounded-full border-2 border-card shadow-sm"
-								style="background-color: {color}"
-							></div>
-						{/each}
+				<div>
+					<div class="mb-3 flex items-center justify-between">
+						<div class="flex -space-x-1.5 overflow-hidden p-0.5">
+							{#each it.colors[data.mode] as color}
+								<div
+									class="h-7 w-7 rounded-full border-2 border-card shadow-sm transition-transform duration-200 group-hover:scale-105"
+									style="background-color: {color}"
+								></div>
+							{/each}
+						</div>
 					</div>
-				</div>
 
-				<h3 class="font-bold text-foreground">{it.name()}</h3>
-				<p class="mt-1 text-xs text-muted-foreground">{it.description()}</p>
+					<h3 class="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
+						{it.name()}
+					</h3>
+					<p class="mt-1 text-xs leading-snug text-muted-foreground line-clamp-2">
+						{it.description()}
+					</p>
+				</div>
 
 				{#if data.theme === it.id}
 					<div
-						class="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
+						class="absolute top-3.5 right-3.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
 					>
-						<RefreshCwIcon size={12} class="animate-spin text-primary-foreground" />
+						<CheckIcon size={12} strokeWidth={3} />
 					</div>
 				{/if}
 			</button>

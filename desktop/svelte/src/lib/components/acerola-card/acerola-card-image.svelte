@@ -91,19 +91,21 @@
 						<BookOpenIcon size={40} />
 					</div>
 				{/if}
-				<div
-					class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-crust via-crust/30 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-				>
-					{#if overlay}
-						{@render overlay()}
-					{:else if data.description}
+				{#if overlay}
+					{@render overlay()}
+				{/if}
+
+				{#if data.description}
+					<div
+						class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-crust via-crust/30 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+					>
 						<p
 							class="line-clamp-3 translate-y-2 text-xs text-foreground transition-transform duration-300 group-hover:translate-y-0"
 						>
 							{data.description}
 						</p>
-					{/if}
-				</div>
+					</div>
+				{/if}
 
 				{#if data.progress !== undefined}
 					<div class="absolute bottom-0 left-0 h-1 w-full bg-surface">

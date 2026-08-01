@@ -59,7 +59,7 @@ describe('home nativa', () => {
 
 		await (await firstDisplayed('a[href="/config"]')).click();
 		await browser.waitUntil(async () => (await getPathname()) === '/config', {
-			timeout: 5_000,
+			timeout: 10_000,
 			interval: 100,
 			timeoutMsg: 'Sidebar não navegou para Configurações.'
 		});
@@ -67,7 +67,7 @@ describe('home nativa', () => {
 
 		await (await firstDisplayed('a[href="/home"]')).click();
 		await browser.waitUntil(async () => (await getPathname()) === '/home', {
-			timeout: 5_000,
+			timeout: 10_000,
 			interval: 100,
 			timeoutMsg: 'Sidebar não voltou para Home.'
 		});

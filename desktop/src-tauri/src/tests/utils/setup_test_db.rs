@@ -50,21 +50,7 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
     .unwrap();
 
     sqlx::query(include_str!(
-        "../../infra/db/migrations/models/metadata/003_create_chapter_page.sql"
-    ))
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    sqlx::query(include_str!(
         "../../infra/db/migrations/models/metadata/source/001_create_anilist_source.sql"
-    ))
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    sqlx::query(include_str!(
-        "../../infra/db/migrations/models/metadata/source/002_create_comic_info_source.sql"
     ))
     .execute(&pool)
     .await
@@ -79,20 +65,6 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
 
     sqlx::query(include_str!(
         "../../infra/db/migrations/models/metadata/relationship/001_create_genre.sql"
-    ))
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    sqlx::query(include_str!(
-        "../../infra/db/migrations/models/metadata/relationship/002_create_cover.sql"
-    ))
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    sqlx::query(include_str!(
-        "../../infra/db/migrations/models/metadata/relationship/003_create_banner.sql"
     ))
     .execute(&pool)
     .await

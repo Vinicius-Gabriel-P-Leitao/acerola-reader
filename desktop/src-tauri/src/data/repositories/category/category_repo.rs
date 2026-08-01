@@ -47,4 +47,22 @@ impl CategoryRepository {
 
         Ok(result)
     }
+
+    /// Busca todas as categorias associadas a cada quadrinho em um HashMap (comic_directory_fk -> Category).
+    pub async fn get_all_comic_bookmarks(
+        &self,
+    ) -> Result<std::collections::HashMap<i64, Category>, DbError> {
+        let rows = sqlx::query_as::<_, (i64, Option<i64>, String, i64)>(
+            "SELECT cc.comic_directory_fk, c.id, c.name, c.color FROM category c
+             INNER JOIN comic_category cc ON c.id = cc.category_id",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut map = std::collections::HashMap::new();
+        for (comic_directory_fk, id, name, color) in rows {
+            map.insert(comic_directory_fk, Category { id, name, color });
+        }
+        Ok(map)
+    }
 }

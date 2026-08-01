@@ -8,10 +8,18 @@
 	import { useTheme, type ThemeColor } from '$lib/hooks/theme/use-theme.svelte';
 	import ThemePicker from '../../config/components/theme-picker.svelte';
 
+	import { onMount } from 'svelte';
+
 	const themeCtx = useTheme();
 	const folder = useSelectFolder();
 
-	let canProceed = $derived(!!folder.folderPath);
+	onMount(() => {
+		folder.loadSavedPath();
+	});
+
+	$effect(() => {
+		folder.loadSavedPath();
+	});
 
 	let { onNext, onPrev } = $props<{ onNext: () => void; onPrev: () => void }>();
 </script>
@@ -31,6 +39,7 @@
 				</div>
 				<ThemePicker
 					data={{ theme: themeCtx.theme, mode: themeCtx.resolved }}
+					ui={{ showHeader: false }}
 					events={{ onSelect: (name: ThemeColor) => themeCtx.setTheme(name) }}
 				/>
 			</div>
@@ -40,19 +49,19 @@
 					<div class="flex items-center gap-3">
 						<FolderIcon class="text-chart-2" size={24} />
 						<h2 class="text-xl font-semibold text-foreground">
-							{m['onboarding.settings.folder']()}
+							{m['onboarding.settings.folder.title']()}
 						</h2>
 					</div>
 					{#if folder.folderPath}
 						<div class="flex items-center gap-2 text-sm text-primary">
 							<CheckIcon size={16} />
-							<span>{m['onboarding.settings.folder_selected']()}</span>
+							<span>{m['onboarding.settings.folder.selected']()}</span>
 						</div>
 					{/if}
 				</div>
-				<p class="mb-4 text-sm text-muted-foreground">{m['onboarding.settings.folder_desc']()}</p>
+				<p class="mb-4 text-sm text-muted-foreground">{m['onboarding.settings.folder.desc']()}</p>
 				<Button onclick={folder.selectFolder} variant="outline" class="w-full rounded-xl">
-					{folder.folderPath || m['onboarding.settings.folder_select']()}
+					{folder.folderPath || m['onboarding.settings.folder.select']()}
 				</Button>
 			</div>
 		</div>
@@ -61,7 +70,7 @@
 			<Button onclick={onPrev} variant="outline" class="rounded-xl">
 				{m['onboarding.back']()}
 			</Button>
-			<Button onclick={onNext} disabled={!canProceed} class="rounded-xl">
+			<Button onclick={onNext} disabled={!folder.folderPath} class="rounded-xl">
 				{m['onboarding.next']()}
 			</Button>
 		</div>

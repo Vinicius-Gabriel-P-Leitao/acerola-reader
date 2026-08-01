@@ -15,6 +15,7 @@
 		};
 		services: {
 			pageAt: (index: number) => ReaderCachedPagePayload | undefined;
+			loadPage?: (index: number, setCurrent?: boolean) => Promise<unknown>;
 			trackPage: ReaderPageTracker;
 		};
 	};
@@ -29,6 +30,15 @@
 	let { data, services }: ReaderPagesProps = $props();
 
 	const trackPage = $derived(services.trackPage);
+
+	function loadIfMissing(node: HTMLElement, pageIndex: number) {
+		if (!services.pageAt(pageIndex)) {
+			void services.loadPage?.(pageIndex, false);
+		}
+		return {
+			destroy() {}
+		};
+	}
 </script>
 
 {#if data.openFailed || !data.chapterAvailable}
@@ -83,6 +93,7 @@
 					</div>
 				{:else}
 					<div
+						use:loadIfMissing={pageIndex}
 						class={cn(
 							data.mode !== 'webtoon' &&
 								'flex h-full w-full max-w-4xl items-center justify-center border border-surface/40 bg-base/50',

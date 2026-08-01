@@ -19,8 +19,6 @@ pub struct ChapterFileDto {
     pub volume_name: Option<String>,
     pub is_special: bool,
     pub last_modified: i64,
-    pub meta_title: Option<String>,
-    pub meta_scanlation: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::data::models::metadata::{banner::Banner, comic::ComicMetadata, cover::Cover};
+use crate::data::models::metadata::comic::ComicMetadata;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -8,7 +8,6 @@ pub struct ComicMetadataEvent {
     pub id: String,
     pub title: String,
     pub description: String,
-    pub romanji: String,
     pub status: String,
     pub publication: Option<i64>,
     pub sync_source: Option<String>,
@@ -24,7 +23,6 @@ impl ComicMetadataEvent {
             id: model.id.to_string(),
             title: model.title,
             description: model.description,
-            romanji: model.romanji,
             status: model.status,
             publication: model.publication,
             sync_source: model.sync_source,
@@ -35,13 +33,13 @@ impl ComicMetadataEvent {
         }
     }
 
-    pub fn with_cover(mut self, cover: Option<Cover>) -> Self {
-        self.cover_url = cover.map(|c| c.url);
+    pub fn with_cover(mut self, cover_url: Option<String>) -> Self {
+        self.cover_url = cover_url;
         self
     }
 
-    pub fn with_banner(mut self, banner: Option<Banner>) -> Self {
-        self.banner_url = banner.map(|b| b.url);
+    pub fn with_banner(mut self, banner_url: Option<String>) -> Self {
+        self.banner_url = banner_url;
         self
     }
 }

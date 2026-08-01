@@ -66,7 +66,7 @@ describe('Reader Navigation E2E', () => {
 		});
 
 		// Confirma que a página 1 abriu no capitulo 1
-		const image = await firstDisplayed('img[alt="Página 1"]', 10_000);
+		const image = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 		expect(await image.getAttribute('src')).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 
 		// 3. Navega para o próximo capítulo

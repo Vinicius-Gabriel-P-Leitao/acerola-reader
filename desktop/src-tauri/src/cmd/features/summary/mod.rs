@@ -20,9 +20,12 @@ pub async fn get_comic_summary<R: Runtime>(
         let service = HomeService::new(pool);
 
         match service.get_all(search).await {
-            Ok((comics, counts, meta_map)) => {
-                app.emit("home:data", ComicSummaryPayload::from(comics, counts, meta_map)).unwrap()
-            },
+            Ok((comics, counts, meta_map, bookmark_map)) => app
+                .emit(
+                    "home:data",
+                    ComicSummaryPayload::from(comics, counts, meta_map, bookmark_map),
+                )
+                .unwrap(),
             Err(err) => app.emit("home:error", ErrorPayload::from(&err)).unwrap(),
         }
     });
@@ -37,7 +40,9 @@ pub async fn get_comic_by_folder_name(
     let service = HomeService::new(pool.inner().clone());
 
     match service.get_by_folder_name(&folder_name).await {
-        Ok(Some((view, count, meta))) => Ok(Some(ComicSummaryItem::from_view(view, count, meta))),
+        Ok(Some((view, count, meta, bookmark))) => {
+            Ok(Some(ComicSummaryItem::from_view(view, count, meta, bookmark)))
+        },
         Ok(None) => Ok(None),
         Err(err) => Err(err.to_string()),
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, afterNavigate, invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
@@ -29,6 +29,10 @@
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
+	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
+	import { extractErrorMessage } from '$lib/utils/error.utils';
+
+	const { notify } = notificationStore;
 
 	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
@@ -114,12 +118,19 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
+			const startMsg = m['pages.comic.toast.sync.start_mangadex']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
 			await metadataSync.syncMangadex(manga.title, id.toString());
-			toast.success(m['pages.comic.toast.sync_success']());
+			const successMsg = m['pages.comic.toast.sync.success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
 			await invalidateAll();
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.comic.toast.mangadex_error']({ msg }));
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.mangadex_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
@@ -127,12 +138,39 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
+			const startMsg = m['pages.comic.toast.sync.start_anilist']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
 			await metadataSync.syncAnilist(manga.title, id.toString());
-			toast.success(m['pages.comic.toast.sync_success']());
+			const successMsg = m['pages.comic.toast.sync.success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
 			await invalidateAll();
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.comic.toast.anilist_error']({ msg }));
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.anilist_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
+	async function handleSyncComicInfo() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			const startMsg = m['pages.comic.toast.sync.start_comic_info']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
+			await metadataSync.syncComicInfo(id.toString());
+			const successMsg = m['pages.comic.toast.sync.success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.comic_info.error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
@@ -144,11 +182,17 @@
 			if (manga) {
 				manga.metadata.externalSync = value;
 			}
-			toast.success(value ? m['pages.comic.toast.sync_enabled']() : m['pages.comic.toast.sync_disabled']());
+			const successMsg = value
+				? m['pages.comic.toast.sync.enabled']()
+				: m['pages.comic.toast.sync.disabled']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
 			await invalidateAll();
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.comic.toast.sync_toggle_error']({ msg }));
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.sync.toggle_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
@@ -160,9 +204,15 @@
 		]);
 	});
 
-	afterNavigate(async () => {
-		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
-		if (id) {
+	const comicId = $derived(
+		activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId
+	);
+
+	$effect(() => {
+		const id = comicId;
+		if (!id) return;
+
+		untrack(() => {
 			isHistoryLoading = true;
 			const fetchHistory = invoke(HISTORY_COMMANDS.getComic, { comicId: id.toString() }).catch(
 				() => null
@@ -172,13 +222,13 @@
 			}).catch(() => []);
 			const fetchBookmark = bookmarkStore.getComicBookmark(id);
 
-			const [history, read, bookmark] = await Promise.all([fetchHistory, fetchRead, fetchBookmark]);
-			readingHistory = history;
-			readChapters = read;
-			currentBookmarkId = bookmark?.id ?? null;
-
-			isHistoryLoading = false;
-		}
+			Promise.all([fetchHistory, fetchRead, fetchBookmark]).then(([history, read, bookmark]) => {
+				readingHistory = history;
+				readChapters = read;
+				currentBookmarkId = bookmark?.id ?? null;
+				isHistoryLoading = false;
+			});
+		});
 	});
 
 	function handleReadNow() {
@@ -300,9 +350,9 @@
 				.map((comic, index) => ({
 					id: comic.id.toString(),
 					name: comic.name,
-					title: comic.metaTitle || comic.name,
-					fileName: comic.metaScanlation ? `${comic.name} • ${comic.metaScanlation}` : comic.name,
-					isRead: readChapters.includes(comic.id.toString()),
+					title: comic.name,
+					fileName: comic.name,
+					isRead: Array.isArray(readChapters) ? readChapters.includes(comic.id.toString()) : false,
 					chapterSort: comic.chapterSort,
 					path: comic.path,
 					volumeId: comic.volumeId,
@@ -347,9 +397,10 @@
 			volumes,
 			pageSize,
 			metadata: {
-				description: item.metadata.description || m['pages.comic.metadata.description_unavailable'](),
-				author: item.metadata.author || m['pages.comic.metadata.unknown_author'](),
-				status: item.metadata.status || m['pages.comic.metadata.unknown_status'](),
+				description:
+					item.metadata.description || m['pages.comic.metadata.description.unavailable'](),
+				author: item.metadata.author || m['pages.comic.metadata.unknown.author'](),
+				status: item.metadata.status || m['pages.comic.metadata.unknown.status'](),
 				source: item.metadata.activeSource || 'LOCAL',
 				externalSync: item.metadata.externalSync,
 				genres: []
@@ -502,7 +553,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.number_asc']()}
+												{m['pages.comic.sort.number.asc']()}
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -518,7 +569,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.number_desc']()}
+												{m['pages.comic.sort.number.desc']()}
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -534,7 +585,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.modified_desc']()}
+												{m['pages.comic.sort.modified.desc']()}
 											</AcerolaButton>
 											<AcerolaButton
 												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
@@ -550,7 +601,7 @@
 												{:else}
 													<div class="w-4"></div>
 												{/if}
-												{m['pages.comic.sort.modified_asc']()}
+												{m['pages.comic.sort.modified.asc']()}
 											</AcerolaButton>
 										</div>
 									</div>
@@ -619,7 +670,8 @@
 								},
 								onExternalSyncChange: handleExternalSyncChange,
 								onSyncMangadex: handleSyncMangadex,
-								onSyncAnilist: handleSyncAnilist
+								onSyncAnilist: handleSyncAnilist,
+								onSyncComicInfo: handleSyncComicInfo
 							}}
 						/>
 					{/if}

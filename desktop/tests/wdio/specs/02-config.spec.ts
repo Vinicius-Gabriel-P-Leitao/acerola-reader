@@ -32,6 +32,7 @@ describe('config nativa', () => {
 		await waitForText('Catppuccin');
 		await waitForText('Nord');
 		await waitForText('Dracula');
+		await waitForText('Tokyo Night');
 		await waitForText('Configuração de metadados');
 		await waitForText('Idioma');
 		await waitForText('Sincronização com MangaDex');
@@ -53,6 +54,13 @@ describe('config nativa', () => {
 			timeout: 5_000,
 			interval: 100,
 			timeoutMsg: 'Tema Dracula não foi aplicado no documento.'
+		});
+
+		await (await waitForText('Tokyo Night')).click();
+		await browser.waitUntil(async () => (await currentTheme()).startsWith('tokyo-night'), {
+			timeout: 5_000,
+			interval: 100,
+			timeoutMsg: 'Tema Tokyo Night não foi aplicado no documento.'
 		});
 
 		expect(await getPathname()).toBe('/config');

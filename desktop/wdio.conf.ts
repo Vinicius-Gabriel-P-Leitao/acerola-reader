@@ -27,7 +27,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const capabilities: TauriCapability[] = [
 	{
-		browserName: process.platform === 'win32' ? 'chrome' : 'wry',
+		browserName: 'wry',
 		'tauri:options': {
 			application: appPath
 		}
@@ -59,7 +59,7 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 		}
 	},
 	onPrepare: async () => {
-		const binaryPath = path.resolve(__dirname, appPath);
+		const binaryPath = appPath;
 
 		if (!existsSync(binaryPath)) {
 			throw new Error(`Binário não encontrado em: ${binaryPath}\nRode: cargo tauri build`);
@@ -80,13 +80,10 @@ export const config: Options.Testrunner & Capabilities.WithRequestedTestrunnerCa
 				LOCALAPPDATA: appDataDir,
 				XDG_DATA_HOME: appDataDir
 			},
-			stdio: ['ignore', 'pipe', 'pipe']
+			stdio: ['ignore', 'pipe', 'pipe'],
+			shell: process.platform === 'win32'
 		});
 		tauriDriver = driver;
-
-		driver.stdout.on('data', (chunk) => {
-			process.stdout.write(`[tauri-driver] ${chunk}`);
-		});
 
 		driver.stderr.on('data', (chunk) => {
 			process.stderr.write(`[tauri-driver] ${chunk}`);

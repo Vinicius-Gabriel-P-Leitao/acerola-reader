@@ -167,7 +167,6 @@ mod tests {
             chapter_sort: chapter_sort.to_string(),
             is_special: false,
             checksum: None,
-            fast_hash: None,
             comic_directory_fk: 1,
             volume_id_fk: None,
             last_modified: 123456789,
@@ -189,7 +188,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_counts() {
+    async fn teste_contagens() {
         let pool = setup_test_db_with_volumes().await;
         let repo = ChapterRepository::new(pool);
         repo.base.insert(&chapter(1, "1")).await.unwrap();

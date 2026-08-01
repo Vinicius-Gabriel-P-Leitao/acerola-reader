@@ -17,6 +17,9 @@ pub enum ComicError {
     #[error("Comic not found.")]
     NotFound,
 
+    #[error("ComicInfo.xml file not found in comic directory or archive.")]
+    ComicInfoNotFound,
+
     #[error("Invalid data: {0}")]
     InvalidRequest(String),
 
