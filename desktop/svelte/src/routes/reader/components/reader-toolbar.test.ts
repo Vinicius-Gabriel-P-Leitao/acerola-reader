@@ -61,11 +61,11 @@ describe('ReaderToolbar', () => {
 		render(ReaderToolbar, { props: toolbarProps });
 
 		await user.click(screen.getByTitle('Voltar'));
-		await user.click(screen.getByTitle('Aplicar zoom'));
-		await user.click(screen.getByTitle('Modo zoom'));
-		await user.click(screen.getByTitle('Comandos'));
-		await user.click(screen.getByTitle('Página anterior'));
-		await user.click(screen.getByTitle('Próxima página'));
+		await user.click(screen.getByTitle(/Aplicar zoom/));
+		await user.click(screen.getByTitle(/Modo zoom/));
+		await user.click(screen.getByTitle(/Comandos/));
+		await user.click(screen.getByTitle(/Página anterior/));
+		await user.click(screen.getByTitle(/Próxima página/));
 
 		expect(toolbarProps.events.onBack).toHaveBeenCalledOnce();
 		expect(toolbarProps.events.onToggleQuickZoom).toHaveBeenCalledOnce();
@@ -80,6 +80,7 @@ describe('ReaderToolbar', () => {
 		const toolbarProps = props();
 
 		render(ReaderToolbar, { props: toolbarProps });
+
 		await user.click(screen.getByTitle('Paginado horizontal'));
 		await user.click(screen.getByTitle('Webtoon'));
 
@@ -97,10 +98,11 @@ describe('ReaderToolbar', () => {
 		});
 
 		render(ReaderToolbar, { props: toolbarProps });
-		await user.click(screen.getByTitle('Resetar zoom'));
+
+		await user.click(screen.getByTitle(/Resetar zoom/));
 
 		expect(toolbarProps.events.onToggleQuickZoom).toHaveBeenCalledOnce();
-		expect(screen.queryByTitle('Aplicar zoom')).not.toBeInTheDocument();
+		expect(screen.queryByTitle(/Aplicar zoom/)).not.toBeInTheDocument();
 	});
 
 	it('oculta navegacao de paginas fora do modo paginado', () => {
@@ -113,8 +115,8 @@ describe('ReaderToolbar', () => {
 			})
 		});
 
-		expect(screen.queryByTitle('Página anterior')).not.toBeInTheDocument();
-		expect(screen.queryByTitle('Próxima página')).not.toBeInTheDocument();
+		expect(screen.queryByTitle(/Página anterior/)).not.toBeInTheDocument();
+		expect(screen.queryByTitle(/Próxima página/)).not.toBeInTheDocument();
 	});
 
 	it('desabilita navegacao quando paginas estao travadas por zoom', () => {
@@ -143,7 +145,7 @@ describe('ReaderToolbar', () => {
 			})
 		});
 
-		expect(screen.getByTitle('Página anterior')).toBeDisabled();
-		expect(screen.getByTitle('Próxima página')).not.toBeDisabled();
+		expect(screen.getByTitle(/Página anterior/)).toBeDisabled();
+		expect(screen.getByTitle(/Próxima página/)).not.toBeDisabled();
 	});
 });
