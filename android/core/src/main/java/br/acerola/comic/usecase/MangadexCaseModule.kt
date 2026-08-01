@@ -1,17 +1,11 @@
 package br.acerola.comic.usecase
 
-import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
-import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
-import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
 import br.acerola.comic.adapter.contract.gateway.ComicReadOnlyGateway
 import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
 import br.acerola.comic.adapter.metadata.mangadex.MangadexEngine
-import br.acerola.comic.dto.metadata.chapter.ChapterRemoteInfoPageDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
-import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
-import br.acerola.comic.usecase.library.RescanComicChaptersUseCase
 import br.acerola.comic.usecase.library.RescanComicUseCase
 import br.acerola.comic.usecase.library.SyncLibraryUseCase
 import dagger.Module
@@ -31,11 +25,9 @@ object MangadexCaseModule {
     @MangadexCase
     fun provideSyncLibraryUseCase(
         @MangadexEngine scanGateway: ComicLibraryScanGateway,
-        @MangadexEngine chapterGateway: ChapterSyncStatusGateway,
     ): SyncLibraryUseCase =
         SyncLibraryUseCase(
             scanGateway = scanGateway,
-            chapterGateway = chapterGateway,
         )
 
     @Provides
@@ -56,25 +48,5 @@ object MangadexCaseModule {
     ): RescanComicUseCase =
         RescanComicUseCase(
             comicRepository = comicOps,
-        )
-
-    @Provides
-    @MangadexCase
-    fun provideRescanComicChaptersUseCase(
-        @MangadexEngine chapterOps: ChapterSyncGateway,
-    ): RescanComicChaptersUseCase =
-        RescanComicChaptersUseCase(
-            chapterRepository = chapterOps,
-        )
-
-    @Provides
-    @MangadexCase
-    fun provideGetChaptersUseCase(
-        @MangadexEngine readOps: ChapterReadGateway<ChapterRemoteInfoPageDto>,
-        @MangadexEngine statusOps: ChapterSyncStatusGateway,
-    ): ObserveChaptersUseCase<ChapterRemoteInfoPageDto> =
-        ObserveChaptersUseCase(
-            readGateway = readOps,
-            syncStatusGateway = statusOps,
         )
 }

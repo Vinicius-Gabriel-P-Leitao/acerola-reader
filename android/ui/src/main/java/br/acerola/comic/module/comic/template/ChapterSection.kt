@@ -8,7 +8,6 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
-import br.acerola.comic.dto.metadata.chapter.ChapterFeedDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
 import br.acerola.comic.module.comic.component.CoverVolumeCard
@@ -22,7 +21,7 @@ fun Comic.Template.chapterSection(
     readChapters: List<String> = emptyList(),
     volumeViewMode: VolumeViewType = VolumeViewType.CHAPTER,
     activeVolumeId: Long? = null,
-    onChapterClick: (ChapterFileDto, ChapterFeedDto?) -> Unit,
+    onChapterClick: (ChapterFileDto) -> Unit,
     onToggleRead: (String) -> Unit,
     onPageChange: (Int) -> Unit,
     onSetActiveVolume: (Long?) -> Unit = {},
@@ -66,20 +65,14 @@ fun Comic.Template.chapterSection(
 
             if (isExpanded) {
                 group.items.forEachIndexed { index, chapter ->
-                    val remoteInfo =
-                        chapters.remoteInfo
-                            ?.items
-                            ?.getOrNull(index)
-                            ?.takeIf { it.id != -1L }
                     scope.item(
                         key = "vol_${group.volume.id}_ch_${chapter.id}_$index",
                         contentType = "chapter_item",
                     ) {
                         Comic.Component.ChapterItem(
                             chapterFileDto = chapter,
-                            chapterRemoteInfoDto = remoteInfo,
                             isRead = readChapters.contains(chapter.chapterSort),
-                            onClick = { onChapterClick(chapter, remoteInfo) },
+                            onClick = { onChapterClick(chapter) },
                             onToggleRead = { onToggleRead(chapter.chapterSort) },
                         )
                     }
@@ -100,16 +93,10 @@ fun Comic.Template.chapterSection(
                 key = "ch_${chapter.id}_$index",
                 contentType = "chapter_item",
             ) {
-                val remoteInfo =
-                    chapters.remoteInfo
-                        ?.items
-                        ?.getOrNull(index)
-                        ?.takeIf { it.id != -1L }
                 Comic.Component.ChapterItem(
                     chapterFileDto = chapter,
-                    chapterRemoteInfoDto = remoteInfo,
                     isRead = readChapters.contains(chapter.chapterSort),
-                    onClick = { onChapterClick(chapter, remoteInfo) },
+                    onClick = { onChapterClick(chapter) },
                     onToggleRead = { onToggleRead(chapter.chapterSort) },
                 )
             }

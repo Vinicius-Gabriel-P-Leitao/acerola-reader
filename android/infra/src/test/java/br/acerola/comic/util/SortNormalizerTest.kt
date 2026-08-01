@@ -100,33 +100,38 @@ class SortNormalizerTest {
 
     @Test
     fun `should sort decimal chapters in strict numerical order`() {
-        val rawList = listOf(
-            "Capitulo 41.cbz",
-            "Capitulo 3.5.cbz",
-            "Capitulo 10.5.cbz",
-            "Ch. 0.01.cbz",
-            "Ch. 0.02.cbz",
-            "Capitulo 1.cbz",
-            "Capitulo 3.cbz",
-        )
+        val rawList =
+            listOf(
+                "Capitulo 41.cbz",
+                "Capitulo 3.5.cbz",
+                "Capitulo 10.5.cbz",
+                "Ch. 0.01.cbz",
+                "Ch. 0.02.cbz",
+                "Capitulo 1.cbz",
+                "Capitulo 3.cbz",
+            )
 
-        val normalized = rawList.map { name ->
-            name to SortNormalizer.normalize(name, SortType.CHAPTER, chapterTemplates)
-        }
+        val normalized =
+            rawList.map { name ->
+                name to SortNormalizer.normalize(name, SortType.CHAPTER, chapterTemplates)
+            }
 
-        val sortedNames = normalized.sortedBy { (_, result) ->
-            result.normalizedSort.toDoubleOrNull() ?: 0.0
-        }.map { it.first }
+        val sortedNames =
+            normalized
+                .sortedBy { (_, result) ->
+                    result.normalizedSort.toDoubleOrNull() ?: 0.0
+                }.map { it.first }
 
-        val expectedOrder = listOf(
-            "Ch. 0.01.cbz",
-            "Ch. 0.02.cbz",
-            "Capitulo 1.cbz",
-            "Capitulo 3.cbz",
-            "Capitulo 3.5.cbz",
-            "Capitulo 10.5.cbz",
-            "Capitulo 41.cbz",
-        )
+        val expectedOrder =
+            listOf(
+                "Ch. 0.01.cbz",
+                "Ch. 0.02.cbz",
+                "Capitulo 1.cbz",
+                "Capitulo 3.cbz",
+                "Capitulo 3.5.cbz",
+                "Capitulo 10.5.cbz",
+                "Capitulo 41.cbz",
+            )
 
         assertEquals(expectedOrder, sortedNames)
     }

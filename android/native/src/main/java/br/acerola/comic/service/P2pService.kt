@@ -54,11 +54,12 @@ class P2pService(
         alpn: ByteArray,
     ) {
         Log.d("P2pService", "Connecting to peer: ${peerAddress.id}")
-        val ffiAddr = FfiPeerAddr(
-            id = peerAddress.id,
-            deviceId = peerAddress.deviceId,
-            addrs = peerAddress.addrs,
-        )
+        val ffiAddr =
+            FfiPeerAddr(
+                id = peerAddress.id,
+                deviceId = peerAddress.deviceId,
+                addrs = peerAddress.addrs,
+            )
         p2pNode.connect(ffiAddr, alpn)
     }
 

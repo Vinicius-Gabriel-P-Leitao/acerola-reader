@@ -1,12 +1,9 @@
 package br.acerola.comic.fixtures
 
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.CoverDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
-import br.acerola.comic.local.entity.metadata.ChapterDownloadSource
-import br.acerola.comic.local.entity.metadata.ChapterMetadata
 import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
 import br.acerola.comic.local.entity.metadata.relationship.Banner
@@ -39,48 +36,6 @@ object MetadataFixtures {
         comicDirectoryFk = comicDirectoryFk,
         syncSource = syncSource,
         hasComicInfo = hasComicInfo,
-    )
-
-    fun createChapterRemoteInfo(
-        id: Long = 100,
-        title: String? = "Episode 1",
-        chapter: String = "1",
-        pageCount: Int = 20,
-        scanlation: String? = "ScanGroup",
-        comicRemoteInfoFk: Long = 10,
-    ) = ChapterMetadata(
-        id = id,
-        title = title,
-        chapter = chapter,
-        pageCount = pageCount,
-        scanlation = scanlation,
-        comicRemoteInfoFk = comicRemoteInfoFk,
-    )
-
-    fun createChapterDownloadSource(
-        id: Long = 1000,
-        pageNumber: Int = 0,
-        imageUrl: String = "http://img.com/1.jpg",
-        downloaded: Boolean = false,
-        chapterFk: Long = 100,
-    ) = ChapterDownloadSource(
-        id = id,
-        pageNumber = pageNumber,
-        imageUrl = imageUrl,
-        downloaded = downloaded,
-        chapterFk = chapterFk,
-    )
-
-    fun createChapterRemoteInfoDto(
-        id: String = "ch-1",
-        chapter: String = "1",
-        mangadexVersion: Int = 1,
-        title: String? = null,
-    ) = ChapterMetadataDto(
-        id = id,
-        chapter = chapter,
-        mangadexVersion = mangadexVersion,
-        title = title,
     )
 
     fun createMangaRemoteInfoDto(

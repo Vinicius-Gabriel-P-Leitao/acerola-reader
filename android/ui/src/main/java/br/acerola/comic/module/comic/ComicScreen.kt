@@ -28,8 +28,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.state.SyncActionVisualState
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
@@ -37,7 +35,6 @@ import br.acerola.comic.common.ux.component.TopBar
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
-import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.module.comic.component.ChapterSortSheet
@@ -45,7 +42,6 @@ import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicChapterAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
-import br.acerola.comic.worker.sync.MetadataSyncWorker
 import br.acerola.comic.module.comic.state.MainTab
 import br.acerola.comic.module.comic.template.Header
 import br.acerola.comic.module.comic.template.Tabs
@@ -53,9 +49,12 @@ import br.acerola.comic.module.comic.template.chapterSection
 import br.acerola.comic.module.comic.template.configSection
 import br.acerola.comic.module.reader.ReaderActivity
 import br.acerola.comic.ui.R
+import br.acerola.comic.worker.sync.MetadataSyncWorker
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ComicScreen(
@@ -65,7 +64,6 @@ fun ComicScreen(
     comicMetadataViewModel: ComicMetadataViewModel = hiltViewModel(),
     chapterArchiveViewModel: ChapterArchiveViewModel = hiltViewModel(),
     comicDirectoryViewModel: ComicDirectoryViewModel = hiltViewModel(),
-    chapterMetadataViewModel: ChapterMetadataViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -96,11 +94,6 @@ fun ComicScreen(
                 snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
             }
         }
-        launch {
-            chapterMetadataViewModel.uiEvents.collect { message ->
-                snackbarHostState.showSnackbar(message.uiMessage.asString(context), SnackbarVariant.Error)
-            }
-        }
     }
 
     var selectedTab by remember { mutableStateOf(value = MainTab.CHAPTERS) }
@@ -118,7 +111,6 @@ fun ComicScreen(
     val isChapterArchiveIndexing by chapterArchiveViewModel.isIndexing.collectAsStateWithLifecycle(false)
     val isComicDirectoryIndexing by comicDirectoryViewModel.isIndexing.collectAsStateWithLifecycle(false)
     val isComicMetadataIndexing by comicMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
-    val isChapterMetadataIndexing by chapterMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
 
     val isExtractingVolumeCovers by comicViewModel.isExtractingVolumeCovers.collectAsStateWithLifecycle(false)
 
@@ -129,7 +121,7 @@ fun ComicScreen(
     var successSyncAction by remember { mutableStateOf<ComicSyncAction?>(null) }
     var isCurrentlyIndexing by remember { mutableStateOf(false) }
 
-    val isAnyIndexing = isChapterArchiveIndexing || isComicDirectoryIndexing || isComicMetadataIndexing || isChapterMetadataIndexing || isExtractingVolumeCovers
+    val isAnyIndexing = isChapterArchiveIndexing || isComicDirectoryIndexing || isComicMetadataIndexing || isExtractingVolumeCovers
 
     LaunchedEffect(isAnyIndexing) {
         if (isAnyIndexing) {
@@ -249,9 +241,7 @@ fun ComicScreen(
             ComicSyncAction.SyncChaptersLocal -> chapterArchiveViewModel.syncChaptersByMangaDirectory(uiState.comic.directory.id)
             ComicSyncAction.RescanComic -> comicDirectoryViewModel.rescanMangaByManga(uiState.comic.directory.id)
             ComicSyncAction.SyncMangadexInfo -> comicMetadataViewModel.syncFromMangadex(uiState.comic.directory.id)
-            ComicSyncAction.SyncMangadexChapters -> chapterMetadataViewModel.syncChaptersByMangadex(uiState.comic.directory.id)
             ComicSyncAction.SyncComicInfo -> comicMetadataViewModel.syncFromComicInfo(uiState.comic.directory.id)
-            ComicSyncAction.SyncComicInfoChapters -> chapterMetadataViewModel.syncChaptersByComicInfo(uiState.comic.directory.id)
             ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.comic.directory.id)
             ComicSyncAction.ExtractFirstPageAsCover -> comicDirectoryViewModel.extractCoverFromChapter(uiState.comic.directory.id)
             ComicSyncAction.ExtractVolumeCovers -> comicViewModel.extractAllVolumeCovers()
@@ -324,7 +314,7 @@ fun ComicScreen(
                                 onPageChange = { page -> onChapterAction(ComicChapterAction.ChangePage(page)) },
                                 readChapters = uiState.readChapters.toList(),
                                 onToggleRead = { id -> onChapterAction(ComicChapterAction.ToggleReadStatus(id)) },
-                                onChapterClick = { chapter, _ -> onChapterAction(ComicChapterAction.ClickChapter(chapter, 0)) },
+                                onChapterClick = { chapter -> onChapterAction(ComicChapterAction.ClickChapter(chapter, 0)) },
                                 volumeViewMode = uiState.volumeViewMode,
                                 activeVolumeId = uiState.activeVolumeId,
                                 onSetActiveVolume = comicViewModel::setActiveVolume,

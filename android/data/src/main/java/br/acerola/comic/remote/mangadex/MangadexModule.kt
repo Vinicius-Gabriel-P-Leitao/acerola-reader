@@ -1,7 +1,6 @@
 package br.acerola.comic.remote.mangadex
 
 import br.acerola.comic.data.BuildConfig
-import br.acerola.comic.remote.mangadex.api.MangadexChapterMetadataClient
 import br.acerola.comic.remote.mangadex.api.MangadexMangaDownloadClient
 import br.acerola.comic.remote.mangadex.api.MangadexMangaMetadataClient
 import br.acerola.comic.remote.mangadex.interceptor.MangadexInterceptor
@@ -68,10 +67,4 @@ object MangadexModule {
     fun provideMangadexDownloadApi(
         @DownloadApi retrofit: Retrofit,
     ): MangadexMangaDownloadClient = retrofit.create(MangadexMangaDownloadClient::class.java)
-
-    @Provides
-    @Singleton
-    fun provideMangadexChapterInfoApi(
-        @MainApi retrofit: Retrofit,
-    ): MangadexChapterMetadataClient = retrofit.create(MangadexChapterMetadataClient::class.java)
 }

@@ -62,6 +62,9 @@
     <string name="description_text_home_quick_sync">Sincronização rápida</string>
     <string name="description_text_home_quick_sync_supporting">Adiciona apenas novos arquivos e pastas.</string>
     <string name="description_text_home_empty_state">Nenhum quadrinho na biblioteca</string>
+    <string name="description_text_home_empty_subtitle">Sua biblioteca está vazia no momento. Execute uma sincronização rápida na pasta atual ou selecione outra pasta contendo seus quadrinhos.</string>
+    <string name="action_home_quick_sync">Sincronização Rápida</string>
+    <string name="action_home_select_folder">Selecionar Pasta</string>
     <string name="description_comic_list_item_chapter_count">Capitulos %1$s</string>
 
     <string name="label_sync_group">Sincronizar</string>
@@ -252,6 +255,18 @@
     <string name="dialog_unhide_message">Este quadrinho voltará a ser exibido na biblioteca principal.</string>
     <string name="dialog_delete_title">Deletar quadrinho?</string>
     <string name="dialog_delete_message">Esta ação remove o quadrinho do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
+    <string name="label_selection_count">%1$d selecionado(s)</string>
+    <string name="action_select_all">Selecionar tudo</string>
+    <string name="action_deselect_all">Desmarcar tudo</string>
+    <string name="dialog_batch_hide_title">Ocultar %1$d quadrinhos?</string>
+    <string name="dialog_batch_hide_message">Os quadrinhos selecionados serão ocultados da biblioteca. Você pode usar o filtro para ver quadrinhos ocultos.</string>
+    <string name="dialog_batch_unhide_title">Reexibir %1$d quadrinhos?</string>
+    <string name="dialog_batch_unhide_message">Os quadrinhos selecionados voltarão a ser exibidos na biblioteca principal.</string>
+    <string name="dialog_batch_delete_title">Deletar %1$d quadrinhos?</string>
+    <string name="dialog_batch_delete_message">Esta ação removerá %1$d quadrinhos selecionados do banco de dados e apagará suas pastas do dispositivo. Não pode ser desfeita.</string>
+    <string name="description_batch_category_mixed">Categoria presente em apenas alguns dos quadrinhos selecionados</string>
+    <string name="description_batch_category_all">Categoria presente em todos os quadrinhos selecionados</string>
+    <string name="description_batch_category_none">Categoria não presente nos quadrinhos selecionados</string>
 
     <!-- Dialog Actions -->
     <string name="action_confirm">Confirmar</string>
@@ -321,6 +336,25 @@
     <string name="tutorial_desc_folder">Crie uma pasta raiz para a biblioteca. Dentro dela, cada quadrinho deve ter sua própria subpasta contendo os capítulos.</string>
     <string name="tutorial_title_files">Formatos Suportados</string>
     <string name="tutorial_desc_files">O Acerola suporta arquivos .cbz e .cbr. PDFs são convertidos automaticamente para .cbz. Organize os capítulos numericamente dentro da pasta do quadrinho para melhor experiência.</string>
+    <string name="tutorial_formats_title">Formatos Suportados</string>
+    <string name="tutorial_formats_subtitle">O Acerola suporta os seguintes formatos de leitura:</string>
+    <string name="tutorial_formats_cbz_title">Comic Book ZIP</string>
+    <string name="tutorial_formats_cbz_badge">Nativo (SDK)</string>
+    <string name="tutorial_formats_cbz_desc">Container ZIP de acesso randômico nativo do Android SDK. Leitura instantânea com cache inteligente em memória e pré-carregamento.</string>
+    <string name="tutorial_formats_cbz_feat_1">Nativo do Android SDK</string>
+    <string name="tutorial_formats_cbz_feat_2">Cache LRU em memória</string>
+    <string name="tutorial_formats_cbr_title">Comic Book RAR</string>
+    <string name="tutorial_formats_cbr_badge">Suporte Junrar</string>
+    <string name="tutorial_formats_cbr_desc">Processado via biblioteca Junrar em Java. Extração sob demanda da página direto para a memória, sem arquivos temporários.</string>
+    <string name="tutorial_formats_cbr_feat_1">Leitura sob demanda</string>
+    <string name="tutorial_formats_cbr_feat_2">Sem sujeira no disco</string>
+    <string name="tutorial_formats_pdf_title">Documento PDF</string>
+    <string name="tutorial_formats_pdf_badge">PdfRenderer Nativo</string>
+    <string name="tutorial_formats_pdf_desc">Renderizado nativamente via Android PdfRenderer e convertido automaticamente em background para garantir a máxima performance.</string>
+    <string name="tutorial_formats_pdf_feat_1">Android PdfRenderer nativo</string>
+    <string name="tutorial_formats_pdf_feat_2">Conversão otimizada para CBZ</string>
+    <string name="tutorial_formats_sync_note_title">Sincronização Automática:</string>
+    <string name="tutorial_formats_sync_note_content">O Acerola escaneia e indexa seus arquivos nesses formatos sem precisar extraí-los manualmente.</string>
     <string name="tutorial_title_settings">Configurações Iniciais</string>
     <string name="tutorial_title_complete">Tudo Pronto!</string>
     <string name="tutorial_desc_complete">O Acerola está pronto para uso.</string>

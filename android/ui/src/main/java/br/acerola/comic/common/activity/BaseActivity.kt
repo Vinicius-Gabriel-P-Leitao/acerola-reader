@@ -24,11 +24,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -134,9 +132,10 @@ abstract class BaseActivity : ComponentActivity() {
                             ) { padding ->
                                 val contentPadding = if (applyScaffoldPadding) padding else PaddingValues(all = 0.dp)
                                 Box(
-                                    modifier = Modifier
-                                        .padding(paddingValues = contentPadding)
-                                        .hazeSource(hazeState),
+                                    modifier =
+                                        Modifier
+                                            .padding(paddingValues = contentPadding)
+                                            .hazeSource(hazeState),
                                 ) {
                                     NavHost(navController, startDestination) { setupNavGraph(context = this@BaseActivity, navController) }
                                 }

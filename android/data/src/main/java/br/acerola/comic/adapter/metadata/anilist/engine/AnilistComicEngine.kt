@@ -108,8 +108,8 @@ class AnilistComicEngine
                                     val remoteInfoId =
                                         comicMetadataDao.upsertComicWithRelationsTransaction(
                                             metadata = comicToSave,
-                                            authors = dto.authors?.let { listOf(it.toEntity(comicId = 0L)) } ?: emptyList(),
-                                            genres = dto.genre.map { it.toEntity(comicId = 0L) },
+                                            authors = dto.authors?.let { listOf(it.toEntity(comicRemoteInfoFk = 0L)) } ?: emptyList(),
+                                            genres = dto.genre.map { it.toEntity(comicRemoteInfoFk = 0L) },
                                             anilistSource = dto.toAnilistSourceEntity(comicRemoteInfoFk = 0L),
                                             authorDao = authorDao,
                                             genreDao = genreDao,
@@ -207,12 +207,17 @@ class AnilistComicEngine
                 baseUri?.toString()
                     ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()
 
-            val rootUri = if (!rootPath.isNullOrBlank()) {
-                rootPath.toUri()
-            } else {
-                AcerolaLogger.w(TAG, "Root library path is blank or null for AniList sync. Media download will fallback to internal storage if needed.", LogSource.REPOSITORY)
-                Uri.EMPTY
-            }
+            val rootUri =
+                if (!rootPath.isNullOrBlank()) {
+                    rootPath.toUri()
+                } else {
+                    AcerolaLogger.w(
+                        TAG,
+                        "Root library path is blank or null for AniList sync. Media download will fallback to internal storage if needed.",
+                        LogSource.REPOSITORY,
+                    )
+                    Uri.EMPTY
+                }
 
             dto.sources?.anilist?.coverImage?.let { url ->
                 coverFetcher.searchMedia(url).onRight { bytes ->

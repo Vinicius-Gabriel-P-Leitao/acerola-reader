@@ -1,6 +1,5 @@
 package br.acerola.comic.local.translator.infra
 
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
@@ -44,13 +43,3 @@ fun ComicInfoMapper.toMangaDto(): ComicMetadataDto {
             ),
     )
 }
-
-fun ComicInfoMapper.toChapterDto(): ChapterMetadataDto =
-    ChapterMetadataDto(
-        id = "local-$number",
-        chapter = number,
-        volume = volume,
-        title = title,
-        pages = pageCount,
-        mangadexVersion = 0,
-    )

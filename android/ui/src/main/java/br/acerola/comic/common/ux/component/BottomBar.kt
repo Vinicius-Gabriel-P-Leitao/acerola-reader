@@ -59,18 +59,21 @@ fun Acerola.Component.BottomBar(
     val glassColor = MaterialTheme.colorScheme.surface
 
     NavigationBar(
-        modifier = Modifier
-            .height(64.dp)
-            .hazeEffect(
-                state = hazeState,
-                style = HazeStyle(
-                    backgroundColor = Color.Transparent,
-                    tints = listOf(
-                        HazeTint(color = glassColor.copy(alpha = 0.90f))
-                    ),
-                    blurRadius = 20.dp,
+        modifier =
+            Modifier
+                .height(64.dp)
+                .hazeEffect(
+                    state = hazeState,
+                    style =
+                        HazeStyle(
+                            backgroundColor = Color.Transparent,
+                            tints =
+                                listOf(
+                                    HazeTint(color = glassColor.copy(alpha = 0.90f)),
+                                ),
+                            blurRadius = 20.dp,
+                        ),
                 ),
-            ),
         windowInsets = NavigationBarDefaults.windowInsets,
         containerColor = Color.Transparent,
     ) {

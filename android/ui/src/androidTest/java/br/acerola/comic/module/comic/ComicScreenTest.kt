@@ -9,7 +9,6 @@ import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
-import br.acerola.comic.common.viewmodel.library.metadata.ChapterMetadataViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
 import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.config.preference.types.ChapterSortPreferenceData
@@ -37,7 +36,6 @@ class ComicScreenTest {
     private val chapterArchiveVM = mockk<ChapterArchiveViewModel>(relaxed = true)
     private val comicDirVM = mockk<ComicDirectoryViewModel>(relaxed = true)
     private val comicRemoteVM = mockk<ComicMetadataViewModel>(relaxed = true)
-    private val chapterRemoteVM = mockk<ChapterMetadataViewModel>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -64,9 +62,6 @@ class ComicScreenTest {
         every { comicRemoteVM.isIndexing } returns MutableStateFlow(false)
         every { comicRemoteVM.uiEvents } returns emptyEvents
         every { comicRemoteVM.allCategories } returns MutableStateFlow(emptyList())
-
-        every { chapterRemoteVM.isIndexing } returns MutableStateFlow(false)
-        every { chapterRemoteVM.uiEvents } returns emptyEvents
     }
 
     @Test
@@ -92,7 +87,6 @@ class ComicScreenTest {
                         chapterArchiveViewModel = chapterArchiveVM,
                         comicDirectoryViewModel = comicDirVM,
                         comicMetadataViewModel = comicRemoteVM,
-                        chapterMetadataViewModel = chapterRemoteVM,
                     )
                 }
             }

@@ -159,15 +159,11 @@ fun Comic.Template.configSection(
             remoteInfo = uiState.comic.remoteInfo,
             externalSyncEnabled = uiState.comic.directory.externalSyncEnabled,
             onSyncMangadexInfo = { onSyncAction(ComicSyncAction.SyncMangadexInfo) },
-            onSyncMangadexChapters = { onSyncAction(ComicSyncAction.SyncMangadexChapters) },
             onSyncComicInfo = { onSyncAction(ComicSyncAction.SyncComicInfo) },
-            onSyncComicInfoChapters = { onSyncAction(ComicSyncAction.SyncComicInfoChapters) },
             onSyncAnilistInfo = { onSyncAction(ComicSyncAction.SyncAnilistInfo) },
             mangadexInfoState = getSyncActionVisualState(ComicSyncAction.SyncMangadexInfo),
-            mangadexChaptersState = getSyncActionVisualState(ComicSyncAction.SyncMangadexChapters),
             anilistInfoState = getSyncActionVisualState(ComicSyncAction.SyncAnilistInfo),
             comicInfoState = getSyncActionVisualState(ComicSyncAction.SyncComicInfo),
-            comicInfoChaptersState = getSyncActionVisualState(ComicSyncAction.SyncComicInfoChapters),
             modifier = itemModifier,
         )
     }

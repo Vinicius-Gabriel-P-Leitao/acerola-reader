@@ -2,15 +2,12 @@ package br.acerola.comic.local.translator.remote
 
 import android.content.Context
 import br.acerola.comic.data.R
-import br.acerola.comic.dto.metadata.chapter.ChapterMetadataDto
 import br.acerola.comic.dto.metadata.comic.AuthorDto
 import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.dto.metadata.comic.CoverDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
 import br.acerola.comic.dto.metadata.comic.source.ComicSourcesDto
 import br.acerola.comic.dto.metadata.comic.source.MangadexSourceDto
-import br.acerola.comic.remote.mangadex.dto.chapter.ChapterMangadexDto
-import br.acerola.comic.remote.mangadex.dto.chapter.ChapterSourceMangadexDto
 import br.acerola.comic.remote.mangadex.dto.comic.MangaMangadexDto
 
 fun MangaMangadexDto.toViewDto(
@@ -85,32 +82,5 @@ fun MangaMangadexDto.toViewDto(
             ComicSourcesDto(
                 mangadex = mangadexSourceDto,
             ),
-    )
-}
-
-fun ChapterMangadexDto.toViewDto(source: ChapterSourceMangadexDto? = null): ChapterMetadataDto {
-    val attributes = this.attributes
-    val scanlatorName = this.scanlationGroups.firstNotNullOfOrNull { it.attributes?.name }
-
-    val pagesUrls =
-        if (source != null) {
-            val dataSaver = source.chapter
-            val baseUrl = source.baseUrl
-            val hash = dataSaver.hash
-
-            dataSaver.data.map { "$baseUrl/data/$hash/$it" }
-        } else {
-            emptyList()
-        }
-
-    return ChapterMetadataDto(
-        id = this.id,
-        volume = attributes.volume,
-        chapter = attributes.chapter,
-        title = attributes.title,
-        scanlator = scanlatorName,
-        pages = attributes.pages,
-        mangadexVersion = this.version,
-        pageUrls = pagesUrls,
     )
 }

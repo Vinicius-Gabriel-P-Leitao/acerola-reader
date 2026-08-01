@@ -85,7 +85,6 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.androidx.navigation.compose)
 
-
     // --- DI ---
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)

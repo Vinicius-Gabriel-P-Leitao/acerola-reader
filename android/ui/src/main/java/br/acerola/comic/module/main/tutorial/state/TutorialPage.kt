@@ -1,6 +1,5 @@
 package br.acerola.comic.module.main.tutorial.state
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import br.acerola.comic.ui.R
 

@@ -163,12 +163,52 @@ class HomeViewModel
             observeFilterSettings()
         }
 
+        private val _selectedComicIds = MutableStateFlow<Set<Long>>(emptySet())
+        val selectedComicIds: StateFlow<Set<Long>> = _selectedComicIds.asStateFlow()
+
+        fun toggleComicSelection(comicId: Long) {
+            _selectedComicIds.value =
+                if (_selectedComicIds.value.contains(comicId)) {
+                    _selectedComicIds.value - comicId
+                } else {
+                    _selectedComicIds.value + comicId
+                }
+        }
+
+        fun selectAllComics(allIds: List<Long>) {
+            _selectedComicIds.value = allIds.toSet()
+        }
+
+        fun clearComicSelection() {
+            _selectedComicIds.value = emptySet()
+        }
+
         fun hideManga(comicId: Long) {
             viewModelScope.launch {
                 hideComicUseCase(comicId).onLeft { error ->
                     _uiEvents.send(error)
                 }
             }
+        }
+
+        fun setHideSelectedComics(hidden: Boolean) {
+            val idsToUpdate = _selectedComicIds.value
+            viewModelScope.launch {
+                idsToUpdate.forEach { id ->
+                    hideComicUseCase(id, hidden = hidden).onLeft { error ->
+                        _uiEvents.send(error)
+                    }
+                }
+                clearComicSelection()
+            }
+        }
+
+        fun hideSelectedComics() {
+            setHideSelectedComics(hidden = true)
+        }
+
+        fun unhideSelectedComics() {
+            setHideSelectedComics(hidden = false)
         }
 
         fun deleteComic(comicId: Long) {
@@ -179,12 +219,34 @@ class HomeViewModel
             }
         }
 
+        fun deleteSelectedComics() {
+            val idsToDelete = _selectedComicIds.value
+            viewModelScope.launch {
+                idsToDelete.forEach { id ->
+                    deleteComicUseCase(id).onLeft { error ->
+                        _uiEvents.send(error)
+                    }
+                }
+                clearComicSelection()
+            }
+        }
+
         fun setMangaCategory(
             comicId: Long,
             categoryId: Long?,
         ) {
             viewModelScope.launch {
                 manageCategoriesUseCase.updateComicCategory(comicId, categoryId)
+            }
+        }
+
+        fun setSelectedComicsCategory(categoryId: Long?) {
+            val idsToUpdate = _selectedComicIds.value
+            viewModelScope.launch {
+                idsToUpdate.forEach { id ->
+                    manageCategoriesUseCase.updateComicCategory(id, categoryId)
+                }
+                clearComicSelection()
             }
         }
 
