@@ -17,6 +17,7 @@
 			onExternalSyncChange: (value: boolean) => void;
 			onSyncMangadex?: () => void;
 			onSyncAnilist?: () => void;
+			onSyncComicInfo?: () => void;
 		};
 	};
 </script>
@@ -35,6 +36,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import CloudSync from '@lucide/svelte/icons/cloud-sync';
 	import Link from '@lucide/svelte/icons/link';
+	import FileText from '@lucide/svelte/icons/file-text';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
@@ -58,8 +60,8 @@
 			{#if data?.hasVolumeStructure}
 				<AcerolaHeroButton
 					data={{
-						title: m['pages.comic.preferences.volume_highlight'](),
-						description: m['pages.comic.preferences.volume_highlight_desc']()
+						title: m['pages.comic.preferences.volume_highlight.title'](),
+						description: m['pages.comic.preferences.volume_highlight.desc']()
 					}}
 				>
 					{#snippet icon()}
@@ -80,14 +82,14 @@
 						>
 							{#snippet children()}
 								<ToggleGroupItem value="cover" class="px-4 py-1.5 text-[10px] font-black uppercase">
-									{m['pages.comic.preferences.volume_highlight_cover']()}
+									{m['pages.comic.preferences.volume_highlight.cover']()}
 								</ToggleGroupItem>
 
 								<ToggleGroupItem
 									value="banner"
 									class="px-4 py-1.5 text-[10px] font-black uppercase"
 								>
-									{m['pages.comic.preferences.volume_highlight_banner']()}
+									{m['pages.comic.preferences.volume_highlight.banner']()}
 								</ToggleGroupItem>
 							{/snippet}
 						</AcerolaToggleGroup>
@@ -98,8 +100,8 @@
 			<!-- Chapters per page -->
 			<AcerolaHeroButton
 				data={{
-					title: m['pages.comic.preferences.chapters_per_page'](),
-					description: m['pages.comic.preferences.chapters_per_page_desc']()
+					title: m['pages.comic.preferences.chapters_per_page.title'](),
+					description: m['pages.comic.preferences.chapters_per_page.desc']()
 				}}
 			>
 				{#snippet icon()}
@@ -126,8 +128,8 @@
 			<!-- Bookmark Assignment -->
 			<AcerolaHeroButton
 				data={{
-					title: m['pages.comic.preferences.bookmark'](),
-					description: m['pages.comic.preferences.bookmark_desc']()
+					title: m['pages.comic.preferences.bookmark.title'](),
+					description: m['pages.comic.preferences.bookmark.desc']()
 				}}
 			>
 				{#snippet icon()}
@@ -138,7 +140,7 @@
 					<AcerolaSelect
 						data={{
 							options: [
-								{ value: 'none', label: m['pages.comic.preferences.bookmark_none']() },
+								{ value: 'none', label: m['pages.comic.preferences.bookmark.none']() },
 								...(data?.bookmarks ?? []).map((b) => ({
 									value: b.id.toString(),
 									label: b.name,
@@ -168,8 +170,8 @@
 		<div class="grid gap-4">
 			<AcerolaHeroButton
 				data={{
-					title: m['pages.comic.preferences.external_sync'](),
-					description: m['pages.comic.preferences.external_sync_desc']()
+					title: m['pages.comic.preferences.external_sync.title'](),
+					description: m['pages.comic.preferences.external_sync.desc']()
 				}}
 			>
 				{#snippet icon()}
@@ -219,6 +221,31 @@
 				{#snippet icon()}
 					<span style="all: unset; display: inline-flex;">
 						<AniListIcon class="h-6 w-6 rounded-lg" />
+					</span>
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.toast.comic_info.title'](),
+					description: m['pages.comic.toast.comic_info.desc']()
+				}}
+				events={{ onClick: events.onSyncComicInfo }}
+			>
+				{#snippet icon()}
+					<span style="all: unset; display: inline-flex;">
+						<FileText class="h-6 w-6 text-foreground" />
 					</span>
 				{/snippet}
 

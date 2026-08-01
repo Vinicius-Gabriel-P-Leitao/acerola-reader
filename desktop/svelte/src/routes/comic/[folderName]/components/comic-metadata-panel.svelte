@@ -95,7 +95,7 @@
 						{m['pages.comic.metadata.synopsis']()}
 					</h3>
 					<span class="text-[9px] font-black tracking-widest text-primary/60 uppercase"
-						>{m['pages.comic.metadata.chapters_count']({ count: data.chaptersCount })}</span
+						>{m['pages.comic.metadata.chapters.count']({ count: data.chaptersCount })}</span
 					>
 				</div>
 				<p class="text-subtext line-clamp-6 text-xs leading-relaxed font-medium">

@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS comic_metadata (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  romanji TEXT NOT NULL,
   status TEXT NOT NULL,
   publication INTEGER,
   sync_source TEXT,

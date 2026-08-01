@@ -106,7 +106,9 @@ describe('useComicSummary', () => {
 		expect(invokeMock).toHaveBeenCalledWith(HOME_COMMANDS.getComicSummarySorted, {
 			search: undefined,
 			sortBy: 'title',
-			sortOrder: 'asc'
+			sortOrder: 'asc',
+			showHidden: false,
+			metadataSource: null
 		});
 
 		callbacks.get(HOME_EVENTS.homeData)?.({ payload: summaryPayload() });

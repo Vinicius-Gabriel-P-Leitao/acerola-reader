@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import ThemePicker from './theme-picker.svelte';
 
 describe('ThemePicker', () => {
-	it('renderiza os três temas disponíveis', () => {
+	it('renderiza os temas disponíveis', () => {
 		render(ThemePicker, {
 			props: {
 				data: { theme: 'catppuccin', mode: 'dark' },
@@ -15,6 +15,7 @@ describe('ThemePicker', () => {
 		expect(screen.getByText('Catppuccin')).toBeInTheDocument();
 		expect(screen.getByText('Nord')).toBeInTheDocument();
 		expect(screen.getByText('Dracula')).toBeInTheDocument();
+		expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
 	});
 
 	it('chama onselect com o id correto ao clicar num tema', async () => {

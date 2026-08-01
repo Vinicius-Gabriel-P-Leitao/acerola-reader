@@ -50,11 +50,27 @@ export function useMetadataSync() {
 		}
 	}
 
+	async function syncComicInfo(comicId: string): Promise<ComicMetadataEvent | null> {
+		isSyncing = true;
+		try {
+			const result = await invoke<ComicMetadataEvent>(METADATA_COMMANDS.syncComicInfo, {
+				comicId
+			});
+			return result;
+		} catch (err) {
+			error(`Failed to sync ComicInfo.xml: ${JSON.stringify(err)}`);
+			throw err;
+		} finally {
+			isSyncing = false;
+		}
+	}
+
 	return {
 		get isSyncing() {
 			return isSyncing;
 		},
 		syncMangadex,
-		syncAnilist
+		syncAnilist,
+		syncComicInfo
 	};
 }

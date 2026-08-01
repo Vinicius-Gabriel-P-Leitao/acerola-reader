@@ -1,16 +1,18 @@
-use crate::infra::error::ComicError;
+use sqlx::SqlitePool;
+use tauri::{AppHandle, Emitter, Runtime, State};
+
 use crate::{
     cmd::events::{shared::ErrorPayload, summary::ComicSummaryPayload},
     core::services::{summary::HomeService, ComicService},
     data::repositories::views::SortCriteria,
+    infra::error::ComicError,
 };
-use sqlx::SqlitePool;
-use tauri::{AppHandle, Emitter, Runtime, State};
 
-/// Comando Tauri para buscar quadrinhos com ordenação específica.
+/// Comando Tauri para buscar quadrinhos com ordenação e filtros específicos.
 #[tauri::command]
 pub async fn get_comic_summary_sorted<R: Runtime>(
-    sort_by: String, sort_order: String, app: AppHandle<R>, pool: State<'_, SqlitePool>,
+    sort_by: String, sort_order: String, show_hidden: Option<bool>,
+    metadata_source: Option<String>, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
 
@@ -20,22 +22,30 @@ pub async fn get_comic_summary_sorted<R: Runtime>(
         ("title", "desc") => SortCriteria::TitleDesc,
         ("chapterCount", "asc") => SortCriteria::ChapterCountAsc,
         ("chapterCount", "desc") => SortCriteria::ChapterCountDesc,
+        ("lastUpdated", "asc") => SortCriteria::LastUpdatedAsc,
+        ("lastUpdated", "desc") => SortCriteria::LastUpdatedDesc,
         _ => SortCriteria::TitleAsc,
     };
+
+    let show_hidden = show_hidden.unwrap_or(false);
 
     tokio::spawn(async move {
         let service = HomeService::new(pool);
 
-        match service.get_all_sorted(criteria).await {
-            Ok((comics, counts, meta_map)) => {
-                app.emit("home:data", ComicSummaryPayload::from(comics, counts, meta_map)).unwrap()
-            },
+        match service.get_all_sorted(criteria, show_hidden, metadata_source).await {
+            Ok((comics, counts, meta_map, bookmark_map)) => app
+                .emit(
+                    "home:data",
+                    ComicSummaryPayload::from(comics, counts, meta_map, bookmark_map),
+                )
+                .unwrap(),
             Err(err) => app.emit("home:error", ErrorPayload::from(&err)).unwrap(),
         }
     });
 
     Ok(())
 }
+
 
 /// Comando Tauri para atualizar visibilidade de múltiplos quadrinhos.
 #[tauri::command]

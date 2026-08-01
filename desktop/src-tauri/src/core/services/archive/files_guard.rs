@@ -43,9 +43,10 @@ impl FileGuard for MetadataFileGuard {
         let name =
             path.file_name().and_then(|name| name.to_str()).ok_or(FileError::MissingFileName)?;
 
-        match name {
-            "ComicInfo.xml" => Ok(()),
-            _ => Err(FileError::FileNameNotAllowed(name.to_string())),
+        if name.eq_ignore_ascii_case("ComicInfo.xml") {
+            Ok(())
+        } else {
+            Err(FileError::FileNameNotAllowed(name.to_string()))
         }
     }
 }

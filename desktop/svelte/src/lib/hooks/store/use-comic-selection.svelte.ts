@@ -1,6 +1,8 @@
 import { error } from '@tauri-apps/plugin-log';
 
-let selectedIds = $state<Set<number>>(new Set());
+export type ComicId = string | number;
+
+let selectedIds = $state<Set<ComicId>>(new Set());
 let isSelectionMode = $state(false);
 
 /**
@@ -8,7 +10,7 @@ let isSelectionMode = $state(false);
  * Permite selecionar um ou vários quadrinhos para ações em batch.
  */
 export function useComicSelection() {
-	function toggleSelection(id: number): void {
+	function toggleSelection(id: ComicId): void {
 		const next = new Set(selectedIds);
 		if (next.has(id)) {
 			next.delete(id);
@@ -19,12 +21,12 @@ export function useComicSelection() {
 		isSelectionMode = selectedIds.size > 0;
 	}
 
-	function selectSingle(id: number): void {
+	function selectSingle(id: ComicId): void {
 		selectedIds = new Set([id]);
 		isSelectionMode = true;
 	}
 
-	function selectAll(ids: number[]): void {
+	function selectAll(ids: ComicId[]): void {
 		selectedIds = new Set(ids);
 		isSelectionMode = ids.length > 0;
 	}
@@ -43,7 +45,7 @@ export function useComicSelection() {
 		isSelectionMode = false;
 	}
 
-	function isSelected(id: number): boolean {
+	function isSelected(id: ComicId): boolean {
 		return selectedIds.has(id);
 	}
 

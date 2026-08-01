@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS chapter_archive (
   chapter_sort TEXT NOT NULL,
   is_special BOOLEAN NOT NULL DEFAULT 0,
   checksum TEXT,
-  fast_hash TEXT,
   comic_directory_fk INTEGER NOT NULL,
   volume_id_fk INTEGER,
   last_modified INTEGER NOT NULL DEFAULT 0,

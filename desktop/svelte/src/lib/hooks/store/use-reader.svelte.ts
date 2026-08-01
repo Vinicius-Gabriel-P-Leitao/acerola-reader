@@ -9,7 +9,7 @@ import type {
 } from '$lib/contracts/reader/reader.payloads';
 import { LRUService } from '$lib/services/lru.service';
 
-const DEFAULT_READER_CACHE_SIZE = 7;
+const DEFAULT_READER_CACHE_SIZE = 100;
 const PREFETCH_RADIUS = 2;
 
 export function useReader() {

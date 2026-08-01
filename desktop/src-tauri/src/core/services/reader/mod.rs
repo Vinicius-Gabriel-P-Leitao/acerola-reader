@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-const DEFAULT_CACHE_CAPACITY: usize = 7;
+const DEFAULT_CACHE_CAPACITY: usize = 100;
 const DEFAULT_PREFETCH_RADIUS: usize = 2;
 
 #[derive(Clone)]

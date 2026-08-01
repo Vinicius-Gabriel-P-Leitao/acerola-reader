@@ -21,35 +21,26 @@
 
 	let { events, state: control, ui }: AcerolaSwitchProps = $props();
 
-	let checked = $state(false);
-	let lastChecked = $state(false);
+	let localChecked = $state(false);
+	const isControlled = $derived(control?.checked !== undefined);
+	const currentChecked = $derived(isControlled ? Boolean(control?.checked) : localChecked);
 
 	const restProps = $derived.by(() => {
 		const { class: _class, size: _size, ...rest } = ui ?? {};
 		return rest;
 	});
 
-	$effect(() => {
-		if (control?.checked === undefined) return;
-
-		const nextChecked = control.checked;
-
-		if (nextChecked !== lastChecked) {
-			checked = nextChecked;
-			lastChecked = nextChecked;
+	function handleCheckedChange(nextChecked: boolean) {
+		if (!isControlled) {
+			localChecked = nextChecked;
 		}
-	});
-
-	$effect(() => {
-		if (checked === lastChecked) return;
-
-		lastChecked = checked;
-		events?.onCheckedChange?.(checked);
-	});
+		events?.onCheckedChange?.(nextChecked);
+	}
 </script>
 
 <SwitchPrimitive.Root
-	bind:checked
+	checked={currentChecked}
+	onCheckedChange={handleCheckedChange}
 	data-slot="switch"
 	data-size={ui?.size ?? 'default'}
 	class={cn(

@@ -24,6 +24,10 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { toast } from 'svelte-sonner';
+	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
+	import { extractErrorMessage } from '$lib/utils/error.utils';
+
+	const { notify } = notificationStore;
 
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
@@ -78,27 +82,35 @@
 
 	async function handleSyncAllMangadex() {
 		try {
-			toast.info(m['pages.config.toast.sync_start_mangadex']());
+			const startMsg = m['pages.config.toast.sync.mangadex.start']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
 			await invoke(METADATA_COMMANDS.syncAllMangadex, { 
 				language: metadataLanguageStore.metadataLanguage,
 				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
 			});
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.config.toast.sync_error_mangadex']({ msg }));
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.config.toast.sync.mangadex.error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
 	async function handleSyncAllAnilist() {
 		try {
-			toast.info(m['pages.config.toast.sync_start_anilist']());
+			const startMsg = m['pages.config.toast.sync.anilist.start']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
 			await invoke(METADATA_COMMANDS.syncAllAnilist, { 
 				language: metadataLanguageStore.metadataLanguage,
 				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
 			});
-		} catch (err: any) {
-			const msg = err && typeof err === 'object' && 'message' in err ? err.message as string : String(err);
-			toast.error(m['pages.config.toast.sync_error_anilist']({ msg }));
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.config.toast.sync.anilist.error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
 		}
 	}
 
@@ -112,16 +124,22 @@
 			await bookmarkStore.loadBookmarks();
 
 			unlistenProgress = await listen<string>('metadata:sync_all:progress', (event) => {
-				toast.info(m['pages.config.toast.sync_progress']({ name: event.payload }));
+				const progressMsg = m['pages.config.toast.sync.progress']({ name: event.payload });
+				notify.info(progressMsg, { duration: 5000 });
+				toast.info(progressMsg);
 			});
 			
 			unlistenComplete = await listen('metadata:sync_all:complete', () => {
-				toast.success(m['pages.config.toast.sync_complete']());
+				const completeMsg = m['pages.config.toast.sync.complete']();
+				notify.success(completeMsg, { duration: 5000 });
+				toast.success(completeMsg);
 			});
 
 			unlistenError = await listen<any>('metadata:sync_all:error', (event) => {
 				const msg = event.payload?.message || event.payload;
-				toast.error(m['pages.config.toast.sync_error']({ msg }));
+				const errorMsg = m['pages.config.toast.sync.error']({ msg });
+				notify.error(errorMsg, { duration: 5000 });
+				toast.error(errorMsg);
 			});
 		})();
 

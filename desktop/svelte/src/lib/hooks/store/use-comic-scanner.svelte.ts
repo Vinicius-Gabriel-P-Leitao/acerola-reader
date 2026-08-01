@@ -37,12 +37,12 @@ export function useLibraryScanner(
 
 		const unlistenConverting = await listen<string>(LIBRARY_EVENTS.scanConverting, (event) => {
 			if (progressId === undefined) {
-				const msg = event.payload || 'Convertendo arquivos para cbz...';
+				const msg = event.payload || m['hooks.comic_scanner.converting']();
 				toast.info(msg);
 				progressId = notify.info(msg, { duration: 0 });
 			} else {
 				pop(progressId);
-				const msg = event.payload || 'Convertendo arquivos para cbz...';
+				const msg = event.payload || m['hooks.comic_scanner.converting']();
 				progressId = notify.info(msg, { duration: 0 });
 			}
 		});
@@ -72,7 +72,7 @@ export function useLibraryScanner(
 			}
 
 			const description = resolveErrorMessage(it.payload);
-			notify.error(m['hooks.comic_scanner.error_title'](), {
+			notify.error(m['hooks.comic_scanner.error.title'](), {
 				description,
 				duration: 0
 			});

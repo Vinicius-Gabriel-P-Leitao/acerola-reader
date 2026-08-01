@@ -79,11 +79,17 @@ describe('AcerolaComicActionDialog', () => {
 		});
 
 		expect(screen.getByText(/Comic Actions|Ações do Quadrinho/i)).toBeInTheDocument();
-		expect(screen.getByText(/3 (comic\(s\) selected|quadrinho\(s\) selecionado\(s\))/i)).toBeInTheDocument();
+		expect(
+			screen.getByText(/3 (comic\(s\) selected|quadrinho\(s\) selecionado\(s\))/i)
+		).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /Hide|Ocultar/i })).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /Delete|Deletar/i })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: /Bookmark|Adicionar Bookmark/i })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: /Select all|Selecionar todos/i })).toBeInTheDocument();
+		expect(
+			screen.getByRole('button', { name: /Bookmark|Adicionar Bookmark/i })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole('button', { name: /Select all|Selecionar todos/i })
+		).toBeInTheDocument();
 	});
 
 	it('chama onSelectAll ao clicar no botão selecionar todos dentro do dialog', async () => {

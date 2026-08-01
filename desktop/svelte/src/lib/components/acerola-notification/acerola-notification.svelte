@@ -74,6 +74,9 @@
 
 <AcerolaPopover
 	ui={{
+		align: 'end',
+		sideOffset: 8,
+		collisionPadding: 16,
 		contentClass:
 			'p-0 w-84 overflow-hidden rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl'
 	}}
@@ -115,7 +118,7 @@
 						class="h-7 px-2 text-[10px] font-semibold hover:bg-destructive/10 hover:text-destructive"
 						onclick={clearAll}
 					>
-						{m['components.notification.clear_all']()}
+						{m['components.notification.clear.all']()}
 					</Button>
 				{/if}
 			</div>

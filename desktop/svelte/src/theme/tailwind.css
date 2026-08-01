@@ -8,6 +8,7 @@
 @import './colors/catppuccin.css';
 @import './colors/nord.css';
 @import './colors/dracula.css';
+@import './colors/tokyo-night.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
