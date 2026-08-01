@@ -272,7 +272,7 @@
 	events={{ onOpenChange: (open) => (isSearchDialogOpen = open) }}
 	ui={{
 		contentClass:
-			'p-0 border border-surface/50 overflow-hidden w-full max-w-4xl sm:max-w-4xl bg-base/95 backdrop-blur-xl shadow-2xl',
+			'p-0 border border-surface/50 overflow-hidden w-full max-w-4xl sm:max-w-4xl bg-base/95 backdrop-blur-xl shadow-2xl top-10 portrait:top-4 sm:top-10 translate-y-0',
 		showCloseButton: false
 	}}
 >

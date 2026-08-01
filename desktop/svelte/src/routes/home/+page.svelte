@@ -6,16 +6,15 @@
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaComicActionDialog from './components/acerola-comic-action-dialog.svelte';
+	import AcerolaFilterPanel from './components/acerola-filter-panel.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
-	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
-	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
@@ -27,7 +26,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
-	import type { ComicSummaryItemPayload } from '$lib/contracts/home/home.payloads';
+	import type { ComicSummaryItemPayload, MetadataSource, SortBy, SortOrder } from '$lib/contracts/home/home.payloads';
 
 	const summary = useComicSummary();
 	const activeComic = useComicContext();
@@ -41,7 +40,7 @@
 	);
 
 	let unlistenScan: (() => void) | undefined;
-	let showSortMenu = $state(false);
+	let showFilterPanel = $state(false);
 	let showActionDialog = $state(false);
 
 	onMount(async () => {
@@ -125,11 +124,21 @@
 		}
 	}
 
-	function handleSort(sortBy: 'title' | 'chapterCount', sortOrder: 'asc' | 'desc') {
-		summary.setSorting(sortBy, sortOrder);
+	function handleFilterApply(params: {
+		sortBy: SortBy;
+		sortOrder: SortOrder;
+		showHidden: boolean;
+		metadataSource: MetadataSource;
+	}) {
+		summary.setSorting(params.sortBy, params.sortOrder);
+		summary.setFilters(params.showHidden, params.metadataSource);
 		summary.fetch();
-		showSortMenu = false;
+		showFilterPanel = false;
 	}
+
+	const activeFiltersCount = $derived(
+		(summary.showHidden ? 1 : 0) + (summary.metadataSource !== 'all' ? 1 : 0)
+	);
 </script>
 
 {#if summary.loading && (!summary.comics || summary.comics.total === 0)}
@@ -169,66 +178,55 @@
 					</AcerolaButton>
 				</div>
 			{:else}
-				<div class="relative">
+				<div class="flex items-center gap-2">
+					<!-- Filter & Sort Button -->
 					<AcerolaButton
-						ui={{ variant: 'ghost', class: 'rounded-xl' }}
-						events={{ onClick: () => (showSortMenu = !showSortMenu) }}
+						ui={{ variant: 'ghost', class: 'rounded-xl gap-2' }}
+						events={{ onClick: () => (showFilterPanel = !showFilterPanel) }}
 					>
-						<ArrowUpDown size={16} />
-						{m['pages.home.sort.button']()}
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<line x1="21" y1="4" x2="14" y2="4"></line>
+							<line x1="10" y1="4" x2="3" y2="4"></line>
+							<line x1="21" y1="12" x2="12" y2="12"></line>
+							<line x1="8" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="20" x2="16" y2="20"></line>
+							<line x1="12" y1="20" x2="3" y2="20"></line>
+							<line x1="14" y1="2" x2="14" y2="6"></line>
+							<line x1="8" y1="10" x2="8" y2="14"></line>
+							<line x1="16" y1="18" x2="16" y2="22"></line>
+						</svg>
+						Filtrar e Ordenar
+						{#if activeFiltersCount > 0}
+							<span
+								class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground"
+							>
+								{activeFiltersCount}
+							</span>
+						{/if}
 					</AcerolaButton>
 
-					{#if showSortMenu}
-						<div
-							class="absolute top-full left-0 z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg"
+					<!-- Active sort indicator -->
+					{#if summary.sortBy !== 'title' || summary.sortOrder !== 'asc'}
+						<span
+							class="rounded-lg bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary"
 						>
-							<div class="p-2">
-								<AcerolaButton
-									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-									events={{ onClick: () => handleSort('title', 'asc') }}
-								>
-									{#if summary.sortBy === 'title' && summary.sortOrder === 'asc'}
-										<Check size={16} />
-									{:else}
-										<div class="w-4"></div>
-									{/if}
-									{m['pages.home.sort.title.asc']()}
-								</AcerolaButton>
-								<AcerolaButton
-									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-									events={{ onClick: () => handleSort('title', 'desc') }}
-								>
-									{#if summary.sortBy === 'title' && summary.sortOrder === 'desc'}
-										<Check size={16} />
-									{:else}
-										<div class="w-4"></div>
-									{/if}
-									{m['pages.home.sort.title.desc']()}
-								</AcerolaButton>
-								<AcerolaButton
-									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-									events={{ onClick: () => handleSort('chapterCount', 'asc') }}
-								>
-									{#if summary.sortBy === 'chapterCount' && summary.sortOrder === 'asc'}
-										<Check size={16} />
-									{:else}
-										<div class="w-4"></div>
-									{/if}
-									{m['pages.home.sort.chapter.asc']()}
-								</AcerolaButton>
-								<AcerolaButton
-									ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-									events={{ onClick: () => handleSort('chapterCount', 'desc') }}
-								>
-									{#if summary.sortBy === 'chapterCount' && summary.sortOrder === 'desc'}
-										<Check size={16} />
-									{:else}
-										<div class="w-4"></div>
-									{/if}
-									{m['pages.home.sort.chapter.desc']()}
-								</AcerolaButton>
-							</div>
-						</div>
+							{summary.sortBy === 'title'
+								? 'Título'
+								: summary.sortBy === 'chapterCount'
+									? 'Capítulos'
+									: 'Atualização'}
+							{summary.sortOrder === 'asc' ? '↑' : '↓'}
+						</span>
 					{/if}
 				</div>
 			{/if}
@@ -354,3 +352,18 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Filter Panel (slide-in drawer) -->
+<AcerolaFilterPanel
+	state={{ open: showFilterPanel }}
+	data={{
+		sortBy: summary.sortBy,
+		sortOrder: summary.sortOrder,
+		showHidden: summary.showHidden,
+		metadataSource: summary.metadataSource
+	}}
+	events={{
+		onApply: handleFilterApply,
+		onClose: () => (showFilterPanel = false)
+	}}
+/>

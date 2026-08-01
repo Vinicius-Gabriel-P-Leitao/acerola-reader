@@ -42,10 +42,16 @@ export type ComicSummaryPayload = {
 	fetchedAt: string;
 };
 
-export type SortBy = 'title' | 'chapterCount';
+export type SortBy = 'title' | 'chapterCount' | 'lastUpdated';
 export type SortOrder = 'asc' | 'desc';
+export type MetadataSource = 'all' | 'comicinfo' | 'mangadex' | 'anilist' | 'no_metadata';
 
 export type SortConfig = {
 	sortBy: SortBy;
 	sortOrder: SortOrder;
+};
+
+export type FilterConfig = {
+	showHidden: boolean;
+	metadataSource: MetadataSource;
 };

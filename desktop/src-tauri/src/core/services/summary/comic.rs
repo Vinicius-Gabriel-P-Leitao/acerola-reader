@@ -73,7 +73,7 @@ impl HomeService {
     }
 
     pub async fn get_all_sorted(
-        &self, criteria: SortCriteria,
+        &self, criteria: SortCriteria, show_hidden: bool, metadata_source: Option<String>,
     ) -> Result<
         (
             Vec<ComicSummaryView>,
@@ -83,7 +83,7 @@ impl HomeService {
         ),
         ComicError,
     > {
-        let comics = self.repo.find_all_sorted(criteria).await?;
+        let comics = self.repo.find_all_sorted(criteria, show_hidden, metadata_source).await?;
         let counts = self.chapter_repo.get_all_counts().await?;
 
         let all_meta = self.metadata_repo.comic_repo.find_all().await?;

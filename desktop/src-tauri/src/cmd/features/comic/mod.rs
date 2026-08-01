@@ -8,10 +8,11 @@ use crate::{
     infra::error::ComicError,
 };
 
-/// Comando Tauri para buscar quadrinhos com ordenação específica.
+/// Comando Tauri para buscar quadrinhos com ordenação e filtros específicos.
 #[tauri::command]
 pub async fn get_comic_summary_sorted<R: Runtime>(
-    sort_by: String, sort_order: String, app: AppHandle<R>, pool: State<'_, SqlitePool>,
+    sort_by: String, sort_order: String, show_hidden: Option<bool>,
+    metadata_source: Option<String>, app: AppHandle<R>, pool: State<'_, SqlitePool>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
 
@@ -21,13 +22,17 @@ pub async fn get_comic_summary_sorted<R: Runtime>(
         ("title", "desc") => SortCriteria::TitleDesc,
         ("chapterCount", "asc") => SortCriteria::ChapterCountAsc,
         ("chapterCount", "desc") => SortCriteria::ChapterCountDesc,
+        ("lastUpdated", "asc") => SortCriteria::LastUpdatedAsc,
+        ("lastUpdated", "desc") => SortCriteria::LastUpdatedDesc,
         _ => SortCriteria::TitleAsc,
     };
+
+    let show_hidden = show_hidden.unwrap_or(false);
 
     tokio::spawn(async move {
         let service = HomeService::new(pool);
 
-        match service.get_all_sorted(criteria).await {
+        match service.get_all_sorted(criteria, show_hidden, metadata_source).await {
             Ok((comics, counts, meta_map, bookmark_map)) => app
                 .emit(
                     "home:data",
@@ -40,6 +45,7 @@ pub async fn get_comic_summary_sorted<R: Runtime>(
 
     Ok(())
 }
+
 
 /// Comando Tauri para atualizar visibilidade de múltiplos quadrinhos.
 #[tauri::command]

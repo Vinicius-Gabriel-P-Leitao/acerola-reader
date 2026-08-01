@@ -4,7 +4,12 @@ import { debug } from '@tauri-apps/plugin-log';
 import { toast } from 'svelte-sonner';
 import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
 import { HOME_EVENTS } from '$lib/contracts/home/home.events';
-import type { ComicSummaryPayload, SortBy, SortOrder } from '$lib/contracts/home/home.payloads';
+import type {
+	ComicSummaryPayload,
+	MetadataSource,
+	SortBy,
+	SortOrder
+} from '$lib/contracts/home/home.payloads';
 import type { ErrorPayload } from '$lib/contracts/shared/shared.payloads';
 import { resolveErrorMessage } from '$lib/contracts/errors/errors.i18n';
 import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
@@ -17,6 +22,8 @@ let comics = $state<ComicSummaryPayload | undefined>(undefined);
 let loading = $state(false);
 let sortBy = $state<SortBy>('title');
 let sortOrder = $state<SortOrder>('asc');
+let showHidden = $state(false);
+let metadataSource = $state<MetadataSource>('all');
 
 let fetchQueued = false;
 let lastSearch: string | undefined = undefined;
@@ -26,6 +33,8 @@ export function _resetComicSummaryState() {
 	loading = false;
 	sortBy = 'title';
 	sortOrder = 'asc';
+	showHidden = false;
+	metadataSource = 'all';
 	fetchQueued = false;
 	lastSearch = undefined;
 }
@@ -70,7 +79,9 @@ export function useComicSummary() {
 			await invoke(HOME_COMMANDS.getComicSummarySorted, {
 				search,
 				sortBy,
-				sortOrder
+				sortOrder,
+				showHidden,
+				metadataSource: metadataSource === 'all' ? null : metadataSource
 			});
 		}).finally(() => {
 			loading = false;
@@ -86,14 +97,15 @@ export function useComicSummary() {
 				ids: ids.map((id) => Number(id)),
 				hidden
 			});
-			// Remove hidden comics from the local state
-			if (hidden && comics) {
+			if (hidden && !showHidden && comics) {
 				const idStrs = new Set(ids.map(String));
 				comics = {
 					...comics,
 					comics: comics.comics.filter((c) => !idStrs.has(String(c.relations.directoryId))),
 					total: comics.total - count
 				};
+			} else {
+				await fetch(lastSearch);
 			}
 			return count;
 		} catch (err) {
@@ -128,11 +140,22 @@ export function useComicSummary() {
 		sortOrder = newSortOrder;
 	}
 
+	function setFilters(newShowHidden: boolean, newMetadataSource: MetadataSource): void {
+		showHidden = newShowHidden;
+		metadataSource = newMetadataSource;
+	}
+
+	function hasActiveFilters(): boolean {
+		return showHidden || metadataSource !== 'all';
+	}
+
 	return {
 		fetch,
 		updateVisibility,
 		deleteComics,
 		setSorting,
+		setFilters,
+		hasActiveFilters,
 		get comics() {
 			return comics;
 		},
@@ -144,6 +167,12 @@ export function useComicSummary() {
 		},
 		get sortOrder() {
 			return sortOrder;
+		},
+		get showHidden() {
+			return showHidden;
+		},
+		get metadataSource() {
+			return metadataSource;
 		}
 	};
 }
