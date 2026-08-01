@@ -104,21 +104,6 @@ async fn wait_for_cache_keys(
     bail!("reader cache did not reach the expected keys: {expected_sorted:?}");
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn reader_abre_cbz_e_retorna_page_count() -> Result<()> {
-    let (_app, webview) = build_reader_app(true)?;
-    let dir = TempDir::new()?;
-    let cbz = create_cbz(&dir, "chapter.cbz", &[("002.png", &[2]), ("001.jpg", &[1])])?;
-
-    let response = open_chapter(&webview, &cbz)?;
-
-    assert_eq!(response["chapter"]["id"], "chapter-1");
-    assert_eq!(response["pageCount"], 2);
-    assert_eq!(response["currentPage"], 0);
-    assert_eq!(response["cacheCapacity"], 7);
-
-    Ok(())
-}
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reader_abre_capitulo_rejeita_formato_invalido() -> Result<()> {

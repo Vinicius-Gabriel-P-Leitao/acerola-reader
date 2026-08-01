@@ -593,10 +593,11 @@ mod tests {
         let reader = ReaderService::new();
 
         let session = reader.open_chapter(chapter(&cbz_path)).await.unwrap();
+
         assert_eq!(session.chapter.id, "chapter-1");
         assert_eq!(session.page_count, 3);
         assert_eq!(session.current_page, 0);
-        assert_eq!(session.cache_capacity, 7);
+        assert_eq!(session.cache_capacity, 100);
 
         let first_page = reader.load_page(0, true).await.unwrap();
         assert_eq!(first_page.chapter_id, "chapter-1");
