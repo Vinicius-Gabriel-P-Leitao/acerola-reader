@@ -215,7 +215,18 @@ fun Main.Home.Template.Screen(
         val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
         val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        val topOverlayTopPadding = statusBarHeight + SpacingTokens.Small
+        val topOverlayTopPadding =
+            if (isLandscape) {
+                statusBarHeight + SpacingTokens.Small
+            } else {
+                SpacingTokens.ExtraSmall
+            }
+        val searchBarTopPadding =
+            if (isSearchExpanded && !isLandscape) {
+                0.dp
+            } else {
+                topOverlayTopPadding
+            }
         val gridTopPadding = topOverlayTopPadding + homeTopOverlayHeight + SpacingTokens.Medium + homeTopContentOffset
         val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
         val bottomNavigationHeight = if (isLandscape) 0.dp else mainBottomBarHeight
@@ -228,8 +239,14 @@ fun Main.Home.Template.Screen(
             } else {
                 0.dp
             }
+        val fabGridPadding = 88.dp
         val gridBottomPadding =
-            bottomSafeAreaPadding + SpacingTokens.Medium + selectionDockGridPadding
+            bottomSafeAreaPadding +
+                if (isSelectionMode) {
+                    selectionDockGridPadding + SpacingTokens.Medium
+                } else {
+                    fabGridPadding
+                }
 
         when {
             comicList == null -> Unit
@@ -266,7 +283,7 @@ fun Main.Home.Template.Screen(
                                     .padding(
                                         start = if (isLandscape) 32.dp else SpacingTokens.Small,
                                         end = if (isLandscape) 32.dp else SpacingTokens.Small,
-                                        top = topOverlayTopPadding,
+                                        top = searchBarTopPadding,
                                     ),
                         )
                     }
