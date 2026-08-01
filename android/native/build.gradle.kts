@@ -63,7 +63,10 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     }
 }
 
-tasks.withType<Test> {
+tasks.withType<Test>().configureEach {
+    // Garante que gere a lib e os bindings antes de rodar os testes unitários
+    dependsOn("generateBindings", "copyRustLib")
+
     systemProperty("java.library.path", "${project.projectDir}/src/main/jniLibs/arm64-v8a")
     systemProperty("jna.library.path", "${project.projectDir}/src/main/jniLibs/arm64-v8a")
 
@@ -133,4 +136,13 @@ tasks.register<Copy>("copyRustLib") {
 
 tasks.named("preBuild") {
     dependsOn("generateBindings", "copyRustLib")
+}
+
+tasks.configureEach {
+    val isJniTask = name.startsWith("merge") && name.contains("JniLib")
+    val isTestTask = name.contains("AndroidTest") || name.startsWith("connected")
+
+    if (isJniTask || isTestTask) {
+        dependsOn("generateBindings", "copyRustLib")
+    }
 }

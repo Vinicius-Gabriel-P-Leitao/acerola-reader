@@ -8,7 +8,6 @@ import androidx.test.filters.SmallTest
 import br.acerola.comic.fixtures.MetadataFixtures
 import br.acerola.comic.local.dao.metadata.ComicMetadataDao
 import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
-import br.acerola.comic.local.dao.metadata.relationship.CoverDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.database.AcerolaDatabase
 import junit.framework.TestCase.assertEquals
@@ -29,7 +28,6 @@ class ComicMetadataDaoTest {
     private lateinit var comicDao: ComicMetadataDao
     private lateinit var authorDao: AuthorDao
     private lateinit var genreDao: GenreDao
-    private lateinit var coverDao: CoverDao
 
     @Before
     fun setUp() {
@@ -38,7 +36,6 @@ class ComicMetadataDaoTest {
         comicDao = db.comicRemoteInfoDao()
         authorDao = db.authorDao()
         genreDao = db.genreDao()
-        coverDao = db.coverDao()
     }
 
     @After
@@ -48,7 +45,7 @@ class ComicMetadataDaoTest {
     }
 
     @Test
-    fun getAllComicsWithRelations_DeveRetornarMangaComAutoresGenerosECapa() =
+    fun getAllComicsWithRelations_DeveRetornarMangaComAutoresGeneros() =
         runBlocking {
             // Arrange
             val comic = MetadataFixtures.createMangaRemoteInfo(title = "Comic Test")
@@ -56,11 +53,9 @@ class ComicMetadataDaoTest {
 
             val author = MetadataFixtures.createAuthor(comicId = comicId, name = "Author 1")
             val genre = MetadataFixtures.createGenre(comicId = comicId, genre = "Action")
-            val cover = MetadataFixtures.createCover(comicId = comicId, url = "url")
 
             authorDao.insert(author)
             genreDao.insert(genre)
-            coverDao.insert(cover)
 
             // Act
             val result = comicDao.observeAllComicsWithRelations().first()
@@ -76,9 +71,6 @@ class ComicMetadataDaoTest {
 
             assertEquals(1, relations.genre.size)
             assertEquals("Action", relations.genre[0].genre)
-
-            assertEquals(1, relations.cover.size)
-            assertEquals("url", relations.cover[0].url)
         }
 
     @Test

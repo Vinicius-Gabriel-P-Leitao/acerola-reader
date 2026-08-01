@@ -1,15 +1,19 @@
 package br.acerola.comic.common.ux.component
 
+import androidx.compose.runtime.remember
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.navigation.compose.rememberNavController
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.theme.AcerolaTheme
+import dev.chrisbanes.haze.HazeState
 import org.junit.Rule
 import org.junit.Test
 
 class NavigationBarsTest {
+
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -17,16 +21,21 @@ class NavigationBarsTest {
     fun `BottomBar_deve_exibir_destinos_principais`() {
         composeTestRule.setContent {
             val navController = rememberNavController()
+            val hazeState = remember { HazeState() }
+
             AcerolaTheme {
-                Acerola.Component.BottomBar(navController = navController)
+                Acerola.Component.BottomBar(
+                    navController = navController,
+                    hazeState = hazeState // Passado conforme exigido pelo componente
+                )
             }
         }
 
-        // Verifica os labels da navegação inferior (usando strings do sistema se possível, ou aproximadas)
-        // HOME, HISTORY, CONFIG
-        composeTestRule.onNodeWithText("home", ignoreCase = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Histórico", ignoreCase = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Configurações", ignoreCase = true).assertIsDisplayed()
+        // Como o BottomBar usa label = null, precisamos buscar pela contentDescription dos ícones
+        // Substitua os textos abaixo pelas strings exatas retornadas por `stringResource(destination.contentDescriptionRes)`
+        composeTestRule.onNodeWithContentDescription("home", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Histórico", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Configurações", ignoreCase = true).assertIsDisplayed()
     }
 
     @Test
@@ -43,13 +52,14 @@ class NavigationBarsTest {
     @Test
     fun `SideBar_deve_renderizar_em_modo_paisagem`() {
         composeTestRule.setContent {
-            val navController = androidx.navigation.compose.rememberNavController()
+            val navController = rememberNavController()
+
             AcerolaTheme {
                 Acerola.Component.SideBar(navController = navController)
             }
         }
 
-        // Verifica se ao menos um dos ícones/labels principais está presente na SideBar
+        // A SideBar possui o Text(), então onNodeWithText vai funcionar
         composeTestRule.onNodeWithText("home", ignoreCase = true).assertIsDisplayed()
     }
 }

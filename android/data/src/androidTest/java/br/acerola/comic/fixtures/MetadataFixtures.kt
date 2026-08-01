@@ -6,12 +6,9 @@ import br.acerola.comic.dto.metadata.comic.CoverDto
 import br.acerola.comic.dto.metadata.comic.GenreDto
 import br.acerola.comic.local.entity.metadata.ComicMetadata
 import br.acerola.comic.local.entity.metadata.relationship.Author
-import br.acerola.comic.local.entity.metadata.relationship.Banner
-import br.acerola.comic.local.entity.metadata.relationship.Cover
 import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.relationship.TypeAuthor
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
-import br.acerola.comic.local.entity.metadata.source.ComicInfoSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
 import br.acerola.comic.local.entity.relation.MetadataRelations
 
@@ -20,7 +17,6 @@ object MetadataFixtures {
         id: Long = 10,
         title: String = "Naruto",
         description: String = "Ninja story",
-        romanji: String = "Naruto",
         status: String = "ongoing",
         publication: Int = 1999,
         comicDirectoryFk: Long? = null,
@@ -30,7 +26,6 @@ object MetadataFixtures {
         id = id,
         title = title,
         description = description,
-        romanji = romanji,
         status = status,
         publication = publication,
         comicDirectoryFk = comicDirectoryFk,
@@ -60,19 +55,13 @@ object MetadataFixtures {
         remoteInfo: ComicMetadata = createMangaRemoteInfo(),
         mangadexSource: MangadexSource? = null,
         anilistSource: AnilistSource? = null,
-        comicInfoSource: ComicInfoSource? = null,
         authors: List<Author> = emptyList(),
-        covers: List<Cover> = emptyList(),
-        banners: List<Banner> = emptyList(),
         genres: List<Genre> = emptyList(),
     ) = MetadataRelations(
         remoteInfo = remoteInfo,
         mangadexSource = mangadexSource,
         anilistSource = anilistSource,
-        comicInfoSource = comicInfoSource,
         author = authors,
-        cover = covers,
-        banner = banners,
         genre = genres,
     )
 
@@ -88,11 +77,4 @@ object MetadataFixtures {
         genre: String = "Shonen",
         comicId: Long = 10,
     ) = Genre(id = id, genre = genre, comicRemoteInfoFk = comicId)
-
-    fun createCover(
-        id: Long = 1,
-        url: String = "http://cover.jpg",
-        fileName: String = "cover.jpg",
-        comicId: Long = 10,
-    ) = Cover(id = id, url = url, fileName = fileName, comicRemoteInfoFk = comicId)
 }
