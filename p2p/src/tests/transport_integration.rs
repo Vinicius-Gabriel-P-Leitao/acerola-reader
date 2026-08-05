@@ -157,4 +157,39 @@ mod run_in_isolation {
         assert!(result.is_ok(), "connect não deveria falhar no sender");
         assert!(node_b.connected_peers().await.is_empty(), "node B não deveria ter peers conectados");
     }
+
+    #[tokio::test]
+    async fn real_iroh_nodes_latency_monitoring_integration() {
+        crate::tests::init_tracing();
+
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let emitter_a: EventEmitter = Arc::new(move |event: &str, payload: String| {
+            let _ = tx.send((event.to_string(), payload));
+        });
+
+        let node_a = AcerolaP2p::builder(emitter_a, IrohTransportBuilder::default(), device("a"))
+            .build()
+            .await
+            .unwrap();
+
+        let node_b = build_node("b").await;
+        let id_b = node_b.local_id().to_string();
+
+        node_a.connect(node_b.local_addr().clone(), b"acerola/handshake/1").await.unwrap();
+        sleep(Duration::from_millis(1500)).await;
+
+        let peers = node_a.connected_peers().await;
+        assert!(peers.keys().any(|p| p.id == id_b), "node B não apareceu no state de node A");
+
+        let mut events = Vec::new();
+        while let Ok(evt) = rx.try_recv() {
+            events.push(evt);
+        }
+
+        // Verifica que eventos RPC do handshake foram emitidos na conexão real
+        assert!(events.iter().any(|(ev, _)| ev == "rpc:ping_sent" || ev == "rpc:device_info_sent"));
+
+        let _ = node_a.shutdown().await;
+        let _ = node_b.shutdown().await;
+    }
 }

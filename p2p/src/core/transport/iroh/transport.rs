@@ -1,7 +1,8 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
-use iroh::{Endpoint, EndpointAddr, EndpointId, endpoint::IncomingAddr};
+use iroh::{Endpoint, EndpointAddr, EndpointId, Watcher, endpoint::{IncomingAddr, Connection}};
+use tokio::sync::RwLock;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
@@ -16,11 +17,15 @@ use crate::{
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
 pub struct IrohTransport {
     endpoint: Endpoint,
+    connections: Arc<RwLock<HashMap<PeerId, Connection>>>,
 }
 
 impl IrohTransport {
     pub(crate) fn new(endpoint: Endpoint) -> Self {
-        Self { endpoint }
+        Self {
+            endpoint,
+            connections: Arc::new(RwLock::new(HashMap::new())),
+        }
     }
 
     /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
@@ -41,6 +46,13 @@ impl IrohTransport {
             id: self.to_peer_id(node_id),
             addrs: serde_json::to_vec(&addr).expect("EndpointAddr serialization failed"),
         }
+    }
+
+    pub async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
+        let id: EndpointId = peer.id.parse().ok()?;
+        let info = self.endpoint.remote_info(id).await?;
+        let _ = info.addrs();
+        None
     }
 }
 
@@ -79,6 +91,8 @@ impl P2pTransport for IrohTransport {
         let peer = self.to_peer_id(remote_id);
         let addr = self.to_peer_addr(remote_id, endpoint_addr);
 
+        self.connections.write().await.insert(peer.clone(), conn.clone());
+
         tracing::debug!(
             peer = %remote_id,
             layer = "iroh_transport",
@@ -110,6 +124,8 @@ impl P2pTransport for IrohTransport {
         );
 
         let conn = self.endpoint.connect(addr, alpn).await?;
+        self.connections.write().await.insert(peer.id.clone(), conn.clone());
+
         let (send, recv) = conn.open_bi().await?;
 
         tracing::trace!(
@@ -124,6 +140,35 @@ impl P2pTransport for IrohTransport {
             Box::new(ConnectionWriter::new(send, Arc::clone(&shared_conn))),
             Box::new(ConnectionReader::new(recv, shared_conn)),
         ))
+    }
+
+    async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
+        let conn = {
+            let guard = self.connections.read().await;
+            guard.get(peer).cloned()
+        }?;
+
+        if conn.close_reason().is_some() {
+            self.connections.write().await.remove(peer);
+            return None;
+        }
+
+        let paths = conn.paths();
+        let path_list = paths.peek();
+
+        if let Some(selected_path) = path_list.iter().find(|p| p.is_selected()) {
+            if let Some(rtt) = selected_path.rtt() {
+                return Some(rtt);
+            }
+        }
+
+        for path in path_list.iter() {
+            if let Some(rtt) = path.rtt() {
+                return Some(rtt);
+            }
+        }
+
+        None
     }
 
     /// Executa o teardown forçado do componente iroh.

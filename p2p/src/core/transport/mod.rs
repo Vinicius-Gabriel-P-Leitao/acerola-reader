@@ -66,6 +66,9 @@ pub trait P2pTransport: Send + Sync {
         ConnectionError,
     >;
 
+    /// Retorna a estimativa de latência (RTT) para um par específico, se houver conexão ativa.
+    async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration>;
+
     /// Realiza a destruição graciosa das portas e threads ocupadas pelo driver físico.
     async fn shutdown(&self) -> Result<(), ConnectionError>;
 }

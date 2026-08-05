@@ -105,7 +105,7 @@ async fn mock_transport_high_concurrency_stress() {
     crate::tests::init_tracing();
 
     let (transport, handle) = mock_transport();
-    let (mut manager, _command_tx, _state) = NetworkManager::new(Arc::new(transport), OpenGuard::into_validator());
+    let (mut manager, _command_tx, _state) = NetworkManager::new(Arc::new(transport), OpenGuard::into_validator(), no_op_emitter());
 
     let completed_counter = Arc::new(AtomicUsize::new(0));
     let buffer = Arc::new(Mutex::new(Vec::new()));
@@ -159,7 +159,7 @@ async fn mock_transport_blake3_data_integrity_validation() {
     crate::tests::init_tracing();
 
     let (transport, handle) = mock_transport();
-    let (mut manager, _command_tx, _state) = NetworkManager::new(Arc::new(transport), OpenGuard::into_validator());
+    let (mut manager, _command_tx, _state) = NetworkManager::new(Arc::new(transport), OpenGuard::into_validator(), no_op_emitter());
 
     let received_buffer = Arc::new(Mutex::new(Vec::new()));
     let completed_counter = Arc::new(AtomicUsize::new(0));

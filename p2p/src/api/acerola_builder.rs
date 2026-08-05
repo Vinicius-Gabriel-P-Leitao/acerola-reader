@@ -97,7 +97,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
         let local_addr = transport.local_addr()?;
 
         #[rustfmt::skip]
-        let (mut manager, command_tx, state) = NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2pTransport>, self.guard);
+        let (mut manager, command_tx, state) = NetworkManager::new(Arc::clone(&transport) as Arc<dyn P2pTransport>, self.guard, Arc::clone(&self.emit));
 
         manager.register_inbound(
             b"acerola/handshake/1",

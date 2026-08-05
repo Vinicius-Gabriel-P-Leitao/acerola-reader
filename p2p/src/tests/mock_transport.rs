@@ -58,11 +58,14 @@ impl IncomingConnection for MockIncoming {
     }
 }
 
+use std::{collections::HashMap, sync::Arc};
+
 /// Implementador falso (Dummy) da trait `P2pTransport`.
 /// O NetworkManager irá ficar suspenso esperando conexões que o handle submete pelo buffer.
 pub struct MockTransport {
     inbound_rx: Mutex<mpsc::UnboundedReceiver<InjectedConnection>>,
     outbound_rx: Mutex<mpsc::UnboundedReceiver<OutboundConnection>>,
+    latencies: Arc<Mutex<HashMap<PeerId, std::time::Duration>>>,
 }
 
 /// A manivela para disparar streams pra dentro do ambiente mockado.
@@ -70,6 +73,7 @@ pub struct MockTransportHandle {
     inbound_tx: mpsc::UnboundedSender<InjectedConnection>,
     #[allow(dead_code)]
     outbound_tx: mpsc::UnboundedSender<OutboundConnection>,
+    latencies: Arc<Mutex<HashMap<PeerId, std::time::Duration>>>,
 }
 
 impl MockTransportHandle {
@@ -83,6 +87,12 @@ impl MockTransportHandle {
     pub fn expect_open(&self, client: DuplexStream, server: DuplexStream) {
         let _ = self.outbound_tx.send((Box::new(client), Box::new(server)));
     }
+
+    /// Configura a latência mockada para um peer.
+    #[allow(dead_code)]
+    pub async fn set_latency(&self, peer: PeerId, latency: std::time::Duration) {
+        self.latencies.lock().await.insert(peer, latency);
+    }
 }
 
 /// Construtor emparelhado que devolve tanto o Transporte Fictício (para injetar no Builder)
@@ -90,9 +100,14 @@ impl MockTransportHandle {
 pub fn mock_transport() -> (MockTransport, MockTransportHandle) {
     let (inbound_tx, inbound_rx) = mpsc::unbounded_channel();
     let (outbound_tx, outbound_rx) = mpsc::unbounded_channel();
+    let latencies = Arc::new(Mutex::new(HashMap::new()));
     (
-        MockTransport { inbound_rx: Mutex::new(inbound_rx), outbound_rx: Mutex::new(outbound_rx) },
-        MockTransportHandle { inbound_tx, outbound_tx },
+        MockTransport {
+            inbound_rx: Mutex::new(inbound_rx),
+            outbound_rx: Mutex::new(outbound_rx),
+            latencies: Arc::clone(&latencies),
+        },
+        MockTransportHandle { inbound_tx, outbound_tx, latencies },
     )
 }
 
@@ -123,6 +138,10 @@ impl P2pTransport for MockTransport {
         ConnectionError,
     > {
         self.outbound_rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)
+    }
+
+    async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
+        self.latencies.lock().await.get(peer).cloned()
     }
 
     async fn shutdown(&self) -> Result<(), ConnectionError> {

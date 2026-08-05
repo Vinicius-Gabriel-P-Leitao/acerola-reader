@@ -125,10 +125,10 @@
   - Máximo de 5 tentativas por conexão
   - Critério: `open_bi` tolera latência ou atrasos na resolução de endereços e reconecta automaticamente
 
-- [ ] **Monitoramento de latência** — `network.rs`
-  - Task periódica a cada 30s chama `endpoint.latency()` para cada peer conectado
-  - Emite evento `"network:latency"` com o valor para a UI
-  - Critério: evento de latência disparado a cada ~30s por peer ativo
+- [x] **Monitoramento de latência** — `network.rs`
+    - Task periódica a cada 30s chama `endpoint.latency()` para cada peer conectado
+    - Emite evento `"network:latency"` com o valor para a UI
+    - Critério: evento de latência disparado a cada ~30s por peer ativo
 
 - [x] **Mensagem Goodbye no shutdown** — `network.rs` + `protocol/rpc.rs`
   - `NetworkCommand::Shutdown` envia mensagem `0x03 GOODBYE` para todos os peers antes de fechar
