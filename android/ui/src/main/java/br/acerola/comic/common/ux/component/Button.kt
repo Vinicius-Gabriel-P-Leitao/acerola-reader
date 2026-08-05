@@ -11,9 +11,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.modifier.glass
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
 
 @Composable
 fun Acerola.Component.IconButton(
@@ -80,5 +88,41 @@ fun Acerola.Component.GlassButton(
         )
 
         icon()
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun IconButtonPreview() {
+    AcerolaTheme {
+        Acerola.Component.IconButton(
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ButtonPreview() {
+    AcerolaTheme {
+        Acerola.Component.Button(
+            text = "Button",
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun GlassButtonPreview() {
+    AcerolaTheme {
+        Acerola.Component.GlassButton(
+            icon = { Icon(Icons.Default.Star, contentDescription = null) },
+            onClick = {},
+        )
     }
 }

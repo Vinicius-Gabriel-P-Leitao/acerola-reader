@@ -6,6 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Acerola.Component.Divider(modifier: Modifier = Modifier) {
@@ -14,4 +17,13 @@ fun Acerola.Component.Divider(modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.surface,
         modifier = modifier.padding(vertical = 8.dp),
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DividerPreview() {
+    AcerolaTheme {
+        Acerola.Component.Divider()
+    }
 }

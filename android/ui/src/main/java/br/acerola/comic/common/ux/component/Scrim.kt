@@ -11,6 +11,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import br.acerola.comic.common.ux.Acerola
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Acerola.Component.Scrim(
@@ -42,4 +45,13 @@ private fun calculateGradientHeight(): () -> Float {
     val statusBars = WindowInsets.statusBars
     val density = LocalDensity.current
     return { statusBars.getTop(density).times(other = 1.2f) }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ScrimPreview() {
+    AcerolaTheme {
+        Acerola.Component.Scrim()
+    }
 }

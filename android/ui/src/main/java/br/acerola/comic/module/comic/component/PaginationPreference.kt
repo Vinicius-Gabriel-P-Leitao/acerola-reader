@@ -14,6 +14,9 @@ import br.acerola.comic.common.ux.component.RadioGroup
 import br.acerola.comic.config.preference.types.ChapterPageSizeType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Component.PaginationPreference(
@@ -40,4 +43,16 @@ fun Comic.Component.PaginationPreference(
             )
         },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PaginationPreferencePreview() {
+    AcerolaTheme {
+        Comic.Component.PaginationPreference(
+            selected = null,
+            onSelect = {},
+        )
+    }
 }

@@ -24,6 +24,10 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.archive.ArchiveTemplateDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.util.sort.SortType
 
 @Composable
 fun Main.Pattern.Component.TemplateItem(
@@ -85,6 +89,25 @@ fun Main.Pattern.Component.TemplateItem(
                 }
             },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TemplateItemPreview() {
+    AcerolaTheme {
+        Main.Pattern.Component.TemplateItem(
+            template = ArchiveTemplateDto(
+                id = 1L,
+                label = "Default",
+                pattern = "{title} - {chapter}",
+                type = SortType.CHAPTER,
+                isDefault = true
+            ),
+            onEdit = {},
+            onDelete = {},
         )
     }
 }

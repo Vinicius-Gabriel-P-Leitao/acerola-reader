@@ -42,6 +42,9 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 private const val TAG = "ReaderBottomControls"
 
@@ -371,6 +374,22 @@ private fun PageNavigationControls(
                         },
                 )
             },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun BottomControlsPreview() {
+    AcerolaTheme {
+        Reader.Template.BottomControls(
+            pageCount = 10,
+            currentPage = 1,
+            onPrevClick = {},
+            onNextClick = {},
+            onNextChapterClick = {},
+            onPreviousChapterClick = {},
         )
     }
 }

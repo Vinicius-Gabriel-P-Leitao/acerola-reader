@@ -11,6 +11,9 @@ import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Main.Home.Component.HomeSearchBar(
@@ -43,4 +46,21 @@ fun Main.Home.Component.HomeSearchBar(
             )
         },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HomeSearchBarPreview() {
+    AcerolaTheme {
+        Main.Home.Component.HomeSearchBar(
+            query = "",
+            onQueryChange = {},
+            onSearch = {},
+            expanded = false,
+            onExpandedChange = {},
+            comics = emptyList(),
+            onComicClick = {},
+        )
+    }
 }

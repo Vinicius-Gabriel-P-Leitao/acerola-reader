@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.dto.archive.VolumeArchiveDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Component.VolumeHeader(
@@ -81,5 +84,17 @@ fun Comic.Component.VolumeHeader(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun VolumeHeaderPreview() {
+    AcerolaTheme {
+        Comic.Component.VolumeHeader(
+            volume = VolumeArchiveDto(id = 1L, name = "Vol 1", volumeSort = "0001", isSpecial = false),
+            chapterCount = 5,
+        )
     }
 }

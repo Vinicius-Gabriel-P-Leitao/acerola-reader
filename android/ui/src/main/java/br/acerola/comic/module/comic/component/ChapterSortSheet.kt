@@ -26,6 +26,9 @@ import br.acerola.comic.config.preference.types.ChapterSortType
 import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Component.ChapterSortSheet(
@@ -103,5 +106,21 @@ fun Comic.Component.ChapterSortSheet(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ChapterSortSheetPreview() {
+    AcerolaTheme {
+        Comic.Component.ChapterSortSheet(
+            sortSettings = ChapterSortPreferenceData(
+                type = ChapterSortType.NUMBER,
+                direction = SortDirection.ASCENDING
+            ),
+            onSortChange = {},
+            onDismiss = {},
+        )
     }
 }

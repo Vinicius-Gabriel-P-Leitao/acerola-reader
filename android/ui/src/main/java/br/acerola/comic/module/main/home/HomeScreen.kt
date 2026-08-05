@@ -1,4 +1,6 @@
 package br.acerola.comic.module.main.home
+import androidx.compose.ui.tooling.preview.Preview
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 import android.content.Intent
 import android.content.res.Configuration
@@ -923,5 +925,18 @@ private fun SelectionActionButton(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ScreenPreview() {
+    AcerolaTheme {
+        EmptyState(
+            isIndexing = false,
+            onQuickSync = {},
+            onFolderSelected = {},
+        )
     }
 }

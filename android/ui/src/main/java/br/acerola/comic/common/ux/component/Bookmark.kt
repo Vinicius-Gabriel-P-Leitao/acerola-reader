@@ -1,4 +1,5 @@
 package br.acerola.comic.common.ux.component
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -9,6 +10,9 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun BookmarkRibbon(
@@ -44,4 +48,13 @@ fun BookmarkRibbon(
                 shape = ribbonShape,
             ),
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun BookmarkRibbonPreview() {
+    AcerolaTheme {
+        BookmarkRibbon(color = MaterialTheme.colorScheme.primary)
+    }
 }
