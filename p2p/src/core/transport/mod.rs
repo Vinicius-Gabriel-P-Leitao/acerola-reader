@@ -78,4 +78,12 @@ pub trait P2pTransport: Send + Sync {
 pub trait TransportP2pBuilder: Send + Sync {
     type Output: P2pTransport;
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<Self::Output, ConnectionError>;
+
+    /// Atribui explicitamente a seed para derivação da chave secreta.
+    fn set_seed(&mut self, _seed: [u8; 32]) {}
+
+    /// Retorna a seed configurada, caso exista.
+    fn get_seed(&self) -> Option<[u8; 32]> {
+        None
+    }
 }

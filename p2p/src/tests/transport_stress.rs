@@ -18,6 +18,8 @@ use tokio::{
     time::{sleep, Duration},
 };
 
+#[cfg(feature = "iroh")]
+use crate::core::transport::iroh::IrohTransportBuilder;
 use crate::{
     api::{identity::DeviceInfo, AcerolaP2p},
     core::{guard::open::OpenGuard, network::manager::NetworkManager},
@@ -25,9 +27,6 @@ use crate::{
     infra::{error::ConnectionError, peer::PeerId},
     tests::mock_transport::mock_transport,
 };
-
-#[cfg(feature = "iroh")]
-use crate::core::transport::iroh::IrohTransportBuilder;
 
 fn no_op_emitter() -> EventEmitter {
     Arc::new(|_: &str, _: String| {})
@@ -49,17 +48,13 @@ struct BulkSenderHandler {
 #[async_trait]
 impl ProtocolHandler for BulkSenderHandler {
     async fn handle(
-        &self,
-        _peer: &PeerId,
-        mut send: Box<dyn AsyncWrite + Send + Unpin>,
+        &self, _peer: &PeerId, mut send: Box<dyn AsyncWrite + Send + Unpin>,
         mut recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), ConnectionError> {
         send.write_all(&self.payload)
             .await
             .map_err(|err| ConnectionError::StreamFailed(err.to_string()))?;
-        send.shutdown()
-            .await
-            .map_err(|err| ConnectionError::StreamFailed(err.to_string()))?;
+        send.shutdown().await.map_err(|err| ConnectionError::StreamFailed(err.to_string()))?;
 
         // Wait for remote closing signal to ensure full stream drain.
         let mut drain_sink = Vec::new();
@@ -77,9 +72,7 @@ struct BulkReceiverHandler {
 #[async_trait]
 impl ProtocolHandler for BulkReceiverHandler {
     async fn handle(
-        &self,
-        _peer: &PeerId,
-        mut send: Box<dyn AsyncWrite + Send + Unpin>,
+        &self, _peer: &PeerId, mut send: Box<dyn AsyncWrite + Send + Unpin>,
         mut recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), ConnectionError> {
         let mut buffer = Vec::new();
@@ -105,7 +98,8 @@ async fn mock_transport_high_concurrency_stress() {
     crate::tests::init_tracing();
 
     let (transport, handle) = mock_transport();
-    let (mut manager, _command_tx, _state) = NetworkManager::new(Arc::new(transport), OpenGuard::into_validator(), no_op_emitter());
+    let (mut manager, _command_tx, _state) =
+        NetworkManager::new(Arc::new(transport), OpenGuard::into_validator(), no_op_emitter());
 
     let completed_counter = Arc::new(AtomicUsize::new(0));
     let buffer = Arc::new(Mutex::new(Vec::new()));
@@ -125,10 +119,7 @@ async fn mock_transport_high_concurrency_stress() {
     );
 
     for connection_index in 0..concurrent_connections {
-        let peer = PeerId {
-            id: format!("mock-peer-{}", connection_index),
-            device_id: None,
-        };
+        let peer = PeerId { id: format!("mock-peer-{}", connection_index), device_id: None };
         let (mut client_tx, client_rx) = tokio::io::duplex(2048);
         let (server_tx, _server_rx) = tokio::io::duplex(2048);
 
@@ -147,11 +138,7 @@ async fn mock_transport_high_concurrency_stress() {
         processed = processed_count,
         "mock transport stress connections successfully processed"
     );
-    assert_eq!(
-        processed_count,
-        concurrent_connections,
-        "All mock connections should be served"
-    );
+    assert_eq!(processed_count, concurrent_connections, "All mock connections should be served");
 }
 
 #[tokio::test]
@@ -159,7 +146,8 @@ async fn mock_transport_blake3_data_integrity_validation() {
     crate::tests::init_tracing();
 
     let (transport, handle) = mock_transport();
-    let (mut manager, _command_tx, _state) = NetworkManager::new(Arc::new(transport), OpenGuard::into_validator(), no_op_emitter());
+    let (mut manager, _command_tx, _state) =
+        NetworkManager::new(Arc::new(transport), OpenGuard::into_validator(), no_op_emitter());
 
     let received_buffer = Arc::new(Mutex::new(Vec::new()));
     let completed_counter = Arc::new(AtomicUsize::new(0));
@@ -179,10 +167,7 @@ async fn mock_transport_blake3_data_integrity_validation() {
     let (mut client_tx, client_rx) = tokio::io::duplex(65_536);
     let (server_tx, _server_rx) = tokio::io::duplex(65_536);
 
-    let peer = PeerId {
-        id: "mock-blake3-peer".to_string(),
-        device_id: None,
-    };
+    let peer = PeerId { id: "mock-blake3-peer".to_string(), device_id: None };
 
     handle.inject(b"test/blake3", peer, client_rx, server_tx);
 
@@ -201,10 +186,7 @@ async fn mock_transport_blake3_data_integrity_validation() {
         "data integrity verified via blake3 hash"
     );
 
-    assert_eq!(
-        actual_hash, expected_hash,
-        "Blake3 hash of received data must match expected hash"
-    );
+    assert_eq!(actual_hash, expected_hash, "Blake3 hash of received data must match expected hash");
 }
 
 // ============================================================================
@@ -228,12 +210,7 @@ async fn iroh_transport_throughput_and_large_payload_integrity() {
         IrohTransportBuilder::default(),
         create_device("node-a-sender"),
     )
-    .outbound(
-        b"test/throughput",
-        Arc::new(BulkSenderHandler {
-            payload: payload.clone(),
-        }),
-    )
+    .outbound(b"test/throughput", Arc::new(BulkSenderHandler { payload: payload.clone() }))
     .build()
     .await
     .unwrap();
@@ -256,10 +233,7 @@ async fn iroh_transport_throughput_and_large_payload_integrity() {
 
     let start_time = Instant::now();
 
-    node_a
-        .connect(node_b.local_addr().clone(), b"test/throughput")
-        .await
-        .unwrap();
+    node_a.connect(node_b.local_addr().clone(), b"test/throughput").await.unwrap();
 
     // Wait for transfer completion
     let elapsed_secs = loop {
@@ -287,11 +261,7 @@ async fn iroh_transport_throughput_and_large_payload_integrity() {
         "blake3 integrity validation"
     );
 
-    assert_eq!(
-        received.len(),
-        payload_size,
-        "Received data size must match payload size"
-    );
+    assert_eq!(received.len(), payload_size, "Received data size must match payload size");
     assert_eq!(
         actual_hash, expected_hash,
         "Blake3 hash mismatch! Data corrupted during transport."
@@ -318,12 +288,7 @@ async fn iroh_transport_multiple_concurrent_streams_stress() {
         IrohTransportBuilder::default(),
         create_device("node-a-multi"),
     )
-    .outbound(
-        b"test/multi-stream",
-        Arc::new(BulkSenderHandler {
-            payload: payload.clone(),
-        }),
-    )
+    .outbound(b"test/multi-stream", Arc::new(BulkSenderHandler { payload: payload.clone() }))
     .build()
     .await
     .unwrap();
@@ -344,16 +309,10 @@ async fn iroh_transport_multiple_concurrent_streams_stress() {
     .await
     .unwrap();
 
-    tracing::info!(
-        streams = stream_count,
-        "initiating concurrent dispatch of streams"
-    );
+    tracing::info!(streams = stream_count, "initiating concurrent dispatch of streams");
 
     for _ in 0..stream_count {
-        node_a
-            .connect(node_b.local_addr().clone(), b"test/multi-stream")
-            .await
-            .unwrap();
+        node_a.connect(node_b.local_addr().clone(), b"test/multi-stream").await.unwrap();
     }
 
     let start_time = Instant::now();
@@ -377,10 +336,7 @@ async fn iroh_transport_multiple_concurrent_streams_stress() {
         "concurrent streams processed successfully"
     );
 
-    assert_eq!(
-        total_received, expected_total,
-        "Total accumulated bytes must match expected total"
-    );
+    assert_eq!(total_received, expected_total, "Total accumulated bytes must match expected total");
 
     node_a.shutdown().await.unwrap();
     node_b.shutdown().await.unwrap();

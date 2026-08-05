@@ -20,10 +20,14 @@ use crate::{
     core::{
         guard::{BoxedValidator, ConnectionContext},
         network::state::{NetworkMode, NetworkState},
+        storage::P2PStorage,
         transport::P2pTransport,
     },
     data::protocol::{rpc::GOODBYE, EventEmitter, ProtocolHandler},
-    infra::{error::ConnectionError, peer::{PeerAddr, PeerId}},
+    infra::{
+        error::ConnectionError,
+        peer::{PeerAddr, PeerId},
+    },
 };
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
@@ -50,6 +54,8 @@ pub struct NetworkManager {
     state: Arc<RwLock<NetworkState>>,
     /// Referência do Guard atual ativo para validação no aceite de conexões.
     validator: Arc<RwLock<BoxedValidator>>,
+    /// Componente de persistência de identidade e peers (P2PStorage).
+    storage: Option<Arc<dyn P2PStorage>>,
     /// Fila para consumo dos comandos requisitados externamente.
     command_rx: mpsc::Receiver<NetworkCommand>,
     /// Tabela de protocolos autorizados para quem recebe conexões (Servidor).
@@ -66,8 +72,17 @@ impl NetworkManager {
     /// Cria e compartilha buffers MPSC e o `NetworkState`. Retorna uma tupla
     /// contendo a instância pronta para rodar, o comunicador (sender) e a view
     /// do estado da rede, garantindo que o chamador mantenha as referências ativas.
+    #[allow(dead_code)]
     pub fn new(
         transport: Arc<dyn P2pTransport>, validator: BoxedValidator, emit: EventEmitter,
+    ) -> (Self, mpsc::Sender<NetworkCommand>, Arc<RwLock<NetworkState>>) {
+        Self::with_storage(transport, validator, emit, None)
+    }
+
+    /// Inicializa os componentes internos de gerência de rede com suporte opcional a storage.
+    pub fn with_storage(
+        transport: Arc<dyn P2pTransport>, validator: BoxedValidator, emit: EventEmitter,
+        storage: Option<Arc<dyn P2PStorage>>,
     ) -> (Self, mpsc::Sender<NetworkCommand>, Arc<RwLock<NetworkState>>) {
         let (command_tx, command_rx) = mpsc::channel(COMMAND_CHANNEL_CAPACITY);
         let state = Arc::new(RwLock::new(NetworkState::new()));
@@ -79,6 +94,7 @@ impl NetworkManager {
             handlers_inbound: HashMap::new(),
             handlers_outbound: HashMap::new(),
             validator: Arc::new(RwLock::new(validator)),
+            storage,
             emit,
         };
 
@@ -134,6 +150,7 @@ impl NetworkManager {
                             let state = Arc::clone(&self.state);
                             let handler = handler.clone();
                             let validator = Arc::clone(&self.validator);
+                            let storage = self.storage.clone();
 
                             // Lança o tratamento da stream em background (Tarefa paralela).
                             let span = tracing::info_span!(
@@ -160,6 +177,12 @@ impl NetworkManager {
                                 if let Err(err) = allowed {
                                     tracing::debug!(error = ?err, "connection denied by guard");
                                     return; // O early return mata as streams `send` e `recv`.
+                                }
+
+                                // Etapa de Storage: Salva o peer no storage se configurado.
+                                if save_peer_if_present(storage.as_ref(), &addr).await.is_err() {
+                                    tracing::error!(peer = %peer.id, "failed to save peer to storage, terminating connection");
+                                    return;
                                 }
 
                                 // Promove a conexão a 'Conectada' no tracker central
@@ -194,6 +217,7 @@ impl NetworkManager {
                             let addr_clone = addr.clone();
                             let alpn_clone = alpn.clone();
                             let transport = Arc::clone(&self.transport);
+                            let storage = self.storage.clone();
 
                             let span = tracing::info_span!(
                                 "outbound",
@@ -209,6 +233,11 @@ impl NetworkManager {
                                     for attempt in 1..=max_retries {
                                         match transport.open_bi(&alpn_clone, &addr_clone).await {
                                             Ok((send, recv)) => {
+                                                if save_peer_if_present(storage.as_ref(), &addr_clone).await.is_err() {
+                                                    tracing::error!(peer = %addr_clone.id, "failed to save outbound peer to storage, terminating connection");
+                                                    return;
+                                                }
+
                                                 state.write().await.connect(
                                                     addr_clone.id.clone(),
                                                     addr_clone.clone(),
@@ -310,10 +339,21 @@ impl NetworkManager {
     }
 }
 
+/// Utilitário funcional para persistir peer apenas se o storage estiver configurado.
+async fn save_peer_if_present(
+    storage: Option<&Arc<dyn P2PStorage>>, addr: &PeerAddr,
+) -> Result<(), ConnectionError> {
+    match storage {
+        Some(storage) => storage.save_peer(addr).await,
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use tokio::time::{sleep, Duration};
     use std::sync::Mutex;
+
+    use tokio::time::{sleep, Duration};
 
     use super::*;
     use crate::{infra::peer::PeerId, tests::mock_transport::mock_transport};
@@ -326,6 +366,7 @@ mod tests {
         Arc::new(|_event: &str, _payload: String| {})
     }
 
+    #[allow(clippy::type_complexity)]
     fn capture_emitter() -> (EventEmitter, Arc<Mutex<Vec<(String, String)>>>) {
         let events = Arc::new(Mutex::new(Vec::new()));
         let clone = Arc::clone(&events);
@@ -365,7 +406,8 @@ mod tests {
     #[tokio::test]
     async fn inbound_handler_registered_for_alpn_is_found() {
         let (transport, _handle) = mock_transport();
-        let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
+        let (mut manager, _, _) =
+            NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(NoopHandler));
         assert!(manager.handlers_inbound.contains_key(b"acerola/handshake/1".as_ref()));
     }
@@ -373,7 +415,8 @@ mod tests {
     #[tokio::test]
     async fn outbound_handler_registered_for_alpn_is_found() {
         let (transport, _handle) = mock_transport();
-        let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
+        let (mut manager, _, _) =
+            NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
         manager.register_outbound(b"acerola/handshake/1", Arc::new(NoopHandler));
         assert!(manager.handlers_outbound.contains_key(b"acerola/handshake/1".as_ref()));
     }
@@ -382,7 +425,8 @@ mod tests {
     async fn peer_added_to_state_on_accepting_connection() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
+        let (mut manager, _, state) =
+            NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
@@ -398,7 +442,8 @@ mod tests {
     async fn peer_removed_from_state_when_handler_finishes() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
+        let (mut manager, _, state) =
+            NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(NoopHandler));
 
         let (client, server) = tokio::io::duplex(1024);
@@ -414,7 +459,8 @@ mod tests {
     async fn unknown_alpn_is_ignored() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
+        let (manager, _, state) =
+            NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
 
         let (client, server) = tokio::io::duplex(1024);
         handle.inject(b"acerola/unknown", make_peer("peer-3"), client, server);
@@ -428,7 +474,8 @@ mod tests {
     #[tokio::test]
     async fn shutdown_terminates_loop() {
         let (transport, _handle) = mock_transport();
-        let (manager, command_tx, _) = NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
+        let (manager, command_tx, _) =
+            NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
 
         let handle = tokio::spawn(manager.run());
         let _ = command_tx.send(NetworkCommand::Shutdown).await;
@@ -446,7 +493,8 @@ mod tests {
             Box::pin(async { Err(ConnectionError::AuthDenied("test deny all".into())) })
         });
 
-        let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), deny_all, no_op_emitter());
+        let (mut manager, _, state) =
+            NetworkManager::new(Arc::clone(&transport), deny_all, no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
@@ -462,7 +510,8 @@ mod tests {
     async fn same_peer_on_two_alpns_appears_connected() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
+        let (mut manager, _, state) =
+            NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
 
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
         manager.register_inbound(b"acerola/blob/1", Arc::new(SlowHandler));
@@ -491,7 +540,8 @@ mod tests {
 
         let (emit, events) = capture_emitter();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, _state) = NetworkManager::new(Arc::clone(&transport), open_validator(), emit);
+        let (mut manager, _, _state) =
+            NetworkManager::new(Arc::clone(&transport), open_validator(), emit);
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
         let (client, server) = tokio::io::duplex(1024);
@@ -504,5 +554,45 @@ mod tests {
         assert!(captured.iter().any(|(ev, payload)| {
             ev == "network:latency" && payload.contains("peer-latency") && payload.contains("42")
         }));
+    }
+
+    struct FailingStorage;
+    #[async_trait::async_trait]
+    impl P2PStorage for FailingStorage {
+        async fn save_identity(&self, _secret: &[u8]) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+        async fn load_identity(&self) -> Result<Option<Vec<u8>>, ConnectionError> {
+            Ok(None)
+        }
+        async fn save_peer(&self, _peer: &PeerAddr) -> Result<(), ConnectionError> {
+            Err(ConnectionError::StreamFailed("disk write error".to_string()))
+        }
+        async fn load_peers(&self) -> Result<Vec<PeerAddr>, ConnectionError> {
+            Ok(vec![])
+        }
+    }
+
+    #[tokio::test]
+    async fn inbound_connection_terminated_and_no_ghost_peer_when_save_peer_fails() {
+        let (transport, handle) = mock_transport();
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
+        let storage = Arc::new(FailingStorage);
+
+        let (mut manager, _, state) = NetworkManager::with_storage(
+            Arc::clone(&transport),
+            open_validator(),
+            no_op_emitter(),
+            Some(storage),
+        );
+        manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
+
+        let (client, server) = tokio::io::duplex(1024);
+        handle.inject(b"acerola/handshake/1", make_peer("peer-storage-fail"), client, server);
+
+        tokio::spawn(manager.run());
+        sleep(Duration::from_millis(30)).await;
+
+        assert!(!state.read().await.is_connected(&make_peer("peer-storage-fail")));
     }
 }

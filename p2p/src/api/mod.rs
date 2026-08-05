@@ -39,6 +39,11 @@ pub mod transport {
     };
 }
 
+/// Contratos e implementações de persistência de dados.
+pub mod storage {
+    pub use crate::core::storage::{InMemoryStorage, P2PStorage};
+}
+
 /// Entidades dentro de um p2p
 pub mod identity {
     #[cfg(target_os = "android")]

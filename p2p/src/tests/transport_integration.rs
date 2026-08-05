@@ -86,7 +86,10 @@ mod run_in_isolation {
 
         let node_b: AcerolaP2p =
             AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("b"))
-                .inbound(b"test/echo", Arc::new(ReceiverHandler { received: Arc::clone(&received) }))
+                .inbound(
+                    b"test/echo",
+                    Arc::new(ReceiverHandler { received: Arc::clone(&received) }),
+                )
                 .build()
                 .await
                 .unwrap();
@@ -115,7 +118,10 @@ mod run_in_isolation {
 
         let node_b: AcerolaP2p =
             AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("b"))
-                .inbound(b"test/bulk", Arc::new(ReceiverHandler { received: Arc::clone(&received) }))
+                .inbound(
+                    b"test/bulk",
+                    Arc::new(ReceiverHandler { received: Arc::clone(&received) }),
+                )
                 .build()
                 .await
                 .unwrap();
@@ -155,7 +161,10 @@ mod run_in_isolation {
         sleep(Duration::from_millis(300)).await;
 
         assert!(result.is_ok(), "connect não deveria falhar no sender");
-        assert!(node_b.connected_peers().await.is_empty(), "node B não deveria ter peers conectados");
+        assert!(
+            node_b.connected_peers().await.is_empty(),
+            "node B não deveria ter peers conectados"
+        );
     }
 
     #[tokio::test]

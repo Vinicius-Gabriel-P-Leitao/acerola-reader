@@ -35,6 +35,14 @@ impl IrohTransportBuilder {
 impl TransportP2pBuilder for IrohTransportBuilder {
     type Output = IrohTransport;
 
+    fn set_seed(&mut self, seed: [u8; 32]) {
+        self.seed = Some(SecretBox::new(Box::new(seed)));
+    }
+
+    fn get_seed(&self) -> Option<[u8; 32]> {
+        self.seed.as_ref().map(|s| *s.expose_secret())
+    }
+
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
         tracing::debug!(
             layer = "iroh_transport",

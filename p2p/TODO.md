@@ -139,13 +139,13 @@
 
 ## Etapa 5 — Persistência (P2PStorage)
 
-- [ ] **Trait de callback de storage** — `storage.rs` (novo arquivo)
+- [x] **Trait de callback de storage** — `storage.rs` (novo arquivo)
   - Definir `trait P2PStorage: Send + Sync` com métodos async: `save_identity`, `load_identity`, `save_peer`, `load_peers`
   - Separação de responsabilidades: Vault (chaves) vs Cache (peers/endereços)
   - Injetar via `.storage(impl P2PStorage)` no builder
   - Critério: peers descobertos via mDNS são lembrados após restart
 
-- [ ] **Atomicidade na persistência de peers** — `network.rs` + `storage.rs`
+- [x] **Atomicidade na persistência de peers** — `network.rs` + `storage.rs`
   - Se `save_peer` falhar, a conexão é encerrada (não fica em estado inconsistente)
   - Critério: sem peers "fantasma" no estado após falha de storage
 

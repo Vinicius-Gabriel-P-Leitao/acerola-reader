@@ -69,6 +69,16 @@ impl NetworkState {
         self.peer_addresses.get(peer)
     }
 
+    /// Armazena ou atualiza o endereço conhecido para um peer sem alterar o estado de conexão.
+    pub fn store_peer_addr(&mut self, addr: PeerAddr) {
+        self.peer_addresses.insert(addr.id.clone(), addr);
+    }
+
+    /// Armazena em lote múltiplos endereços de peers no cache interno de estado.
+    pub fn store_peer_addrs(&mut self, addrs: impl IntoIterator<Item = PeerAddr>) {
+        addrs.into_iter().for_each(|addr| self.store_peer_addr(addr));
+    }
+
     /// Retorna `true` se o `peer` estiver registrado no mapa (conectado por ao menos 1 protocolo).
     #[cfg(test)]
     pub fn is_connected(&self, peer: &PeerId) -> bool {

@@ -15,7 +15,7 @@ const ACEROLA_DEVICE_NAMESPACE: Uuid = Uuid::from_bytes(*b"acerola-p2p!dev!");
 /// O `PeerId` contém o identificador subjacente da camada de rede (ex: Iroh PublicKey
 /// formatado). Implementa traits de equivalência e hashing para uso como chave
 /// no rastreamento do estado das conexões ativas.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct PeerId {
     /// Identificador único (geralmente uma string em base32).
     pub id: String,

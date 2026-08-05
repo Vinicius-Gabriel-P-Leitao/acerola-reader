@@ -15,7 +15,10 @@ use tokio::{
 
 use crate::{
     core::transport::{IncomingConnection, P2pTransport},
-    infra::{error::ConnectionError, peer::{PeerAddr, PeerId}},
+    infra::{
+        error::ConnectionError,
+        peer::{PeerAddr, PeerId},
+    },
 };
 
 /// Assinatura interna que empacota as propriedades forjadas de uma nova "conexão P2P".

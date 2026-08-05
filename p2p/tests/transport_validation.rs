@@ -11,6 +11,8 @@ use std::{
     time::Instant,
 };
 
+#[cfg(feature = "iroh")]
+use acerola_p2p::api::transport::IrohTransportBuilder;
 use acerola_p2p::api::{
     error::P2pError,
     identity::DeviceInfo,
@@ -24,9 +26,6 @@ use tokio::{
     sync::Mutex,
     time::{sleep, Duration},
 };
-
-#[cfg(feature = "iroh")]
-use acerola_p2p::api::transport::IrohTransportBuilder;
 
 fn no_op_emitter() -> EventEmitter {
     Arc::new(|_: &str, _: String| {})
@@ -47,17 +46,13 @@ struct StreamSender {
 #[async_trait]
 impl Handler for StreamSender {
     async fn handle(
-        &self,
-        _peer: &PeerIdentity,
-        mut send: Box<dyn AsyncWrite + Send + Unpin>,
+        &self, _peer: &PeerIdentity, mut send: Box<dyn AsyncWrite + Send + Unpin>,
         mut recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), P2pError> {
         send.write_all(&self.payload)
             .await
             .map_err(|err| P2pError::StreamFailed(err.to_string()))?;
-        send.shutdown()
-            .await
-            .map_err(|err| P2pError::StreamFailed(err.to_string()))?;
+        send.shutdown().await.map_err(|err| P2pError::StreamFailed(err.to_string()))?;
 
         let mut drain_sink = Vec::new();
         let _ = recv.read_to_end(&mut drain_sink).await;
@@ -73,9 +68,7 @@ struct StreamReceiver {
 #[async_trait]
 impl Handler for StreamReceiver {
     async fn handle(
-        &self,
-        _peer: &PeerIdentity,
-        mut send: Box<dyn AsyncWrite + Send + Unpin>,
+        &self, _peer: &PeerIdentity, mut send: Box<dyn AsyncWrite + Send + Unpin>,
         mut recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), P2pError> {
         let mut buffer = Vec::new();
@@ -105,12 +98,7 @@ async fn validate_iroh_data_integrity_and_throughput() {
         IrohTransportBuilder::default(),
         create_device_info("stress-node-a"),
     )
-    .outbound(
-        b"validation/bulk",
-        Arc::new(StreamSender {
-            payload: payload.clone(),
-        }),
-    )
+    .outbound(b"validation/bulk", Arc::new(StreamSender { payload: payload.clone() }))
     .build()
     .await
     .expect("Failed to build node A");
@@ -122,10 +110,7 @@ async fn validate_iroh_data_integrity_and_throughput() {
     )
     .inbound(
         b"validation/bulk",
-        Arc::new(StreamReceiver {
-            buffer: Arc::clone(&buffer),
-            counter: Arc::clone(&counter),
-        }),
+        Arc::new(StreamReceiver { buffer: Arc::clone(&buffer), counter: Arc::clone(&counter) }),
     )
     .build()
     .await
@@ -166,10 +151,7 @@ async fn validate_iroh_data_integrity_and_throughput() {
         payload_size,
         "Transferred data size differs from expected payload size"
     );
-    assert_eq!(
-        actual_hash, expected_hash,
-        "Blake3 checksum mismatch - data corrupted"
-    );
+    assert_eq!(actual_hash, expected_hash, "Blake3 checksum mismatch - data corrupted");
 
     node_a.shutdown().await.unwrap();
     node_b.shutdown().await.unwrap();
@@ -189,12 +171,7 @@ async fn validate_iroh_concurrent_transport_stress() {
         IrohTransportBuilder::default(),
         create_device_info("multi-node-a"),
     )
-    .outbound(
-        b"validation/multi",
-        Arc::new(StreamSender {
-            payload: payload.clone(),
-        }),
-    )
+    .outbound(b"validation/multi", Arc::new(StreamSender { payload: payload.clone() }))
     .build()
     .await
     .unwrap();
@@ -206,25 +183,16 @@ async fn validate_iroh_concurrent_transport_stress() {
     )
     .inbound(
         b"validation/multi",
-        Arc::new(StreamReceiver {
-            buffer: Arc::clone(&buffer),
-            counter: Arc::clone(&counter),
-        }),
+        Arc::new(StreamReceiver { buffer: Arc::clone(&buffer), counter: Arc::clone(&counter) }),
     )
     .build()
     .await
     .unwrap();
 
-    tracing::info!(
-        requests = stream_count,
-        "dispatching concurrent requests"
-    );
+    tracing::info!(requests = stream_count, "dispatching concurrent requests");
 
     for _ in 0..stream_count {
-        node_a
-            .connect(node_b.local_addr().clone(), b"validation/multi")
-            .await
-            .unwrap();
+        node_a.connect(node_b.local_addr().clone(), b"validation/multi").await.unwrap();
     }
 
     let start_time = Instant::now();
@@ -241,11 +209,7 @@ async fn validate_iroh_concurrent_transport_stress() {
         "concurrent streams processed successfully"
     );
 
-    assert_eq!(
-        processed_count,
-        stream_count,
-        "All concurrent streams must be completed"
-    );
+    assert_eq!(processed_count, stream_count, "All concurrent streams must be completed");
 
     node_a.shutdown().await.unwrap();
     node_b.shutdown().await.unwrap();

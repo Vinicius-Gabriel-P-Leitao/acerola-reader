@@ -1,9 +1,14 @@
 use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
-use iroh::{Endpoint, EndpointAddr, EndpointId, Watcher, endpoint::{IncomingAddr, Connection}};
-use tokio::sync::RwLock;
-use tokio::io::{AsyncRead, AsyncWrite};
+use iroh::{
+    endpoint::{Connection, IncomingAddr},
+    Endpoint, EndpointAddr, EndpointId, Watcher,
+};
+use tokio::{
+    io::{AsyncRead, AsyncWrite},
+    sync::RwLock,
+};
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
 use crate::{
@@ -22,10 +27,7 @@ pub struct IrohTransport {
 
 impl IrohTransport {
     pub(crate) fn new(endpoint: Endpoint) -> Self {
-        Self {
-            endpoint,
-            connections: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self { endpoint, connections: Arc::new(RwLock::new(HashMap::new())) }
     }
 
     /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
@@ -77,7 +79,7 @@ impl P2pTransport for IrohTransport {
         let alpn = conn.alpn();
 
         let mut endpoint_addr = EndpointAddr::new(remote_id);
-        
+
         match incoming_addr {
             IncomingAddr::Ip(addr) => {
                 endpoint_addr = endpoint_addr.with_ip_addr(addr);
