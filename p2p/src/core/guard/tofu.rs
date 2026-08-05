@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn peer_desconhecido_e_aceito_e_registrado() {
+    async fn unknown_peer_is_accepted_and_registered() {
         let store = make_store();
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn peer_ja_conhecido_e_aceito() {
+    async fn already_known_peer_is_accepted() {
         let store = make_store();
         store.insert("peer-antigo");
         let validator =
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn peer_bloqueado_e_rejeitado() {
+    async fn blocked_peer_is_rejected() {
         let store = make_store();
         store.block("peer-malicioso");
         let validator =
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn peer_bloqueado_nao_e_inserido_no_trusted() {
+    async fn blocked_peer_is_not_inserted_into_trusted() {
         let store = make_store();
         store.block("peer-malicioso");
         let validator =

@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn peer_conectado_aparece_no_state() {
+    fn connected_peer_appears_in_state() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn peer_desconectado_some_do_state() {
+    fn disconnected_peer_disappears_from_state() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn peer_permanece_conectado_apos_remover_um_de_dois_alpns() {
+    fn peer_remains_connected_after_removing_one_of_two_alpns() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn peer_removido_quando_todos_alpns_desconectam() {
+    fn peer_removed_when_all_alpns_disconnect() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[test]
-    fn disconnect_de_alpn_inexistente_nao_afeta_outros() {
+    fn disconnect_of_nonexistent_alpn_does_not_affect_others() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn modo_inicial_e_local() {
+    fn initial_mode_is_local() {
         let state = NetworkState::new();
         assert!(matches!(state.mode(), NetworkMode::Local));
     }
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn store_device_info_armazena_e_get_recupera() {
+    fn store_device_info_stores_and_get_retrieves() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -203,13 +203,13 @@ mod tests {
     }
 
     #[test]
-    fn get_device_info_retorna_none_para_peer_desconhecido() {
+    fn get_device_info_returns_none_for_unknown_peer() {
         let state = NetworkState::new();
         assert!(state.get_device_info(&make_peer("fantasma")).is_none());
     }
 
     #[test]
-    fn store_device_info_sobrescreve_info_existente() {
+    fn store_device_info_overwrites_existing_info() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn device_info_removido_quando_peer_desconecta_completamente() {
+    fn device_info_removed_when_peer_disconnects_completely() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn device_info_persiste_enquanto_peer_tem_alpns_ativos() {
+    fn device_info_persists_while_peer_has_active_alpns() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -245,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn device_info_removido_apos_todos_alpns_desconectarem() {
+    fn device_info_removed_after_all_alpns_disconnect() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -259,7 +259,7 @@ mod tests {
     }
 
     #[test]
-    fn disconnect_sem_device_info_nao_causa_erro() {
+    fn disconnect_without_device_info_does_not_cause_error() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 

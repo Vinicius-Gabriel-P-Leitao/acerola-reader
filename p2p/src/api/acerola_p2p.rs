@@ -153,31 +153,31 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn local_id_nao_vazio() {
+    async fn local_id_not_empty() {
         let node = build_node().await;
         assert!(!node.local_id().is_empty());
     }
 
     #[tokio::test]
-    async fn peers_conectados_comecam_vazios() {
+    async fn connected_peers_start_empty() {
         let node = build_node().await;
         assert!(node.connected_peers().await.is_empty());
     }
 
     #[tokio::test]
-    async fn shutdown_sem_erro() {
+    async fn shutdown_without_error() {
         let node = build_node().await;
         assert!(node.shutdown().await.is_ok());
     }
 
     #[tokio::test]
-    async fn modo_inicial_e_local() {
+    async fn initial_mode_is_local() {
         let node = build_node().await;
         assert_eq!(node.mode().await, NetworkMode::Local);
     }
 
     #[tokio::test]
-    async fn dois_nos_tem_ids_distintos() {
+    async fn two_nodes_have_distinct_ids() {
         let (emit_a, _) = capture_emitter();
         let (emit_b, _) = capture_emitter();
 
@@ -197,13 +197,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn local_device_id_preenchido() {
+    async fn local_device_id_populated() {
         let node = build_node().await;
         assert!(node.local_device_id().is_some());
     }
 
     #[tokio::test]
-    async fn mesma_seed_gera_mesmo_device_id() {
+    async fn same_seed_generates_same_device_id() {
         let seed = [0x42u8; 32];
 
         let node_a = AcerolaP2p::builder(
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn seeds_diferentes_geram_device_ids_diferentes() {
+    async fn different_seeds_generate_different_device_ids() {
         let node_a = AcerolaP2p::builder(
             no_op_emitter(),
             IrohTransportBuilder::default().seed([0x11u8; 32]),
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn device_info_name_acessivel_apos_build() {
+    async fn device_info_name_accessible_after_build() {
         let info = DeviceInfo {
             name: "meu-pc".to_string(),
             os: "linux".to_string(),
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn device_info_os_acessivel_apos_build() {
+    async fn device_info_os_accessible_after_build() {
         let info = DeviceInfo {
             name: "meu-pc".to_string(),
             os: "windows".to_string(),
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn device_info_version_acessivel_apos_build() {
+    async fn device_info_version_accessible_after_build() {
         let info = DeviceInfo {
             name: "meu-pc".to_string(),
             os: "linux".to_string(),
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn dois_nos_com_device_infos_distintos_sao_independentes() {
+    async fn two_nodes_with_distinct_device_infos_are_independent() {
         let (emit_a, _) = capture_emitter();
         let (emit_b, _) = capture_emitter();
 

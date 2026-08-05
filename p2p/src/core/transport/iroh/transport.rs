@@ -146,19 +146,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn local_id_nao_vazio() {
+    async fn local_id_not_empty() {
         let transport = build_transport().await;
         assert!(!transport.local_id().id.is_empty());
     }
 
     #[tokio::test]
-    async fn local_id_tem_device_id_preenchido() {
+    async fn local_id_has_populated_device_id() {
         let transport = build_transport().await;
         assert!(transport.local_id().device_id.is_some());
     }
 
     #[tokio::test]
-    async fn mesma_seed_gera_mesmo_device_id() {
+    async fn same_seed_generates_same_device_id() {
         let seed = [0x42u8; 32];
         let t1 = IrohTransportBuilder::default().seed(seed).build(vec![]).await.unwrap();
         let t2 = IrohTransportBuilder::default().seed(seed).build(vec![]).await.unwrap();
@@ -166,14 +166,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn seeds_diferentes_geram_device_ids_diferentes() {
+    async fn different_seeds_generate_different_device_ids() {
         let t1 = IrohTransportBuilder::default().seed([0x11u8; 32]).build(vec![]).await.unwrap();
         let t2 = IrohTransportBuilder::default().seed([0x22u8; 32]).build(vec![]).await.unwrap();
         assert_ne!(t1.local_id().device_id, t2.local_id().device_id);
     }
 
     #[tokio::test]
-    async fn shutdown_sem_erro() {
+    async fn shutdown_without_error() {
         let transport = build_transport().await;
         assert!(transport.shutdown().await.is_ok());
     }

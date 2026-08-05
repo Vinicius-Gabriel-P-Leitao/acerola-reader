@@ -43,40 +43,40 @@ mod tests {
     const ANOTHER_KEY: &[u8] = &[0xcd; 32];
 
     #[test]
-    fn from_public_key_preenche_device_id() {
+    fn from_public_key_populates_device_id() {
         let peer = PeerId::from_public_key("node-1".to_string(), FAKE_KEY);
         assert!(peer.device_id.is_some());
     }
 
     #[test]
-    fn from_public_key_e_deterministico() {
+    fn from_public_key_is_deterministic() {
         let a = PeerId::from_public_key("node-1".to_string(), FAKE_KEY);
         let b = PeerId::from_public_key("node-1".to_string(), FAKE_KEY);
         assert_eq!(a.device_id, b.device_id);
     }
 
     #[test]
-    fn bytes_diferentes_geram_device_ids_diferentes() {
+    fn different_bytes_generate_different_device_ids() {
         let a = PeerId::from_public_key("node-1".to_string(), FAKE_KEY);
         let b = PeerId::from_public_key("node-1".to_string(), ANOTHER_KEY);
         assert_ne!(a.device_id, b.device_id);
     }
 
     #[test]
-    fn peer_sem_bytes_tem_device_id_none() {
+    fn peer_without_bytes_has_none_device_id() {
         let peer = PeerId { id: "node-remote".to_string(), device_id: None };
         assert!(peer.device_id.is_none());
     }
 
     #[test]
-    fn device_id_e_uuid_v5_valido() {
+    fn device_id_is_valid_uuid_v5() {
         let peer = PeerId::from_public_key("node-1".to_string(), FAKE_KEY);
         let uuid = Uuid::parse_str(peer.device_id.unwrap().as_str());
         assert!(uuid.is_ok());
     }
 
     #[test]
-    fn id_nao_afeta_device_id() {
+    fn id_does_not_affect_device_id() {
         let a = PeerId::from_public_key("node-1".to_string(), FAKE_KEY);
         let b = PeerId::from_public_key("node-2".to_string(), FAKE_KEY);
         assert_eq!(a.device_id, b.device_id);

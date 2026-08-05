@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn servidor_responde_pong_ao_receber_ping() {
+    async fn server_responds_pong_on_receiving_ping() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, events) = capture_emitter();
         let server = RpcServerHandler::new(emit, make_device_info("server"), make_state());
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn servidor_armazena_device_info_do_cliente() {
+    async fn server_stores_client_device_info() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, _) = capture_emitter();
         let state = make_state();
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn servidor_encerra_se_nao_receber_ping() {
+    async fn server_terminates_if_ping_not_received() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, _) = capture_emitter();
         let server = RpcServerHandler::new(emit, make_device_info("server"), make_state());

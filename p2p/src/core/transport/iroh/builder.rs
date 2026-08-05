@@ -92,7 +92,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn valida_build_retorna_transport() {
+    async fn validate_build_returns_transport() {
         let transport = IrohTransportBuilder::default()
             .relay("https://relay.test.local")
             .build(vec![b"test/proto".to_vec()]);
@@ -100,13 +100,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn valida_build_sem_relay_retorna_transport() {
+    async fn validate_build_without_relay_returns_transport() {
         let transport = IrohTransportBuilder::default().build(vec![b"test/proto".to_vec()]);
         assert!(transport.await.is_ok());
     }
 
     #[tokio::test]
-    async fn valida_build_relay_invalido_retorna_erro() {
+    async fn validate_build_invalid_relay_returns_error() {
         let transport = IrohTransportBuilder::default()
             .relay("nao-sou-uma-url-valida")
             .build(vec![b"test/proto".to_vec()]);

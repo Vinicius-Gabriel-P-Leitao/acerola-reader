@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn build_retorna_no_valido() {
+    async fn build_returns_valid_node() {
         assert!(AcerolaP2p::builder(
             no_op_emitter(),
             IrohTransportBuilder::default(),
@@ -178,20 +178,20 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "reserved by the library")]
-    fn inbound_com_alpn_reservado_causa_panic() {
+    fn inbound_with_reserved_alpn_causes_panic() {
         AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
             .inbound(b"acerola/handshake/1", Arc::new(NoOpHandler));
     }
 
     #[test]
     #[should_panic(expected = "reserved by the library")]
-    fn outbound_com_alpn_reservado_causa_panic() {
+    fn outbound_with_reserved_alpn_causes_panic() {
         AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
             .outbound(b"acerola/handshake/1", Arc::new(NoOpHandler));
     }
 
     #[tokio::test]
-    async fn build_com_handler_customizado_nao_falha() {
+    async fn build_with_custom_handler_does_not_fail() {
         let result = AcerolaP2p::builder(
             no_op_emitter(),
             IrohTransportBuilder::default(),
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handshake_reservado_completa_entre_dois_nos() {
+    async fn reserved_handshake_completes_between_two_nodes() {
         let (emit_a, events_a) = capture_emitter();
         let (emit_b, events_b) = capture_emitter();
 

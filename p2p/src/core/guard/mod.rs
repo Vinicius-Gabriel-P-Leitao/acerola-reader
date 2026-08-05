@@ -49,7 +49,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn validator_customizado_nega_conexao() {
+    async fn custom_validator_denies_connection() {
         let deny: BoxedValidator = Box::new(|_ctx| {
             Box::pin(async { Err(ConnectionError::AuthDenied("test deny".into())) })
         });
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn validator_permite_ou_nega_por_peer_id() {
+    async fn validator_allows_or_denies_by_peer_id() {
         let allow: BoxedValidator = Box::new(|ctx| {
             let allowed = ctx.peer_id.id == "trusted-peer";
             Box::pin(async move {

@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn cliente_envia_ping_primeiro() {
+    async fn client_sends_ping_first() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, events) = capture_emitter();
         let client = RpcClientHandler::new(emit, make_device_info("client"), make_state());
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn cliente_encerra_se_receber_byte_errado_apos_ping() {
+    async fn client_terminates_if_wrong_byte_received_after_ping() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, _) = capture_emitter();
         let client = RpcClientHandler::new(emit, make_device_info("client"), make_state());
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn cliente_armazena_device_info_do_servidor() {
+    async fn client_stores_device_info_from_server() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, _) = capture_emitter();
         let state = make_state();

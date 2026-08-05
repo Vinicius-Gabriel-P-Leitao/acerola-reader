@@ -28,7 +28,7 @@ fn no_op_emitter() -> EventEmitter {
 }
 
 #[tokio::test]
-async fn handshake_completo_entre_client_e_server() {
+async fn full_handshake_between_client_and_server() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let peer_client = PeerId { id: "client".into(), device_id: None };
@@ -76,7 +76,7 @@ async fn handshake_completo_entre_client_e_server() {
 }
 
 #[tokio::test]
-async fn server_falha_se_stream_fecha_antes_do_ping() {
+async fn server_fails_if_stream_closes_before_ping() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state = Arc::new(RwLock::new(NetworkState::new()));
@@ -96,7 +96,7 @@ async fn server_falha_se_stream_fecha_antes_do_ping() {
 }
 
 #[tokio::test]
-async fn client_falha_se_stream_fecha_antes_do_pong() {
+async fn client_fails_if_stream_closes_before_pong() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state = Arc::new(RwLock::new(NetworkState::new()));
@@ -116,7 +116,7 @@ async fn client_falha_se_stream_fecha_antes_do_pong() {
 }
 
 #[tokio::test]
-async fn nenhum_lado_armazena_device_info_se_conexao_cai_antes_do_exchange() {
+async fn neither_side_stores_device_info_if_connection_drops_before_exchange() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state_server = Arc::new(RwLock::new(NetworkState::new()));

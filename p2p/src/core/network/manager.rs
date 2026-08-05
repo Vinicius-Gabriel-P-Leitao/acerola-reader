@@ -330,7 +330,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handler_inbound_registrado_para_alpn_e_encontrado() {
+    async fn inbound_handler_registered_for_alpn_is_found() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(NoopHandler));
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handler_outbound_registrado_para_alpn_e_encontrado() {
+    async fn outbound_handler_registered_for_alpn_is_found() {
         let (transport, _handle) = mock_transport();
         let (mut manager, _, _) = NetworkManager::new(Arc::new(transport), open_validator());
         manager.register_outbound(b"acerola/handshake/1", Arc::new(NoopHandler));
@@ -346,7 +346,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn peer_adicionado_ao_state_ao_aceitar_conexao() {
+    async fn peer_added_to_state_on_accepting_connection() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn peer_removido_do_state_quando_handler_termina() {
+    async fn peer_removed_from_state_when_handler_finishes() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
@@ -378,7 +378,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn alpn_desconhecido_e_ignorado() {
+    async fn unknown_alpn_is_ignored() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());
@@ -393,7 +393,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn shutdown_encerra_o_loop() {
+    async fn shutdown_terminates_loop() {
         let (transport, _handle) = mock_transport();
         let (manager, command_tx, _) = NetworkManager::new(Arc::new(transport), open_validator());
 
@@ -405,7 +405,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn guard_nega_conexao_de_peer_bloqueado() {
+    async fn guard_denies_connection_from_blocked_peer() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
 
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn mesmo_peer_em_dois_alpns_aparece_conectado() {
+    async fn same_peer_on_two_alpns_appears_connected() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let (mut manager, _, state) = NetworkManager::new(Arc::clone(&transport), open_validator());

@@ -14,7 +14,7 @@ mod tests {
     use crate::{api::guard::ConnectionContext, infra::peer::PeerId};
 
     #[tokio::test]
-    async fn open_guard_permite_qualquer_conexao() {
+    async fn open_guard_allows_any_connection() {
         let validator = OpenGuard::into_validator();
         let ctx = ConnectionContext {
             peer_id: PeerId { id: "test-peer".to_string(), device_id: None },

@@ -72,7 +72,7 @@ mod run_in_isolation {
     }
 
     #[tokio::test]
-    async fn dois_nos_trocam_dados_em_alpn_customizado() {
+    async fn two_nodes_exchange_data_on_custom_alpn() {
         crate::tests::init_tracing();
         let received = Arc::new(Mutex::new(Vec::new()));
         let payload = b"hello acerola".to_vec();
@@ -102,7 +102,7 @@ mod run_in_isolation {
     }
 
     #[tokio::test]
-    async fn dados_chegam_integros_com_payload_grande() {
+    async fn data_arrives_intact_with_large_payload() {
         let received = Arc::new(Mutex::new(Vec::new()));
         let payload = vec![0xABu8; 64 * 1024];
 
@@ -127,7 +127,7 @@ mod run_in_isolation {
     }
 
     #[tokio::test]
-    async fn peer_aparece_no_state_de_node_b_apos_conexao_real() {
+    async fn peer_appears_in_node_b_state_after_real_connection() {
         let node_a = build_node("a").await;
         let node_b = build_node("b").await;
 
@@ -140,7 +140,7 @@ mod run_in_isolation {
     }
 
     #[tokio::test]
-    async fn alpn_sem_handler_no_receiver_nao_quebra_sender() {
+    async fn alpn_without_handler_on_receiver_does_not_break_sender() {
         let node_a: AcerolaP2p =
             AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("a"))
                 .outbound(b"test/ghost", Arc::new(SenderHandler { payload: b"ignored".to_vec() }))

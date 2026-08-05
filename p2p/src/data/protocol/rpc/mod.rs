@@ -45,12 +45,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ping_byte_diferente_de_pong() {
+    fn ping_byte_different_from_pong() {
         assert_ne!(PING, PONG);
     }
 
     #[test]
-    fn bytes_sao_valores_esperados() {
+    fn bytes_are_expected_values() {
         assert_eq!(PING, 0x01);
         assert_eq!(PONG, 0x02);
     }
