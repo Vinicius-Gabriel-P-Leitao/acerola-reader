@@ -30,6 +30,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.comic.common.ux.Acerola
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.ui.res.stringResource
+import br.acerola.comic.ui.R
+
 
 @Composable
 fun Acerola.Component.DialogButton(
@@ -168,3 +174,48 @@ fun Acerola.Component.Dialog(
         }
     }
 }
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DialogButtonPreview() {
+    AcerolaTheme {
+        Acerola.Component.DialogButton(
+            text = stringResource(R.string.action_confirm),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DialogPreview() {
+    AcerolaTheme {
+        Acerola.Component.Dialog(
+            show = true,
+            onDismiss = {},
+            title = stringResource(R.string.dialog_delete_title),
+            confirmButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(R.string.action_delete),
+                    onClick = {},
+                    contentColor = MaterialTheme.colorScheme.error,
+                )
+            },
+            dismissButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    onClick = {},
+                )
+            },
+        ) {
+            Text(
+                text = stringResource(R.string.dialog_delete_message),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+

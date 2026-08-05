@@ -10,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 enum class SnackbarVariant { Error, Success, Warn }
 
@@ -73,4 +76,31 @@ fun Acerola.Component.SnackbarWarn(
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
         content = { Text(text = message) },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SnackbarErrorPreview() {
+    AcerolaTheme {
+        Acerola.Component.SnackbarError(message = "Error message")
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SnackbarSuccessPreview() {
+    AcerolaTheme {
+        Acerola.Component.SnackbarSuccess(message = "Success message")
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SnackbarWarnPreview() {
+    AcerolaTheme {
+        Acerola.Component.SnackbarWarn(message = "Warning message")
+    }
 }

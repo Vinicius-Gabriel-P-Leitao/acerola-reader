@@ -21,6 +21,10 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.dto.archive.VolumeArchiveDto
 
 @Composable
 fun Comic.Component.VolumeCard(
@@ -75,4 +79,17 @@ fun Comic.Component.VolumeCard(
         },
         nestedItem = nestedItem,
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun VolumeCardPreview() {
+    AcerolaTheme {
+        Comic.Component.VolumeCard(
+            group = VolumeChapterGroupDto(volume = VolumeArchiveDto(id = 1L, name = "Vol 1", volumeSort = "0001", isSpecial = false), items = emptyList(), totalChapters = 0, loadedCount = 0, hasMore = false),
+            expanded = false,
+            onToggleExpanded = {},
+        )
+    }
 }

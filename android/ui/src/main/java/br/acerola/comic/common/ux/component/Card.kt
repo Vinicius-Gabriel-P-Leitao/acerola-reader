@@ -27,6 +27,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.tokens.SpacingTokens
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.res.stringResource
+import br.acerola.comic.ui.R
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -192,3 +199,36 @@ fun Acerola.Component.Card(
         }
     }
 }
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TextCardPreview() {
+    AcerolaTheme {
+        Acerola.Component.TextCard(
+            title = stringResource(R.string.title_text_archive_configs_in_app),
+            text = stringResource(R.string.description_text_config_select_path_comic),
+            footer = stringResource(R.string.label_sync_complete),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun CardPreview() {
+    AcerolaTheme {
+        Acerola.Component.Card(
+            title = stringResource(R.string.title_settings_display_config),
+            footer = stringResource(R.string.label_library_context),
+        ) {
+            Text(
+                text = stringResource(R.string.description_config_categories),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+

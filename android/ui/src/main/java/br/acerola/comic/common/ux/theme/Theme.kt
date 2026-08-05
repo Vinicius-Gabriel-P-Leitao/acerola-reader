@@ -1,9 +1,13 @@
 package br.acerola.comic.common.ux.theme
+
 import android.content.Context
+
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+
+
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -23,6 +27,9 @@ import br.acerola.comic.common.ux.theme.color.NordLight
 import br.acerola.comic.common.ux.theme.color.TokyoNightDark
 import br.acerola.comic.common.ux.theme.color.TokyoNightDay
 import br.acerola.comic.config.preference.types.AppTheme
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 private val CatppuccinDarkColorScheme =
     darkColorScheme(
@@ -308,3 +315,4 @@ fun AcerolaTheme(
         content = content,
     )
 }
+

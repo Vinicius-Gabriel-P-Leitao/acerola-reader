@@ -13,6 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Acerola.Component.RadioGroup(
@@ -42,5 +45,18 @@ fun Acerola.Component.RadioGroup(
                 Text(text = label)
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun RadioGroupPreview() {
+    AcerolaTheme {
+        Acerola.Component.RadioGroup(
+            selectedIndex = 0,
+            options = listOf("Option 1", "Option 2"),
+            onSelect = {},
+        )
     }
 }

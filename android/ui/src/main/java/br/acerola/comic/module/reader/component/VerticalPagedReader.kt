@@ -12,6 +12,10 @@ import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.gesture.ZoomablePageImage
 import br.acerola.comic.module.reader.state.TapArea
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.foundation.pager.rememberPagerState
 
 @Composable
 fun Reader.Component.VerticalPagedReader(
@@ -47,6 +51,24 @@ fun Reader.Component.VerticalPagedReader(
                     else -> {}
                 }
             },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun VerticalPagedReaderPreview() {
+    AcerolaTheme {
+        val pagerState = rememberPagerState(pageCount = { 5 })
+        Reader.Component.VerticalPagedReader(
+            comicId = 1L,
+            chapterId = 1L,
+            pagerState = pagerState,
+            onUiToggle = {},
+            onPrevClick = {},
+            onNextClick = {},
+            onZoomChange = {},
         )
     }
 }

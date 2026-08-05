@@ -28,6 +28,9 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Component.SyncMetadata(
@@ -230,4 +233,19 @@ private fun SyncItem(
             }
         },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SyncMetadataPreview() {
+    AcerolaTheme {
+        Comic.Component.SyncMetadata(
+            remoteInfo = null,
+            externalSyncEnabled = true,
+            onSyncMangadexInfo = {},
+            onSyncComicInfo = {},
+            onSyncAnilistInfo = {},
+        )
+    }
 }

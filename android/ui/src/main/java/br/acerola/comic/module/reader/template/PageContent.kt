@@ -10,6 +10,11 @@ import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.component.HorizontalPagedReader
 import br.acerola.comic.module.reader.component.VerticalPagedReader
 import br.acerola.comic.module.reader.component.WebtoonReader
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 @Composable
 fun Reader.Template.PageContent(
@@ -63,5 +68,28 @@ fun Reader.Template.PageContent(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PageContentPreview() {
+    AcerolaTheme {
+        val pagerState = rememberPagerState(pageCount = { 5 })
+        val listState = rememberLazyListState()
+        Reader.Template.PageContent(
+            pageCount = 5,
+            pagerState = pagerState,
+            onUiToggle = {},
+            onPrevClick = {},
+            onNextClick = {},
+            readingMode = ReadingMode.VERTICAL,
+            listState = listState,
+            comicId = 1L,
+            chapterId = 1L,
+            onPageRequest = {},
+            onZoomChange = {},
+        )
     }
 }

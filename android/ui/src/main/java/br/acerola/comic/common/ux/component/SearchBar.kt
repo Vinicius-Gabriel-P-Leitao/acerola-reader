@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -238,3 +240,32 @@ fun rememberSearchBarContentPadding(additionalBottomPadding: Dp = 16.dp): Paddin
         bottom = bottomBarHeight + bottomInset + additionalBottomPadding,
     )
 }
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SearchBarPreview() {
+    AcerolaTheme {
+        Acerola.Component.SearchBar<String>(
+            query = "One Piece",
+            onQueryChange = {},
+            onSearch = {},
+            expanded = true,
+            onExpandedChange = {},
+            items = listOf("One Piece - Vol. 1", "One Piece - Vol. 2", "One Piece - Film Red"),
+            placeholder = stringResource(R.string.label_home_search_placeholder),
+            itemKey = { it },
+            itemContent = { title ->
+                Text(
+                    text = title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+        )
+    }
+}
+
+

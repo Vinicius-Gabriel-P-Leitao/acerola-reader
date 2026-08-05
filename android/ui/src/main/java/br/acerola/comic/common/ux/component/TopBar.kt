@@ -1,4 +1,7 @@
 package br.acerola.comic.common.ux.component
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -100,5 +103,23 @@ fun Acerola.Component.TitleCapsule(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TopBarPreview() {
+    AcerolaTheme {
+        Acerola.Component.TopBar(title = "Title")
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TitleCapsulePreview() {
+    AcerolaTheme {
+        Acerola.Component.TitleCapsule(text = "Capsule")
     }
 }

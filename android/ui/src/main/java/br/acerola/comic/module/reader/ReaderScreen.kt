@@ -1,4 +1,9 @@
 package br.acerola.comic.module.reader
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -203,6 +208,32 @@ fun ReaderScreen(
                     onAction(ReaderAction.UpdateReadingMode(mode))
                     showSettings = false
                 },
+            )
+        }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ReaderScreenPreview() {
+    AcerolaTheme {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Reader.Template.TopBar(
+                title = "Capítulo 01",
+                subtitle = "Sample Comic",
+                isVisible = true,
+                onBackClick = {},
+                onSettingsClick = {},
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Reader.Template.BottomControls(
+                pageCount = 20,
+                currentPage = 5,
+                onPrevClick = {},
+                onNextClick = {},
+                onNextChapterClick = {},
+                onPreviousChapterClick = {},
             )
         }
     }

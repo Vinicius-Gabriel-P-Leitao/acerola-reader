@@ -42,6 +42,9 @@ import br.acerola.comic.module.main.Main
 import br.acerola.comic.module.main.home.state.FilterSettings
 import br.acerola.comic.pattern.metadata.MetadataSource
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -241,5 +244,24 @@ fun Main.Home.Component.HomeFilterSheet(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HomeFilterSheetPreview() {
+    AcerolaTheme {
+        Main.Home.Component.HomeFilterSheet(
+            sortSettings = HomeSortPreference(
+                type = ComicSortType.TITLE,
+                direction = SortDirection.ASCENDING
+            ),
+            filterSettings = FilterSettings(),
+            categories = emptyList(),
+            onSortChange = {},
+            onFilterChange = {},
+            onDismiss = {},
+        )
     }
 }

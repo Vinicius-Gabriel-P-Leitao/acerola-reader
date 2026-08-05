@@ -23,6 +23,10 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.mapper.LanguageMapper
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.material3.Button
 
 @Composable
 fun Acerola.Component.LanguagePicker(
@@ -75,5 +79,18 @@ fun Acerola.Component.LanguagePicker(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LanguagePickerPreview() {
+    AcerolaTheme {
+        Acerola.Component.LanguagePicker(
+            selectedLanguage = "pt-BR",
+            onLanguageSelected = {},
+            trigger = { onClick -> Button(onClick = onClick) { Text("Language") } },
+        )
     }
 }

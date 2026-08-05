@@ -1,4 +1,7 @@
 package br.acerola.comic.module.main.home.template
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,5 +35,14 @@ fun Main.Home.Template.TopBar(
         ) {
             actions()
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TopBarPreview() {
+    AcerolaTheme {
+        Main.Home.Template.TopBar()
     }
 }

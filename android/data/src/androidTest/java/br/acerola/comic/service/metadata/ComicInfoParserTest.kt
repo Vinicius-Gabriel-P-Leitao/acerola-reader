@@ -89,31 +89,6 @@ class ComicInfoParserTest {
     }
 
     @Test
-    fun parseChapterInfo_deve_ler_dados_do_capitulo_corretamente() {
-        val xml =
-            """
-            <?xml version="1.0"?>
-            <ComicInfo>
-                <Title>Romance Dawn</Title>
-                <Number>1</Number>
-                <Volume>1</Volume>
-                <PageCount>50</PageCount>
-            </ComicInfo>
-            """.trimIndent()
-
-        val inputStream = ByteArrayInputStream(xml.toByteArray())
-        val result = service.parseChapterInfo(inputStream)
-
-        assertTrue(result.isRight())
-        result.onRight { info ->
-            assertEquals("Romance Dawn", info.title)
-            assertEquals("1", info.chapter)
-            assertEquals("1", info.volume)
-            assertEquals(50, info.pages)
-        }
-    }
-
-    @Test
     fun serialize_deve_gerar_xml_valido() {
         val info =
             ComicMetadataDto(

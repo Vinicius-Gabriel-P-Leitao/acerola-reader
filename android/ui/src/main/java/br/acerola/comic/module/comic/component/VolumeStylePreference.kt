@@ -14,6 +14,9 @@ import br.acerola.comic.common.ux.component.RadioGroup
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Component.VolumeStylePreference(
@@ -48,3 +51,15 @@ private fun volumeStyleLabel(viewType: VolumeViewType): String =
         VolumeViewType.COVER_VOLUME -> stringResource(R.string.label_volume_style_cover)
         else -> stringResource(R.string.label_volume_style_normal)
     }
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun VolumeStylePreferencePreview() {
+    AcerolaTheme {
+        Comic.Component.VolumeStylePreference(
+            selected = VolumeViewType.VOLUME,
+            onSelect = {},
+        )
+    }
+}

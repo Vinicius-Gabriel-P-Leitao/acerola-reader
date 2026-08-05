@@ -30,6 +30,9 @@ import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Acerola.Component.SyncActionIcon(
@@ -94,5 +97,17 @@ fun Acerola.Component.SyncActionIcon(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SyncActionIconPreview() {
+    AcerolaTheme {
+        Acerola.Component.SyncActionIcon(
+            state = SyncActionVisualState.IDLE,
+            icon = {},
+        )
     }
 }

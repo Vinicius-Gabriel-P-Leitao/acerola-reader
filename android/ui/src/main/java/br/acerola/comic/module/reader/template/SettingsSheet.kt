@@ -35,6 +35,9 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.config.preference.types.ReadingMode
 import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Reader.Template.SettingsSheet(
@@ -153,5 +156,18 @@ private fun ReadingModeItem(
                         .background(MaterialTheme.colorScheme.primary),
             )
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SettingsSheetPreview() {
+    AcerolaTheme {
+        Reader.Template.SettingsSheet(
+            onDismissRequest = {},
+            currentMode = ReadingMode.VERTICAL,
+            onModeSelected = {},
+        )
     }
 }

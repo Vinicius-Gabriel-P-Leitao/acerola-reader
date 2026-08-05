@@ -41,6 +41,9 @@ import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 // FIXME: Verificar como isso tá chegando no banco de dados, provavelmente o frontend é a verdade e só manda isso para o banco de dados
 val categoryColors =
@@ -229,4 +232,17 @@ private fun CreateCategoryDialog(
             }
         },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun GlobalCategoryManagerPreview() {
+    AcerolaTheme {
+        Main.Config.Component.GlobalCategoryManager(
+            categories = emptyList(),
+            onCreateCategory = { _, _ -> },
+            onDeleteCategory = {},
+        )
+    }
 }

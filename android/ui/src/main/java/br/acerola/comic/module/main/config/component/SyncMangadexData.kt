@@ -15,6 +15,9 @@ import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.common.ux.component.SyncActionIcon
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Main.Config.Component.SyncMangadexData(
@@ -41,4 +44,15 @@ fun Main.Config.Component.SyncMangadexData(
             }
         },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SyncMangadexDataPreview() {
+    AcerolaTheme {
+        Main.Config.Component.SyncMangadexData(
+            onRescan = {},
+        )
+    }
 }
