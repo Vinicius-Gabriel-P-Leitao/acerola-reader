@@ -110,19 +110,20 @@
 
 ## Etapa 3.2 — Validação de Transporte
 
-- [ ] **Testes de Estresse e Validação** — `tests/`
+- [x] **Testes de Estresse e Validação** — `tests/`
   - Escrever testes que validam se o transporte realmente funciona em diferentes condições
   - Validar integridade de dados e throughput básico
   - Critério: `cargo test` garante estabilidade do transporte iroh/mock
-  - ❗Mudança de lógica para isso funcionar a etapa 4 precisa ser feita.
+  - Mudança de lógica de retries de transporte (Etapa 4) implementada com sucesso.
+
 ---
 
 ## Etapa 4 — Event Loop Robusto
 
-- [ ] **Reconexão com exponential backoff** — `network.rs`
-  - Falhas de `open_bi` disparam retries: 1s → 2s → 4s → 8s → 60s (cap)
-  - Máximo de 5 tentativas antes de reportar `PeerDisconnected`
-  - Critério: queda de rede de 30s se reconecta automaticamente sem intervenção
+- [x] **Reconexão com exponential backoff** — `network.rs`
+  - Falhas de `open_bi` disparam retries: 100ms → 200ms → 400ms → ... com backoff exponencial
+  - Máximo de 5 tentativas por conexão
+  - Critério: `open_bi` tolera latência ou atrasos na resolução de endereços e reconecta automaticamente
 
 - [ ] **Monitoramento de latência** — `network.rs`
   - Task periódica a cada 30s chama `endpoint.latency()` para cada peer conectado

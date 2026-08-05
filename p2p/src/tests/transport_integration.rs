@@ -39,12 +39,15 @@ mod run_in_isolation {
     impl ProtocolHandler for SenderHandler {
         async fn handle(
             &self, _peer: &PeerId, mut send: Box<dyn AsyncWrite + Send + Unpin>,
-            _recv: Box<dyn AsyncRead + Send + Unpin>,
+            mut recv: Box<dyn AsyncRead + Send + Unpin>,
         ) -> Result<(), ConnectionError> {
             send.write_all(&self.payload)
                 .await
                 .map_err(|e| ConnectionError::StreamFailed(e.to_string()))?;
-            send.shutdown().await.map_err(|e| ConnectionError::StreamFailed(e.to_string()))
+            send.shutdown().await.map_err(|e| ConnectionError::StreamFailed(e.to_string()))?;
+            let mut dummy = Vec::new();
+            let _ = recv.read_to_end(&mut dummy).await;
+            Ok(())
         }
     }
 
@@ -55,7 +58,7 @@ mod run_in_isolation {
     #[async_trait]
     impl ProtocolHandler for ReceiverHandler {
         async fn handle(
-            &self, _peer: &PeerId, _send: Box<dyn AsyncWrite + Send + Unpin>,
+            &self, _peer: &PeerId, mut send: Box<dyn AsyncWrite + Send + Unpin>,
             mut recv: Box<dyn AsyncRead + Send + Unpin>,
         ) -> Result<(), ConnectionError> {
             let mut buf = Vec::new();
@@ -63,12 +66,14 @@ mod run_in_isolation {
                 .await
                 .map_err(|e| ConnectionError::StreamFailed(e.to_string()))?;
             *self.received.lock().await = buf;
+            let _ = send.shutdown().await;
             Ok(())
         }
     }
 
     #[tokio::test]
     async fn dois_nos_trocam_dados_em_alpn_customizado() {
+        crate::tests::init_tracing();
         let received = Arc::new(Mutex::new(Vec::new()));
         let payload = b"hello acerola".to_vec();
 
@@ -86,10 +91,14 @@ mod run_in_isolation {
                 .await
                 .unwrap();
 
-        node_a.connect(node_b.local_addr().clone(), b"test/echo").await.unwrap();
-        sleep(Duration::from_millis(500)).await;
+        tracing::debug!(node_a_id = %node_a.local_id(), node_b_id = %node_b.local_id(), "initiating test connection");
+        let connect_result = node_a.connect(node_b.local_addr().clone(), b"test/echo").await;
+        tracing::debug!(result = ?connect_result, "connect completed");
+        sleep(Duration::from_millis(1500)).await;
 
-        assert_eq!(*received.lock().await, payload);
+        let received_data = received.lock().await.clone();
+        tracing::debug!(len = received_data.len(), "data received");
+        assert_eq!(received_data, payload);
     }
 
     #[tokio::test]

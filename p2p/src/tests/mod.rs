@@ -6,6 +6,7 @@
 pub mod api_integration;
 pub mod mock_transport;
 pub mod transport_integration;
+pub mod transport_stress;
 
 #[cfg(test)]
 #[allow(dead_code)]

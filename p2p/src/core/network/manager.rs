@@ -174,6 +174,7 @@ impl NetworkManager {
                             let handler = handler.clone();
                             let addr_clone = addr.clone();
                             let alpn_clone = alpn.clone();
+                            let transport = Arc::clone(&self.transport);
 
                             let span = tracing::info_span!(
                                 "outbound",
@@ -181,25 +182,54 @@ impl NetworkManager {
                                 alpn = ?String::from_utf8_lossy(&alpn)
                             );
 
-                            // Procede abrindo requisição ativa à interface física.
-                            match self.transport.open_bi(&alpn, &addr).await {
-                                Ok((send, recv)) => {
-                                    state.write().await.connect(addr_clone.id.clone(), addr_clone.clone(), alpn_clone.clone());
-                                    tracing::debug!(parent: &span, "outbound connection established");
+                            tokio::spawn(
+                                async move {
+                                    let max_retries = 5;
+                                    let mut backoff = std::time::Duration::from_millis(100);
 
-                                    tokio::spawn(async move {
-                                        if let Err(err) = handler.handle(&addr_clone.id, send, recv).await {
-                                            tracing::warn!(error = ?err, "outbound handler failed");
+                                    for attempt in 1..=max_retries {
+                                        match transport.open_bi(&alpn_clone, &addr_clone).await {
+                                            Ok((send, recv)) => {
+                                                state.write().await.connect(
+                                                    addr_clone.id.clone(),
+                                                    addr_clone.clone(),
+                                                    alpn_clone.clone(),
+                                                );
+                                                tracing::debug!("outbound connection established");
+
+                                                if let Err(err) =
+                                                    handler.handle(&addr_clone.id, send, recv).await
+                                                {
+                                                    tracing::warn!(
+                                                        error = ?err,
+                                                        "outbound handler failed"
+                                                    );
+                                                }
+
+                                                tracing::debug!("outbound connection closed");
+                                                state
+                                                    .write()
+                                                    .await
+                                                    .disconnect(&addr_clone.id, &alpn_clone);
+                                                return;
+                                            }
+                                            Err(err) => {
+                                                tracing::warn!(
+                                                    attempt,
+                                                    error = ?err,
+                                                    "outbound connection attempt failed, retrying..."
+                                                );
+                                                if attempt < max_retries {
+                                                    tokio::time::sleep(backoff).await;
+                                                    backoff = (backoff * 2)
+                                                        .min(std::time::Duration::from_secs(5));
+                                                }
+                                            }
                                         }
-
-                                        tracing::debug!("outbound connection closed");
-                                        state.write().await.disconnect(&addr_clone.id, &alpn_clone);
-                                    }.instrument(span));
+                                    }
                                 }
-                                Err(err) => {
-                                    tracing::warn!(parent: &span, error = ?err, "connect failed");
-                                }
-                            }
+                                .instrument(span),
+                            );
                         }
                         NetworkCommand::SwitchGuard { validator, mode } => {
                             // Substitui on-the-fly as proteções de rede e estado operacional.

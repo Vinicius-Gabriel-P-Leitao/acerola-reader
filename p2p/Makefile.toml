@@ -56,6 +56,12 @@ workspace = false
 command = "cargo"
 args = ["nextest", "run", "--profile", "ci"]
 
+[tasks.test-stress]
+description = "Run transport stress and validation tests with output"
+workspace = false
+command = "cargo"
+args = ["test", "--test", "transport_validation", "--", "--nocapture"]
+
 [tasks.build-android-arm64]
 description = "Cross-compile for Android ARM64 (requires Android NDK)"
 workspace = false
