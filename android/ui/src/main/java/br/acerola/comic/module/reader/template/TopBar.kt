@@ -1,4 +1,7 @@
 package br.acerola.comic.module.reader.template
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -135,5 +138,32 @@ fun Reader.Template.TitleCapsule(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TopBarPreview() {
+    AcerolaTheme {
+        Reader.Template.TopBar(
+            title = "Chapter 1",
+            subtitle = "Sample Comic",
+            isVisible = true,
+            onBackClick = {},
+            onSettingsClick = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TitleCapsulePreview() {
+    AcerolaTheme {
+        Reader.Template.TitleCapsule(
+            title = "Chapter 1",
+            subtitle = "Sample Comic",
+        )
     }
 }

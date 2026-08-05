@@ -21,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.state.MainTab
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Template.Tabs(
@@ -80,5 +83,18 @@ fun Comic.Template.Tabs(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TabsPreview() {
+    AcerolaTheme {
+        Comic.Template.Tabs(
+            totalChapters = 10,
+            activeTab = MainTab.CHAPTERS,
+            onTabSelected = {},
+        )
     }
 }

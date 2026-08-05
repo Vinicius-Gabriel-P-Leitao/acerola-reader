@@ -24,6 +24,9 @@ import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -85,4 +88,17 @@ fun Comic.Component.ComicCategorySelector(
                 null
             },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicCategorySelectorPreview() {
+    AcerolaTheme {
+        Comic.Component.ComicCategorySelector(
+            selectedCategory = null,
+            allCategories = emptyList(),
+            onUpdateMangaCategory = {},
+        )
+    }
 }

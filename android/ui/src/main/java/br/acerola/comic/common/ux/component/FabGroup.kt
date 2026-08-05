@@ -1,4 +1,5 @@
 package br.acerola.comic.common.ux.component
+import androidx.compose.material3.Icon
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -38,6 +39,12 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
 
 data class FabGroupItem(
     val icon: @Composable () -> Unit,
@@ -171,5 +178,23 @@ fun Acerola.Component.FabGroup(
                 icon()
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun FabGroupPreview() {
+    AcerolaTheme {
+        Acerola.Component.FabGroup(
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
+            items = listOf(
+                FabGroupItem(
+                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                    label = "Star",
+                    onClick = {},
+                )
+            ),
+        )
     }
 }

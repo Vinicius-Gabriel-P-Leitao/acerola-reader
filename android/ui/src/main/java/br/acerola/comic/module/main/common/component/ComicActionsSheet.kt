@@ -53,6 +53,10 @@ import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 
 @Composable
 fun Main.Common.Component.ComicActionsSheet(
@@ -436,5 +440,51 @@ fun Main.Common.Component.BatchComicCategorySheet(
         }
 
         Spacer(modifier = Modifier.navigationBarsPadding())
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicActionsSheetPreview() {
+    AcerolaTheme {
+        Main.Common.Component.ComicActionsSheet(
+            comic = ComicDto(directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null), category = null, remoteInfo = null),
+            categories = emptyList(),
+            onHide = {},
+            onDelete = {},
+            onBookmark = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicCategorySheetPreview() {
+    AcerolaTheme {
+        Main.Common.Component.ComicCategorySheet(
+            categories = emptyList(),
+            selectedCategoryId = null,
+            onSelect = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun BatchComicCategorySheetPreview() {
+    AcerolaTheme {
+        Main.Common.Component.BatchComicCategorySheet(
+            categories = emptyList(),
+            categoryCounts = emptyMap(),
+            totalSelectedCount = 0,
+            onSelectCategory = {},
+            onRemoveCategory = {},
+            onDismiss = {},
+        )
     }
 }

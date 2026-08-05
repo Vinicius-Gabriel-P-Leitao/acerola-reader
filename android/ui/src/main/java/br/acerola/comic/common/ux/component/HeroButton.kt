@@ -29,6 +29,11 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 
 private val HeroShape = ShapeTokens.Huge
 private val IconShape = ShapeTokens.Large
@@ -290,5 +295,79 @@ private fun HeroButtonContent(
             )
             bottomContent()
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HeroButtonWithVectorPreview() {
+    AcerolaTheme {
+        Acerola.Component.HeroButton(
+            title = "Hero Title",
+            icon = Icons.Default.Star,
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HeroButtonWithComposablePreview() {
+    AcerolaTheme {
+        Acerola.Component.HeroButton(
+            title = "Hero Title",
+            icon = { Icon(Icons.Default.Star, contentDescription = null) },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HeroNestedButtonWithComposablePreview() {
+    AcerolaTheme {
+        Acerola.Component.HeroNestedButton(
+            title = "Nested Title",
+            onClick = {},
+            icon = { Icon(Icons.Default.Star, contentDescription = null) },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HeroNestedButtonWithVectorPreview() {
+    AcerolaTheme {
+        Acerola.Component.HeroNestedButton(
+            title = "Nested Title",
+            icon = Icons.Default.Star,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun GroupedHeroButtonWithComposablePreview() {
+    AcerolaTheme {
+        Acerola.Component.GroupedHeroButton(
+            title = "Grouped Title",
+            icon = { Icon(Icons.Default.Star, contentDescription = null) },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun GroupedHeroButtonWithVectorPreview() {
+    AcerolaTheme {
+        Acerola.Component.GroupedHeroButton(
+            title = "Grouped Title",
+            icon = Icons.Default.Star,
+        )
     }
 }

@@ -28,6 +28,9 @@ import br.acerola.comic.module.reader.Reader
 import br.acerola.comic.module.reader.state.TapArea
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Reader.Gesture.ZoomablePageImage(
@@ -136,6 +139,21 @@ fun Reader.Gesture.ZoomablePageImage(
                             },
                         )
                     },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ZoomablePageImagePreview() {
+    AcerolaTheme {
+        Reader.Gesture.ZoomablePageImage(
+            comicId = 1L,
+            chapterId = 1L,
+            pageIndex = 0,
+            onAreaTap = {},
+            onZoomStatusChange = {},
         )
     }
 }

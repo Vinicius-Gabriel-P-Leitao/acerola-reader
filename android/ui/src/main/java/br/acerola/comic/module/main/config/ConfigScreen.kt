@@ -1,4 +1,8 @@
 package br.acerola.comic.module.main.config
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.config.preference.types.AppTheme
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -458,5 +462,17 @@ fun P2pDemoSection(p2pViewModel: P2pViewModel = hiltViewModel()) {
                 Text("Switch to Relay")
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ScreenPreview() {
+    AcerolaTheme {
+        Main.Config.Component.ThemeSettings(
+            currentTheme = AppTheme.CATPPUCCIN,
+            onThemeChange = {},
+        )
     }
 }

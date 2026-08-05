@@ -1,5 +1,15 @@
 package br.acerola.comic.module.main.history
 
+import br.acerola.comic.module.main.history.state.HistoryItemState
+
+import br.acerola.comic.dto.history.ReadingHistoryWithChapterDto
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.dto.ComicDto
+import br.acerola.comic.dto.archive.ComicDirectoryDto
+
+
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -71,6 +81,14 @@ fun Main.History.Template.Screen(viewModel: HistoryViewModel = hiltViewModel()) 
         }
     }
 
+    HistoryScreenContent(uiState = uiState, onAction = onAction)
+}
+
+@Composable
+fun HistoryScreenContent(
+    uiState: HistoryUiState,
+    onAction: (HistoryAction) -> Unit,
+) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -139,3 +157,35 @@ fun Main.History.Template.Screen(viewModel: HistoryViewModel = hiltViewModel()) 
         }
     }
 }
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ScreenPreview() {
+    AcerolaTheme {
+        HistoryScreenContent(
+            uiState = HistoryUiState(
+                items = listOf(
+                    HistoryItemState(
+                        comic = ComicDto(
+                            directory = ComicDirectoryDto(id = 1L, name = "Cyberpunk 2077", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null),
+                            category = null,
+                            remoteInfo = null,
+                        ),
+                        history = ReadingHistoryWithChapterDto(
+                            comicDirectoryId = 1L,
+                            chapterArchiveId = 10L,
+                            chapterSort = "0001",
+                            lastPage = 5,
+                            updatedAt = 123456L,
+                            chapterName = "Capítulo 1",
+                            isCompleted = false,
+                        ),
+                        chapterCount = 12,
+                    )
+                )
+            ),
+            onAction = {},
+        )
+    }
+}

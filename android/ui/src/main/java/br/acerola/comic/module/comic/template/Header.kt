@@ -56,6 +56,10 @@ import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 
 @Composable
 fun Comic.Template.Header(
@@ -381,6 +385,19 @@ private fun StatusBadge(
             text = status,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HeaderPreview() {
+    AcerolaTheme {
+        Comic.Template.Header(
+            comic = ComicDto(directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null), category = null, remoteInfo = null),
+            history = null,
+            onContinueClick = { _, _ -> },
         )
     }
 }

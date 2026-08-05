@@ -37,6 +37,9 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.module.main.Main
 import br.acerola.comic.ui.R
 import br.acerola.comic.util.sort.SortType
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Main.Pattern.Component.AddTemplateDialog(
@@ -165,5 +168,17 @@ fun Main.Pattern.Component.AddTemplateDialog(
 
             Spacer(modifier = Modifier.height(SpacingTokens.Large))
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AddTemplateDialogPreview() {
+    AcerolaTheme {
+        Main.Pattern.Component.AddTemplateDialog(
+            onDismiss = {},
+            onConfirm = { _, _, _ -> },
+        )
     }
 }

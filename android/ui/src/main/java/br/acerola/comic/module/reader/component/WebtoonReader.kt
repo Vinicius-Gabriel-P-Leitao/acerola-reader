@@ -29,6 +29,10 @@ import androidx.compose.ui.platform.testTag
 import br.acerola.comic.module.reader.Reader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 @Composable
 fun Reader.Component.WebtoonReader(
@@ -141,5 +145,23 @@ fun Reader.Component.WebtoonReader(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun WebtoonReaderPreview() {
+    AcerolaTheme {
+        val listState = rememberLazyListState()
+        Reader.Component.WebtoonReader(
+            pageCount = 5,
+            comicId = 1L,
+            chapterId = 1L,
+            onUiToggle = {},
+            listState = listState,
+            onPageRequest = {},
+            onZoomChange = {},
+        )
     }
 }

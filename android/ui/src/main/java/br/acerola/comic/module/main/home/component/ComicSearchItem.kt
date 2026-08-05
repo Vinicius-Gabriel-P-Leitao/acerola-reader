@@ -37,6 +37,10 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
 import coil.size.SizeResolver
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 
 @Composable
 fun Main.Home.Component.ComicSearchItem(
@@ -202,5 +206,18 @@ fun Main.Home.Component.ComicSearchItem(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicSearchItemPreview() {
+    AcerolaTheme {
+        Main.Home.Component.ComicSearchItem(
+            comic = ComicDto(directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null), category = null, remoteInfo = null),
+            chapterCount = 10,
+            onClick = {},
+        )
     }
 }

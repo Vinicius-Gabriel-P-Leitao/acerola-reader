@@ -1,4 +1,9 @@
 package br.acerola.comic.module.comic
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import androidx.compose.foundation.layout.Column
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Box
@@ -376,6 +381,30 @@ fun ComicScreen(
                 sortSettings = uiState.chapterSortSettings,
                 onSortChange = { comicViewModel.updateChapterSort(it) },
                 onDismiss = { showSortSheet = false },
+            )
+        }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicScreenPreview() {
+    AcerolaTheme {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Comic.Template.Header(
+                comic = ComicDto(
+                    directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null),
+                    category = null,
+                    remoteInfo = null,
+                ),
+                history = null,
+                onContinueClick = { _, _ -> },
+            )
+            Comic.Template.Tabs(
+                totalChapters = 12,
+                activeTab = br.acerola.comic.module.comic.state.MainTab.CHAPTERS,
+                onTabSelected = {},
             )
         }
     }

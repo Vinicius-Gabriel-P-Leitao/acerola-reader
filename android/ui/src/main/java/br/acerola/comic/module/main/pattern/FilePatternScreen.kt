@@ -1,4 +1,7 @@
 package br.acerola.comic.module.main.pattern
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -203,6 +206,29 @@ private fun FilePatternLayout(
                 onAction(FilePatternAction.EditTemplate(template.id, label, pattern, type))
                 editingTemplate = null
             },
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun FilePatternScreenPreview() {
+    AcerolaTheme {
+        FilePatternLayout(
+            uiState = FilePatternUiState(
+                templates = listOf(
+                    ArchiveTemplateDto(
+                        id = 1L,
+                        label = "Padrao Manga",
+                        pattern = "{title} - {chapter}",
+                        type = SortType.CHAPTER,
+                        isDefault = true,
+                    )
+                )
+            ),
+            onAction = {},
+            onBack = {},
         )
     }
 }

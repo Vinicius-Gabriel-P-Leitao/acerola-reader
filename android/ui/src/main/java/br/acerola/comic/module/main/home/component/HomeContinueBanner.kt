@@ -53,6 +53,10 @@ import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlin.math.roundToInt
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.dto.archive.ComicDirectoryDto
 
 private val BannerExpandedHeightPortrait = 280.dp
 private val BannerExpandedHeightLandscape = 180.dp
@@ -315,5 +319,21 @@ fun Main.Home.Component.HomeContinueBanner(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun HomeContinueBannerPreview() {
+    AcerolaTheme {
+        Main.Home.Component.HomeContinueBanner(
+            comic = ComicDto(directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null), category = null, remoteInfo = null),
+            history = ReadingHistoryDto(comicDirectoryId = 1L, chapterArchiveId = 10L, chapterSort = "0001", lastPage = 5, isCompleted = false, updatedAt = 123456L),
+            isExpanded = true,
+            onExpandedChange = {},
+            onContinueClick = {},
+            onComicClick = {},
+        )
     }
 }

@@ -11,6 +11,9 @@ import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.ui.R
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
+import br.acerola.comic.common.ux.theme.AcerolaTheme
 
 @Composable
 fun Comic.Component.ComicExternalSyncToggle(
@@ -32,4 +35,16 @@ fun Comic.Component.ComicExternalSyncToggle(
             )
         },
     )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicExternalSyncTogglePreview() {
+    AcerolaTheme {
+        Comic.Component.ComicExternalSyncToggle(
+            enabled = true,
+            onToggle = {},
+        )
+    }
 }
