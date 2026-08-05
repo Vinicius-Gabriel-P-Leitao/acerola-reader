@@ -129,16 +129,18 @@ O projeto utiliza `cargo-make` para gerenciar todas as rotinas de desenvolviment
 
 ### Convenção de Commits
 
-Utilizamos mensagens de commit estruturadas (baseadas no padrão *Conventional Commits*):
+Utilizamos mensagens de commit estruturadas no padrão `[tag]: Descrição.`:
 
-- `feat:` Adição de nova funcionalidade.
-- `fix:` Correção de bug.
-- `docs:` Alterações em documentação ou comentários.
-- `refactor:` Reformatação ou refatoração sem alterar funcionalidades.
-- `test:` Adição ou correção de testes.
-- `ci:` Alterações nos fluxos de integração contínua.
+- `[feat]:` Adição de nova funcionalidade.
+- `[fixed]:` ou `[fix]:` Correção de bug.
+- `[docs]:` Alterações em documentação ou comentários.
+- `[refactor]:` Reformatação ou refatoração sem alterar funcionalidades.
+- `[test]:` Adição ou correção de testes.
+- `[chore]:` Tarefas de manutenção, formatação ou atualizações gerais.
+- `[ci]:` Alterações nos fluxos de integração contínua.
+- `[merge]:` Mensagens de merge entre branches.
 
-*Exemplo:* `feat(guard): adicionar suporte a persistência no TofuGuard`
+*Exemplo:* `[feat]: Adiciona suporte a persistência no TofuGuard.`
 
 ---
 
