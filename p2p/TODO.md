@@ -83,19 +83,19 @@
 
 ## Etapa D — Mutation Testing
 
-- [ ] **Integrar `cargo-mutants` ao CI** — `.github/workflows/`
-  - `cargo install cargo-mutants`
+- [x] **Integrar `cargo-mutants` ao CI** — `.github/workflows/`
+  - `cargo install --locked cargo-mutants`
   - `cargo mutants --package acerola-p2p` em schedule semanal (não em cada PR — é lento)
   - Score alvo: **≥75% de mutantes mortos**
   - Critério: relatório de mutantes gerado e publicado como artefato de CI
 
-- [ ] **Fortalecer testes do backoff de reconexão** — `core/network/manager.rs`
+- [x] **Fortalecer testes do backoff de reconexão** — `core/network/manager.rs`
   - A lógica `backoff * 2` não é verificada quantitativamente pelos testes
   - Adicionar teste que injeta 3+ falhas consecutivas e mede que o tempo de espera cresce exponencialmente
   - Verificar que após 5 tentativas a task termina sem panic
   - Critério: mutação de `backoff * 2` para `backoff + 1` deve ser detectada pelos testes
 
-- [ ] **Fortalecer testes de `resolve_identity()` com seed inválida** — `api/acerola_builder.rs`
+- [x] **Fortalecer testes de `resolve_identity()` com seed inválida** — `api/acerola_builder.rs`
   - Caminho onde `load_identity()` retorna bytes com tamanho errado (falha no `try_into()`) não é testado em isolamento
   - Adicionar teste unitário que verifica que a função regenera seed ao receber bytes inválidos do storage
   - Critério: mutação no `try_into()` é detectada

@@ -648,4 +648,101 @@ mod tests {
             tokio::time::timeout(Duration::from_millis(500), manager_task_handle).await;
         assert!(timeout_result.is_ok());
     }
+
+    struct TrackingBackoffTransport {
+        call_timestamps: Arc<tokio::sync::Mutex<Vec<tokio::time::Instant>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl P2pTransport for TrackingBackoffTransport {
+        fn local_id(&self) -> PeerId {
+            PeerId { id: "test-peer".to_string(), device_id: None }
+        }
+
+        fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
+            Ok(PeerAddr { id: self.local_id(), addrs: vec![] })
+        }
+
+        async fn accept(&self) -> Result<Box<dyn crate::core::transport::IncomingConnection>, ConnectionError> {
+            std::future::pending().await
+        }
+
+        async fn open_bi(
+            &self, _alpn: &[u8], _peer: &PeerAddr,
+        ) -> Result<
+            (
+                Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
+                Box<dyn tokio::io::AsyncRead + Send + Unpin>,
+            ),
+            ConnectionError,
+        > {
+            self.call_timestamps.lock().await.push(tokio::time::Instant::now());
+            Err(ConnectionError::StreamFailed("simulated network failure".to_string()))
+        }
+
+        async fn latency(&self, _peer: &PeerId) -> Option<Duration> {
+            None
+        }
+
+        async fn shutdown(&self) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn exponential_backoff_increases_delay_and_terminates_safely() {
+        // Inicializa o vetor de marcas temporais para registrar o momento exato de cada tentativa
+        let call_timestamps = Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        let tracking_transport = Arc::new(TrackingBackoffTransport {
+            call_timestamps: Arc::clone(&call_timestamps),
+        });
+
+        let (mut network_manager, command_sender, _network_state) =
+            NetworkManager::new(tracking_transport, open_validator(), no_op_emitter());
+
+        network_manager.register_outbound(b"acerola/test/1", Arc::new(NoopHandler));
+
+        let manager_task_handle = tokio::spawn(network_manager.run());
+
+        let target_peer_address = PeerAddr {
+            id: make_peer("target-peer"),
+            addrs: vec![],
+        };
+
+        command_sender
+            .send(NetworkCommand::Connect {
+                addr: target_peer_address,
+                alpn: b"acerola/test/1".to_vec(),
+            })
+            .await
+            .unwrap();
+
+        // Aguarda virtualmente tempo suficiente para que todas as 5 tentativas concluam
+        tokio::time::sleep(Duration::from_millis(3000)).await;
+
+        let timestamps_guard = call_timestamps.lock().await;
+
+        // Confirma que exatamente 5 tentativas foram executadas e que a task terminou sem pânico
+        assert_eq!(timestamps_guard.len(), 5, "Devem ocorrer exatamente 5 tentativas de reconexão");
+
+        // Calcula os intervalos entre tentativas consecutivas
+        let first_interval = timestamps_guard[1] - timestamps_guard[0];
+        let second_interval = timestamps_guard[2] - timestamps_guard[1];
+        let third_interval = timestamps_guard[3] - timestamps_guard[2];
+        let fourth_interval = timestamps_guard[4] - timestamps_guard[3];
+
+        // Confirma que os intervalos seguem a progressão exponencial (100ms, 200ms, 400ms, 800ms)
+        assert_eq!(first_interval, Duration::from_millis(100));
+        assert_eq!(second_interval, Duration::from_millis(200));
+        assert_eq!(third_interval, Duration::from_millis(400));
+        assert_eq!(fourth_interval, Duration::from_millis(800));
+
+        // Verificação estrita de duplicação: se a mutação alterar * 2 para + 1, as asserções abaixo falharão
+        assert_eq!(second_interval, first_interval * 2);
+        assert_eq!(third_interval, second_interval * 2);
+        assert_eq!(fourth_interval, third_interval * 2);
+
+        let _shutdown_result = command_sender.send(NetworkCommand::Shutdown).await;
+        let _manager_join_result = manager_task_handle.await;
+    }
 }

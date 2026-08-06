@@ -1,10 +1,16 @@
-name: Test Build
+name: Test
 
 on:
   push:
     branches:
       - develop
       - main
+  pull_request:
+    branches:
+      - develop
+      - main
+  schedule:
+    - cron: '0 0 * * 0' # Semanal (todo domingo à meia-noite)
   workflow_dispatch:
 
 jobs:
@@ -71,3 +77,29 @@ jobs:
         with:
           files: acerola/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  mutation-test:
+    name: Cargo Mutants
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-mutants
+        run: cargo install --locked cargo-mutants
+
+      - name: Run mutation tests
+        working-directory: acerola
+        run: cargo mutants --package acerola-p2p --output mutants-out
+
+      - name: Upload Mutants Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants-report
+          path: acerola/mutants-out/

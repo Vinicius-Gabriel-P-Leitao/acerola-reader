@@ -381,4 +381,67 @@ mod tests {
         let state_guard = network_state.read().await;
         assert!(state_guard.peers().is_empty());
     }
+
+    struct InvalidSeedStorage {
+        invalid_bytes: Vec<u8>,
+        saved_seed: Arc<std::sync::Mutex<Option<Vec<u8>>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::core::storage::P2PStorage for InvalidSeedStorage {
+        async fn save_identity(&self, secret: &[u8]) -> Result<(), ConnectionError> {
+            let mut saved_seed_guard = self.saved_seed.lock().unwrap();
+            *saved_seed_guard = Some(secret.to_vec());
+            Ok(())
+        }
+
+        async fn load_identity(&self) -> Result<Option<Vec<u8>>, ConnectionError> {
+            Ok(Some(self.invalid_bytes.clone()))
+        }
+
+        async fn save_peer(
+            &self, _peer: &crate::infra::peer::PeerAddr,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+
+        async fn load_peers(&self) -> Result<Vec<crate::infra::peer::PeerAddr>, ConnectionError> {
+            Ok(vec![])
+        }
+    }
+
+    #[tokio::test]
+    async fn resolve_identity_regenerates_seed_when_storage_returns_invalid_bytes() {
+        // Inicializa storage mock que retorna bytes de tamanho inválido (5 bytes em vez de 32)
+        let saved_seed_container = Arc::new(std::sync::Mutex::new(None));
+        let invalid_seed_storage = InvalidSeedStorage {
+            invalid_bytes: vec![1, 2, 3, 4, 5],
+            saved_seed: Arc::clone(&saved_seed_container),
+        };
+
+        let mut builder = AcerolaP2pBuilder::new(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .storage(invalid_seed_storage);
+
+        // Executa a resolução de identidade em isolamento
+        let resolution_result = builder.resolve_identity().await;
+        assert!(resolution_result.is_ok());
+
+        // Verifica que a seed gerada e atribuída ao transporte possui exatamente 32 bytes
+        let transport_seed = builder.transport.get_seed();
+        assert!(transport_seed.is_some());
+        let resolved_seed_bytes = transport_seed.unwrap();
+        assert_eq!(resolved_seed_bytes.len(), 32);
+
+        // Verifica que a nova seed válida de 32 bytes foi persistida no storage para corrigir a seed inválida anterior
+        let saved_seed_guard = saved_seed_container.lock().unwrap();
+        assert!(saved_seed_guard.is_some());
+        let persisted_bytes = saved_seed_guard.as_ref().unwrap();
+        assert_eq!(persisted_bytes.len(), 32);
+        assert_ne!(persisted_bytes.as_slice(), &[1, 2, 3, 4, 5]);
+        assert_eq!(persisted_bytes.as_slice(), resolved_seed_bytes.as_slice());
+    }
 }
