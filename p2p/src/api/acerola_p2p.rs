@@ -326,4 +326,54 @@ mod tests {
         assert_ne!(node_a.local_device_info().name, node_b.local_device_info().name);
         assert_ne!(node_a.local_device_info().os, node_b.local_device_info().os);
     }
+
+    #[tokio::test]
+    async fn connected_peers_with_info_returns_peers_and_device_info() {
+        let node = build_node().await;
+        let peer = PeerId { id: "test-connected-peer".to_string(), device_id: None };
+        let addr = PeerAddr { id: peer.clone(), addrs: vec![] };
+        let device_info = test_device_info();
+
+        {
+            let mut state_guard = node.state.write().await;
+            state_guard.connect(peer.clone(), addr, b"acerola/handshake/1".to_vec());
+            state_guard.store_device_info(peer.clone(), device_info.clone());
+        }
+
+        let peers_with_info = node.connected_peers_with_info().await;
+        assert_eq!(peers_with_info.len(), 1);
+        assert_eq!(peers_with_info[0].0, peer);
+        assert!(peers_with_info[0].1.contains(b"acerola/handshake/1".as_slice()));
+        assert_eq!(peers_with_info[0].2, Some(device_info));
+    }
+
+    #[tokio::test]
+    async fn switch_guard_command_updates_network_mode_and_returns_ok() {
+        let node = build_node().await;
+        let deny_validator: BoxedValidator = Box::new(|_ctx| {
+            Box::pin(async { Err(ConnectionError::AuthDenied("switch test".into())) })
+        });
+
+        let switch_result = node.switch_guard(deny_validator, NetworkMode::Relay).await;
+        assert!(switch_result.is_ok());
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        assert_eq!(node.mode().await, NetworkMode::Relay);
+    }
+
+    #[tokio::test]
+    async fn shutdown_command_sends_shutdown_signal_and_returns_ok() {
+        let node = build_node().await;
+        let shutdown_result = node.shutdown().await;
+        assert!(shutdown_result.is_ok());
+
+        // Após o shutdown, tentar enviar novos comandos pelo canal command_tx deve falhar com erro
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let peer_address = PeerAddr {
+            id: PeerId { id: "remote".to_string(), device_id: None },
+            addrs: vec![],
+        };
+        let connect_result = node.connect(peer_address, b"acerola/handshake/1").await;
+        assert!(connect_result.is_err());
+    }
 }

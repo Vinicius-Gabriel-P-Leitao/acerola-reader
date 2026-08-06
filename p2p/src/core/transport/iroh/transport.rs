@@ -253,5 +253,14 @@ mod tests {
         let resolved_endpoint_address = resolve_endpoint_addr(node_id, &incoming_ip_address);
 
         assert_eq!(resolved_endpoint_address.id, node_id);
+        assert!(resolved_endpoint_address.ip_addrs().any(|addr| *addr == socket_address));
+    }
+
+    #[tokio::test]
+    async fn iroh_transport_latency_returns_none_for_unknown_peer() {
+        let transport = build_transport().await;
+        let unknown_peer = PeerId { id: "unknown-peer-id".to_string(), device_id: None };
+        assert!(transport.latency(&unknown_peer).await.is_none());
+        assert!(P2pTransport::latency(&transport, &unknown_peer).await.is_none());
     }
 }

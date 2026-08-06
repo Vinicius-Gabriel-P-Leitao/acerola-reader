@@ -120,4 +120,15 @@ mod tests {
             .build(vec![b"test/proto".to_vec()]);
         assert!(transport.await.is_err());
     }
+
+    #[test]
+    fn get_seed_returns_none_when_unconfigured_and_some_when_set() {
+        let builder_unconfigured = IrohTransportBuilder::default();
+        assert!(builder_unconfigured.get_seed().is_none());
+
+        let target_seed = [0x55u8; 32];
+        let mut builder_configured = IrohTransportBuilder::default();
+        builder_configured.set_seed(target_seed);
+        assert_eq!(builder_configured.get_seed(), Some(target_seed));
+    }
 }

@@ -87,3 +87,26 @@ pub trait TransportP2pBuilder: Send + Sync {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MinimalDummyBuilder;
+
+    #[async_trait]
+    impl TransportP2pBuilder for MinimalDummyBuilder {
+        type Output = crate::tests::mock_transport::MockTransport;
+        async fn build(self, _alpns: Vec<Vec<u8>>) -> Result<Self::Output, ConnectionError> {
+            let (transport, _handle) = crate::tests::mock_transport::mock_transport();
+            Ok(transport)
+        }
+    }
+
+    #[test]
+    fn default_trait_methods_behave_as_expected() {
+        let mut dummy_builder = MinimalDummyBuilder;
+        dummy_builder.set_seed([0xAA; 32]);
+        assert!(dummy_builder.get_seed().is_none());
+    }
+}
