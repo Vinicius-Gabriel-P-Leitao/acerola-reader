@@ -75,3 +75,114 @@ impl From<getrandom::Error> for ConnectionError {
         ConnectionError::StartupFailed("system cannot provide secure entropy".into())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{ConnectionError, DeviceInfoError, RpcError};
+    use crate::infra::peer::PeerId;
+
+    /// Verifica que RpcError::Stream exibe "stream error" e a mensagem interna.
+    #[test]
+    fn rpc_error_stream_display() {
+        let error_message = RpcError::Stream("framing failure".into()).to_string();
+
+        assert!(error_message.contains("stream error"));
+        assert!(error_message.contains("framing failure"));
+    }
+
+    /// Verifica que PeerNotFound exibe "peer not found" e o id do peer.
+    #[test]
+    fn connection_error_peer_not_found_display() {
+        let peer_id = PeerId { id: "abc123".into(), device_id: None };
+        let error_message = ConnectionError::PeerNotFound(peer_id).to_string();
+
+        assert!(error_message.contains("peer not found"));
+        assert!(error_message.contains("abc123"));
+    }
+
+    /// Verifica que AuthDenied exibe "connection denied by guard" e o motivo.
+    #[test]
+    fn connection_error_auth_denied_display() {
+        let error_message = ConnectionError::AuthDenied("blocklist".into()).to_string();
+
+        assert!(error_message.contains("connection denied by guard"));
+        assert!(error_message.contains("blocklist"));
+    }
+
+    /// Verifica que StreamFailed exibe "stream failed" e a descrição do erro.
+    #[test]
+    fn connection_error_stream_failed_display() {
+        let error_message = ConnectionError::StreamFailed("io error".into()).to_string();
+
+        assert!(error_message.contains("stream failed"));
+        assert!(error_message.contains("io error"));
+    }
+
+    /// Verifica que Shutdown exibe exatamente "endpoint shut down".
+    #[test]
+    fn connection_error_shutdown_display() {
+        assert_eq!(ConnectionError::Shutdown.to_string(), "endpoint shut down");
+    }
+
+    /// Verifica que Timeout exibe exatamente "connection timed out".
+    #[test]
+    fn connection_error_timeout_display() {
+        assert_eq!(ConnectionError::Timeout.to_string(), "connection timed out");
+    }
+
+    /// Verifica que PeerDisconnected exibe "peer disconnected" e a mensagem passada.
+    #[test]
+    fn connection_error_peer_disconnected_display() {
+        let disconnect_reason = "connection reset by peer".to_string();
+        let error_message =
+            ConnectionError::PeerDisconnected(disconnect_reason.clone()).to_string();
+
+        assert!(error_message.contains("peer disconnected"));
+        assert!(error_message.contains(&disconnect_reason));
+    }
+
+    /// Verifica que IncompatibleVersion exibe exatamente "incompatible protocol version".
+    #[test]
+    fn connection_error_incompatible_version_display() {
+        assert_eq!(
+            ConnectionError::IncompatibleVersion.to_string(),
+            "incompatible protocol version"
+        );
+    }
+
+    /// Verifica que StartupFailed exibe "failed to initialize connection" e a mensagem passada.
+    #[test]
+    fn connection_error_startup_failed_display() {
+        let startup_message = "port already in use".to_string();
+        let error_message = ConnectionError::StartupFailed(startup_message.clone()).to_string();
+
+        assert!(error_message.contains("failed to initialize connection"));
+        assert!(error_message.contains(&startup_message));
+    }
+
+    /// Verifica que DeviceInfoError::Name exibe "failed to read device name".
+    #[test]
+    fn device_info_error_name_display() {
+        assert_eq!(DeviceInfoError::Name.to_string(), "failed to read device name");
+    }
+
+    /// Verifica que DeviceInfoError::Os exibe "failed to read operating system".
+    #[test]
+    fn device_info_error_os_display() {
+        assert_eq!(DeviceInfoError::Os.to_string(), "failed to read operating system");
+    }
+
+    /// Verifica que DeviceInfoError::Version exibe "failed to read app version".
+    #[test]
+    fn device_info_error_version_display() {
+        assert_eq!(DeviceInfoError::Version.to_string(), "failed to read app version");
+    }
+
+    /// Verifica que a conversão de getrandom::Error produz ConnectionError::StartupFailed.
+    #[test]
+    fn from_getrandom_error_produces_startup_failed() {
+        let converted_error = ConnectionError::from(getrandom::Error::UNSUPPORTED);
+
+        assert!(matches!(converted_error, ConnectionError::StartupFailed(_)));
+    }
+}

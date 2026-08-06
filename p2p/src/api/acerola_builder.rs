@@ -1,5 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
+use secrecy::ExposeSecret;
+
 use super::acerola_p2p::AcerolaP2p;
 use crate::{
     core::{
@@ -100,10 +102,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
 
         let seed = match self.transport.get_seed() {
             Some(seed) => seed,
-            None => {
-                use secrecy::ExposeSecret;
-                *crate::data::identity::generate_seed()?.expose_secret()
-            },
+            None => *crate::data::identity::generate_seed()?.expose_secret(),
         };
 
         self.transport.set_seed(seed);
@@ -188,7 +187,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        core::transport::iroh::IrohTransportBuilder, data::identity::device_info::DeviceInfo,
+        core::{storage::InMemoryStorage, transport::iroh::IrohTransportBuilder},
+        data::identity::device_info::DeviceInfo,
         infra::peer::PeerId,
     };
 
@@ -312,8 +312,6 @@ mod tests {
 
     #[tokio::test]
     async fn storage_persists_identity_across_rebuild() {
-        use crate::core::storage::InMemoryStorage;
-
         let storage = InMemoryStorage::new();
 
         let node1 = AcerolaP2p::builder(
@@ -344,5 +342,43 @@ mod tests {
 
         assert_eq!(id1, id2);
         assert_eq!(dev_id1, dev_id2);
+    }
+
+    struct FailingPeerLoadStorage;
+
+    #[async_trait::async_trait]
+    impl crate::core::storage::P2PStorage for FailingPeerLoadStorage {
+        async fn save_identity(&self, _secret: &[u8]) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+        async fn load_identity(&self) -> Result<Option<Vec<u8>>, ConnectionError> {
+            Ok(None)
+        }
+        async fn save_peer(
+            &self, _peer: &crate::infra::peer::PeerAddr,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+        async fn load_peers(&self) -> Result<Vec<crate::infra::peer::PeerAddr>, ConnectionError> {
+            Err(ConnectionError::StreamFailed("disk read error".to_string()))
+        }
+    }
+
+    #[tokio::test]
+    async fn restore_cached_peers_handles_storage_failure_gracefully() {
+        // Verifica que o erro retornado por load_peers não causa panic e deixa o estado limpo
+        let failing_storage: Arc<dyn crate::core::storage::P2PStorage> =
+            Arc::new(FailingPeerLoadStorage);
+        let network_state =
+            Arc::new(tokio::sync::RwLock::new(crate::core::network::state::NetworkState::new()));
+
+        AcerolaP2pBuilder::<IrohTransportBuilder>::restore_cached_peers(
+            Some(&failing_storage),
+            &network_state,
+        )
+        .await;
+
+        let state_guard = network_state.read().await;
+        assert!(state_guard.peers().is_empty());
     }
 }

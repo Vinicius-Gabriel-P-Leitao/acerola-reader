@@ -107,8 +107,9 @@ mod tests {
         sync::RwLock,
         time::{sleep, Duration},
     };
+    use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-    use super::*;
+    use super::{read_byte, write_byte, write_device_info, PING, PONG, *};
     use crate::{
         core::network::state::NetworkState, data::protocol::EventEmitter, infra::peer::PeerId,
     };
@@ -150,9 +151,6 @@ mod tests {
         });
 
         let (read, write) = tokio::io::split(client_side);
-        use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
-
-        use super::{read_byte, write_byte, write_device_info, PONG};
         let mut recv = FramedRead::new(
             Box::new(read) as Box<dyn tokio::io::AsyncRead + Send + Unpin>,
             LengthDelimitedCodec::new(),
@@ -162,7 +160,7 @@ mod tests {
             LengthDelimitedCodec::new(),
         );
 
-        write_byte(&mut send, super::PING).await.unwrap();
+        write_byte(&mut send, PING).await.unwrap();
         let byte = read_byte(&mut recv).await.unwrap();
         assert_eq!(byte, PONG);
 
@@ -188,9 +186,6 @@ mod tests {
         });
 
         let (read, write) = tokio::io::split(client_side);
-        use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
-
-        use super::{read_byte, write_byte, write_device_info};
         let mut recv = FramedRead::new(
             Box::new(read) as Box<dyn tokio::io::AsyncRead + Send + Unpin>,
             LengthDelimitedCodec::new(),
@@ -200,7 +195,7 @@ mod tests {
             LengthDelimitedCodec::new(),
         );
 
-        write_byte(&mut send, super::PING).await.unwrap();
+        write_byte(&mut send, PING).await.unwrap();
         read_byte(&mut recv).await.unwrap();
         write_device_info(&mut send, &make_device_info("client-pc")).await.unwrap();
 

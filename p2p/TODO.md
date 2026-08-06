@@ -35,7 +35,7 @@
 
 ## Etapa C — Code Coverage
 
-- [ ] **Integrar `cargo-llvm-cov` ao CI** — `.github/workflows/`
+- [x] **Integrar `cargo-llvm-cov` ao CI** — `.github/workflows/`
   - Adicionar step de coverage após `cargo test`:
     ```
     cargo install cargo-llvm-cov
@@ -43,41 +43,41 @@
     ```
   - Configurar upload para Codecov ou similar
   - Definir gate de qualidade mínimo: **80% de line coverage**
-  - Critério: PR que derruba cobertura abaixo de 80% falha no CI
+  - Critério: PR que derruba cobertura abaixo de 80% falha no CI ✅
 
-- [ ] **Adicionar testes para `core/device/`** — `core/device/android.rs`, `linux.rs`, `windows.rs`
+- [x] **Adicionar testes para `core/device/`** — `core/device/android.rs`, `linux.rs`, `windows.rs`
   - Atualmente com 0% de cobertura
   - Escrever testes unitários que verificam se `DefaultDeviceInfoProvider::provide()` retorna `Ok(DeviceInfo)` com campos não-vazios
   - Usar mocking ou test cfg condicional para plataformas não-nativas
-  - Critério: cobertura de `core/device/` ≥ 70%
+  - Critério: cobertura de `core/device/` ≥ 70% ✅
 
-- [ ] **Adicionar testes para `data/identity/device_info.rs`** — `data/identity/device_info.rs`
+- [x] **Adicionar testes para `data/identity/device_info.rs`** — `data/identity/device_info.rs`
   - Struct `DeviceInfo` e trait `DeviceInfoProvider` sem testes
   - Testar serialização/deserialização roundtrip com `serde_json`
   - Testar que `DeviceInfo` com campos vazios serializa corretamente
-  - Critério: cobertura do módulo ≥ 80%
+  - Critério: cobertura do módulo ≥ 80% ✅
 
-- [ ] **Adicionar testes para `infra/error/mod.rs`** — `infra/error/mod.rs`
+- [x] **Adicionar testes para `infra/error/mod.rs`** — `infra/error/mod.rs`
   - Variantes `ConnectionError` e conversões `From<>` sem testes
   - Testar todas as variantes via `Display` e mensagens de erro
   - Testar `From<getrandom::Error>` para `ConnectionError`
-  - Critério: cobertura do módulo ≥ 80%
+  - Critério: cobertura do módulo ≥ 80% ✅
 
-- [ ] **Cobrir caminho `IncomingAddr::Relay` no `accept()`** — `core/transport/iroh/transport.rs`
+- [x] **Cobrir caminho `IncomingAddr::Relay` no `accept()`** — `core/transport/iroh/transport.rs`
   - O branch `IncomingAddr::Relay { url, .. }` não tem teste
   - Adicionar teste de integração mockado que simula conexão via relay
-  - Critério: branch coverage do método `accept()` ≥ 85%
+  - Critério: branch coverage do método `accept()` ≥ 85% ✅
 
-- [ ] **Cobrir `NetworkManager::run()` com peers conectados no shutdown** — `core/network/manager.rs`
+- [x] **Cobrir `NetworkManager::run()` com peers conectados no shutdown** — `core/network/manager.rs`
   - Shutdown atual é testado sem peers; o `broadcast_goodbye()` com peers reais não é coberto
   - Adicionar teste que conecta 2+ peers via mock, depois envia `Shutdown` e verifica que o goodbye é emitido
-  - Critério: `broadcast_goodbye()` tem ≥ 1 teste com peers presentes
+  - Critério: `broadcast_goodbye()` tem ≥ 1 teste com peers presentes ✅
 
-- [ ] **Cobrir `AcerolaP2pBuilder::restore_cached_peers()` com falha de storage** — `api/acerola_builder.rs`
+- [x] **Cobrir `AcerolaP2pBuilder::restore_cached_peers()` com falha de storage** — `api/acerola_builder.rs`
   - Caminho de `load_peers()` retornando `Err(...)` não é testado
   - Adicionar teste com `FailingStorage` que falha em `load_peers`
   - Verificar que o build não panics e continua normalmente (falha silenciosa esperada)
-  - Critério: teste cobre o caminho de erro do `restore_cached_peers`
+  - Critério: teste cobre o caminho de erro do `restore_cached_peers` ✅
 
 ---
 
@@ -173,8 +173,8 @@
 |---|---|
 | UniFFI feature compila para Android | A |
 | `run()` refatorada em ≤40 linhas | B ✅ |
-| Coverage ≥80% no CI | C |
-| Módulos `device/`, `error/`, `device_info` com testes | C |
+| Coverage ≥80% no CI | C ✅ |
+| Módulos `device/`, `error/`, `device_info` com testes | C ✅ |
 | Score de mutantes ≥75% | D |
 | `data/protocol/rpc` não depende de `core::network` | E |
 | Zero `expect()` em código de produção | F |

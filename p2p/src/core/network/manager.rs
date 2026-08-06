@@ -160,7 +160,7 @@ impl NetworkManager {
     /// Emite eventos de latência para todos os peers atualmente conectados.
     async fn emit_latency_for_all_peers(&self) {
         let peers: Vec<PeerId> = self.state.read().await.peers().keys().cloned().collect();
-        
+
         for peer in peers {
             if let Some(latency) = self.transport.latency(&peer).await {
                 let payload = serde_json::json!({
@@ -594,5 +594,58 @@ mod tests {
         sleep(Duration::from_millis(30)).await;
 
         assert!(!state.read().await.is_connected(&make_peer("peer-storage-fail")));
+    }
+
+    #[tokio::test]
+    async fn shutdown_with_connected_peers_broadcasts_goodbye() {
+        // Testa se o shutdown com peers conectados dispara a transmissão de goodbye sem travar o loop
+        let (transport, transport_handle) = mock_transport();
+        let transport: Arc<dyn P2pTransport> = Arc::new(transport);
+
+        let (mut network_manager, command_sender, network_state) =
+            NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
+
+        network_manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
+
+        let peer_alpha = make_peer("peer-alpha");
+        let peer_beta = make_peer("peer-beta");
+
+        let (client_alpha, server_alpha) = tokio::io::duplex(1024);
+        let (client_beta, server_beta) = tokio::io::duplex(1024);
+
+        transport_handle.inject(
+            b"acerola/handshake/1",
+            peer_alpha.clone(),
+            client_alpha,
+            server_alpha,
+        );
+        transport_handle.inject(
+            b"acerola/handshake/1",
+            peer_beta.clone(),
+            client_beta,
+            server_beta,
+        );
+
+        let manager_task_handle = tokio::spawn(network_manager.run());
+        sleep(Duration::from_millis(30)).await;
+
+        // Garante que os dois pares foram registrados no estado nominal da rede
+        assert!(network_state.read().await.is_connected(&peer_alpha));
+        assert!(network_state.read().await.is_connected(&peer_beta));
+
+        // Pré-aloca os buffers para as duas transmissões de goodbye no open_bi
+        let (outbound_client_first, outbound_server_first) = tokio::io::duplex(1024);
+        let (outbound_client_second, outbound_server_second) = tokio::io::duplex(1024);
+        transport_handle.expect_open(outbound_client_first, outbound_server_first);
+        transport_handle.expect_open(outbound_client_second, outbound_server_second);
+
+        // Dispara a sinalização de Shutdown
+        let send_result = command_sender.send(NetworkCommand::Shutdown).await;
+        assert!(send_result.is_ok());
+
+        // Confirma encerramento do event loop dentro do tempo limite
+        let timeout_result =
+            tokio::time::timeout(Duration::from_millis(500), manager_task_handle).await;
+        assert!(timeout_result.is_ok());
     }
 }

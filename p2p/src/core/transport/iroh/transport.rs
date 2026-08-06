@@ -78,17 +78,7 @@ impl P2pTransport for IrohTransport {
         let remote_id = conn.remote_id();
         let alpn = conn.alpn();
 
-        let mut endpoint_addr = EndpointAddr::new(remote_id);
-
-        match incoming_addr {
-            IncomingAddr::Ip(addr) => {
-                endpoint_addr = endpoint_addr.with_ip_addr(addr);
-            },
-            IncomingAddr::Relay { url, .. } => {
-                endpoint_addr = endpoint_addr.with_relay_url(url);
-            },
-            _ => {},
-        }
+        let endpoint_addr = resolve_endpoint_addr(remote_id, &incoming_addr);
 
         let peer = self.to_peer_id(remote_id);
         let addr = self.to_peer_addr(remote_id, endpoint_addr);
@@ -178,6 +168,23 @@ impl P2pTransport for IrohTransport {
     }
 }
 
+/// Utilitário interno para compor o EndpointAddr a partir das informações de endereço de entrada.
+fn resolve_endpoint_addr(remote_id: EndpointId, incoming_addr: &IncomingAddr) -> EndpointAddr {
+    let mut endpoint_addr = EndpointAddr::new(remote_id);
+
+    match incoming_addr {
+        IncomingAddr::Ip(socket_address) => {
+            endpoint_addr = endpoint_addr.with_ip_addr(*socket_address);
+        },
+        IncomingAddr::Relay { url: relay_url, .. } => {
+            endpoint_addr = endpoint_addr.with_relay_url(relay_url.clone());
+        },
+        _ => {},
+    }
+
+    endpoint_addr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -218,5 +225,33 @@ mod tests {
     async fn shutdown_without_error() {
         let transport = build_transport().await;
         assert!(transport.shutdown().await.is_ok());
+    }
+
+    #[test]
+    fn resolve_endpoint_addr_handles_relay_url() {
+        // Verifica que o branch IncomingAddr::Relay associa a URL do Relay ao EndpointAddr
+        let node_id = iroh::SecretKey::generate().public();
+        let relay_url: iroh::RelayUrl =
+            "https://relay.example.com.".parse().expect("Relay URL válida");
+        let incoming_relay_address =
+            IncomingAddr::Relay { url: relay_url.clone(), endpoint_id: node_id };
+
+        let resolved_endpoint_address = resolve_endpoint_addr(node_id, &incoming_relay_address);
+
+        assert!(resolved_endpoint_address.relay_urls().any(|u| u == &relay_url));
+        assert_eq!(resolved_endpoint_address.id, node_id);
+    }
+
+    #[test]
+    fn resolve_endpoint_addr_handles_ip_address() {
+        // Verifica que o branch IncomingAddr::Ip associa o SocketAddr ao EndpointAddr
+        let node_id = iroh::SecretKey::generate().public();
+        let socket_address: std::net::SocketAddr =
+            "127.0.0.1:8080".parse().expect("SocketAddr válido");
+        let incoming_ip_address = IncomingAddr::Ip(socket_address);
+
+        let resolved_endpoint_address = resolve_endpoint_addr(node_id, &incoming_ip_address);
+
+        assert_eq!(resolved_endpoint_address.id, node_id);
     }
 }
