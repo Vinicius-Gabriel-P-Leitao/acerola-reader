@@ -382,6 +382,33 @@ mod tests {
         assert!(state_guard.peers().is_empty());
     }
 
+    #[tokio::test]
+    async fn restore_cached_peers_populates_network_state_with_cached_peers() {
+        // Inicializa storage contendo um peer preexistente no cache
+        let memory_storage = InMemoryStorage::new();
+        let cached_peer_address = crate::infra::peer::PeerAddr {
+            id: PeerId { id: "cached-peer-1".to_string(), device_id: None },
+            addrs: vec![],
+        };
+        memory_storage.save_peer(&cached_peer_address).await.unwrap();
+
+        let network_state =
+            Arc::new(tokio::sync::RwLock::new(crate::core::network::state::NetworkState::new()));
+
+        let storage_arc: Arc<dyn crate::core::storage::P2PStorage> = Arc::new(memory_storage);
+
+        // Executa a restauração de peers salvos
+        AcerolaP2pBuilder::<IrohTransportBuilder>::restore_cached_peers(
+            Some(&storage_arc),
+            &network_state,
+        )
+        .await;
+
+        // Verifica que o peer foi carregado para a tabela de endereços conhecidos do estado
+        let state_guard = network_state.read().await;
+        assert!(state_guard.get_addr(&cached_peer_address.id).is_some());
+    }
+
     struct InvalidSeedStorage {
         invalid_bytes: Vec<u8>,
         saved_seed: Arc<std::sync::Mutex<Option<Vec<u8>>>>,

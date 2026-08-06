@@ -634,10 +634,13 @@ mod tests {
         assert!(network_state.read().await.is_connected(&peer_beta));
 
         // Pré-aloca os buffers para as duas transmissões de goodbye no open_bi
-        let (outbound_client_first, outbound_server_first) = tokio::io::duplex(1024);
-        let (outbound_client_second, outbound_server_second) = tokio::io::duplex(1024);
-        transport_handle.expect_open(outbound_client_first, outbound_server_first);
-        transport_handle.expect_open(outbound_client_second, outbound_server_second);
+        let (outbound_client_first, mut outbound_server_first) = tokio::io::duplex(1024);
+        let (outbound_client_second, mut outbound_server_second) = tokio::io::duplex(1024);
+        let (_dummy_client_first, dummy_server_first) = tokio::io::duplex(1024);
+        let (_dummy_client_second, dummy_server_second) = tokio::io::duplex(1024);
+
+        transport_handle.expect_open(outbound_client_first, dummy_server_first);
+        transport_handle.expect_open(outbound_client_second, dummy_server_second);
 
         // Dispara a sinalização de Shutdown
         let send_result = command_sender.send(NetworkCommand::Shutdown).await;
@@ -647,6 +650,59 @@ mod tests {
         let timeout_result =
             tokio::time::timeout(Duration::from_millis(500), manager_task_handle).await;
         assert!(timeout_result.is_ok());
+
+        // Valida que a mensagem de GOODBYE foi efetivamente transmitida pelos canais outbound
+        use tokio::io::AsyncReadExt;
+        let mut buffer_alpha = [0u8; 16];
+        let mut buffer_beta = [0u8; 16];
+        let read_alpha_result = tokio::time::timeout(
+            Duration::from_millis(100),
+            outbound_server_first.read(&mut buffer_alpha),
+        )
+        .await;
+        let read_beta_result = tokio::time::timeout(
+            Duration::from_millis(100),
+            outbound_server_second.read(&mut buffer_beta),
+        )
+        .await;
+
+        assert!(
+            read_alpha_result.is_ok() && read_alpha_result.unwrap().unwrap_or(0) > 0,
+            "Deve transmitir o payload de goodbye para peer-alpha"
+        );
+        assert!(
+            read_beta_result.is_ok() && read_beta_result.unwrap().unwrap_or(0) > 0,
+            "Deve transmitir o payload de goodbye para peer-beta"
+        );
+    }
+
+    #[tokio::test]
+    async fn switch_guard_command_updates_active_validator_and_network_mode() {
+        let (transport, _transport_handle) = mock_transport();
+        let (network_manager, command_sender, network_state) =
+            NetworkManager::new(Arc::new(transport), open_validator(), no_op_emitter());
+
+        let manager_task_handle = tokio::spawn(network_manager.run());
+
+        let deny_validator: BoxedValidator = Box::new(|_ctx| {
+            Box::pin(async { Err(ConnectionError::AuthDenied("switch test deny".into())) })
+        });
+
+        command_sender
+            .send(NetworkCommand::SwitchGuard {
+                validator: deny_validator,
+                mode: crate::core::network::state::NetworkMode::Relay,
+            })
+            .await
+            .unwrap();
+
+        sleep(Duration::from_millis(30)).await;
+
+        let state_guard = network_state.read().await;
+        assert_eq!(*state_guard.mode(), crate::core::network::state::NetworkMode::Relay);
+
+        let _shutdown_result = command_sender.send(NetworkCommand::Shutdown).await;
+        let _manager_join_result = manager_task_handle.await;
     }
 
     struct TrackingBackoffTransport {
