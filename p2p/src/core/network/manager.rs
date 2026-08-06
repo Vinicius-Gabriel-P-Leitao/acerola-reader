@@ -127,171 +127,171 @@ impl NetworkManager {
 
         loop {
             tokio::select! {
-                // Evento 0: Checagem periódica da latência de todos os peers conectados.
                 _ = latency_interval.tick() => {
-                    let peers: Vec<PeerId> = self.state.read().await.peers().keys().cloned().collect();
-                    for peer in peers {
-                        if let Some(latency) = self.transport.latency(&peer).await {
-                            let payload = serde_json::json!({
-                                "peer_id": peer.id,
-                                "latency_ms": latency.as_millis() as u64,
-                            }).to_string();
-                            (self.emit)("network:latency", payload);
-                        }
-                    }
+                    self.emit_latency_for_all_peers().await;
                 }
-                // Evento 1: Uma conexão externa solicitando handshake foi recebida.
                 result = self.transport.accept() => {
                     match result {
-                        Ok(incoming) => {
-                            // Ignora e droppa conexões se o ALPN não está suportado no mapa local.
-                            let Some(handler) = self.handlers_inbound.get(incoming.alpn()) else { continue };
-
-                            let state = Arc::clone(&self.state);
-                            let handler = handler.clone();
-                            let validator = Arc::clone(&self.validator);
-                            let storage = self.storage.clone();
-
-                            // Lança o tratamento da stream em background (Tarefa paralela).
-                            let span = tracing::info_span!(
-                                "inbound",
-                                peer = %incoming.peer().id,
-                                alpn = ?String::from_utf8_lossy(incoming.alpn())
-                            );
-
-                            tokio::spawn(async move {
-                                let peer = incoming.peer().clone();
-                                let addr = incoming.addr().clone();
-                                let alpn = incoming.alpn().to_vec();
-
-                                // Exige a promoção da conexão à canais de leitura e escrita.
-                                let Ok((send, recv)) = incoming.accept_bi().await else { return };
-
-                                // Etapa de Segurança: Invoca a Validação (Guard).
-                                let ctx = ConnectionContext { peer_id: peer.clone(), data: () };
-                                let allowed = {
-                                    let guard = validator.read().await;
-                                    guard(&ctx)
-                                }.await;
-
-                                if let Err(err) = allowed {
-                                    tracing::debug!(error = ?err, "connection denied by guard");
-                                    return; // O early return mata as streams `send` e `recv`.
-                                }
-
-                                // Etapa de Storage: Salva o peer no storage se configurado.
-                                if save_peer_if_present(storage.as_ref(), &addr).await.is_err() {
-                                    tracing::error!(peer = %peer.id, "failed to save peer to storage, terminating connection");
-                                    return;
-                                }
-
-                                // Promove a conexão a 'Conectada' no tracker central
-                                state.write().await.connect(peer.clone(), addr, alpn.clone());
-                                tracing::debug!("connection accepted");
-
-                                // Bloqueia esta Task na execução do protocolo ALPN assinalado.
-                                if let Err(err) = handler.handle(&peer, send, recv).await {
-                                    tracing::warn!(error = ?err, "inbound handler failed");
-                                }
-                                tracing::debug!("connection closed");
-
-                                // Protocolo encerrou, retira a tag ALPN do Estado Central.
-                                state.write().await.disconnect(&peer, &alpn);
-                            }.instrument(span));
-                        }
-                        Err(ConnectionError::Shutdown) => break, // Trata finalização programada.
+                        Ok(incoming) => self.handle_incoming(incoming),
+                        Err(ConnectionError::Shutdown) => break,
                         Err(err) => {
                             tracing::debug!(error = ?err, "transport accept failed");
-                            continue; // Permite que a rede tente se recuperar sob outros erros.
                         }
                     }
                 }
-                // Evento 2: Uma requisição na fila do manager vinda da própria API da biblioteca.
                 Some(cmd) = self.command_rx.recv() => {
                     match cmd {
                         NetworkCommand::Connect { addr, alpn } => {
-                            let Some(handler) = self.handlers_outbound.get(&alpn) else { continue };
-
-                            let state = Arc::clone(&self.state);
-                            let handler = handler.clone();
-                            let addr_clone = addr.clone();
-                            let alpn_clone = alpn.clone();
-                            let transport = Arc::clone(&self.transport);
-                            let storage = self.storage.clone();
-
-                            let span = tracing::info_span!(
-                                "outbound",
-                                addr = %addr.id,
-                                alpn = ?String::from_utf8_lossy(&alpn)
-                            );
-
-                            tokio::spawn(
-                                async move {
-                                    let max_retries = 5;
-                                    let mut backoff = std::time::Duration::from_millis(100);
-
-                                    for attempt in 1..=max_retries {
-                                        match transport.open_bi(&alpn_clone, &addr_clone).await {
-                                            Ok((send, recv)) => {
-                                                if save_peer_if_present(storage.as_ref(), &addr_clone).await.is_err() {
-                                                    tracing::error!(peer = %addr_clone.id, "failed to save outbound peer to storage, terminating connection");
-                                                    return;
-                                                }
-
-                                                state.write().await.connect(
-                                                    addr_clone.id.clone(),
-                                                    addr_clone.clone(),
-                                                    alpn_clone.clone(),
-                                                );
-                                                tracing::debug!("outbound connection established");
-
-                                                if let Err(err) =
-                                                    handler.handle(&addr_clone.id, send, recv).await
-                                                {
-                                                    tracing::warn!(
-                                                        error = ?err,
-                                                        "outbound handler failed"
-                                                    );
-                                                }
-
-                                                tracing::debug!("outbound connection closed");
-                                                state
-                                                    .write()
-                                                    .await
-                                                    .disconnect(&addr_clone.id, &alpn_clone);
-                                                return;
-                                            }
-                                            Err(err) => {
-                                                tracing::warn!(
-                                                    attempt,
-                                                    error = ?err,
-                                                    "outbound connection attempt failed, retrying..."
-                                                );
-                                                if attempt < max_retries {
-                                                    tokio::time::sleep(backoff).await;
-                                                    backoff = (backoff * 2)
-                                                        .min(std::time::Duration::from_secs(5));
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                .instrument(span),
-                            );
+                            self.handle_connect_command(addr, alpn);
                         }
                         NetworkCommand::SwitchGuard { validator, mode } => {
-                            // Substitui on-the-fly as proteções de rede e estado operacional.
-                            *self.validator.write().await = validator;
-                            self.state.write().await.switch_mode(mode);
+                            self.handle_switch_guard(validator, mode).await;
                         }
                         NetworkCommand::Shutdown => {
                             self.broadcast_goodbye().await;
-                            break; // Rompe o loop explicitamente.
+                            break;
                         }
                     }
                 }
             }
         }
+    }
+
+    /// Emite eventos de latência para todos os peers atualmente conectados.
+    async fn emit_latency_for_all_peers(&self) {
+        let peers: Vec<PeerId> = self.state.read().await.peers().keys().cloned().collect();
+        
+        for peer in peers {
+            if let Some(latency) = self.transport.latency(&peer).await {
+                let payload = serde_json::json!({
+                    "peer_id": peer.id,
+                    "latency_ms": latency.as_millis() as u64,
+                })
+                .to_string();
+                (self.emit)("network:latency", payload);
+            }
+        }
+    }
+
+    /// Aceita e despacha uma conexão inbound em background.
+    ///
+    /// Ignora silenciosamente conexões cujo ALPN não possui handler registrado.
+    fn handle_incoming(&self, incoming: Box<dyn crate::core::transport::IncomingConnection>) {
+        let Some(handler) = self.handlers_inbound.get(incoming.alpn()) else { return };
+
+        let state = Arc::clone(&self.state);
+        let handler = handler.clone();
+        let validator = Arc::clone(&self.validator);
+        let storage = self.storage.clone();
+
+        let span = tracing::info_span!(
+            "inbound",
+            peer = %incoming.peer().id,
+            alpn = ?String::from_utf8_lossy(incoming.alpn())
+        );
+
+        tokio::spawn(
+            async move {
+                let peer = incoming.peer().clone();
+                let addr = incoming.addr().clone();
+                let alpn = incoming.alpn().to_vec();
+
+                let Ok((send, recv)) = incoming.accept_bi().await else { return };
+
+                let ctx = ConnectionContext { peer_id: peer.clone(), data: () };
+                let allowed = {
+                    let guard = validator.read().await;
+                    guard(&ctx)
+                }
+                .await;
+
+                if let Err(err) = allowed {
+                    tracing::debug!(error = ?err, "connection denied by guard");
+                    return;
+                }
+
+                if save_peer_if_present(storage.as_ref(), &addr).await.is_err() {
+                    tracing::error!(peer = %peer.id, "failed to save peer to storage, terminating connection");
+                    return;
+                }
+
+                state.write().await.connect(peer.clone(), addr, alpn.clone());
+                tracing::debug!("connection accepted");
+
+                if let Err(err) = handler.handle(&peer, send, recv).await {
+                    tracing::warn!(error = ?err, "inbound handler failed");
+                }
+                tracing::debug!("connection closed");
+
+                state.write().await.disconnect(&peer, &alpn);
+            }
+            .instrument(span),
+        );
+    }
+
+    /// Dispara uma tentativa de conexão outbound com retries em background.
+    ///
+    /// Ignora silenciosamente se não há handler registrado para o ALPN solicitado.
+    fn handle_connect_command(&self, addr: PeerAddr, alpn: Vec<u8>) {
+        let Some(handler) = self.handlers_outbound.get(&alpn) else { return };
+
+        let state = Arc::clone(&self.state);
+        let handler = handler.clone();
+        let transport = Arc::clone(&self.transport);
+        let storage = self.storage.clone();
+
+        let span = tracing::info_span!(
+            "outbound",
+            addr = %addr.id,
+            alpn = ?String::from_utf8_lossy(&alpn)
+        );
+
+        tokio::spawn(
+            async move {
+                let max_retries = 5;
+                let mut backoff = std::time::Duration::from_millis(100);
+
+                for attempt in 1..=max_retries {
+                    match transport.open_bi(&alpn, &addr).await {
+                        Ok((send, recv)) => {
+                            if save_peer_if_present(storage.as_ref(), &addr).await.is_err() {
+                                tracing::error!(peer = %addr.id, "failed to save outbound peer to storage, terminating connection");
+                                return;
+                            }
+
+                            state.write().await.connect(addr.id.clone(), addr.clone(), alpn.clone());
+                            tracing::debug!("outbound connection established");
+
+                            if let Err(err) = handler.handle(&addr.id, send, recv).await {
+                                tracing::warn!(error = ?err, "outbound handler failed");
+                            }
+
+                            tracing::debug!("outbound connection closed");
+                            state.write().await.disconnect(&addr.id, &alpn);
+                            return;
+                        }
+                        Err(err) => {
+                            tracing::warn!(
+                                attempt,
+                                error = ?err,
+                                "outbound connection attempt failed, retrying..."
+                            );
+                            if attempt < max_retries {
+                                tokio::time::sleep(backoff).await;
+                                backoff = (backoff * 2).min(std::time::Duration::from_secs(5));
+                            }
+                        }
+                    }
+                }
+            }
+            .instrument(span),
+        );
+    }
+
+    /// Substitui on-the-fly o Guard ativo e o modo operacional da rede.
+    async fn handle_switch_guard(&self, validator: BoxedValidator, mode: NetworkMode) {
+        *self.validator.write().await = validator;
+        self.state.write().await.switch_mode(mode);
     }
 
     /// Envia o sinal de GOODBYE para todos os peers conectados antes de desligar.

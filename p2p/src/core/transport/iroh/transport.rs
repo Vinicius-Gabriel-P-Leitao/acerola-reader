@@ -158,19 +158,14 @@ impl P2pTransport for IrohTransport {
         let paths = conn.paths();
         let path_list = paths.peek();
 
-        if let Some(selected_path) = path_list.iter().find(|p| p.is_selected()) {
-            if let Some(rtt) = selected_path.rtt() {
-                return Some(rtt);
-            }
-        }
-
-        for path in path_list.iter() {
-            if let Some(rtt) = path.rtt() {
-                return Some(rtt);
-            }
-        }
-
-        None
+        // Prefere o caminho selecionado; aceita qualquer outro como fallback.
+        // A variável local força o iterador a ser resolvido antes de `paths` ser dropado.
+        let rtt = path_list
+            .iter()
+            .filter(|path| path.is_selected())
+            .chain(path_list.iter())
+            .find_map(|path| path.rtt());
+        rtt
     }
 
     /// Executa o teardown forçado do componente iroh.

@@ -1,166 +1,182 @@
-# AcerolaP2P — Roadmap de Production-Readiness
+# AcerolaP2P — TODO de Qualidade e Evolução
 
-## Etapa 0 — Correções Críticas (fazer antes de qualquer outra coisa)
-
-- [x] **Fix ALPN registration bug** — `api.rs` + `transport/iroh.rs`
-  - `build()` deve coletar todos os ALPNs de `handlers_inbound` e passá-los para `IrohTransport::new(alpns)`
-  - Sem esse fix, protocolos customizados registrados via `.inbound()` são silenciosamente rejeitados pelo Iroh no nível TLS
-  - Critério: dois nós conseguem trocar mensagens em um ALPN customizado (não-rpc)
-
-- [x] **Relay configurável via builder** — `api.rs` + `transport/iroh.rs`
-  - Adicionar `.relay(url: &str)` no `AcerolaP2PBuilder`
-  - `IrohTransport::new()` recebe `relay_url: &str` ao invés de hardcoded
-  - Remover o FIXME em `iroh.rs:114`
-  - Critério: trocar a URL do relay sem recompilar
+> Baseado na análise de quality metrics do projeto (2026-08-05).
+> Todos os itens das etapas anteriores foram concluídos, exceto os marcados abaixo.
 
 ---
 
-## Etapa 1 — Identidade Determinística
+## Etapa A — Itens Pendentes do Roadmap Anterior
 
- ❗Mudança de planos, usaremos blake3
-
-- [x] **Seed → SecretKey via HKDF** — `transport/iroh.rs` + `api.rs`
-  - Adicionar dependências: `hkdf`, `sha2`
-  - Implementar `derive_secret_key(seed: &[u8; 32]) -> iroh::SecretKey` com HKDF-SHA256
-  - Usar `Endpoint::builder().secret_key(key)` para fixar a identidade
-  - Expor `.seed(seed: [u8; 32])` no `AcerolaP2PBuilder`
-  - Critério: `PeerId` idêntico após reiniciar com a mesma seed
-
-- [x] **DeviceId determinístico** — `peer.rs`
-  - `PeerId` expõe um `device_id: String` derivado do hash Blake3 da chave pública
-  - Critério: `device_id` é o mesmo UUID a cada reinício com mesma seed
-
----
-
-## Etapa 2 — Bootstrap Handshake
-
-- [x] **Protocolo de apresentação** — `protocol/hello.rs` (novo arquivo)
-  - Definir struct `DeviceInfo { name, os, version, public_key }`
-  - Serialização via MessagePack (`rmp-serde`)
-  - Ao estabelecer qualquer conexão, a primeira troca obrigatória é `DeviceInfo` em ambas as direções
-  - `NetworkState` armazena `DeviceInfo` indexado por `PeerId`
-  - Critério: logo após conectar, ambos os nós conhecem nome/OS/versão do peer sem segunda requisição
-
----
-
-## Etapa 2.1 — Feature Flag de Transport
-
-- [x] **Iroh como feature opcional** — `Cargo.toml` + `core/transport/` + `api/`
-  - Tornar a dependência `iroh` opcional: `iroh = { version = "...", optional = true }`
-  - Adicionar `[features] default = ["iroh"]`
-  - Gatar `pub mod iroh` em `core/transport/mod.rs` com `#[cfg(feature = "iroh")]`
-  - Remover o default generic de `AcerolaP2pBuilder<TB = IrohTransportBuilder>` — fica `<TB: TransportP2pBuilder>`
-  - Gatar o método `AcerolaP2p::builder()` com `#[cfg(feature = "iroh")]`
-  - Gatar testes que usam `IrohTransportBuilder` diretamente com `#[cfg(feature = "iroh")]`
-  - Critério: `cargo build --no-default-features` compila sem erros; `cargo test --features iroh` passa tudo
-
----
-
-## Etapa 2.2 — Proteção do Protocolo Interno
-
-- [x] **ALPN `acerola/rpc` imutável** — `api/acerola_builder.rs`
-  - Adicionar conjunto de ALPNs reservados: `const RESERVED: &[&[u8]] = &[b"acerola/rpc"]`
-  - Em `.inbound()` e `.outbound()`, checar contra `RESERVED` e `panic!` com mensagem clara
-  - Critério: tentar registrar handler com ALPN reservado causa erro imediato em tempo de execução
-  ! Foi mudado para acerola/handshake/1
-
----
-
-## Etapa 2.3 — Feature UniFFI para DeviceInfo
-
-- [x] **`DeviceInfo` como UniFFI record opcional** — `data/identity/device_info.rs` + `Cargo.toml`
-  - Adicionar feature: `uniffi = ["dep:uniffi"]`
+- [ ] **Implementar UniFFI para DeviceInfo** — `Cargo.toml` + `data/identity/device_info.rs`
+  - Adicionar dependência opcional: `uniffi = { version = "...", optional = true }` 
+  - Adicionar feature: `[features] uniffi = ["dep:uniffi"]`
   - Adicionar `#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]` na struct `DeviceInfo`
-  - Facilita integração Android: o Kotlin passa `DeviceInfo(name, os, version)` diretamente via binding gerado
-  - Sem a feature, zero overhead — desktop usa `DefaultDeviceInfoProvider` normalmente
   - Critério: `cargo build --features uniffi` compila; binding gerado expõe `DeviceInfo` como record no Kotlin
 
 ---
 
-## Etapa 3 — Segurança (TOFU Guard)
+## Etapa B — Function Size & Cyclomatic Complexity
 
-> O iroh já prova posse da chave privada via TLS durante o handshake QUIC — challenge-response
-> na camada de aplicação seria redundante. O NodeId que chega no Guard já é autêntico.
-> O modelo SSH-like (Trust On First Use) é suficiente e mais simples.
+- [x] **Refatorar `NetworkManager::run()`** — `core/network/manager.rs`
+  - Função atual tem ~171 linhas e CC estimada de 18–22 (limite recomendado: ≤10)
+  - Extrair bloco de aceite de conexão inbound em `fn handle_incoming(&mut self, incoming: ...) -> ...`
+  - Extrair bloco de connect outbound (com retries) em `fn handle_connect_command(&mut self, addr, alpn) -> ...`
+  - Extrair bloco de latência periódica em `fn emit_latency_for_all_peers(&self) -> ...`
+  - Extrair bloco de `SwitchGuard` em `fn handle_switch_guard(&mut self, validator, mode)`
+  - Após refatoração, `run()` tem ~35 linhas ✅
+  - Critério: **88/88 testes passando** ✅
 
-- [x] **TofuGuard** — `core/guard/tofu.rs` (novo arquivo)
-  - Struct `TofuGuard` com uma store injetável (`Arc<dyn TrustedPeerStore>`)
-  - Trait `TrustedPeerStore`: `contains(&str) -> bool` + `insert(&str)`
-  - Implementação padrão em memória: `InMemoryTrustedStore` (HashSet protegido por Mutex)
-  - Lógica: NodeId conhecido → permite; desconhecido → insere e permite (TOFU); NodeId na blocklist → rejeita
-  - Re-exportar via `api::guard::TofuGuard` e `api::guard::InMemoryTrustedStore`
-  - Critério: consumidor consegue restringir conexões a peers previamente vistos sem escrever Guard custom
-
----
-
-## Etapa 3.1 — Observabilidade e Erros (Urgente)
-
-- [x] **Logging com Tracing** — `Cargo.toml` + `lib.rs`
-  - Configurar `tracing` e `tracing-log` para logs estruturados
-  - Fornecer utilitário para facilitar a integração com o `log` padrão do Rust
-  - Adicionar spans e instrumentação nos fluxos críticos (Handshake, RPC, Loop)
-  - Critério: logs detalhados e estruturados disponíveis para depuração e monitoramento
-
-- [x] **Melhoria no Tratamento de Erros** — `infra/error/`
-  - Refinar as variantes de erro para serem mais descritivas
-  - Garantir que erros de transporte e protocolo sejam capturados com contexto
-  - Critério: diagnóstico claro de falhas sem precisar ler o código fonte
+- [x] **Simplificar `IrohTransport::latency()`** — `core/transport/iroh/transport.rs`
+  - Função tem dupla iteração sobre paths (selected + any) com CC ~8
+  - Unificado num único `Iterator::find_map` com `.filter().chain().find_map()` ✅
+  - Critério: lógica idêntica, código mais legível e CC ≤ 4 ✅
 
 ---
 
-## Etapa 3.2 — Validação de Transporte
+## Etapa C — Code Coverage
 
-- [x] **Testes de Estresse e Validação** — `tests/`
-  - Escrever testes que validam se o transporte realmente funciona em diferentes condições
-  - Validar integridade de dados e throughput básico
-  - Critério: `cargo test` garante estabilidade do transporte iroh/mock
-  - Mudança de lógica de retries de transporte (Etapa 4) implementada com sucesso.
+- [ ] **Integrar `cargo-llvm-cov` ao CI** — `.github/workflows/`
+  - Adicionar step de coverage após `cargo test`:
+    ```
+    cargo install cargo-llvm-cov
+    cargo llvm-cov --all-features --lcov --output-path lcov.info
+    ```
+  - Configurar upload para Codecov ou similar
+  - Definir gate de qualidade mínimo: **80% de line coverage**
+  - Critério: PR que derruba cobertura abaixo de 80% falha no CI
+
+- [ ] **Adicionar testes para `core/device/`** — `core/device/android.rs`, `linux.rs`, `windows.rs`
+  - Atualmente com 0% de cobertura
+  - Escrever testes unitários que verificam se `DefaultDeviceInfoProvider::provide()` retorna `Ok(DeviceInfo)` com campos não-vazios
+  - Usar mocking ou test cfg condicional para plataformas não-nativas
+  - Critério: cobertura de `core/device/` ≥ 70%
+
+- [ ] **Adicionar testes para `data/identity/device_info.rs`** — `data/identity/device_info.rs`
+  - Struct `DeviceInfo` e trait `DeviceInfoProvider` sem testes
+  - Testar serialização/deserialização roundtrip com `serde_json`
+  - Testar que `DeviceInfo` com campos vazios serializa corretamente
+  - Critério: cobertura do módulo ≥ 80%
+
+- [ ] **Adicionar testes para `infra/error/mod.rs`** — `infra/error/mod.rs`
+  - Variantes `ConnectionError` e conversões `From<>` sem testes
+  - Testar todas as variantes via `Display` e mensagens de erro
+  - Testar `From<getrandom::Error>` para `ConnectionError`
+  - Critério: cobertura do módulo ≥ 80%
+
+- [ ] **Cobrir caminho `IncomingAddr::Relay` no `accept()`** — `core/transport/iroh/transport.rs`
+  - O branch `IncomingAddr::Relay { url, .. }` não tem teste
+  - Adicionar teste de integração mockado que simula conexão via relay
+  - Critério: branch coverage do método `accept()` ≥ 85%
+
+- [ ] **Cobrir `NetworkManager::run()` com peers conectados no shutdown** — `core/network/manager.rs`
+  - Shutdown atual é testado sem peers; o `broadcast_goodbye()` com peers reais não é coberto
+  - Adicionar teste que conecta 2+ peers via mock, depois envia `Shutdown` e verifica que o goodbye é emitido
+  - Critério: `broadcast_goodbye()` tem ≥ 1 teste com peers presentes
+
+- [ ] **Cobrir `AcerolaP2pBuilder::restore_cached_peers()` com falha de storage** — `api/acerola_builder.rs`
+  - Caminho de `load_peers()` retornando `Err(...)` não é testado
+  - Adicionar teste com `FailingStorage` que falha em `load_peers`
+  - Verificar que o build não panics e continua normalmente (falha silenciosa esperada)
+  - Critério: teste cobre o caminho de erro do `restore_cached_peers`
 
 ---
 
-## Etapa 4 — Event Loop Robusto
+## Etapa D — Mutation Testing
 
-- [x] **Reconexão com exponential backoff** — `network.rs`
-  - Falhas de `open_bi` disparam retries: 100ms → 200ms → 400ms → ... com backoff exponencial
-  - Máximo de 5 tentativas por conexão
-  - Critério: `open_bi` tolera latência ou atrasos na resolução de endereços e reconecta automaticamente
+- [ ] **Integrar `cargo-mutants` ao CI** — `.github/workflows/`
+  - `cargo install cargo-mutants`
+  - `cargo mutants --package acerola-p2p` em schedule semanal (não em cada PR — é lento)
+  - Score alvo: **≥75% de mutantes mortos**
+  - Critério: relatório de mutantes gerado e publicado como artefato de CI
 
-- [x] **Monitoramento de latência** — `network.rs`
-    - Task periódica a cada 30s chama `endpoint.latency()` para cada peer conectado
-    - Emite evento `"network:latency"` com o valor para a UI
-    - Critério: evento de latência disparado a cada ~30s por peer ativo
+- [ ] **Fortalecer testes do backoff de reconexão** — `core/network/manager.rs`
+  - A lógica `backoff * 2` não é verificada quantitativamente pelos testes
+  - Adicionar teste que injeta 3+ falhas consecutivas e mede que o tempo de espera cresce exponencialmente
+  - Verificar que após 5 tentativas a task termina sem panic
+  - Critério: mutação de `backoff * 2` para `backoff + 1` deve ser detectada pelos testes
 
-- [x] **Mensagem Goodbye no shutdown** — `network.rs` + `protocol/rpc.rs`
-  - `NetworkCommand::Shutdown` envia mensagem `0x03 GOODBYE` para todos os peers antes de fechar
-  - Peers receptores atualizam status imediatamente
-  - Critério: peer remoto detecta desconexão em < 1s após shutdown gracioso
-
----
-
-## Etapa 5 — Persistência (P2PStorage)
-
-- [x] **Trait de callback de storage** — `storage.rs` (novo arquivo)
-  - Definir `trait P2PStorage: Send + Sync` com métodos async: `save_identity`, `load_identity`, `save_peer`, `load_peers`
-  - Separação de responsabilidades: Vault (chaves) vs Cache (peers/endereços)
-  - Injetar via `.storage(impl P2PStorage)` no builder
-  - Critério: peers descobertos via mDNS são lembrados após restart
-
-- [x] **Atomicidade na persistência de peers** — `network.rs` + `storage.rs`
-  - Se `save_peer` falhar, a conexão é encerrada (não fica em estado inconsistente)
-  - Critério: sem peers "fantasma" no estado após falha de storage
+- [ ] **Fortalecer testes de `resolve_identity()` com seed inválida** — `api/acerola_builder.rs`
+  - Caminho onde `load_identity()` retorna bytes com tamanho errado (falha no `try_into()`) não é testado em isolamento
+  - Adicionar teste unitário que verifica que a função regenera seed ao receber bytes inválidos do storage
+  - Critério: mutação no `try_into()` é detectada
 
 ---
 
-## Tabela de Verificação Final
+## Etapa E — Dependency Structure
+
+- [ ] **Desacoplar `data/protocol/rpc` de `core::network::state`**
+  - `rpc/client.rs` e `rpc/server.rs` importam `NetworkState` diretamente — dependência cruzada entre camadas `data` e `core`
+  - Criar trait `DeviceInfoStore` em `data/protocol/`:
+    ```rust
+    pub trait DeviceInfoStore: Send + Sync {
+        async fn store_device_info(&self, peer: PeerId, info: DeviceInfo);
+    }
+    ```
+  - Fazer `NetworkState` implementar `DeviceInfoStore`
+  - Handlers RPC recebem `Arc<dyn DeviceInfoStore>` ao invés de `Arc<RwLock<NetworkState>>`
+  - Critério: `data/protocol/rpc/` não importa mais nada de `core::network`
+
+- [ ] **Mover a constante `GOODBYE` para o `NetworkManager`** — `core/network/manager.rs`
+  - `manager.rs` importa `GOODBYE` de `data::protocol::rpc` — acoplamento desnecessário entre rede e protocolo
+  - Definir `const GOODBYE: u8 = 0x03` no próprio `manager.rs` (ou em `data/protocol/rpc/mod.rs` com re-export público)
+  - Critério: `manager.rs` não importa mais módulos de `data::protocol::rpc`
+
+---
+
+## Etapa F — Qualidade Geral de Código
+
+- [ ] **Trocar `std::sync::Mutex` por `tokio::sync::Mutex` no `TofuGuard`** — `core/guard/tofu.rs`
+  - `InMemoryTrustedStore` usa `std::sync::Mutex` dentro de um contexto async
+  - Risco: se o lock for mantido através de um `.await` (ex: em futures futuras), ocorre deadlock no tokio runtime
+  - Substituir `Mutex<HashSet<String>>` por `tokio::sync::Mutex<HashSet<String>>`
+  - Atualizar métodos para `async fn insert`, `async fn contains`, `async fn is_blocked`
+  - Critério: `TofuGuard` funciona sem risco de bloquear o runtime
+
+- [ ] **Substituir `expect()` em código de produção** — `core/transport/iroh/transport.rs:49`
+  - `serde_json::to_vec(&addr).expect("EndpointAddr serialization failed")` causa panic em produção
+  - Propagar o erro como `ConnectionError::StreamFailed(...)` usando `?`
+  - Critério: zero `expect()` em código de produção fora de testes
+
+- [ ] **Adicionar `#![deny(missing_docs)]` no `lib.rs`**
+  - Previne regressão de cobertura de documentação a longo prazo
+  - Primeiro adicionar docs faltantes (se houver), depois ativar o deny
+  - Critério: `cargo doc --no-deps` não emite warnings de documentação faltante
+
+- [ ] **Adicionar `cargo clippy` como gate de CI** — `.github/workflows/`
+  - `cargo clippy --all-features -- -D warnings`
+  - Critério: nenhum warning de clippy em PRs
+
+---
+
+## Etapa G — Testes de Robustez e Cancelamento
+
+- [ ] **Testar cancelamento e liberação de recursos do `AcerolaP2p`** — `acerola/tests/`
+  - Verificar que dropar `AcerolaP2p` sem chamar `shutdown()` não causa memory leak ou thread órfã
+  - Usar `tokio_test` ou `drop()` explícito seguido de sleep para verificar que tasks foram canceladas
+  - Critério: nenhum task ativo após drop do `AcerolaP2p`
+
+- [ ] **Testes de property-based para serialização** — `data/identity/`, `infra/peer/`
+  - Usar `proptest` para validar roundtrip de `DeviceInfo` e `PeerAddr` com dados arbitrários
+  - Verificar que `PeerId::from_public_key` é sempre determinístico para o mesmo input
+  - Critério: 1000+ casos gerados automaticamente passam
+
+- [ ] **Adicionar benchmark formal de throughput** — `acerola/benches/`
+  - Usar `criterion` para medir throughput do Mock transport vs Iroh
+  - Baseline: mock deve processar ≥100 conexões/s; Iroh ≥10 MB/s de throughput
+  - Critério: `cargo bench` roda sem erros e gera relatório HTML
+
+---
+
+## Tabela de Verificação Final (Novo)
 
 | Critério | Etapa |
 |---|---|
-| Protocolos customizados funcionam (ALPN fix) | 0 |
-| Relay próprio configurado | 0 |
-| PeerId idêntico após reinstalar (mesma seed) | 1 |
-| Nó conectado = UI já sabe nome/OS/versão | 2 |
-| Nó não-pareado não envia mensagens de sistema | 3 |
-| Reconexão automática em queda de rede | 4 |
-| Shutdown gracioso notifica peers em < 1s | 4 |
-| Peers lembrados após restart | 5 |
-| CPU próximo de 0% em standby | 4 (latência periódica, não polling) |
+| UniFFI feature compila para Android | A |
+| `run()` refatorada em ≤40 linhas | B ✅ |
+| Coverage ≥80% no CI | C |
+| Módulos `device/`, `error/`, `device_info` com testes | C |
+| Score de mutantes ≥75% | D |
+| `data/protocol/rpc` não depende de `core::network` | E |
+| Zero `expect()` em código de produção | F |
+| Clippy clean no CI | F |
+| Drop de `AcerolaP2p` sem recursos órfãos | G |
