@@ -22,6 +22,30 @@ pub trait DeviceInfoProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+        #[test]
+        fn device_info_serialization_roundtrip_proptest(
+            operating_system in ".*",
+            device_name in ".*",
+            app_version in ".*"
+        ) {
+            let original_info = DeviceInfo {
+                os: operating_system,
+                name: device_name,
+                version: app_version,
+            };
+
+            let json_representation =
+                serde_json::to_string(&original_info).expect("Failed to serialize DeviceInfo");
+            let deserialized_info: DeviceInfo =
+                serde_json::from_str(&json_representation).expect("Failed to deserialize DeviceInfo");
+
+            prop_assert_eq!(original_info, deserialized_info);
+        }
+    }
 
     #[test]
     fn serialization_and_deserialization_roundtrip() {
@@ -33,9 +57,9 @@ mod tests {
         };
 
         let json_representation =
-            serde_json::to_string(&original_info).expect("Falha ao serializar DeviceInfo");
+            serde_json::to_string(&original_info).expect("Failed to serialize DeviceInfo");
         let deserialized_info: DeviceInfo =
-            serde_json::from_str(&json_representation).expect("Falha ao desserializar DeviceInfo");
+            serde_json::from_str(&json_representation).expect("Failed to deserialize DeviceInfo");
 
         assert_eq!(original_info, deserialized_info);
     }
@@ -46,14 +70,14 @@ mod tests {
         let empty_info =
             DeviceInfo { os: String::new(), name: String::new(), version: String::new() };
 
-        let json_representation = serde_json::to_string(&empty_info)
-            .expect("Falha ao serializar DeviceInfo com campos vazios");
+        let json_representation =
+            serde_json::to_string(&empty_info).expect("Failed to serialize empty DeviceInfo");
         assert!(json_representation.contains("\"os\":\"\""));
         assert!(json_representation.contains("\"name\":\"\""));
         assert!(json_representation.contains("\"version\":\"\""));
 
         let deserialized_info: DeviceInfo = serde_json::from_str(&json_representation)
-            .expect("Falha ao desserializar DeviceInfo vazio");
+            .expect("Failed to deserialize empty DeviceInfo");
         assert_eq!(empty_info, deserialized_info);
     }
 }

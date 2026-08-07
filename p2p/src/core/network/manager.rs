@@ -42,9 +42,19 @@ const GOODBYE: u8 = 0x03;
 /// externa é sinalizada e enfileirada no canal por meio deste enum.
 pub enum NetworkCommand {
     /// Troca dinâmica da política de validação (Guard) e estado nominal da rede.
-    SwitchGuard { validator: BoxedValidator, mode: NetworkMode },
+    SwitchGuard {
+        /// O novo validador Guard a ser aplicado.
+        validator: BoxedValidator,
+        /// O novo modo de operação da rede.
+        mode: NetworkMode,
+    },
     /// Tenta discar ativamente para outro par através de um protocolo.
-    Connect { addr: PeerAddr, alpn: Vec<u8> },
+    Connect {
+        /// Endereço de destino do peer.
+        addr: PeerAddr,
+        /// Protocolo ALPN requisitado.
+        alpn: Vec<u8>,
+    },
     /// Provoca a desmontagem e desligamento seguro do daemon P2P.
     Shutdown,
 }
@@ -142,16 +152,20 @@ impl NetworkManager {
                         }
                     }
                 }
-                Some(cmd) = self.command_rx.recv() => {
-                    match cmd {
-                        NetworkCommand::Connect { addr, alpn } => {
+                cmd_option = self.command_rx.recv() => {
+                    match cmd_option {
+                        Some(NetworkCommand::Connect { addr, alpn }) => {
                             self.handle_connect_command(addr, alpn);
                         }
-                        NetworkCommand::SwitchGuard { validator, mode } => {
+                        Some(NetworkCommand::SwitchGuard { validator, mode }) => {
                             self.handle_switch_guard(validator, mode).await;
                         }
-                        NetworkCommand::Shutdown => {
+                        Some(NetworkCommand::Shutdown) => {
                             self.broadcast_goodbye().await;
+                            break;
+                        }
+                        None => {
+                            // O canal command_tx foi fechado (ex: a instância AcerolaP2p foi dropada sem shutdown explícito)
                             break;
                         }
                     }
@@ -356,7 +370,10 @@ async fn save_peer_if_present(
 mod tests {
     use std::sync::Mutex;
 
-    use tokio::time::{sleep, Duration};
+    use tokio::{
+        io::AsyncReadExt,
+        time::{sleep, Duration},
+    };
 
     use super::*;
     use crate::{infra::peer::PeerId, tests::mock_transport::mock_transport};
@@ -428,7 +445,7 @@ mod tests {
     async fn peer_added_to_state_on_accepting_connection() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, state) =
+        let (mut manager, _command_tx, state) =
             NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
@@ -445,7 +462,7 @@ mod tests {
     async fn peer_removed_from_state_when_handler_finishes() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, state) =
+        let (mut manager, _command_tx, state) =
             NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(NoopHandler));
 
@@ -462,7 +479,7 @@ mod tests {
     async fn unknown_alpn_is_ignored() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (manager, _, state) =
+        let (manager, _command_tx, state) =
             NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
 
         let (client, server) = tokio::io::duplex(1024);
@@ -496,7 +513,7 @@ mod tests {
             Box::pin(async { Err(ConnectionError::AuthDenied("test deny all".into())) })
         });
 
-        let (mut manager, _, state) =
+        let (mut manager, _command_tx, state) =
             NetworkManager::new(Arc::clone(&transport), deny_all, no_op_emitter());
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
@@ -513,7 +530,7 @@ mod tests {
     async fn same_peer_on_two_alpns_appears_connected() {
         let (transport, handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, state) =
+        let (mut manager, _command_tx, state) =
             NetworkManager::new(Arc::clone(&transport), open_validator(), no_op_emitter());
 
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
@@ -543,7 +560,7 @@ mod tests {
 
         let (emit, events) = capture_emitter();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
-        let (mut manager, _, _state) =
+        let (mut manager, _command_tx, _state) =
             NetworkManager::new(Arc::clone(&transport), open_validator(), emit);
         manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
@@ -582,7 +599,7 @@ mod tests {
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
         let storage = Arc::new(FailingStorage);
 
-        let (mut manager, _, state) = NetworkManager::with_storage(
+        let (mut manager, _command_tx, state) = NetworkManager::with_storage(
             Arc::clone(&transport),
             open_validator(),
             no_op_emitter(),
@@ -655,7 +672,6 @@ mod tests {
         assert!(timeout_result.is_ok());
 
         // Valida que a mensagem de GOODBYE foi efetivamente transmitida pelos canais outbound
-        use tokio::io::AsyncReadExt;
         let mut buffer_alpha = [0u8; 16];
         let mut buffer_beta = [0u8; 16];
         let read_alpha_result = tokio::time::timeout(
@@ -671,11 +687,11 @@ mod tests {
 
         assert!(
             read_alpha_result.is_ok() && read_alpha_result.unwrap().unwrap_or(0) > 0,
-            "Deve transmitir o payload de goodbye para peer-alpha"
+            "Should transmit goodbye payload to peer-alpha"
         );
         assert!(
             read_beta_result.is_ok() && read_beta_result.unwrap().unwrap_or(0) > 0,
-            "Deve transmitir o payload de goodbye para peer-beta"
+            "Should transmit goodbye payload to peer-beta"
         );
     }
 
@@ -780,7 +796,7 @@ mod tests {
         let timestamps_guard = call_timestamps.lock().await;
 
         // Confirma que exatamente 5 tentativas foram executadas e que a task terminou sem pânico
-        assert_eq!(timestamps_guard.len(), 5, "Devem ocorrer exatamente 5 tentativas de reconexão");
+        assert_eq!(timestamps_guard.len(), 5, "Exactly 5 reconnection attempts should occur");
 
         // Calcula os intervalos entre tentativas consecutivas
         let first_interval = timestamps_guard[1] - timestamps_guard[0];

@@ -18,20 +18,22 @@ use tokio::{
     time::{sleep, Duration},
 };
 
-#[cfg(feature = "iroh")]
-use crate::core::transport::iroh::IrohTransportBuilder;
 use crate::{
-    api::{identity::DeviceInfo, AcerolaP2p},
+    api::identity::DeviceInfo,
     core::{guard::open::OpenGuard, network::manager::NetworkManager},
     data::protocol::{EventEmitter, ProtocolHandler},
     infra::{error::ConnectionError, peer::PeerId},
     tests::mock_transport::mock_transport,
 };
+#[cfg(feature = "iroh")]
+use crate::{api::AcerolaP2p, core::transport::iroh::IrohTransportBuilder};
 
+#[allow(dead_code)]
 fn no_op_emitter() -> EventEmitter {
     Arc::new(|_: &str, _: String| {})
 }
 
+#[allow(dead_code)]
 fn create_device(device_name: &str) -> DeviceInfo {
     DeviceInfo {
         name: device_name.to_string(),
@@ -41,6 +43,7 @@ fn create_device(device_name: &str) -> DeviceInfo {
 }
 
 /// Generic protocol handler for sending data with graceful stream shutdown.
+#[allow(dead_code)]
 struct BulkSenderHandler {
     payload: Vec<u8>,
 }
@@ -64,6 +67,7 @@ impl ProtocolHandler for BulkSenderHandler {
 }
 
 /// Generic protocol handler for receiving data and storing consumed buffer.
+#[allow(dead_code)]
 struct BulkReceiverHandler {
     received_buffer: Arc<Mutex<Vec<u8>>>,
     completed_counter: Arc<AtomicUsize>,

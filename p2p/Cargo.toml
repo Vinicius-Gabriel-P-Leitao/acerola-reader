@@ -33,3 +33,11 @@ tracing = "0.1.44"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.23", features = ["fmt"] }
 uuid = {version = "1.23.1", features = ["v5"]}
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["async_tokio"] }
+proptest = "1.6"
+
+[[bench]]
+name = "throughput"
+harness = false

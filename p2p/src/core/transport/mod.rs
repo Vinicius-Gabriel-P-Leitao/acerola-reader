@@ -3,6 +3,7 @@
 //! Contratos (traits) que permitem plugar camadas de transporte diferentes à biblioteca.
 //! Todo o acerola-p2p se baseia em instâncias de structs que implementam `P2PTransport` e `IncomingConnection`.
 
+/// Implementação concreta do transporte baseada no protocolo QUIC/Iroh.
 #[cfg(feature = "iroh")]
 pub mod iroh;
 

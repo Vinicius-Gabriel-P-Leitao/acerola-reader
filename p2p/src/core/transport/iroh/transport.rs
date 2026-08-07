@@ -185,6 +185,8 @@ fn resolve_endpoint_addr(remote_id: EndpointId, incoming_addr: &IncomingAddr) ->
 
 #[cfg(test)]
 mod tests {
+    use tokio::io::AsyncWriteExt;
+
     use super::*;
     use crate::core::transport::{iroh::IrohTransportBuilder, TransportP2pBuilder};
 
@@ -228,8 +230,6 @@ mod tests {
 
     #[tokio::test]
     async fn iroh_transport_latency_and_flush_and_shutdown_integration() {
-        use tokio::io::AsyncWriteExt;
-
         let transport_a = Arc::new(build_transport().await);
         let transport_b = Arc::new(build_transport().await);
 

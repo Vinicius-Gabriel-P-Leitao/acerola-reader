@@ -142,7 +142,7 @@ mod run_in_isolation {
         sleep(Duration::from_millis(500)).await;
 
         let peers = node_b.connected_peers().await;
-        assert!(peers.keys().any(|p| p.id == id_a), "node A não apareceu no state de node B");
+        assert!(peers.keys().any(|p| p.id == id_a), "node A did not appear in node B state");
     }
 
     #[tokio::test]
@@ -160,10 +160,10 @@ mod run_in_isolation {
             node_a.connect(node_b.local_addr().clone(), b"test/ghost").await;
         sleep(Duration::from_millis(300)).await;
 
-        assert!(result.is_ok(), "connect não deveria falhar no sender");
+        assert!(result.is_ok(), "connect should not fail on sender");
         assert!(
             node_b.connected_peers().await.is_empty(),
-            "node B não deveria ter peers conectados"
+            "node B should not have connected peers"
         );
     }
 
@@ -188,7 +188,7 @@ mod run_in_isolation {
         sleep(Duration::from_millis(1500)).await;
 
         let peers = node_a.connected_peers().await;
-        assert!(peers.keys().any(|p| p.id == id_b), "node B não apareceu no state de node A");
+        assert!(peers.keys().any(|p| p.id == id_b), "node B did not appear in node A state");
 
         let mut events = Vec::new();
         while let Ok(evt) = rx.try_recv() {

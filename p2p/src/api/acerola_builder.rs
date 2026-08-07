@@ -295,18 +295,18 @@ mod tests {
         let ev_a = events_a.lock().unwrap();
         let ev_b = events_b.lock().unwrap();
 
-        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"), "node A: ping enviado");
-        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"), "node A: pong recebido");
+        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"), "node A: ping sent");
+        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"), "node A: pong received");
         assert!(
             ev_a.iter().any(|e| e == "rpc:device_info_received"),
-            "node A: device info recebida"
+            "node A: device info received"
         );
 
-        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"), "node B: ping recebido");
-        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"), "node B: pong enviado");
+        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"), "node B: ping received");
+        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"), "node B: pong sent");
         assert!(
             ev_b.iter().any(|e| e == "rpc:device_info_exchanged"),
-            "node B: device info trocada"
+            "node B: device info exchanged"
         );
     }
 

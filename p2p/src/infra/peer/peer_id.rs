@@ -40,6 +40,41 @@ impl fmt::Display for PeerId {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+        #[test]
+        fn from_public_key_is_always_deterministic_proptest(
+            peer_identifier in ".*",
+            public_key_bytes in proptest::collection::vec(proptest::num::u8::ANY, 0..512)
+        ) {
+            let first_peer = PeerId::from_public_key(peer_identifier.clone(), &public_key_bytes);
+            let second_peer = PeerId::from_public_key(peer_identifier, &public_key_bytes);
+
+            prop_assert_eq!(first_peer.id, second_peer.id);
+            prop_assert_eq!(first_peer.device_id.clone(), second_peer.device_id);
+            prop_assert!(first_peer.device_id.is_some());
+        }
+
+        #[test]
+        fn peer_id_serialization_roundtrip_proptest(
+            peer_identifier in ".*",
+            device_identifier in proptest::option::of(".*")
+        ) {
+            let original_peer_id = PeerId {
+                id: peer_identifier,
+                device_id: device_identifier,
+            };
+
+            let json_representation =
+                serde_json::to_string(&original_peer_id).expect("Failed to serialize PeerId");
+            let deserialized_peer_id: PeerId =
+                serde_json::from_str(&json_representation).expect("Failed to deserialize PeerId");
+
+            prop_assert_eq!(original_peer_id, deserialized_peer_id);
+        }
+    }
 
     const FAKE_KEY: &[u8] = &[0xab; 32];
     const ANOTHER_KEY: &[u8] = &[0xcd; 32];

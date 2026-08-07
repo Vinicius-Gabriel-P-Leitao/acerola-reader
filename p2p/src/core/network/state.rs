@@ -40,6 +40,12 @@ pub struct NetworkState {
     mode: NetworkMode,
 }
 
+impl Default for NetworkState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NetworkState {
     /// Instancia um novo estado de rede, padronizando o modo para `Local`.
     pub fn new() -> Self {
@@ -83,13 +89,11 @@ impl NetworkState {
     }
 
     /// Retorna `true` se o `peer` estiver registrado no mapa (conectado por ao menos 1 protocolo).
-    #[cfg(test)]
     pub fn is_connected(&self, peer: &PeerId) -> bool {
         self.connected_peers.contains_key(peer)
     }
 
     /// Retorna `true` se o nó remoto está conectado por meio de um ALPN específico.
-    #[cfg(test)]
     pub fn is_connected_on(&self, peer: &PeerId, alpn: &[u8]) -> bool {
         self.connected_peers.get(peer).is_some_and(|alpns| alpns.contains(alpn))
     }

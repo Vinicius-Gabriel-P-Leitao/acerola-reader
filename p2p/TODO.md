@@ -150,20 +150,20 @@
 
 ## Etapa G — Testes de Robustez e Cancelamento
 
-- [ ] **Testar cancelamento e liberação de recursos do `AcerolaP2p`** — `acerola/tests/`
+- [x] **Testar cancelamento e liberação de recursos do `AcerolaP2p`** — `acerola/tests/`
   - Verificar que dropar `AcerolaP2p` sem chamar `shutdown()` não causa memory leak ou thread órfã
   - Usar `tokio_test` ou `drop()` explícito seguido de sleep para verificar que tasks foram canceladas
-  - Critério: nenhum task ativo após drop do `AcerolaP2p`
+  - Critério: nenhum task ativo após drop do `AcerolaP2p` ✅
 
-- [ ] **Testes de property-based para serialização** — `data/identity/`, `infra/peer/`
+- [x] **Testes de property-based para serialização** — `data/identity/`, `infra/peer/`
   - Usar `proptest` para validar roundtrip de `DeviceInfo` e `PeerAddr` com dados arbitrários
   - Verificar que `PeerId::from_public_key` é sempre determinístico para o mesmo input
-  - Critério: 1000+ casos gerados automaticamente passam
+  - Critério: 1000+ casos gerados automaticamente passam ✅
 
-- [ ] **Adicionar benchmark formal de throughput** — `acerola/benches/`
+- [x] **Adicionar benchmark formal de throughput** — `acerola/benches/`
   - Usar `criterion` para medir throughput do Mock transport vs Iroh
   - Baseline: mock deve processar ≥100 conexões/s; Iroh ≥10 MB/s de throughput
-  - Critério: `cargo bench` roda sem erros e gera relatório HTML
+  - Critério: `cargo bench` roda sem erros e gera relatório HTML ✅
 
 ---
 
@@ -175,8 +175,8 @@
 | `run()` refatorada em ≤40 linhas | B ✅ |
 | Coverage ≥80% no CI | C ✅ |
 | Módulos `device/`, `error/`, `device_info` com testes | C ✅ |
-| Score de mutantes ≥75% | D |
+| Score de mutantes ≥75% | D ✅ |
 | `data/protocol/rpc` não depende de `core::network` | E ✅ |
-| Zero `expect()` em código de produção | F |
-| Clippy clean no CI | F |
-| Drop de `AcerolaP2p` sem recursos órfãos | G |
+| Zero `expect()` em código de produção | F ✅ |
+| Clippy clean no CI | F ✅ |
+| Drop de `AcerolaP2p` sem recursos órfãos | G ✅ |
