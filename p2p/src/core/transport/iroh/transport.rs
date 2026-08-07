@@ -51,10 +51,7 @@ impl IrohTransport {
     }
 
     pub async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
-        let id: EndpointId = peer.id.parse().ok()?;
-        let info = self.endpoint.remote_info(id).await?;
-        let _ = info.addrs();
-        None
+        P2pTransport::latency(self, peer).await
     }
 }
 
@@ -225,6 +222,62 @@ mod tests {
     async fn shutdown_without_error() {
         let transport = build_transport().await;
         assert!(transport.shutdown().await.is_ok());
+        assert!(transport.endpoint.is_closed());
+    }
+
+    #[tokio::test]
+    async fn iroh_transport_latency_and_flush_and_shutdown_integration() {
+        use tokio::io::AsyncWriteExt;
+
+        let transport_a = Arc::new(build_transport().await);
+        let transport_b = Arc::new(build_transport().await);
+
+        let addr_b = transport_b.local_addr().unwrap();
+        let peer_b_id = transport_b.local_id();
+
+        let t_b = Arc::clone(&transport_b);
+        let accept_handle = tokio::spawn(async move {
+            let incoming = t_b.accept().await.unwrap();
+            let (_in_writer, mut in_reader) = incoming.accept_bi().await.unwrap();
+            let mut buf = [0u8; 4];
+            let _ = tokio::io::AsyncReadExt::read_exact(&mut in_reader, &mut buf).await;
+        });
+
+        let (mut writer, _reader) = transport_a.open_bi(b"test/proto", &addr_b).await.unwrap();
+
+        // Write and flush data on active ConnectionWriter (exercises poll_flush)
+        writer.write_all(b"ping").await.unwrap();
+        writer.flush().await.unwrap();
+
+        accept_handle.await.unwrap();
+
+        // Latency check: must return Some(duration) when connected
+        let mut latency_inherent = None;
+        for _ in 0..30 {
+            if let Some(l) = transport_a.latency(&peer_b_id).await {
+                latency_inherent = Some(l);
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+
+        let mut latency_trait = None;
+        for _ in 0..30 {
+            if let Some(l) = P2pTransport::latency(&*transport_a, &peer_b_id).await {
+                latency_trait = Some(l);
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+
+        assert!(latency_inherent.is_some(), "Inherent latency should return Some(Duration)");
+        assert!(latency_trait.is_some(), "Trait latency should return Some(Duration)");
+
+        // Shutdown both transports
+        transport_a.shutdown().await.unwrap();
+        transport_b.shutdown().await.unwrap();
+        assert!(transport_a.endpoint.is_closed());
+        assert!(transport_b.endpoint.is_closed());
     }
 
     #[test]

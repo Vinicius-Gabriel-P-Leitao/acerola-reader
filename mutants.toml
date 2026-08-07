@@ -1,6 +1,0 @@
-# Configuração do cargo-mutants para ignorar código de testes e focar no código de produção
-
-exclude_re = [
-    ".*::tests::.*",
-    ".*::test_.*",
-]

@@ -1,6 +1,0 @@
-# Configuração do cargo-mutants para a pasta do pacote acerola
-
-exclude_re = [
-    ".*::tests::.*",
-    ".*::test_.*",
-]

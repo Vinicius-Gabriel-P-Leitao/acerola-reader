@@ -801,4 +801,76 @@ mod tests {
         let _shutdown_result = command_sender.send(NetworkCommand::Shutdown).await;
         let _manager_join_result = manager_task_handle.await;
     }
+
+    #[tokio::test(start_paused = true)]
+    async fn no_sleep_after_final_retry_attempt() {
+        struct FailingTransport;
+        #[async_trait::async_trait]
+        impl P2pTransport for FailingTransport {
+            fn local_id(&self) -> PeerId {
+                make_peer("local")
+            }
+            fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
+                Err(ConnectionError::Shutdown)
+            }
+            async fn accept(
+                &self,
+            ) -> Result<
+                Box<dyn crate::core::transport::IncomingConnection>,
+                ConnectionError,
+            > {
+                std::future::pending().await
+            }
+            async fn open_bi(
+                &self, _alpn: &[u8], _peer: &PeerAddr,
+            ) -> Result<
+                (
+                    Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
+                    Box<dyn tokio::io::AsyncRead + Send + Unpin>,
+                ),
+                ConnectionError,
+            > {
+                Err(ConnectionError::StreamFailed("simulated error".to_string()))
+            }
+            async fn latency(&self, _peer: &PeerId) -> Option<Duration> {
+                None
+            }
+            async fn shutdown(&self) -> Result<(), ConnectionError> {
+                Ok(())
+            }
+        }
+
+        let transport = Arc::new(FailingTransport);
+
+        let (mut network_manager, command_sender, network_state) =
+            NetworkManager::new(transport, open_validator(), no_op_emitter());
+
+        network_manager.register_outbound(b"acerola/test/1", Arc::new(NoopHandler));
+        let manager_task_handle = tokio::spawn(network_manager.run());
+
+        command_sender
+            .send(NetworkCommand::Connect {
+                addr: PeerAddr { id: make_peer("target"), addrs: vec![] },
+                alpn: b"acerola/test/1".to_vec(),
+            })
+            .await
+            .unwrap();
+
+        // Advance virtual time by 1500ms (100 + 200 + 400 + 800ms retry backoffs)
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        tokio::task::yield_now().await;
+
+        // At 1500ms, all 5 attempts have failed.
+        // If attempt < max_retries was used, no sleep occurred after the 5th attempt and the task finished,
+        // reducing network_state strong_count back to 2 (manager + test body).
+        // If attempt <= max_retries was used, the task is currently sleeping for 1600ms, keeping strong_count at 3.
+        assert_eq!(
+            Arc::strong_count(&network_state),
+            2,
+            "Outbound retry task should have completed without an extra sleep after the 5th attempt"
+        );
+
+        let _ = command_sender.send(NetworkCommand::Shutdown).await;
+        let _ = manager_task_handle.await;
+    }
 }
