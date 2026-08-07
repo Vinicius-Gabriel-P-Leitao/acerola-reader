@@ -104,7 +104,7 @@
 
 ## Etapa E — Dependency Structure
 
-- [ ] **Desacoplar `data/protocol/rpc` de `core::network::state`**
+- [x] **Desacoplar `data/protocol/rpc` de `core::network::state`** ✅
   - `rpc/client.rs` e `rpc/server.rs` importam `NetworkState` diretamente — dependência cruzada entre camadas `data` e `core`
   - Criar trait `DeviceInfoStore` em `data/protocol/`:
     ```rust
@@ -114,12 +114,12 @@
     ```
   - Fazer `NetworkState` implementar `DeviceInfoStore`
   - Handlers RPC recebem `Arc<dyn DeviceInfoStore>` ao invés de `Arc<RwLock<NetworkState>>`
-  - Critério: `data/protocol/rpc/` não importa mais nada de `core::network`
+  - Critério: `data/protocol/rpc/` não importa mais nada de `core::network` ✅
 
-- [ ] **Mover a constante `GOODBYE` para o `NetworkManager`** — `core/network/manager.rs`
+- [x] **Mover a constante `GOODBYE` para o `NetworkManager`** — `core/network/manager.rs` ✅
   - `manager.rs` importa `GOODBYE` de `data::protocol::rpc` — acoplamento desnecessário entre rede e protocolo
   - Definir `const GOODBYE: u8 = 0x03` no próprio `manager.rs` (ou em `data/protocol/rpc/mod.rs` com re-export público)
-  - Critério: `manager.rs` não importa mais módulos de `data::protocol::rpc`
+  - Critério: `manager.rs` não importa mais módulos de `data::protocol::rpc` ✅
 
 ---
 
@@ -176,7 +176,7 @@
 | Coverage ≥80% no CI | C ✅ |
 | Módulos `device/`, `error/`, `device_info` com testes | C ✅ |
 | Score de mutantes ≥75% | D |
-| `data/protocol/rpc` não depende de `core::network` | E |
+| `data/protocol/rpc` não depende de `core::network` | E ✅ |
 | Zero `expect()` em código de produção | F |
 | Clippy clean no CI | F |
 | Drop de `AcerolaP2p` sem recursos órfãos | G |

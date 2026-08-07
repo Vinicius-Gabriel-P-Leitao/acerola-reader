@@ -5,8 +5,11 @@
 
 use std::collections::{HashMap, HashSet};
 
+use async_trait::async_trait;
+use tokio::sync::RwLock;
+
 use crate::{
-    data::identity::device_info::DeviceInfo,
+    data::{identity::device_info::DeviceInfo, protocol::DeviceInfoStore},
     infra::peer::{PeerAddr, PeerId},
 };
 
@@ -125,6 +128,13 @@ impl NetworkState {
                 self.peer_addresses.remove(peer);
             }
         }
+    }
+}
+
+#[async_trait]
+impl DeviceInfoStore for RwLock<NetworkState> {
+    async fn store_device_info(&self, peer: PeerId, info: DeviceInfo) {
+        self.write().await.store_device_info(peer, info);
     }
 }
 

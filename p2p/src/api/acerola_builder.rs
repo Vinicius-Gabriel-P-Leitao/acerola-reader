@@ -14,7 +14,7 @@ use crate::{
         identity::device_info::DeviceInfo,
         protocol::{
             rpc::{RpcClientHandler, RpcServerHandler},
-            EventEmitter, ProtocolHandler,
+            DeviceInfoStore, EventEmitter, ProtocolHandler,
         },
     },
     infra::error::ConnectionError,
@@ -155,7 +155,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
             Arc::new(RpcServerHandler::new(
                 Arc::clone(&self.emit),
                 self.device_info.clone(),
-                Arc::clone(&state),
+                Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
             )),
         );
 
@@ -164,7 +164,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
             Arc::new(RpcClientHandler::new(
                 Arc::clone(&self.emit),
                 self.device_info.clone(),
-                Arc::clone(&state),
+                Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
             )),
         );
 

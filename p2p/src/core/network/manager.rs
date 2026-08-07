@@ -23,7 +23,7 @@ use crate::{
         storage::P2PStorage,
         transport::P2pTransport,
     },
-    data::protocol::{rpc::GOODBYE, EventEmitter, ProtocolHandler},
+    data::protocol::{EventEmitter, ProtocolHandler},
     infra::{
         error::ConnectionError,
         peer::{PeerAddr, PeerId},
@@ -32,6 +32,9 @@ use crate::{
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
+
+/// Byte constante enviado no handshake de encerramento da conexão.
+const GOODBYE: u8 = 0x03;
 
 /// Sinais de controle enviados ao Event Loop da rede.
 ///
