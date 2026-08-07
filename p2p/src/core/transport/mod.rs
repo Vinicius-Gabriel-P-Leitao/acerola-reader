@@ -3,6 +3,7 @@
 //! Contratos (traits) que permitem plugar camadas de transporte diferentes à biblioteca.
 //! Todo o acerola-p2p se baseia em instâncias de structs que implementam `P2PTransport` e `IncomingConnection`.
 
+/// Implementação concreta do transporte baseada no protocolo QUIC/Iroh.
 #[cfg(feature = "iroh")]
 pub mod iroh;
 
@@ -76,7 +77,10 @@ pub trait P2pTransport: Send + Sync {
 /// Interface para montar um transporte responsável por montar o transporte antes de qualquer coisa
 #[async_trait]
 pub trait TransportP2pBuilder: Send + Sync {
+    /// O tipo de transporte produzido por este builder.
     type Output: P2pTransport;
+
+    /// Constrói a instância de transporte com os ALPNs configurados.
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<Self::Output, ConnectionError>;
 
     /// Atribui explicitamente a seed para derivação da chave secreta.

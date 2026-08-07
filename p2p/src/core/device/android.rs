@@ -16,6 +16,7 @@ pub struct DefaultDeviceInfoProvider {
 }
 
 impl DefaultDeviceInfoProvider {
+    /// Cria um novo provedor de informações com nome e versão explícitos.
     pub fn new(name: impl Into<String>, version: impl Into<String>) -> Self {
         Self { name: name.into(), version: version.into() }
     }

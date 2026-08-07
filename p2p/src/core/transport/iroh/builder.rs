@@ -25,6 +25,7 @@ impl IrohTransportBuilder {
         self
     }
 
+    /// Define a seed bruta de 32 bytes para a geração de identidade criptográfica do nó.
     pub fn seed(mut self, seed: [u8; 32]) -> Self {
         self.seed = Some(SecretBox::new(Box::new(seed)));
         self

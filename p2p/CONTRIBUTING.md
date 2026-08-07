@@ -98,9 +98,12 @@ O projeto utiliza `cargo-make` para gerenciar todas as rotinas de desenvolviment
 | `cargo make build-release` | Compila a biblioteca otimizada para produção |
 | `cargo make format` | Aplica formatação de código com regras customizadas do `rustfmt.toml` |
 | `cargo make lint` | Executa o `clippy` com `-D warnings` |
-| `cargo make test` | Executa a suíte de testes com `cargo-nextest` |
+| `cargo make test` | Executa a suíte de testes unitários e de integração |
 | `cargo make test-verbose` | Executa testes sem capturar a saída padrão (`--no-capture`) |
 | `cargo make test-stress` | Executa o teste de estresse de transporte (`transport_validation`) |
+| `cargo bench` | Executa os benchmarks formais de throughput (Mock & Iroh) via Criterion |
+| `cargo llvm-cov` | Gera o relatório de cobertura de linhas de código (`--all-features`) |
+| `cargo mutants` | Executa a análise de testes de mutação no pacote (`--package acerola-p2p`) |
 | `cargo make ci` | Executa a pipeline completa de CI (check + lint + test-ci) |
 | `cargo make build-android-all` | Cross-compilação para alvos Android (ARM64, ARMv7, x86_64) |
 

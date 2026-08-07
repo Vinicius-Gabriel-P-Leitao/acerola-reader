@@ -1,20 +1,16 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use tokio::{
-    io::{AsyncRead, AsyncWrite},
-    sync::RwLock,
-};
+use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
 use super::{
     read_byte, read_device_info, write_byte, write_device_info, Recv, Writer, GOODBYE, PING, PONG,
 };
 use crate::{
-    core::network::state::NetworkState,
     data::{
         identity::device_info::DeviceInfo,
-        protocol::{EventEmitter, ProtocolHandler},
+        protocol::{DeviceInfoStore, EventEmitter, ProtocolHandler},
     },
     infra::{error::ConnectionError, peer::PeerId},
 };
@@ -22,7 +18,7 @@ use crate::{
 pub struct RpcServerHandler {
     emit: EventEmitter,
     local_info: DeviceInfo,
-    state: Arc<RwLock<NetworkState>>,
+    state: Arc<dyn DeviceInfoStore>,
 }
 
 #[async_trait]
@@ -44,7 +40,7 @@ impl ProtocolHandler for RpcServerHandler {
 
 impl RpcServerHandler {
     pub fn new(
-        emit: EventEmitter, local_info: DeviceInfo, state: Arc<RwLock<NetworkState>>,
+        emit: EventEmitter, local_info: DeviceInfo, state: Arc<dyn DeviceInfoStore>,
     ) -> Self {
         Self { emit, local_info, state }
     }
@@ -73,7 +69,7 @@ impl RpcServerHandler {
         write_device_info(send, &self.local_info).await?;
 
         (self.emit)("rpc:device_info_exchanged", peer.id.clone());
-        self.state.write().await.store_device_info(peer.clone(), device_info);
+        self.state.store_device_info(peer.clone(), device_info).await;
 
         Ok(())
     }
@@ -101,18 +97,28 @@ impl RpcServerHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
-
-    use tokio::{
-        sync::RwLock,
-        time::{sleep, Duration},
+    use std::{
+        collections::HashMap,
+        sync::{Arc, Mutex},
     };
+
+    use tokio::time::{sleep, Duration};
     use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
     use super::{read_byte, write_byte, write_device_info, PING, PONG, *};
-    use crate::{
-        core::network::state::NetworkState, data::protocol::EventEmitter, infra::peer::PeerId,
-    };
+    use crate::{data::protocol::EventEmitter, infra::peer::PeerId};
+
+    #[derive(Default)]
+    struct TestDeviceInfoStore {
+        devices: Arc<Mutex<HashMap<PeerId, DeviceInfo>>>,
+    }
+
+    #[async_trait]
+    impl DeviceInfoStore for TestDeviceInfoStore {
+        async fn store_device_info(&self, peer: PeerId, info: DeviceInfo) {
+            self.devices.lock().unwrap().insert(peer, info);
+        }
+    }
 
     fn make_peer(id: &str) -> PeerId {
         PeerId { id: id.to_string(), device_id: None }
@@ -122,8 +128,8 @@ mod tests {
         DeviceInfo { name: name.to_string(), os: "linux".to_string(), version: "0.0.1".to_string() }
     }
 
-    fn make_state() -> Arc<RwLock<NetworkState>> {
-        Arc::new(RwLock::new(NetworkState::new()))
+    fn make_state() -> Arc<dyn DeviceInfoStore> {
+        Arc::new(TestDeviceInfoStore::default())
     }
 
     fn capture_emitter() -> (EventEmitter, Arc<Mutex<Vec<String>>>) {
@@ -144,10 +150,10 @@ mod tests {
         let server = RpcServerHandler::new(emit, make_device_info("server"), make_state());
 
         let peer = make_peer("peer-1");
-        let peer_s = peer.clone();
+        let peer_clone = peer.clone();
         tokio::spawn(async move {
             let (read, write) = tokio::io::split(server_side);
-            let _ = server.handle(&peer_s, Box::new(write), Box::new(read)).await;
+            let _ = server.handle(&peer_clone, Box::new(write), Box::new(read)).await;
         });
 
         let (read, write) = tokio::io::split(client_side);
@@ -167,22 +173,22 @@ mod tests {
         write_device_info(&mut send, &make_device_info("client")).await.unwrap();
         sleep(Duration::from_millis(20)).await;
 
-        assert!(events.lock().unwrap().iter().any(|e| e == "rpc:ping_received"));
-        assert!(events.lock().unwrap().iter().any(|e| e == "rpc:pong_sent"));
+        assert!(events.lock().unwrap().iter().any(|event| event == "rpc:ping_received"));
+        assert!(events.lock().unwrap().iter().any(|event| event == "rpc:pong_sent"));
     }
 
     #[tokio::test]
     async fn server_stores_client_device_info() {
         let (client_side, server_side) = tokio::io::duplex(4096);
         let (emit, _) = capture_emitter();
-        let state = make_state();
-        let server = RpcServerHandler::new(emit, make_device_info("server"), Arc::clone(&state));
+        let store = Arc::new(TestDeviceInfoStore::default());
+        let server = RpcServerHandler::new(emit, make_device_info("server"), store.clone());
 
         let peer = make_peer("peer-1");
-        let peer_s = peer.clone();
+        let peer_clone = peer.clone();
         tokio::spawn(async move {
             let (read, write) = tokio::io::split(server_side);
-            let _ = server.handle(&peer_s, Box::new(write), Box::new(read)).await;
+            let _ = server.handle(&peer_clone, Box::new(write), Box::new(read)).await;
         });
 
         let (read, write) = tokio::io::split(client_side);
@@ -201,7 +207,7 @@ mod tests {
 
         sleep(Duration::from_millis(30)).await;
 
-        let stored = state.read().await.get_device_info(&peer).map(|d| d.name.clone());
+        let stored = store.devices.lock().unwrap().get(&peer).map(|info| info.name.clone());
         assert_eq!(stored, Some("client-pc".to_string()));
     }
 

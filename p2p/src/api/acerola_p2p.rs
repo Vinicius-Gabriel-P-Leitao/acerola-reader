@@ -369,11 +369,30 @@ mod tests {
 
         // Após o shutdown, tentar enviar novos comandos pelo canal command_tx deve falhar com erro
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        let peer_address = PeerAddr {
-            id: PeerId { id: "remote".to_string(), device_id: None },
-            addrs: vec![],
-        };
+        let peer_address =
+            PeerAddr { id: PeerId { id: "remote".to_string(), device_id: None }, addrs: vec![] };
         let connect_result = node.connect(peer_address, b"acerola/handshake/1").await;
         assert!(connect_result.is_err());
+    }
+
+    #[tokio::test]
+    async fn explicit_drop_without_shutdown_cancels_tasks_and_frees_resources() {
+        let node = build_node().await;
+        let weak_state = Arc::downgrade(&node.state);
+
+        // Confirma que o estado é mantido por referências fortes enquanto a struct existe
+        assert!(weak_state.upgrade().is_some());
+
+        // Dropar explicitamente o AcerolaP2p sem chamar .shutdown()
+        drop(node);
+
+        // Aguarda pequeno intervalo para permitir que o Tokio runtime processe o encerramento do task
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        // Verifica que o task do NetworkManager foi encerrado e a referência Arc do estado foi liberada
+        assert!(
+            weak_state.upgrade().is_none(),
+            "State should be destroyed after dropping AcerolaP2p"
+        );
     }
 }

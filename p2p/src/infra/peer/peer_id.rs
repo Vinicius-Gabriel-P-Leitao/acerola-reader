@@ -19,10 +19,12 @@ const ACEROLA_DEVICE_NAMESPACE: Uuid = Uuid::from_bytes(*b"acerola-p2p!dev!");
 pub struct PeerId {
     /// Identificador único (geralmente uma string em base32).
     pub id: String,
+    /// Identificador único determinístico derivado da chave pública do dispositivo.
     pub device_id: Option<String>,
 }
 
 impl PeerId {
+    /// Cria um novo `PeerId` derivando o `device_id` deterministicamente a partir dos bytes da chave pública.
     pub fn from_public_key(id: String, public_key_bytes: &[u8]) -> Self {
         let device_id = Uuid::new_v5(&ACEROLA_DEVICE_NAMESPACE, public_key_bytes).to_string();
         Self { id, device_id: Some(device_id) }
@@ -38,6 +40,41 @@ impl fmt::Display for PeerId {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+        #[test]
+        fn from_public_key_is_always_deterministic_proptest(
+            peer_identifier in ".*",
+            public_key_bytes in proptest::collection::vec(proptest::num::u8::ANY, 0..512)
+        ) {
+            let first_peer = PeerId::from_public_key(peer_identifier.clone(), &public_key_bytes);
+            let second_peer = PeerId::from_public_key(peer_identifier, &public_key_bytes);
+
+            prop_assert_eq!(first_peer.id, second_peer.id);
+            prop_assert_eq!(first_peer.device_id.clone(), second_peer.device_id);
+            prop_assert!(first_peer.device_id.is_some());
+        }
+
+        #[test]
+        fn peer_id_serialization_roundtrip_proptest(
+            peer_identifier in ".*",
+            device_identifier in proptest::option::of(".*")
+        ) {
+            let original_peer_id = PeerId {
+                id: peer_identifier,
+                device_id: device_identifier,
+            };
+
+            let json_representation =
+                serde_json::to_string(&original_peer_id).expect("Failed to serialize PeerId");
+            let deserialized_peer_id: PeerId =
+                serde_json::from_str(&json_representation).expect("Failed to deserialize PeerId");
+
+            prop_assert_eq!(original_peer_id, deserialized_peer_id);
+        }
+    }
 
     const FAKE_KEY: &[u8] = &[0xab; 32];
     const ANOTHER_KEY: &[u8] = &[0xcd; 32];

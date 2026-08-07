@@ -10,19 +10,22 @@ use crate::{
     core::network::state::NetworkState,
     data::protocol::{
         rpc::{RpcClientHandler, RpcServerHandler},
-        EventEmitter, ProtocolHandler,
+        DeviceInfoStore, EventEmitter, ProtocolHandler,
     },
     infra::peer::PeerId,
 };
 
+#[allow(dead_code)]
 fn make_peer(id: &str) -> PeerId {
     PeerId { id: id.into(), device_id: None }
 }
 
+#[allow(dead_code)]
 fn make_device(name: &str) -> DeviceInfo {
     DeviceInfo { name: name.into(), os: "linux".into(), version: "1.0".into() }
 }
 
+#[allow(dead_code)]
 fn no_op_emitter() -> EventEmitter {
     Arc::new(|_: &str, _: String| {})
 }
@@ -37,10 +40,16 @@ async fn full_handshake_between_client_and_server() {
     let state_server = Arc::new(RwLock::new(NetworkState::new()));
     let state_client = Arc::new(RwLock::new(NetworkState::new()));
 
-    let server =
-        RpcServerHandler::new(no_op_emitter(), make_device("server-pc"), Arc::clone(&state_server));
-    let client =
-        RpcClientHandler::new(no_op_emitter(), make_device("client-pc"), Arc::clone(&state_client));
+    let server = RpcServerHandler::new(
+        no_op_emitter(),
+        make_device("server-pc"),
+        Arc::clone(&state_server) as Arc<dyn DeviceInfoStore>,
+    );
+    let client = RpcClientHandler::new(
+        no_op_emitter(),
+        make_device("client-pc"),
+        Arc::clone(&state_client) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (client_read, client_write) = tokio::io::split(client_side);
     let (server_read, server_write) = tokio::io::split(server_side);
@@ -63,7 +72,7 @@ async fn full_handshake_between_client_and_server() {
             .get_device_info(&PeerId { id: "client".into(), device_id: None })
             .map(|d| d.name.as_str()),
         Some("client-pc"),
-        "server não recebeu DeviceInfo do client"
+        "server did not receive DeviceInfo from client"
     );
 
     assert_eq!(
@@ -71,7 +80,7 @@ async fn full_handshake_between_client_and_server() {
             .get_device_info(&PeerId { id: "server".into(), device_id: None })
             .map(|d| d.name.as_str()),
         Some("server-pc"),
-        "client não recebeu DeviceInfo do server"
+        "client did not receive DeviceInfo from server"
     );
 }
 
@@ -80,8 +89,11 @@ async fn server_fails_if_stream_closes_before_ping() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state = Arc::new(RwLock::new(NetworkState::new()));
-    let server =
-        RpcServerHandler::new(no_op_emitter(), make_device("server-pc"), Arc::clone(&state));
+    let server = RpcServerHandler::new(
+        no_op_emitter(),
+        make_device("server-pc"),
+        Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (server_read, server_write) = tokio::io::split(server_side);
     let server_task = tokio::spawn(async move {
@@ -91,7 +103,7 @@ async fn server_fails_if_stream_closes_before_ping() {
     drop(client_side);
 
     let result = server_task.await.unwrap();
-    assert!(result.is_err(), "server deveria falhar com stream fechado");
+    assert!(result.is_err(), "server should fail with closed stream");
     assert!(state.read().await.get_device_info(&make_peer("client")).is_none());
 }
 
@@ -100,8 +112,11 @@ async fn client_fails_if_stream_closes_before_pong() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state = Arc::new(RwLock::new(NetworkState::new()));
-    let client =
-        RpcClientHandler::new(no_op_emitter(), make_device("client-pc"), Arc::clone(&state));
+    let client = RpcClientHandler::new(
+        no_op_emitter(),
+        make_device("client-pc"),
+        Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (client_read, client_write) = tokio::io::split(client_side);
     let client_task = tokio::spawn(async move {
@@ -111,7 +126,7 @@ async fn client_fails_if_stream_closes_before_pong() {
     drop(server_side);
 
     let result = client_task.await.unwrap();
-    assert!(result.is_err(), "client deveria falhar com stream fechado");
+    assert!(result.is_err(), "client should fail with closed stream");
     assert!(state.read().await.get_device_info(&make_peer("server")).is_none());
 }
 
@@ -122,10 +137,16 @@ async fn neither_side_stores_device_info_if_connection_drops_before_exchange() {
     let state_server = Arc::new(RwLock::new(NetworkState::new()));
     let state_client = Arc::new(RwLock::new(NetworkState::new()));
 
-    let server =
-        RpcServerHandler::new(no_op_emitter(), make_device("server-pc"), Arc::clone(&state_server));
-    let client =
-        RpcClientHandler::new(no_op_emitter(), make_device("client-pc"), Arc::clone(&state_client));
+    let server = RpcServerHandler::new(
+        no_op_emitter(),
+        make_device("server-pc"),
+        Arc::clone(&state_server) as Arc<dyn DeviceInfoStore>,
+    );
+    let client = RpcClientHandler::new(
+        no_op_emitter(),
+        make_device("client-pc"),
+        Arc::clone(&state_client) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (client_read, client_write) = tokio::io::split(client_side);
     let (server_read, server_write) = tokio::io::split(server_side);

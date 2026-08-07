@@ -5,8 +5,11 @@
 
 use std::collections::{HashMap, HashSet};
 
+use async_trait::async_trait;
+use tokio::sync::RwLock;
+
 use crate::{
-    data::identity::device_info::DeviceInfo,
+    data::{identity::device_info::DeviceInfo, protocol::DeviceInfoStore},
     infra::peer::{PeerAddr, PeerId},
 };
 
@@ -35,6 +38,12 @@ pub struct NetworkState {
     peer_device_info: HashMap<PeerId, DeviceInfo>,
     /// O modo corrente  do ambiente da rede P2P.
     mode: NetworkMode,
+}
+
+impl Default for NetworkState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NetworkState {
@@ -80,13 +89,11 @@ impl NetworkState {
     }
 
     /// Retorna `true` se o `peer` estiver registrado no mapa (conectado por ao menos 1 protocolo).
-    #[cfg(test)]
     pub fn is_connected(&self, peer: &PeerId) -> bool {
         self.connected_peers.contains_key(peer)
     }
 
     /// Retorna `true` se o nó remoto está conectado por meio de um ALPN específico.
-    #[cfg(test)]
     pub fn is_connected_on(&self, peer: &PeerId, alpn: &[u8]) -> bool {
         self.connected_peers.get(peer).is_some_and(|alpns| alpns.contains(alpn))
     }
@@ -125,6 +132,13 @@ impl NetworkState {
                 self.peer_addresses.remove(peer);
             }
         }
+    }
+}
+
+#[async_trait]
+impl DeviceInfoStore for RwLock<NetworkState> {
+    async fn store_device_info(&self, peer: PeerId, info: DeviceInfo) {
+        self.write().await.store_device_info(peer, info);
     }
 }
 

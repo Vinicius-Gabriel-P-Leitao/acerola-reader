@@ -14,7 +14,7 @@ use crate::{
         identity::device_info::DeviceInfo,
         protocol::{
             rpc::{RpcClientHandler, RpcServerHandler},
-            EventEmitter, ProtocolHandler,
+            DeviceInfoStore, EventEmitter, ProtocolHandler,
         },
     },
     infra::error::ConnectionError,
@@ -155,7 +155,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
             Arc::new(RpcServerHandler::new(
                 Arc::clone(&self.emit),
                 self.device_info.clone(),
-                Arc::clone(&state),
+                Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
             )),
         );
 
@@ -164,7 +164,7 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
             Arc::new(RpcClientHandler::new(
                 Arc::clone(&self.emit),
                 self.device_info.clone(),
-                Arc::clone(&state),
+                Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
             )),
         );
 
@@ -295,18 +295,18 @@ mod tests {
         let ev_a = events_a.lock().unwrap();
         let ev_b = events_b.lock().unwrap();
 
-        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"), "node A: ping enviado");
-        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"), "node A: pong recebido");
+        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"), "node A: ping sent");
+        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"), "node A: pong received");
         assert!(
             ev_a.iter().any(|e| e == "rpc:device_info_received"),
-            "node A: device info recebida"
+            "node A: device info received"
         );
 
-        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"), "node B: ping recebido");
-        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"), "node B: pong enviado");
+        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"), "node B: ping received");
+        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"), "node B: pong sent");
         assert!(
             ev_b.iter().any(|e| e == "rpc:device_info_exchanged"),
-            "node B: device info trocada"
+            "node B: device info exchanged"
         );
     }
 
@@ -368,10 +368,7 @@ mod tests {
     async fn failing_peer_load_storage_returns_expected_results() {
         let storage = FailingPeerLoadStorage;
         assert_eq!(storage.load_identity().await.unwrap(), None);
-        assert!(matches!(
-            storage.load_peers().await,
-            Err(ConnectionError::StreamFailed(_))
-        ));
+        assert!(matches!(storage.load_peers().await, Err(ConnectionError::StreamFailed(_))));
     }
 
     #[tokio::test]
@@ -450,10 +447,8 @@ mod tests {
     #[tokio::test]
     async fn invalid_seed_storage_returns_configured_bytes() {
         let container = Arc::new(std::sync::Mutex::new(None));
-        let storage = InvalidSeedStorage {
-            invalid_bytes: vec![1, 2, 3, 4, 5],
-            saved_seed: container,
-        };
+        let storage =
+            InvalidSeedStorage { invalid_bytes: vec![1, 2, 3, 4, 5], saved_seed: container };
         assert_eq!(storage.load_identity().await.unwrap().unwrap(), vec![1, 2, 3, 4, 5]);
     }
 

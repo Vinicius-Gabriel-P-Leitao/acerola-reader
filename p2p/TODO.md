@@ -104,7 +104,7 @@
 
 ## Etapa E — Dependency Structure
 
-- [ ] **Desacoplar `data/protocol/rpc` de `core::network::state`**
+- [x] **Desacoplar `data/protocol/rpc` de `core::network::state`** ✅
   - `rpc/client.rs` e `rpc/server.rs` importam `NetworkState` diretamente — dependência cruzada entre camadas `data` e `core`
   - Criar trait `DeviceInfoStore` em `data/protocol/`:
     ```rust
@@ -114,56 +114,56 @@
     ```
   - Fazer `NetworkState` implementar `DeviceInfoStore`
   - Handlers RPC recebem `Arc<dyn DeviceInfoStore>` ao invés de `Arc<RwLock<NetworkState>>`
-  - Critério: `data/protocol/rpc/` não importa mais nada de `core::network`
+  - Critério: `data/protocol/rpc/` não importa mais nada de `core::network` ✅
 
-- [ ] **Mover a constante `GOODBYE` para o `NetworkManager`** — `core/network/manager.rs`
+- [x] **Mover a constante `GOODBYE` para o `NetworkManager`** — `core/network/manager.rs` ✅
   - `manager.rs` importa `GOODBYE` de `data::protocol::rpc` — acoplamento desnecessário entre rede e protocolo
   - Definir `const GOODBYE: u8 = 0x03` no próprio `manager.rs` (ou em `data/protocol/rpc/mod.rs` com re-export público)
-  - Critério: `manager.rs` não importa mais módulos de `data::protocol::rpc`
+  - Critério: `manager.rs` não importa mais módulos de `data::protocol::rpc` ✅
 
 ---
 
 ## Etapa F — Qualidade Geral de Código
 
-- [ ] **Trocar `std::sync::Mutex` por `tokio::sync::Mutex` no `TofuGuard`** — `core/guard/tofu.rs`
+- [x] **Trocar `std::sync::Mutex` por `tokio::sync::Mutex` no `TofuGuard`** — `core/guard/tofu.rs`
   - `InMemoryTrustedStore` usa `std::sync::Mutex` dentro de um contexto async
   - Risco: se o lock for mantido através de um `.await` (ex: em futures futuras), ocorre deadlock no tokio runtime
   - Substituir `Mutex<HashSet<String>>` por `tokio::sync::Mutex<HashSet<String>>`
   - Atualizar métodos para `async fn insert`, `async fn contains`, `async fn is_blocked`
-  - Critério: `TofuGuard` funciona sem risco de bloquear o runtime
+  - Critério: `TofuGuard` funciona sem risco de bloquear o runtime ✅
 
-- [ ] **Substituir `expect()` em código de produção** — `core/transport/iroh/transport.rs:49`
+- [x] **Substituir `expect()` em código de produção** — `core/transport/iroh/transport.rs:49`
   - `serde_json::to_vec(&addr).expect("EndpointAddr serialization failed")` causa panic em produção
   - Propagar o erro como `ConnectionError::StreamFailed(...)` usando `?`
-  - Critério: zero `expect()` em código de produção fora de testes
+  - Critério: zero `expect()` em código de produção fora de testes ✅
 
-- [ ] **Adicionar `#![deny(missing_docs)]` no `lib.rs`**
+- [x] **Adicionar `#![deny(missing_docs)]` no `lib.rs`**
   - Previne regressão de cobertura de documentação a longo prazo
   - Primeiro adicionar docs faltantes (se houver), depois ativar o deny
-  - Critério: `cargo doc --no-deps` não emite warnings de documentação faltante
+  - Critério: `cargo doc --no-deps` não emite warnings de documentação faltante ✅
 
-- [ ] **Adicionar `cargo clippy` como gate de CI** — `.github/workflows/`
+- [x] **Adicionar `cargo clippy` como gate de CI** — `.github/workflows/`
   - `cargo clippy --all-features -- -D warnings`
-  - Critério: nenhum warning de clippy em PRs
+  - Critério: nenhum warning de clippy em PRs ✅
 
 ---
 
 ## Etapa G — Testes de Robustez e Cancelamento
 
-- [ ] **Testar cancelamento e liberação de recursos do `AcerolaP2p`** — `acerola/tests/`
+- [x] **Testar cancelamento e liberação de recursos do `AcerolaP2p`** — `acerola/tests/`
   - Verificar que dropar `AcerolaP2p` sem chamar `shutdown()` não causa memory leak ou thread órfã
   - Usar `tokio_test` ou `drop()` explícito seguido de sleep para verificar que tasks foram canceladas
-  - Critério: nenhum task ativo após drop do `AcerolaP2p`
+  - Critério: nenhum task ativo após drop do `AcerolaP2p` ✅
 
-- [ ] **Testes de property-based para serialização** — `data/identity/`, `infra/peer/`
+- [x] **Testes de property-based para serialização** — `data/identity/`, `infra/peer/`
   - Usar `proptest` para validar roundtrip de `DeviceInfo` e `PeerAddr` com dados arbitrários
   - Verificar que `PeerId::from_public_key` é sempre determinístico para o mesmo input
-  - Critério: 1000+ casos gerados automaticamente passam
+  - Critério: 1000+ casos gerados automaticamente passam ✅
 
-- [ ] **Adicionar benchmark formal de throughput** — `acerola/benches/`
+- [x] **Adicionar benchmark formal de throughput** — `acerola/benches/`
   - Usar `criterion` para medir throughput do Mock transport vs Iroh
   - Baseline: mock deve processar ≥100 conexões/s; Iroh ≥10 MB/s de throughput
-  - Critério: `cargo bench` roda sem erros e gera relatório HTML
+  - Critério: `cargo bench` roda sem erros e gera relatório HTML ✅
 
 ---
 
@@ -175,8 +175,8 @@
 | `run()` refatorada em ≤40 linhas | B ✅ |
 | Coverage ≥80% no CI | C ✅ |
 | Módulos `device/`, `error/`, `device_info` com testes | C ✅ |
-| Score de mutantes ≥75% | D |
-| `data/protocol/rpc` não depende de `core::network` | E |
-| Zero `expect()` em código de produção | F |
-| Clippy clean no CI | F |
-| Drop de `AcerolaP2p` sem recursos órfãos | G |
+| Score de mutantes ≥75% | D ✅ |
+| `data/protocol/rpc` não depende de `core::network` | E ✅ |
+| Zero `expect()` em código de produção | F ✅ |
+| Clippy clean no CI | F ✅ |
+| Drop de `AcerolaP2p` sem recursos órfãos | G ✅ |
