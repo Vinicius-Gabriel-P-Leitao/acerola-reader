@@ -66,11 +66,15 @@ acerola-p2p = { git = "https://github.com/your-org/acerola-p2p" }
 
 ```rust
 use std::sync::Arc;
-use acerola_p2p::{AcerolaP2p, protocol::EventEmitter, identity::DeviceInfo};
-use acerola_p2p::transport::IrohTransportBuilder;
+use acerola_p2p::api::{
+    AcerolaP2p,
+    identity::DeviceInfo,
+    protocol::EventEmitter,
+    transport::IrohTransportBuilder,
+};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let emit: EventEmitter = Arc::new(|event, data| {
         println!("[{event}] {data}");
     });
@@ -83,10 +87,10 @@ async fn main() {
 
     let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
         .build()
-        .await
-        .expect("falha ao iniciar o nó");
+        .await?;
 
     println!("id local: {}", node.local_id());
+    Ok(())
 }
 ```
 
@@ -123,7 +127,11 @@ let emit: EventEmitter = Arc::new(|event, data| {
 Interface que desacopla a criação do transport do builder principal. O padrão é `IrohTransportBuilder`, mas qualquer implementação da trait pode ser injetada:
 
 ```rust
-use acerola_p2p::transport::TransportP2pBuilder;
+use acerola_p2p::api::{
+    error::P2pError,
+    transport::TransportP2pBuilder,
+};
+use async_trait::async_trait;
 
 struct MeuTransportBuilder;
 
@@ -136,7 +144,7 @@ impl TransportP2pBuilder for MeuTransportBuilder {
     }
 }
 
-let node = AcerolaP2p::builder(emit, MeuTransportBuilder)
+let node = AcerolaP2p::builder(emit, MeuTransportBuilder, device_info)
     .build()
     .await?;
 ```
@@ -150,7 +158,13 @@ Implemente essa trait para tratar um protocolo ALPN customizado. Recebe um strea
 ```rust
 use std::sync::Arc;
 use async_trait::async_trait;
-use acerola_p2p::{Handler, P2pError, PeerIdentity};
+use acerola_p2p::api::{
+    error::P2pError,
+    peer::PeerIdentity,
+    protocol::Handler,
+    transport::IrohTransportBuilder,
+    AcerolaP2p,
+};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 struct BlobHandler;
@@ -168,7 +182,7 @@ impl Handler for BlobHandler {
     }
 }
 
-let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default())
+let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
     .inbound(b"acerola/blob", Arc::new(BlobHandler))   // aceita conexões entrantes
     .outbound(b"acerola/blob", Arc::new(BlobHandler))  // inicia conexões saintes
     .build()
@@ -184,7 +198,12 @@ O mesmo ALPN deve ser registrado nos dois lados. `inbound` trata conexões que c
 Função assíncrona chamada antes de qualquer conexão entrante ser aceita. Retorne `Err` para rejeitar.
 
 ```rust
-use acerola_p2p::{Guard, P2pError};
+use acerola_p2p::api::{
+    error::P2pError,
+    guard::Guard,
+    transport::IrohTransportBuilder,
+    AcerolaP2p,
+};
 
 // Aberto — aceita qualquer peer (padrão)
 let aberto: Guard = Box::new(|_ctx| Box::pin(async { Ok(()) }));
@@ -203,7 +222,7 @@ let allowlist: Guard = Box::new(move |ctx| {
     })
 });
 
-let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default())
+let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
     .guard(allowlist)
     .build()
     .await?;
@@ -214,8 +233,8 @@ let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default())
 ### Conectar a um peer
 
 ```rust
-// O ALPN deve corresponder a um handler outbound registrado
-node.connect("peer-id-string", b"acerola/blob").await?;
+// Conecta a um PeerAddr apontando para o ALPN registrado no outbound handler
+node.connect(peer_addr, b"acerola/blob").await?;
 ```
 
 ### Encerrar o nó
