@@ -22,7 +22,6 @@ jobs:
         uses: davidB/rust-cargo-make@v1
 
       - name: Build Release
-        working-directory: acerola
         run: cargo make build-release
 
       - name: Upload Release Artifacts
