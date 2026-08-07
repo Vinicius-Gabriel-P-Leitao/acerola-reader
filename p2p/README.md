@@ -9,16 +9,18 @@ Biblioteca P2P central do projeto Acerola. Compartilhada entre desktop e Android
 ```mermaid
 flowchart TD
     Consumer["Consumidor\n(desktop / Android)"]
-    Builder["AcerolaP2PBuilder"]
-    Node["AcerolaP2P"]
+    Builder["AcerolaP2pBuilder&lt;TB&gt;"]
+    Node["AcerolaP2p"]
     Manager["NetworkManager"]
+    TB["TransportP2pBuilder (trait)"]
     Transport["IrohTransport\n(QUIC / iroh)"]
 
-    Consumer -->|"AcerolaP2P::builder(emit)"| Builder
+    Consumer -->|"AcerolaP2p::builder(emit, transport_builder)"| Builder
     Builder -->|".guard() .inbound() .outbound()"| Builder
     Builder -->|".build().await"| Node
     Node -->|"connect() / shutdown()"| Manager
     Manager -->|"accept() / open_bi()"| Transport
+    TB -->|"IrohTransportBuilder (padrão)"| Transport
 
     subgraph internals["Internos (pub crate)"]
         Manager
@@ -64,7 +66,8 @@ acerola-p2p = { git = "https://github.com/your-org/acerola-p2p" }
 
 ```rust
 use std::sync::Arc;
-use acerola_p2p::{AcerolaP2P, EventEmitter};
+use acerola_p2p::{AcerolaP2p, protocol::EventEmitter, identity::DeviceInfo};
+use acerola_p2p::transport::IrohTransportBuilder;
 
 #[tokio::main]
 async fn main() {
@@ -72,7 +75,13 @@ async fn main() {
         println!("[{event}] {data}");
     });
 
-    let node = AcerolaP2P::builder(emit)
+    let device_info = DeviceInfo {
+        name: "meu-dispositivo".to_string(),
+        os: "linux".to_string(),
+        version: "1.0.0".to_string(),
+    };
+
+    let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
         .build()
         .await
         .expect("falha ao iniciar o nó");
@@ -80,6 +89,16 @@ async fn main() {
     println!("id local: {}", node.local_id());
 }
 ```
+
+### Com relay configurado
+
+```rust
+let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_info)
+    .build()
+    .await?;
+```
+
+Sem relay configurado, o nó opera apenas via mDNS local (`RelayMode::Disabled`).
 
 ---
 
@@ -99,6 +118,31 @@ let emit: EventEmitter = Arc::new(|event, data| {
 
 ---
 
+### `TransportP2pBuilder`
+
+Interface que desacopla a criação do transport do builder principal. O padrão é `IrohTransportBuilder`, mas qualquer implementação da trait pode ser injetada:
+
+```rust
+use acerola_p2p::transport::TransportP2pBuilder;
+
+struct MeuTransportBuilder;
+
+#[async_trait]
+impl TransportP2pBuilder for MeuTransportBuilder {
+    type Output = MeuTransport;
+
+    async fn build(self, alpns: Vec<Vec<u8>>) -> Result<MeuTransport, P2pError> {
+        // monta o transport com os ALPNs recebidos
+    }
+}
+
+let node = AcerolaP2p::builder(emit, MeuTransportBuilder)
+    .build()
+    .await?;
+```
+
+---
+
 ### `Handler` (ProtocolHandler)
 
 Implemente essa trait para tratar um protocolo ALPN customizado. Recebe um stream bidirecional bruto por conexão.
@@ -106,7 +150,7 @@ Implemente essa trait para tratar um protocolo ALPN customizado. Recebe um strea
 ```rust
 use std::sync::Arc;
 use async_trait::async_trait;
-use acerola_p2p::{Handler, P2PError, PeerIdentity};
+use acerola_p2p::{Handler, P2pError, PeerIdentity};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 struct BlobHandler;
@@ -118,14 +162,13 @@ impl Handler for BlobHandler {
         peer: &PeerIdentity,
         mut send: Box<dyn AsyncWrite + Send + Unpin>,
         mut recv: Box<dyn AsyncRead + Send + Unpin>,
-    ) -> Result<(), P2PError> {
+    ) -> Result<(), P2pError> {
         // leitura e escrita de bytes brutos sobre o stream QUIC
         Ok(())
     }
 }
 
-// Registro:
-let node = AcerolaP2P::builder(emit)
+let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default())
     .inbound(b"acerola/blob", Arc::new(BlobHandler))   // aceita conexões entrantes
     .outbound(b"acerola/blob", Arc::new(BlobHandler))  // inicia conexões saintes
     .build()
@@ -141,7 +184,7 @@ O mesmo ALPN deve ser registrado nos dois lados. `inbound` trata conexões que c
 Função assíncrona chamada antes de qualquer conexão entrante ser aceita. Retorne `Err` para rejeitar.
 
 ```rust
-use acerola_p2p::{Guard, P2PError};
+use acerola_p2p::{Guard, P2pError};
 
 // Aberto — aceita qualquer peer (padrão)
 let aberto: Guard = Box::new(|_ctx| Box::pin(async { Ok(()) }));
@@ -155,12 +198,12 @@ let allowlist: Guard = Box::new(move |ctx| {
         if permitidos.contains(&peer_id) {
             Ok(())
         } else {
-            Err(P2PError::AuthDenied)
+            Err(P2pError::AuthDenied)
         }
     })
 });
 
-let node = AcerolaP2P::builder(emit)
+let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default())
     .guard(allowlist)
     .build()
     .await?;
@@ -195,3 +238,22 @@ node.shutdown().await?;
 | `rpc:pong_sent` | servidor → cliente |
 
 Não é necessário registrar esse handler — ele sempre está presente.
+
+---
+
+## TofuGuard e autenticação com iroh
+
+O `TofuGuard` implementa a política SSH-like de Trust On First Use: peers desconhecidos são aceitos e registrados na primeira conexão; nas seguintes, basta estar no store para ser permitido.
+
+Ao usar o transport `iroh`, **não é necessário implementar challenge-response na camada de aplicação**. O iroh estabelece conexões via QUIC com TLS 1.3, e durante esse handshake cada peer prova criptograficamente a posse da chave privada correspondente ao seu `NodeId`. O `peer_id` que chega ao Guard já é autêntico — o iroh rejeita conexões onde essa prova falha antes de qualquer código de aplicação ser executado.
+
+Em outras palavras: o TLS do iroh já é o challenge-response. Adicionar uma segunda validação na camada de aplicação seria redundante e não acrescentaria segurança ao modelo de ameaça.
+
+```
+Conexão QUIC (iroh)
+  └── TLS 1.3 handshake          ← prova de posse da chave privada (automático)
+        └── Guard executa         ← TofuGuard decide aceitar ou rejeitar pelo NodeId
+              └── Handler recebe  ← peer_id já verificado
+```
+
+Se o transport subjacente **não** oferecer autenticação no nível de transporte, um Guard customizado com challenge-response pode ser necessário.

@@ -1,0 +1,494 @@
+use std::{collections::HashMap, sync::Arc};
+
+use secrecy::ExposeSecret;
+
+use super::acerola_p2p::AcerolaP2p;
+use crate::{
+    core::{
+        guard::BoxedValidator,
+        network::manager::NetworkManager,
+        storage::P2PStorage,
+        transport::{P2pTransport, TransportP2pBuilder},
+    },
+    data::{
+        identity::device_info::DeviceInfo,
+        protocol::{
+            rpc::{RpcClientHandler, RpcServerHandler},
+            EventEmitter, ProtocolHandler,
+        },
+    },
+    infra::error::ConnectionError,
+};
+
+const RESERVED_ALPNS: &[&[u8]] = &[b"acerola/handshake/1"];
+
+/// Estrutura auxiliar para pré-configurar o ecossistema P2p antes da iniciação real no sistema operacional.
+///
+/// Através desse builder é possível injetar regras de firewall,
+/// registrar portas e protocols customizados (handlers ALPN) e repassar
+/// as lógicas de monitoria pro usuário.
+pub struct AcerolaP2pBuilder<TB: TransportP2pBuilder>
+where
+    TB::Output: 'static,
+{
+    pub(super) transport: TB,
+    pub(super) emit: EventEmitter,
+    pub(super) device_info: DeviceInfo,
+    pub(super) guard: BoxedValidator,
+    pub(super) storage: Option<Arc<dyn P2PStorage>>,
+    pub(super) handlers_inbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
+    pub(super) handlers_outbound: HashMap<Vec<u8>, Arc<dyn ProtocolHandler>>,
+}
+
+impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
+    pub(super) fn new(emit: EventEmitter, transport: TB, device_info: DeviceInfo) -> Self {
+        Self {
+            emit,
+            transport,
+            device_info,
+            handlers_inbound: HashMap::new(),
+            handlers_outbound: HashMap::new(),
+            guard: Box::new(|_ctx| Box::pin(async { Ok(()) })),
+            storage: None,
+        }
+    }
+
+    /// Atribui um componente ou closure Guard para checagem estrita de cada handshake na rede.
+    pub fn guard(mut self, validator: BoxedValidator) -> Self {
+        self.guard = validator;
+        self
+    }
+
+    /// Injeta uma implementação de `P2PStorage` para persistência de chaves de identidade e cache de peers.
+    pub fn storage(mut self, storage: impl P2PStorage + 'static) -> Self {
+        self.storage = Some(Arc::new(storage));
+        self
+    }
+
+    /// Acopla um manipulador passivo de requisições de serviço à pilha.
+    /// Dispara somente quando um par iniciar conexão invocando a exata chave `alpn`.
+    pub fn inbound(mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) -> Self {
+        assert!(
+            !RESERVED_ALPNS.contains(&alpn),
+            "ALPN {:?} is reserved by the library and cannot be overridden",
+            alpn
+        );
+        self.handlers_inbound.insert(alpn.to_vec(), handler);
+        self
+    }
+
+    /// Acopla um manipulador proativo à pilha, a ser usado toda vez que o software
+    /// quiser ativamente invocar um sub-serviço e processar a via dupla ativamente.
+    pub fn outbound(mut self, alpn: &[u8], handler: Arc<dyn ProtocolHandler>) -> Self {
+        assert!(
+            !RESERVED_ALPNS.contains(&alpn),
+            "ALPN {:?} is reserved by the library and cannot be overridden",
+            alpn
+        );
+        self.handlers_outbound.insert(alpn.to_vec(), handler);
+        self
+    }
+
+    /// Sincroniza a chave/seed de identidade entre o transport e o storage configurado.
+    async fn resolve_identity(&mut self) -> Result<(), ConnectionError> {
+        let Some(storage) = &self.storage else { return Ok(()) };
+
+        if let Ok(Some(bytes)) = storage.load_identity().await {
+            if let Ok(seed) = bytes.try_into() {
+                self.transport.set_seed(seed);
+                return Ok(());
+            }
+        }
+
+        let seed = match self.transport.get_seed() {
+            Some(seed) => seed,
+            None => *crate::data::identity::generate_seed()?.expose_secret(),
+        };
+
+        self.transport.set_seed(seed);
+        storage.save_identity(&seed).await
+    }
+
+    /// Carrega e registra peers salvos no cache de storage no estado inicial da rede.
+    async fn restore_cached_peers(
+        storage: Option<&Arc<dyn P2PStorage>>,
+        state: &tokio::sync::RwLock<crate::core::network::state::NetworkState>,
+    ) {
+        if let Some(storage) = storage {
+            if let Ok(cached_peers) = storage.load_peers().await {
+                state.write().await.store_peer_addrs(cached_peers);
+            }
+        }
+    }
+
+    /// Compila as configurações submetidas e consolida a interface física no sistema operacional (abre as sockets).
+    ///
+    /// Além de popular a estrutura do `NetworkManager`, ativa de ofício o handler base `acerola/handshake/1`.
+    pub async fn build(mut self) -> Result<AcerolaP2p, ConnectionError> {
+        self.resolve_identity().await?;
+
+        let alpns: Vec<Vec<u8>> = RESERVED_ALPNS
+            .iter()
+            .map(|it| it.to_vec())
+            .chain(self.handlers_inbound.keys().cloned())
+            .chain(self.handlers_outbound.keys().cloned())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+
+        let transport = Arc::new(self.transport.build(alpns).await?);
+
+        let local_id = transport.local_id();
+        let local_addr = transport.local_addr()?;
+
+        let (mut manager, command_tx, state) = NetworkManager::with_storage(
+            Arc::clone(&transport) as Arc<dyn P2pTransport>,
+            self.guard,
+            Arc::clone(&self.emit),
+            self.storage.clone(),
+        );
+
+        Self::restore_cached_peers(self.storage.as_ref(), &state).await;
+
+        manager.register_inbound(
+            b"acerola/handshake/1",
+            Arc::new(RpcServerHandler::new(
+                Arc::clone(&self.emit),
+                self.device_info.clone(),
+                Arc::clone(&state),
+            )),
+        );
+
+        manager.register_outbound(
+            b"acerola/handshake/1",
+            Arc::new(RpcClientHandler::new(
+                Arc::clone(&self.emit),
+                self.device_info.clone(),
+                Arc::clone(&state),
+            )),
+        );
+
+        self.handlers_inbound.into_iter().for_each(|(alpn, handler)| {
+            manager.register_inbound(&alpn, handler);
+        });
+
+        self.handlers_outbound.into_iter().for_each(|(alpn, handler)| {
+            manager.register_outbound(&alpn, handler);
+        });
+
+        tokio::spawn(manager.run());
+        Ok(AcerolaP2p { command_tx, local_id, local_addr, state, device_info: self.device_info })
+    }
+}
+
+#[cfg(all(test, feature = "iroh"))]
+mod tests {
+    use tokio::io::{AsyncRead, AsyncWrite};
+
+    use super::*;
+    use crate::{
+        core::{storage::InMemoryStorage, transport::iroh::IrohTransportBuilder},
+        data::identity::device_info::DeviceInfo,
+        infra::peer::PeerId,
+    };
+
+    fn no_op_emitter() -> EventEmitter {
+        Arc::new(|_event: &str, _payload: String| {})
+    }
+
+    fn test_device_info() -> DeviceInfo {
+        DeviceInfo {
+            name: "test-device".to_string(),
+            os: "linux".to_string(),
+            version: "0.0.1".to_string(),
+        }
+    }
+
+    struct NoOpHandler;
+
+    #[async_trait::async_trait]
+    impl ProtocolHandler for NoOpHandler {
+        async fn handle(
+            &self, _peer: &PeerId, _send: Box<dyn AsyncWrite + Send + Unpin>,
+            _recv: Box<dyn AsyncRead + Send + Unpin>,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn build_returns_valid_node() {
+        assert!(AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info()
+        )
+        .build()
+        .await
+        .is_ok());
+    }
+
+    #[test]
+    #[should_panic(expected = "reserved by the library")]
+    fn inbound_with_reserved_alpn_causes_panic() {
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .inbound(b"acerola/handshake/1", Arc::new(NoOpHandler));
+    }
+
+    #[test]
+    #[should_panic(expected = "reserved by the library")]
+    fn outbound_with_reserved_alpn_causes_panic() {
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .outbound(b"acerola/handshake/1", Arc::new(NoOpHandler));
+    }
+
+    #[tokio::test]
+    async fn build_with_custom_handler_does_not_fail() {
+        let result = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .inbound(b"meu/protocolo", Arc::new(NoOpHandler))
+        .outbound(b"meu/protocolo", Arc::new(NoOpHandler))
+        .build()
+        .await;
+
+        assert!(result.is_ok());
+    }
+
+    fn capture_emitter() -> (EventEmitter, Arc<std::sync::Mutex<Vec<String>>>) {
+        let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let clone = Arc::clone(&events);
+        let emit: EventEmitter = Arc::new(move |event: &str, _: String| {
+            clone.lock().unwrap().push(event.to_string());
+        });
+        (emit, events)
+    }
+
+    #[tokio::test]
+    async fn reserved_handshake_completes_between_two_nodes() {
+        let (emit_a, events_a) = capture_emitter();
+        let (emit_b, events_b) = capture_emitter();
+
+        let node_a =
+            AcerolaP2p::builder(emit_a, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
+
+        let node_b =
+            AcerolaP2p::builder(emit_b, IrohTransportBuilder::default(), test_device_info())
+                .build()
+                .await
+                .unwrap();
+
+        let addr_b = node_b.local_addr().clone();
+
+        // Aguarda mDNS descobrir o peer antes de tentar conectar
+        tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+        node_a.connect(addr_b, b"acerola/handshake/1").await.unwrap();
+
+        // Aguarda handshake completar
+        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+
+        let ev_a = events_a.lock().unwrap();
+        let ev_b = events_b.lock().unwrap();
+
+        assert!(ev_a.iter().any(|e| e == "rpc:ping_sent"), "node A: ping enviado");
+        assert!(ev_a.iter().any(|e| e == "rpc:pong_received"), "node A: pong recebido");
+        assert!(
+            ev_a.iter().any(|e| e == "rpc:device_info_received"),
+            "node A: device info recebida"
+        );
+
+        assert!(ev_b.iter().any(|e| e == "rpc:ping_received"), "node B: ping recebido");
+        assert!(ev_b.iter().any(|e| e == "rpc:pong_sent"), "node B: pong enviado");
+        assert!(
+            ev_b.iter().any(|e| e == "rpc:device_info_exchanged"),
+            "node B: device info trocada"
+        );
+    }
+
+    #[tokio::test]
+    async fn storage_persists_identity_across_rebuild() {
+        let storage = InMemoryStorage::new();
+
+        let node1 = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .storage(storage.clone())
+        .build()
+        .await
+        .unwrap();
+
+        let id1 = node1.local_id().to_string();
+        let dev_id1 = node1.local_device_id().map(|s| s.to_string());
+
+        let node2 = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .storage(storage)
+        .build()
+        .await
+        .unwrap();
+
+        let id2 = node2.local_id().to_string();
+        let dev_id2 = node2.local_device_id().map(|s| s.to_string());
+
+        assert_eq!(id1, id2);
+        assert_eq!(dev_id1, dev_id2);
+    }
+
+    struct FailingPeerLoadStorage;
+
+    #[async_trait::async_trait]
+    impl crate::core::storage::P2PStorage for FailingPeerLoadStorage {
+        async fn save_identity(&self, _secret: &[u8]) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+        async fn load_identity(&self) -> Result<Option<Vec<u8>>, ConnectionError> {
+            Ok(None)
+        }
+        async fn save_peer(
+            &self, _peer: &crate::infra::peer::PeerAddr,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+        async fn load_peers(&self) -> Result<Vec<crate::infra::peer::PeerAddr>, ConnectionError> {
+            Err(ConnectionError::StreamFailed("disk read error".to_string()))
+        }
+    }
+
+    #[tokio::test]
+    async fn failing_peer_load_storage_returns_expected_results() {
+        let storage = FailingPeerLoadStorage;
+        assert_eq!(storage.load_identity().await.unwrap(), None);
+        assert!(matches!(
+            storage.load_peers().await,
+            Err(ConnectionError::StreamFailed(_))
+        ));
+    }
+
+    #[tokio::test]
+    async fn restore_cached_peers_handles_storage_failure_gracefully() {
+        // Verifica que o erro retornado por load_peers não causa panic e deixa o estado limpo
+        let failing_storage: Arc<dyn crate::core::storage::P2PStorage> =
+            Arc::new(FailingPeerLoadStorage);
+        let network_state =
+            Arc::new(tokio::sync::RwLock::new(crate::core::network::state::NetworkState::new()));
+
+        AcerolaP2pBuilder::<IrohTransportBuilder>::restore_cached_peers(
+            Some(&failing_storage),
+            &network_state,
+        )
+        .await;
+
+        let state_guard = network_state.read().await;
+        assert!(state_guard.peers().is_empty());
+    }
+
+    #[tokio::test]
+    async fn restore_cached_peers_populates_network_state_with_cached_peers() {
+        // Inicializa storage contendo um peer preexistente no cache
+        let memory_storage = InMemoryStorage::new();
+        let cached_peer_address = crate::infra::peer::PeerAddr {
+            id: PeerId { id: "cached-peer-1".to_string(), device_id: None },
+            addrs: vec![],
+        };
+        memory_storage.save_peer(&cached_peer_address).await.unwrap();
+
+        let network_state =
+            Arc::new(tokio::sync::RwLock::new(crate::core::network::state::NetworkState::new()));
+
+        let storage_arc: Arc<dyn crate::core::storage::P2PStorage> = Arc::new(memory_storage);
+
+        // Executa a restauração de peers salvos
+        AcerolaP2pBuilder::<IrohTransportBuilder>::restore_cached_peers(
+            Some(&storage_arc),
+            &network_state,
+        )
+        .await;
+
+        // Verifica que o peer foi carregado para a tabela de endereços conhecidos do estado
+        let state_guard = network_state.read().await;
+        assert!(state_guard.get_addr(&cached_peer_address.id).is_some());
+    }
+
+    struct InvalidSeedStorage {
+        invalid_bytes: Vec<u8>,
+        saved_seed: Arc<std::sync::Mutex<Option<Vec<u8>>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::core::storage::P2PStorage for InvalidSeedStorage {
+        async fn save_identity(&self, secret: &[u8]) -> Result<(), ConnectionError> {
+            let mut saved_seed_guard = self.saved_seed.lock().unwrap();
+            *saved_seed_guard = Some(secret.to_vec());
+            Ok(())
+        }
+
+        async fn load_identity(&self) -> Result<Option<Vec<u8>>, ConnectionError> {
+            Ok(Some(self.invalid_bytes.clone()))
+        }
+
+        async fn save_peer(
+            &self, _peer: &crate::infra::peer::PeerAddr,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+
+        async fn load_peers(&self) -> Result<Vec<crate::infra::peer::PeerAddr>, ConnectionError> {
+            Ok(vec![])
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_seed_storage_returns_configured_bytes() {
+        let container = Arc::new(std::sync::Mutex::new(None));
+        let storage = InvalidSeedStorage {
+            invalid_bytes: vec![1, 2, 3, 4, 5],
+            saved_seed: container,
+        };
+        assert_eq!(storage.load_identity().await.unwrap().unwrap(), vec![1, 2, 3, 4, 5]);
+    }
+
+    #[tokio::test]
+    async fn resolve_identity_regenerates_seed_when_storage_returns_invalid_bytes() {
+        // Inicializa storage mock que retorna bytes de tamanho inválido (5 bytes em vez de 32)
+        let saved_seed_container = Arc::new(std::sync::Mutex::new(None));
+        let invalid_seed_storage = InvalidSeedStorage {
+            invalid_bytes: vec![1, 2, 3, 4, 5],
+            saved_seed: Arc::clone(&saved_seed_container),
+        };
+
+        let mut builder = AcerolaP2pBuilder::new(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .storage(invalid_seed_storage);
+
+        // Executa a resolução de identidade em isolamento
+        let resolution_result = builder.resolve_identity().await;
+        assert!(resolution_result.is_ok());
+
+        // Verifica que a seed gerada e atribuída ao transporte possui exatamente 32 bytes
+        let transport_seed = builder.transport.get_seed();
+        assert!(transport_seed.is_some());
+        let resolved_seed_bytes = transport_seed.unwrap();
+        assert_eq!(resolved_seed_bytes.len(), 32);
+
+        // Verifica que a nova seed válida de 32 bytes foi persistida no storage para corrigir a seed inválida anterior
+        let saved_seed_guard = saved_seed_container.lock().unwrap();
+        assert!(saved_seed_guard.is_some());
+        let persisted_bytes = saved_seed_guard.as_ref().unwrap();
+        assert_eq!(persisted_bytes.len(), 32);
+        assert_ne!(persisted_bytes.as_slice(), &[1, 2, 3, 4, 5]);
+        assert_eq!(persisted_bytes.as_slice(), resolved_seed_bytes.as_slice());
+    }
+}

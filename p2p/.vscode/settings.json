@@ -1,0 +1,47 @@
+{
+  "files.readonlyInclude": {
+    "**/lib/rustlib/src/rust/library/**/*.rs": true,
+    "**/.cargo/git/checkouts/**/*.rs": true,
+    "**/.cargo/registry/src/**/*.rs": true
+  },
+  "files.watcherExclude": {
+    "**/target/**": true
+  },
+  "files.exclude": {
+    "**/target": true
+  },
+  "search.exclude": {
+    "**/target": true
+  },
+  "material-icon-theme.files.customClones": [
+    {
+      "name": "rust-lib",
+      "color": "cyan",
+      "base": "rust"
+    },
+    {
+      "name": "rust-mod",
+      "color": "green",
+      "base": "rust"
+    }
+  ],
+  "material-icon-theme.files.associations": {
+    "lib.rs": "rust-lib",
+    "mod.rs": "rust-mod"
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "mod.rs": "*"
+  },
+  "material-icon-theme.folders.associations": {
+    "transport": "connection",
+    "network": "connection",
+    "identity": "class",
+    "device": "console",
+    "protocol": "core",
+    "summary": "docs",
+    "peer": "client",
+    ".cargo": "rust",
+    "p2p": "client"
+  }
+}

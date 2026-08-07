@@ -1,0 +1,20 @@
+[test-groups]
+# Testes que fazem bind de portas ou usam recursos globais devem rodar
+# isolados para evitar conflitos (Address already in use).
+run-in-isolation = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'test(::run_in_isolation::)'
+test-group = 'run-in-isolation'
+
+[profile.default]
+# Timeout generoso para testes P2P — handshake QUIC + MDNS pode ser lento.
+slow-timeout = { period = "20s", terminate-after = 2 }
+# Paralelismo conservador: testes de rede competem por portas.
+test-threads = 4
+
+[profile.ci]
+# CI tem latência de rede/IO maior; mais margem antes de matar o teste.
+slow-timeout = { period = "60s", terminate-after = 3 }
+fail-fast = false
+test-threads = 2

@@ -1,0 +1,8 @@
+# mutants.toml — Configuração do cargo-mutants para o acerola-p2p
+
+exclude_re = [
+    "^tests::.*",
+    ".*::tests::.*",
+    ".*::test_.*",
+    ".*ConnectionWriter.*",
+]
