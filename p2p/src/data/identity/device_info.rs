@@ -2,14 +2,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::infra::error::DeviceInfoError;
 
+/// Informações de identificação do dispositivo (sistema operacional, nome e versão do app).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DeviceInfo {
+    /// Nome do sistema operacional (ex: "windows", "linux", "android").
     pub os: String,
+    /// Nome amigável ou hostname do dispositivo.
     pub name: String,
+    /// Versão do aplicativo executado no dispositivo.
     pub version: String,
 }
 
+/// Contrato para provedores de informações do dispositivo local.
 pub trait DeviceInfoProvider {
+    /// Retorna as informações do dispositivo atual ou um erro caso não seja possível obtê-las.
     fn provide(&self) -> Result<DeviceInfo, DeviceInfoError>;
 }
 

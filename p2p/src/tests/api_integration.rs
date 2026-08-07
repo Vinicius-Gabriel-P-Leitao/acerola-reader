@@ -37,10 +37,16 @@ async fn full_handshake_between_client_and_server() {
     let state_server = Arc::new(RwLock::new(NetworkState::new()));
     let state_client = Arc::new(RwLock::new(NetworkState::new()));
 
-    let server =
-        RpcServerHandler::new(no_op_emitter(), make_device("server-pc"), Arc::clone(&state_server) as Arc<dyn DeviceInfoStore>);
-    let client =
-        RpcClientHandler::new(no_op_emitter(), make_device("client-pc"), Arc::clone(&state_client) as Arc<dyn DeviceInfoStore>);
+    let server = RpcServerHandler::new(
+        no_op_emitter(),
+        make_device("server-pc"),
+        Arc::clone(&state_server) as Arc<dyn DeviceInfoStore>,
+    );
+    let client = RpcClientHandler::new(
+        no_op_emitter(),
+        make_device("client-pc"),
+        Arc::clone(&state_client) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (client_read, client_write) = tokio::io::split(client_side);
     let (server_read, server_write) = tokio::io::split(server_side);
@@ -80,8 +86,11 @@ async fn server_fails_if_stream_closes_before_ping() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state = Arc::new(RwLock::new(NetworkState::new()));
-    let server =
-        RpcServerHandler::new(no_op_emitter(), make_device("server-pc"), Arc::clone(&state) as Arc<dyn DeviceInfoStore>);
+    let server = RpcServerHandler::new(
+        no_op_emitter(),
+        make_device("server-pc"),
+        Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (server_read, server_write) = tokio::io::split(server_side);
     let server_task = tokio::spawn(async move {
@@ -100,8 +109,11 @@ async fn client_fails_if_stream_closes_before_pong() {
     let (client_side, server_side) = tokio::io::duplex(4096);
 
     let state = Arc::new(RwLock::new(NetworkState::new()));
-    let client =
-        RpcClientHandler::new(no_op_emitter(), make_device("client-pc"), Arc::clone(&state) as Arc<dyn DeviceInfoStore>);
+    let client = RpcClientHandler::new(
+        no_op_emitter(),
+        make_device("client-pc"),
+        Arc::clone(&state) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (client_read, client_write) = tokio::io::split(client_side);
     let client_task = tokio::spawn(async move {
@@ -122,10 +134,16 @@ async fn neither_side_stores_device_info_if_connection_drops_before_exchange() {
     let state_server = Arc::new(RwLock::new(NetworkState::new()));
     let state_client = Arc::new(RwLock::new(NetworkState::new()));
 
-    let server =
-        RpcServerHandler::new(no_op_emitter(), make_device("server-pc"), Arc::clone(&state_server) as Arc<dyn DeviceInfoStore>);
-    let client =
-        RpcClientHandler::new(no_op_emitter(), make_device("client-pc"), Arc::clone(&state_client) as Arc<dyn DeviceInfoStore>);
+    let server = RpcServerHandler::new(
+        no_op_emitter(),
+        make_device("server-pc"),
+        Arc::clone(&state_server) as Arc<dyn DeviceInfoStore>,
+    );
+    let client = RpcClientHandler::new(
+        no_op_emitter(),
+        make_device("client-pc"),
+        Arc::clone(&state_client) as Arc<dyn DeviceInfoStore>,
+    );
 
     let (client_read, client_write) = tokio::io::split(client_side);
     let (server_read, server_write) = tokio::io::split(server_side);

@@ -125,26 +125,26 @@
 
 ## Etapa F — Qualidade Geral de Código
 
-- [ ] **Trocar `std::sync::Mutex` por `tokio::sync::Mutex` no `TofuGuard`** — `core/guard/tofu.rs`
+- [x] **Trocar `std::sync::Mutex` por `tokio::sync::Mutex` no `TofuGuard`** — `core/guard/tofu.rs`
   - `InMemoryTrustedStore` usa `std::sync::Mutex` dentro de um contexto async
   - Risco: se o lock for mantido através de um `.await` (ex: em futures futuras), ocorre deadlock no tokio runtime
   - Substituir `Mutex<HashSet<String>>` por `tokio::sync::Mutex<HashSet<String>>`
   - Atualizar métodos para `async fn insert`, `async fn contains`, `async fn is_blocked`
-  - Critério: `TofuGuard` funciona sem risco de bloquear o runtime
+  - Critério: `TofuGuard` funciona sem risco de bloquear o runtime ✅
 
-- [ ] **Substituir `expect()` em código de produção** — `core/transport/iroh/transport.rs:49`
+- [x] **Substituir `expect()` em código de produção** — `core/transport/iroh/transport.rs:49`
   - `serde_json::to_vec(&addr).expect("EndpointAddr serialization failed")` causa panic em produção
   - Propagar o erro como `ConnectionError::StreamFailed(...)` usando `?`
-  - Critério: zero `expect()` em código de produção fora de testes
+  - Critério: zero `expect()` em código de produção fora de testes ✅
 
-- [ ] **Adicionar `#![deny(missing_docs)]` no `lib.rs`**
+- [x] **Adicionar `#![deny(missing_docs)]` no `lib.rs`**
   - Previne regressão de cobertura de documentação a longo prazo
   - Primeiro adicionar docs faltantes (se houver), depois ativar o deny
-  - Critério: `cargo doc --no-deps` não emite warnings de documentação faltante
+  - Critério: `cargo doc --no-deps` não emite warnings de documentação faltante ✅
 
-- [ ] **Adicionar `cargo clippy` como gate de CI** — `.github/workflows/`
+- [x] **Adicionar `cargo clippy` como gate de CI** — `.github/workflows/`
   - `cargo clippy --all-features -- -D warnings`
-  - Critério: nenhum warning de clippy em PRs
+  - Critério: nenhum warning de clippy em PRs ✅
 
 ---
 

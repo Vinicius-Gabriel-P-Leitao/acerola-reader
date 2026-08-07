@@ -369,10 +369,8 @@ mod tests {
 
         // Após o shutdown, tentar enviar novos comandos pelo canal command_tx deve falhar com erro
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        let peer_address = PeerAddr {
-            id: PeerId { id: "remote".to_string(), device_id: None },
-            addrs: vec![],
-        };
+        let peer_address =
+            PeerAddr { id: PeerId { id: "remote".to_string(), device_id: None }, addrs: vec![] };
         let connect_result = node.connect(peer_address, b"acerola/handshake/1").await;
         assert!(connect_result.is_err());
     }

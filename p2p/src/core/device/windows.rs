@@ -3,11 +3,13 @@ use crate::{
     infra::error::DeviceInfoError,
 };
 
+/// Provedor padrão de informações do dispositivo para sistemas Windows.
 pub struct DefaultDeviceInfoProvider {
     version: String,
 }
 
 impl DefaultDeviceInfoProvider {
+    /// Cria um novo provedor de informações com a versão fornecida.
     pub fn new(version: impl Into<String>) -> Self {
         Self { version: version.into() }
     }

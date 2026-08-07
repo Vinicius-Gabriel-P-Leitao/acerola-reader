@@ -19,10 +19,12 @@ const ACEROLA_DEVICE_NAMESPACE: Uuid = Uuid::from_bytes(*b"acerola-p2p!dev!");
 pub struct PeerId {
     /// Identificador único (geralmente uma string em base32).
     pub id: String,
+    /// Identificador único determinístico derivado da chave pública do dispositivo.
     pub device_id: Option<String>,
 }
 
 impl PeerId {
+    /// Cria um novo `PeerId` derivando o `device_id` deterministicamente a partir dos bytes da chave pública.
     pub fn from_public_key(id: String, public_key_bytes: &[u8]) -> Self {
         let device_id = Uuid::new_v5(&ACEROLA_DEVICE_NAMESPACE, public_key_bytes).to_string();
         Self { id, device_id: Some(device_id) }

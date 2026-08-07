@@ -368,10 +368,7 @@ mod tests {
     async fn failing_peer_load_storage_returns_expected_results() {
         let storage = FailingPeerLoadStorage;
         assert_eq!(storage.load_identity().await.unwrap(), None);
-        assert!(matches!(
-            storage.load_peers().await,
-            Err(ConnectionError::StreamFailed(_))
-        ));
+        assert!(matches!(storage.load_peers().await, Err(ConnectionError::StreamFailed(_))));
     }
 
     #[tokio::test]
@@ -450,10 +447,8 @@ mod tests {
     #[tokio::test]
     async fn invalid_seed_storage_returns_configured_bytes() {
         let container = Arc::new(std::sync::Mutex::new(None));
-        let storage = InvalidSeedStorage {
-            invalid_bytes: vec![1, 2, 3, 4, 5],
-            saved_seed: container,
-        };
+        let storage =
+            InvalidSeedStorage { invalid_bytes: vec![1, 2, 3, 4, 5], saved_seed: container };
         assert_eq!(storage.load_identity().await.unwrap().unwrap(), vec![1, 2, 3, 4, 5]);
     }
 

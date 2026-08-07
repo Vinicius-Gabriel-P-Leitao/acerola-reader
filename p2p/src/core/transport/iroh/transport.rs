@@ -43,11 +43,12 @@ impl IrohTransport {
     }
 
     /// Converte um par ID+Endereço do Iroh para o PeerAddr da nossa abstração.
-    fn to_peer_addr(&self, node_id: EndpointId, addr: EndpointAddr) -> PeerAddr {
-        PeerAddr {
-            id: self.to_peer_id(node_id),
-            addrs: serde_json::to_vec(&addr).expect("EndpointAddr serialization failed"),
-        }
+    fn to_peer_addr(
+        &self, node_id: EndpointId, addr: EndpointAddr,
+    ) -> Result<PeerAddr, ConnectionError> {
+        let addrs = serde_json::to_vec(&addr)
+            .map_err(|error| ConnectionError::StreamFailed(error.to_string()))?;
+        Ok(PeerAddr { id: self.to_peer_id(node_id), addrs })
     }
 
     pub async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
@@ -62,7 +63,7 @@ impl P2pTransport for IrohTransport {
     }
 
     fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
-        Ok(self.to_peer_addr(self.endpoint.id(), self.endpoint.addr()))
+        self.to_peer_addr(self.endpoint.id(), self.endpoint.addr())
     }
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
@@ -78,7 +79,7 @@ impl P2pTransport for IrohTransport {
         let endpoint_addr = resolve_endpoint_addr(remote_id, &incoming_addr);
 
         let peer = self.to_peer_id(remote_id);
-        let addr = self.to_peer_addr(remote_id, endpoint_addr);
+        let addr = self.to_peer_addr(remote_id, endpoint_addr)?;
 
         self.connections.write().await.insert(peer.clone(), conn.clone());
 

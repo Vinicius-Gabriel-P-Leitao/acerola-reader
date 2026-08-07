@@ -722,7 +722,9 @@ mod tests {
             Ok(PeerAddr { id: self.local_id(), addrs: vec![] })
         }
 
-        async fn accept(&self) -> Result<Box<dyn crate::core::transport::IncomingConnection>, ConnectionError> {
+        async fn accept(
+            &self,
+        ) -> Result<Box<dyn crate::core::transport::IncomingConnection>, ConnectionError> {
             std::future::pending().await
         }
 
@@ -752,9 +754,8 @@ mod tests {
     async fn exponential_backoff_increases_delay_and_terminates_safely() {
         // Inicializa o vetor de marcas temporais para registrar o momento exato de cada tentativa
         let call_timestamps = Arc::new(tokio::sync::Mutex::new(Vec::new()));
-        let tracking_transport = Arc::new(TrackingBackoffTransport {
-            call_timestamps: Arc::clone(&call_timestamps),
-        });
+        let tracking_transport =
+            Arc::new(TrackingBackoffTransport { call_timestamps: Arc::clone(&call_timestamps) });
 
         let (mut network_manager, command_sender, _network_state) =
             NetworkManager::new(tracking_transport, open_validator(), no_op_emitter());
@@ -763,10 +764,7 @@ mod tests {
 
         let manager_task_handle = tokio::spawn(network_manager.run());
 
-        let target_peer_address = PeerAddr {
-            id: make_peer("target-peer"),
-            addrs: vec![],
-        };
+        let target_peer_address = PeerAddr { id: make_peer("target-peer"), addrs: vec![] };
 
         command_sender
             .send(NetworkCommand::Connect {
@@ -818,10 +816,8 @@ mod tests {
             }
             async fn accept(
                 &self,
-            ) -> Result<
-                Box<dyn crate::core::transport::IncomingConnection>,
-                ConnectionError,
-            > {
+            ) -> Result<Box<dyn crate::core::transport::IncomingConnection>, ConnectionError>
+            {
                 std::future::pending().await
             }
             async fn open_bi(

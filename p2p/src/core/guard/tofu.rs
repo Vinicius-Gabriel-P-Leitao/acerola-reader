@@ -1,7 +1,7 @@
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashSet, sync::Arc};
+
+use async_trait::async_trait;
+use tokio::sync::Mutex;
 
 use crate::{
     core::guard::{BoxedValidator, ConnectionContext},
@@ -13,15 +13,16 @@ use crate::{
 /// Implementar esta trait permite controlar onde e como os dados de confiança
 /// são persistidos — em memória, banco de dados, arquivo, etc.
 /// A lib fornece [`InMemoryTrustedStore`] como implementação padrão.
+#[async_trait]
 pub trait TrustedPeerStore: Send + Sync {
     /// Registra o `id` como um peer confiável.
-    fn insert(&self, id: &str);
+    async fn insert(&self, id: &str);
 
     /// Retorna `true` se o `id` já foi registrado como confiável.
-    fn contains(&self, id: &str) -> bool;
+    async fn contains(&self, id: &str) -> bool;
 
     /// Retorna `true` se o `id` está na lista de bloqueados.
-    fn is_blocked(&self, id: &str) -> bool;
+    async fn is_blocked(&self, id: &str) -> bool;
 }
 
 /// Implementação padrão de [`TrustedPeerStore`] com armazenamento em memória.
@@ -46,8 +47,8 @@ impl InMemoryTrustedStore {
     ///
     /// Peers bloqueados são rejeitados pelo [`TofuGuard`] antes de qualquer verificação
     /// de confiança, mesmo que o `id` também esteja na lista de confiáveis.
-    pub fn block(&self, id: &str) {
-        self.blocked.lock().unwrap().insert(id.to_string());
+    pub async fn block(&self, id: &str) {
+        self.blocked.lock().await.insert(id.to_string());
     }
 }
 
@@ -57,17 +58,18 @@ impl Default for InMemoryTrustedStore {
     }
 }
 
+#[async_trait]
 impl TrustedPeerStore for InMemoryTrustedStore {
-    fn insert(&self, id: &str) {
-        self.trusted.lock().unwrap().insert(id.to_string());
+    async fn insert(&self, id: &str) {
+        self.trusted.lock().await.insert(id.to_string());
     }
 
-    fn contains(&self, id: &str) -> bool {
-        self.trusted.lock().unwrap().contains(id)
+    async fn contains(&self, id: &str) -> bool {
+        self.trusted.lock().await.contains(id)
     }
 
-    fn is_blocked(&self, id: &str) -> bool {
-        self.blocked.lock().unwrap().contains(id)
+    async fn is_blocked(&self, id: &str) -> bool {
+        self.blocked.lock().await.contains(id)
     }
 }
 
@@ -89,11 +91,14 @@ impl TrustedPeerStore for InMemoryTrustedStore {
 ///
 /// use acerola_p2p::api::guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore};
 ///
-/// let store = Arc::new(InMemoryTrustedStore::new());
-/// store.block("peer-malicioso");
+/// #[tokio::main]
+/// async fn main() {
+///     let store = Arc::new(InMemoryTrustedStore::new());
+///     store.block("peer-malicioso").await;
 ///
-/// let validator =
-///     TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
+///     let validator =
+///         TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
+/// }
 /// ```
 pub struct TofuGuard {
     store: Arc<dyn TrustedPeerStore>,
@@ -113,12 +118,12 @@ impl TofuGuard {
             let store = Arc::clone(&store);
 
             Box::pin(async move {
-                if store.is_blocked(&id) {
+                if store.is_blocked(&id).await {
                     return Err(ConnectionError::AuthDenied("peer is blocked".into()));
                 }
 
-                if !store.contains(&id) {
-                    store.insert(&id);
+                if !store.contains(&id).await {
+                    store.insert(&id).await;
                 }
                 Ok(())
             })
@@ -146,13 +151,13 @@ mod tests {
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
         assert!(validator(&make_ctx("novo-peer")).await.is_ok());
-        assert!(store.contains("novo-peer"));
+        assert!(store.contains("novo-peer").await);
     }
 
     #[tokio::test]
     async fn already_known_peer_is_accepted() {
         let store = make_store();
-        store.insert("peer-antigo");
+        store.insert("peer-antigo").await;
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
@@ -162,7 +167,7 @@ mod tests {
     #[tokio::test]
     async fn blocked_peer_is_rejected() {
         let store = make_store();
-        store.block("peer-malicioso");
+        store.block("peer-malicioso").await;
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
@@ -173,11 +178,11 @@ mod tests {
     #[tokio::test]
     async fn blocked_peer_is_not_inserted_into_trusted() {
         let store = make_store();
-        store.block("peer-malicioso");
+        store.block("peer-malicioso").await;
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
         let _ = validator(&make_ctx("peer-malicioso")).await;
-        assert!(!store.contains("peer-malicioso"));
+        assert!(!store.contains("peer-malicioso").await);
     }
 }

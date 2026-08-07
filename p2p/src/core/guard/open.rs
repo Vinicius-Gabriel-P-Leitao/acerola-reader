@@ -1,8 +1,10 @@
 use super::BoxedValidator;
 
+/// Guard permissivo que aceita todas as conexões sem restrição.
 pub struct OpenGuard;
 
 impl OpenGuard {
+    /// Retorna um [`BoxedValidator`] que permite qualquer conexão.
     pub fn into_validator() -> BoxedValidator {
         Box::new(|_ctx| Box::pin(async { Ok(()) }))
     }
