@@ -1,4 +1,4 @@
-# Acerola
+# acerola-android
 
 Acerola é um leitor de mangá para Android focado em coleções locais. Basta apontar para uma pasta no dispositivo que o aplicativo encontra os arquivos, organiza automaticamente sua biblioteca e deixa tudo pronto para leitura.
 
@@ -7,15 +7,15 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Basta a
 ## Preview
 
 <p align="center">
-  <img src="docs/banner/01-home.png" alt="Acerola Home" width="100%">
+  <img src="docs/banner/01-home.png" alt="Acerola Home" width="70%">
 </p>
 
 <p align="center">
-  <img src="docs/banner/02-reader.png" alt="Acerola Reader" width="100%">
+  <img src="docs/banner/02-reader.png" alt="Acerola Reader" width="70%">
 </p>
 
 <p align="center">
-  <img src="docs/banner/03-customization.png" alt="Acerola Customization" width="100%">
+  <img src="docs/banner/03-customization.png" alt="Acerola Customization" width="70%">
 </p>
 
 > **Nota:** Os banners apresentados acima foram produzidos com auxílio de Inteligência Artificial e posteriormente refinados para representar a identidade visual e a experiência do Acerola.
@@ -27,16 +27,16 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Basta a
 <table>
   <tr>
     <td rowspan="2" valign="top" align="center">
-      <img src="docs/prints/chapter-manga-screen.png" width="260" style="display:block;"><br>
-      <sub><b>Leitura de Capítulo</b></sub>
+      <img src="docs/prints/reader-screen.png" width="260" style="display:block;"><br>
+      <sub><b>Leitura</b></sub>
     </td>
     <td align="center">
       <img src="docs/prints/home-screen.png" width="140"><br>
       <sub><b>Home</b></sub>
     </td>
     <td align="center">
-      <img src="docs/prints/config-manga-screen.png" width="140"><br>
-      <sub><b>Configuração do Mangá</b></sub>
+      <img src="docs/prints/comic-screen.png" width="140"><br>
+      <sub><b>Mangá</b></sub>
     </td>
     <td align="center">
       <img src="docs/prints/config-screen.png" width="140"><br>
@@ -50,12 +50,8 @@ Acerola é um leitor de mangá para Android focado em coleções locais. Basta a
       <sub><b>Histórico</b></sub>
     </td>
     <td align="center">
-      <img src="docs/prints/reader-screen-modes.png" width="140"><br>
-      <sub><b>Modos de Leitura</b></sub>
-    </td>
-    <td align="center">
-      <img src="docs/prints/webtom-reader-mode.png" width="140"><br>
-      <sub><b>Modo Webtoon</b></sub>
+      <img src="docs/prints/onboarding-screen.png" width="140"><br>
+      <sub><b>Onboarding</b></sub>
     </td>
   </tr>
 </table>
@@ -74,35 +70,40 @@ flowchart LR
 
 ## Funcionalidades
 
-- **Biblioteca**
-  - Escaneia automaticamente uma ou mais pastas.
-  - Detecta novos arquivos.
-  - Visualização em grade ou lista.
-  - Busca rápida.
-  - Organização por categorias.
+* **Biblioteca**
 
-- **Metadados**
-  - Busca automaticamente capa, sinopse, autor e gênero.
-  - Integração com MangaDex, AniList e ComicInfo.
-  - Alteração manual das informações.
-  - Troca da fonte de metadados quando desejar.
+  * Escaneia automaticamente uma ou mais pastas.
+  * Detecta novos arquivos.
+  * Visualização em grade ou lista.
+  * Busca rápida.
+  * Organização por categorias.
 
-- **Leitura**
-  - Suporte nativo para `.cbz` e `.cbr`.
-  - Conversão automática de `.pdf` para `.cbz`.
-  - Diversos modos de leitura.
-  - Paginação configurável.
-  - Salvamento automático do progresso.
+* **Metadados**
 
-- **Histórico**
-  - Acesso rápido aos mangás lidos recentemente.
+  * Busca automaticamente capa, sinopse, autor e gênero.
+  * Integração com MangaDex, AniList e ComicInfo.
+  * Alteração manual das informações.
+  * Troca da fonte de metadados quando desejar.
 
-- **Personalização**
-  - Temas Catppuccin.
-  - Dracula.
-  - Alucard.
-  - Nord.
-  - Outras opções de customização da interface.
+* **Leitura**
+
+  * Suporte nativo para `.cbz` e `.cbr`.
+  * Conversão automática de `.pdf` para `.cbz`.
+  * Diversos modos de leitura.
+  * Paginação configurável.
+  * Salvamento automático do progresso.
+
+* **Histórico**
+
+  * Acesso rápido aos mangás lidos recentemente.
+
+* **Personalização**
+
+  * Temas Catppuccin.
+  * Dracula.
+  * Alucard.
+  * Nord.
+  * Outras opções de customização da interface.
 
 ---
 
@@ -129,17 +130,17 @@ flowchart TD
 3. Escolha a pasta onde sua coleção está armazenada.
 4. Aguarde o escaneamento automático.
 5. Sincronize os metadados para baixar capas e informações.
-6. Abra um mangá e comece a ler.
+6. Abra um mangá e comece a leitura.
 
 ---
 
 ## Formatos suportados
 
-| Formato | Descrição |
-| ---------- | ----------- |
-| `.cbz` | Comic Book ZIP (ZIP contendo imagens) |
-| `.cbr` | Comic Book RAR (RAR contendo imagens) |
-| `.pdf` | Convertido automaticamente para `.cbz` na primeira leitura |
+| Formato | Descrição                                                  |
+| ------- | ---------------------------------------------------------- |
+| `.cbz`  | Comic Book ZIP (ZIP contendo imagens)                      |
+| `.cbr`  | Comic Book RAR (RAR contendo imagens)                      |
+| `.pdf`  | Convertido automaticamente para `.cbz` na primeira leitura |
 
 ---
 
@@ -151,11 +152,9 @@ O Acerola para Android fará parte do ecossistema **acerola-desktop**, permitind
 
 Os recursos planejados incluem:
 
-- Biblioteca do computador acessível diretamente pelo Android.
-- Sincronização de progresso de leitura.
-- Sincronização de histórico.
-- Envio de mangás entre dispositivos.
-- Descoberta automática na mesma rede.
-- Acesso remoto utilizando **acerola-relay**, sem necessidade de abrir portas no roteador ou configurar VPN.
-
----
+* Biblioteca do computador acessível diretamente pelo Android.
+* Sincronização de progresso de leitura.
+* Sincronização de histórico.
+* Envio de mangás entre dispositivos.
+* Descoberta automática na mesma rede.
+* Acesso remoto utilizando **acerola-relay**, sem necessidade de abrir portas no roteador ou configurar VPN.
