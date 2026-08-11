@@ -97,6 +97,9 @@ class ComicViewModel
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
+        private val _selectedChapterSorts = MutableStateFlow<Set<String>>(emptySet())
+        val selectedChapterSorts: StateFlow<Set<String>> = _selectedChapterSorts.asStateFlow()
+
         val comicIsIndexing: StateFlow<Boolean> =
             combine(
                 directoryObserve.isIndexing,
@@ -252,6 +255,7 @@ class ComicViewModel
             selectedComicId.value = comicId
             _volumeSectionOverrides.value = emptyMap()
             _activeVolumeId.value = null
+            _selectedChapterSorts.value = emptySet()
 
             viewModelScope.launch {
                 ChapterPerPagePreference.chapterPerPageFlow(context).collect { size -> _selectedChapterPerPage.value = size }
@@ -384,6 +388,48 @@ class ComicViewModel
                 mapOf("chapterSort" to chapterSort, "newStatus" to (!isRead).toString()),
             )
             viewModelScope.launch { trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId) }
+        }
+
+        fun toggleChapterSelection(chapterSort: String) {
+            _selectedChapterSorts.value =
+                if (_selectedChapterSorts.value.contains(chapterSort)) {
+                    _selectedChapterSorts.value - chapterSort
+                } else {
+                    _selectedChapterSorts.value + chapterSort
+                }
+        }
+
+        fun selectAllChapters(allSorts: List<String>) {
+            _selectedChapterSorts.value = allSorts.toSet()
+        }
+
+        fun clearChapterSelection() {
+            _selectedChapterSorts.value = emptySet()
+        }
+
+        fun markSelectedChaptersReadStatus(markAsRead: Boolean) {
+            val comicId = selectedDirectoryId.value ?: return
+            val sortsToUpdate = _selectedChapterSorts.value
+            val chapterItems = chapters.value?.archive?.items.orEmpty()
+
+            AcerolaLogger.audit(
+                TAG,
+                "Marking selected chapters read status",
+                LogSource.VIEWMODEL,
+                mapOf("count" to sortsToUpdate.size.toString(), "markAsRead" to markAsRead.toString()),
+            )
+
+            viewModelScope.launch {
+                sortsToUpdate.forEach { chapterSort ->
+                    if (markAsRead) {
+                        val chapterId = chapterItems.find { it.chapterSort == chapterSort }?.id
+                        trackReadingProgressUseCase.markChapterAsRead(comicId, chapterSort, chapterId)
+                    } else {
+                        trackReadingProgressUseCase.unmarkChapterAsRead(comicId, chapterSort)
+                    }
+                }
+                clearChapterSelection()
+            }
         }
 
         fun extractVolumeCover(volumeId: Long) {

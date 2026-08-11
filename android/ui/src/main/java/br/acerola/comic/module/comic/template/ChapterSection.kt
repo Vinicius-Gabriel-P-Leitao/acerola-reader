@@ -21,8 +21,12 @@ fun Comic.Template.chapterSection(
     readChapters: List<String> = emptyList(),
     volumeViewMode: VolumeViewType = VolumeViewType.CHAPTER,
     activeVolumeId: Long? = null,
+    selectedChapterSorts: Set<String> = emptySet(),
+    isSelectionMode: Boolean = false,
     onChapterClick: (ChapterFileDto) -> Unit,
     onToggleRead: (String) -> Unit,
+    onToggleSelection: (String) -> Unit = {},
+    onLongPressChapter: (String) -> Unit = {},
     onPageChange: (Int) -> Unit,
     onSetActiveVolume: (Long?) -> Unit = {},
     onLoadVolumeChaptersPage: (Long, Int) -> Unit = { _, _ -> },
@@ -72,7 +76,12 @@ fun Comic.Template.chapterSection(
                         Comic.Component.ChapterItem(
                             chapterFileDto = chapter,
                             isRead = readChapters.contains(chapter.chapterSort),
-                            onClick = { onChapterClick(chapter) },
+                            isSelected = selectedChapterSorts.contains(chapter.chapterSort),
+                            isSelectionMode = isSelectionMode,
+                            onClick = {
+                                if (isSelectionMode) onToggleSelection(chapter.chapterSort) else onChapterClick(chapter)
+                            },
+                            onLongClick = { onLongPressChapter(chapter.chapterSort) },
                             onToggleRead = { onToggleRead(chapter.chapterSort) },
                         )
                     }
@@ -96,7 +105,12 @@ fun Comic.Template.chapterSection(
                 Comic.Component.ChapterItem(
                     chapterFileDto = chapter,
                     isRead = readChapters.contains(chapter.chapterSort),
-                    onClick = { onChapterClick(chapter) },
+                    isSelected = selectedChapterSorts.contains(chapter.chapterSort),
+                    isSelectionMode = isSelectionMode,
+                    onClick = {
+                        if (isSelectionMode) onToggleSelection(chapter.chapterSort) else onChapterClick(chapter)
+                    },
+                    onLongClick = { onLongPressChapter(chapter.chapterSort) },
                     onToggleRead = { onToggleRead(chapter.chapterSort) },
                 )
             }
