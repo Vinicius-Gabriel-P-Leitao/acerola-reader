@@ -184,6 +184,13 @@ impl ChapterService {
             effective_view_mode,
         })
     }
+
+    /// Retorna todos os IDs de capítulo de um quadrinho, sem paginação.
+    pub async fn get_all_chapter_ids(
+        &self, comic_directory_fk: i64,
+    ) -> Result<Vec<i64>, ComicError> {
+        self.chapter_repo.find_all_ids_by_directory(comic_directory_fk).await.map_err(Into::into)
+    }
 }
 
 #[cfg(test)]
@@ -229,5 +236,16 @@ mod tests {
         assert_eq!(result.archive.volume_sections.len(), 1);
         assert_eq!(result.archive.volume_sections[0].volume.name, "Vol 01");
         assert_eq!(result.archive.volumes[0].chapter_count, 1);
+    }
+
+    #[tokio::test]
+    async fn teste_obter_todos_ids_de_capitulos() {
+        let pool = setup_test_db_with_volumes().await;
+        popular_dados(&pool).await;
+
+        let service = ChapterService::new(pool);
+        let ids = service.get_all_chapter_ids(1).await.unwrap();
+
+        assert_eq!(ids, vec![1]);
     }
 }

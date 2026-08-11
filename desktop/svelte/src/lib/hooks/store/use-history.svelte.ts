@@ -61,10 +61,76 @@ export function useHistory() {
 		}
 	}
 
+	async function markChapterRead(comicId: string, chapterId: string) {
+		try {
+			await invoke(HISTORY_COMMANDS.markChapterRead, { comicId, chapterId });
+		} catch (error) {
+			const errorMessage = error as string;
+
+			notify.error('Erro ao marcar capítulo como lido', {
+				description: errorMessage
+			});
+			toast.error(errorMessage);
+			throw error;
+		}
+	}
+
+	async function unmarkChapterRead(comicId: string, chapterId: string) {
+		try {
+			await invoke(HISTORY_COMMANDS.unmarkChapterRead, { comicId, chapterId });
+		} catch (error) {
+			const errorMessage = error as string;
+
+			notify.error('Erro ao marcar capítulo como não lido', {
+				description: errorMessage
+			});
+			toast.error(errorMessage);
+			throw error;
+		}
+	}
+
+	async function markChaptersReadBatch(comicId: string, chapterIds: string[]) {
+		try {
+			return await invoke<number>(HISTORY_COMMANDS.markChaptersReadBatch, {
+				comicId,
+				chapterIds
+			});
+		} catch (error) {
+			const errorMessage = error as string;
+
+			notify.error('Erro ao marcar capítulos como lidos', {
+				description: errorMessage
+			});
+			toast.error(errorMessage);
+			throw error;
+		}
+	}
+
+	async function unmarkChaptersReadBatch(comicId: string, chapterIds: string[]) {
+		try {
+			return await invoke<number>(HISTORY_COMMANDS.unmarkChaptersReadBatch, {
+				comicId,
+				chapterIds
+			});
+		} catch (error) {
+			const errorMessage = error as string;
+
+			notify.error('Erro ao marcar capítulos como não lidos', {
+				description: errorMessage
+			});
+			toast.error(errorMessage);
+			throw error;
+		}
+	}
+
 	return {
 		fetch,
 		clear,
 		updateReading,
+		markChapterRead,
+		unmarkChapterRead,
+		markChaptersReadBatch,
+		unmarkChaptersReadBatch,
 		get items() {
 			return items;
 		},
