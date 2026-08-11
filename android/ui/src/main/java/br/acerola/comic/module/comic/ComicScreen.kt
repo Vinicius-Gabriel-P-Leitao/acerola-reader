@@ -6,28 +6,50 @@ import androidx.compose.foundation.layout.Column
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Deselect
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.RemoveDone
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,6 +60,8 @@ import br.acerola.comic.common.ux.component.GlassButton
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.TopBar
 import br.acerola.comic.common.ux.component.showSnackbar
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.common.viewmodel.library.metadata.ComicMetadataViewModel
@@ -107,6 +131,7 @@ fun ComicScreen(
     val chapterDto by comicViewModel.chapters.collectAsStateWithLifecycle()
     val history by comicViewModel.history.collectAsStateWithLifecycle()
     val readChapters by comicViewModel.readChapters.collectAsStateWithLifecycle()
+    val selectedChapterSorts by comicViewModel.selectedChapterSorts.collectAsStateWithLifecycle()
     val selectedChapterPerPage by comicViewModel.selectedChapterPerPage.collectAsStateWithLifecycle()
     val chapterSortSettings by comicViewModel.chapterSortSettings.collectAsStateWithLifecycle()
     val allCategories by comicMetadataViewModel.allCategories.collectAsStateWithLifecycle()
@@ -198,6 +223,22 @@ fun ComicScreen(
         )
 
     val listState = rememberLazyListState()
+    val haptic = LocalHapticFeedback.current
+
+    val isChapterSelectionMode = selectedChapterSorts.isNotEmpty()
+    val allChapterSorts =
+        remember(chapterDto) {
+            chapterDto?.archive?.items?.map { it.chapterSort } ?: emptyList()
+        }
+    val areAllSelectedRead =
+        remember(readChapters, selectedChapterSorts) {
+            selectedChapterSorts.isNotEmpty() && selectedChapterSorts.all { readChapters.contains(it) }
+        }
+
+    val onChapterLongPress: (String) -> Unit = { chapterSort ->
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        comicViewModel.toggleChapterSelection(chapterSort)
+    }
 
     var showSortSheet by remember { mutableStateOf(false) }
 
@@ -256,7 +297,10 @@ fun ComicScreen(
     val onAction: (ComicAction) -> Unit = { action ->
         when (action) {
             ComicAction.NavigateBack -> onBackClick()
-            is ComicAction.SelectTab -> selectedTab = action.tab
+            is ComicAction.SelectTab -> {
+                selectedTab = action.tab
+                if (action.tab != MainTab.CHAPTERS) comicViewModel.clearChapterSelection()
+            }
             is ComicAction.UpdatePageSize -> comicViewModel.updateChapterPerPage(action.size)
             is ComicAction.UpdateCategory ->
                 comicMetadataViewModel.updateMangaCategory(
@@ -320,6 +364,10 @@ fun ComicScreen(
                                 readChapters = uiState.readChapters.toList(),
                                 onToggleRead = { id -> onChapterAction(ComicChapterAction.ToggleReadStatus(id)) },
                                 onChapterClick = { chapter -> onChapterAction(ComicChapterAction.ClickChapter(chapter, 0)) },
+                                selectedChapterSorts = selectedChapterSorts,
+                                isSelectionMode = isChapterSelectionMode,
+                                onToggleSelection = comicViewModel::toggleChapterSelection,
+                                onLongPressChapter = onChapterLongPress,
                                 volumeViewMode = uiState.volumeViewMode,
                                 activeVolumeId = uiState.activeVolumeId,
                                 onSetActiveVolume = comicViewModel::setActiveVolume,
@@ -349,32 +397,108 @@ fun ComicScreen(
             }
         }
 
-        Acerola.Component.TopBar(
-            navigationIcon = {
-                Acerola.Component.GlassButton(
-                    onClick = { onAction(ComicAction.NavigateBack) },
-                    icon = {
-                        Icon(
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(id = R.string.description_icon_navigation_back),
-                        )
-                    },
-                )
-            },
-            actions = {
-                Acerola.Component.GlassButton(
-                    onClick = { showSortSheet = true },
-                    icon = {
-                        Icon(
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(id = R.string.description_icon_home_filter),
-                        )
-                    },
-                )
-            },
-        )
+        if (isChapterSelectionMode && uiState.selectedTab == MainTab.CHAPTERS) {
+            val isAllChaptersSelected = selectedChapterSorts.size == allChapterSorts.size && allChapterSorts.isNotEmpty()
+
+            Acerola.Component.TopBar(
+                title = stringResource(id = R.string.label_selection_count, selectedChapterSorts.size),
+                navigationIcon = {
+                    Acerola.Component.GlassButton(
+                        onClick = { comicViewModel.clearChapterSelection() },
+                        icon = {
+                            Icon(
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(id = R.string.action_cancel),
+                            )
+                        },
+                    )
+                },
+                actions = {
+                    Acerola.Component.GlassButton(
+                        onClick = {
+                            if (isAllChaptersSelected) {
+                                comicViewModel.clearChapterSelection()
+                            } else {
+                                comicViewModel.selectAllChapters(allChapterSorts)
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                imageVector = if (isAllChaptersSelected) Icons.Default.Deselect else Icons.Default.SelectAll,
+                                contentDescription =
+                                    stringResource(
+                                        id = if (isAllChaptersSelected) R.string.action_deselect_all else R.string.action_select_all,
+                                    ),
+                            )
+                        },
+                    )
+                },
+            )
+        } else {
+            Acerola.Component.TopBar(
+                navigationIcon = {
+                    Acerola.Component.GlassButton(
+                        onClick = { onAction(ComicAction.NavigateBack) },
+                        icon = {
+                            Icon(
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(id = R.string.description_icon_navigation_back),
+                            )
+                        },
+                    )
+                },
+                actions = {
+                    Acerola.Component.GlassButton(
+                        onClick = { showSortSheet = true },
+                        icon = {
+                            Icon(
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = stringResource(id = R.string.description_icon_home_filter),
+                            )
+                        },
+                    )
+                },
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isChapterSelectionMode && uiState.selectedTab == MainTab.CHAPTERS,
+            enter = slideInVertically { it } + fadeIn(),
+            exit = slideOutVertically { it } + fadeOut(),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = SpacingTokens.Large),
+        ) {
+            Surface(
+                shape = ShapeTokens.Large,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                tonalElevation = 8.dp,
+                shadowElevation = 12.dp,
+                modifier =
+                    Modifier
+                        .padding(horizontal = SpacingTokens.Medium),
+            ) {
+                Row(
+                    modifier = Modifier.padding(all = SpacingTokens.Small),
+                    horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ChapterSelectionActionButton(
+                        icon = if (areAllSelectedRead) Icons.Default.RemoveDone else Icons.Default.DoneAll,
+                        label =
+                            stringResource(
+                                id = if (areAllSelectedRead) R.string.action_mark_as_unread else R.string.action_mark_as_read,
+                            ),
+                        onClick = { comicViewModel.markSelectedChaptersReadStatus(!areAllSelectedRead) },
+                    )
+                }
+            }
+        }
 
         if (showSortSheet) {
             Comic.Component.ChapterSortSheet(
@@ -405,6 +529,36 @@ private fun ComicScreenPreview() {
                 totalChapters = 12,
                 activeTab = br.acerola.comic.module.comic.state.MainTab.CHAPTERS,
                 onTabSelected = {},
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChapterSelectionActionButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        shape = ShapeTokens.Medium,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(SpacingTokens.Small))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             )
         }
     }
