@@ -86,6 +86,41 @@ workspace = false
 env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
 
 # ==========================================
+# Coverage & Mutation Testing
+# ==========================================
+
+[tasks.coverage]
+args = ["llvm-cov", "nextest", "--all-features", "--lcov", "--output-path", "lcov.info"]
+command = "cargo"
+description = "Run tests under coverage instrumentation and emit an lcov report"
+workspace = false
+
+[tasks.coverage.windows]
+dependencies = ["copy-pdfium-dll"]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+[tasks.mutants]
+# Escopo restrito à camada de guards/allowlist (fronteira de segurança e permissão
+# de filesystem), não ao core de regra de negócio: alto sinal por linha analisada,
+# custo de execução baixo. "-- --lib" restringe cada mutante aos testes unitários
+# in-tree, evitando recompilar/rodar a suíte de integração inteira por mutante.
+args = [
+  "mutants",
+  "--file", "src/core/services/archive/path_guard.rs",
+  "--file", "src/core/services/archive/files_guard.rs",
+  "--file", "src/bios/scopes.rs",
+  "--",
+  "--lib",
+]
+command = "cargo"
+description = "Run mutation testing scoped to the filesystem guard/allowlist boundary"
+workspace = false
+
+[tasks.mutants.windows]
+dependencies = ["copy-pdfium-dll"]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+# ==========================================
 # Continuous Integration and Deploy
 # ==========================================
 
