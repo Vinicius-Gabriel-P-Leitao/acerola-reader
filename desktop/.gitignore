@@ -18,6 +18,9 @@ storybook-static
 # Cargo/Tauri generated files
 /src-tauri/target/
 /src-tauri/gen/schemas
+/src-tauri/mutants.out/
+/src-tauri/mutants.out.old/
+/src-tauri/lcov.info
 
 # Test WebDriver binaries
 /msedgedriver.exe

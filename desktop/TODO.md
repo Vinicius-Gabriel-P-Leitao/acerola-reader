@@ -23,7 +23,7 @@
 - [x] **Exibir sinopse expansível** - Truncate via CSS/Svelte que permite expansão para leitura do texto completo.
 - [x] **Iniciar / Continuar / Reler** - O Svelte consulta `history_get_comic` via Tauri e decide a string e para qual página a rota `/reader` vai navegar.
 - [x] **Listar capítulos com status de leitura** - Listagem renderizada com os `readChapters` marcados visualmente.
-- [ ] **Marcar capítulo como lido / não lido** - Ação explícita na UI chamando um evento no backend (Tauri) para inserir ou deletar row no histórico.
+- [x] **Marcar capítulo como lido / não lido** - Ação explícita na UI (menu do capítulo + seleção múltipla em lote) chamando um evento no backend (Tauri) para inserir ou deletar row no histórico.
 - [x] **Ordenar capítulos** - Menu com 4 opções: número (crescente/decrescente) e última modificação (crescente/decrescente). Aplica-se a chapters e volumes.
 - [x] **Agrupar capítulos por volume** - Agrupamento e renderização dos dados que possuem `volumeId` formatados no Rust.
 - [x] **Trocar estilo de exibição de capítulos/volumes** - O frontend muda o layout de list para volume baseado nas preferências da store do Svelte.

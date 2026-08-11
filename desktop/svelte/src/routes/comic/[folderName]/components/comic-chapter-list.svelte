@@ -24,10 +24,16 @@
 			pagesData: ChapterPage[];
 			totalChapters: number;
 			pageSize: number;
+			isSelectionMode?: boolean;
+			isSelected?: (id: string) => boolean;
 		};
 		events?: {
 			onVisiblePages?: (pages: number[]) => void;
 			onOpenChapter?: (chapter: Chapter) => void;
+			onToggleSelect?: (chapter: Chapter) => void;
+			onEnterSelection?: (chapter: Chapter) => void;
+			onMarkRead?: (chapter: Chapter) => void;
+			onMarkUnread?: (chapter: Chapter) => void;
 		};
 	};
 </script>
@@ -35,14 +41,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import AcerolaHeroButton from '$lib/components/acerola-hero-button/acerola-hero-button.svelte';
-	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
+	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
+	import CheckSquare from '@lucide/svelte/icons/check-square';
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
 	let { data, events }: ComicChapterListProps = $props();
+
+	let openMenuId = $state<string | null>(null);
 
 	/**
 	 * ITEM_HEIGHT (112px): Altura total do slot (item + gap).
@@ -129,7 +139,10 @@
 									description: chapter.fileName
 								}}
 								events={{
-									onClick: () => events?.onOpenChapter?.(chapter)
+									onClick: () =>
+										data.isSelectionMode
+											? events?.onToggleSelect?.(chapter)
+											: events?.onOpenChapter?.(chapter)
 								}}
 								ui={{
 									class: chapter.isRead
@@ -138,17 +151,31 @@
 								}}
 							>
 								{#snippet icon()}
-									<div class={chapter.isRead ? '' : 'text-primary'}>
-										{#if chapter.isRead}
+									{#if data.isSelectionMode}
+										{#if data.isSelected?.(chapter.id)}
 											<div
 												class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust"
 											>
 												<Check size={16} strokeWidth={3} />
 											</div>
 										{:else}
-											<BookOpen size={24} />
+											<div class="flex h-6 w-6 items-center justify-center">
+												<div class="h-5 w-5 rounded-full border-2 border-muted-foreground"></div>
+											</div>
 										{/if}
-									</div>
+									{:else}
+										<div class={chapter.isRead ? '' : 'text-primary'}>
+											{#if chapter.isRead}
+												<div
+													class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust"
+												>
+													<Check size={16} strokeWidth={3} />
+												</div>
+											{:else}
+												<BookOpen size={24} />
+											{/if}
+										</div>
+									{/if}
 								{/snippet}
 
 								{#snippet action()}
@@ -162,18 +189,86 @@
 													: 'LIDO'}
 											</span>
 										{/if}
-										<AcerolaButtonIcon
-											events={{
-												onClick: (event) => event.stopPropagation()
-											}}
-											ui={{
-												variant: 'ghost',
-												size: 'sm',
-												class: 'text-overlay hover:text-primary'
-											}}
-										>
-											<MoreVertical size={20} />
-										</AcerolaButtonIcon>
+										<div role="presentation" onclick={(event) => event.stopPropagation()}>
+											<AcerolaPopover
+												state={{ open: openMenuId === chapter.id }}
+												events={{
+													onOpenChange: (open) => (openMenuId = open ? chapter.id : null)
+												}}
+												ui={{
+													align: 'end',
+													contentClass:
+														'w-52 overflow-hidden rounded-2xl border-border/40 bg-card/95 p-1.5 shadow-2xl backdrop-blur-md'
+												}}
+											>
+												{#snippet trigger()}
+													<span
+														class="flex size-10 items-center justify-center rounded-xl text-overlay transition-colors hover:bg-surface/60 hover:text-primary"
+													>
+														<MoreVertical size={20} />
+													</span>
+												{/snippet}
+
+												{#snippet content()}
+													<div class="flex flex-col gap-0.5">
+														{#if chapter.isRead}
+															<AcerolaButton
+																ui={{
+																	variant: 'ghost',
+																	class:
+																		'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium text-amber-500 hover:bg-amber-500/10 hover:text-amber-400'
+																}}
+																events={{
+																	onClick: () => {
+																		openMenuId = null;
+																		events?.onMarkUnread?.(chapter);
+																	}
+																}}
+															>
+																<BookOpen size={16} class="shrink-0" />
+																{m['pages.comic.selection.mark_unread']()}
+															</AcerolaButton>
+														{:else}
+															<AcerolaButton
+																ui={{
+																	variant: 'ghost',
+																	class:
+																		'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium text-primary hover:bg-primary/10'
+																}}
+																events={{
+																	onClick: () => {
+																		openMenuId = null;
+																		events?.onMarkRead?.(chapter);
+																	}
+																}}
+															>
+																<Check size={16} class="shrink-0" />
+																{m['pages.comic.selection.mark_read']()}
+															</AcerolaButton>
+														{/if}
+
+														<div class="mx-1 my-1 h-px bg-border/60"></div>
+
+														<AcerolaButton
+															ui={{
+																variant: 'ghost',
+																class:
+																	'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+															}}
+															events={{
+																onClick: () => {
+																	openMenuId = null;
+																	events?.onEnterSelection?.(chapter);
+																}
+															}}
+														>
+															<CheckSquare size={16} class="shrink-0 text-muted-foreground" />
+															{m['pages.comic.selection.select']()}
+														</AcerolaButton>
+													</div>
+												{/snippet}
+											</AcerolaPopover>
+										</div>
 									</div>
 								{/snippet}
 							</AcerolaHeroButton>

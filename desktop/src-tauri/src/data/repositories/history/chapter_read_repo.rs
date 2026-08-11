@@ -54,6 +54,77 @@ impl ChapterReadRepository {
 
         Ok(rows.into_iter().map(|(id,)| id).collect())
     }
+
+    /// Remove o registro de leitura de um capítulo (marca como não lido).
+    pub async fn delete(
+        &self, comic_directory_id: i64, chapter_archive_id: i64,
+    ) -> Result<(), DbError> {
+        let table = ChapterRead::table_name();
+
+        sqlx::query(&format!(
+            "DELETE FROM {} WHERE comic_directory_id = ? AND chapter_archive_id = ?",
+            table
+        ))
+        .bind(comic_directory_id)
+        .bind(chapter_archive_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Registra múltiplos capítulos como lidos em uma única query. Ignora
+    /// silenciosamente os que já existirem.
+    pub async fn insert_batch(
+        &self, comic_directory_id: i64, chapter_ids: &[i64], created_at: i64,
+    ) -> Result<usize, DbError> {
+        if chapter_ids.is_empty() {
+            return Ok(0);
+        }
+
+        let table = ChapterRead::table_name();
+        let cols = ChapterRead::columns().join(", ");
+        let placeholders =
+            chapter_ids.iter().map(|_| "(?, ?, ?)").collect::<Vec<_>>().join(", ");
+
+        let sql = format!(
+            "INSERT INTO {} ({}) VALUES {} ON CONFLICT(comic_directory_id, chapter_archive_id) DO NOTHING",
+            table, cols, placeholders
+        );
+
+        let mut query = sqlx::query(&sql);
+        for &chapter_id in chapter_ids {
+            query = query.bind(comic_directory_id).bind(chapter_id).bind(created_at);
+        }
+
+        let rows_affected = query.execute(&self.pool).await?.rows_affected();
+        Ok(rows_affected as usize)
+    }
+
+    /// Remove o registro de leitura de múltiplos capítulos em batch.
+    pub async fn delete_batch(
+        &self, comic_directory_id: i64, chapter_ids: &[i64],
+    ) -> Result<usize, DbError> {
+        if chapter_ids.is_empty() {
+            return Ok(0);
+        }
+
+        let table = ChapterRead::table_name();
+        let placeholders = chapter_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+
+        let sql = format!(
+            "DELETE FROM {} WHERE comic_directory_id = ? AND chapter_archive_id IN ({})",
+            table, placeholders
+        );
+
+        let mut query = sqlx::query(&sql).bind(comic_directory_id);
+        for &chapter_id in chapter_ids {
+            query = query.bind(chapter_id);
+        }
+
+        let rows_affected = query.execute(&self.pool).await?.rows_affected();
+        Ok(rows_affected as usize)
+    }
 }
 
 #[cfg(test)]
@@ -111,5 +182,87 @@ mod tests {
         let (_, repo) = setup().await;
         let ids = repo.find_ids_by_comic(1).await.unwrap();
         assert!(ids.is_empty());
+    }
+
+    async fn inserir_capitulos(pool: &sqlx::SqlitePool, ids: &[i64]) {
+        for &id in ids {
+            sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (?, ?, ?, ?, 0, 1, 0)")
+                .bind(id)
+                .bind(format!("{}", id))
+                .bind(format!("path{}", id))
+                .bind(format!("{}", id))
+                .execute(pool)
+                .await
+                .unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn teste_delete_remove_capitulo_lido() {
+        let (pool, repo) = setup().await;
+        inserir_capitulos(&pool, &[1]).await;
+
+        repo.insert_or_ignore(&capitulo_lido(1, 1)).await.unwrap();
+        assert_eq!(repo.find_ids_by_comic(1).await.unwrap().len(), 1);
+
+        repo.delete(1, 1).await.unwrap();
+        assert!(repo.find_ids_by_comic(1).await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn teste_delete_capitulo_inexistente_nao_falha() {
+        let (_, repo) = setup().await;
+        repo.delete(1, 999).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn teste_insert_batch_registra_varios() {
+        let (pool, repo) = setup().await;
+        inserir_capitulos(&pool, &[1, 2, 3]).await;
+
+        let count = repo.insert_batch(1, &[1, 2, 3], 1000).await.unwrap();
+        assert_eq!(count, 3);
+
+        let ids = repo.find_ids_by_comic(1).await.unwrap();
+        assert_eq!(ids.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn teste_insert_batch_ignora_duplicados() {
+        let (pool, repo) = setup().await;
+        inserir_capitulos(&pool, &[1, 2]).await;
+
+        repo.insert_batch(1, &[1], 1000).await.unwrap();
+        let count = repo.insert_batch(1, &[1, 2], 1000).await.unwrap();
+
+        assert_eq!(count, 1);
+        assert_eq!(repo.find_ids_by_comic(1).await.unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn teste_insert_batch_vazio_retorna_zero() {
+        let (_, repo) = setup().await;
+        let count = repo.insert_batch(1, &[], 1000).await.unwrap();
+        assert_eq!(count, 0);
+    }
+
+    #[tokio::test]
+    async fn teste_delete_batch_remove_varios() {
+        let (pool, repo) = setup().await;
+        inserir_capitulos(&pool, &[1, 2, 3]).await;
+        repo.insert_batch(1, &[1, 2, 3], 1000).await.unwrap();
+
+        let count = repo.delete_batch(1, &[1, 2]).await.unwrap();
+
+        assert_eq!(count, 2);
+        let ids = repo.find_ids_by_comic(1).await.unwrap();
+        assert_eq!(ids, vec![3]);
+    }
+
+    #[tokio::test]
+    async fn teste_delete_batch_vazio_retorna_zero() {
+        let (_, repo) = setup().await;
+        let count = repo.delete_batch(1, &[]).await.unwrap();
+        assert_eq!(count, 0);
     }
 }

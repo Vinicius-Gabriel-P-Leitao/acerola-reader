@@ -49,6 +49,20 @@ pub async fn get_comic_by_folder_name(
 }
 
 #[tauri::command]
+pub async fn get_comic_chapter_ids(
+    comic_directory_fk: String, pool: State<'_, SqlitePool>,
+) -> Result<Vec<String>, String> {
+    let comic_directory_id =
+        comic_directory_fk.parse::<i64>().map_err(|error| error.to_string())?;
+
+    let service = ChapterService::new(pool.inner().clone());
+
+    let ids = service.get_all_chapter_ids(comic_directory_id).await.map_err(|error| error.to_string())?;
+
+    Ok(ids.into_iter().map(|id| id.to_string()).collect())
+}
+
+#[tauri::command]
 #[allow(clippy::too_many_arguments)]
 pub async fn get_comic_chapters<R: Runtime>(
     comic_directory_fk: String, volume_id: Option<String>, page: i32, page_size: i32,
