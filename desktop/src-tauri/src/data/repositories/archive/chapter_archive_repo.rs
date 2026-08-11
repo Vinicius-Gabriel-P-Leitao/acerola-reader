@@ -130,6 +130,17 @@ impl ChapterRepository {
             .map_err(Into::into)
     }
 
+    /// Retorna todos os IDs de capítulo de um quadrinho, sem paginação.
+    pub async fn find_all_ids_by_directory(&self, comic_directory_fk: i64) -> Result<Vec<i64>, DbError> {
+        let rows =
+            sqlx::query_as::<_, (i64,)>("SELECT id FROM chapter_archive WHERE comic_directory_fk = ?")
+                .bind(comic_directory_fk)
+                .fetch_all(&self.pool)
+                .await?;
+
+        Ok(rows.into_iter().map(|(id,)| id).collect())
+    }
+
     pub async fn get_chapters_by_volume(
         &self, comic_directory_fk: i64, volume_id_fk: i64, page_size: i64, offset: i64,
         criteria: ChapterSortCriteria,
@@ -326,6 +337,20 @@ mod tests {
             "Deveria ter retornado NotFound, mas veio: {:?}",
             result
         );
+    }
+
+    #[tokio::test]
+    async fn teste_find_all_ids_by_directory() {
+        let pool = setup_test_db_with_comic().await;
+        let repo = ChapterRepository::new(pool);
+
+        repo.base.insert(&chapter(1, "1")).await.unwrap();
+        repo.base.insert(&chapter(2, "2")).await.unwrap();
+
+        let ids = repo.find_all_ids_by_directory(1).await.unwrap();
+        assert_eq!(ids.len(), 2);
+        assert!(ids.contains(&1));
+        assert!(ids.contains(&2));
     }
 
     #[tokio::test]

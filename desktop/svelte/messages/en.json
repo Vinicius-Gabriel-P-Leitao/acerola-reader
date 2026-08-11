@@ -190,6 +190,14 @@
           "desc": "Newest"
         }
       },
+      "selection": {
+        "mark_read": "Mark as read",
+        "mark_unread": "Mark as unread",
+        "select": "Select",
+        "selected": "{count} selected",
+        "select_all": "Select all",
+        "cancel": "Cancel"
+      },
       "banner": {
         "popular": "Popular"
       },

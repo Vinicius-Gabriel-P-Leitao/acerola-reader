@@ -75,6 +75,38 @@ impl HistoryService {
     pub async fn find_read_chapters(&self, comic_directory_id: i64) -> Result<Vec<i64>, DbError> {
         self.chapter_repo.find_ids_by_comic(comic_directory_id).await
     }
+
+    /// Marca um capítulo como lido explicitamente.
+    pub async fn mark_chapter_read(
+        &self, comic_directory_id: i64, chapter_archive_id: i64,
+    ) -> Result<(), DbError> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        let chapter_read_entry =
+            ChapterRead { comic_directory_id, chapter_archive_id, created_at: now };
+        self.chapter_repo.insert_or_ignore(&chapter_read_entry).await
+    }
+
+    /// Desmarca um capítulo como lido.
+    pub async fn unmark_chapter_read(
+        &self, comic_directory_id: i64, chapter_archive_id: i64,
+    ) -> Result<(), DbError> {
+        self.chapter_repo.delete(comic_directory_id, chapter_archive_id).await
+    }
+
+    /// Marca múltiplos capítulos como lidos em batch.
+    pub async fn mark_chapters_read_batch(
+        &self, comic_directory_id: i64, chapter_ids: &[i64],
+    ) -> Result<usize, DbError> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        self.chapter_repo.insert_batch(comic_directory_id, chapter_ids, now).await
+    }
+
+    /// Desmarca múltiplos capítulos como lidos em batch.
+    pub async fn unmark_chapters_read_batch(
+        &self, comic_directory_id: i64, chapter_ids: &[i64],
+    ) -> Result<usize, DbError> {
+        self.chapter_repo.delete_batch(comic_directory_id, chapter_ids).await
+    }
 }
 
 #[cfg(test)]
@@ -103,6 +135,44 @@ mod tests {
         assert_eq!(result.chapter_archive_id, 1);
         assert_eq!(result.last_page, 10);
         assert!(!result.is_completed);
+    }
+
+    #[tokio::test]
+    async fn teste_marca_e_desmarca_capitulo_como_lido() {
+        let (pool, service) = setup().await;
+
+        sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        service.mark_chapter_read(1, 1).await.unwrap();
+        assert_eq!(service.find_read_chapters(1).await.unwrap(), vec![1]);
+
+        service.unmark_chapter_read(1, 1).await.unwrap();
+        assert!(service.find_read_chapters(1).await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn teste_marca_e_desmarca_capitulos_em_batch() {
+        let (pool, service) = setup().await;
+
+        for id in 1..=3 {
+            sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (?, ?, 'path', '1', 0, 1, 0)")
+                .bind(id)
+                .bind(format!("{}", id))
+                .execute(&pool)
+                .await
+                .unwrap();
+        }
+
+        let marked = service.mark_chapters_read_batch(1, &[1, 2, 3]).await.unwrap();
+        assert_eq!(marked, 3);
+        assert_eq!(service.find_read_chapters(1).await.unwrap().len(), 3);
+
+        let unmarked = service.unmark_chapters_read_batch(1, &[1, 2]).await.unwrap();
+        assert_eq!(unmarked, 2);
+        assert_eq!(service.find_read_chapters(1).await.unwrap(), vec![3]);
     }
 
     #[tokio::test]

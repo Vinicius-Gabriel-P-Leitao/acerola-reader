@@ -48,3 +48,58 @@ pub async fn history_get_read_chapters(
 pub async fn history_clear(history_service: State<'_, HistoryService>) -> Result<(), String> {
     history_service.clear().await.map_err(|error| error.to_string())
 }
+
+#[tauri::command]
+pub async fn history_mark_chapter_read(
+    comic_id: String, chapter_id: String, history_service: State<'_, HistoryService>,
+) -> Result<(), String> {
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+    let chapter_id = chapter_id.parse::<i64>().map_err(|error| error.to_string())?;
+
+    history_service.mark_chapter_read(comic_id, chapter_id).await.map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn history_unmark_chapter_read(
+    comic_id: String, chapter_id: String, history_service: State<'_, HistoryService>,
+) -> Result<(), String> {
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+    let chapter_id = chapter_id.parse::<i64>().map_err(|error| error.to_string())?;
+
+    history_service
+        .unmark_chapter_read(comic_id, chapter_id)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn history_mark_chapters_read_batch(
+    comic_id: String, chapter_ids: Vec<String>, history_service: State<'_, HistoryService>,
+) -> Result<usize, String> {
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+    let chapter_ids = chapter_ids
+        .into_iter()
+        .map(|id| id.parse::<i64>().map_err(|error| error.to_string()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    history_service
+        .mark_chapters_read_batch(comic_id, &chapter_ids)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn history_unmark_chapters_read_batch(
+    comic_id: String, chapter_ids: Vec<String>, history_service: State<'_, HistoryService>,
+) -> Result<usize, String> {
+    let comic_id = comic_id.parse::<i64>().map_err(|error| error.to_string())?;
+    let chapter_ids = chapter_ids
+        .into_iter()
+        .map(|id| id.parse::<i64>().map_err(|error| error.to_string()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    history_service
+        .unmark_chapters_read_batch(comic_id, &chapter_ids)
+        .await
+        .map_err(|error| error.to_string())
+}

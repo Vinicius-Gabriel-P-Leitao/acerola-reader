@@ -10,6 +10,8 @@
 	import { useVolumeViewMode } from '$lib/hooks/preferences/use-volume-view-mode.svelte';
 	import { useComicChapters } from '$lib/hooks/store/use-comic-chapters.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
+	import { useChapterSelection } from '$lib/hooks/store/use-chapter-selection.svelte';
+	import { useHistory } from '$lib/hooks/store/use-history.svelte';
 
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 	import { useMetadataSync } from '$lib/hooks/store/use-metadata-sync.svelte';
@@ -19,6 +21,7 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
 	import { HISTORY_COMMANDS } from '$lib/contracts/history/history.commands';
+	import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -49,6 +52,8 @@
 	const volumeViewPreference = useVolumeViewMode();
 	const bookmarkStore = useBookmarks();
 	const metadataSync = useMetadataSync();
+	const chapterSelection = useChapterSelection();
+	const historyActions = useHistory();
 
 	let expandedVolumeId = $state<string | null>(null);
 	let currentBookmarkId = $state<number | null>(null);
@@ -113,6 +118,63 @@
 	let readChapters = $state<string[]>([]);
 	let isHistoryLoading = $state(false);
 	let isSyncing = $state(false);
+
+	async function handleMarkRead(chapter: Chapter | VolumeChapter) {
+		const id = comicId;
+		if (!id) return;
+
+		await historyActions.markChapterRead(id.toString(), chapter.id);
+		if (!readChapters.includes(chapter.id)) {
+			readChapters = [...readChapters, chapter.id];
+		}
+	}
+
+	async function handleMarkUnread(chapter: Chapter | VolumeChapter) {
+		const id = comicId;
+		if (!id) return;
+
+		await historyActions.unmarkChapterRead(id.toString(), chapter.id);
+		readChapters = readChapters.filter((readId) => readId !== chapter.id);
+	}
+
+	function handleEnterSelection(chapter: Chapter | VolumeChapter) {
+		chapterSelection.selectSingle(chapter.id);
+	}
+
+	function handleToggleSelect(chapter: Chapter | VolumeChapter) {
+		chapterSelection.toggleSelection(chapter.id);
+	}
+
+	async function handleSelectAllChapters() {
+		const id = comicId;
+		if (!id) return;
+
+		const ids = await invoke<string[]>(LIBRARY_COMMANDS.getComicChapterIds, {
+			comicDirectoryFk: id.toString()
+		});
+		chapterSelection.selectAll(ids);
+	}
+
+	async function handleBatchMarkRead() {
+		const id = comicId;
+		if (!id) return;
+
+		const ids = chapterSelection.selectedIdsArray;
+		await historyActions.markChaptersReadBatch(id.toString(), ids);
+		const newlyRead = ids.filter((chapterId) => !readChapters.includes(chapterId));
+		readChapters = [...readChapters, ...newlyRead];
+		chapterSelection.exitSelectionMode();
+	}
+
+	async function handleBatchMarkUnread() {
+		const id = comicId;
+		if (!id) return;
+
+		const ids = chapterSelection.selectedIdsArray;
+		await historyActions.unmarkChaptersReadBatch(id.toString(), ids);
+		readChapters = readChapters.filter((readId) => !ids.includes(readId));
+		chapterSelection.exitSelectionMode();
+	}
 
 	async function handleSyncMangadex() {
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
@@ -611,6 +673,38 @@
 					{/if}
 				</div>
 
+				{#if activeTab === 'content' && chapterSelection.isSelectionMode}
+					<div class="-mx-4 flex items-center gap-2 border-b border-surface/30 px-4 py-3">
+						<span class="text-sm font-medium text-muted-foreground">
+							{m['pages.comic.selection.selected']({ count: chapterSelection.selectedCount })}
+						</span>
+						<AcerolaButton
+							ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
+							events={{ onClick: handleSelectAllChapters }}
+						>
+							{m['pages.comic.selection.select_all']()}
+						</AcerolaButton>
+						<AcerolaButton
+							ui={{ variant: 'secondary', size: 'sm', class: 'rounded-lg' }}
+							events={{ onClick: handleBatchMarkRead }}
+						>
+							{m['pages.comic.selection.mark_read']()}
+						</AcerolaButton>
+						<AcerolaButton
+							ui={{ variant: 'secondary', size: 'sm', class: 'rounded-lg' }}
+							events={{ onClick: handleBatchMarkUnread }}
+						>
+							{m['pages.comic.selection.mark_unread']()}
+						</AcerolaButton>
+						<AcerolaButton
+							ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
+							events={{ onClick: () => chapterSelection.exitSelectionMode() }}
+						>
+							{m['pages.comic.selection.cancel']()}
+						</AcerolaButton>
+					</div>
+				{/if}
+
 				<div class="min-h-150">
 					{#if activeTab === 'content'}
 						{#if chapterStore.chapters?.hasVolumeStructure}
@@ -620,12 +714,18 @@
 									pagesData: manga.pagesData,
 									loading: chapterStore.loading,
 									pageSize: manga.pageSize,
-									viewMode: volumeViewPreference.volumeViewMode
+									viewMode: volumeViewPreference.volumeViewMode,
+									isSelectionMode: chapterSelection.isSelectionMode,
+									isSelected: chapterSelection.isSelected
 								}}
 								events={{
 									onExpand: (value) => (expandedVolumeId = value),
 									onVisiblePages: (pages) => (visiblePages = pages),
-									onOpenChapter: openReader
+									onOpenChapter: openReader,
+									onToggleSelect: handleToggleSelect,
+									onEnterSelection: handleEnterSelection,
+									onMarkRead: handleMarkRead,
+									onMarkUnread: handleMarkUnread
 								}}
 							/>
 						{:else}
@@ -633,11 +733,17 @@
 								data={{
 									pagesData: manga.pagesData,
 									totalChapters: manga.chaptersCount,
-									pageSize: manga.pageSize
+									pageSize: manga.pageSize,
+									isSelectionMode: chapterSelection.isSelectionMode,
+									isSelected: chapterSelection.isSelected
 								}}
 								events={{
 									onVisiblePages: (pages: number[]) => (visiblePages = pages),
-									onOpenChapter: openReader
+									onOpenChapter: openReader,
+									onToggleSelect: handleToggleSelect,
+									onEnterSelection: handleEnterSelection,
+									onMarkRead: handleMarkRead,
+									onMarkUnread: handleMarkUnread
 								}}
 							/>
 						{/if}
