@@ -517,7 +517,7 @@
 	<div
 		in:fade={{ duration: 200 }}
 		out:fade={{ duration: 200 }}
-		class="text-text fixed inset-0 z-50 flex h-screen overflow-hidden bg-base"
+		class="text-text fixed inset-x-0 top-8 bottom-0 z-50 flex overflow-hidden bg-base pt-2"
 	>
 		<div class="pointer-events-none absolute inset-0 overflow-hidden">
 			<img

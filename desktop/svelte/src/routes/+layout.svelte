@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { AcerolaSelectOption } from '$lib/components/acerola-select/acerola-select.svelte';
-	import type { SidebarItem } from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
+	import type { DockItem } from '$lib/components/acerola-dock/acerola-dock.svelte';
 	import type { Locale } from '$lib/paraglide/runtime.js';
 
 	import { m } from '$lib/paraglide/messages';
@@ -25,7 +25,7 @@
 		label: localeLabels[locale] || locale.toUpperCase()
 	}));
 
-	const sidebarItems: SidebarItem[] = $derived([
+	const navItems: DockItem[] = $derived([
 		{ label: m['routes.home'](), href: '/home', icon: HouseIcon },
 		{ label: m['routes.history'](), href: '/history', icon: HistoryIcon },
 		{ label: m['routes.config'](), href: '/config', icon: SettingsIcon }
@@ -39,17 +39,20 @@
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useOnboarding } from '$lib/hooks/onboarding/use-onboarding.svelte';
+	import { useNavDockMode } from '$lib/hooks/preferences/use-nav-dock-mode.svelte';
 	import { setComicContext } from '$lib/state/comic-context.svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { resolveCover } from '$lib/utils/artwork.utils';
 
 	import AcerolaModePicker from '$lib/components/acerola-mode-picker/acerola-mode-picker.svelte';
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
-	import AcerolaSidebar from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
+	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
+	import AcerolaDock from '$lib/components/acerola-dock/acerola-dock.svelte';
 	import AcerolaSonner from '$lib/components/acerola-sonner/acerola-sonner.svelte';
-	import SidebarProvider from '$lib/components/ui/sidebar/sidebar-provider.svelte';
 	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
 	import AcerolaCommand from '$lib/components/acerola-command/acerola-command.svelte';
 	import * as Command from '$lib/components/ui/command/index.js';
@@ -61,6 +64,7 @@
 	import Onboarding from './(onboarding)/onboarding.svelte';
 	import '$theme/layout.css';
 	import Search from '@lucide/svelte/icons/search';
+	import GlobeIcon from '@lucide/svelte/icons/globe';
 
 	setComicContext();
 
@@ -73,6 +77,7 @@
 	const summary = useComicSummary();
 	const bookmarkStore = useBookmarks();
 	const onboarding = useOnboarding();
+	const dockMode = useNavDockMode();
 
 	const incrementalScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.incrementalScan,
@@ -179,91 +184,93 @@
 
 	<!-- Conteúdo Principal da Aplicação -->
 	<div class="relative flex flex-1 overflow-hidden">
-		<SidebarProvider open={onboarding.isCompleted} class="h-full min-h-0">
-			<AcerolaSonner />
+		<AcerolaSonner />
 
-			<AcerolaSidebar
-				collapsible={!onboarding.isCompleted ? 'offcanvas' : 'icon'}
-				data={{ items: sidebarItems }}
-				ui={{ class: 'absolute h-full' }}
-			>
-				{#snippet header()}
-					<div class="flex items-center gap-3">
-						<div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
-							<AcerolaLogo class="h-full w-full" />
-						</div>
-
-						<span class="text-xl font-bold tracking-tight group-data-[collapsible=icon]:hidden">
-							Acerola
-						</span>
+		<main class="h-full flex-1 overflow-y-auto {dockMode.mode === 'fixed' ? 'pb-24' : ''}">
+			{#if onboarding.isLoading}
+				<div class="flex h-full w-full items-center justify-center text-muted-foreground">
+					Loading...
+				</div>
+			{:else if !onboarding.isCompleted}
+				<Onboarding />
+			{:else}
+				<header
+					class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl transition-all"
+				>
+					<div class="max-w-xl flex-1">
+						<button
+							aria-label={m['layout.search_placeholder']()}
+							class="group relative w-full cursor-text text-left"
+							onclick={() => {
+								isSearchDialogOpen = true;
+								if (!summary.comics) summary.fetch();
+							}}
+						>
+							<Search
+								class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
+								size={18}
+							/>
+							<div
+								class="text-overlay/50 flex w-full items-center justify-between rounded-xl border border-surface bg-mantle py-2 pr-4 pl-11 text-sm transition-all group-hover:border-primary"
+							>
+								<span>{m['layout.search_placeholder']()}</span>
+								<kbd
+									class="pointer-events-none hidden select-none items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground sm:flex"
+								>
+									Ctrl+K
+								</kbd>
+							</div>
+						</button>
 					</div>
-				{/snippet}
 
-				{#snippet footer()}
-					<div class="flex w-full items-center gap-2 overflow-hidden px-2 pb-2">
+					<div class="mx-8 flex items-center gap-3">
+						{#if packageIdentity}
+							<span class="text-xs text-muted-foreground">{packageIdentity}</span>
+						{/if}
+
 						<AcerolaModePicker />
 
-						<AcerolaSelect
-							data={{ options: localeOptions }}
-							state={{ value: currentLocale }}
-							events={{ onValueChange: (value) => (currentLocale = value as Locale) }}
-							ui={{ class: 'min-w-0 flex-1' }}
-						/>
-					</div>
-				{/snippet}
-			</AcerolaSidebar>
+						<AcerolaPopover
+							ui={{
+								align: 'end',
+								side: 'bottom',
+								sideOffset: 8,
+								contentClass:
+									'w-56 p-3 rounded-2xl border-border/40 bg-card/95 backdrop-blur-md shadow-2xl'
+							}}
+						>
+							{#snippet trigger()}
+								<AcerolaButtonIcon ui={{ title: m['layout.language_picker.title']() }}>
+									<GlobeIcon size={16} />
+								</AcerolaButtonIcon>
+							{/snippet}
 
-			<main class="flex-1 overflow-y-auto">
-				{#if onboarding.isLoading}
-					<div class="flex h-full w-full items-center justify-center text-muted-foreground">
-						Loading...
-					</div>
-				{:else if !onboarding.isCompleted}
-					<Onboarding />
-				{:else}
-					<header
-						class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-surface/50 bg-base/80 px-8 backdrop-blur-xl transition-all"
-					>
-						<div class="max-w-xl flex-1">
-							<button
-								aria-label={m['layout.search_placeholder']()}
-								class="group relative w-full cursor-text text-left"
-								onclick={() => {
-									isSearchDialogOpen = true;
-									if (!summary.comics) summary.fetch();
-								}}
-							>
-								<Search
-									class="text-overlay absolute top-1/2 left-4 -translate-y-1/2 transition-colors group-hover:text-primary"
-									size={18}
+							{#snippet content()}
+								<AcerolaSelect
+									data={{ options: localeOptions }}
+									state={{ value: currentLocale }}
+									events={{ onValueChange: (value) => (currentLocale = value as Locale) }}
 								/>
-								<div
-									class="text-overlay/50 flex w-full items-center justify-between rounded-xl border border-surface bg-mantle py-2 pr-4 pl-11 text-sm transition-all group-hover:border-primary"
-								>
-									<span>{m['layout.search_placeholder']()}</span>
-									<kbd
-										class="pointer-events-none hidden select-none items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground sm:flex"
-									>
-										Ctrl+K
-									</kbd>
-								</div>
-							</button>
-						</div>
+							{/snippet}
+						</AcerolaPopover>
 
-						<div class="mx-8 flex items-center gap-4">
-							{#if packageIdentity}
-								<span class="text-xs text-muted-foreground">{packageIdentity}</span>
-							{/if}
-							<AcerolaNotification />
-						</div>
-					</header>
+						<AcerolaNotification />
+					</div>
+				</header>
 
-					{@render children()}
-				{/if}
-			</main>
-		</SidebarProvider>
+				{@render children()}
+			{/if}
+		</main>
 	</div>
 </div>
+
+{#if onboarding.isCompleted}
+	<AcerolaDock data={{ items: navItems }} state={{ mode: dockMode.mode }}>
+		{#snippet brand()}
+			<AcerolaLogo class="h-full w-full" />
+		{/snippet}
+	</AcerolaDock>
+{/if}
 
 <AcerolaDialog
 	state={{ open: isSearchDialogOpen }}
@@ -291,6 +298,23 @@
 			<Command.Empty class="py-24 text-center text-lg text-muted-foreground">
 				Nenhum quadrinho encontrado.
 			</Command.Empty>
+
+			<Command.Group heading={m['layout.command.navigation_group']()} class="px-2 text-muted-foreground">
+				{#each navItems as item (item.href)}
+					<Command.Item
+						value={item.label}
+						onSelect={() => {
+							isSearchDialogOpen = false;
+							goto(item.href);
+						}}
+						class="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-colors data-[selected=true]:bg-surface/50"
+					>
+						<item.icon size={18} />
+						<span class="text-sm font-semibold text-foreground">{item.label}</span>
+					</Command.Item>
+				{/each}
+			</Command.Group>
+
 			{#if summary.comics && summary.comics.total > 0}
 				<Command.Group heading="Biblioteca" class="px-2 text-muted-foreground">
 					<div class="flex flex-col gap-2">

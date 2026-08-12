@@ -6,6 +6,7 @@
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import ThemePicker from './components/theme-picker.svelte';
+	import DockModePicker from './components/dock-mode-picker.svelte';
 
 	import * as Command from '$lib/components/ui/command';
 	import { LANGUAGES, type LanguageCode } from '$lib/constants/languages';
@@ -13,6 +14,7 @@
 
 	import { useComicInfoPreference } from '$lib/hooks/preferences/use-comic-info.svelte';
 	import { useMetadataLanguage } from '$lib/hooks/preferences/use-metadata-language.svelte';
+	import { useNavDockMode } from '$lib/hooks/preferences/use-nav-dock-mode.svelte';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { METADATA_COMMANDS } from '$lib/contracts/metadata/metadata.commands';
@@ -47,6 +49,7 @@
 	const folder = useSelectFolder();
 	const comicInfoPreference = useComicInfoPreference();
 	const bookmarkStore = useBookmarks();
+	const dockMode = useNavDockMode();
 
 	const CATEGORY_COLORS = [
 		0xfff44336, 0xffe91e63, 0xff9c27b0, 0xff673ab7, 0xff3f51b5, 0xff2196f3, 0xff03a9f4, 0xff00bcd4,
@@ -163,7 +166,7 @@
 	});
 </script>
 
-<div class="max-w-5xl space-y-12 p-8">
+<div class="mx-auto w-full max-w-5xl space-y-12 p-8">
 	<!-- Header -->
 	<div>
 		<h1 class="text-3xl font-bold tracking-tight text-foreground">
@@ -301,6 +304,9 @@
 		data={{ theme: ctx.theme, mode: ctx.resolved }}
 		events={{ onSelect: ctx.setTheme }}
 	/>
+
+	<!-- Navegação (Dock) -->
+	<DockModePicker data={{ mode: dockMode.mode }} events={{ onSelect: dockMode.setMode }} />
 
 	<!-- Metadados -->
 
