@@ -25,6 +25,8 @@
 	import { page } from '$app/state';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	let { data, state: control, brand }: AcerolaDockProps & AcerolaDockSnippets = $props();
 
@@ -49,14 +51,16 @@
 <Tooltip.Provider delayDuration={200}>
 	<div class="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-4">
 		<div
-			class="pointer-events-auto"
+			class="pointer-events-auto grid"
 			role="navigation"
 			onmouseenter={control.mode === 'hover' ? handleMouseEnter : undefined}
 			onmouseleave={control.mode === 'hover' ? handleMouseLeave : undefined}
 		>
 			{#if isOpen}
 				<div
-					class="flex items-center gap-1 rounded-full border border-surface/30 bg-surface/20 p-2 shadow-2xl backdrop-blur-xl transition-all duration-200"
+					in:scale={{ start: 0.9, duration: 180, easing: cubicOut }}
+					out:fade={{ duration: 120 }}
+					class="col-start-1 row-start-1 flex origin-bottom items-center gap-1 rounded-full border border-surface/30 bg-surface/20 p-2 shadow-2xl backdrop-blur-xl"
 				>
 					{#if brand}
 						<div class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
@@ -87,7 +91,10 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="flex items-center justify-center p-4">
+				<div
+					in:fade={{ delay: 120, duration: 120 }}
+					class="col-start-1 row-start-1 flex items-center justify-center p-4"
+				>
 					<div class="h-1.5 w-12 rounded-full bg-muted-foreground/70 shadow-sm transition-all duration-200"
 					></div>
 				</div>
