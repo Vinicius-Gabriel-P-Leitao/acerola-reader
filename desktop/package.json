@@ -2,7 +2,7 @@
 	"name": "acerola",
 	"type": "module",
 	"version": "0.0.1-beta",
-	"license": "GPL-3.0-only",
+	"license": "MPL-2.0",
 	"author": {
 		"name": "Vinícius Gabriel Pereira Leitão",
 		"email": "contato@acerola-comic.com"
