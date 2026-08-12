@@ -517,7 +517,7 @@
 	<div
 		in:fade={{ duration: 200 }}
 		out:fade={{ duration: 200 }}
-		class="text-text fixed inset-x-0 top-8 bottom-0 z-50 flex overflow-hidden bg-base pt-2"
+		class="text-text fixed inset-x-0 top-8 bottom-0 z-50 flex overflow-hidden bg-base"
 	>
 		<div class="pointer-events-none absolute inset-0 overflow-hidden">
 			<img
@@ -556,7 +556,7 @@
 			class="scrollbar-hide relative z-10 flex flex-1 flex-col overflow-y-auto [overflow-anchor:none]"
 		>
 			<div
-				class="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-surface/30 bg-base/90 px-6 backdrop-blur-md lg:hidden"
+				class="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-surface/30 bg-base/90 px-6 py-2 backdrop-blur-md lg:hidden"
 			>
 				<AcerolaButtonIcon events={{ onClick: onBack }} ui={{ size: 'sm' }}>
 					<ArrowLeft size={20} />
