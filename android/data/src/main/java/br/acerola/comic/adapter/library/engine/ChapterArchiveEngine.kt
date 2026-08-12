@@ -83,7 +83,9 @@ class ChapterArchiveEngine
                 val result =
                     Either
                         .catch {
-                            val folder = directoryDao.getDirectoryById(comicId = comicId) ?: return@catch
+                            val folder =
+                                directoryDao.getDirectoryById(comicId = comicId)
+                                    ?: throw NoSuchElementException("Comic not found: $comicId")
                             val folderUri = folder.path.toUri()
 
                             val rootChildren: List<FastFileMetadata>
@@ -91,10 +93,17 @@ class ChapterArchiveEngine
 
                             if (baseUri != null) {
                                 val folderDocId = DocumentsContract.getDocumentId(folderUri)
-                                rootChildren = ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { return@catch }
-                                folderDoc = DocumentFile.fromTreeUri(context, folderUri) ?: return@catch
+                                rootChildren =
+                                    ContentQueryHelper.listFiles(context, baseUri, folderDocId).getOrElse { ioError ->
+                                        throw IOException("Failed to list files for comic: $comicId ($ioError)")
+                                    }
+                                folderDoc =
+                                    DocumentFile.fromTreeUri(context, folderUri)
+                                        ?: throw SecurityException("Comic folder is not accessible: $folderUri")
                             } else {
-                                folderDoc = DocumentFile.fromSingleUri(context, folderUri) ?: return@catch
+                                folderDoc =
+                                    DocumentFile.fromSingleUri(context, folderUri)
+                                        ?: throw SecurityException("Comic folder is not accessible: $folderUri")
                                 rootChildren = folderDoc.listFiles().map { it.toFastMetadata() }
                             }
 

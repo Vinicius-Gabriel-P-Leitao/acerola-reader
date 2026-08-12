@@ -43,7 +43,7 @@ class ObserveCombinedChaptersUseCase
             viewMode: VolumeViewType,
             volumeOverrides: Map<Long, VolumeChapterGroupDto>,
         ): Flow<ChapterDto?> {
-            val cacheKey =
+            val baseCacheKey =
                 cacheHandler.generateKey(
                     comicId,
                     sort.type.name,
@@ -70,6 +70,13 @@ class ObserveCombinedChaptersUseCase
                 volumeGateway.observeHasRootChapters(comicId),
             ) { localAll, volumeSections, hasRootChapters ->
                 val isInitialState = localAll.pageSize == 0 && localAll.items.isEmpty()
+
+                // A chave inclui um "retrato" leve dos dados atuais (total + soma dos lastModified).
+                // Sem isso, o cache LRU respondia com o resultado antigo mesmo depois de o Flow do
+                // banco emitir uma lista de capítulos nova (ex: após um rescan), pois a chave dependia
+                // só dos parâmetros da consulta (comicId, sort, página...), nunca dos dados em si.
+                val dataSignature = "${localAll.total}_${localAll.items.sumOf { it.lastModified }}_${volumeSections.sumOf { it.totalChapters }}"
+                val cacheKey = "${baseCacheKey}_$dataSignature"
 
                 val cached = if (!isInitialState) cacheHandler.get(cacheKey) else null
                 if (cached != null) return@combine cached

@@ -77,20 +77,26 @@ class ComicDirectoryEngine
                 try {
                     Either
                         .catch {
-                            val existingManga = directoryDao.getDirectoryById(comicId) ?: return@catch
+                            val existingManga =
+                                directoryDao.getDirectoryById(comicId)
+                                    ?: throw NoSuchElementException("Comic not found: $comicId")
 
                             val folderUri = existingManga.path.toUri()
                             val folderDoc = DocumentFile.fromSingleUri(context, folderUri)
 
-                            if (folderDoc == null || !folderDoc.isDirectory) return@catch
+                            if (folderDoc == null || !folderDoc.isDirectory) {
+                                throw SecurityException("Comic folder is not accessible: $folderUri")
+                            }
 
                             val rootUri =
                                 baseUri ?: ComicDirectoryPreference.folderUriFlow(context).firstOrNull()?.toUri()
-                                    ?: return@catch
+                                    ?: throw SecurityException("No library root URI granted")
 
                             val folderId = DocumentsContract.getDocumentId(folderUri)
                             val folderChildren =
-                                ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { return@catch }
+                                ContentQueryHelper.listFiles(context, rootUri, folderId).getOrElse { ioError ->
+                                    throw IOException("Failed to list files for comic: $comicId ($ioError)")
+                                }
 
                             val bannerMetadata = folderChildren.firstOrNull { MediaFile.isBanner(it.name) }
                             val coverMetadata = folderChildren.firstOrNull { MediaFile.isCover(it.name) }
@@ -128,7 +134,7 @@ class ComicDirectoryEngine
 
                             directoryDao.update(entity = updatedManga)
 
-                            comicDirectoryOps.refreshComicChapters(comicId = comicId, baseUri = rootUri)
+                            rootUri
                         }.mapLeft { exception ->
                             AcerolaLogger.e(TAG, "Failed to refresh specific comic: $comicId", LogSource.REPOSITORY, throwable = exception)
                             when (exception) {
@@ -137,6 +143,8 @@ class ComicDirectoryEngine
                                 is SQLiteException -> LibrarySyncError.DatabaseError(cause = exception)
                                 else -> LibrarySyncError.UnexpectedError(cause = exception)
                             }
+                        }.flatMap { rootUri ->
+                            comicDirectoryOps.refreshComicChapters(comicId = comicId, baseUri = rootUri)
                         }
                 } finally {
                     _isIndexing.value = false
@@ -166,23 +174,7 @@ class ComicDirectoryEngine
                                 return@catch
                             }
 
-                            val existingFoldersMap = databaseFolders.associateBy { normalizeName(it.name) }
                             val foldersMap = discoveredFolders.associateBy { normalizeName(it.name) }
-
-                            val foldersToProcess =
-                                discoveredFolders.filter { folder ->
-                                    val normalizedName = normalizeName(folder.name)
-                                    val existing = existingFoldersMap[normalizedName]
-
-                                    when {
-                                        existing == null -> true
-                                        existing.path != folder.path -> true
-                                        existing.lastModified < folder.lastModified -> true
-                                        existing.cover != folder.cover || existing.banner != folder.banner -> true
-                                        else -> false
-                                    }
-                                }
-
                             val removedFolders = databaseFolders.filter { normalizeName(it.name) !in foldersMap }
 
                             if (removedFolders.isNotEmpty()) {
@@ -190,8 +182,11 @@ class ComicDirectoryEngine
                                 removedFolders.forEach { folder -> directoryDao.delete(entity = folder) }
                             }
 
-                            AcerolaLogger.d(TAG, "Processing ${foldersToProcess.size} new/updated folders", LogSource.REPOSITORY)
-                            processFolderList(foldersToProcess, baseUri = rootUri)
+                            // Não usamos mais "lastModified" da pasta para decidir o que pular: o SAF nem sempre
+                            // atualiza esse valor quando um arquivo filho é criado (ex: adb push), o que fazia
+                            // quadrinhos com capítulos novos serem ignorados silenciosamente. Reprocessa tudo.
+                            AcerolaLogger.d(TAG, "Processing ${discoveredFolders.size} folders", LogSource.REPOSITORY)
+                            processFolderList(discoveredFolders, baseUri = rootUri)
                         }.mapLeft { exception ->
                             AcerolaLogger.e(TAG, "Incremental scan failed", LogSource.REPOSITORY, throwable = exception)
                             when (exception) {
