@@ -304,7 +304,6 @@ fun Comic.Template.Header(
             },
             text =
                 when {
-                    history?.isCompleted == true -> stringResource(id = R.string.label_comic_action_reread)
                     history != null -> stringResource(id = R.string.label_comic_action_continue)
                     else -> stringResource(id = R.string.label_comic_action_start)
                 },
