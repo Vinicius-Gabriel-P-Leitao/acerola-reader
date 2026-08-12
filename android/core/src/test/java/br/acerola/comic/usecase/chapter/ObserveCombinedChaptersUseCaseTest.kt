@@ -17,6 +17,8 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -113,5 +115,48 @@ class ObserveCombinedChaptersUseCaseTest {
             assertNotNull(result)
             assertEquals(1, result!!.archive.items.size)
             assertEquals("Ch 1", result.archive.items[0].name)
+        }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @Test
+    fun `nao deve retornar resultado desatualizado do cache quando novos capitulos chegam`() =
+        runTest {
+            val sort = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING)
+            val volumeGroupsFlow = MutableStateFlow<List<VolumeChapterGroupDto>>(emptyList())
+            val hasRootFlow = MutableStateFlow(false)
+
+            val firstChapter = ChapterFileDto(id = 1L, name = "Ch 1", path = "/ch1.cbz", chapterSort = "1")
+            val firstPage = ChapterPageDto(items = listOf(firstChapter), pageSize = 20, page = 0, total = 1)
+            val localFlow = MutableStateFlow(firstPage)
+
+            every { localReadGateway.observeChapters(1L, "NUMBER", true) } returns localFlow
+            every { volumeGateway.observeVolumeGroups(1L, 20, "NUMBER", true) } returns volumeGroupsFlow
+            every { volumeGateway.observeHasRootChapters(1L) } returns hasRootFlow
+
+            val results = mutableListOf<ChapterDto?>()
+            val job =
+                launch {
+                    useCase
+                        .observeCombined(
+                            comicId = 1L,
+                            remoteId = null,
+                            sort = sort,
+                            page = 0,
+                            pageSize = 20,
+                            viewMode = VolumeViewType.CHAPTER,
+                            volumeOverrides = emptyMap(),
+                        ).collect { results.add(it) }
+                }
+
+            advanceUntilIdle()
+            assertEquals(1, results.last()!!.archive.items.size)
+
+            val secondChapter = ChapterFileDto(id = 2L, name = "Ch 2", path = "/ch2.cbz", chapterSort = "2")
+            localFlow.value = firstPage.copy(items = listOf(firstChapter, secondChapter), total = 2)
+            advanceUntilIdle()
+
+            assertEquals(2, results.last()!!.archive.items.size)
+
+            job.cancel()
         }
 }

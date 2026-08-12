@@ -387,7 +387,21 @@ class ComicViewModel
                 LogSource.VIEWMODEL,
                 mapOf("chapterSort" to chapterSort, "newStatus" to (!isRead).toString()),
             )
-            viewModelScope.launch { trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId) }
+            viewModelScope.launch {
+                trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId)
+                if (!isRead) {
+                    trackReadingProgressUseCase.saveProgress(
+                        ReadingHistoryDto(
+                            comicDirectoryId = comicId,
+                            chapterArchiveId = chapterId,
+                            chapterSort = chapterSort,
+                            lastPage = 0,
+                            isCompleted = true,
+                            updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
+                }
+            }
         }
 
         fun toggleChapterSelection(chapterSort: String) {
@@ -420,13 +434,32 @@ class ComicViewModel
             )
 
             viewModelScope.launch {
-                sortsToUpdate.forEach { chapterSort ->
-                    if (markAsRead) {
-                        val chapterId = chapterItems.find { it.chapterSort == chapterSort }?.id
-                        trackReadingProgressUseCase.markChapterAsRead(comicId, chapterSort, chapterId)
-                    } else {
-                        trackReadingProgressUseCase.unmarkChapterAsRead(comicId, chapterSort)
+                var lastMarkedSort: String? = null
+                var lastMarkedChapterId: Long? = null
+
+                chapterItems
+                    .filter { sortsToUpdate.contains(it.chapterSort) }
+                    .forEach { chapterItem ->
+                        if (markAsRead) {
+                            trackReadingProgressUseCase.markChapterAsRead(comicId, chapterItem.chapterSort, chapterItem.id)
+                            lastMarkedSort = chapterItem.chapterSort
+                            lastMarkedChapterId = chapterItem.id
+                        } else {
+                            trackReadingProgressUseCase.unmarkChapterAsRead(comicId, chapterItem.chapterSort)
+                        }
                     }
+
+                lastMarkedSort?.let { chapterSort ->
+                    trackReadingProgressUseCase.saveProgress(
+                        ReadingHistoryDto(
+                            comicDirectoryId = comicId,
+                            chapterArchiveId = lastMarkedChapterId,
+                            chapterSort = chapterSort,
+                            lastPage = 0,
+                            isCompleted = true,
+                            updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
                 }
                 clearChapterSelection()
             }

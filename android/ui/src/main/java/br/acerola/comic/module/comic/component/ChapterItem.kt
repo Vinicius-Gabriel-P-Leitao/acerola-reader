@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
@@ -69,14 +68,9 @@ fun Comic.Component.ChapterItem(
     val mainTitle = stringResource(id = R.string.title_chapter_item_chapter_number, chapterFileDto.chapterSort)
     val subtitle = chapterFileDto.name
 
-    val iconBackground =
-        if (isRead) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
-    val iconTint =
-        if (isRead) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-
     val surfaceColor =
         if (isRead) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
         } else {
             Color.Transparent
         }
@@ -129,20 +123,35 @@ fun Comic.Component.ChapterItem(
                                 ),
                     )
                 }
-            } else {
-                Surface(
-                    shape = ShapeTokens.MediumLarge,
-                    color = iconBackground,
-                    modifier = Modifier.size(SizeTokens.ClickTargetSmall),
+            } else if (isRead) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(SizeTokens.ClickTargetSmall)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape,
+                            ),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (isRead) Icons.Default.CheckCircle else Icons.Default.MenuBook,
-                            contentDescription = null,
-                            tint = iconTint,
-                            modifier = Modifier.size(SizeTokens.IconSmall),
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(SizeTokens.IconSmall),
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier.size(SizeTokens.ClickTargetSmall),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MenuBook,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(SizeTokens.IconSmall),
+                    )
                 }
             }
 
@@ -164,6 +173,25 @@ fun Comic.Component.ChapterItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+
+            if (isRead) {
+                Surface(
+                    shape = ShapeTokens.Full,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.label_comic_status_read),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier =
+                            Modifier.padding(
+                                horizontal = SpacingTokens.Medium,
+                                vertical = SpacingTokens.ExtraSmall,
+                            ),
+                    )
+                }
             }
 
             IconButton(onClick = { if (isSelectionMode) onClick() else showDetails = true }) {
