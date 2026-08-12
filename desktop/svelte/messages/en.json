@@ -238,6 +238,17 @@
         "external_sync": {
           "title": "External Sync",
           "desc": "Allow this comic to be automatically updated during batch syncs."
+        },
+        "file_sync": {
+          "title": "File Sync",
+          "rescan": {
+            "title": "Sync local chapters",
+            "desc": "Updates only the chapters that are new or changed in this folder."
+          },
+          "deep_rescan": {
+            "title": "Rescan entire comic",
+            "desc": "Wipes the indexed chapters and volumes and rebuilds everything from the folder."
+          }
         }
       },
       "volume": {
@@ -248,6 +259,8 @@
       "toast": {
         "mangadex_error": "MangaDex: {msg}",
         "anilist_error": "AniList: {msg}",
+        "rescan_error": "Error syncing chapters: {msg}",
+        "deep_rescan_error": "Error rescanning comic: {msg}",
         "sync": {
           "disabled": "External sync disabled",
           "enabled": "External sync enabled",
@@ -255,7 +268,9 @@
           "success": "Metadata synced!",
           "start_mangadex": "Syncing metadata with MangaDex...",
           "start_anilist": "Syncing metadata with AniList...",
-          "start_comic_info": "Syncing metadata with ComicInfo.xml..."
+          "start_comic_info": "Syncing metadata with ComicInfo.xml...",
+          "start_rescan": "Syncing local chapters...",
+          "start_deep_rescan": "Rescanning comic..."
         },
         "comic_info": {
           "error": "ComicInfo.xml: {msg}",

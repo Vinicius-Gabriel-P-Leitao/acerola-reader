@@ -84,3 +84,25 @@ pub async fn toggle_comic_external_sync(
         .map(|_| ())
         .map_err(|error| ErrorPayload::from(&error))
 }
+
+/// Comando Tauri para reescanear pontualmente um único quadrinho (sync leve, sob demanda).
+#[tauri::command]
+pub async fn rescan_comic(id: String, pool: State<'_, SqlitePool>) -> Result<(), ErrorPayload> {
+    let parsed_id = id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    let service = ComicService::new(pool.inner().clone());
+    service.rescan_comic(parsed_id).await.map_err(|error| ErrorPayload::from(&error))
+}
+
+/// Comando Tauri para invalidar e reescanear um único quadrinho do zero (sync profunda).
+#[tauri::command]
+pub async fn deep_rescan_comic(id: String, pool: State<'_, SqlitePool>) -> Result<(), ErrorPayload> {
+    let parsed_id = id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    let service = ComicService::new(pool.inner().clone());
+    service.deep_rescan_comic(parsed_id).await.map_err(|error| ErrorPayload::from(&error))
+}

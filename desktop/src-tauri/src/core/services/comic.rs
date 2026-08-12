@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use sqlx::SqlitePool;
 
 use crate::{
+    core::services::archive::comic_scanner_engine::ComicScannerService,
     data::{
         models::archive::comic_directory::ComicDirectory,
         repositories::archive::comic_directory_repo::ComicRepository,
@@ -11,11 +14,28 @@ use crate::{
 /// Serviço para operações em massa e individuais de quadrinhos.
 pub struct ComicService {
     repo: ComicRepository,
+    pool: SqlitePool,
 }
 
 impl ComicService {
     pub fn new(pool: SqlitePool) -> Self {
-        Self { repo: ComicRepository::new(pool) }
+        Self { repo: ComicRepository::new(pool.clone()), pool }
+    }
+
+    /// Reescaneia pontualmente um único quadrinho a partir do seu path atual no disco.
+    pub async fn rescan_comic(&self, id: i64) -> Result<(), ComicError> {
+        let comic = self.repo.find_by_id(id).await.map_err(ComicError::from)?.ok_or(ComicError::NotFound)?;
+        let scanner = ComicScannerService::new(PathBuf::from(&comic.path), self.pool.clone());
+
+        scanner.rescan_comic(comic, |_| {}, |_| {}).await
+    }
+
+    /// Invalida e reescaneia um único quadrinho do zero (capítulos e volumes inclusos).
+    pub async fn deep_rescan_comic(&self, id: i64) -> Result<(), ComicError> {
+        let comic = self.repo.find_by_id(id).await.map_err(ComicError::from)?.ok_or(ComicError::NotFound)?;
+        let scanner = ComicScannerService::new(PathBuf::from(&comic.path), self.pool.clone());
+
+        scanner.deep_rescan_comic(comic, |_| {}, |_| {}).await
     }
 
     /// Atualiza o status de visibilidade de um quadrinho específico.

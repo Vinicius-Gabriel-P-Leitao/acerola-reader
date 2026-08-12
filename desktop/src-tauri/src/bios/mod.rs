@@ -68,6 +68,8 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         comic_cmd::update_comics_visibility,
         comic_cmd::delete_comics,
         comic_cmd::toggle_comic_external_sync,
+        comic_cmd::rescan_comic,
+        comic_cmd::deep_rescan_comic,
         system_cmd::open_filesystem_access_settings,
         metadata_cmd::sync_metadata_mangadex,
         metadata_cmd::sync_metadata_anilist,

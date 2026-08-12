@@ -32,6 +32,19 @@ impl VolumeRepository {
         Self { base: Repository::new(pool.clone()), pool }
     }
 
+    /// Remove todos os volumes vinculados a um quadrinho específico.
+    ///
+    /// Usado pelo rescan profundo, já que o cascade de FK não roda em runtime
+    /// (`PRAGMA foreign_keys` não é habilitado no pool de produção).
+    pub async fn delete_by_comic(&self, comic_directory_fk: i64) -> Result<u64, DbError> {
+        let result = sqlx::query("DELETE FROM volume_archive WHERE comic_directory_fk = ?")
+            .bind(comic_directory_fk)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(result.rows_affected())
+    }
+
     pub async fn find_by_comic(
         &self, comic_directory_fk: i64,
     ) -> Result<Vec<VolumeArchive>, DbError> {
@@ -153,6 +166,41 @@ mod tests {
         repo.base.insert(&vol1()).await.unwrap();
         repo.base.delete(1).await.unwrap();
         assert_eq!(repo.base.find_all().await.unwrap().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn teste_delete_by_comic_remove_apenas_volumes_do_comic() {
+        let pool = setup_test_db_with_comic().await;
+        sqlx::query(
+            "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
+             VALUES (2, 'Other', '/other', 0, 0, 0)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let repo = VolumeRepository::new(pool);
+        repo.base.insert(&vol1()).await.unwrap();
+        repo.base
+            .insert(&VolumeArchive {
+                id: 2,
+                name: "Vol. 02".to_string(),
+                volume_sort: "2".to_string(),
+                ..vol1()
+            })
+            .await
+            .unwrap();
+        repo.base
+            .insert(&VolumeArchive { id: 3, comic_directory_fk: 2, ..vol1() })
+            .await
+            .unwrap();
+
+        let removed = repo.delete_by_comic(1).await.unwrap();
+        assert_eq!(removed, 2);
+
+        let remaining = repo.base.find_all().await.unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].comic_directory_fk, 2);
     }
 
     #[tokio::test]

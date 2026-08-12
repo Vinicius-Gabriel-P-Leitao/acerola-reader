@@ -236,6 +236,46 @@
 		}
 	}
 
+	async function handleRescanComic() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			const startMsg = m['pages.comic.toast.sync.start_rescan']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
+			await invoke(HOME_COMMANDS.rescanComic, { id: id.toString() });
+			const successMsg = m['pages.comic.toast.sync.success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.rescan_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
+	async function handleDeepRescanComic() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			const startMsg = m['pages.comic.toast.sync.start_deep_rescan']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
+			await invoke(HOME_COMMANDS.deepRescanComic, { id: id.toString() });
+			const successMsg = m['pages.comic.toast.sync.success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.deep_rescan_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
 	async function handleExternalSyncChange(value: boolean) {
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
@@ -777,7 +817,9 @@
 								onExternalSyncChange: handleExternalSyncChange,
 								onSyncMangadex: handleSyncMangadex,
 								onSyncAnilist: handleSyncAnilist,
-								onSyncComicInfo: handleSyncComicInfo
+								onSyncComicInfo: handleSyncComicInfo,
+								onRescanComic: handleRescanComic,
+								onDeepRescanComic: handleDeepRescanComic
 							}}
 						/>
 					{/if}

@@ -18,6 +18,8 @@
 			onSyncMangadex?: () => void;
 			onSyncAnilist?: () => void;
 			onSyncComicInfo?: () => void;
+			onRescanComic?: () => void;
+			onDeepRescanComic?: () => void;
 		};
 	};
 </script>
@@ -39,6 +41,8 @@
 	import FileText from '@lucide/svelte/icons/file-text';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
+	import FolderSync from '@lucide/svelte/icons/folder-sync';
+	import DatabaseZap from '@lucide/svelte/icons/database-zap';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 
@@ -186,55 +190,57 @@
 				{/snippet}
 			</AcerolaHeroButton>
 
-			<AcerolaHeroButton
-				data={{
-					title: m['pages.config.metadata.mangadex.title'](),
-					description: m['pages.config.metadata.mangadex.desc']()
-				}}
-				events={{ onClick: events.onSyncMangadex }}
-			>
-				{#snippet icon()}
-					<span style="all: unset; display: inline-flex;">
-						<MangaDexIcon class="h-6 w-6 rounded-lg" />
-					</span>
-				{/snippet}
+			{#if state.externalSyncEnabled}
+				<AcerolaHeroButton
+					data={{
+						title: m['pages.config.metadata.mangadex.title'](),
+						description: m['pages.config.metadata.mangadex.desc']()
+					}}
+					events={{ onClick: events.onSyncMangadex }}
+				>
+					{#snippet icon()}
+						<span style="all: unset; display: inline-flex;">
+							<MangaDexIcon class="h-6 w-6 rounded-lg" />
+						</span>
+					{/snippet}
 
-				{#snippet action()}
-					<AcerolaButtonIcon
-						ui={{
-							class:
-								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
-						}}
-					>
-						<RefreshCw />
-					</AcerolaButtonIcon>
-				{/snippet}
-			</AcerolaHeroButton>
+					{#snippet action()}
+						<AcerolaButtonIcon
+							ui={{
+								class:
+									'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+							}}
+						>
+							<RefreshCw />
+						</AcerolaButtonIcon>
+					{/snippet}
+				</AcerolaHeroButton>
 
-			<AcerolaHeroButton
-				data={{
-					title: m['pages.config.metadata.anilist.title'](),
-					description: m['pages.config.metadata.anilist.desc']()
-				}}
-				events={{ onClick: events.onSyncAnilist }}
-			>
-				{#snippet icon()}
-					<span style="all: unset; display: inline-flex;">
-						<AniListIcon class="h-6 w-6 rounded-lg" />
-					</span>
-				{/snippet}
+				<AcerolaHeroButton
+					data={{
+						title: m['pages.config.metadata.anilist.title'](),
+						description: m['pages.config.metadata.anilist.desc']()
+					}}
+					events={{ onClick: events.onSyncAnilist }}
+				>
+					{#snippet icon()}
+						<span style="all: unset; display: inline-flex;">
+							<AniListIcon class="h-6 w-6 rounded-lg" />
+						</span>
+					{/snippet}
 
-				{#snippet action()}
-					<AcerolaButtonIcon
-						ui={{
-							class:
-								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
-						}}
-					>
-						<RefreshCw />
-					</AcerolaButtonIcon>
-				{/snippet}
-			</AcerolaHeroButton>
+					{#snippet action()}
+						<AcerolaButtonIcon
+							ui={{
+								class:
+									'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+							}}
+						>
+							<RefreshCw />
+						</AcerolaButtonIcon>
+					{/snippet}
+				</AcerolaHeroButton>
+			{/if}
 
 			<AcerolaHeroButton
 				data={{
@@ -247,6 +253,64 @@
 					<span style="all: unset; display: inline-flex;">
 						<FileText class="h-6 w-6 text-foreground" />
 					</span>
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+		</div>
+	</section>
+
+	<!-- File Sync Section -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<FolderSync size={16} />
+			{m['pages.comic.preferences.file_sync.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.file_sync.rescan.title'](),
+					description: m['pages.comic.preferences.file_sync.rescan.desc']()
+				}}
+				events={{ onClick: events.onRescanComic }}
+			>
+				{#snippet icon()}
+					<FolderSync class="text-chart-1" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.file_sync.deep_rescan.title'](),
+					description: m['pages.comic.preferences.file_sync.deep_rescan.desc']()
+				}}
+				events={{ onClick: events.onDeepRescanComic }}
+			>
+				{#snippet icon()}
+					<DatabaseZap class="text-destructive" size={24} />
 				{/snippet}
 
 				{#snippet action()}
