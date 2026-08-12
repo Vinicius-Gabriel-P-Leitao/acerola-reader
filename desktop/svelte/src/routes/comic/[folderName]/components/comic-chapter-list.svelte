@@ -64,46 +64,52 @@
 	const totalPages = $derived(Math.ceil(data.totalChapters / data.pageSize));
 
 	let visiblePages = new Set<number>();
-	let observer: IntersectionObserver | null = null;
+
+	/**
+	 * Criado de forma eager (não em onMount): as actions `use:trackPage` dos
+	 * blocos do {#each} rodam durante a montagem inicial, antes do onMount do
+	 * componente disparar — se o observer fosse criado em onMount, as páginas
+	 * já montadas nunca seriam observadas.
+	 */
+	const observer = new IntersectionObserver(
+		(entries) => {
+			let changed = false;
+
+			entries.forEach((entry) => {
+				const pageStr = (entry.target as HTMLElement).dataset.page;
+				if (!pageStr) return;
+
+				const page = parseInt(pageStr, 10);
+				const wasVisible = visiblePages.has(page);
+
+				if (entry.isIntersecting) {
+					visiblePages.add(page);
+				} else {
+					visiblePages.delete(page);
+				}
+
+				if (wasVisible !== entry.isIntersecting) {
+					changed = true;
+				}
+			});
+
+			if (changed && events?.onVisiblePages) {
+				events.onVisiblePages(Array.from(visiblePages).sort((a, b) => a - b));
+			}
+		},
+		{ rootMargin: '1200px 0px' }
+	);
 
 	onMount(() => {
-		observer = new IntersectionObserver(
-			(entries) => {
-				let changed = false;
-
-				entries.forEach((entry) => {
-					const pageStr = (entry.target as HTMLElement).dataset.page;
-					if (!pageStr) return;
-
-					const page = parseInt(pageStr, 10);
-					const wasVisible = visiblePages.has(page);
-
-					if (entry.isIntersecting) {
-						visiblePages.add(page);
-					} else {
-						visiblePages.delete(page);
-					}
-
-					if (wasVisible !== entry.isIntersecting) {
-						changed = true;
-					}
-				});
-
-				if (changed && events?.onVisiblePages) {
-					events.onVisiblePages(Array.from(visiblePages).sort((a, b) => a - b));
-				}
-			},
-			{ rootMargin: '1200px 0px' }
-		);
-		return () => observer?.disconnect();
+		return () => observer.disconnect();
 	});
 
 	function trackPage(node: HTMLElement, page: number) {
 		node.dataset.page = page.toString();
-		observer?.observe(node);
+		observer.observe(node);
 		return {
 			destroy() {
-				observer?.unobserve(node);
+				observer.unobserve(node);
 			}
 		};
 	}
