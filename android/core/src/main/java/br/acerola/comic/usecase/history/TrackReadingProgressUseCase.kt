@@ -20,6 +20,13 @@ class TrackReadingProgressUseCase
             historyRepository.markChapterAsRead(comicId, chapterSort, chapterId)
         }
 
+        suspend fun unmarkChapterAsRead(
+            comicId: Long,
+            chapterSort: String,
+        ) {
+            historyRepository.unmarkChapterAsRead(comicId, chapterSort)
+        }
+
         suspend fun toggleReadStatus(
             comicId: Long,
             chapterSort: String,

@@ -1,6 +1,8 @@
 package br.acerola.comic.module.comic.component
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
@@ -54,22 +58,19 @@ fun Comic.Component.ChapterItem(
     modifier: Modifier = Modifier,
     onToggleRead: () -> Unit = {},
     isRead: Boolean = false,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    onLongClick: () -> Unit = {},
     onClick: () -> Unit,
 ) {
     var showDetails by remember { mutableStateOf(value = false) }
-    val stableOnClick = remember(key1 = chapterFileDto.id) { onClick }
 
     val mainTitle = stringResource(id = R.string.title_chapter_item_chapter_number, chapterFileDto.chapterSort)
     val subtitle = chapterFileDto.name
 
-    val iconBackground =
-        if (isRead) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
-    val iconTint =
-        if (isRead) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-
     val surfaceColor =
         if (isRead) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
         } else {
             Color.Transparent
         }
@@ -80,24 +81,75 @@ fun Comic.Component.ChapterItem(
             modifier
                 .fillMaxWidth()
                 .combinedClickable(
-                    onClick = stableOnClick,
-                    onLongClick = { showDetails = true },
+                    onClick = onClick,
+                    onLongClick = onLongClick,
                 ),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Surface(
-                shape = ShapeTokens.MediumLarge,
-                color = iconBackground,
-                modifier = Modifier.size(SizeTokens.ClickTargetSmall),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
+            if (isSelectionMode) {
+                if (isSelected) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(SizeTokens.ClickTargetSmall)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = CircleShape,
+                                ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(SizeTokens.IconSmall),
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(SizeTokens.ClickTargetSmall)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = CircleShape,
+                                ).border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    shape = CircleShape,
+                                ),
+                    )
+                }
+            } else if (isRead) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(SizeTokens.ClickTargetSmall)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape,
+                            ),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(
-                        imageVector = if (isRead) Icons.Default.CheckCircle else Icons.Default.MenuBook,
+                        imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = iconTint,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(SizeTokens.IconSmall),
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier.size(SizeTokens.ClickTargetSmall),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MenuBook,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(SizeTokens.IconSmall),
                     )
                 }
@@ -123,7 +175,26 @@ fun Comic.Component.ChapterItem(
                 )
             }
 
-            IconButton(onClick = { showDetails = true }) {
+            if (isRead) {
+                Surface(
+                    shape = ShapeTokens.Full,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.label_comic_status_read),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier =
+                            Modifier.padding(
+                                horizontal = SpacingTokens.Medium,
+                                vertical = SpacingTokens.ExtraSmall,
+                            ),
+                    )
+                }
+            }
+
+            IconButton(onClick = { if (isSelectionMode) onClick() else showDetails = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),

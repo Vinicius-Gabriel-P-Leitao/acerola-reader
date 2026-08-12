@@ -8,6 +8,7 @@ import arrow.core.Either
 import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
 import br.acerola.comic.adapter.library.engine.ComicDirectoryEngine
 import br.acerola.comic.config.preference.ComicDirectoryPreference
+import br.acerola.comic.error.message.IoError
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
 import br.acerola.comic.service.library.DirectoryScanner
@@ -128,6 +129,58 @@ class ComicDirectoryEngineTest {
         }
 
     @Test
+    fun `refreshManga deve retornar Left quando comic nao existe no banco`() =
+        runTest {
+            val comicId = 999L
+            coEvery { directoryDao.getDirectoryById(comicId) } returns null
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            coVerify(exactly = 0) { directoryDao.update(any()) }
+        }
+
+    @Test
+    fun `refreshManga deve retornar Left quando a pasta do comic nao e acessivel`() =
+        runTest {
+            val comicId = 1L
+            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
+            val uriMock = mockk<Uri>()
+            val folderDocMock = mockk<DocumentFile>()
+
+            coEvery { directoryDao.getDirectoryById(comicId) } returns existingManga
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
+            every { folderDocMock.isDirectory } returns false
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            coVerify(exactly = 0) { directoryDao.update(any()) }
+        }
+
+    @Test
+    fun `refreshManga deve retornar Left quando falha ao listar arquivos da pasta via SAF`() =
+        runTest {
+            val comicId = 1L
+            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
+            val uriMock = mockk<Uri>()
+            val folderDocMock = mockk<DocumentFile>()
+
+            coEvery { directoryDao.getDirectoryById(comicId) } returns existingManga
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
+            every { folderDocMock.isDirectory } returns true
+            every { ContentQueryHelper.listFiles(context, any(), any()) } returns
+                Either.Left(IoError.FileReadError(path = "content://root", cause = SecurityException("boom")))
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            coVerify(exactly = 0) { directoryDao.update(any()) }
+        }
+
+    @Test
     fun `deve realizar scan incremental e encontrar comics`() =
         runTest {
             val rootUri = mockk<Uri>()
@@ -140,6 +193,31 @@ class ComicDirectoryEngineTest {
 
             assertTrue(result.isRight())
             coVerify { directoryDao.upsertDirectoryTransaction(match { it.name == "BPRD" }, any()) }
+        }
+
+    @Test
+    fun `incrementalScan deve reprocessar pasta existente mesmo quando lastModified nao aumentou`() =
+        runTest {
+            val rootUri = mockk<Uri>()
+            val discovered =
+                MangaDirectoryFixtures.createMangaDirectory(name = "BPRD", path = "content://path/bprd", lastModified = 1000L)
+            val existing =
+                MangaDirectoryFixtures.createMangaDirectory(
+                    id = 5L,
+                    name = "BPRD",
+                    path = "content://path/bprd",
+                    lastModified = 5000L,
+                )
+
+            coEvery { directoryScanner.buildLibrary(rootUri, any()) } returns listOf(discovered)
+            every { directoryDao.getAllDirectories() } returns flowOf(listOf(existing))
+            coEvery { directoryDao.upsertDirectoryTransaction(any(), any()) } returns existing.id
+
+            val result = repository.incrementalScan(rootUri)
+
+            assertTrue(result.isRight())
+            coVerify(exactly = 1) { directoryDao.upsertDirectoryTransaction(match { it.name == "BPRD" }, any()) }
+            coVerify(exactly = 1) { comicDirectoryOps.refreshComicChapters(comicId = existing.id, baseUri = rootUri) }
         }
 
     @Test

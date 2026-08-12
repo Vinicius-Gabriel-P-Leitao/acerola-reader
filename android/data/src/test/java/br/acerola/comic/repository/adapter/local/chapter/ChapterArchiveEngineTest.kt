@@ -4,7 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
 import br.acerola.comic.adapter.library.engine.ChapterArchiveEngine
+import br.acerola.comic.error.message.IoError
 import br.acerola.comic.fixtures.MangaDirectoryFixtures
 import br.acerola.comic.local.dao.archive.ChapterArchiveDao
 import br.acerola.comic.local.dao.archive.ComicDirectoryDao
@@ -132,6 +134,57 @@ class ChapterArchiveEngineTest {
             coVerify { volumeSyncService.sync(eq(comicId), any(), any(), any(), any()) }
             coVerify { chapterSyncService.sync(eq(comicId), any(), any(), any(), any(), any()) }
             coVerify { directoryDao.update(match { it.lastModified == 2000L }) }
+        }
+
+    @Test
+    fun `refreshComicChapters deve retornar Left quando comic nao existe no banco`() =
+        runTest {
+            val comicId = 999L
+            coEvery { directoryDao.getDirectoryById(comicId = comicId) } returns null
+
+            val result = repository.refreshComicChapters(comicId)
+
+            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            coVerify(exactly = 0) { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `refreshComicChapters deve retornar Left quando a pasta nao pode ser aberta`() =
+        runTest {
+            val comicId = 1L
+            val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
+
+            val uriMock = mockk<Uri>()
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns null
+
+            coEvery { directoryDao.getDirectoryById(comicId = comicId) } returns directory
+
+            val result = repository.refreshComicChapters(comicId)
+
+            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            coVerify(exactly = 0) { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `refreshComicChapters deve retornar Left quando falha ao listar arquivos via SAF`() =
+        runTest {
+            val comicId = 1L
+            val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
+
+            val uriMock = mockk<Uri>()
+            val baseUriMock = mockk<Uri>()
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentsContract.getDocumentId(any()) } returns "doc_id"
+
+            coEvery { directoryDao.getDirectoryById(comicId = comicId) } returns directory
+            every { ContentQueryHelper.listFiles(context, baseUriMock, any()) } returns
+                Either.Left(IoError.FileReadError(path = "content://fake", cause = SecurityException("boom")))
+
+            val result = repository.refreshComicChapters(comicId, baseUriMock)
+
+            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            coVerify(exactly = 0) { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test

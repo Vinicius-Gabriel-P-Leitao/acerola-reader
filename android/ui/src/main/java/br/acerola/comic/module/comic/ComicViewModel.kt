@@ -97,6 +97,9 @@ class ComicViewModel
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
 
+        private val _selectedChapterSorts = MutableStateFlow<Set<String>>(emptySet())
+        val selectedChapterSorts: StateFlow<Set<String>> = _selectedChapterSorts.asStateFlow()
+
         val comicIsIndexing: StateFlow<Boolean> =
             combine(
                 directoryObserve.isIndexing,
@@ -252,6 +255,7 @@ class ComicViewModel
             selectedComicId.value = comicId
             _volumeSectionOverrides.value = emptyMap()
             _activeVolumeId.value = null
+            _selectedChapterSorts.value = emptySet()
 
             viewModelScope.launch {
                 ChapterPerPagePreference.chapterPerPageFlow(context).collect { size -> _selectedChapterPerPage.value = size }
@@ -383,7 +387,82 @@ class ComicViewModel
                 LogSource.VIEWMODEL,
                 mapOf("chapterSort" to chapterSort, "newStatus" to (!isRead).toString()),
             )
-            viewModelScope.launch { trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId) }
+            viewModelScope.launch {
+                trackReadingProgressUseCase.toggleReadStatus(comicId, chapterSort, isRead, chapterId)
+                if (!isRead) {
+                    trackReadingProgressUseCase.saveProgress(
+                        ReadingHistoryDto(
+                            comicDirectoryId = comicId,
+                            chapterArchiveId = chapterId,
+                            chapterSort = chapterSort,
+                            lastPage = 0,
+                            isCompleted = true,
+                            updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
+                }
+            }
+        }
+
+        fun toggleChapterSelection(chapterSort: String) {
+            _selectedChapterSorts.value =
+                if (_selectedChapterSorts.value.contains(chapterSort)) {
+                    _selectedChapterSorts.value - chapterSort
+                } else {
+                    _selectedChapterSorts.value + chapterSort
+                }
+        }
+
+        fun selectAllChapters(allSorts: List<String>) {
+            _selectedChapterSorts.value = allSorts.toSet()
+        }
+
+        fun clearChapterSelection() {
+            _selectedChapterSorts.value = emptySet()
+        }
+
+        fun markSelectedChaptersReadStatus(markAsRead: Boolean) {
+            val comicId = selectedDirectoryId.value ?: return
+            val sortsToUpdate = _selectedChapterSorts.value
+            val chapterItems = chapters.value?.archive?.items.orEmpty()
+
+            AcerolaLogger.audit(
+                TAG,
+                "Marking selected chapters read status",
+                LogSource.VIEWMODEL,
+                mapOf("count" to sortsToUpdate.size.toString(), "markAsRead" to markAsRead.toString()),
+            )
+
+            viewModelScope.launch {
+                var lastMarkedSort: String? = null
+                var lastMarkedChapterId: Long? = null
+
+                chapterItems
+                    .filter { sortsToUpdate.contains(it.chapterSort) }
+                    .forEach { chapterItem ->
+                        if (markAsRead) {
+                            trackReadingProgressUseCase.markChapterAsRead(comicId, chapterItem.chapterSort, chapterItem.id)
+                            lastMarkedSort = chapterItem.chapterSort
+                            lastMarkedChapterId = chapterItem.id
+                        } else {
+                            trackReadingProgressUseCase.unmarkChapterAsRead(comicId, chapterItem.chapterSort)
+                        }
+                    }
+
+                lastMarkedSort?.let { chapterSort ->
+                    trackReadingProgressUseCase.saveProgress(
+                        ReadingHistoryDto(
+                            comicDirectoryId = comicId,
+                            chapterArchiveId = lastMarkedChapterId,
+                            chapterSort = chapterSort,
+                            lastPage = 0,
+                            isCompleted = true,
+                            updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
+                }
+                clearChapterSelection()
+            }
         }
 
         fun extractVolumeCover(volumeId: Long) {
