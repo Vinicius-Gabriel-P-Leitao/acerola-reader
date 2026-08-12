@@ -16,8 +16,16 @@ describe('ComicHeroBanner', () => {
 		const { container } = render(ComicHeroBanner, { props: { data: { banner: null } } });
 		const img = container.querySelector('img');
 		expect(img).not.toBeInTheDocument();
-		// Verifica se os elementos das estatísticas ainda estão lá
+	});
+
+	it('exibe a nota real quando fornecida', () => {
+		render(ComicHeroBanner, { props: { data: { banner: null, rating: 9.8 } } });
 		expect(screen.getByText('9.8')).toBeInTheDocument();
-		expect(screen.getByText('Popular')).toBeInTheDocument();
+	});
+
+	it('oculta o badge de nota quando não há rating, mas mostra o total de capítulos', () => {
+		render(ComicHeroBanner, { props: { data: { banner: null, rating: null, chapterCount: 10 } } });
+		expect(screen.queryByText('9.8')).not.toBeInTheDocument();
+		expect(screen.getByText('10 Caps')).toBeInTheDocument();
 	});
 });

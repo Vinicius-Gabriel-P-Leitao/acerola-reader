@@ -29,8 +29,6 @@
 	import PlaceholderManga from '$lib/assets/placeholder/placeholder_manga.svg?component';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Play from '@lucide/svelte/icons/play';
-	import Bookmark from '@lucide/svelte/icons/bookmark';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { m } from '$lib/paraglide/messages';
 
 	let { data, events, state }: ComicMetadataPanelProps = $props();
@@ -118,28 +116,6 @@
 							: 'Continue Reading'
 						: m['pages.comic.metadata.read_now']()}
 				</AcerolaButton>
-
-				<div class="grid grid-cols-2 gap-3">
-					<AcerolaButton
-						ui={{
-							variant: 'outline',
-							class: 'flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black'
-						}}
-					>
-						<Bookmark size={16} />
-						{m['pages.comic.metadata.save']()}
-					</AcerolaButton>
-
-					<AcerolaButton
-						ui={{
-							variant: 'outline',
-							class: 'flex items-center justify-center gap-2 rounded-2xl py-6 text-xs font-black'
-						}}
-					>
-						<RefreshCw size={16} />
-						{m['pages.comic.metadata.sync']()}
-					</AcerolaButton>
-				</div>
 			</div>
 		</div>
 	</div>

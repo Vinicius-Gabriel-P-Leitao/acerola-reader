@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use crate::{
     core::services::archive::files_guard::{ArchiveFileGuard, FileGuard, MetadataFileGuard},
     data::{
-        models::metadata::{author::AuthorMetadata, comic::ComicMetadata},
+        models::metadata::{anilist_source::AnilistSource, author::AuthorMetadata, comic::ComicMetadata},
         repositories::{
             archive::comic_directory_repo::ComicRepository, metadata::MetadataRepository,
         },
@@ -122,6 +122,7 @@ impl MetadataService {
 
         self.process_anilist_author(&media, saved.id).await?;
         self.process_anilist_images(&media, comic_directory_fk, saved.id).await?;
+        self.process_anilist_score(&media, saved.id).await?;
 
         if generate_comic_info {
             self.generate_and_save_comic_info(comic_directory_fk, saved.id).await?;
@@ -462,6 +463,45 @@ impl MetadataService {
         Ok(())
     }
 
+    /// Persiste a nota do AniList (escala 0-100) em `anilist_source`, ligada por
+    /// `comic_metadata_fk`. Não faz nada se o AniList não retornou nota (manga sem votos).
+    async fn process_anilist_score(
+        &self, media: &AnilistMedia, metadata_id: i64,
+    ) -> Result<(), ComicError> {
+        let Some(average_score) = media.average_score else {
+            return Ok(());
+        };
+
+        self.upsert_anilist_source(media.id as i64, average_score, metadata_id).await
+    }
+
+    async fn upsert_anilist_source(
+        &self, anilist_id: i64, average_score: i64, metadata_id: i64,
+    ) -> Result<(), ComicError> {
+        let existing = self.repo.get_anilist_source_by_comic_metadata_id(metadata_id).await?;
+
+        let source = AnilistSource {
+            id: match &existing {
+                Some(found) => found.id,
+                None => self.repo.anilist_repo.get_next_id().await?,
+            },
+            anilist_id,
+            average_score: Some(average_score),
+            popularity: existing.as_ref().and_then(|found| found.popularity),
+            trending: existing.as_ref().and_then(|found| found.trending),
+            cover_image: existing.as_ref().and_then(|found| found.cover_image.clone()),
+            banner_image: existing.as_ref().and_then(|found| found.banner_image.clone()),
+            comic_metadata_fk: metadata_id,
+        };
+
+        match existing {
+            Some(_) => self.repo.anilist_repo.update(&source).await?,
+            None => self.repo.anilist_repo.insert(&source).await?,
+        };
+
+        Ok(())
+    }
+
     async fn process_comic_info_author(
         &self, comic_info: &comic_info::ComicInfo, metadata_id: i64,
     ) -> Result<(), ComicError> {
@@ -684,5 +724,75 @@ mod tests {
 
         let sync_result = service.sync_comic_comic_info(1).await;
         assert!(matches!(sync_result, Err(ComicError::ComicInfoNotFound)));
+    }
+
+    #[tokio::test]
+    async fn teste_upsert_anilist_source_insere_nota_na_primeira_sincronizacao() {
+        let pool = setup_test_db_with_comic().await;
+        let service = MetadataService::new(pool.clone());
+
+        let metadata_id =
+            service.repo.comic_repo.get_next_id().await.expect("Failed to get next id");
+        service
+            .repo
+            .comic_repo
+            .insert(&ComicMetadata {
+                id: metadata_id,
+                title: "Test".to_string(),
+                description: String::new(),
+                status: String::new(),
+                publication: None,
+                sync_source: Some("AniList".to_string()),
+                has_comic_info: false,
+                comic_directory_fk: Some(1),
+            })
+            .await
+            .expect("Failed to insert metadata");
+
+        service.upsert_anilist_source(42, 87, metadata_id).await.expect("Failed to upsert score");
+
+        let source = service
+            .repo
+            .get_anilist_source_by_comic_metadata_id(metadata_id)
+            .await
+            .expect("Failed to fetch anilist source")
+            .expect("anilist_source row should exist");
+        assert_eq!(source.anilist_id, 42);
+        assert_eq!(source.average_score, Some(87));
+    }
+
+    #[tokio::test]
+    async fn teste_upsert_anilist_source_atualiza_nota_existente_sem_duplicar() {
+        let pool = setup_test_db_with_comic().await;
+        let service = MetadataService::new(pool.clone());
+
+        let metadata_id =
+            service.repo.comic_repo.get_next_id().await.expect("Failed to get next id");
+        service
+            .repo
+            .comic_repo
+            .insert(&ComicMetadata {
+                id: metadata_id,
+                title: "Test".to_string(),
+                description: String::new(),
+                status: String::new(),
+                publication: None,
+                sync_source: Some("AniList".to_string()),
+                has_comic_info: false,
+                comic_directory_fk: Some(1),
+            })
+            .await
+            .expect("Failed to insert metadata");
+
+        service.upsert_anilist_source(42, 70, metadata_id).await.expect("Failed first upsert");
+        service.upsert_anilist_source(42, 91, metadata_id).await.expect("Failed second upsert");
+
+        let source = service
+            .repo
+            .get_anilist_source_by_comic_metadata_id(metadata_id)
+            .await
+            .expect("Failed to fetch anilist source")
+            .expect("anilist_source row should exist");
+        assert_eq!(source.average_score, Some(91), "score should be updated, not duplicated");
     }
 }

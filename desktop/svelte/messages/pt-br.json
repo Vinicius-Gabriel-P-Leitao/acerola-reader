@@ -198,9 +198,6 @@
         "select_all": "Selecionar todos",
         "cancel": "Cancelar"
       },
-      "banner": {
-        "popular": "Popular"
-      },
       "metadata": {
         "description": {
           "unavailable": "Descrição indisponível."
@@ -214,8 +211,6 @@
           "count": "{count} Caps"
         },
         "read_now": "LER AGORA",
-        "save": "SALVAR",
-        "sync": "SYNC",
         "completed": "CONCLUÍDO"
       },
       "preferences": {

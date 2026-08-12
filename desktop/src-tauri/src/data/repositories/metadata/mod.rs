@@ -2,7 +2,9 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::metadata::{author::AuthorMetadata, comic::ComicMetadata},
+        models::metadata::{
+            anilist_source::AnilistSource, author::AuthorMetadata, comic::ComicMetadata,
+        },
         repositories::{Entity, Repository},
     },
     infra::error::DbError,
@@ -12,6 +14,7 @@ use crate::{
 pub struct MetadataRepository {
     pub comic_repo: Repository<ComicMetadata>,
     pub author_repo: Repository<AuthorMetadata>,
+    pub anilist_repo: Repository<AnilistSource>,
     pool: SqlitePool,
 }
 
@@ -20,6 +23,7 @@ impl MetadataRepository {
         Self {
             comic_repo: Repository::new(pool.clone()),
             author_repo: Repository::new(pool.clone()),
+            anilist_repo: Repository::new(pool.clone()),
             pool,
         }
     }
@@ -53,6 +57,24 @@ impl MetadataRepository {
         ))
         .bind(metadata_id)
         .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Busca a linha de dados do AniList (nota, popularidade) vinculada a um `comic_metadata`.
+    pub async fn get_anilist_source_by_comic_metadata_id(
+        &self, metadata_id: i64,
+    ) -> Result<Option<AnilistSource>, DbError> {
+        let table = AnilistSource::table_name();
+        let cols = AnilistSource::columns().join(", ");
+
+        let result = sqlx::query_as::<_, AnilistSource>(&format!(
+            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
+            cols, table
+        ))
+        .bind(metadata_id)
+        .fetch_optional(&self.pool)
         .await?;
 
         Ok(result)

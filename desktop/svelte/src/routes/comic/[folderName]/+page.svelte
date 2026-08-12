@@ -442,7 +442,6 @@
 		if (!item) return null;
 
 		const chaptersData = chapterStore.chapters;
-		const totalItems = chaptersData?.archive.total ?? 0;
 		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
 
 		const pagesData = (chaptersData?.pages ?? []).map((it) => ({
@@ -492,7 +491,10 @@
 		return {
 			id: item.relations.directoryId.toString(),
 			title: item.metadata.title || item.filesystem.folderName,
-			chaptersCount: totalItems,
+			// Total real de capítulos do quadrinho (soma volumes) — não usar `totalItems`
+			// aqui, pois esse valor reflete a paginação/filtro de volume atualmente aberto.
+			chaptersCount: item.metadata.chapterCount,
+			rating: item.metadata.rating ?? null,
 			cover: resolveCover(item.artwork),
 			banner: resolveBanner(item.artwork),
 			pagesData,
@@ -567,7 +569,14 @@
 				<div class="w-10"></div>
 			</div>
 
-			<ComicHeroBanner data={{ banner: manga.banner, genres: manga.metadata.genres }} />
+			<ComicHeroBanner
+				data={{
+					banner: manga.banner,
+					genres: manga.metadata.genres,
+					rating: manga.rating,
+					chapterCount: manga.chaptersCount
+				}}
+			/>
 
 			<div class="mx-auto w-full max-w-5xl space-y-12 p-8 lg:p-16">
 				<div

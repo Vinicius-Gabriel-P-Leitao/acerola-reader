@@ -198,9 +198,6 @@
         "select_all": "Select all",
         "cancel": "Cancel"
       },
-      "banner": {
-        "popular": "Popular"
-      },
       "metadata": {
         "description": {
           "unavailable": "Description unavailable."
@@ -214,8 +211,6 @@
           "count": "{count} Chaps"
         },
         "read_now": "READ NOW",
-        "save": "SAVE",
-        "sync": "SYNC",
         "completed": "COMPLETED"
       },
       "preferences": {

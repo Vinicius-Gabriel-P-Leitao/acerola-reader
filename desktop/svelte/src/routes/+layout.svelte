@@ -10,7 +10,7 @@
 	import HouseIcon from '@lucide/svelte/icons/house';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 
-	import BookOpenIcon from '@lucide/svelte/icons/book-open';
+	import AcerolaLogo from '$lib/assets/icons/acerola.svg?component';
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import SquareIcon from '@lucide/svelte/icons/square';
 	import XIcon from '@lucide/svelte/icons/x';
@@ -189,10 +189,8 @@
 			>
 				{#snippet header()}
 					<div class="flex items-center gap-3">
-						<div
-							class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"
-						>
-							<BookOpenIcon size={24} />
+						<div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+							<AcerolaLogo class="h-full w-full" />
 						</div>
 
 						<span class="text-xl font-bold tracking-tight group-data-[collapsible=icon]:hidden">

@@ -42,7 +42,7 @@ impl HomeService {
         (
             Vec<ComicSummaryView>,
             HashMap<i64, i64>,
-            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
+            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>, Option<i64>)>,
             HashMap<i64, Category>,
         ),
         ComicError,
@@ -63,7 +63,9 @@ impl HomeService {
                     .await?
                     .into_iter()
                     .next();
-                meta_map.insert(fk, (m, author));
+                // Rating não é buscado aqui para evitar N+1 na grade da home;
+                // só é resolvido na tela de detalhe (get_by_folder_name).
+                meta_map.insert(fk, (m, author, None));
             }
         }
 
@@ -78,7 +80,7 @@ impl HomeService {
         (
             Vec<ComicSummaryView>,
             HashMap<i64, i64>,
-            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
+            HashMap<i64, (ComicMetadata, Option<AuthorMetadata>, Option<i64>)>,
             HashMap<i64, Category>,
         ),
         ComicError,
@@ -96,7 +98,7 @@ impl HomeService {
                     .await?
                     .into_iter()
                     .next();
-                meta_map.insert(fk, (m, author));
+                meta_map.insert(fk, (m, author, None));
             }
         }
 
@@ -111,7 +113,7 @@ impl HomeService {
         Option<(
             ComicSummaryView,
             i64,
-            Option<(ComicMetadata, Option<AuthorMetadata>)>,
+            Option<(ComicMetadata, Option<AuthorMetadata>, Option<i64>)>,
             Option<Category>,
         )>,
         ComicError,
@@ -131,8 +133,16 @@ impl HomeService {
             } else {
                 None
             };
+            let rating = if let Some(m) = &meta {
+                self.metadata_repo
+                    .get_anilist_source_by_comic_metadata_id(m.id)
+                    .await?
+                    .and_then(|source| source.average_score)
+            } else {
+                None
+            };
             let bookmark = self.category_repo.get_comic_category(view.directory_id).await?;
-            Ok(Some((view, count, meta.map(|m| (m, author)), bookmark)))
+            Ok(Some((view, count, meta.map(|m| (m, author, rating)), bookmark)))
         } else {
             Ok(None)
         }

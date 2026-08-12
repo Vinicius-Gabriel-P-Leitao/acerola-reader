@@ -15,6 +15,8 @@ export type ComicSummaryMetadataPayload = {
 	description?: string | null;
 	status?: string | null;
 	author?: string | null;
+	/** Nota do AniList na escala 0-10, ou null se o quadrinho não tiver nota. */
+	rating?: number | null;
 };
 
 export type ComicSummaryArtworkPayload = {

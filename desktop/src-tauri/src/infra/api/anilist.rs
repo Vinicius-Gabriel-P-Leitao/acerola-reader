@@ -32,6 +32,8 @@ pub struct AnilistMedia {
     pub cover_image: Option<AnilistCoverImage>,
     #[serde(default)]
     pub banner_image: Option<String>,
+    #[serde(default)]
+    pub average_score: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -123,6 +125,7 @@ impl AnilistClient {
                     large
                   }
                   bannerImage
+                  averageScore
                 }
               }
             }
