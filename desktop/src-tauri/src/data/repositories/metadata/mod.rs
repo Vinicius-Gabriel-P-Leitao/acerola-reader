@@ -79,6 +79,38 @@ impl MetadataRepository {
 
         Ok(result)
     }
+
+    /// Remove por completo os metadados sincronizados de um quadrinho: o registro
+    /// principal em `comic_metadata` e todas as tabelas filhas (autores e fontes
+    /// externas). O cascade de FK não roda em runtime (ver comentário em
+    /// `VolumeRepository::delete_by_comic`), então cada tabela filha precisa ser
+    /// limpa explicitamente antes de apagar o registro pai. No-op se o quadrinho
+    /// nunca teve metadados sincronizados.
+    pub async fn delete_by_comic_id(&self, comic_directory_fk: i64) -> Result<(), DbError> {
+        let Some(metadata) = self.get_comic_metadata_by_comic_id(comic_directory_fk).await?
+        else {
+            return Ok(());
+        };
+
+        sqlx::query("DELETE FROM author WHERE comic_metadata_fk = ?")
+            .bind(metadata.id)
+            .execute(&self.pool)
+            .await?;
+
+        sqlx::query("DELETE FROM anilist_source WHERE comic_metadata_fk = ?")
+            .bind(metadata.id)
+            .execute(&self.pool)
+            .await?;
+
+        sqlx::query("DELETE FROM mangadex_source WHERE comic_metadata_fk = ?")
+            .bind(metadata.id)
+            .execute(&self.pool)
+            .await?;
+
+        self.comic_repo.delete(metadata.id).await?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]

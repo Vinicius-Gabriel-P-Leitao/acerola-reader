@@ -11,7 +11,6 @@ use crate::{
     core::services::archive::{
         chapter_scanner_engine::ChapterScannerService,
         converter::ConverterService,
-        cover_extractor,
         files_guard::{ArchiveFileGuard, ArtworkFileGuard, FileGuard, ScannerGuard},
         path_guard::{path_hash, PathGuard},
     },
@@ -496,19 +495,6 @@ impl ComicScannerService {
         let template_fk = detected_template.map(|template| template.id);
         let template_pattern = detected_template.map(|template| template.pattern.as_str());
 
-        let comic_cover = match comic_cover {
-            Some(cover) => Some(cover),
-            None => {
-                let mut sorted_files = comic_files.clone();
-                sorted_files.sort();
-
-                match sorted_files.first() {
-                    Some(first_file) => self.extract_fallback_cover(first_file, &entry.directory).await,
-                    None => None,
-                }
-            },
-        };
-
         let directory_metadata = fs::metadata(&entry.directory).await?;
         let directory_name = entry
             .directory
@@ -584,19 +570,6 @@ impl ComicScannerService {
             let converted_files =
                 self.convert_pdf_files(volume_pdfs, &volume_archives, "volume").await;
             volume_archives.extend(converted_files);
-
-            let volume_cover = match volume_cover {
-                Some(cover) => Some(cover),
-                None => {
-                    let mut sorted_archives = volume_archives.clone();
-                    sorted_archives.sort();
-
-                    match sorted_archives.first() {
-                        Some(first_file) => self.extract_fallback_cover(first_file, subdirectory).await,
-                        None => None,
-                    }
-                },
-            };
 
             let volume_id = path_hash(subdirectory);
             let volume = VolumeArchive {
@@ -778,49 +751,6 @@ impl ComicScannerService {
                 }
             })
             .await;
-    }
-
-    /// Extrai a primeira página do arquivo de capítulo informado e persiste como `cover.*`
-    /// dentro de `target_dir`. É um fallback best-effort: nunca propaga erro, apenas loga
-    /// um warning e retorna `None` se o arquivo estiver corrompido ou não tiver imagens.
-    async fn extract_fallback_cover(
-        &self, chapter_file: &std::path::Path, target_dir: &std::path::Path,
-    ) -> Option<String> {
-        let file = chapter_file.to_path_buf();
-        let extraction =
-            tokio::task::spawn_blocking(move || cover_extractor::extract_first_page(&file)).await;
-
-        let (bytes, format) = match extraction {
-            Ok(Ok(page)) => page,
-            Ok(Err(error)) => {
-                tracing::warn!(
-                    file = %chapter_file.to_string_lossy(),
-                    error = %error,
-                    "Failed to extract fallback cover"
-                );
-                return None;
-            },
-            Err(join_error) => {
-                tracing::warn!(
-                    file = %chapter_file.to_string_lossy(),
-                    error = %join_error,
-                    "Fallback cover extraction task failed"
-                );
-                return None;
-            },
-        };
-
-        match cover_extractor::persist_cover(target_dir, bytes, format).await {
-            Ok(path) => Some(path),
-            Err(error) => {
-                tracing::warn!(
-                    directory = %target_dir.to_string_lossy(),
-                    error = %error,
-                    "Failed to persist fallback cover"
-                );
-                None
-            },
-        }
     }
 
     fn detect_template_for<'a>(
@@ -1109,7 +1039,7 @@ mod tests {
     }
 
     /// Cria um CBZ válido (zip real) com uma única página de imagem — usado pelos testes
-    /// de fallback de capa, já que `create_comic_dir` grava bytes falsos que não abrem como zip.
+    /// de extração de capa, já que `create_comic_dir` grava bytes falsos que não abrem como zip.
     fn create_valid_cbz(path: &std::path::Path, page_name: &str, page_bytes: &[u8]) {
         use std::io::Write;
 
@@ -1183,7 +1113,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn process_entry_extrai_capa_da_primeira_pagina_quando_pasta_nao_tem_capa() {
+    async fn process_entry_nao_gera_capa_automaticamente_quando_pasta_nao_tem_capa() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -1194,11 +1124,10 @@ mod tests {
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
 
         let comic = find_comic_by_name(&pool, "Berserk").await;
-        let cover_path = comic.cover.expect("cover should have been extracted as fallback");
-
-        assert!(cover_path.ends_with("cover.jpg"));
-        let bytes = fs::read(&cover_path).await.unwrap();
-        assert_eq!(bytes, b"fake page bytes");
+        assert!(
+            comic.cover.is_none(),
+            "scan should no longer auto-generate a cover from the first chapter page"
+        );
     }
 
     #[tokio::test]

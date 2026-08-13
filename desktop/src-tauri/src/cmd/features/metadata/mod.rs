@@ -97,6 +97,36 @@ pub async fn sync_metadata_comic_info(
     Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
 }
 
+/// Comando Tauri para apagar os metadados sincronizados (+ cover/banner + ComicInfo.xml)
+/// de um único quadrinho, revertendo-o ao estado sem sincronização.
+#[command]
+pub async fn clear_comic_metadata(
+    comic_id: String, state: State<'_, MetadataState>,
+) -> Result<(), ErrorPayload> {
+    let parsed_id = comic_id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    state.service.clear_comic_metadata(parsed_id).await.map_err(|err| ErrorPayload::from(&err))
+}
+
+/// Comando Tauri para apagar os metadados sincronizados de múltiplos quadrinhos em lote.
+/// Best-effort: quadrinhos que falharem são pulados. Retorna quantos foram limpos.
+#[command]
+pub async fn clear_comics_metadata_batch(
+    comic_ids: Vec<String>, state: State<'_, MetadataState>,
+) -> Result<usize, ErrorPayload> {
+    let mut parsed_ids = Vec::with_capacity(comic_ids.len());
+    for id in comic_ids {
+        let parsed = id.parse::<i64>().map_err(|err| {
+            ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+        })?;
+        parsed_ids.push(parsed);
+    }
+
+    Ok(state.service.clear_comics_metadata_batch(&parsed_ids).await)
+}
+
 #[command]
 pub async fn sync_all_metadata_mangadex<R: tauri::Runtime>(
     language: String, generate_comic_info: bool, app: tauri::AppHandle<R>,

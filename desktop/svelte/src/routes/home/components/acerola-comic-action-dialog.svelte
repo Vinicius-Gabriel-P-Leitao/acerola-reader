@@ -1,6 +1,7 @@
 <script lang="ts">
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Eraser from '@lucide/svelte/icons/eraser';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import CheckSquare from '@lucide/svelte/icons/check-square';
 	import Square from '@lucide/svelte/icons/square';
@@ -26,6 +27,7 @@
 		bookmarks: Category[];
 		onHide: (ids: (string | number)[]) => Promise<void>;
 		onDelete: (ids: (string | number)[]) => Promise<void>;
+		onClearMetadata: (ids: (string | number)[]) => Promise<void>;
 		onBookmark: (ids: (string | number)[], categoryId: number) => Promise<void>;
 		onSelectAll?: () => void;
 		onClose: () => void;
@@ -38,6 +40,7 @@
 		bookmarks,
 		onHide,
 		onDelete,
+		onClearMetadata,
 		onBookmark,
 		onSelectAll,
 		onClose
@@ -45,9 +48,10 @@
 
 	let showHideDialog = $state(false);
 	let showDeleteDialog = $state(false);
+	let showClearMetadataDialog = $state(false);
 	let showBookmarkMenu = $state(false);
 	let isProcessing = $state(false);
-	let activeAction = $state<'hide' | 'delete' | 'bookmark' | null>(null);
+	let activeAction = $state<'hide' | 'delete' | 'clearMetadata' | 'bookmark' | null>(null);
 	let activeCategoryId = $state<number | null>(null);
 	let searchQuery = $state('');
 
@@ -95,6 +99,24 @@
 		}
 	}
 
+	async function handleClearMetadata() {
+		if (isProcessing) return;
+		isProcessing = true;
+		activeAction = 'clearMetadata';
+		try {
+			await onClearMetadata(selectedIds);
+			showClearMetadataDialog = false;
+			onClose();
+		} catch (err: unknown) {
+			const msg = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
+			error(`Failed to clear comics metadata: ${msg}`);
+			toast.error(m['pages.home.toast.error.clear_metadata']());
+		} finally {
+			isProcessing = false;
+			activeAction = null;
+		}
+	}
+
 	async function handleBookmark(categoryId: number) {
 		if (isProcessing) return;
 		isProcessing = true;
@@ -121,6 +143,10 @@
 
 	function handleDeleteClick() {
 		showDeleteDialog = true;
+	}
+
+	function handleClearMetadataClick() {
+		showClearMetadataDialog = true;
 	}
 </script>
 
@@ -311,7 +337,7 @@
 			{/if}
 		</div>
 
-		<!-- Action Buttons Grid: Hide & Delete -->
+		<!-- Action Buttons Grid: Hide, Clear Metadata & Delete -->
 		<div class="grid w-full grid-cols-1 gap-2.5 pt-1">
 			<!-- Hide Action -->
 			<AcerolaButton
@@ -334,6 +360,30 @@
 				</div>
 				<div class="flex min-w-0 flex-1 flex-col text-left">
 					<span class="truncate">{m['pages.home.actions.hide']()}</span>
+				</div>
+			</AcerolaButton>
+
+			<!-- Clear Metadata Action -->
+			<AcerolaButton
+				ui={{
+					variant: 'outline',
+					class:
+						'w-full justify-start h-12 px-4 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 hover:border-destructive/50 font-semibold text-sm transition-all duration-200 active:scale-[0.98] min-w-0',
+					disabled: isProcessing || selectedIds.length === 0
+				}}
+				events={{ onClick: handleClearMetadataClick }}
+			>
+				<div
+					class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-destructive/15"
+				>
+					{#if isProcessing && activeAction === 'clearMetadata'}
+						<Loader2 size={18} class="shrink-0 animate-spin text-destructive" />
+					{:else}
+						<Eraser size={18} class="shrink-0 text-destructive" />
+					{/if}
+				</div>
+				<div class="flex min-w-0 flex-1 flex-col text-left">
+					<span class="truncate">{m['pages.home.actions.clear_metadata']()}</span>
 				</div>
 			</AcerolaButton>
 
@@ -392,6 +442,24 @@
 	events={{
 		onAction: handleDelete,
 		onCancel: () => (showDeleteDialog = false)
+	}}
+	ui={{ variant: 'destructive' }}
+/>
+
+<!-- Clear Metadata Confirmation Alert Dialog -->
+<AcerolaAlertDialog
+	state={{ open: showClearMetadataDialog }}
+	data={{
+		title: m['pages.home.actions.clear_metadata_confirm.title'](),
+		description: m['pages.home.actions.clear_metadata_confirm.desc']({
+			count: selectedIds.length
+		}),
+		cancelText: m['pages.home.actions.cancel'](),
+		actionText: m['pages.home.actions.clear_metadata_confirm.action']()
+	}}
+	events={{
+		onAction: handleClearMetadata,
+		onCancel: () => (showClearMetadataDialog = false)
 	}}
 	ui={{ variant: 'destructive' }}
 />

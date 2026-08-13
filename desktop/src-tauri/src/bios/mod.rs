@@ -70,6 +70,8 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         comic_cmd::toggle_comic_external_sync,
         comic_cmd::rescan_comic,
         comic_cmd::deep_rescan_comic,
+        comic_cmd::regenerate_comic_cover,
+        comic_cmd::regenerate_volume_covers,
         system_cmd::open_filesystem_access_settings,
         metadata_cmd::sync_metadata_mangadex,
         metadata_cmd::sync_metadata_anilist,
@@ -77,6 +79,8 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         metadata_cmd::sync_all_metadata_anilist,
         metadata_cmd::read_comic_info,
         metadata_cmd::sync_metadata_comic_info,
+        metadata_cmd::clear_comic_metadata,
+        metadata_cmd::clear_comics_metadata_batch,
     ])
 }
 

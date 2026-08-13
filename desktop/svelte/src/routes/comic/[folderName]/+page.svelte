@@ -67,6 +67,17 @@
 
 	let visiblePages = $state<number[]>([]);
 
+	// Sobrescrever cover.* mantém o mesmo path no disco, então o back-end não muda a URL
+	// resolvida — sem isso o <img> nunca re-renderiza e o cache do protocolo asset:// serve
+	// os bytes antigos. Bumped localmente logo após um regenerate bem-sucedido nesta página.
+	let coverCacheBust = $state(0);
+	let volumeCoverCacheBust = $state(0);
+
+	function bustCache(url: string | null, bust: number): string | null {
+		if (!url || !bust) return url;
+		return url + (url.includes('?') ? '&' : '?') + 'v=' + bust;
+	}
+
 	const onBack = () => window.history.back();
 
 	function toReaderChapter(chapter: Chapter | VolumeChapter): ReaderChapterPayload | null {
@@ -251,6 +262,65 @@
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
 			const errorMsg = m['pages.comic.toast.rescan_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
+	async function handleClearMetadata() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			await metadataSync.clearMetadata(id.toString());
+			const successMsg = m['pages.comic.toast.sync.clear_metadata_success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.clear_metadata_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
+	async function handleRegenerateCover() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			const startMsg = m['pages.comic.toast.sync.start_regenerate_cover']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
+			await invoke(HOME_COMMANDS.regenerateComicCover, { id: id.toString() });
+			coverCacheBust = Date.now();
+			const successMsg = m['pages.comic.toast.sync.regenerate_cover_success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.regenerate_cover_error']({ msg });
+			notify.error(errorMsg, { duration: 5000 });
+			toast.error(errorMsg);
+		}
+	}
+
+	async function handleRegenerateVolumeCovers() {
+		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
+		if (!id) return;
+		try {
+			const startMsg = m['pages.comic.toast.sync.start_regenerate_volume_covers']();
+			notify.info(startMsg, { duration: 5000 });
+			toast.info(startMsg);
+			await invoke(HOME_COMMANDS.regenerateVolumeCovers, { id: id.toString() });
+			volumeCoverCacheBust = Date.now();
+			const successMsg = m['pages.comic.toast.sync.regenerate_volume_covers_success']();
+			notify.success(successMsg, { duration: 5000 });
+			toast.success(successMsg);
+			await invalidateAll();
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			const errorMsg = m['pages.comic.toast.regenerate_volume_covers_error']({ msg });
 			notify.error(errorMsg, { duration: 5000 });
 			toast.error(errorMsg);
 		}
@@ -469,11 +539,17 @@
 		}));
 
 		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
-			const volCover = volume.coverUri ? resolveArtworkPath(volume.coverUri) : null;
-			const volBanner = volume.bannerUri ? resolveArtworkPath(volume.bannerUri) : null;
+			const volCover = bustCache(
+				volume.coverUri ? resolveArtworkPath(volume.coverUri) : null,
+				volumeCoverCacheBust
+			);
+			const volBanner = bustCache(
+				volume.bannerUri ? resolveArtworkPath(volume.bannerUri) : null,
+				volumeCoverCacheBust
+			);
 
-			const fallbackCover = resolveCover(item.artwork);
-			const fallbackBanner = resolveBanner(item.artwork);
+			const fallbackCover = bustCache(resolveCover(item.artwork), coverCacheBust);
+			const fallbackBanner = bustCache(resolveBanner(item.artwork), coverCacheBust);
 
 			return {
 				id: volume.id.toString(),
@@ -495,8 +571,8 @@
 			// aqui, pois esse valor reflete a paginação/filtro de volume atualmente aberto.
 			chaptersCount: item.metadata.chapterCount,
 			rating: item.metadata.rating ?? null,
-			cover: resolveCover(item.artwork),
-			banner: resolveBanner(item.artwork),
+			cover: bustCache(resolveCover(item.artwork), coverCacheBust),
+			banner: bustCache(resolveBanner(item.artwork), coverCacheBust),
 			pagesData,
 			volumes,
 			pageSize,
@@ -828,7 +904,10 @@
 								onSyncAnilist: handleSyncAnilist,
 								onSyncComicInfo: handleSyncComicInfo,
 								onRescanComic: handleRescanComic,
-								onDeepRescanComic: handleDeepRescanComic
+								onDeepRescanComic: handleDeepRescanComic,
+								onRegenerateCover: handleRegenerateCover,
+								onRegenerateVolumeCovers: handleRegenerateVolumeCovers,
+								onClearMetadata: handleClearMetadata
 							}}
 						/>
 					{/if}

@@ -106,3 +106,34 @@ pub async fn deep_rescan_comic(id: String, pool: State<'_, SqlitePool>) -> Resul
     let service = ComicService::new(pool.inner().clone());
     service.deep_rescan_comic(parsed_id).await.map_err(|error| ErrorPayload::from(&error))
 }
+
+/// Comando Tauri para gerar a capa de um quadrinho a partir da página do primeiro capítulo.
+#[tauri::command]
+pub async fn regenerate_comic_cover(
+    id: String, pool: State<'_, SqlitePool>,
+) -> Result<(), ErrorPayload> {
+    let parsed_id = id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    let service = ComicService::new(pool.inner().clone());
+    service.regenerate_cover(parsed_id).await.map(|_| ()).map_err(|error| ErrorPayload::from(&error))
+}
+
+/// Comando Tauri para gerar a capa de todos os volumes de um quadrinho a partir da página
+/// do primeiro capítulo de cada volume.
+#[tauri::command]
+pub async fn regenerate_volume_covers(
+    id: String, pool: State<'_, SqlitePool>,
+) -> Result<(), ErrorPayload> {
+    let parsed_id = id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    let service = ComicService::new(pool.inner().clone());
+    service
+        .regenerate_volume_covers(parsed_id)
+        .await
+        .map(|_| ())
+        .map_err(|error| ErrorPayload::from(&error))
+}

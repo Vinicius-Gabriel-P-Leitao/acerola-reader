@@ -161,6 +161,67 @@ impl MetadataService {
         self.parse_and_sync_comic_info(&xml_content, comic_directory_fk).await
     }
 
+    /// Remove por completo os metadados sincronizados e as artes (cover/banner +
+    /// ComicInfo.xml) de um quadrinho, devolvendo-o ao estado "sem metadados" — como se
+    /// nunca tivesse sido sincronizado. Pensada para reverter um sync que trouxe dados
+    /// errados (ex.: match errado no AniList/MangaDex).
+    ///
+    /// A limpeza dos arquivos em disco é best-effort: um arquivo ausente ou bloqueado
+    /// não interrompe a limpeza dos demais nem do banco.
+    pub async fn clear_comic_metadata(&self, comic_directory_fk: i64) -> Result<(), ComicError> {
+        let comic_dir = self
+            .comic_directory_repo
+            .find_by_id(comic_directory_fk)
+            .await?
+            .ok_or(ComicError::NotFound)?;
+
+        let dir_path = PathBuf::from(&comic_dir.path);
+        for file_name in [
+            "ComicInfo.xml",
+            "cover.jpg",
+            "cover.jpeg",
+            "cover.png",
+            "banner.jpg",
+            "banner.jpeg",
+            "banner.png",
+        ] {
+            if let Err(error) = std::fs::remove_file(dir_path.join(file_name)) {
+                if error.kind() != std::io::ErrorKind::NotFound {
+                    tracing::warn!(
+                        file = file_name,
+                        directory = %dir_path.to_string_lossy(),
+                        error = %error,
+                        "Failed to remove file while clearing comic metadata"
+                    );
+                }
+            }
+        }
+
+        self.comic_directory_repo.clear_artwork(comic_directory_fk).await?;
+        self.repo.delete_by_comic_id(comic_directory_fk).await?;
+
+        Ok(())
+    }
+
+    /// Aplica [`Self::clear_comic_metadata`] em lote, prosseguindo mesmo se algum item
+    /// falhar. Retorna quantos quadrinhos foram limpos com sucesso.
+    pub async fn clear_comics_metadata_batch(&self, ids: &[i64]) -> usize {
+        let mut cleared = 0;
+        for &id in ids {
+            match self.clear_comic_metadata(id).await {
+                Ok(()) => cleared += 1,
+                Err(error) => {
+                    tracing::warn!(
+                        comic_directory_fk = id,
+                        error = %error,
+                        "Failed to clear comic metadata"
+                    );
+                },
+            }
+        }
+        cleared
+    }
+
     pub async fn sync_all_comics_mangadex<F>(
         &self, language: &str, generate_comic_info: bool, on_progress: F,
     ) -> Result<(), ComicError>

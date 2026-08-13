@@ -39,6 +39,7 @@ describe('AcerolaComicActionDialog', () => {
 
 	const mockOnHide = vi.fn();
 	const mockOnDelete = vi.fn();
+	const mockOnClearMetadata = vi.fn();
 	const mockOnBookmark = vi.fn();
 	const mockOnClose = vi.fn();
 	const mockOnSelectAll = vi.fn();
@@ -55,6 +56,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -72,6 +74,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onSelectAll: mockOnSelectAll,
 				onClose: mockOnClose
@@ -101,6 +104,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onSelectAll: mockOnSelectAll,
 				onClose: mockOnClose
@@ -123,6 +127,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -147,6 +152,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -169,6 +175,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -190,6 +197,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -212,6 +220,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -234,6 +243,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}
@@ -256,6 +266,7 @@ describe('AcerolaComicActionDialog', () => {
 				bookmarks: mockBookmarks,
 				onHide: mockOnHide,
 				onDelete: mockOnDelete,
+				onClearMetadata: mockOnClearMetadata,
 				onBookmark: mockOnBookmark,
 				onClose: mockOnClose
 			}

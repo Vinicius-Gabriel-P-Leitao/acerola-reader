@@ -8,6 +8,14 @@ vi.mock('$app/state', () => ({
 	page: { url: new URL('http://localhost/home') }
 }));
 
+// jsdom não roda animações CSS/WAAPI de verdade, então as transições in/out do Svelte
+// (fade/scale) nunca terminam sozinhas em teste — sem esse mock, a remoção do item do
+// DOM ao colapsar a dock fica presa aguardando um "animationend" que nunca chega.
+vi.mock('svelte/transition', () => ({
+	fade: () => ({ duration: 0 }),
+	scale: () => ({ duration: 0 })
+}));
+
 const items = [
 	{ href: '/home', label: 'Home', icon: HouseIcon },
 	{ href: '/history', label: 'History', icon: HistoryIcon }

@@ -76,6 +76,15 @@
 		showActionDialog = false;
 	}
 
+	async function handleClearMetadata(ids: (string | number)[]) {
+		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
+		if (validIds.length === 0) return;
+		const count = await summary.clearMetadata(validIds);
+		toast.success(m['pages.home.toast.metadata_cleared']({ count }));
+		selection.exitSelectionMode();
+		showActionDialog = false;
+	}
+
 	async function handleBookmark(ids: (string | number)[], categoryId: number) {
 		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
@@ -332,6 +341,7 @@
 		bookmarks={bookmarkStore.bookmarks}
 		onHide={handleHide}
 		onDelete={handleDelete}
+		onClearMetadata={handleClearMetadata}
 		onBookmark={handleBookmark}
 		onSelectAll={handleSelectAllToggle}
 		onClose={() => (showActionDialog = false)}

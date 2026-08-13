@@ -164,6 +164,7 @@
         "bookmark": "Add Bookmark",
         "hide": "Hide",
         "delete": "Delete",
+        "clear_metadata": "Clear Metadata",
         "cancel": "Cancel",
         "hide_confirm": {
           "title": "Hide Comics",
@@ -174,16 +175,23 @@
           "title": "Delete Comics",
           "desc": "Are you sure you want to delete the selected comic(s)? This will only remove them from the database, physical files will not be changed.",
           "action": "Delete"
+        },
+        "clear_metadata_confirm": {
+          "title": "Clear Metadata",
+          "desc": "This deletes ComicInfo.xml, cover and banner from each of the {count} selected comic(s)' folder, plus all synced metadata in the database. Chapters and volumes are not affected. This action cannot be undone.",
+          "action": "Clear Metadata"
         }
       },
       "toast": {
         "hidden": "{count} comic(s) hidden",
         "deleted": "{count} comic(s) deleted",
         "bookmarked": "{count} comic(s) bookmarked",
+        "metadata_cleared": "{count} comic(s) had their metadata cleared",
         "error": {
           "hide": "Failed to hide comics",
           "delete": "Failed to delete comics",
-          "bookmark": "Failed to bookmark comics"
+          "bookmark": "Failed to bookmark comics",
+          "clear_metadata": "Failed to clear comics metadata"
         }
       }
     },
@@ -260,6 +268,30 @@
             "title": "Rescan entire comic",
             "desc": "Wipes the indexed chapters and volumes and rebuilds everything from the folder."
           }
+        },
+        "cover": {
+          "title": "Cover",
+          "regenerate": {
+            "title": "Use chapter page as cover",
+            "desc": "Extracts the first chapter's first page and sets it as the comic cover, replacing the current one."
+          },
+          "regenerate_volumes": {
+            "title": "Generate volume covers",
+            "desc": "Extracts the first page of each volume's first chapter and sets it as that volume's cover, replacing the current ones."
+          }
+        },
+        "danger_zone": {
+          "title": "Danger Zone",
+          "clear_metadata": {
+            "title": "Clear metadata",
+            "desc": "Deletes ComicInfo.xml, the cover and the banner from the folder, and removes the synced metadata (title, description, authors, AniList/MangaDex) from the database. Useful for reverting a sync that pulled in wrong data.",
+            "confirm": {
+              "title": "Clear this comic's metadata?",
+              "desc": "This deletes ComicInfo.xml, cover and banner from the folder on disk, plus all synced metadata in the database. Chapters and volumes are not affected. This action cannot be undone.",
+              "cancel": "Cancel",
+              "action": "Clear metadata"
+            }
+          }
         }
       },
       "volume": {
@@ -272,6 +304,9 @@
         "anilist_error": "AniList: {msg}",
         "rescan_error": "Error syncing chapters: {msg}",
         "deep_rescan_error": "Error rescanning comic: {msg}",
+        "regenerate_cover_error": "Error generating cover: {msg}",
+        "regenerate_volume_covers_error": "Error generating volume covers: {msg}",
+        "clear_metadata_error": "Error clearing metadata: {msg}",
         "sync": {
           "disabled": "External sync disabled",
           "enabled": "External sync enabled",
@@ -281,7 +316,12 @@
           "start_anilist": "Syncing metadata with AniList...",
           "start_comic_info": "Syncing metadata with ComicInfo.xml...",
           "start_rescan": "Syncing local chapters...",
-          "start_deep_rescan": "Rescanning comic..."
+          "start_deep_rescan": "Rescanning comic...",
+          "start_regenerate_cover": "Generating cover from first page...",
+          "start_regenerate_volume_covers": "Generating volume covers...",
+          "regenerate_cover_success": "Cover updated!",
+          "regenerate_volume_covers_success": "Volume covers updated!",
+          "clear_metadata_success": "Metadata cleared!"
         },
         "comic_info": {
           "error": "ComicInfo.xml: {msg}",

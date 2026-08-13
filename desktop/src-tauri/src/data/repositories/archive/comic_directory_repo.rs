@@ -91,6 +91,39 @@ impl ComicRepository {
         Ok(result)
     }
 
+    /// Atualiza a capa de um quadrinho especifico.
+    pub async fn update_cover(&self, id: i64, cover: &str) -> Result<ComicDirectory, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "UPDATE {} SET cover = ? WHERE id = ? RETURNING {}",
+            table, cols
+        ))
+        .bind(cover)
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Remove a capa e o banner (apenas a referência no banco; não mexe nos arquivos).
+    pub async fn clear_artwork(&self, id: i64) -> Result<ComicDirectory, DbError> {
+        let table = ComicDirectory::table_name();
+        let cols = ComicDirectory::columns().join(", ");
+
+        let result = sqlx::query_as::<_, ComicDirectory>(&format!(
+            "UPDATE {} SET cover = NULL, banner = NULL WHERE id = ? RETURNING {}",
+            table, cols
+        ))
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     /// Atualiza o status de visibilidade de multiplos quadrinhos em batch.
     pub async fn update_hidden_status_batch(
         &self, ids: &[i64], hidden: bool,

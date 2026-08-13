@@ -12,7 +12,8 @@ use crate::infra::{
 
 /// Extrai os bytes da primeira página (em ordem natural) de um arquivo de capítulo CBZ/CBR.
 ///
-/// Usado como fallback de capa quando a pasta do quadrinho/volume não possui um `cover.*` próprio.
+/// Usado pela geração manual de capa (ver [`crate::core::services::comic::ComicService`]) quando
+/// o usuário opta por usar a página do capítulo como capa do quadrinho/volume.
 /// Não deve ser chamado a partir de contexto async diretamente — é uma operação bloqueante de I/O
 /// (mesma razão pela qual o `ReaderService` roda suas leituras de arquivo em `spawn_blocking`).
 pub fn extract_first_page(archive_path: &Path) -> Result<(Vec<u8>, ImageFileFormat), ComicError> {
@@ -31,7 +32,9 @@ pub fn extract_first_page(archive_path: &Path) -> Result<(Vec<u8>, ImageFileForm
     }
 }
 
-/// Persiste os bytes extraídos como `cover.{jpg,png}` dentro do diretório informado.
+/// Persiste os bytes extraídos como `cover.{jpg,png}` dentro do diretório informado,
+/// substituindo qualquer `cover.jpg`/`cover.jpeg`/`cover.png` pré-existente na pasta
+/// (inclusive com uma extensão diferente da gerada agora, para não deixar arquivo órfão).
 pub async fn persist_cover(
     directory: &Path, bytes: Vec<u8>, format: ImageFileFormat,
 ) -> Result<String, ComicError> {
@@ -40,6 +43,15 @@ pub async fn persist_cover(
         ImageFileFormat::Png => "png",
     };
     let cover_path = directory.join(format!("cover.{extension}"));
+
+    for stale_extension in ["jpg", "jpeg", "png"] {
+        if stale_extension == extension {
+            continue;
+        }
+
+        let stale_path = directory.join(format!("cover.{stale_extension}"));
+        let _ = tokio::fs::remove_file(&stale_path).await;
+    }
 
     tokio::fs::write(&cover_path, bytes).await?;
 

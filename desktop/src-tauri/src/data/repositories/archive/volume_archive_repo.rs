@@ -60,6 +60,22 @@ impl VolumeRepository {
         Ok(result)
     }
 
+    /// Atualiza a capa de um volume especifico.
+    pub async fn update_cover(&self, id: i64, cover: &str) -> Result<VolumeArchive, DbError> {
+        let cols = VolumeArchive::columns().join(", ");
+
+        let result = sqlx::query_as::<_, VolumeArchive>(&format!(
+            "UPDATE volume_archive SET cover = ? WHERE id = ? RETURNING {}",
+            cols
+        ))
+        .bind(cover)
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     fn order_clause_for_volumes(criteria: ChapterSortCriteria) -> String {
         match criteria {
             ChapterSortCriteria::NumberAsc => "ORDER BY va.is_special ASC, CAST(va.volume_sort AS INTEGER) ASC, CAST(CASE WHEN va.volume_sort LIKE '%.%' THEN SUBSTR(va.volume_sort, INSTR(va.volume_sort, '.') + 1) ELSE 0 END AS INTEGER) ASC".to_string(),
