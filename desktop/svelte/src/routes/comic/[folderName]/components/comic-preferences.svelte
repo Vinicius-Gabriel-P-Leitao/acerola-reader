@@ -18,6 +18,11 @@
 			onSyncMangadex?: () => void;
 			onSyncAnilist?: () => void;
 			onSyncComicInfo?: () => void;
+			onRescanComic?: () => void;
+			onDeepRescanComic?: () => void;
+			onRegenerateCover?: () => void;
+			onRegenerateVolumeCovers?: () => void;
+			onClearMetadata?: () => Promise<void> | void;
 		};
 	};
 </script>
@@ -26,6 +31,7 @@
 	import AcerolaHeroButton from '$lib/components/acerola-hero-button/acerola-hero-button.svelte';
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
+	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
 	import { m } from '$lib/paraglide/messages';
 
@@ -39,10 +45,17 @@
 	import FileText from '@lucide/svelte/icons/file-text';
 	import MangaDexIcon from '$lib/assets/icons/mangadex.svg?component';
 	import AniListIcon from '$lib/assets/icons/anilist.svg?component';
+	import FolderSync from '@lucide/svelte/icons/folder-sync';
+	import DatabaseZap from '@lucide/svelte/icons/database-zap';
+	import Image from '@lucide/svelte/icons/image';
+	import Layers2 from '@lucide/svelte/icons/layers-2';
+	import Eraser from '@lucide/svelte/icons/eraser';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 
-	let { data, events, state }: ComicPreferencesProps = $props();
+	let { data, events, state: preferences }: ComicPreferencesProps = $props();
+
+	let showClearMetadataDialog = $state(false);
 </script>
 
 <div class="space-y-12">
@@ -71,7 +84,7 @@
 					{#snippet action()}
 						<AcerolaToggleGroup
 							config={{ type: 'single' }}
-							state={{ value: state.volumeViewMode }}
+							state={{ value: preferences.volumeViewMode }}
 							events={{
 								onValueChange: (value) => {
 									if (value === 'cover' || value === 'banner') {
@@ -117,7 +130,7 @@
 								{ value: '100', label: '100' }
 							]
 						}}
-						state={{ value: state.chaptersPerPage }}
+						state={{ value: preferences.chaptersPerPage }}
 						events={{
 							onValueChange: events.onChaptersPerPageChange
 						}}
@@ -148,7 +161,7 @@
 								}))
 							]
 						}}
-						state={{ value: state.bookmarkId ? state.bookmarkId.toString() : 'none' }}
+						state={{ value: preferences.bookmarkId ? preferences.bookmarkId.toString() : 'none' }}
 						events={{
 							onValueChange: (v) => events.onBookmarkChange(v === 'none' ? null : parseInt(v))
 						}}
@@ -180,61 +193,63 @@
 
 				{#snippet action()}
 					<AcerolaSwitch
-						state={{ checked: state.externalSyncEnabled }}
+						state={{ checked: preferences.externalSyncEnabled }}
 						events={{ onCheckedChange: events.onExternalSyncChange }}
 					/>
 				{/snippet}
 			</AcerolaHeroButton>
 
-			<AcerolaHeroButton
-				data={{
-					title: m['pages.config.metadata.mangadex.title'](),
-					description: m['pages.config.metadata.mangadex.desc']()
-				}}
-				events={{ onClick: events.onSyncMangadex }}
-			>
-				{#snippet icon()}
-					<span style="all: unset; display: inline-flex;">
-						<MangaDexIcon class="h-6 w-6 rounded-lg" />
-					</span>
-				{/snippet}
+			{#if preferences.externalSyncEnabled}
+				<AcerolaHeroButton
+					data={{
+						title: m['pages.config.metadata.mangadex.title'](),
+						description: m['pages.config.metadata.mangadex.desc']()
+					}}
+					events={{ onClick: events.onSyncMangadex }}
+				>
+					{#snippet icon()}
+						<span style="all: unset; display: inline-flex;">
+							<MangaDexIcon class="h-6 w-6 rounded-lg" />
+						</span>
+					{/snippet}
 
-				{#snippet action()}
-					<AcerolaButtonIcon
-						ui={{
-							class:
-								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
-						}}
-					>
-						<RefreshCw />
-					</AcerolaButtonIcon>
-				{/snippet}
-			</AcerolaHeroButton>
+					{#snippet action()}
+						<AcerolaButtonIcon
+							ui={{
+								class:
+									'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+							}}
+						>
+							<RefreshCw />
+						</AcerolaButtonIcon>
+					{/snippet}
+				</AcerolaHeroButton>
 
-			<AcerolaHeroButton
-				data={{
-					title: m['pages.config.metadata.anilist.title'](),
-					description: m['pages.config.metadata.anilist.desc']()
-				}}
-				events={{ onClick: events.onSyncAnilist }}
-			>
-				{#snippet icon()}
-					<span style="all: unset; display: inline-flex;">
-						<AniListIcon class="h-6 w-6 rounded-lg" />
-					</span>
-				{/snippet}
+				<AcerolaHeroButton
+					data={{
+						title: m['pages.config.metadata.anilist.title'](),
+						description: m['pages.config.metadata.anilist.desc']()
+					}}
+					events={{ onClick: events.onSyncAnilist }}
+				>
+					{#snippet icon()}
+						<span style="all: unset; display: inline-flex;">
+							<AniListIcon class="h-6 w-6 rounded-lg" />
+						</span>
+					{/snippet}
 
-				{#snippet action()}
-					<AcerolaButtonIcon
-						ui={{
-							class:
-								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
-						}}
-					>
-						<RefreshCw />
-					</AcerolaButtonIcon>
-				{/snippet}
-			</AcerolaHeroButton>
+					{#snippet action()}
+						<AcerolaButtonIcon
+							ui={{
+								class:
+									'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+							}}
+						>
+							<RefreshCw />
+						</AcerolaButtonIcon>
+					{/snippet}
+				</AcerolaHeroButton>
+			{/if}
 
 			<AcerolaHeroButton
 				data={{
@@ -262,4 +277,164 @@
 			</AcerolaHeroButton>
 		</div>
 	</section>
+
+	<!-- File Sync Section -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<FolderSync size={16} />
+			{m['pages.comic.preferences.file_sync.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.file_sync.rescan.title'](),
+					description: m['pages.comic.preferences.file_sync.rescan.desc']()
+				}}
+				events={{ onClick: events.onRescanComic }}
+			>
+				{#snippet icon()}
+					<FolderSync class="text-chart-1" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.file_sync.deep_rescan.title'](),
+					description: m['pages.comic.preferences.file_sync.deep_rescan.desc']()
+				}}
+				events={{ onClick: events.onDeepRescanComic }}
+			>
+				{#snippet icon()}
+					<DatabaseZap class="text-destructive" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+		</div>
+	</section>
+
+	<!-- Cover Section -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<Image size={16} />
+			{m['pages.comic.preferences.cover.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.cover.regenerate.title'](),
+					description: m['pages.comic.preferences.cover.regenerate.desc']()
+				}}
+				events={{ onClick: events.onRegenerateCover }}
+			>
+				{#snippet icon()}
+					<Image class="text-chart-2" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			{#if data?.hasVolumeStructure}
+				<AcerolaHeroButton
+					data={{
+						title: m['pages.comic.preferences.cover.regenerate_volumes.title'](),
+						description: m['pages.comic.preferences.cover.regenerate_volumes.desc']()
+					}}
+					events={{ onClick: events.onRegenerateVolumeCovers }}
+				>
+					{#snippet icon()}
+						<Layers2 class="text-chart-3" size={24} />
+					{/snippet}
+
+					{#snippet action()}
+						<AcerolaButtonIcon
+							ui={{
+								class:
+									'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+							}}
+						>
+							<RefreshCw />
+						</AcerolaButtonIcon>
+					{/snippet}
+				</AcerolaHeroButton>
+			{/if}
+		</div>
+	</section>
+
+	<!-- Danger Zone -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<Eraser size={16} />
+			{m['pages.comic.preferences.danger_zone.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.comic.preferences.danger_zone.clear_metadata.title'](),
+					description: m['pages.comic.preferences.danger_zone.clear_metadata.desc']()
+				}}
+				events={{ onClick: () => (showClearMetadataDialog = true) }}
+			>
+				{#snippet icon()}
+					<Eraser class="text-destructive" size={24} />
+				{/snippet}
+			</AcerolaHeroButton>
+		</div>
+	</section>
 </div>
+
+<AcerolaAlertDialog
+	state={{ open: showClearMetadataDialog }}
+	data={{
+		title: m['pages.comic.preferences.danger_zone.clear_metadata.confirm.title'](),
+		description: m['pages.comic.preferences.danger_zone.clear_metadata.confirm.desc'](),
+		cancelText: m['pages.comic.preferences.danger_zone.clear_metadata.confirm.cancel'](),
+		actionText: m['pages.comic.preferences.danger_zone.clear_metadata.confirm.action']()
+	}}
+	events={{
+		onAction: async () => {
+			await events.onClearMetadata?.();
+			showClearMetadataDialog = false;
+		},
+		onCancel: () => (showClearMetadataDialog = false)
+	}}
+	ui={{ variant: 'destructive' }}
+/>

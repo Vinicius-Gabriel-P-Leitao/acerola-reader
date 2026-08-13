@@ -29,6 +29,7 @@
 				bookmarks={mockBookmarks}
 				onHide={async () => {}}
 				onDelete={async () => {}}
+				onClearMetadata={async () => {}}
 				onBookmark={async () => {}}
 				onClose={() => {}}
 			/>
@@ -50,6 +51,7 @@
 				bookmarks={mockBookmarks}
 				onHide={async () => {}}
 				onDelete={async () => {}}
+				onClearMetadata={async () => {}}
 				onBookmark={async () => {}}
 				onClose={() => {}}
 			/>
@@ -71,6 +73,7 @@
 				bookmarks={mockBookmarks}
 				onHide={async () => {}}
 				onDelete={async () => {}}
+				onClearMetadata={async () => {}}
 				onBookmark={async () => {}}
 				onClose={() => {}}
 			/>
@@ -92,6 +95,7 @@
 				bookmarks={mockBookmarks}
 				onHide={async () => {}}
 				onDelete={async () => {}}
+				onClearMetadata={async () => {}}
 				onBookmark={async () => {}}
 				onClose={() => {}}
 			/>
@@ -113,6 +117,7 @@
 				bookmarks={[]}
 				onHide={async () => {}}
 				onDelete={async () => {}}
+				onClearMetadata={async () => {}}
 				onBookmark={async () => {}}
 				onClose={() => {}}
 			/>

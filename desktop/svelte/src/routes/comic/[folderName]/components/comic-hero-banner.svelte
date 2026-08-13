@@ -3,6 +3,8 @@
 		data?: {
 			banner?: string | null;
 			genres?: string[];
+			rating?: number | null;
+			chapterCount?: number;
 		};
 	};
 </script>
@@ -10,7 +12,6 @@
 <script lang="ts">
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Star from '@lucide/svelte/icons/star';
-	import List from '@lucide/svelte/icons/list';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { m } from '$lib/paraglide/messages';
 
@@ -40,19 +41,25 @@
 	<!-- Floating stats and Genres on Banner -->
 	<div class="absolute right-6 bottom-6 left-6 flex flex-col gap-4 lg:left-16">
 		<div class="flex shrink-0 gap-4 lg:gap-6">
-			<div
-				class="flex items-center gap-3 rounded-2xl border border-surface/30 bg-surface/20 px-6 py-3 backdrop-blur-xl"
-			>
-				<Star size={20} class="fill-yellow-400 text-yellow-400" />
-				<span class="text-xl font-black tracking-tighter">9.8</span>
-			</div>
+			{#if data?.rating != null}
+				<div
+					class="flex items-center gap-3 rounded-2xl border border-surface/30 bg-surface/20 px-6 py-3 backdrop-blur-xl"
+				>
+					<Star size={20} class="fill-yellow-400 text-yellow-400" />
+					<span class="text-xl font-black tracking-tighter">{data.rating.toFixed(1)}</span>
+				</div>
+			{/if}
 
-			<div
-				class="flex items-center gap-3 rounded-2xl border border-surface/30 bg-surface/20 px-6 py-3 backdrop-blur-xl"
-			>
-				<List size={20} class="text-primary" />
-				<span class="text-xl font-black tracking-tighter">{m['pages.comic.banner.popular']()}</span>
-			</div>
+			{#if data?.chapterCount != null}
+				<div
+					class="flex items-center gap-3 rounded-2xl border border-surface/30 bg-surface/20 px-6 py-3 backdrop-blur-xl"
+				>
+					<BookOpen size={20} class="text-primary" />
+					<span class="text-xl font-black tracking-tighter"
+						>{m['pages.comic.metadata.chapters.count']({ count: data.chapterCount })}</span
+					>
+				</div>
+			{/if}
 		</div>
 
 		{#if genres.length > 0}

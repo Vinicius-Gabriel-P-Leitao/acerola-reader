@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     fs::File,
     io::Read,
     num::NonZeroUsize,
@@ -16,7 +15,10 @@ use crate::{
     },
     infra::{
         error::ReaderError,
-        pattern::{archive_format::ArchiveFormat, image_file_format::ImageFileFormat},
+        pattern::{
+            archive_format::ArchiveFormat, image_file_format::ImageFileFormat,
+            natural_sort::natural_cmp,
+        },
     },
 };
 
@@ -482,40 +484,6 @@ fn sort_page_paths(entries: &mut [PathBuf]) {
     entries.sort_by(|left, right| natural_cmp(&left.to_string_lossy(), &right.to_string_lossy()));
 }
 
-fn natural_cmp(left: &str, right: &str) -> Ordering {
-    natural_key(left).cmp(&natural_key(right))
-}
-
-fn natural_key(value: &str) -> String {
-    let mut output = String::with_capacity(value.len());
-    let mut digits = String::new();
-
-    for character in value.chars() {
-        if character.is_ascii_digit() {
-            digits.push(character);
-            continue;
-        }
-
-        flush_digits(&mut output, &mut digits);
-        output.push(character.to_ascii_lowercase());
-    }
-
-    flush_digits(&mut output, &mut digits);
-    output
-}
-
-fn flush_digits(output: &mut String, digits: &mut String) {
-    if digits.is_empty() {
-        return;
-    }
-
-    let trimmed = digits.trim_start_matches('0');
-    let normalized = if trimmed.is_empty() { "0" } else { trimmed };
-
-    output.push_str(&format!("{normalized:0>20}"));
-    digits.clear();
-}
-
 fn mime_type_for(name: &str) -> Result<String, ReaderError> {
     ImageFileFormat::from_path(Path::new(name))
         .map(|format| format.mime_type().to_string())
@@ -532,8 +500,8 @@ mod tests {
         CompressionMethod,
     };
 
-    use super::{natural_key, window_indices, ReaderError, ReaderService};
-    use crate::cmd::events::reader::ReaderChapterPayload;
+    use super::{window_indices, ReaderError, ReaderService};
+    use crate::{cmd::events::reader::ReaderChapterPayload, infra::pattern::natural_sort::natural_key};
 
     fn chapter(path: &Path) -> ReaderChapterPayload {
         ReaderChapterPayload {

@@ -130,6 +130,19 @@ impl ChapterRepository {
             .map_err(Into::into)
     }
 
+    /// Remove todos os capítulos vinculados a um quadrinho específico.
+    ///
+    /// Usado pelo rescan profundo, já que o cascade de FK não roda em runtime
+    /// (`PRAGMA foreign_keys` não é habilitado no pool de produção).
+    pub async fn delete_by_comic(&self, comic_directory_fk: i64) -> Result<u64, DbError> {
+        let result = sqlx::query("DELETE FROM chapter_archive WHERE comic_directory_fk = ?")
+            .bind(comic_directory_fk)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(result.rows_affected())
+    }
+
     /// Retorna todos os IDs de capítulo de um quadrinho, sem paginação.
     pub async fn find_all_ids_by_directory(&self, comic_directory_fk: i64) -> Result<Vec<i64>, DbError> {
         let rows =
@@ -337,6 +350,33 @@ mod tests {
             "Deveria ter retornado NotFound, mas veio: {:?}",
             result
         );
+    }
+
+    #[tokio::test]
+    async fn teste_delete_by_comic_remove_apenas_capitulos_do_comic() {
+        let pool = setup_test_db_with_comic().await;
+        sqlx::query(
+            "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
+             VALUES (2, 'Other', '/other', 0, 0, 0)",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let repo = ChapterRepository::new(pool);
+        repo.base.insert(&chapter(1, "1")).await.unwrap();
+        repo.base.insert(&chapter(2, "2")).await.unwrap();
+        repo.base
+            .insert(&ChapterArchive { comic_directory_fk: 2, ..chapter(3, "1") })
+            .await
+            .unwrap();
+
+        let removed = repo.delete_by_comic(1).await.unwrap();
+        assert_eq!(removed, 2);
+
+        let remaining = repo.base.find_all().await.unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].comic_directory_fk, 2);
     }
 
     #[tokio::test]

@@ -32,6 +32,9 @@ pub struct ComicSummaryMetadata {
     pub description: Option<String>,
     pub status: Option<String>,
     pub author: Option<String>,
+    /// Nota do AniList, já convertida para escala 0-10. `None` quando o quadrinho
+    /// não tem nota (não sincronizado via AniList, ou obra ainda sem votos).
+    pub rating: Option<f64>,
 }
 
 #[derive(Clone, Serialize)]
@@ -76,7 +79,7 @@ pub struct ComicSummaryPayload {
 impl ComicSummaryPayload {
     pub fn from(
         comics: Vec<ComicSummaryView>, counts: HashMap<i64, i64>,
-        metadata_map: HashMap<i64, (ComicMetadata, Option<AuthorMetadata>)>,
+        metadata_map: HashMap<i64, (ComicMetadata, Option<AuthorMetadata>, Option<i64>)>,
         bookmark_map: HashMap<i64, Category>,
     ) -> Self {
         let items = comics
@@ -101,7 +104,8 @@ impl ComicSummaryPayload {
 impl ComicSummaryItem {
     pub fn from_view(
         view: ComicSummaryView, chapter_count: i64,
-        full_metadata: Option<(ComicMetadata, Option<AuthorMetadata>)>, bookmark: Option<Category>,
+        full_metadata: Option<(ComicMetadata, Option<AuthorMetadata>, Option<i64>)>,
+        bookmark: Option<Category>,
     ) -> Self {
         Self {
             relations: ComicSummaryRelations {
@@ -114,11 +118,14 @@ impl ComicSummaryItem {
                 external_sync: view.external_sync,
                 active_source: view.active_source,
                 chapter_count,
-                description: full_metadata.as_ref().map(|(m, _)| m.description.clone()),
-                status: full_metadata.as_ref().map(|(m, _)| m.status.clone()),
+                description: full_metadata.as_ref().map(|(m, _, _)| m.description.clone()),
+                status: full_metadata.as_ref().map(|(m, _, _)| m.status.clone()),
                 author: full_metadata
                     .as_ref()
-                    .and_then(|(_, a)| a.as_ref().map(|a| a.name.clone())),
+                    .and_then(|(_, a, _)| a.as_ref().map(|a| a.name.clone())),
+                rating: full_metadata
+                    .as_ref()
+                    .and_then(|(_, _, rating)| rating.map(|score| score as f64 / 10.0)),
             },
             artwork: ComicSummaryArtwork { cover: view.folder_cover, banner: view.folder_banner },
             bookmark: bookmark.map(Into::into),

@@ -4,6 +4,7 @@ import { debug } from '@tauri-apps/plugin-log';
 import { toast } from 'svelte-sonner';
 import { HOME_COMMANDS } from '$lib/contracts/home/home.commands';
 import { HOME_EVENTS } from '$lib/contracts/home/home.events';
+import { METADATA_COMMANDS } from '$lib/contracts/metadata/metadata.commands';
 import type {
 	ComicSummaryPayload,
 	MetadataSource,
@@ -135,6 +136,21 @@ export function useComicSummary() {
 		}
 	}
 
+	async function clearMetadata(ids: (string | number)[]): Promise<number> {
+		try {
+			// IDs são hashes i64 que podem passar de Number.MAX_SAFE_INTEGER — mandar como
+			// string preserva precisão (Number(id) arredondaria e apagaria o quadrinho errado).
+			const count = await invoke<number>(METADATA_COMMANDS.clearComicsMetadataBatch, {
+				comicIds: ids.map(String)
+			});
+			await fetch(lastSearch);
+			return count;
+		} catch (err) {
+			error(`Failed to clear comics metadata: ${err}`);
+			throw err;
+		}
+	}
+
 	function setSorting(newSortBy: SortBy, newSortOrder: SortOrder): void {
 		sortBy = newSortBy;
 		sortOrder = newSortOrder;
@@ -153,6 +169,7 @@ export function useComicSummary() {
 		fetch,
 		updateVisibility,
 		deleteComics,
+		clearMetadata,
 		setSorting,
 		setFilters,
 		hasActiveFilters,

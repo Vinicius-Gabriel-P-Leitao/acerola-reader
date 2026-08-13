@@ -28,6 +28,13 @@ impl ChapterScannerService {
         Self { chapter_repo: ChapterRepository::new(pool) }
     }
 
+    /// Remove todos os capítulos indexados de um quadrinho. Usado pelo rescan profundo
+    /// para invalidar o estado atual antes de re-escanear a pasta do zero.
+    pub async fn delete_by_comic(&self, comic_id: i64) -> Result<(), ComicError> {
+        self.chapter_repo.delete_by_comic(comic_id).await?;
+        Ok(())
+    }
+
     /// Indexa um único arquivo de capítulo no banco de dados.
     ///
     /// Extrai nome, hash rápido (`nome|tamanho|modificado`) e `chapter_sort` a partir do

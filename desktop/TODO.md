@@ -30,14 +30,14 @@
 - [x] **Configurar paginação da lista de capítulos** - Parametrização customizável gravada nas preferências que quebra requisições grandes pro Rust.
 - [x] **Atribuir categoria ao quadrinho** - Modal/Dropdown no Svelte que dispara o update do quadrinho no banco.
 - [x] **Ativar/desativar sync externo por quadrinho** - Toggle na UI repassado para o backend que anula ou permite metadados online específicos.
-- [ ] **Sincronizar capítulos locais (rescaneamento manual/folder watch)** - Chamada de comando Tauri que instrui o Rust a recarregar apenas essa pasta pontual do File System.
-- [ ] **Reescanear quadrinho completo** - Invalida metadados atuais do banco e extrai tudo de novo daquele subdiretório.
+- [x] **Sincronizar capítulos locais (rescaneamento manual/folder watch)** - Chamada de comando Tauri que instrui o Rust a recarregar apenas essa pasta pontual do File System.
+- [x] **Reescanear quadrinho completo** - Invalida metadados atuais do banco e extrai tudo de novo daquele subdiretório.
 - [x] **Sincronizar metadados pelo MangaDex** - Endpoint no Rust com um HTTP Client para buscar cover/banner/tags da API externa.
 - [x] **Sincronizar metadados pelo AniList** - Endpoint no Rust utilizando queries GraphQL pro serviço.
 - [x] **Sincronizar metadados pelo ComicInfo.xml** - O Rust decodifica e carrega o arquivo XML para popular o banco interno.
 - [x] **Sincronizar capítulos pelo ComicInfo.xml** - O Rust associa as `Pages` e informações estruturais de capítulo via parse do XML.
-- [ ] **(validar se faz sentido nesse caso) Extrair primeira página de capítulo como capa do quadrinho** - Rust abre o `cbz/rar`, processa a page 0 e salva em disco como miniatura persistente.
-- [ ] **(validar se faz sentido nesse caso) Extrair capa do volume a partir do primeiro capítulo do volume** - O Rust resolve o primeiro item do volume local e exporta uma thumb isolada na pasta correspondente.
+- [x] **(validar se faz sentido nesse caso) Extrair primeira página de capítulo como capa do quadrinho** - Rust abre o `cbz/rar`, processa a page 0 e salva em disco como miniatura persistente.
+- [x] **(validar se faz sentido nesse caso) Extrair capa do volume a partir do primeiro capítulo do volume** - O Rust resolve o primeiro item do volume local e exporta uma thumb isolada na pasta correspondente.
 
 ---
 

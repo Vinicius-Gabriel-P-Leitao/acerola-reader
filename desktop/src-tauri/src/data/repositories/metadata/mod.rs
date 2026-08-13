@@ -2,7 +2,9 @@ use sqlx::SqlitePool;
 
 use crate::{
     data::{
-        models::metadata::{author::AuthorMetadata, comic::ComicMetadata},
+        models::metadata::{
+            anilist_source::AnilistSource, author::AuthorMetadata, comic::ComicMetadata,
+        },
         repositories::{Entity, Repository},
     },
     infra::error::DbError,
@@ -12,6 +14,7 @@ use crate::{
 pub struct MetadataRepository {
     pub comic_repo: Repository<ComicMetadata>,
     pub author_repo: Repository<AuthorMetadata>,
+    pub anilist_repo: Repository<AnilistSource>,
     pool: SqlitePool,
 }
 
@@ -20,6 +23,7 @@ impl MetadataRepository {
         Self {
             comic_repo: Repository::new(pool.clone()),
             author_repo: Repository::new(pool.clone()),
+            anilist_repo: Repository::new(pool.clone()),
             pool,
         }
     }
@@ -56,6 +60,56 @@ impl MetadataRepository {
         .await?;
 
         Ok(result)
+    }
+
+    /// Busca a linha de dados do AniList (nota, popularidade) vinculada a um `comic_metadata`.
+    pub async fn get_anilist_source_by_comic_metadata_id(
+        &self, metadata_id: i64,
+    ) -> Result<Option<AnilistSource>, DbError> {
+        let table = AnilistSource::table_name();
+        let cols = AnilistSource::columns().join(", ");
+
+        let result = sqlx::query_as::<_, AnilistSource>(&format!(
+            "SELECT {} FROM {} WHERE comic_metadata_fk = ?",
+            cols, table
+        ))
+        .bind(metadata_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Remove por completo os metadados sincronizados de um quadrinho: o registro
+    /// principal em `comic_metadata` e todas as tabelas filhas (autores e fontes
+    /// externas). O cascade de FK não roda em runtime (ver comentário em
+    /// `VolumeRepository::delete_by_comic`), então cada tabela filha precisa ser
+    /// limpa explicitamente antes de apagar o registro pai. No-op se o quadrinho
+    /// nunca teve metadados sincronizados.
+    pub async fn delete_by_comic_id(&self, comic_directory_fk: i64) -> Result<(), DbError> {
+        let Some(metadata) = self.get_comic_metadata_by_comic_id(comic_directory_fk).await?
+        else {
+            return Ok(());
+        };
+
+        sqlx::query("DELETE FROM author WHERE comic_metadata_fk = ?")
+            .bind(metadata.id)
+            .execute(&self.pool)
+            .await?;
+
+        sqlx::query("DELETE FROM anilist_source WHERE comic_metadata_fk = ?")
+            .bind(metadata.id)
+            .execute(&self.pool)
+            .await?;
+
+        sqlx::query("DELETE FROM mangadex_source WHERE comic_metadata_fk = ?")
+            .bind(metadata.id)
+            .execute(&self.pool)
+            .await?;
+
+        self.comic_repo.delete(metadata.id).await?;
+
+        Ok(())
     }
 }
 

@@ -309,6 +309,91 @@ impl ComicScannerService {
         Ok(())
     }
 
+    /// Reescaneia pontualmente um único quadrinho já indexado, sem comparar contra o
+    /// restante da biblioteca — apenas insere/atualiza o que for encontrado na pasta.
+    ///
+    /// Diferente de [`Self::incremental_scan`], não remove capítulos cujo arquivo tenha
+    /// sumido do disco (mesma limitação que o scan de biblioteca inteira já tem hoje para
+    /// pastas que continuam existindo). Para invalidar tudo, veja [`Self::deep_rescan_comic`].
+    pub async fn rescan_comic(
+        &self, comic: ComicDirectory, on_progress: impl FnMut(String),
+        on_converting: impl FnMut(String),
+    ) -> Result<(), ComicError> {
+        self.scan_comic_path(PathBuf::from(&comic.path), on_progress, on_converting).await
+    }
+
+    /// Invalida e reescaneia um único quadrinho do zero: apaga seus capítulos e volumes
+    /// indexados antes de re-processar a pasta, garantindo que nada órfão sobre no banco.
+    pub async fn deep_rescan_comic(
+        &self, comic: ComicDirectory, on_progress: impl FnMut(String),
+        on_converting: impl FnMut(String),
+    ) -> Result<(), ComicError> {
+        self.chapter_scanner.delete_by_comic(comic.id).await?;
+        self.volume_repo.delete_by_comic(comic.id).await?;
+
+        self.scan_comic_path(PathBuf::from(&comic.path), on_progress, on_converting).await
+    }
+
+    /// Núcleo compartilhado de [`Self::rescan_comic`] e [`Self::deep_rescan_comic`]: processa
+    /// apenas as entradas encontradas dentro de `path`, sem tocar em quadrinhos de fora dele.
+    async fn scan_comic_path(
+        &self, path: PathBuf, mut on_progress: impl FnMut(String),
+        mut on_converting: impl FnMut(String),
+    ) -> Result<(), ComicError> {
+        self.path_guard.execute(&path, |_guard_path| -> Result<(), String> { Ok(()) })?;
+
+        let templates = self.template_repo.base.find_all().await?;
+        let mut entries = self.collect_entries(path).await?;
+        entries.sort_by_key(|entry| entry.directory.clone());
+
+        self.pre_convert_all_pdfs(&entries, &mut on_converting).await;
+
+        let repository = self.comic_repo.clone();
+        let mut processed_paths: Vec<String> = vec![];
+
+        for entry in entries {
+            let directory_path = entry.directory.to_string_lossy().to_string();
+
+            if processed_paths.iter().any(|processed| {
+                std::path::Path::new(&directory_path).starts_with(processed)
+                    && directory_path != *processed
+            }) {
+                continue;
+            }
+
+            let repo_clone = repository.clone();
+            let is_comic = match self
+                .process_entry(entry, &templates, |comic| async move {
+                    match repo_clone.base.insert(&comic).await {
+                        Ok(saved) => Ok(saved),
+                        Err(DbError::UniqueViolation) => {
+                            repo_clone.base.update(&comic).await.map_err(ComicError::from)
+                        },
+                        Err(error) => Err(ComicError::from(error)),
+                    }
+                })
+                .await
+            {
+                Ok(processed_successfully) => processed_successfully,
+                Err(processing_error) => {
+                    tracing::error!(
+                        "Error processing comic in {}: {}",
+                        directory_path,
+                        processing_error
+                    );
+                    false
+                },
+            };
+
+            if is_comic {
+                on_progress(directory_path.clone());
+                processed_paths.push(directory_path);
+            }
+        }
+
+        Ok(())
+    }
+
     /// Coleta entradas de diretório recursivamente através do ScannerEngine.
     async fn collect_entries(&self, path: PathBuf) -> Result<Vec<DirectoryEntry>, ComicError> {
         let (tx, mut rx) = mpsc::channel(32);
@@ -701,9 +786,12 @@ mod tests {
 
     use super::ComicScannerService;
     use crate::{
-        data::repositories::archive::{
-            chapter_archive_repo::ChapterRepository, comic_directory_repo::ComicRepository,
-            volume_archive_repo::VolumeRepository,
+        data::{
+            models::archive::comic_directory::ComicDirectory,
+            repositories::archive::{
+                chapter_archive_repo::ChapterRepository, comic_directory_repo::ComicRepository,
+                volume_archive_repo::VolumeRepository,
+            },
         },
         tests::utils::setup_test_db::{reset_comics_last_modified, setup_test_db},
     };
@@ -948,5 +1036,115 @@ mod tests {
         assert_eq!(count_comics(&pool).await, 1, "Comic should be indexed");
         assert_eq!(count_chapters(&pool).await, 2, "Both CBZs should be indexed as chapters");
         assert_eq!(count_volumes(&pool).await, 1, "Volume should be indexed");
+    }
+
+    /// Cria um CBZ válido (zip real) com uma única página de imagem — usado pelos testes
+    /// de extração de capa, já que `create_comic_dir` grava bytes falsos que não abrem como zip.
+    fn create_valid_cbz(path: &std::path::Path, page_name: &str, page_bytes: &[u8]) {
+        use std::io::Write;
+
+        let file = std::fs::File::create(path).unwrap();
+        let mut archive = zip::ZipWriter::new(file);
+        let options = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+
+        archive.start_file(page_name, options).unwrap();
+        archive.write_all(page_bytes).unwrap();
+        archive.finish().unwrap();
+    }
+
+    async fn find_comic_by_name(pool: &sqlx::SqlitePool, name: &str) -> ComicDirectory {
+        ComicRepository::new(pool.clone()).find_by_name(name).await.unwrap().unwrap()
+    }
+
+    #[tokio::test]
+    async fn rescan_comic_nao_afeta_outros_comics_da_biblioteca() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        let berserk_dir = create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+        service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
+        assert_eq!(count_comics(&pool).await, 2);
+
+        fs::write(berserk_dir.join("Ch. 2.cbz"), b"fake cbz").await.unwrap();
+        let berserk = find_comic_by_name(&pool, "Berserk").await;
+
+        service.rescan_comic(berserk, |_| {}, |_| {}).await.unwrap();
+
+        assert_eq!(count_comics(&pool).await, 2, "Other comics must remain untouched");
+        assert_eq!(count_chapters(&pool).await, 3, "New chapter file must be picked up");
+    }
+
+    #[tokio::test]
+    async fn deep_rescan_comic_remove_capitulo_apagado_do_disco() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        let berserk_dir = create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
+        service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
+        assert_eq!(count_chapters(&pool).await, 2);
+
+        fs::remove_file(berserk_dir.join("Ch. 2.cbz")).await.unwrap();
+        let berserk = find_comic_by_name(&pool, "Berserk").await;
+
+        service.deep_rescan_comic(berserk, |_| {}, |_| {}).await.unwrap();
+
+        assert_eq!(
+            count_chapters(&pool).await,
+            1,
+            "Orphaned chapter row must be removed by the deep rescan"
+        );
+    }
+
+    #[tokio::test]
+    async fn deep_rescan_comic_nao_afeta_outros_comics_da_biblioteca() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
+        create_comic_dir(&root, "Vinland Saga", &["Ch. 1.cbz"]).await;
+        service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
+
+        let berserk = find_comic_by_name(&pool, "Berserk").await;
+        service.deep_rescan_comic(berserk, |_| {}, |_| {}).await.unwrap();
+
+        assert_eq!(count_comics(&pool).await, 2, "Other comics must remain untouched");
+    }
+
+    #[tokio::test]
+    async fn process_entry_nao_gera_capa_automaticamente_quando_pasta_nao_tem_capa() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        let comic_dir = root.path().join("Berserk");
+        fs::create_dir_all(&comic_dir).await.unwrap();
+        create_valid_cbz(&comic_dir.join("Ch. 1.cbz"), "001.jpg", b"fake page bytes");
+
+        service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
+
+        let comic = find_comic_by_name(&pool, "Berserk").await;
+        assert!(
+            comic.cover.is_none(),
+            "scan should no longer auto-generate a cover from the first chapter page"
+        );
+    }
+
+    #[tokio::test]
+    async fn process_entry_nao_sobrescreve_capa_existente() {
+        let root = tempfile::tempdir().unwrap();
+        let (service, pool) = setup(&root).await;
+
+        let comic_dir = root.path().join("Berserk");
+        fs::create_dir_all(&comic_dir).await.unwrap();
+        fs::write(comic_dir.join("cover.jpg"), b"real cover").await.unwrap();
+        create_valid_cbz(&comic_dir.join("Ch. 1.cbz"), "001.jpg", b"fake page bytes");
+
+        service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
+
+        let comic = find_comic_by_name(&pool, "Berserk").await;
+        let cover_path = comic.cover.expect("existing cover should still be set");
+        let bytes = fs::read(&cover_path).await.unwrap();
+        assert_eq!(bytes, b"real cover", "existing cover.jpg must not be overwritten");
     }
 }

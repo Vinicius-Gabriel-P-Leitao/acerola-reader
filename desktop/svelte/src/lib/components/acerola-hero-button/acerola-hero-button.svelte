@@ -32,7 +32,7 @@
 
 <Item.Root
 	class={cn(
-		'group flex items-center justify-between rounded-3xl border border-border bg-card p-6 transition-colors',
+		'group flex min-w-0 items-center justify-between rounded-3xl border border-border bg-card p-6 transition-colors',
 		events?.onClick ? 'cursor-pointer hover:border-primary/50' : '',
 		ui?.class
 	)}

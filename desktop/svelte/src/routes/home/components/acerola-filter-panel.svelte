@@ -1,5 +1,9 @@
 <script module lang="ts">
 	import type { MetadataSource, SortBy, SortOrder } from '$lib/contracts/home/home.payloads';
+	import type { Category } from '$lib/contracts/bookmarks/bookmarks.payloads';
+
+	/** 'all' shows every comic, 'none' shows comics without a bookmark, a number filters by category id. */
+	export type BookmarkFilter = 'all' | 'none' | number;
 
 	export type FilterPanelProps = {
 		state?: { open?: boolean };
@@ -8,6 +12,8 @@
 			sortOrder: SortOrder;
 			showHidden: boolean;
 			metadataSource: MetadataSource;
+			bookmarkFilter: BookmarkFilter;
+			bookmarks: Category[];
 		};
 		events: {
 			onApply: (params: {
@@ -15,6 +21,7 @@
 				sortOrder: SortOrder;
 				showHidden: boolean;
 				metadataSource: MetadataSource;
+				bookmarkFilter: BookmarkFilter;
 			}) => void;
 			onClose: () => void;
 		};
@@ -30,6 +37,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
 	import Eye from '@lucide/svelte/icons/eye';
+	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 
 	let { state: controlState, data, events }: FilterPanelProps = $props();
@@ -38,6 +46,7 @@
 	let localSortOrder = $state<SortOrder>('asc');
 	let localShowHidden = $state(false);
 	let localMetadataSource = $state<MetadataSource>('all');
+	let localBookmarkFilter = $state<BookmarkFilter>('all');
 	let wasOpen = false;
 
 	$effect(() => {
@@ -47,6 +56,7 @@
 			localSortOrder = data.sortOrder;
 			localShowHidden = data.showHidden;
 			localMetadataSource = data.metadataSource;
+			localBookmarkFilter = data.bookmarkFilter;
 		}
 		wasOpen = isOpen;
 	});
@@ -79,7 +89,8 @@
 			sortBy: localSortBy,
 			sortOrder: localSortOrder,
 			showHidden: localShowHidden,
-			metadataSource: localMetadataSource
+			metadataSource: localMetadataSource,
+			bookmarkFilter: localBookmarkFilter
 		});
 	}
 
@@ -88,6 +99,7 @@
 		localSortOrder = 'asc';
 		localShowHidden = false;
 		localMetadataSource = 'all';
+		localBookmarkFilter = 'all';
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -100,10 +112,13 @@
 		localSortBy !== data.sortBy ||
 			localSortOrder !== data.sortOrder ||
 			localShowHidden !== data.showHidden ||
-			localMetadataSource !== data.metadataSource
+			localMetadataSource !== data.metadataSource ||
+			localBookmarkFilter !== data.bookmarkFilter
 	);
 
-	const hasActiveFilters = $derived(localShowHidden || localMetadataSource !== 'all');
+	const hasActiveFilters = $derived(
+		localShowHidden || localMetadataSource !== 'all' || localBookmarkFilter !== 'all'
+	);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -112,7 +127,7 @@
 	<!-- Backdrop -->
 	<div
 		role="presentation"
-		class="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm"
+		class="fixed inset-x-0 top-8 bottom-0 z-40 bg-background/40 backdrop-blur-sm"
 		transition:fade={{ duration: 200 }}
 		onclick={events.onClose}
 	></div>
@@ -122,7 +137,7 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label="Filtrar e Ordenar"
-		class="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-full sm:max-w-sm flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl"
+		class="fixed top-8 right-0 bottom-0 z-50 flex w-full max-w-full sm:max-w-sm flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl"
 		transition:fly={{ x: 400, duration: 300, easing: cubicOut }}
 	>
 		<!-- Header -->
@@ -267,6 +282,56 @@
 							onclick={() => (localMetadataSource = source.value)}
 						>
 							{source.label}
+						</button>
+					{/each}
+				</div>
+			</section>
+
+			<!-- Bookmark Filter Section -->
+			<section>
+				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
+					Filtrar por bookmark
+				</p>
+				<div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por bookmark">
+					<button
+						type="button"
+						aria-pressed={localBookmarkFilter === 'all'}
+						class="rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {localBookmarkFilter ===
+						'all'
+							? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
+							: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
+						onclick={() => (localBookmarkFilter = 'all')}
+					>
+						Todos
+					</button>
+					<button
+						type="button"
+						aria-pressed={localBookmarkFilter === 'none'}
+						class="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {localBookmarkFilter ===
+						'none'
+							? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
+							: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
+						onclick={() => (localBookmarkFilter = 'none')}
+					>
+						<Bookmark size={12} class="opacity-70" />
+						Sem bookmark
+					</button>
+					{#each data.bookmarks as category (category.id)}
+						{@const isSelected = localBookmarkFilter === category.id}
+						{@const hexColor = '#' + (category.color & 0xffffff).toString(16).padStart(6, '0')}
+						<button
+							type="button"
+							aria-pressed={isSelected}
+							class="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {isSelected
+								? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
+								: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
+							onclick={() => (localBookmarkFilter = category.id)}
+						>
+							<span
+								class="h-2.5 w-2.5 shrink-0 rounded-full"
+								style="background-color: {hexColor};"
+							></span>
+							{category.name}
 						</button>
 					{/each}
 				</div>

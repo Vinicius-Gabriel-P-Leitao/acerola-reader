@@ -9,5 +9,6 @@ export const STORE_KEYS = {
 	volumeViewMode: 'volume_view_mode',
 	readerMode: 'reader_mode',
 	onboardingCompleted: 'onboarding_completed',
-	metadataLanguage: 'metadata_language'
+	metadataLanguage: 'metadata_language',
+	navDockMode: 'nav_dock_mode'
 } as const;

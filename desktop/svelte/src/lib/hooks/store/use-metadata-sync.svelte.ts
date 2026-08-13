@@ -65,12 +65,25 @@ export function useMetadataSync() {
 		}
 	}
 
+	async function clearMetadata(comicId: string): Promise<void> {
+		isSyncing = true;
+		try {
+			await invoke(METADATA_COMMANDS.clearComicMetadata, { comicId });
+		} catch (err) {
+			error(`Failed to clear comic metadata: ${JSON.stringify(err)}`);
+			throw err;
+		} finally {
+			isSyncing = false;
+		}
+	}
+
 	return {
 		get isSyncing() {
 			return isSyncing;
 		},
 		syncMangadex,
 		syncAnilist,
-		syncComicInfo
+		syncComicInfo,
+		clearMetadata
 	};
 }
