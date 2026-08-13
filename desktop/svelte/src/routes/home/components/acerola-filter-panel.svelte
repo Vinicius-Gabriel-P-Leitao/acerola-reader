@@ -112,7 +112,7 @@
 	<!-- Backdrop -->
 	<div
 		role="presentation"
-		class="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm"
+		class="fixed inset-x-0 top-8 bottom-0 z-40 bg-background/40 backdrop-blur-sm"
 		transition:fade={{ duration: 200 }}
 		onclick={events.onClose}
 	></div>
@@ -122,7 +122,7 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label="Filtrar e Ordenar"
-		class="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-full sm:max-w-sm flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl"
+		class="fixed top-8 right-0 bottom-0 z-50 flex w-full max-w-full sm:max-w-sm flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl"
 		transition:fly={{ x: 400, duration: 300, easing: cubicOut }}
 	>
 		<!-- Header -->
