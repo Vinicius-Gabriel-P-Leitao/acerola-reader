@@ -6,7 +6,7 @@
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaComicActionDialog from './components/acerola-comic-action-dialog.svelte';
-	import AcerolaFilterPanel from './components/acerola-filter-panel.svelte';
+	import AcerolaFilterPanel, { type BookmarkFilter } from './components/acerola-filter-panel.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
@@ -42,6 +42,7 @@
 	let unlistenScan: (() => void) | undefined;
 	let showFilterPanel = $state(false);
 	let showActionDialog = $state(false);
+	let bookmarkFilter = $state<BookmarkFilter>('all');
 
 	onMount(async () => {
 		await folderStore.loadSavedPath();
@@ -116,7 +117,7 @@
 	}
 
 	function handleSelectAllToggle() {
-		const allIds = summary.comics?.comics.map((comicItem) => comicItem.relations.directoryId) ?? [];
+		const allIds = visibleComics.map((comicItem) => comicItem.relations.directoryId);
 		if (selection.selectedCount === allIds.length && allIds.length > 0) {
 			selection.deselectAll();
 		} else {
@@ -129,15 +130,27 @@
 		sortOrder: SortOrder;
 		showHidden: boolean;
 		metadataSource: MetadataSource;
+		bookmarkFilter: BookmarkFilter;
 	}) {
 		summary.setSorting(params.sortBy, params.sortOrder);
 		summary.setFilters(params.showHidden, params.metadataSource);
+		bookmarkFilter = params.bookmarkFilter;
 		summary.fetch();
 		showFilterPanel = false;
 	}
 
 	const activeFiltersCount = $derived(
-		(summary.showHidden ? 1 : 0) + (summary.metadataSource !== 'all' ? 1 : 0)
+		(summary.showHidden ? 1 : 0) +
+			(summary.metadataSource !== 'all' ? 1 : 0) +
+			(bookmarkFilter !== 'all' ? 1 : 0)
+	);
+
+	const visibleComics = $derived(
+		bookmarkFilter === 'all'
+			? (summary.comics?.comics ?? [])
+			: bookmarkFilter === 'none'
+				? (summary.comics?.comics.filter((comic) => comic.bookmark == null) ?? [])
+				: (summary.comics?.comics.filter((comic) => comic.bookmark?.id === bookmarkFilter) ?? [])
 	);
 </script>
 
@@ -157,7 +170,7 @@
 						ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
 						events={{ onClick: handleSelectAllToggle }}
 					>
-						{selection.selectedCount === (summary.comics?.comics.length ?? 0)
+						{selection.selectedCount === visibleComics.length
 							? m['pages.home.selection.all.deselect']()
 							: m['pages.home.selection.all.select']()}
 					</AcerolaButton>
@@ -232,8 +245,14 @@
 			{/if}
 		</div>
 
+		{#if visibleComics.length === 0}
+			<div class="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+				<p class="text-sm">Nenhum quadrinho encontrado para o filtro selecionado.</p>
+			</div>
+		{/if}
+
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
-			{#each summary.comics.comics as comic (comic.relations.directoryId)}
+			{#each visibleComics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
 				{@const bookmarkColor = comic.bookmark?.color}
 				{@const isSelected = selection.isSelected(comic.relations.directoryId)}
@@ -309,7 +328,7 @@
 	<AcerolaComicActionDialog
 		open={showActionDialog}
 		selectedIds={selection.selectedIdsArray}
-		totalCount={summary.comics?.comics.length ?? 0}
+		totalCount={visibleComics.length}
 		bookmarks={bookmarkStore.bookmarks}
 		onHide={handleHide}
 		onDelete={handleDelete}
@@ -360,7 +379,9 @@
 		sortBy: summary.sortBy,
 		sortOrder: summary.sortOrder,
 		showHidden: summary.showHidden,
-		metadataSource: summary.metadataSource
+		metadataSource: summary.metadataSource,
+		bookmarkFilter,
+		bookmarks: bookmarkStore.bookmarks
 	}}
 	events={{
 		onApply: handleFilterApply,
