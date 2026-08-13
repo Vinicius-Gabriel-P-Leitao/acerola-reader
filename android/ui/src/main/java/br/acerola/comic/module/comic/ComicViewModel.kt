@@ -13,6 +13,8 @@ import br.acerola.comic.config.preference.types.SortDirection
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.ComicDto
+import br.acerola.comic.dto.archive.ChapterFileDto
+import br.acerola.comic.dto.archive.ChapterPageDto
 import br.acerola.comic.dto.archive.ComicDirectoryDto
 import br.acerola.comic.dto.archive.VolumeChapterGroupDto
 import br.acerola.comic.dto.history.ReadingHistoryDto
@@ -25,6 +27,7 @@ import br.acerola.comic.type.UiText
 import br.acerola.comic.ui.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.MangadexCase
+import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
@@ -61,6 +64,7 @@ class ComicViewModel
         @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>,
         @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>,
         private val observeChaptersUseCase: ObserveCombinedChaptersUseCase,
+        @param:DirectoryCase private val observeAllChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>,
         @param:DirectoryCase private val directoryObserveVolumeChapters: ObserveVolumeChaptersUseCase,
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
         private val extractVolumeCoverUseCase: ExtractVolumeCoverUseCase,
@@ -168,6 +172,19 @@ class ComicViewModel
             selectedDirectoryId
                 .flatMapLatest { id ->
                     if (id == null) flowOf(emptyList()) else observeComicHistoryUseCase.observeReadChapters(id)
+                }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+        @OptIn(ExperimentalCoroutinesApi::class)
+        val allChapters: StateFlow<List<ChapterFileDto>> =
+            combine(selectedDirectoryId, _chapterSortSettings) { id, sort -> id to sort }
+                .flatMapLatest { (folderId, sort) ->
+                    if (folderId == null) {
+                        flowOf(emptyList())
+                    } else {
+                        observeAllChaptersUseCase
+                            .observeByComic(folderId, sort.type.name, sort.direction == SortDirection.ASCENDING)
+                            .map { it.items }
+                    }
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
         @OptIn(ExperimentalCoroutinesApi::class)
@@ -424,7 +441,7 @@ class ComicViewModel
         fun markSelectedChaptersReadStatus(markAsRead: Boolean) {
             val comicId = selectedDirectoryId.value ?: return
             val sortsToUpdate = _selectedChapterSorts.value
-            val chapterItems = chapters.value?.archive?.items.orEmpty()
+            val chapterItems = allChapters.value
 
             AcerolaLogger.audit(
                 TAG,

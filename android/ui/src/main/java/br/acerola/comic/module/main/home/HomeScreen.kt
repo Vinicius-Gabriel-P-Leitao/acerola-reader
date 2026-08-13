@@ -46,7 +46,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FolderOpen
@@ -58,12 +57,9 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -75,7 +71,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -83,7 +78,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -94,6 +88,9 @@ import br.acerola.comic.common.ux.component.Dialog
 import br.acerola.comic.common.ux.component.DialogButton
 import br.acerola.comic.common.ux.component.FabGroup
 import br.acerola.comic.common.ux.component.FabGroupItem
+import br.acerola.comic.common.ux.component.SelectionAction
+import br.acerola.comic.common.ux.component.SelectionActionDock
+import br.acerola.comic.common.ux.component.SelectionTopBar
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.showSnackbar
 import br.acerola.comic.common.ux.tokens.ShapeTokens
@@ -328,60 +325,22 @@ fun Main.Home.Template.Screen(
                                     top = topOverlayTopPadding,
                                 ),
                     ) {
-                        Surface(
-                            shape = ShapeTokens.Large,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            tonalElevation = 6.dp,
-                            shadowElevation = 8.dp,
+                        val allIds = comicList.map { it.first.directory.id }
+                        val isAllSelected = selectedComicIds.size == allIds.size && allIds.isNotEmpty()
+
+                        Acerola.Component.SelectionTopBar(
+                            selectedCount = selectedComicIds.size,
+                            isAllSelected = isAllSelected,
+                            onClear = { homeViewModel.clearComicSelection() },
+                            onToggleSelectAll = {
+                                if (isAllSelected) {
+                                    homeViewModel.clearComicSelection()
+                                } else {
+                                    homeViewModel.selectAllComics(allIds)
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(homeTopOverlayHeight)
-                                        .padding(horizontal = SpacingTokens.Small),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { homeViewModel.clearComicSelection() }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = stringResource(id = R.string.action_cancel),
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(SpacingTokens.Small))
-                                    Text(
-                                        text = stringResource(id = R.string.label_selection_count, selectedComicIds.size),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-
-                                val allIds = comicList.map { it.first.directory.id }
-                                val isAllSelected = selectedComicIds.size == allIds.size && allIds.isNotEmpty()
-
-                                TextButton(
-                                    onClick = {
-                                        if (isAllSelected) {
-                                            homeViewModel.clearComicSelection()
-                                        } else {
-                                            homeViewModel.selectAllComics(allIds)
-                                        }
-                                    },
-                                ) {
-                                    Text(
-                                        text =
-                                            stringResource(
-                                                id = if (isAllSelected) R.string.action_deselect_all else R.string.action_select_all,
-                                            ),
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                }
-                            }
-                        }
+                        )
                     }
 
                     val (lastComic, lastHistory, _) = lastRead ?: Triple(null, null, 0)
@@ -545,45 +504,32 @@ fun Main.Home.Template.Screen(
                     .zIndex(3f)
                     .padding(bottom = selectionDockBottomPadding),
         ) {
-            Surface(
-                shape = ShapeTokens.Large,
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                tonalElevation = 8.dp,
-                shadowElevation = 12.dp,
+            Acerola.Component.SelectionActionDock(
+                actions =
+                    listOf(
+                        SelectionAction(
+                            icon = Icons.Rounded.Bookmark,
+                            label = stringResource(id = R.string.action_bookmark),
+                            onClick = { showBatchCategorySheet = true },
+                        ),
+                        SelectionAction(
+                            icon = if (areAllSelectedHidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                            label = stringResource(id = if (areAllSelectedHidden) R.string.action_unhide else R.string.action_hide),
+                            onClick = { showBatchHideDialog = true },
+                        ),
+                        SelectionAction(
+                            icon = Icons.Rounded.Delete,
+                            label = stringResource(id = R.string.action_delete),
+                            onClick = { showBatchDeleteDialog = true },
+                            isError = true,
+                        ),
+                    ),
                 modifier =
                     Modifier
                         .fillMaxWidth(if (isLandscape) 0.6f else 1f)
                         .widthIn(max = 440.dp)
                         .padding(horizontal = SpacingTokens.Medium),
-            ) {
-                Row(
-                    modifier = Modifier.padding(all = SpacingTokens.Small),
-                    horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SelectionActionButton(
-                        icon = Icons.Rounded.Bookmark,
-                        label = stringResource(id = R.string.action_bookmark),
-                        onClick = { showBatchCategorySheet = true },
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    SelectionActionButton(
-                        icon = if (areAllSelectedHidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
-                        label = stringResource(id = if (areAllSelectedHidden) R.string.action_unhide else R.string.action_hide),
-                        onClick = { showBatchHideDialog = true },
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    SelectionActionButton(
-                        icon = Icons.Rounded.Delete,
-                        label = stringResource(id = R.string.action_delete),
-                        onClick = { showBatchDeleteDialog = true },
-                        modifier = Modifier.weight(1f),
-                        isError = true,
-                    )
-                }
-            }
+            )
         }
 
         val activeManga = selectedMangaForActions
@@ -875,55 +821,6 @@ private fun EmptyState(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SelectionActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isError: Boolean = false,
-) {
-    val containerColor =
-        if (isError) {
-            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        }
-    val contentColor =
-        if (isError) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        }
-
-    Surface(
-        onClick = onClick,
-        shape = ShapeTokens.Medium,
-        color = containerColor,
-        contentColor = contentColor,
-        modifier = modifier.height(selectionActionButtonHeight),
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp),
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
         }
     }
 }

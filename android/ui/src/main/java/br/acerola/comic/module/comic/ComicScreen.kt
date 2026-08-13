@@ -13,29 +13,25 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.RemoveDone
-import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,23 +40,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.state.SyncActionVisualState
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.GlassButton
+import br.acerola.comic.common.ux.component.SelectionAction
+import br.acerola.comic.common.ux.component.SelectionActionDock
+import br.acerola.comic.common.ux.component.SelectionTopBar
 import br.acerola.comic.common.ux.component.SnackbarVariant
 import br.acerola.comic.common.ux.component.TopBar
 import br.acerola.comic.common.ux.component.showSnackbar
-import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.common.viewmodel.library.archive.ChapterArchiveViewModel
 import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
@@ -129,6 +126,7 @@ fun ComicScreen(
 
     val comicState by comicViewModel.comic.collectAsStateWithLifecycle()
     val chapterDto by comicViewModel.chapters.collectAsStateWithLifecycle()
+    val allChapters by comicViewModel.allChapters.collectAsStateWithLifecycle()
     val history by comicViewModel.history.collectAsStateWithLifecycle()
     val readChapters by comicViewModel.readChapters.collectAsStateWithLifecycle()
     val selectedChapterSorts by comicViewModel.selectedChapterSorts.collectAsStateWithLifecycle()
@@ -227,8 +225,8 @@ fun ComicScreen(
 
     val isChapterSelectionMode = selectedChapterSorts.isNotEmpty()
     val allChapterSorts =
-        remember(chapterDto) {
-            chapterDto?.archive?.items?.map { it.chapterSort } ?: emptyList()
+        remember(allChapters) {
+            allChapters.map { it.chapterSort }
         }
     val areAllSelectedRead =
         remember(readChapters, selectedChapterSorts) {
@@ -399,43 +397,33 @@ fun ComicScreen(
 
         if (isChapterSelectionMode && uiState.selectedTab == MainTab.CHAPTERS) {
             val isAllChaptersSelected = selectedChapterSorts.size == allChapterSorts.size && allChapterSorts.isNotEmpty()
+            val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
-            Acerola.Component.TopBar(
-                title = stringResource(id = R.string.label_selection_count, selectedChapterSorts.size),
-                navigationIcon = {
-                    Acerola.Component.GlassButton(
-                        onClick = { comicViewModel.clearChapterSelection() },
-                        icon = {
-                            Icon(
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(id = R.string.action_cancel),
-                            )
-                        },
-                    )
-                },
-                actions = {
-                    Acerola.Component.GlassButton(
-                        onClick = {
-                            if (isAllChaptersSelected) {
-                                comicViewModel.clearChapterSelection()
-                            } else {
-                                comicViewModel.selectAllChapters(allChapterSorts)
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                imageVector = if (isAllChaptersSelected) Icons.Default.Deselect else Icons.Default.SelectAll,
-                                contentDescription =
-                                    stringResource(
-                                        id = if (isAllChaptersSelected) R.string.action_deselect_all else R.string.action_select_all,
-                                    ),
-                            )
-                        },
-                    )
-                },
-            )
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .zIndex(2f)
+                        .fillMaxWidth()
+                        .padding(
+                            start = SpacingTokens.Small,
+                            end = SpacingTokens.Small,
+                            top = statusBarHeight + SpacingTokens.ExtraSmall,
+                        ),
+            ) {
+                Acerola.Component.SelectionTopBar(
+                    selectedCount = selectedChapterSorts.size,
+                    isAllSelected = isAllChaptersSelected,
+                    onClear = { comicViewModel.clearChapterSelection() },
+                    onToggleSelectAll = {
+                        if (isAllChaptersSelected) {
+                            comicViewModel.clearChapterSelection()
+                        } else {
+                            comicViewModel.selectAllChapters(allChapterSorts)
+                        }
+                    },
+                )
+            }
         } else {
             Acerola.Component.TopBar(
                 navigationIcon = {
@@ -472,32 +460,26 @@ fun ComicScreen(
             modifier =
                 Modifier
                     .align(Alignment.BottomCenter)
+                    .zIndex(3f)
                     .padding(bottom = SpacingTokens.Large),
         ) {
-            Surface(
-                shape = ShapeTokens.Large,
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                tonalElevation = 8.dp,
-                shadowElevation = 12.dp,
+            Acerola.Component.SelectionActionDock(
+                actions =
+                    listOf(
+                        SelectionAction(
+                            icon = if (areAllSelectedRead) Icons.Default.RemoveDone else Icons.Default.DoneAll,
+                            label =
+                                stringResource(
+                                    id = if (areAllSelectedRead) R.string.action_mark_as_unread else R.string.action_mark_as_read,
+                                ),
+                            onClick = { comicViewModel.markSelectedChaptersReadStatus(!areAllSelectedRead) },
+                        ),
+                    ),
                 modifier =
                     Modifier
+                        .widthIn(max = 440.dp)
                         .padding(horizontal = SpacingTokens.Medium),
-            ) {
-                Row(
-                    modifier = Modifier.padding(all = SpacingTokens.Small),
-                    horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ChapterSelectionActionButton(
-                        icon = if (areAllSelectedRead) Icons.Default.RemoveDone else Icons.Default.DoneAll,
-                        label =
-                            stringResource(
-                                id = if (areAllSelectedRead) R.string.action_mark_as_unread else R.string.action_mark_as_read,
-                            ),
-                        onClick = { comicViewModel.markSelectedChaptersReadStatus(!areAllSelectedRead) },
-                    )
-                }
-            }
+            )
         }
 
         if (showSortSheet) {
@@ -529,36 +511,6 @@ private fun ComicScreenPreview() {
                 totalChapters = 12,
                 activeTab = br.acerola.comic.module.comic.state.MainTab.CHAPTERS,
                 onTabSelected = {},
-            )
-        }
-    }
-}
-
-@Composable
-private fun ChapterSelectionActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        shape = ShapeTokens.Medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(modifier = Modifier.width(SpacingTokens.Small))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             )
         }
     }
