@@ -3,12 +3,14 @@ package br.acerola.comic.module.main.home
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.common.viewmodel.archive.FileSystemAccessViewModel
+import br.acerola.comic.common.viewmodel.library.archive.ComicDirectoryViewModel
 import br.acerola.comic.config.preference.types.ComicSortType
 import br.acerola.comic.config.preference.types.HomeLayoutType
 import br.acerola.comic.config.preference.types.HomeSortPreference
@@ -31,6 +33,8 @@ class HomeTemplateToggleTest {
     val composeTestRule = createComposeRule()
 
     private val viewModel = mockk<HomeViewModel>(relaxed = true)
+    private val fileSystemAccessViewModel = mockk<FileSystemAccessViewModel>(relaxed = true)
+    private val comicDirectoryViewModel = mockk<ComicDirectoryViewModel>(relaxed = true)
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Before
@@ -44,6 +48,12 @@ class HomeTemplateToggleTest {
 
         every { viewModel.sortSettings } returns MutableStateFlow(HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING))
         every { viewModel.filterSettings } returns MutableStateFlow(FilterSettings())
+        every { viewModel.searchQuery } returns MutableStateFlow("")
+        every { viewModel.isSearchExpanded } returns MutableStateFlow(false)
+        every { viewModel.selectedComicIds } returns MutableStateFlow(emptySet())
+
+        every { fileSystemAccessViewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
+        every { comicDirectoryViewModel.uiEvents } returns MutableSharedFlow<UserMessage>().asSharedFlow()
     }
 
     @Test
@@ -51,7 +61,12 @@ class HomeTemplateToggleTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {
-                    Main.Home.Template.Screen(homeViewModel = viewModel, onNavigateToConfig = {})
+                    Main.Home.Template.Screen(
+                        homeViewModel = viewModel,
+                        fileSystemAccessViewModel = fileSystemAccessViewModel,
+                        comicDirectoryViewModel = comicDirectoryViewModel,
+                        onNavigateToConfig = {},
+                    )
                 }
             }
         }

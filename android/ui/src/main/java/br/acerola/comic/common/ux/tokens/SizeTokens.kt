@@ -21,6 +21,8 @@ object SizeTokens {
 
     // Layout
     val SideSheetWidth = 360.dp
+    val MaxContentWidth = 440.dp
+    val LandscapeSidePadding = 32.dp
 
     // Comic Grid
     val ComicCardWidth = 140.dp

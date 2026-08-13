@@ -3,7 +3,7 @@ package br.acerola.comic.module.comic
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.common.state.LocalSnackbarHostState
 import br.acerola.comic.common.ux.theme.AcerolaTheme
@@ -43,6 +43,9 @@ class ComicScreenTest {
 
         every { comicViewModel.comic } returns MutableStateFlow(null)
         every { comicViewModel.chapters } returns MutableStateFlow(null)
+        every { comicViewModel.allChapters } returns MutableStateFlow(emptyList())
+        every { comicViewModel.selectedChapterSorts } returns MutableStateFlow(emptySet())
+        every { comicViewModel.isExtractingVolumeCovers } returns MutableStateFlow(false)
         every { comicViewModel.chapterIsIndexing } returns MutableStateFlow(false)
         every { comicViewModel.chapterProgress } returns MutableStateFlow(-1)
         every { comicViewModel.comicIsIndexing } returns MutableStateFlow(false)

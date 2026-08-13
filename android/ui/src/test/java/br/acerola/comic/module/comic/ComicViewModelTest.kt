@@ -5,6 +5,7 @@ import android.util.Log
 import app.cash.turbine.test
 import br.acerola.comic.MainDispatcherRule
 import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
 import br.acerola.comic.adapter.contract.gateway.ComicGateway
 import br.acerola.comic.adapter.contract.gateway.HistoryGateway
 import br.acerola.comic.config.preference.ChapterPerPagePreference
@@ -25,6 +26,7 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.service.cache.ChapterCacheHandler
+import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
@@ -35,6 +37,7 @@ import br.acerola.comic.usecase.metadata.ExtractVolumeCoverUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -64,12 +67,15 @@ class ComicViewModelTest {
     private val mangadexRepo = mockk<ComicGateway<ComicMetadataDto>>(relaxed = true)
     private val directoryRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
     private val directoryChapterReadRepo = mockk<ChapterReadGateway<ChapterPageDto>>(relaxed = true)
+    private val chapterSyncStatusGateway = mockk<ChapterSyncStatusGateway>(relaxed = true)
     private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
 
     private lateinit var observeComicHistoryUseCase: ObserveComicHistoryUseCase
     private lateinit var mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>
     private lateinit var directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>
     private val observeChaptersUseCase = mockk<ObserveCombinedChaptersUseCase>(relaxed = true)
+    private lateinit var observeAllChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>
+    private val allChaptersFlow = MutableStateFlow(ChapterPageDto(emptyList(), emptyList(), 20, 0, 0))
     private val directoryObserveVolumeChapters = mockk<ObserveVolumeChaptersUseCase>(relaxed = true)
     private val extractVolumeCoverUseCase = mockk<ExtractVolumeCoverUseCase>(relaxed = true)
     private val extractAllVolumeCoversUseCase = mockk<ExtractAllVolumeCoversUseCase>(relaxed = true)
@@ -156,10 +162,16 @@ class ComicViewModelTest {
         every { directoryObserveVolumeChapters.observeByComic(any(), any(), any(), any()) } returns volumeSectionsFlow
         every { directoryObserveVolumeChapters.observeHasRootChapters(any()) } returns hasRootChaptersFlow
         coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()
+        every { directoryChapterReadRepo.observeChapters(any(), any(), any()) } returns allChaptersFlow
 
         observeComicHistoryUseCase = ObserveComicHistoryUseCase(historyGateway)
         mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
         directoryObserve = ObserveLibraryUseCase(comicRepository = directoryRepo)
+        observeAllChaptersUseCase =
+            ObserveChaptersUseCase(
+                readGateway = directoryChapterReadRepo,
+                syncStatusGateway = chapterSyncStatusGateway,
+            )
 
         viewModel = createViewModel()
         viewModel.init(1L, null)
@@ -181,6 +193,7 @@ class ComicViewModelTest {
             mangadexObserve = mangadexObserve,
             directoryObserve = directoryObserve,
             observeChaptersUseCase = observeChaptersUseCase,
+            observeAllChaptersUseCase = observeAllChaptersUseCase,
             directoryObserveVolumeChapters = directoryObserveVolumeChapters,
             manageCategoriesUseCase = manageCategoriesUseCase,
             extractVolumeCoverUseCase = extractVolumeCoverUseCase,
@@ -437,6 +450,35 @@ class ComicViewModelTest {
                 while (item == null || item.archive.items.isEmpty()) item = awaitItem()
                 assertThat(item.showVolumeHeaders).isFalse()
                 cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `marcar todos como lido deve usar a lista completa do quadrinho, nao apenas a pagina carregada`() =
+        runTest {
+            val fullChapters =
+                (1..5).map { n ->
+                    ChapterFileDto(id = n.toLong(), name = "Ch. $n", path = "", chapterSort = n.toString())
+                }
+
+            // Lista completa vinda do banco (sem paginação)
+            allChaptersFlow.value = ChapterPageDto(fullChapters, emptyList(), 20, 0, 5)
+            // Apenas os 2 primeiros capítulos foram carregados na página atual (scroll infinito)
+            localChaptersFlow.value = ChapterPageDto(fullChapters.take(2), emptyList(), 2, 0, 5)
+
+            viewModel.allChapters.test {
+                var item = awaitItem()
+                while (item.size < 5) item = awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            viewModel.selectAllChapters(fullChapters.map { it.chapterSort })
+            viewModel.markSelectedChaptersReadStatus(true)
+
+            fullChapters.forEach { chapter ->
+                coVerify(exactly = 1) {
+                    trackReadingProgressUseCase.markChapterAsRead(1L, chapter.chapterSort, chapter.id)
+                }
             }
         }
 }

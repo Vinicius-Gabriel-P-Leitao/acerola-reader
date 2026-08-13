@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.component.BookmarkRibbon
 import br.acerola.comic.common.ux.component.ImageCard
+import br.acerola.comic.common.ux.tokens.SemanticColors
 import br.acerola.comic.common.ux.tokens.ShapeTokens
 import br.acerola.comic.common.ux.tokens.SizeTokens
 import br.acerola.comic.common.ux.tokens.SpacingTokens
@@ -192,7 +193,7 @@ fun Main.Home.Component.ComicGridItem(
             if (comic.directory.hidden) {
                 Icon(
                     imageVector = Icons.Rounded.VisibilityOff,
-                    contentDescription = null,
+                    contentDescription = stringResource(id = R.string.description_icon_comic_hidden),
                     tint = Color.White,
                     modifier =
                         Modifier
@@ -286,7 +287,7 @@ fun Main.Home.Component.ComicGridItem(
                     Icon(
                         imageVector = Icons.Rounded.Star,
                         contentDescription = null,
-                        tint = Color(0xFFFFC107),
+                        tint = SemanticColors.Rating,
                         modifier = Modifier.size(14.dp),
                     )
                     Text(
@@ -328,12 +329,12 @@ fun Main.Home.Component.ComicGridItem(
 
             IconButton(
                 onClick = onShowActions,
-                modifier = Modifier.size(SizeTokens.IconMedium),
+                modifier = Modifier.size(SizeTokens.ClickTargetSmall),
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = stringResource(id = R.string.description_icon_chapter_more_options),
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(SizeTokens.IconSmall),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

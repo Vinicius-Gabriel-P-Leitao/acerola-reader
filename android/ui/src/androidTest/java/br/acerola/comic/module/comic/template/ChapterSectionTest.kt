@@ -3,7 +3,7 @@ package br.acerola.comic.module.comic.template
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import br.acerola.comic.config.preference.types.VolumeViewType
