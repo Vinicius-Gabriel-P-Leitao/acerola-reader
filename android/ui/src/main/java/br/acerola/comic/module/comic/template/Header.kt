@@ -177,7 +177,7 @@ fun Comic.Template.Header(
                         if (comic.directory.hidden) {
                             Icon(
                                 imageVector = Icons.Rounded.VisibilityOff,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.description_icon_comic_hidden),
                                 tint = Color.White,
                                 modifier =
                                     Modifier

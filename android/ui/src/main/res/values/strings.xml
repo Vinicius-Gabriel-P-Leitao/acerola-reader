@@ -38,6 +38,7 @@
     <string name="description_icon_home_floating_tool_hub">Abrir hub de ferramentas</string>
     <string name="description_icon_home_change_layout">Mudar Visualização</string>
     <string name="description_icon_home_filter">Filtro</string>
+    <string name="description_icon_comic_hidden">Quadrinho oculto</string>
     <string name="label_home_search_placeholder">Buscar quadrinhos...</string>
 
     <!-- Text title -->

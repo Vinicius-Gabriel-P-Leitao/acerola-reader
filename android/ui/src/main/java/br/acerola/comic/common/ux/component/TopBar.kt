@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,11 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.acerola.comic.common.ux.Acerola
 import br.acerola.comic.common.ux.modifier.glass
 import br.acerola.comic.common.ux.modifier.glassContainer
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SizeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
 
 @Composable
 fun Acerola.Component.TopBar(
@@ -37,11 +38,11 @@ fun Acerola.Component.TopBar(
             modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(SizeTokens.ClickTarget),
             contentAlignment = Alignment.CenterStart,
         ) {
             navigationIcon?.invoke()
@@ -51,7 +52,7 @@ fun Acerola.Component.TopBar(
             modifier =
                 Modifier
                     .weight(1f)
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = SpacingTokens.Medium),
             contentAlignment = Alignment.Center,
         ) {
             if (title != null) {
@@ -60,7 +61,7 @@ fun Acerola.Component.TopBar(
         }
 
         Box(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(SizeTokens.ClickTarget),
             contentAlignment = Alignment.CenterEnd,
         ) {
             actions?.invoke()
@@ -75,7 +76,7 @@ fun Acerola.Component.TitleCapsule(
 ) {
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
     val glassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
-    val shape = RoundedCornerShape(24.dp)
+    val shape = ShapeTokens.Huge
 
     Box(
         modifier =
@@ -93,7 +94,7 @@ fun Acerola.Component.TitleCapsule(
 
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = SpacingTokens.Large, vertical = SpacingTokens.Small),
             style =
                 MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,

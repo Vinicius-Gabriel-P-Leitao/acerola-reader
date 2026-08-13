@@ -303,8 +303,8 @@ fun Main.Home.Template.Screen(
                                     .zIndex(1f)
                                     .fillMaxWidth(if (isLandscape) 0.7f else 1f)
                                     .padding(
-                                        start = if (isLandscape) 32.dp else SpacingTokens.Small,
-                                        end = if (isLandscape) 32.dp else SpacingTokens.Small,
+                                        start = if (isLandscape) SizeTokens.LandscapeSidePadding else SpacingTokens.Small,
+                                        end = if (isLandscape) SizeTokens.LandscapeSidePadding else SpacingTokens.Small,
                                         top = searchBarTopPadding,
                                     ),
                         )
@@ -320,8 +320,8 @@ fun Main.Home.Template.Screen(
                                 .zIndex(2f)
                                 .fillMaxWidth(if (isLandscape) 0.7f else 1f)
                                 .padding(
-                                    start = if (isLandscape) 32.dp else SpacingTokens.Small,
-                                    end = if (isLandscape) 32.dp else SpacingTokens.Small,
+                                    start = if (isLandscape) SizeTokens.LandscapeSidePadding else SpacingTokens.Small,
+                                    end = if (isLandscape) SizeTokens.LandscapeSidePadding else SpacingTokens.Small,
                                     top = topOverlayTopPadding,
                                 ),
                     ) {
@@ -527,7 +527,7 @@ fun Main.Home.Template.Screen(
                 modifier =
                     Modifier
                         .fillMaxWidth(if (isLandscape) 0.6f else 1f)
-                        .widthIn(max = 440.dp)
+                        .widthIn(max = SizeTokens.MaxContentWidth)
                         .padding(horizontal = SpacingTokens.Medium),
             )
         }
@@ -688,7 +688,7 @@ private fun EmptyState(
             verticalArrangement = Arrangement.Center,
             modifier =
                 Modifier
-                    .widthIn(max = 440.dp)
+                    .widthIn(max = SizeTokens.MaxContentWidth)
                     .fillMaxWidth(),
         ) {
             Box(

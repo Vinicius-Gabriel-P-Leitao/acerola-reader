@@ -1,17 +1,14 @@
 package br.acerola.comic.module.comic.template
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
 import br.acerola.comic.dto.archive.ChapterFileDto
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ChapterItem
-import br.acerola.comic.module.comic.component.CoverVolumeCard
-import br.acerola.comic.module.comic.component.VolumeCard
+import br.acerola.comic.module.comic.component.CoverVolumeSectionHeader
+import br.acerola.comic.module.comic.component.VolumeSectionHeader
 
 fun Comic.Template.chapterSection(
     scope: LazyListScope,
@@ -48,21 +45,17 @@ fun Comic.Template.chapterSection(
                 contentType = "volume_card",
             ) {
                 if (volumeViewMode == VolumeViewType.COVER_VOLUME) {
-                    Comic.Component.CoverVolumeCard(
+                    Comic.Component.CoverVolumeSectionHeader(
                         group = group,
                         expanded = isExpanded,
                         onToggleExpanded = onToggleExpanded,
                         onExtractCover = { onExtractVolumeCover(group.volume.id) },
-                        expandedContent = null,
-                        modifier = Modifier.padding(horizontal = SpacingTokens.ExtraSmall, vertical = SpacingTokens.Small),
                     )
                 } else {
-                    Comic.Component.VolumeCard(
+                    Comic.Component.VolumeSectionHeader(
                         group = group,
                         expanded = isExpanded,
                         onToggleExpanded = onToggleExpanded,
-                        expandedContent = null,
-                        modifier = Modifier.padding(horizontal = SpacingTokens.ExtraSmall, vertical = SpacingTokens.Small),
                     )
                 }
             }

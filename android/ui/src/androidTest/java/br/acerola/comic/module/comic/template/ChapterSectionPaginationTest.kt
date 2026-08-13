@@ -3,7 +3,7 @@ package br.acerola.comic.module.comic.template
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.dto.ChapterDto
