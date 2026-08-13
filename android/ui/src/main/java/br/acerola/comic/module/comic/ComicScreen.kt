@@ -255,12 +255,11 @@ fun ComicScreen(
                 context.startActivity(intent)
             }
             is ComicChapterAction.ClickContinue -> {
-                val chaptersList = uiState.chapters?.archive?.items ?: emptyList()
                 val targetChapter =
                     if (action.chapterId == -1L) {
-                        chaptersList.firstOrNull()
+                        allChapters.firstOrNull()
                     } else {
-                        chaptersList.find { it.id == action.chapterId }
+                        allChapters.find { it.id == action.chapterId }
                     }
 
                 targetChapter?.let {
