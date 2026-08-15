@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use iroh::{
-    address_lookup::mdns,
     endpoint::{self, presets},
     Endpoint, RelayConfig, RelayMap, RelayUrl, SecretKey,
 };
+use iroh_mdns_address_lookup as mdns;
 use secrecy::{ExposeSecret, SecretBox};
 
 use super::transport::IrohTransport;

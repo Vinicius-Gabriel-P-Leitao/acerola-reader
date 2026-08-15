@@ -5,16 +5,6 @@
 
 ---
 
-## Etapa A — Itens Pendentes do Roadmap Anterior
-
-- [ ] **Implementar UniFFI para DeviceInfo** — `Cargo.toml` + `data/identity/device_info.rs`
-  - Adicionar dependência opcional: `uniffi = { version = "...", optional = true }` 
-  - Adicionar feature: `[features] uniffi = ["dep:uniffi"]`
-  - Adicionar `#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]` na struct `DeviceInfo`
-  - Critério: `cargo build --features uniffi` compila; binding gerado expõe `DeviceInfo` como record no Kotlin
-
----
-
 ## Etapa B — Function Size & Cyclomatic Complexity
 
 - [x] **Refatorar `NetworkManager::run()`** — `core/network/manager.rs`
@@ -171,7 +161,6 @@
 
 | Critério | Etapa |
 |---|---|
-| UniFFI feature compila para Android | A |
 | `run()` refatorada em ≤40 linhas | B ✅ |
 | Coverage ≥80% no CI | C ✅ |
 | Módulos `device/`, `error/`, `device_info` com testes | C ✅ |
