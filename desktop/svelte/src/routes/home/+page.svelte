@@ -273,7 +273,7 @@
 			</div>
 		{/if}
 
-		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
+		<div class="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-6">
 			{#each visibleComics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
 				{@const bookmarkColor = comic.bookmark?.color}
@@ -284,6 +284,7 @@
 						title: comic.metadata.title ?? comic.filesystem.folderName,
 						cover
 					}}
+					ui={{ class: 'w-full' }}
 					events={{
 						onClick: () => handleCardClick(comic, cover)
 					}}

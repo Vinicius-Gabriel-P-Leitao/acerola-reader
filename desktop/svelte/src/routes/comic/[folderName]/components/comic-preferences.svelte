@@ -53,6 +53,7 @@
 	let { data, events, state: preferences }: ComicPreferencesProps = $props();
 
 	let showClearMetadataDialog = $state(false);
+	let showDeepRescanDialog = $state(false);
 </script>
 
 <div class="space-y-12">
@@ -285,7 +286,7 @@
 					title: m['pages.comic.preferences.file_sync.deep_rescan.title'](),
 					description: m['pages.comic.preferences.file_sync.deep_rescan.desc']()
 				}}
-				events={{ onClick: events.onDeepRescanComic }}
+				events={{ onClick: () => (showDeepRescanDialog = true) }}
 			>
 				{#snippet icon()}
 					<DatabaseZap class="text-destructive" size={24} />
@@ -404,6 +405,24 @@
 			showClearMetadataDialog = false;
 		},
 		onCancel: () => (showClearMetadataDialog = false)
+	}}
+	ui={{ variant: 'destructive' }}
+/>
+
+<AcerolaAlertDialog
+	state={{ open: showDeepRescanDialog }}
+	data={{
+		title: m['pages.comic.preferences.file_sync.deep_rescan.confirm.title'](),
+		description: m['pages.comic.preferences.file_sync.deep_rescan.confirm.desc'](),
+		cancelText: m['pages.comic.preferences.file_sync.deep_rescan.confirm.cancel'](),
+		actionText: m['pages.comic.preferences.file_sync.deep_rescan.confirm.action']()
+	}}
+	events={{
+		onAction: () => {
+			events.onDeepRescanComic?.();
+			showDeepRescanDialog = false;
+		},
+		onCancel: () => (showDeepRescanDialog = false)
 	}}
 	ui={{ variant: 'destructive' }}
 />

@@ -240,6 +240,12 @@
 		}
 	}
 
+	function retryOpen() {
+		openFailed = false;
+		nav.initializing = true;
+		void start();
+	}
+
 	let currentChapterId = $state<string | null>(null);
 
 	$effect(() => {
@@ -438,6 +444,7 @@
 					loadPage: reader.loadPage,
 					trackPage
 				}}
+				events={{ onRetry: retryOpen }}
 			/>
 		</ReaderViewport>
 	{/snippet}

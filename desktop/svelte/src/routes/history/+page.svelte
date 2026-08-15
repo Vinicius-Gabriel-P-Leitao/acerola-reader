@@ -160,7 +160,7 @@
 					<h3 class="mb-6 text-xl font-bold tracking-tight opacity-80">
 						{m['pages.history.older']()}
 					</h3>
-					<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
+					<div class="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-6">
 						{#each history.items.slice(1) as item (item.comicDirectoryId)}
 							{@const cover = resolveArtworkPath(item.comicCover) || undefined}
 							{@const comicBookmark = bookmarkStore.getBookmarkForComic(item.comicDirectoryId)}
@@ -169,6 +169,7 @@
 									title: item.comicName,
 									cover
 								}}
+								ui={{ class: 'w-full' }}
 								events={{ onClick: () => openComic(item) }}
 							>
 								{#snippet footer()}

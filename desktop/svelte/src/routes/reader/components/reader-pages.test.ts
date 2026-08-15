@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import ReaderPages from './reader-pages.svelte';
 import type { ReaderPageTracker } from './reader-pages.svelte';
@@ -150,6 +150,46 @@ describe('ReaderPages', () => {
 		expect(screen.getByRole('img', { name: 'Página 1' })).toHaveAttribute('loading', 'eager');
 		expect(screen.getByRole('img', { name: 'Página 3' })).toHaveAttribute('loading', 'eager');
 		expect(screen.getByRole('img', { name: 'Página 4' })).toHaveAttribute('loading', 'lazy');
+	});
+
+	it('renderiza estado de falha com retry quando a abertura do capitulo falha', async () => {
+		const onRetry = vi.fn();
+
+		render(ReaderPages, {
+			props: {
+				...props({
+					data: {
+						...props().data,
+						pageCount: 0,
+						openFailed: true,
+						chapterAvailable: true
+					}
+				}),
+				events: { onRetry }
+			}
+		});
+
+		expect(screen.getByText('Não foi possível abrir este capítulo')).toBeInTheDocument();
+		expect(screen.queryByText('Capítulo indisponível')).not.toBeInTheDocument();
+
+		await fireEvent.click(screen.getByText('Tentar novamente'));
+		expect(onRetry).toHaveBeenCalledOnce();
+	});
+
+	it('prioriza fallback de capitulo indisponivel sobre falha de abertura', () => {
+		render(ReaderPages, {
+			props: props({
+				data: {
+					...props().data,
+					pageCount: 0,
+					openFailed: true,
+					chapterAvailable: false
+				}
+			})
+		});
+
+		expect(screen.getByText('Capítulo indisponível')).toBeInTheDocument();
+		expect(screen.queryByText('Não foi possível abrir este capítulo')).not.toBeInTheDocument();
 	});
 
 	it('usa placeholder de webtoon para paginas ausentes', () => {

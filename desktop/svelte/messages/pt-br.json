@@ -18,16 +18,6 @@
       "desc": "Tema escuro e claro limpo inspirado pelas luzes neon de Tóquio"
     }
   },
-  "dock_mode": {
-    "fixed": {
-      "name": "Fixa",
-      "desc": "A dock de navegação fica sempre visível na borda inferior da tela."
-    },
-    "hover": {
-      "name": "Com gesto",
-      "desc": "A dock some e vira uma barrinha fina; aproxime o mouse da borda inferior para expandir."
-    }
-  },
   "components": {
     "hero_button": {
       "default": {
@@ -312,7 +302,13 @@
           },
           "deep_rescan": {
             "title": "Reescanear quadrinho completo",
-            "desc": "Apaga os capítulos e volumes indexados e reconstrói tudo a partir da pasta."
+            "desc": "Apaga os capítulos e volumes indexados e reconstrói tudo a partir da pasta.",
+            "confirm": {
+              "title": "Reescanear este quadrinho do zero?",
+              "desc": "Isso apaga os capítulos e volumes indexados deste quadrinho e reconstrói tudo a partir da pasta no disco. Histórico de leitura e bookmarks vinculados a capítulos removidos podem ser afetados. Essa ação não pode ser desfeita.",
+              "cancel": "Cancelar",
+              "action": "Reescanear quadrinho"
+            }
           }
         },
         "cover": {
@@ -379,7 +375,12 @@
     "reader": {
       "fallback": {
         "loading": "Carregando...",
-        "chapter_unavailable": "Capítulo indisponível"
+        "chapter_unavailable": "Capítulo indisponível",
+        "open_failed": {
+          "title": "Não foi possível abrir este capítulo",
+          "desc": "As páginas podem estar corrompidas, ou o arquivo pode ter sido movido ou apagado. Tente novamente ou volte."
+        },
+        "retry": "Tentar novamente"
       },
       "progress": {
         "chapter_unavailable": "Progresso do capítulo",
@@ -512,8 +513,7 @@
         }
       },
       "components": {
-        "theme_piker": "Aparência",
-        "dock_mode": "Navegação"
+        "theme_piker": "Aparência"
       },
       "library": {
         "title": "Biblioteca"
@@ -593,7 +593,6 @@
     "settings": {
       "title": "Configuração Inicial",
       "theme": "Tema",
-      "dock": "Navegação",
       "folder": {
         "title": "Pasta dos Quadrinhos",
         "desc": "Selecione a pasta onde seus quadrinhos estão armazenados.",

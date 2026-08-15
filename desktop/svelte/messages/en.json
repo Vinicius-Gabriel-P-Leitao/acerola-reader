@@ -18,16 +18,6 @@
       "desc": "Clean dark and light theme inspired by Tokyo neon lights"
     }
   },
-  "dock_mode": {
-    "fixed": {
-      "name": "Fixed",
-      "desc": "The navigation dock stays always visible at the bottom edge of the screen."
-    },
-    "hover": {
-      "name": "Gesture",
-      "desc": "The dock hides into a thin bar; move the mouse to the bottom edge to expand it."
-    }
-  },
   "components": {
     "hero_button": {
       "default": {
@@ -312,7 +302,13 @@
           },
           "deep_rescan": {
             "title": "Rescan entire comic",
-            "desc": "Wipes the indexed chapters and volumes and rebuilds everything from the folder."
+            "desc": "Wipes the indexed chapters and volumes and rebuilds everything from the folder.",
+            "confirm": {
+              "title": "Rescan this comic from scratch?",
+              "desc": "This wipes the indexed chapters and volumes for this comic and rebuilds them from the folder on disk. Reading history and bookmarks tied to removed chapters may be affected. This action cannot be undone.",
+              "cancel": "Cancel",
+              "action": "Rescan comic"
+            }
           }
         },
         "cover": {
@@ -379,7 +375,12 @@
     "reader": {
       "fallback": {
         "loading": "Loading...",
-        "chapter_unavailable": "Chapter unavailable"
+        "chapter_unavailable": "Chapter unavailable",
+        "open_failed": {
+          "title": "Couldn't open this chapter",
+          "desc": "The pages may be corrupted, or the file may have been moved or deleted. Try again or go back."
+        },
+        "retry": "Try again"
       },
       "progress": {
         "chapter_unavailable": "Chapter progress",
@@ -512,8 +513,7 @@
         }
       },
       "components": {
-        "theme_piker": "Appearance",
-        "dock_mode": "Navigation"
+        "theme_piker": "Appearance"
       },
       "library": {
         "title": "Library"
@@ -593,7 +593,6 @@
     "settings": {
       "title": "Initial Setup",
       "theme": "Theme",
-      "dock": "Navigation",
       "folder": {
         "title": "Comics Folder",
         "desc": "Select the folder where your comics are stored.",
