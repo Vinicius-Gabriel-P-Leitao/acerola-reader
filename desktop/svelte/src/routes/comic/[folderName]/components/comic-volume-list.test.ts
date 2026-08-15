@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
+import { tick } from 'svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ComicVolumeList from './comic-volume-list.svelte';
 
@@ -83,29 +84,43 @@ describe('ComicVolumeList', () => {
 
 		if (volumeBtn) {
 			await user.click(volumeBtn);
+
+			intersectionCallback(
+				[
+					{ target: observedElements[0], isIntersecting: true } as unknown as IntersectionObserverEntry
+				],
+				{} as IntersectionObserver
+			);
+			await tick();
+
 			expect(screen.getByText('Capítulo 1')).toBeInTheDocument();
 		}
 	});
 
-	it('colapsa o volume expandido e limpa páginas visíveis', async () => {
+	it('colapsa o volume expandido', async () => {
 		const user = userEvent.setup();
 		const onExpand = vi.fn();
-		const onVisiblePages = vi.fn();
 		render(ComicVolumeList, {
 			props: {
 				data: { volumes, pagesData },
-				events: { onExpand, onVisiblePages }
+				events: { onExpand }
 			}
 		});
 
 		const volumeBtn = screen.getByRole('button', { name: /Volume 1/i });
 		await user.click(volumeBtn);
+
+		intersectionCallback(
+			[{ target: observedElements[0], isIntersecting: true } as unknown as IntersectionObserverEntry],
+			{} as IntersectionObserver
+		);
+		await tick();
+
 		expect(screen.getByText('Capítulo 1')).toBeInTheDocument();
 
 		await user.click(volumeBtn);
 
 		expect(onExpand).toHaveBeenLastCalledWith(null);
-		expect(onVisiblePages).toHaveBeenLastCalledWith([]);
 		await waitFor(() => {
 			expect(screen.queryByText('Capítulo 1')).not.toBeInTheDocument();
 		});
@@ -136,13 +151,12 @@ describe('ComicVolumeList', () => {
 		expect(screen.getByText('Nenhum capítulo disponível.')).toBeInTheDocument();
 	});
 
-	it('notifica páginas visíveis para lazy load', async () => {
+	it('desmonta o conteúdo real ao sair da janela de renderização', async () => {
 		const user = userEvent.setup();
-		const onVisiblePages = vi.fn();
 		render(ComicVolumeList, {
 			props: {
 				data: { volumes, pagesData },
-				events: { onExpand: vi.fn(), onVisiblePages }
+				events: { onExpand: vi.fn() }
 			}
 		});
 
@@ -158,8 +172,9 @@ describe('ComicVolumeList', () => {
 			],
 			{} as IntersectionObserver
 		);
+		await tick();
 
-		expect(onVisiblePages).toHaveBeenLastCalledWith([0]);
+		expect(screen.getByText('Capítulo 1')).toBeInTheDocument();
 
 		intersectionCallback(
 			[
@@ -170,8 +185,9 @@ describe('ComicVolumeList', () => {
 			],
 			{} as IntersectionObserver
 		);
+		await tick();
 
-		expect(onVisiblePages).toHaveBeenLastCalledWith([]);
+		expect(screen.queryByText('Capítulo 1')).not.toBeInTheDocument();
 	});
 
 	it('abre capítulo ao clicar no item expandido', async () => {
@@ -185,6 +201,13 @@ describe('ComicVolumeList', () => {
 		});
 
 		await user.click(screen.getByRole('button', { name: /Volume 1/i }));
+
+		intersectionCallback(
+			[{ target: observedElements[0], isIntersecting: true } as unknown as IntersectionObserverEntry],
+			{} as IntersectionObserver
+		);
+		await tick();
+
 		await user.click(screen.getByText('Capítulo 1'));
 
 		expect(onOpenChapter).toHaveBeenCalledWith(pagesData[0].items[0]);

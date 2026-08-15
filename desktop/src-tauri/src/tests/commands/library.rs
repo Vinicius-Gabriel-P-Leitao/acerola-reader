@@ -10,7 +10,7 @@ use super::support::{
 };
 use crate::{
     cmd::features::{library::comic_scanner_cmd, summary as summary_cmd},
-    core::services::archive::comic_scanner_engine::ComicScannerService,
+    core::services::{archive::comic_scanner_engine::ComicScannerService, summary::ChapterCacheService},
     tests::utils::setup_test_db::setup_test_db,
 };
 
@@ -26,16 +26,18 @@ fn build_library_app(
     pool: SqlitePool,
 ) -> Result<(tauri::App<tauri::test::MockRuntime>, tauri::WebviewWindow<tauri::test::MockRuntime>)>
 {
-    build_webview(tauri::test::mock_builder().manage(pool).invoke_handler(
-        tauri::generate_handler![
-            comic_scanner_cmd::refresh_library,
-            comic_scanner_cmd::incremental_scan,
-            comic_scanner_cmd::rebuild_library,
-            summary_cmd::get_comic_summary,
-            summary_cmd::get_comic_by_folder_name,
-            summary_cmd::get_comic_chapters,
-        ],
-    ))
+    build_webview(
+        tauri::test::mock_builder().manage(pool).manage(ChapterCacheService::new()).invoke_handler(
+            tauri::generate_handler![
+                comic_scanner_cmd::refresh_library,
+                comic_scanner_cmd::incremental_scan,
+                comic_scanner_cmd::rebuild_library,
+                summary_cmd::get_comic_summary,
+                summary_cmd::get_comic_by_folder_name,
+                summary_cmd::get_comic_chapters,
+            ],
+        ),
+    )
 }
 
 fn create_comic_dir(root: &TempDir, name: &str, chapters: &[&str]) -> Result<PathBuf> {

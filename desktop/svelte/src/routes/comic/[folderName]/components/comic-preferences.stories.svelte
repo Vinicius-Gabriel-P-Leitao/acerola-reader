@@ -18,7 +18,6 @@
 
 <script lang="ts">
 	let displayMode = $state('Lista');
-	let chaptersPerPage = $state('100');
 	let mediaType = $state('Manga');
 	let volumeViewMode = $state<'cover' | 'banner'>('cover');
 </script>
@@ -27,12 +26,10 @@
 	<ComicPreferences
 		data={{ hasVolumeStructure: true }}
 		state={{
-			chaptersPerPage,
 			volumeViewMode,
 			bookmarkId: null, externalSyncEnabled: true
 		}}
 		events={{
-			onChaptersPerPageChange: (value) => (chaptersPerPage = value),
 			onVolumeViewModeChange: (value) => (volumeViewMode = value),
 			onBookmarkChange: () => {}, onExternalSyncChange: () => {}
 		}}

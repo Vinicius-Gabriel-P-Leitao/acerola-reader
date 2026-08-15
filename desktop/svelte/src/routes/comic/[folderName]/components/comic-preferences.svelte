@@ -5,13 +5,11 @@
 			bookmarks?: { id: number; name: string; color: number }[];
 		};
 		state: {
-			chaptersPerPage: string;
 			volumeViewMode: 'cover' | 'banner';
 			bookmarkId: number | null;
 			externalSyncEnabled: boolean;
 		};
 		events: {
-			onChaptersPerPageChange: (value: string) => void;
 			onVolumeViewModeChange: (value: 'cover' | 'banner') => void;
 			onBookmarkChange: (value: number | null) => void;
 			onExternalSyncChange: (value: boolean) => void;
@@ -35,7 +33,6 @@
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
 	import { m } from '$lib/paraglide/messages';
 
-	import Hash from '@lucide/svelte/icons/hash';
 	import Layers from '@lucide/svelte/icons/layers';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
@@ -109,34 +106,6 @@
 					{/snippet}
 				</AcerolaHeroButton>
 			{/if}
-
-			<!-- Chapters per page -->
-			<AcerolaHeroButton
-				data={{
-					title: m['pages.comic.preferences.chapters_per_page.title'](),
-					description: m['pages.comic.preferences.chapters_per_page.desc']()
-				}}
-			>
-				{#snippet icon()}
-					<Hash class="text-chart-3" size={24} />
-				{/snippet}
-
-				{#snippet action()}
-					<AcerolaSelect
-						data={{
-							options: [
-								{ value: '25', label: '25' },
-								{ value: '50', label: '50' },
-								{ value: '100', label: '100' }
-							]
-						}}
-						state={{ value: preferences.chaptersPerPage }}
-						events={{
-							onValueChange: events.onChaptersPerPageChange
-						}}
-					/>
-				{/snippet}
-			</AcerolaHeroButton>
 
 			<!-- Bookmark Assignment -->
 			<AcerolaHeroButton

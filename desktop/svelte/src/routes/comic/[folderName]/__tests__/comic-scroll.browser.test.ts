@@ -18,7 +18,7 @@ vi.mock('@tauri-apps/api/event', () => ({
 
 vi.mock('@tauri-apps/plugin-store', () => ({
 	load: vi.fn().mockResolvedValue({
-		get: vi.fn().mockResolvedValue('25'),
+		get: vi.fn().mockResolvedValue('cover'),
 		set: vi.fn().mockResolvedValue(undefined),
 		save: vi.fn().mockResolvedValue(undefined)
 	})
@@ -109,12 +109,10 @@ class MockIntersectionObserver {
 
 describe('ComicPage Scroll Integration', () => {
 	const TOTAL_CHAPTERS = 1000;
-	const PAGE_SIZE = 25;
+	const RENDER_CHUNK_SIZE = 25;
 	const ITEM_HEIGHT = 112;
 
-	let rustEventEmitter:
-		| ((event: { payload: ReturnType<typeof generatePagePayload> }) => void)
-		| undefined;
+	let rustEventEmitter: ((event: { payload: ReturnType<typeof generateChaptersPayload> }) => void) | undefined;
 	let intersectionObservers: MockIntersectionObserver[] = [];
 
 	beforeEach(() => {
@@ -135,7 +133,7 @@ describe('ComicPage Scroll Integration', () => {
 		(listen as any).mockImplementation(
 			(
 				eventName: string,
-				callback: (event: { payload: ReturnType<typeof generatePagePayload> }) => void
+				callback: (event: { payload: ReturnType<typeof generateChaptersPayload> }) => void
 			) => {
 				if (eventName === LIBRARY_EVENTS.comicChapters) {
 					rustEventEmitter = callback;
@@ -151,21 +149,24 @@ describe('ComicPage Scroll Integration', () => {
 		vi.unstubAllGlobals();
 	});
 
-	const generatePagePayload = (pageIndex: number) => ({
+	// INFO: A busca não é mais paginada — o backend responde com todos os
+	// TOTAL_CHAPTERS capítulos numa única resposta (ver FETCH_ALL_PAGE_SIZE em
+	// use-comic-chapters.svelte.ts).
+	const generateChaptersPayload = () => ({
 		archive: {
-			items: Array.from({ length: PAGE_SIZE }, (_, index) => ({
-				id: `id-${pageIndex}-${index}`,
-				name: `Chapter ${pageIndex * PAGE_SIZE + index + 1}`,
-				path: `path-${pageIndex}-${index}`,
-				chapterSort: `${pageIndex * PAGE_SIZE + index + 1}`,
+			items: Array.from({ length: TOTAL_CHAPTERS }, (_, index) => ({
+				id: `id-${index}`,
+				name: `Chapter ${index + 1}`,
+				path: `path-${index}`,
+				chapterSort: `${index + 1}`,
 				volumeId: null,
 				volumeName: null,
 				isSpecial: false,
 				lastModified: 0
 			})),
 			volumes: [],
-			pageSize: PAGE_SIZE,
-			page: pageIndex,
+			pageSize: TOTAL_CHAPTERS,
+			page: 0,
 			total: TOTAL_CHAPTERS,
 			volumeSections: []
 		},
@@ -186,7 +187,6 @@ describe('ComicPage Scroll Integration', () => {
 			},
 			artwork: { cover: null, banner: null }
 		},
-		initialChaptersPerPage: '25',
 		initialVolumeViewMode: 'cover' as 'cover' | 'banner'
 	};
 
@@ -200,12 +200,10 @@ describe('ComicPage Scroll Integration', () => {
 		return observer;
 	}
 
-	function emitComicChapters(pageIndex: number) {
-		if (!rustEventEmitter) {
-			throw new Error('Rust event emitter was not registered');
-		}
-
-		rustEventEmitter({ payload: generatePagePayload(pageIndex) });
+	function getChapterFetchCallCount() {
+		return (invoke as any).mock.calls.filter(
+			(callArgs: any[]) => callArgs[0] === LIBRARY_COMMANDS.getComicChapters
+		).length;
 	}
 
 	function getChapterTitles(container: HTMLElement) {
@@ -214,16 +212,9 @@ describe('ComicPage Scroll Integration', () => {
 		);
 	}
 
-	function getPageRequestCount(pageIndex: number) {
-		return (invoke as any).mock.calls.filter(
-			(callArgs: any[]) =>
-				callArgs[0] === LIBRARY_COMMANDS.getComicChapters && callArgs[1].page === pageIndex
-		).length;
-	}
-
-	async function waitForPageRequest(pageIndex: number) {
+	async function waitForChapterFetch() {
 		await vi.waitFor(() => {
-			expect(getPageRequestCount(pageIndex)).toBeGreaterThan(0);
+			expect(getChapterFetchCallCount()).toBeGreaterThan(0);
 		});
 	}
 
@@ -239,79 +230,60 @@ describe('ComicPage Scroll Integration', () => {
 		});
 	}
 
+	async function waitForChapterTitleGone(container: HTMLElement, title: string) {
+		await vi.waitFor(() => {
+			expect(getChapterTitles(container)).not.toContain(title);
+		});
+	}
+
 	async function renderLoadedComicPage() {
 		const view = render(ComicPage, { data: loaderDataMock });
 
 		await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
-		await waitForPageRequest(0);
-		emitComicChapters(0);
-		await waitForChapterTitle(view.container, 'Chapter 1');
+		await waitForChapterFetch();
+		rustEventEmitter!({ payload: generateChaptersPayload() });
 		await waitForTrackedPage(0);
+		getLatestObserver().emitVisiblePages([0]);
+		await waitForChapterTitle(view.container, 'Chapter 1');
 
 		return view;
 	}
 
-	async function loadVisiblePage(container: HTMLElement, pageIndex: number) {
-		await waitForTrackedPage(pageIndex);
-		getLatestObserver().emitVisiblePages([pageIndex]);
-		await waitForPageRequest(pageIndex);
-		emitComicChapters(pageIndex);
-		await waitForChapterTitle(container, `Chapter ${pageIndex * PAGE_SIZE + 1}`);
-	}
-
-	it('mantem a estabilidade do scroll com espacadores virtuais apos despejo do LRU', async () => {
+	it('busca todos os capítulos numa única chamada, independente de quanto se rola', async () => {
 		const { container } = await renderLoadedComicPage();
+
+		expect(getChapterFetchCallCount()).toBe(1);
 
 		for (let pageIndex = 1; pageIndex <= 6; pageIndex++) {
-			await loadVisiblePage(container, pageIndex);
+			await waitForTrackedPage(pageIndex);
+			getLatestObserver().emitVisiblePages([pageIndex]);
+			await waitForChapterTitle(container, `Chapter ${pageIndex * RENDER_CHUNK_SIZE + 1}`);
 		}
 
-		await vi.waitFor(() => {
-			const titles = getChapterTitles(container);
+		// Nenhuma chamada extra de fetch — tudo já tinha chegado na primeira resposta.
+		expect(getChapterFetchCallCount()).toBe(1);
+	});
 
-			expect(titles).toHaveLength(PAGE_SIZE * 6);
-			expect(titles).not.toContain('Chapter 1');
-			expect(titles).toContain('Chapter 151');
-		});
+	it('desmonta o bloco que saiu da janela e remonta ao voltar sem refazer o fetch', async () => {
+		const { container } = await renderLoadedComicPage();
+
+		await waitForTrackedPage(1);
+		getLatestObserver().emitVisiblePages([1]);
+		await waitForChapterTitle(container, `Chapter ${RENDER_CHUNK_SIZE + 1}`);
+
+		// Página 0 saiu da janela de renderização (só a 1 está visível agora).
+		await waitForChapterTitleGone(container, 'Chapter 1');
 
 		const firstPageBlock = container.querySelector('[data-page="0"]') as HTMLElement | null;
-
 		expect(firstPageBlock).not.toBeNull();
-		expect(firstPageBlock?.style.height).toBe(`${PAGE_SIZE * ITEM_HEIGHT}px`);
+		expect(firstPageBlock?.style.height).toBe(`${RENDER_CHUNK_SIZE * ITEM_HEIGHT}px`);
 		expect(firstPageBlock?.querySelector('[data-slot="item-title"]')).toBeNull();
-	});
 
-	it('limpa o cache quando recebe uma pagina nao adjacente', async () => {
-		const { container } = await renderLoadedComicPage();
-
-		await loadVisiblePage(container, 10);
-
-		await vi.waitFor(() => {
-			const titles = getChapterTitles(container);
-
-			expect(titles).toHaveLength(PAGE_SIZE);
-			expect(titles[0]).toBe('Chapter 251');
-			expect(titles).not.toContain('Chapter 1');
-		});
-
-		const tenthPageBlock = container.querySelector('[data-page="10"]') as HTMLElement | null;
-
-		expect(tenthPageBlock).not.toBeNull();
-		expect(tenthPageBlock?.style.height).toBe(`${PAGE_SIZE * ITEM_HEIGHT}px`);
-	});
-
-	it('busca a proxima pagina correta ao rolar para baixo', async () => {
-		const { container } = await renderLoadedComicPage();
-		const initialPageZeroRequests = getPageRequestCount(0);
-
-		await loadVisiblePage(container, 1);
-
+		// Volta pra página 0 — o dado já está em cache, então reaparece sem novo fetch.
 		getLatestObserver().emitVisiblePages([0]);
+		await waitForChapterTitle(container, 'Chapter 1');
 
-		await new Promise((resolve) => setTimeout(resolve, 100));
-
-		expect(getPageRequestCount(0)).toBe(initialPageZeroRequests);
-		expect(getPageRequestCount(1)).toBe(1);
+		expect(getChapterFetchCallCount()).toBe(1);
 	});
 
 	it('renderiza os titulos dos capitulos usando o nome limpo vindo do Rust', async () => {

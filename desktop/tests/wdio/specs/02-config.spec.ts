@@ -71,6 +71,10 @@ describe('config nativa', () => {
 	it('abre seletor de idioma da sidebar sem alterar a rota', async () => {
 		await openConfig();
 
+		// O select fica dentro do popover do ícone de globo no header — só
+		// existe no DOM depois do popover aberto (ver +layout.svelte).
+		await (await firstDisplayed('[title="Mudar idioma"]')).click();
+
 		const localeTrigger = await firstDisplayed('[data-slot="select-trigger"]');
 		await localeTrigger.click();
 

@@ -245,10 +245,6 @@
           "cover": "Capa",
           "banner": "Banner"
         },
-        "chapters_per_page": {
-          "title": "Capítulos por página",
-          "desc": "Número de capítulos exibidos por página."
-        },
         "bookmark": {
           "title": "Marcador",
           "desc": "Atribua um marcador a este quadrinho.",

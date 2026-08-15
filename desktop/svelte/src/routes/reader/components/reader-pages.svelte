@@ -26,13 +26,21 @@
 	import { cn } from '$lib/utils/cn.utils';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { fade } from 'svelte/transition';
+	import { PREFETCH_RADIUS } from '$lib/hooks/store/use-reader.svelte';
 
 	let { data, services }: ReaderPagesProps = $props();
 
 	const trackPage = $derived(services.trackPage);
 
+	/**
+	 * Todas as `pageCount` seções montam de uma vez (sem virtualização), então
+	 * sem esse raio essa action dispararia loadPage para o capítulo inteiro
+	 * assim que o leitor abre. O IntersectionObserver em +page.svelte já cobre
+	 * o carregamento conforme o usuário rola — isso aqui é só o fallback pro
+	 * primeiro paint ao redor da página atual.
+	 */
 	function loadIfMissing(node: HTMLElement, pageIndex: number) {
-		if (!services.pageAt(pageIndex)) {
+		if (!services.pageAt(pageIndex) && Math.abs(pageIndex - data.currentPage) <= PREFETCH_RADIUS) {
 			void services.loadPage?.(pageIndex, false);
 		}
 		return {

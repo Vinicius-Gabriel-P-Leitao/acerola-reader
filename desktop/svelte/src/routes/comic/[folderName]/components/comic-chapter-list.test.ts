@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
+import { tick } from 'svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ComicChapterList from './comic-chapter-list.svelte';
 
@@ -40,10 +41,20 @@ describe('ComicChapterList', () => {
 		}
 	];
 
-	it('renderiza a lista de capítulos quando fornecida', () => {
+	it('renderiza a lista de capítulos quando fornecida', async () => {
 		render(ComicChapterList, {
 			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
 		});
+
+		// O bloco só monta o conteúdo real (AcerolaHeroButton) quando a página
+		// está dentro da janela de renderização — em produção o
+		// IntersectionObserver reporta isso pouco depois do mount.
+		const firstPage = document.querySelector<HTMLElement>('[data-page="0"]');
+		intersectionCallback(
+			[{ target: firstPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
+			{} as IntersectionObserver
+		);
+		await tick();
 
 		expect(screen.getByText('Capítulo 1: Test')).toBeInTheDocument();
 		expect(screen.getByText('001.cbz')).toBeInTheDocument();
@@ -59,48 +70,43 @@ describe('ComicChapterList', () => {
 		expect(screen.getByText('Carregando...')).toBeInTheDocument();
 	});
 
-	it('notifica a próxima página visível para paginação', () => {
-		const onVisiblePages = vi.fn();
+	it('monta o conteúdo real só quando a página entra na janela de renderização', async () => {
 		render(ComicChapterList, {
-			props: {
-				data: { pagesData, totalChapters: 4, pageSize: 2 },
-				events: { onVisiblePages }
-			}
+			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
 		});
 
-		const nextPage = document.querySelector<HTMLElement>('[data-page="1"]');
-		expect(nextPage).toBeInTheDocument();
-
-		intersectionCallback(
-			[{ target: nextPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
-			{} as IntersectionObserver
-		);
-
-		expect(onVisiblePages).toHaveBeenLastCalledWith([1]);
-	});
-
-	it('remove página da lista visível ao sair do viewport', () => {
-		const onVisiblePages = vi.fn();
-		render(ComicChapterList, {
-			props: {
-				data: { pagesData, totalChapters: 4, pageSize: 2 },
-				events: { onVisiblePages }
-			}
-		});
+		expect(screen.queryByText('Capítulo 1: Test')).not.toBeInTheDocument();
 
 		const firstPage = document.querySelector<HTMLElement>('[data-page="0"]');
-		expect(firstPage).toBeInTheDocument();
-
 		intersectionCallback(
 			[{ target: firstPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
 			{} as IntersectionObserver
 		);
+		await tick();
+
+		expect(screen.getByText('Capítulo 1: Test')).toBeInTheDocument();
+	});
+
+	it('desmonta o conteúdo real ao sair da janela de renderização', async () => {
+		render(ComicChapterList, {
+			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
+		});
+
+		const firstPage = document.querySelector<HTMLElement>('[data-page="0"]');
+		intersectionCallback(
+			[{ target: firstPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
+			{} as IntersectionObserver
+		);
+		await tick();
+		expect(screen.getByText('Capítulo 1: Test')).toBeInTheDocument();
+
 		intersectionCallback(
 			[{ target: firstPage!, isIntersecting: false } as unknown as IntersectionObserverEntry],
 			{} as IntersectionObserver
 		);
+		await tick();
 
-		expect(onVisiblePages).toHaveBeenLastCalledWith([]);
+		expect(screen.queryByText('Capítulo 1: Test')).not.toBeInTheDocument();
 	});
 
 	it('abre capítulo ao clicar no item', async () => {
@@ -112,6 +118,13 @@ describe('ComicChapterList', () => {
 				events: { onOpenChapter }
 			}
 		});
+
+		const firstPage = document.querySelector<HTMLElement>('[data-page="0"]');
+		intersectionCallback(
+			[{ target: firstPage!, isIntersecting: true } as unknown as IntersectionObserverEntry],
+			{} as IntersectionObserver
+		);
+		await tick();
 
 		await user.click(screen.getByText('Capítulo 2: Another Test'));
 

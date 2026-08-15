@@ -7,14 +7,14 @@ describe('ComicPreferences', () => {
 	function defaultProps() {
 		return {
 			state: {
-				chaptersPerPage: '100',
 				volumeViewMode: 'cover' as const,
-				bookmarkId: null, externalSyncEnabled: true
+				bookmarkId: null,
+				externalSyncEnabled: true
 			},
 			events: {
-				onChaptersPerPageChange: vi.fn(),
 				onVolumeViewModeChange: vi.fn(),
-				onBookmarkChange: vi.fn(), onExternalSyncChange: vi.fn()
+				onBookmarkChange: vi.fn(),
+				onExternalSyncChange: vi.fn()
 			}
 		};
 	}
@@ -23,8 +23,6 @@ describe('ComicPreferences', () => {
 		render(ComicPreferences, { props: defaultProps() });
 
 		expect(screen.getByText('Leitura')).toBeInTheDocument();
-		expect(screen.getByText('Capítulos por página')).toBeInTheDocument();
-		expect(screen.getByText('Número de capítulos exibidos por página.')).toBeInTheDocument();
 	});
 
 	it('oculta preferência de volume quando não existe estrutura de volume', () => {
@@ -61,33 +59,4 @@ describe('ComicPreferences', () => {
 
 		expect(props.events.onVolumeViewModeChange).toHaveBeenCalledWith('banner');
 	});
-
-	it('altera capítulos por página pelo select', async () => {
-		const user = userEvent.setup();
-		const props = defaultProps();
-		render(ComicPreferences, { props });
-
-		await user.click(screen.getByText('100'));
-		await user.click(await screen.findByText('50'));
-
-		expect(props.events.onChaptersPerPageChange).toHaveBeenCalledWith('50');
-	});
-
-	it('preserva preferência controlada entre renders', async () => {
-		const props = defaultProps();
-		const { rerender } = render(ComicPreferences, { props });
-
-		expect(screen.getByText('100')).toBeInTheDocument();
-
-		await rerender({
-			...props,
-			state: {
-				...props.state,
-				chaptersPerPage: '25'
-			}
-		});
-
-		expect(screen.getByText('25')).toBeInTheDocument();
-	});
 });
-

@@ -14,7 +14,7 @@ use crate::{
         metadata as metadata_cmd, network as network_cmd, reader as reader_cmd,
         summary as comic_summary_cmd,
     },
-    core::services::reader::ReaderService,
+    core::services::{reader::ReaderService, summary::ChapterCacheService},
     infra::error::ComicError,
     system_cmd,
 };
@@ -132,6 +132,7 @@ fn setup_runtime(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     )?;
 
     app_handle.manage(ReaderService::new());
+    app_handle.manage(ChapterCacheService::new());
 
     tauri::async_runtime::block_on(async move {
         db::setup_database(&app_handle, database_path).await.map_err(|db_error| {

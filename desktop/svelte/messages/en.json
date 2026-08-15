@@ -245,10 +245,6 @@
           "cover": "Cover",
           "banner": "Banner"
         },
-        "chapters_per_page": {
-          "title": "Chapters per page",
-          "desc": "Number of chapters displayed per page."
-        },
         "bookmark": {
           "title": "Bookmark",
           "desc": "Assign a bookmark to this comic.",

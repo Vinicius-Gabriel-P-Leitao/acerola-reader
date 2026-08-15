@@ -6,7 +6,6 @@
 
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
 
-	import { useChaptersPerPage } from '$lib/hooks/preferences/use-chapters-per-page.svelte';
 	import { useVolumeViewMode } from '$lib/hooks/preferences/use-volume-view-mode.svelte';
 	import { useComicChapters } from '$lib/hooks/store/use-comic-chapters.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
@@ -48,7 +47,11 @@
 	const activeComic = useComicContext();
 	const chapterStore = useComicChapters();
 
-	const chaptersPreference = useChaptersPerPage();
+	// INFO: Tamanho do bloco só pra virtualização de renderização — não tem
+	// mais relação com quantos capítulos são buscados do backend (isso agora
+	// vem tudo de uma vez, ver use-comic-chapters.svelte.ts).
+	const RENDER_CHUNK_SIZE = 25;
+
 	const volumeViewPreference = useVolumeViewMode();
 	const bookmarkStore = useBookmarks();
 	const metadataSync = useMetadataSync();
@@ -64,8 +67,6 @@
 	);
 	let searchQuery = $state('');
 	let showSortMenu = $state(false);
-
-	let visiblePages = $state<number[]>([]);
 
 	// Sobrescrever cover.* mantém o mesmo path no disco, então o back-end não muda a URL
 	// resolvida — sem isso o <img> nunca re-renderiza e o cache do protocolo asset:// serve
@@ -369,11 +370,7 @@
 	}
 
 	onMount(async () => {
-		await Promise.all([
-			chaptersPreference.loadChaptersPerPage(),
-			volumeViewPreference.loadVolumeViewMode(),
-			bookmarkStore.loadBookmarks()
-		]);
+		await Promise.all([volumeViewPreference.loadVolumeViewMode(), bookmarkStore.loadBookmarks()]);
 	});
 
 	const comicId = $derived(
@@ -431,14 +428,6 @@
 	}
 
 	$effect(() => {
-		const value = chaptersPreference.chaptersPerPage;
-
-		untrack(() => {
-			chaptersPreference.saveChaptersPerPage(value);
-		});
-	});
-
-	$effect(() => {
 		if (data.comic) {
 			const comic = data.comic;
 			untrack(() => {
@@ -463,47 +452,9 @@
 		const comic = activeComic.item ?? data.comic;
 		if (!comic) return;
 
-		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
-
 		untrack(() => {
-			visiblePages = [];
 			chapterStore.clear(true);
-			chapterStore.fetch(
-				comic.relations.directoryId,
-				0,
-				pageSize,
-				currentSortBy,
-				volumeId,
-				query || null
-			);
-		});
-	});
-
-	$effect(() => {
-		if (chapterStore.loading || visiblePages.length === 0) return;
-
-		const comic = activeComic.item ?? data.comic;
-		if (!comic) return;
-
-		for (const page of visiblePages) {
-			if (chapterStore.lruKeys.includes(page)) {
-				chapterStore.touch(page);
-			}
-		}
-
-		const missingPages = visiblePages.filter((page) => !chapterStore.lruKeys.includes(page));
-
-		if (missingPages.length === 0) return;
-
-		untrack(() => {
-			chapterStore.fetch(
-				comic.relations.directoryId,
-				missingPages[0],
-				parseInt(chaptersPreference.chaptersPerPage),
-				sortBy,
-				expandedVolumeId,
-				searchQuery || null
-			);
+			chapterStore.fetch(comic.relations.directoryId, currentSortBy, volumeId, query || null);
 		});
 	});
 
@@ -512,31 +463,35 @@
 		if (!item) return null;
 
 		const chaptersData = chapterStore.chapters;
-		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
 
-		const pagesData = (chaptersData?.pages ?? []).map((it) => ({
-			page: it.page,
+		const allItems = (chaptersData?.archive.items ?? [])
+			.map((comic, index) => ({
+				id: comic.id.toString(),
+				name: comic.name,
+				title: comic.name,
+				fileName: comic.name,
+				isRead: Array.isArray(readChapters) ? readChapters.includes(comic.id.toString()) : false,
+				chapterSort: comic.chapterSort,
+				path: comic.path,
+				volumeId: comic.volumeId,
+				volumeName: comic.volumeName,
+				isSpecial: comic.isSpecial,
+				lastModified: comic.lastModified,
+				chapterIndex: index
+			}))
+			.filter((comic) => !expandedVolumeId || comic.volumeId === expandedVolumeId);
 
-			items: it.items
-				.map((comic, index) => ({
-					id: comic.id.toString(),
-					name: comic.name,
-					title: comic.name,
-					fileName: comic.name,
-					isRead: Array.isArray(readChapters) ? readChapters.includes(comic.id.toString()) : false,
-					chapterSort: comic.chapterSort,
-					path: comic.path,
-					volumeId: comic.volumeId,
-					volumeName: comic.volumeName,
-					isSpecial: comic.isSpecial,
-					lastModified: comic.lastModified,
-					chapterIndex: it.page * pageSize + index
-				}))
-				.filter((comic) => {
-					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
-					return matchesVolume;
-				})
-		}));
+		// Corta a lista plana em blocos fixos só pra virtualização de renderização
+		// (ComicChapterList/ComicVolumeList montam um AcerolaHeroButton por item
+		// só quando o bloco está perto do scroll) — não tem relação com a busca,
+		// que já veio inteira do backend.
+		const pagesData = Array.from(
+			{ length: Math.ceil(allItems.length / RENDER_CHUNK_SIZE) || 0 },
+			(_, page) => ({
+				page,
+				items: allItems.slice(page * RENDER_CHUNK_SIZE, (page + 1) * RENDER_CHUNK_SIZE)
+			})
+		);
 
 		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
 			const volCover = bustCache(
@@ -558,8 +513,7 @@
 				coverUri: volCover || fallbackCover,
 				bannerUri: volBanner || fallbackBanner || fallbackCover,
 				hasMore:
-					expandedVolumeId === volume.id.toString() &&
-					pagesData.flatMap((page) => page.items).length < volume.chapterCount,
+					expandedVolumeId === volume.id.toString() && allItems.length < volume.chapterCount,
 				chapters: []
 			};
 		});
@@ -575,7 +529,7 @@
 			banner: bustCache(resolveBanner(item.artwork), coverCacheBust),
 			pagesData,
 			volumes,
-			pageSize,
+			pageSize: RENDER_CHUNK_SIZE,
 			metadata: {
 				description:
 					item.metadata.description || m['pages.comic.metadata.description.unavailable'](),
@@ -845,7 +799,6 @@
 								}}
 								events={{
 									onExpand: (value) => (expandedVolumeId = value),
-									onVisiblePages: (pages) => (visiblePages = pages),
 									onOpenChapter: openReader,
 									onToggleSelect: handleToggleSelect,
 									onEnterSelection: handleEnterSelection,
@@ -863,7 +816,6 @@
 									isSelected: chapterSelection.isSelected
 								}}
 								events={{
-									onVisiblePages: (pages: number[]) => (visiblePages = pages),
 									onOpenChapter: openReader,
 									onToggleSelect: handleToggleSelect,
 									onEnterSelection: handleEnterSelection,
@@ -879,13 +831,11 @@
 								bookmarks: bookmarkStore.bookmarks
 							}}
 							state={{
-								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode,
 								bookmarkId: currentBookmarkId,
 								externalSyncEnabled: manga.metadata.externalSync
 							}}
 							events={{
-								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value),
 								onBookmarkChange: async (value) => {
 									const id =

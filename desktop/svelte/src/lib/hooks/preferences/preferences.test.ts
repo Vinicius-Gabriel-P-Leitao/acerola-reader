@@ -6,7 +6,6 @@ import { load } from '@tauri-apps/plugin-store';
 import { STORE_KEYS } from '$lib/constants/store-plugin';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/library.commands';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
-import { useChaptersPerPage } from './use-chapters-per-page.svelte';
 import { useComicInfoPreference } from './use-comic-info.svelte';
 import { useVolumeViewMode } from './use-volume-view-mode.svelte';
 
@@ -60,41 +59,6 @@ function mockStore(values: Record<string, unknown> = {}) {
 
 	return store;
 }
-
-describe('useChaptersPerPage', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
-	it('carrega valor salvo de capítulos por página', async () => {
-		mockStore({ [STORE_KEYS.chaptersPerPage]: '100' });
-		const hook = await renderHook(useChaptersPerPage);
-
-		await hook.loadChaptersPerPage();
-
-		expect(hook.chaptersPerPage).toBe('100');
-	});
-
-	it('usa valor padrão quando não há capítulos por página salvos', async () => {
-		mockStore();
-		const hook = await renderHook(useChaptersPerPage);
-
-		await hook.loadChaptersPerPage();
-
-		expect(hook.chaptersPerPage).toBe('25');
-	});
-
-	it('salva capítulos por página e atualiza estado visível', async () => {
-		const store = mockStore();
-		const hook = await renderHook(useChaptersPerPage);
-
-		await hook.saveChaptersPerPage('50');
-
-		expect(hook.chaptersPerPage).toBe('50');
-		expect(store.set).toHaveBeenCalledWith(STORE_KEYS.chaptersPerPage, '50');
-		expect(store.save).toHaveBeenCalledOnce();
-	});
-});
 
 describe('useVolumeViewMode', () => {
 	beforeEach(() => {

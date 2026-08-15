@@ -33,6 +33,10 @@ describe('reader nativo', () => {
 		await waitForText('0% lido');
 		await waitForText('Capítulos restantes indisponíveis');
 
+		// Os títulos desses botões têm o atalho de teclado embutido (ex.:
+		// "Página anterior (←)") — [title^=] casa só o prefixo, sem depender
+		// do texto exato do atalho.
+
 		const progress = await firstDisplayed('[role="progressbar"]');
 		expect(await progress.getAttribute('aria-valuenow')).toBe('0');
 
@@ -43,8 +47,8 @@ describe('reader nativo', () => {
 			}
 		} catch (e) {}
 
-		const previous = await firstDisplayed('[title="Página anterior"]');
-		const next = await firstDisplayed('[title="Próxima página"]');
+		const previous = await firstDisplayed('[title^="Página anterior"]');
+		const next = await firstDisplayed('[title^="Próxima página"]');
 		expect(await previous.isEnabled()).toBe(false);
 		expect(await next.isEnabled()).toBe(false);
 	});
@@ -53,7 +57,7 @@ describe('reader nativo', () => {
 		await waitForAppReady();
 		await navigateTo('/reader');
 
-		await (await firstDisplayed('[title="Comandos"]')).click();
+		await (await firstDisplayed('[title^="Comandos"]')).click();
 		await waitForText('Aumentar zoom');
 		await waitForText('Reduzir zoom');
 		await waitForText('Paginado horizontal');
@@ -65,9 +69,9 @@ describe('reader nativo', () => {
 		await (await firstDisplayed('[title="Webtoon"]')).click();
 		await waitForTextContaining('Webtoon - Zoom 100%');
 
-		await (await firstDisplayed('[title="Aplicar zoom"]')).click();
+		await (await firstDisplayed('[title^="Aplicar zoom"]')).click();
 		await waitForTextContaining('Zoom 165%');
-		await (await firstDisplayed('[title="Resetar zoom"]')).click();
+		await (await firstDisplayed('[title^="Resetar zoom"]')).click();
 		await waitForTextContaining('Zoom 100%');
 	});
 
@@ -90,14 +94,14 @@ describe('reader nativo', () => {
 
 
 
-		await (await firstDisplayed('[title="Próxima página"]')).click();
+		await (await firstDisplayed('[title^="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
 		await waitForTextContaining('67%', 10_000);
 
-		await (await firstDisplayed('[title="Página anterior"]')).click();
+		await (await firstDisplayed('[title^="Página anterior"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
 
-		await (await firstDisplayed('[title="Aplicar zoom"]')).click();
+		await (await firstDisplayed('[title^="Aplicar zoom"]')).click();
 		await waitForTextContaining('Zoom 165%');
 
 		const lockedNavigation = await firstDisplayed(
@@ -105,7 +109,7 @@ describe('reader nativo', () => {
 		);
 		expect(await lockedNavigation.isEnabled()).toBe(false);
 
-		await (await firstDisplayed('[title="Resetar zoom"]')).click();
+		await (await firstDisplayed('[title^="Resetar zoom"]')).click();
 		await waitForTextContaining('Zoom 100%');
 
 		await (await firstDisplayed('[title="Voltar"]')).click();

@@ -93,15 +93,20 @@
 		await folder.loadSavedPath();
 		await bookmarkStore.loadBookmarks();
 
-		try {
-			const packageFamilyName = await invoke<string>('get_package_family_name');
-			if (packageFamilyName !== 'No package identity' && !packageFamilyName.startsWith('Error')) {
-				packageIdentity = `Package: ${packageFamilyName}`;
-			} else {
-				packageIdentity = `Not running with package identity`;
+		if (import.meta.env.DEV) {
+			try {
+				const packageFamilyName = await invoke<string>('get_package_family_name');
+				if (
+					packageFamilyName !== 'No package identity' &&
+					!packageFamilyName.startsWith('Error')
+				) {
+					packageIdentity = `Package: ${packageFamilyName}`;
+				} else {
+					packageIdentity = `Not running with package identity`;
+				}
+			} catch (error) {
+				logError(`Failed to check package identity: ${error}`);
 			}
-		} catch (error) {
-			logError(`Failed to check package identity: ${error}`);
 		}
 
 		appWindow = getCurrentWindow();

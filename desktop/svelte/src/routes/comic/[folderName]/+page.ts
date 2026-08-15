@@ -16,12 +16,10 @@ export const load: PageLoad = async ({ params }) => {
 	);
 
 	const store = await loadStore(STORE_FILE);
-	const chaptersPerPage = await store.get<string>(STORE_KEYS.chaptersPerPage);
 	const volumeViewMode = await store.get<'cover' | 'banner'>(STORE_KEYS.volumeViewMode);
 
 	return {
 		comic,
-		initialChaptersPerPage: chaptersPerPage,
 		initialVolumeViewMode: volumeViewMode
 	};
 };

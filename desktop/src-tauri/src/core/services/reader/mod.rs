@@ -22,7 +22,11 @@ use crate::{
     },
 };
 
-const DEFAULT_CACHE_CAPACITY: usize = 100;
+// INFO: Janela deslizante — não "o capítulo inteiro". Cobre o raio de prefetch
+// (radius 2 = 5 páginas) com folga pra scroll rápido sem acumular capítulos
+// grandes (webtoon) inteiros em RAM (cada página decodificada pode passar de
+// 40MB em bitmap).
+const DEFAULT_CACHE_CAPACITY: usize = 20;
 const DEFAULT_PREFETCH_RADIUS: usize = 2;
 
 #[derive(Clone)]
@@ -565,7 +569,7 @@ mod tests {
         assert_eq!(session.chapter.id, "chapter-1");
         assert_eq!(session.page_count, 3);
         assert_eq!(session.current_page, 0);
-        assert_eq!(session.cache_capacity, 100);
+        assert_eq!(session.cache_capacity, 20);
 
         let first_page = reader.load_page(0, true).await.unwrap();
         assert_eq!(first_page.chapter_id, "chapter-1");

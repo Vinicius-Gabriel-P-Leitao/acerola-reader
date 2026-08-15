@@ -1,4 +1,5 @@
 import {
+	expandDock,
 	firstDisplayed,
 	getPathname,
 	isTextDisplayed,
@@ -13,9 +14,14 @@ describe('home nativa', () => {
 		await navigateTo('/home');
 
 		await waitForText('Acerola');
-		await waitForText('Início');
-		await waitForText('Histórico');
-		await waitForText('Configurações');
+
+		// O dock só expõe os links depois de expandido (modo hover) — os
+		// rótulos "Início"/"Histórico"/"Configurações" só existem como
+		// aria-label, não como texto visível (ver acerola-dock.svelte).
+		await expandDock();
+		expect(await (await browser.$('[aria-label="Início"]')).isExisting()).toBe(true);
+		expect(await (await browser.$('[aria-label="Histórico"]')).isExisting()).toBe(true);
+		expect(await (await browser.$('[aria-label="Configurações"]')).isExisting()).toBe(true);
 
 		// Abre o dialog de busca
 		const searchButton = await firstDisplayed('button[aria-label="Buscar quadrinho..."]');
@@ -57,6 +63,7 @@ describe('home nativa', () => {
 		await waitForAppReady();
 		await navigateTo('/home');
 
+		await expandDock();
 		await (await firstDisplayed('a[href="/config"]')).click();
 		await browser.waitUntil(async () => (await getPathname()) === '/config', {
 			timeout: 10_000,
@@ -65,12 +72,13 @@ describe('home nativa', () => {
 		});
 		await waitForText('Configurações');
 
+		await expandDock();
 		await (await firstDisplayed('a[href="/home"]')).click();
 		await browser.waitUntil(async () => (await getPathname()) === '/home', {
 			timeout: 10_000,
 			interval: 100,
 			timeoutMsg: 'Sidebar não voltou para Home.'
 		});
-		await waitForText('Início');
+		expect(await (await browser.$('[aria-label="Início"]')).isExisting()).toBe(true);
 	});
 });
