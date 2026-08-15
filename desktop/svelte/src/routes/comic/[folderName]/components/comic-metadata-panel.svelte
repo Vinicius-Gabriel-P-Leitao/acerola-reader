@@ -9,6 +9,7 @@
 			description: string;
 			cover: string | null;
 			bookmarkColor?: number | null;
+			bookmarkName?: string | null;
 		};
 		state?: {
 			isResuming?: boolean;
@@ -56,7 +57,11 @@
 			>
 				{#snippet floatingBadge()}
 					{#if data.bookmarkColor != null}
-						<AcerolaBookmarkRibbon color={data.bookmarkColor} class="-top-1.5 left-5 h-10 w-6" />
+						<AcerolaBookmarkRibbon
+							color={data.bookmarkColor}
+							name={data.bookmarkName ?? undefined}
+							class="-top-1.5 left-5 h-10 w-6"
+						/>
 					{/if}
 				{/snippet}
 

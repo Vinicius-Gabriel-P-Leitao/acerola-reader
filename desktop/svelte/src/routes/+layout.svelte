@@ -301,7 +301,7 @@
 		</div>
 		<Command.List class="max-h-[70vh] overflow-y-auto p-4">
 			<Command.Empty class="py-24 text-center text-lg text-muted-foreground">
-				Nenhum quadrinho encontrado.
+				{m['layout.command.no_results']()}
 			</Command.Empty>
 
 			<Command.Group heading={m['layout.command.navigation_group']()} class="px-2 text-muted-foreground">
@@ -321,13 +321,11 @@
 			</Command.Group>
 
 			{#if summary.comics && summary.comics.total > 0}
-				<Command.Group heading="Biblioteca" class="px-2 text-muted-foreground">
+				<Command.Group heading={m['layout.command.library_group']()} class="px-2 text-muted-foreground">
 					<div class="flex flex-col gap-2">
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
-							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
-								comic.relations.directoryId
-							)?.color}
+							{@const comicBookmark = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)}
 							<Command.Item
 								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
 								onSelect={() => {
@@ -346,8 +344,8 @@
 									ui={{ size: 'sm', hideTitle: true }}
 								>
 									{#snippet floatingBadge()}
-										{#if bookmarkColor != null}
-											<AcerolaBookmarkRibbon color={bookmarkColor} />
+										{#if comicBookmark != null}
+											<AcerolaBookmarkRibbon color={comicBookmark.color} name={comicBookmark.name} />
 										{/if}
 									{/snippet}
 								</AcerolaCardImage>

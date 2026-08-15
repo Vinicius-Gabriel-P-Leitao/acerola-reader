@@ -283,7 +283,7 @@
 								/>
 								<input
 									type="text"
-									placeholder="Filtrar categorias..."
+									placeholder={m['pages.home.actions.filter_categories_placeholder']()}
 									bind:value={searchQuery}
 									class="h-8 w-full rounded-xl border border-border/60 bg-muted/60 pr-3 pl-8 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
 								/>

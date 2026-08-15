@@ -502,12 +502,14 @@
 						<span class="block text-xs font-semibold">{m['pages.config.bookmarks.color']()}</span>
 						<div class="flex flex-wrap gap-2">
 							{#each CATEGORY_COLORS as hexColor}
+								{@const hexLabel = '#' + (hexColor & 0xffffff).toString(16).padStart(6, '0')}
 								<button
 									type="button"
 									class="relative h-8 w-8 cursor-pointer rounded-full transition-transform hover:scale-110"
-									style="background-color: #{(hexColor & 0xffffff).toString(16).padStart(6, '0')}"
+									style="background-color: {hexLabel}"
 									onclick={() => (newBookmarkColor = hexColor)}
-									aria-label="Color"
+									aria-label={m['pages.config.bookmarks.color_option']({ hex: hexLabel })}
+									aria-pressed={newBookmarkColor === hexColor}
 								>
 									{#if newBookmarkColor === hexColor}
 										<div

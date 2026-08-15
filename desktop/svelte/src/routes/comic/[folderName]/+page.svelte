@@ -3,6 +3,7 @@
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
+	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
 
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
 
@@ -570,7 +571,8 @@
 				chaptersCount: manga.chaptersCount,
 				description: manga.metadata.description,
 				cover: manga.cover,
-				bookmarkColor: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.color
+				bookmarkColor: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.color,
+				bookmarkName: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.name
 			}}
 			state={{
 				isResuming: !!readingHistory,
@@ -666,88 +668,85 @@
 								/>
 							{/if}
 
-							<div class="relative">
-								<AcerolaButton
-									ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
-									events={{ onClick: () => (showSortMenu = !showSortMenu) }}
-								>
-									<ArrowUpDown size={16} />
-									{m['pages.comic.sort.button']()}
-								</AcerolaButton>
+							<AcerolaPopover
+								state={{ open: showSortMenu }}
+								events={{ onOpenChange: (open) => (showSortMenu = open) }}
+								ui={{ align: 'end', side: 'bottom', sideOffset: 8, contentClass: 'w-48 p-2 rounded-xl' }}
+							>
+								{#snippet trigger()}
+									<AcerolaButton ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}>
+										<ArrowUpDown size={16} />
+										{m['pages.comic.sort.button']()}
+									</AcerolaButton>
+								{/snippet}
 
-								{#if showSortMenu}
-									<div
-										class="absolute top-full right-0 z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg"
+								{#snippet content()}
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'number_asc';
+												showSortMenu = false;
+											}
+										}}
 									>
-										<div class="p-2">
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'number_asc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'number_asc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.number.asc']()}
-											</AcerolaButton>
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'number_desc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'number_desc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.number.desc']()}
-											</AcerolaButton>
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'modified_desc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'modified_desc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.modified.desc']()}
-											</AcerolaButton>
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'modified_asc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'modified_asc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.modified.asc']()}
-											</AcerolaButton>
-										</div>
-									</div>
-								{/if}
-							</div>
+										{#if sortBy === 'number_asc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.number.asc']()}
+									</AcerolaButton>
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'number_desc';
+												showSortMenu = false;
+											}
+										}}
+									>
+										{#if sortBy === 'number_desc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.number.desc']()}
+									</AcerolaButton>
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'modified_desc';
+												showSortMenu = false;
+											}
+										}}
+									>
+										{#if sortBy === 'modified_desc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.modified.desc']()}
+									</AcerolaButton>
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'modified_asc';
+												showSortMenu = false;
+											}
+										}}
+									>
+										{#if sortBy === 'modified_asc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.modified.asc']()}
+									</AcerolaButton>
+								{/snippet}
+							</AcerolaPopover>
 						</div>
 					{/if}
 				</div>

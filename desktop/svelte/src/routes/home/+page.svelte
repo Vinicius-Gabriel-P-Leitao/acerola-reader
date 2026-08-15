@@ -16,6 +16,7 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import SearchX from '@lucide/svelte/icons/search-x';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
@@ -227,7 +228,7 @@
 							<line x1="8" y1="10" x2="8" y2="14"></line>
 							<line x1="16" y1="18" x2="16" y2="22"></line>
 						</svg>
-						Filtrar e Ordenar
+						{m['pages.home.filter_button']()}
 						{#if activeFiltersCount > 0}
 							<span
 								class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground"
@@ -243,10 +244,10 @@
 							class="rounded-lg bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary"
 						>
 							{summary.sortBy === 'title'
-								? 'Título'
+								? m['pages.home.sort.indicator.title']()
 								: summary.sortBy === 'chapterCount'
-									? 'Capítulos'
-									: 'Atualização'}
+									? m['pages.home.sort.indicator.chapter_count']()
+									: m['pages.home.sort.indicator.last_updated']()}
 							{summary.sortOrder === 'asc' ? '↑' : '↓'}
 						</span>
 					{/if}
@@ -255,8 +256,20 @@
 		</div>
 
 		{#if visibleComics.length === 0}
-			<div class="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-				<p class="text-sm">Nenhum quadrinho encontrado para o filtro selecionado.</p>
+			<div
+				class="flex min-h-[40vh] flex-col items-center justify-center p-12 text-center animate-in fade-in-50 duration-300"
+			>
+				<div
+					class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner"
+				>
+					<SearchX size={32} />
+				</div>
+				<h3 class="text-xl font-bold tracking-tight text-foreground">
+					{m['pages.home.no_results_filtered_title']()}
+				</h3>
+				<p class="mt-1.5 max-w-md text-sm text-muted-foreground">
+					{m['pages.home.no_results_filtered']()}
+				</p>
 			</div>
 		{/if}
 
@@ -264,6 +277,7 @@
 			{#each visibleComics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
 				{@const bookmarkColor = comic.bookmark?.color}
+				{@const bookmarkName = comic.bookmark?.name}
 				{@const isSelected = selection.isSelected(comic.relations.directoryId)}
 				<AcerolaCardImage
 					data={{
@@ -276,7 +290,11 @@
 				>
 					{#snippet floatingBadge()}
 						{#if bookmarkColor != null}
-							<AcerolaBookmarkRibbon color={bookmarkColor} class="-top-1.5 left-5 h-7 w-4" />
+							<AcerolaBookmarkRibbon
+								color={bookmarkColor}
+								name={bookmarkName}
+								class="-top-1.5 left-5 h-7 w-4"
+							/>
 						{/if}
 					{/snippet}
 

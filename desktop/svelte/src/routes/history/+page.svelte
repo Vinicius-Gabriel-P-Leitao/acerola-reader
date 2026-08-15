@@ -163,9 +163,7 @@
 					<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
 						{#each history.items.slice(1) as item (item.comicDirectoryId)}
 							{@const cover = resolveArtworkPath(item.comicCover) || undefined}
-							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
-								item.comicDirectoryId
-							)?.color}
+							{@const comicBookmark = bookmarkStore.getBookmarkForComic(item.comicDirectoryId)}
 							<AcerolaCardImage
 								data={{
 									title: item.comicName,
@@ -191,8 +189,8 @@
 								{/snippet}
 
 								{#snippet floatingBadge()}
-									{#if bookmarkColor != null}
-										<AcerolaBookmarkRibbon color={bookmarkColor} />
+									{#if comicBookmark != null}
+										<AcerolaBookmarkRibbon color={comicBookmark.color} name={comicBookmark.name} />
 									{/if}
 								{/snippet}
 

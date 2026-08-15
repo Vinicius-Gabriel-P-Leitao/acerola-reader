@@ -56,10 +56,15 @@
       "empty": "Nenhuma notificação",
       "clear": {
         "all": "Limpar tudo"
-      }
+      },
+      "scroll_to_bottom": "Rolar para baixo"
     },
     "mode_picker": {
       "title": "Mudar tema"
+    },
+    "bookmark_ribbon": {
+      "default_label": "Com bookmark",
+      "label": "Bookmark: {name}"
     }
   },
   "hooks": {
@@ -120,7 +125,9 @@
       "title": "Mudar idioma"
     },
     "command": {
-      "navigation_group": "Navegação"
+      "navigation_group": "Navegação",
+      "library_group": "Biblioteca",
+      "no_results": "Nenhum quadrinho encontrado."
     }
   },
   "routes": {
@@ -146,6 +153,11 @@
         "chapter": {
           "asc": "Capítulos (Menor para Maior)",
           "desc": "Capítulos (Maior para Menor)"
+        },
+        "indicator": {
+          "title": "Título",
+          "chapter_count": "Capítulos",
+          "last_updated": "Atualização"
         }
       },
       "selection": {
@@ -180,7 +192,8 @@
           "title": "Limpar Metadados",
           "desc": "Isso apaga o ComicInfo.xml, cover e banner da pasta de cada um dos {count} quadrinho(s) selecionado(s), além de todos os metadados sincronizados no banco. Capítulos e volumes não são afetados. Essa ação não pode ser desfeita.",
           "action": "Limpar Metadados"
-        }
+        },
+        "filter_categories_placeholder": "Filtrar categorias..."
       },
       "toast": {
         "hidden": "{count} quadrinho(s) ocultado(s)",
@@ -193,7 +206,44 @@
           "bookmark": "Falha ao marcar quadrinhos",
           "clear_metadata": "Falha ao limpar metadados dos quadrinhos"
         }
-      }
+      },
+      "filter_button": "Filtrar e Ordenar",
+      "no_results_filtered": "Nenhum quadrinho encontrado para o filtro selecionado.",
+      "filter_panel": {
+        "aria_label": "Filtrar e Ordenar",
+        "active_filters": "Filtros ativos",
+        "close_aria": "Fechar painel de filtros",
+        "sort_section_title": "Ordenar por",
+        "sort_radiogroup_aria": "Opções de ordenação",
+        "sort_options": {
+          "title": "Título",
+          "chapter_count": "Quantidade de Capítulos",
+          "last_updated": "Última Atualização"
+        },
+        "filter_section_title": "Filtrar por",
+        "show_hidden": {
+          "title": "Mostrar ocultos",
+          "desc": "Exibir quadrinhos ocultos"
+        },
+        "metadata_sources_title": "Fontes de Metadados",
+        "metadata_sources_aria": "Fontes de metadados",
+        "metadata_sources": {
+          "all": "Todos",
+          "comicinfo": "ComicInfo",
+          "mangadex": "MangaDex",
+          "anilist": "AniList",
+          "no_metadata": "Sem metadados"
+        },
+        "bookmark_filter_title": "Filtrar por bookmark",
+        "bookmark_filter_aria": "Filtrar por bookmark",
+        "bookmark_filter": {
+          "all": "Todos",
+          "none": "Sem bookmark"
+        },
+        "reset": "Resetar",
+        "apply": "Aplicar"
+      },
+      "no_results_filtered_title": "Nenhum resultado encontrado"
     },
     "comic": {
       "loading": "Carregando...",
@@ -475,7 +525,8 @@
         "name": "Nome do marcador",
         "color": "Cor",
         "create": "Criar",
-        "empty": "Nenhum marcador criado."
+        "empty": "Nenhum marcador criado.",
+        "color_option": "Cor {hex}"
       },
       "toast": {
         "sync": {

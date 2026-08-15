@@ -223,7 +223,7 @@
 						onclick={scrollToBottom}
 						transition:fly={{ y: 10, duration: 200 }}
 						class="absolute bottom-4 left-1/2 flex size-8 -translate-x-1/2 items-center justify-center rounded-full border border-border/40 bg-card/90 text-foreground shadow-lg backdrop-blur-sm transition-all hover:scale-110 hover:bg-accent active:scale-95"
-						aria-label="Scroll to bottom"
+						aria-label={m['components.notification.scroll_to_bottom']()}
 					>
 						<ChevronDownIcon size={16} />
 					</button>

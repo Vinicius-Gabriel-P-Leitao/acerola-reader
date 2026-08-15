@@ -39,6 +39,7 @@
 	import Eye from '@lucide/svelte/icons/eye';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let { state: controlState, data, events }: FilterPanelProps = $props();
 
@@ -61,19 +62,22 @@
 		wasOpen = isOpen;
 	});
 
-	const sortOptions: { value: SortBy; labelKey: string }[] = [
-		{ value: 'title', labelKey: 'Título' },
-		{ value: 'chapterCount', labelKey: 'Quantidade de Capítulos' },
-		{ value: 'lastUpdated', labelKey: 'Última Atualização' }
-	];
+	const sortOptions = $derived<{ value: SortBy; labelKey: string }[]>([
+		{ value: 'title', labelKey: m['pages.home.filter_panel.sort_options.title']() },
+		{
+			value: 'chapterCount',
+			labelKey: m['pages.home.filter_panel.sort_options.chapter_count']()
+		},
+		{ value: 'lastUpdated', labelKey: m['pages.home.filter_panel.sort_options.last_updated']() }
+	]);
 
-	const metadataSources: { value: MetadataSource; label: string }[] = [
-		{ value: 'all', label: 'Todos' },
-		{ value: 'comicinfo', label: 'ComicInfo' },
-		{ value: 'mangadex', label: 'MangaDex' },
-		{ value: 'anilist', label: 'AniList' },
-		{ value: 'no_metadata', label: 'Sem metadados' }
-	];
+	const metadataSources = $derived<{ value: MetadataSource; label: string }[]>([
+		{ value: 'all', label: m['pages.home.filter_panel.metadata_sources.all']() },
+		{ value: 'comicinfo', label: m['pages.home.filter_panel.metadata_sources.comicinfo']() },
+		{ value: 'mangadex', label: m['pages.home.filter_panel.metadata_sources.mangadex']() },
+		{ value: 'anilist', label: m['pages.home.filter_panel.metadata_sources.anilist']() },
+		{ value: 'no_metadata', label: m['pages.home.filter_panel.metadata_sources.no_metadata']() }
+	]);
 
 	function selectSort(value: SortBy) {
 		if (localSortBy === value) {
@@ -136,7 +140,7 @@
 	<div
 		role="dialog"
 		aria-modal="true"
-		aria-label="Filtrar e Ordenar"
+		aria-label={m['pages.home.filter_panel.aria_label']()}
 		class="fixed top-8 right-0 bottom-0 z-50 flex w-full max-w-full sm:max-w-sm flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl"
 		transition:fly={{ x: 400, duration: 300, easing: cubicOut }}
 	>
@@ -169,17 +173,19 @@
 					</svg>
 				</div>
 				<div>
-					<h2 class="text-base font-bold tracking-tight text-foreground">Filtrar e Ordenar</h2>
+					<h2 class="text-base font-bold tracking-tight text-foreground">
+						{m['pages.home.filter_panel.aria_label']()}
+					</h2>
 					{#if hasActiveFilters}
 						<span class="text-[10px] font-semibold tracking-wider text-primary uppercase"
-							>Filtros ativos</span
+							>{m['pages.home.filter_panel.active_filters']()}</span
 						>
 					{/if}
 				</div>
 			</div>
 			<button
 				type="button"
-				aria-label="Fechar painel de filtros"
+				aria-label={m['pages.home.filter_panel.close_aria']()}
 				class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
 				onclick={events.onClose}
 			>
@@ -192,9 +198,13 @@
 			<!-- Sort Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Ordenar por
+					{m['pages.home.filter_panel.sort_section_title']()}
 				</p>
-				<div class="space-y-1.5" role="radiogroup" aria-label="Opções de ordenação">
+				<div
+					class="space-y-1.5"
+					role="radiogroup"
+					aria-label={m['pages.home.filter_panel.sort_radiogroup_aria']()}
+				>
 					{#each sortOptions as option}
 						{@const isSelected = localSortBy === option.value}
 						<button
@@ -234,7 +244,7 @@
 			<!-- Filter Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Filtrar por
+					{m['pages.home.filter_panel.filter_section_title']()}
 				</p>
 
 				<!-- Show Hidden Toggle Row -->
@@ -252,8 +262,12 @@
 							<Eye size={15} />
 						</div>
 						<div>
-							<p class="text-sm font-medium text-foreground">Mostrar ocultos</p>
-							<p class="text-xs text-muted-foreground">Exibir quadrinhos ocultos</p>
+							<p class="text-sm font-medium text-foreground">
+								{m['pages.home.filter_panel.show_hidden.title']()}
+							</p>
+							<p class="text-xs text-muted-foreground">
+								{m['pages.home.filter_panel.show_hidden.desc']()}
+							</p>
 						</div>
 					</div>
 					<div class="pointer-events-none">
@@ -268,9 +282,13 @@
 			<!-- Metadata Source Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Fontes de Metadados
+					{m['pages.home.filter_panel.metadata_sources_title']()}
 				</p>
-				<div class="flex flex-wrap gap-2" role="group" aria-label="Fontes de metadados">
+				<div
+					class="flex flex-wrap gap-2"
+					role="group"
+					aria-label={m['pages.home.filter_panel.metadata_sources_aria']()}
+				>
 					{#each metadataSources as source}
 						{@const isSelected = localMetadataSource === source.value}
 						<button
@@ -290,9 +308,13 @@
 			<!-- Bookmark Filter Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Filtrar por bookmark
+					{m['pages.home.filter_panel.bookmark_filter_title']()}
 				</p>
-				<div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por bookmark">
+				<div
+					class="flex flex-wrap gap-2"
+					role="group"
+					aria-label={m['pages.home.filter_panel.bookmark_filter_aria']()}
+				>
 					<button
 						type="button"
 						aria-pressed={localBookmarkFilter === 'all'}
@@ -302,7 +324,7 @@
 							: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
 						onclick={() => (localBookmarkFilter = 'all')}
 					>
-						Todos
+						{m['pages.home.filter_panel.bookmark_filter.all']()}
 					</button>
 					<button
 						type="button"
@@ -314,7 +336,7 @@
 						onclick={() => (localBookmarkFilter = 'none')}
 					>
 						<Bookmark size={12} class="opacity-70" />
-						Sem bookmark
+						{m['pages.home.filter_panel.bookmark_filter.none']()}
 					</button>
 					{#each data.bookmarks as category (category.id)}
 						{@const isSelected = localBookmarkFilter === category.id}
@@ -347,14 +369,14 @@
 					onclick={handleReset}
 					disabled={!hasChanges && !hasActiveFilters}
 				>
-					Resetar
+					{m['pages.home.filter_panel.reset']()}
 				</button>
 				<button
 					type="button"
 					class="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/30 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/40 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
 					onclick={handleApply}
 				>
-					Aplicar
+					{m['pages.home.filter_panel.apply']()}
 				</button>
 			</div>
 		</div>

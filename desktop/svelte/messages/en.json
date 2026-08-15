@@ -56,10 +56,15 @@
       "empty": "No notifications",
       "clear": {
         "all": "Clear all"
-      }
+      },
+      "scroll_to_bottom": "Scroll to bottom"
     },
     "mode_picker": {
       "title": "Change theme"
+    },
+    "bookmark_ribbon": {
+      "default_label": "Bookmarked",
+      "label": "Bookmark: {name}"
     }
   },
   "hooks": {
@@ -120,7 +125,9 @@
       "title": "Change language"
     },
     "command": {
-      "navigation_group": "Navigation"
+      "navigation_group": "Navigation",
+      "library_group": "Library",
+      "no_results": "No comics found."
     }
   },
   "routes": {
@@ -146,6 +153,11 @@
         "chapter": {
           "asc": "Chapters (Low to High)",
           "desc": "Chapters (High to Low)"
+        },
+        "indicator": {
+          "title": "Title",
+          "chapter_count": "Chapters",
+          "last_updated": "Updated"
         }
       },
       "selection": {
@@ -180,7 +192,8 @@
           "title": "Clear Metadata",
           "desc": "This deletes ComicInfo.xml, cover and banner from each of the {count} selected comic(s)' folder, plus all synced metadata in the database. Chapters and volumes are not affected. This action cannot be undone.",
           "action": "Clear Metadata"
-        }
+        },
+        "filter_categories_placeholder": "Filter categories..."
       },
       "toast": {
         "hidden": "{count} comic(s) hidden",
@@ -193,7 +206,44 @@
           "bookmark": "Failed to bookmark comics",
           "clear_metadata": "Failed to clear comics metadata"
         }
-      }
+      },
+      "filter_button": "Filter & Sort",
+      "no_results_filtered": "No comics found for the selected filter.",
+      "filter_panel": {
+        "aria_label": "Filter & Sort",
+        "active_filters": "Active filters",
+        "close_aria": "Close filter panel",
+        "sort_section_title": "Sort by",
+        "sort_radiogroup_aria": "Sort options",
+        "sort_options": {
+          "title": "Title",
+          "chapter_count": "Chapter Count",
+          "last_updated": "Last Updated"
+        },
+        "filter_section_title": "Filter by",
+        "show_hidden": {
+          "title": "Show hidden",
+          "desc": "Display hidden comics"
+        },
+        "metadata_sources_title": "Metadata Sources",
+        "metadata_sources_aria": "Metadata sources",
+        "metadata_sources": {
+          "all": "All",
+          "comicinfo": "ComicInfo",
+          "mangadex": "MangaDex",
+          "anilist": "AniList",
+          "no_metadata": "No metadata"
+        },
+        "bookmark_filter_title": "Filter by bookmark",
+        "bookmark_filter_aria": "Filter by bookmark",
+        "bookmark_filter": {
+          "all": "All",
+          "none": "No bookmark"
+        },
+        "reset": "Reset",
+        "apply": "Apply"
+      },
+      "no_results_filtered_title": "No results found"
     },
     "comic": {
       "loading": "Loading...",
@@ -475,7 +525,8 @@
         "name": "Bookmark name",
         "color": "Color",
         "create": "Create",
-        "empty": "No bookmarks created."
+        "empty": "No bookmarks created.",
+        "color_option": "Color {hex}"
       },
       "toast": {
         "sync": {
