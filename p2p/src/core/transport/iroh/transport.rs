@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use async_trait::async_trait;
 use iroh::{
     endpoint::{Connection, IncomingAddr},
-    Endpoint, EndpointAddr, EndpointId, Watcher,
+    Endpoint, EndpointAddr, EndpointId,
 };
 use tokio::{
     io::{AsyncRead, AsyncWrite},
@@ -143,17 +143,15 @@ impl P2pTransport for IrohTransport {
             return None;
         }
 
-        let paths = conn.paths();
-        let path_list = paths.peek();
+        let path_list = conn.paths();
 
         // Prefere o caminho selecionado; aceita qualquer outro como fallback.
-        // A variável local força o iterador a ser resolvido antes de `paths` ser dropado.
-        let rtt = path_list
+        path_list
             .iter()
             .filter(|path| path.is_selected())
             .chain(path_list.iter())
-            .find_map(|path| path.rtt());
-        rtt
+            .map(|path| path.rtt())
+            .next()
     }
 
     /// Executa o teardown forçado do componente iroh.
