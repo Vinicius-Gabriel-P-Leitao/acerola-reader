@@ -542,6 +542,66 @@
             "error": "Error starting MangaDex sync: {msg}"
           }
         }
+      },
+      "templates": {
+        "title": "Naming Templates",
+        "desc": "Patterns used to recognize chapter and volume numbers from file or folder names during scanning.",
+        "nav": {
+          "title": "Naming Templates",
+          "desc": "Create and manage the naming patterns used to auto-detect chapters and volumes."
+        },
+        "back": "Back",
+        "help": {
+          "title": "How to build a template",
+          "desc": "Combine fixed text (like \"Ch.\" or \"Vol.\") with the macros below, always in curly braces. Use an asterisk to cover any variable part of the name, like the chapter title.",
+          "macro_chapter_label": "Chapter number",
+          "macro_chapter_desc": "Required and unique in chapter templates.",
+          "macro_volume_label": "Volume number",
+          "macro_volume_desc": "Required and unique in volume templates.",
+          "macro_decimal_label": "Decimal part",
+          "macro_decimal_desc": "Optional. At most one per template, always after the chapter or volume.",
+          "macro_extension_label": "File extension",
+          "macro_extension_desc": "Required in chapter templates. Acerola appends it by itself at the end — you don't need to (or get to) type it.",
+          "wildcard_label": "Asterisk (*)",
+          "wildcard_desc": "Covers any text, like the chapter title or variable spacing.",
+          "example_chapter_label": "Chapter template example",
+          "example_chapter_match": "Matches: \"Ch. 12.5.Chapter Title.cbz\"",
+          "example_volume_label": "Volume template example",
+          "example_volume_match": "Matches the folder: \"Vol. 3\""
+        },
+        "form": {
+          "title": "Create new template",
+          "sort_type": "Applies to",
+          "sort_type_chapter": "Chapters",
+          "sort_type_volume": "Volumes",
+          "label": "Template name",
+          "label_placeholder": "A name to identify this template",
+          "pattern": "Pattern",
+          "extension_auto_hint": "The file extension is already included automatically at the end of the pattern — no need to type it.",
+          "create": "Create template",
+          "creating": "Creating..."
+        },
+        "list": {
+          "chapter_title": "Chapter Templates",
+          "volume_title": "Volume Templates",
+          "empty_chapter": "No custom chapter templates yet.",
+          "empty_volume": "No custom volume templates yet.",
+          "default_badge": "Default",
+          "default_hint": "Default templates ship with the app and cannot be edited or removed."
+        },
+        "delete_confirm": {
+          "title": "Remove template?",
+          "desc": "The template \"{label}\" will be removed and will no longer be recognized when scanning the library.",
+          "action": "Remove",
+          "cancel": "Cancel"
+        },
+        "toast": {
+          "create_success": "Template \"{label}\" created successfully.",
+          "create_error": "Could not create the template: {msg}",
+          "delete_success": "Template removed.",
+          "delete_error": "Could not remove the template: {msg}",
+          "load_error": "Could not load templates: {msg}"
+        }
       }
     }
   },

@@ -542,6 +542,66 @@
             "error": "Erro ao iniciar sync Mangadex: {msg}"
           }
         }
+      },
+      "templates": {
+        "title": "Templates de Nomenclatura",
+        "desc": "Padrões usados para reconhecer o número do capítulo e do volume a partir do nome do arquivo ou da pasta durante o escaneamento.",
+        "nav": {
+          "title": "Templates de Nomenclatura",
+          "desc": "Crie e gerencie os padrões de nome usados na detecção automática de capítulos e volumes."
+        },
+        "back": "Voltar",
+        "help": {
+          "title": "Como montar um template",
+          "desc": "Combine texto fixo (como \"Ch.\" ou \"Vol.\") com as macros abaixo, sempre entre chaves. Use um asterisco para cobrir qualquer trecho variável do nome, como o título do capítulo.",
+          "macro_chapter_label": "Número do capítulo",
+          "macro_chapter_desc": "Obrigatória e única em templates de capítulo.",
+          "macro_volume_label": "Número do volume",
+          "macro_volume_desc": "Obrigatória e única em templates de volume.",
+          "macro_decimal_label": "Casa decimal",
+          "macro_decimal_desc": "Opcional. No máximo uma por template, sempre depois do capítulo ou volume.",
+          "macro_extension_label": "Extensão do arquivo",
+          "macro_extension_desc": "Obrigatória em templates de capítulo. O Acerola adiciona ela sozinha no final — você não precisa (nem consegue) digitar.",
+          "wildcard_label": "Asterisco (*)",
+          "wildcard_desc": "Cobre qualquer texto, como o título do capítulo ou espaçamento variável.",
+          "example_chapter_label": "Exemplo de template de capítulo",
+          "example_chapter_match": "Reconhece: \"Ch. 12.5.Titulo do Capitulo.cbz\"",
+          "example_volume_label": "Exemplo de template de volume",
+          "example_volume_match": "Reconhece a pasta: \"Vol. 3\""
+        },
+        "form": {
+          "title": "Criar novo template",
+          "sort_type": "Aplica-se a",
+          "sort_type_chapter": "Capítulos",
+          "sort_type_volume": "Volumes",
+          "label": "Nome do template",
+          "label_placeholder": "Um nome para identificar esse template",
+          "pattern": "Padrão",
+          "extension_auto_hint": "A extensão do arquivo já vem incluída automaticamente no final do padrão — não é preciso digitá-la.",
+          "create": "Criar template",
+          "creating": "Criando..."
+        },
+        "list": {
+          "chapter_title": "Templates de Capítulo",
+          "volume_title": "Templates de Volume",
+          "empty_chapter": "Nenhum template de capítulo personalizado ainda.",
+          "empty_volume": "Nenhum template de volume personalizado ainda.",
+          "default_badge": "Padrão",
+          "default_hint": "Templates padrão vêm com o app e não podem ser editados ou removidos."
+        },
+        "delete_confirm": {
+          "title": "Remover template?",
+          "desc": "O template \"{label}\" será removido e deixará de ser reconhecido durante o escaneamento da biblioteca.",
+          "action": "Remover",
+          "cancel": "Cancelar"
+        },
+        "toast": {
+          "create_success": "Template \"{label}\" criado com sucesso.",
+          "create_error": "Não foi possível criar o template: {msg}",
+          "delete_success": "Template removido.",
+          "delete_error": "Não foi possível remover o template: {msg}",
+          "load_error": "Não foi possível carregar os templates: {msg}"
+        }
       }
     }
   },

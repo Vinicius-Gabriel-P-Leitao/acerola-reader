@@ -1,3 +1,4 @@
+pub mod archive;
 pub mod category;
 pub mod comic;
 pub mod history;

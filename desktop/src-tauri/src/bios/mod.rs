@@ -8,6 +8,7 @@ use tauri::Manager;
 
 use crate::{
     cmd::features::{
+        archive::archive_template_cmd,
         category::category_cmd,
         comic as comic_cmd, history as history_cmd,
         library::{comic_scanner_cmd, select_folder_cmd},
@@ -81,6 +82,9 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         metadata_cmd::sync_metadata_comic_info,
         metadata_cmd::clear_comic_metadata,
         metadata_cmd::clear_comics_metadata_batch,
+        archive_template_cmd::get_archive_templates,
+        archive_template_cmd::create_archive_template,
+        archive_template_cmd::delete_archive_template,
     ])
 }
 

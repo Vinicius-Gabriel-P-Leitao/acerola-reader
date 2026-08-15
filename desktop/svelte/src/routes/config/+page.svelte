@@ -20,6 +20,7 @@
 	import { useTheme } from '$lib/hooks/theme/use-theme.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { Input } from '$lib/components/ui/input';
 	import { invoke } from '@tauri-apps/api/core';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
@@ -41,6 +42,8 @@
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import FileCode2 from '@lucide/svelte/icons/file-code-2';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
 	const ctx = useTheme();
 	const folder = useSelectFolder();
@@ -277,6 +280,30 @@
 						}}
 					>
 						<RefreshCw />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
+
+			<!-- Item: Navega para a tela de templates de nomenclatura -->
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.config.templates.nav.title'](),
+					description: m['pages.config.templates.nav.desc']()
+				}}
+				events={{ onClick: () => goto('/config/templates') }}
+			>
+				{#snippet icon()}
+					<FileCode2 class="text-chart-2" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<ChevronRightIcon />
 					</AcerolaButtonIcon>
 				{/snippet}
 			</AcerolaHeroButton>

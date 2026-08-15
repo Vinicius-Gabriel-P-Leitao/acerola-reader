@@ -79,16 +79,16 @@
 - [x] **Criar categoria** - Envio dos params (Label, HexColor) do modal do frontend para insert no SQLite via Tauri.
 - [x] **Deletar categoria** - Deleção propagada em cascata pelo Rust com as devidas confirmações no Svelte.
 - [x] **Selecionar tema do app** - Comportamento nativo SvelteKit pra injetar class CSS da cor (Ex: Catppuccin/Dracula).
-- [ ] **Navegar para configuração de templates** - Rota isolada listando as macros e regras.
+- [x] **Navegar para configuração de templates** - Rota isolada (`/config/templates`) listando as macros e regras.
 
 ---
 
 ## Templates de Nomenclatura
 
-- [ ] **Criar template** - Frontend expõe os macros (ex: `{chapter}`, `{decimal}`) e grava numa entidade Rust de Parsing.
+- [x] **Criar template** - Frontend expõe os macros (ex: `{chapter}`, `{decimal}`) e grava numa entidade Rust de Parsing.
 - [ ] **Editar template** - Update das tabelas locais relacionadas via Tauri Invoke.
-- [ ] **Deletar template** - Delete row.
-- [ ] **Listar templates** - O backend lista os templates ordenados que o usuário fez pra parser.
+- [x] **Deletar template** - Delete row, bloqueado para templates padrão (`is_default`).
+- [x] **Listar templates** - O backend lista os templates ordenados que o usuário fez pra parser.
 - [x] **Detecção automática de template no scan** - O parser de texto nativo no Rust intercepta arquivos de nome que não possuem um padrão pré-descrito, associando as strings corretas.
 
 ---
