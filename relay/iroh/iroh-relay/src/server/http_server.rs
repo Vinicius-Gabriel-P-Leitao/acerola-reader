@@ -6,7 +6,7 @@
 //!
 //! For a complete relay server implementation, see the parent [`server`](super) module.
 
-use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
+use std::{collections::HashMap, convert::Infallible, net::SocketAddr, sync::Arc, time::Duration};
 
 use bytes::Bytes;
 use derive_more::Debug;
@@ -25,13 +25,16 @@ use n0_error::{e, ensure, stack_error};
 use n0_future::MaybeFuture;
 use tokio::{
     net::{TcpListener, TcpStream},
-    sync::Notify,
+    sync::{Notify, watch},
 };
 use tokio_rustls_acme::AcmeAcceptor;
 use tokio_util::{sync::CancellationToken, task::AbortOnDropHandle};
-use tracing::{Instrument, debug, error, info, info_span, trace, warn, warn_span};
+use tracing::{Instrument, debug, error, info, info_span, trace, warn};
 
-use super::{AccessConfig, SpawnError, clients::Clients, streams::InvalidBucketConfig};
+use super::{
+    AllowAll, ClientRequest, DynAccessControl, SpawnError, clients::Clients,
+    streams::InvalidBucketConfig,
+};
 use crate::{
     KeyCache,
     defaults::{DEFAULT_KEY_CACHE_CAPACITY, timeouts::SERVER_WRITE_TIMEOUT},
@@ -39,11 +42,7 @@ use crate::{
         CLIENT_AUTH_HEADER, ProtocolVersion, RELAY_PATH, SUPPORTED_WEBSOCKET_VERSION,
         WEBSOCKET_UPGRADE_PROTOCOL,
     },
-    protos::{
-        handshake,
-        relay::{MAX_FRAME_SIZE, PER_CLIENT_SEND_QUEUE_DEPTH},
-        streams::WsBytesFramed,
-    },
+    protos::{handshake, relay::MAX_FRAME_SIZE, streams::WsBytesFramed},
     server::{
         ClientRateLimit,
         client::Config,
@@ -52,10 +51,15 @@ use crate::{
     },
 };
 
-type BytesBody = http_body_util::Full<hyper::body::Bytes>;
-type HyperError = Box<dyn std::error::Error + Send + Sync>;
-type HyperResult<T> = std::result::Result<T, HyperError>;
-type HyperHandler = Box<
+/// Boxed HTTP response body produced by [`RelayServiceWithNotify`].
+pub type BytesBody = Box<
+    dyn 'static + Send + Unpin + hyper::body::Body<Data = hyper::body::Bytes, Error = Infallible>,
+>;
+/// Boxed error type returned from [`RelayServiceWithNotify`]'s [`hyper::service::Service`] impl.
+pub type HyperError = Box<dyn std::error::Error + Send + Sync>;
+/// Result alias for HTTP responses produced by [`RelayServiceWithNotify`].
+pub type HyperResult<T> = std::result::Result<T, HyperError>;
+pub(super) type HyperHandler = Box<
     dyn Fn(Request<Incoming>, ResponseBuilder) -> HyperResult<Response<BytesBody>>
         + Send
         + Sync
@@ -84,7 +88,7 @@ fn derive_accept_key(client_key: &HeaderValue) -> String {
 
 /// Creates a new [`BytesBody`] with given content.
 fn body_full(content: impl Into<hyper::body::Bytes>) -> BytesBody {
-    http_body_util::Full::new(content.into())
+    Box::new(http_body_util::Full::new(content.into()))
 }
 
 #[allow(clippy::result_large_err)]
@@ -107,6 +111,7 @@ pub(super) struct Server {
     addr: SocketAddr,
     http_server_task: AbortOnDropHandle<()>,
     cancel_server_loop: CancellationToken,
+    service: RelayService,
 }
 
 impl Server {
@@ -137,6 +142,11 @@ impl Server {
     /// Returns the local address of this server.
     pub(super) fn addr(&self) -> SocketAddr {
         self.addr
+    }
+
+    /// Returns the [`RelayService`] driving this server.
+    pub(super) fn service(&self) -> &RelayService {
+        &self.service
     }
 }
 
@@ -340,8 +350,8 @@ pub(super) struct ServerBuilder {
     client_rx_ratelimit: Option<ClientRateLimit>,
     /// The capacity of the key cache.
     key_cache_capacity: usize,
-    /// Access config for endpoints.
-    access: AccessConfig,
+    /// Access control for endpoints.
+    access: Arc<dyn DynAccessControl>,
     metrics: Option<Arc<Metrics>>,
     establish_timeout: Duration,
 }
@@ -356,7 +366,7 @@ impl ServerBuilder {
             headers: HeaderMap::new(),
             client_rx_ratelimit: None,
             key_cache_capacity: DEFAULT_KEY_CACHE_CAPACITY,
-            access: AccessConfig::Everyone,
+            access: Arc::new(AllowAll),
             metrics: None,
             establish_timeout: ESTABLISH_TIMEOUT,
         }
@@ -368,8 +378,8 @@ impl ServerBuilder {
         self
     }
 
-    /// Set the access configuration.
-    pub(super) fn access(mut self, access: AccessConfig) -> Self {
+    /// Set the access control.
+    pub(super) fn access(mut self, access: Arc<dyn DynAccessControl>) -> Self {
         self.access = access;
         self
     }
@@ -423,7 +433,7 @@ impl ServerBuilder {
     }
 
     /// Set the capacity of the cache for public keys.
-    pub fn key_cache_capacity(mut self, capacity: usize) -> Self {
+    pub(super) fn key_cache_capacity(mut self, capacity: usize) -> Self {
         self.key_cache_capacity = capacity;
         self
     }
@@ -457,8 +467,10 @@ impl ServerBuilder {
         info!("[{http_str}] relay: serving on {addr}");
 
         let cancel = cancel_token.clone();
+        let loop_service = service.clone();
         let task = tokio::task::spawn(
             async move {
+                let service = loop_service;
                 // create a join set to track all our connection tasks
                 let mut set = tokio::task::JoinSet::new();
                 loop {
@@ -503,6 +515,7 @@ impl ServerBuilder {
             addr,
             http_server_task: AbortOnDropHandle::new(task),
             cancel_server_loop: cancel_token,
+            service,
         })
     }
 }
@@ -519,9 +532,9 @@ struct Inner {
     headers: HeaderMap,
     clients: Clients,
     write_timeout: Duration,
-    rate_limit: Option<ClientRateLimit>,
+    rate_limit: watch::Sender<Option<ClientRateLimit>>,
     key_cache: KeyCache,
-    access: AccessConfig,
+    access: Arc<dyn DynAccessControl>,
     metrics: Arc<Metrics>,
 }
 
@@ -608,8 +621,6 @@ impl RelayServiceWithNotify {
                 })
             })?;
 
-        let client_auth_header = req.headers().get(CLIENT_AUTH_HEADER).cloned();
-
         // Setup a future that will eventually receive the upgraded
         // connection and talk a new protocol, and spawn the future
         // into the runtime.
@@ -622,14 +633,11 @@ impl RelayServiceWithNotify {
             async move {
                 match hyper::upgrade::on(&mut req).await {
                     Ok(upgraded) => {
+                        let (parts, _) = req.into_parts();
                         if let Err(err) = this
                             .service
                             .0
-                            .relay_connection_handler(
-                                upgraded,
-                                client_auth_header,
-                                protocol_version,
-                            )
+                            .relay_connection_handler(upgraded, parts, protocol_version)
                             .await
                         {
                             warn!("error accepting upgraded connection: {err:#}",);
@@ -644,7 +652,7 @@ impl RelayServiceWithNotify {
                     Err(err) => warn!("upgrade error: {err:#}"),
                 }
             }
-            .instrument(warn_span!("handler"))
+            .instrument(info_span!("handler"))
         });
 
         // Now return a 101 Response saying we agree to the upgrade to the
@@ -666,9 +674,52 @@ impl RelayServiceWithNotify {
 
 /// Combines [`RelayService`] with a notification token.
 ///
-/// This struct implements [`Service`].
+/// This struct implements [`Service`]. Note that the service has to be called with hyper's `io`
+/// argument set to [`MaybeTlsStream`] wrapped by [`hyper_util::rt::TokioIo`], otherwise handling
+/// WebSocket requests at `/relay` will fail at runtime with [`ConnectionHandlerError::DowncastUpgrade`].
 ///
-/// The notification token is triggered once the relay connection is fully established.
+/// The notification token is triggered once the relay connection is fully established. It can be used
+/// to cancel a timeout aborting the TCP connection if no upgrade request is received in some time.
+///
+/// ## Example
+///
+/// ```no_run
+/// # use std::sync::Arc;
+/// # use http::HeaderMap;
+/// # use hyper::server::conn::http1;
+/// # use hyper_util::rt::TokioIo;
+/// # use tokio::{net::TcpListener, sync::Notify};
+/// # use iroh_relay::{
+/// #     KeyCache,
+/// #     server::{
+/// #         AllowAll, Metrics,
+/// #         http_server::{Handlers, RelayService, RelayServiceWithNotify},
+/// #         streams::MaybeTlsStream
+/// #     },
+/// # };
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let service = RelayService::new(
+///     Handlers::default(),
+///     HeaderMap::new(),
+///     None,
+///     KeyCache::new(1024),
+///     Arc::new(AllowAll),
+///     Arc::new(Metrics::default()),
+/// );
+/// let service = RelayServiceWithNotify::new(service, Arc::new(Notify::new()));
+///
+/// let listener = TcpListener::bind("127.0.0.1:0").await?;
+/// let (stream, _peer) = listener.accept().await?;
+/// // Wrap the TCP stream in `MaybeTlsStream`, otherwise the relay WebSocket handler will error at runtime
+/// // for all WebSocket requests to `/relay`.
+/// let stream = MaybeTlsStream::Plain(stream);
+/// http1::Builder::new()
+///     .serve_connection(TokioIo::new(stream), service)
+///     .with_upgrades()
+///     .await?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone)]
 pub struct RelayServiceWithNotify {
     service: RelayService,
@@ -768,7 +819,7 @@ impl Inner {
     async fn relay_connection_handler(
         &self,
         upgraded: Upgraded,
-        client_auth_header: Option<HeaderValue>,
+        request_parts: http::request::Parts,
         protocol_version: ProtocolVersion,
     ) -> Result<(), ConnectionHandlerError> {
         debug!("relay_connection upgraded");
@@ -777,8 +828,7 @@ impl Inner {
             return Err(e!(ConnectionHandlerError::BufferNotEmpty { buf: read_buf }));
         }
 
-        self.accept(io, client_auth_header, protocol_version)
-            .await?;
+        self.accept(io, request_parts, protocol_version).await?;
         Ok(())
     }
 
@@ -795,7 +845,7 @@ impl Inner {
     async fn accept(
         &self,
         io: MaybeTlsStream,
-        client_auth_header: Option<HeaderValue>,
+        request_parts: http::request::Parts,
         protocol_version: ProtocolVersion,
     ) -> Result<(), AcceptError> {
         trace!("accept: start");
@@ -803,7 +853,7 @@ impl Inner {
         // Set the socket to NO_DELAY.
         io.disable_nagle();
 
-        let io = RateLimited::from_cfg(self.rate_limit, io, self.metrics.clone())
+        let io = RateLimited::from_watcher(io, self.rate_limit.subscribe(), self.metrics.clone())
             .map_err(|err| e!(AcceptError::RateLimitingMisconfigured, err))?;
 
         // Create a server builder with default config
@@ -814,12 +864,18 @@ impl Inner {
 
         let mut io = WsBytesFramed { io: websocket };
 
+        let client_auth_header = request_parts.headers.get(CLIENT_AUTH_HEADER).cloned();
         let authentication = handshake::serverside(&mut io, client_auth_header).await?;
 
         trace!(?authentication.mechanism, "accept: verified authentication");
 
-        let is_authorized = self.access.is_allowed(authentication.client_key).await;
-        let client_key = authentication.authorize_if(is_authorized, &mut io).await?;
+        let request =
+            ClientRequest::new(authentication.client_key, protocol_version, request_parts);
+
+        // Authorize the request against the configured `AccessControl`.
+        let guard = authentication
+            .authorize_with(&request, &self.access, &mut io)
+            .await?;
 
         trace!("accept: verified authorization");
 
@@ -829,16 +885,9 @@ impl Inner {
         };
 
         trace!("accept: build client conn");
-        let client_conn_builder = Config {
-            endpoint_id: client_key,
-            stream: io,
-            write_timeout: self.write_timeout,
-            channel_capacity: PER_CLIENT_SEND_QUEUE_DEPTH,
-            protocol_version,
-        };
-        trace!("accept: create client");
-        let endpoint_id = client_conn_builder.endpoint_id;
-        trace!(endpoint_id = %endpoint_id.fmt_short(), "create client");
+        let mut client_conn_builder = Config::new(guard, io, protocol_version);
+        client_conn_builder.write_timeout = self.write_timeout;
+        trace!(endpoint_id = %request.endpoint_id().fmt_short(), "create client");
 
         // build and register client, starting up read & write loops for the client
         // connection
@@ -867,7 +916,7 @@ impl RelayService {
         headers: HeaderMap,
         rate_limit: Option<ClientRateLimit>,
         key_cache: KeyCache,
-        access: AccessConfig,
+        access: Arc<dyn DynAccessControl>,
         metrics: Arc<Metrics>,
     ) -> Self {
         Self(Arc::new(Inner {
@@ -875,16 +924,32 @@ impl RelayService {
             headers,
             clients: Clients::default(),
             write_timeout: SERVER_WRITE_TIMEOUT,
-            rate_limit,
+            rate_limit: watch::Sender::new(rate_limit),
             key_cache,
             access,
             metrics,
         }))
     }
 
+    /// Updates the per-client receive rate limit.
+    ///
+    /// The new rate limit will be applied to all current and future client connections.
+    /// Passing `None` will remove rate limiting from all connections.
+    pub fn set_client_rate_limit(&self, rate_limit: Option<ClientRateLimit>) {
+        self.0.rate_limit.send_replace(rate_limit);
+    }
+
     /// Shuts down the relay service, disconnecting all clients.
     pub async fn shutdown(&self) {
         self.0.clients.shutdown().await;
+    }
+
+    /// Returns a reference to the registry of currently connected clients.
+    ///
+    /// The returned [`Clients`] handle can be used at runtime to disconnect a
+    /// connected endpoint via [`Clients::disconnect`].
+    pub fn clients(&self) -> &Clients {
+        &self.0.clients
     }
 
     /// Handle the incoming connection.
@@ -901,7 +966,7 @@ impl RelayService {
     /// # use tokio::net::TcpStream;
     /// # use http::HeaderMap;
     /// # use iroh_relay::server::http_server::{Handlers, RelayService, TlsConfig};
-    /// # use iroh_relay::{KeyCache, server::{AccessConfig, Metrics}};
+    /// # use iroh_relay::{KeyCache, server::{AllowAll, Metrics}};
     /// # use webpki_types::{CertificateDer, PrivateKeyDer};
     /// # async fn example(stream: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
     /// // Create a relay service
@@ -914,7 +979,7 @@ impl RelayService {
     ///     headers,
     ///     None, // No rate limiting
     ///     key_cache,
-    ///     AccessConfig::Everyone,
+    ///     Arc::new(AllowAll),
     ///     metrics,
     /// );
     ///
@@ -1051,10 +1116,7 @@ impl RelayServiceWithNotify {
     }
 
     /// Wrapper for the actual http connection (with upgrades)
-    async fn serve_connection<I>(self, io: I) -> Result<(), ServeConnectionError>
-    where
-        I: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + Sync + 'static,
-    {
+    async fn serve_connection(self, io: MaybeTlsStream) -> Result<(), ServeConnectionError> {
         hyper::server::conn::http1::Builder::new()
             .serve_connection(hyper_util::rt::TokioIo::new(io), self)
             .with_upgrades()
@@ -1130,6 +1192,7 @@ mod tests {
     use std::sync::Arc;
 
     use iroh_base::{PublicKey, SecretKey};
+    use iroh_dns::dns::DnsResolver;
     use n0_error::{Result, StdResultExt, bail_any};
     use n0_future::{SinkExt, StreamExt};
     use n0_tracing_test::traced_test;
@@ -1141,9 +1204,8 @@ mod tests {
     use super::*;
     use crate::{
         client::{Client, ClientBuilder, ConnectError, conn::Conn},
-        dns::DnsResolver,
         protos::relay::{ClientToRelayMsg, Datagrams, RelayToClientMsg},
-        tls::{CaRootsConfig, default_provider},
+        tls::{CaTlsConfig, default_provider},
     };
 
     pub(crate) fn make_tls_config() -> TlsConfig {
@@ -1249,7 +1311,7 @@ mod tests {
     ) -> Result<(PublicKey, Client), ConnectError> {
         let public_key = key.public();
         let client = ClientBuilder::new(server_url, key, DnsResolver::new()).tls_client_config(
-            CaRootsConfig::insecure_skip_verify()
+            CaTlsConfig::insecure_skip_verify()
                 .client_config(default_provider())
                 .expect("infallible"),
         );
@@ -1425,7 +1487,7 @@ mod tests {
             Default::default(),
             None,
             KeyCache::test(),
-            AccessConfig::Everyone,
+            Arc::new(crate::server::AllowAll),
             metrics.clone(),
         );
 
@@ -1435,8 +1497,12 @@ mod tests {
         let (client_a, rw_a) = tokio::io::duplex(10);
         let s = service.clone();
         let handler_task = tokio::spawn(async move {
-            s.0.accept(MaybeTlsStream::Test(rw_a), None, Default::default())
-                .await
+            s.0.accept(
+                MaybeTlsStream::Test(rw_a),
+                Request::new(()).into_parts().0,
+                Default::default(),
+            )
+            .await
         });
         let mut client_a = make_test_client(client_a, &key_a).await?;
         handler_task.await.std_context("join")??;
@@ -1447,8 +1513,12 @@ mod tests {
         let (client_b, rw_b) = tokio::io::duplex(10);
         let s = service.clone();
         let handler_task = tokio::spawn(async move {
-            s.0.accept(MaybeTlsStream::Test(rw_b), None, Default::default())
-                .await
+            s.0.accept(
+                MaybeTlsStream::Test(rw_b),
+                Request::new(()).into_parts().0,
+                Default::default(),
+            )
+            .await
         });
         let mut client_b = make_test_client(client_b, &key_b).await?;
         handler_task.await.std_context("join")??;
@@ -1529,7 +1599,7 @@ mod tests {
             Default::default(),
             None,
             KeyCache::test(),
-            AccessConfig::Everyone,
+            Arc::new(crate::server::AllowAll),
             Default::default(),
         );
 
@@ -1539,8 +1609,12 @@ mod tests {
         let (client_a, rw_a) = tokio::io::duplex(10);
         let s = service.clone();
         let handler_task = tokio::spawn(async move {
-            s.0.accept(MaybeTlsStream::Test(rw_a), None, Default::default())
-                .await
+            s.0.accept(
+                MaybeTlsStream::Test(rw_a),
+                Request::new(()).into_parts().0,
+                Default::default(),
+            )
+            .await
         });
         let mut client_a = make_test_client(client_a, &key_a).await?;
         handler_task.await.std_context("join")??;
@@ -1551,8 +1625,12 @@ mod tests {
         let (client_b, rw_b) = tokio::io::duplex(10);
         let s = service.clone();
         let handler_task = tokio::spawn(async move {
-            s.0.accept(MaybeTlsStream::Test(rw_b), None, Default::default())
-                .await
+            s.0.accept(
+                MaybeTlsStream::Test(rw_b),
+                Request::new(()).into_parts().0,
+                Default::default(),
+            )
+            .await
         });
         let mut client_b = make_test_client(client_b, &key_b).await?;
         handler_task.await.std_context("join")??;
@@ -1603,8 +1681,12 @@ mod tests {
         let (new_client_b, new_rw_b) = tokio::io::duplex(10);
         let s = service.clone();
         let handler_task = tokio::spawn(async move {
-            s.0.accept(MaybeTlsStream::Test(new_rw_b), None, Default::default())
-                .await
+            s.0.accept(
+                MaybeTlsStream::Test(new_rw_b),
+                Request::new(()).into_parts().0,
+                Default::default(),
+            )
+            .await
         });
         let mut new_client_b = make_test_client(new_client_b, &key_b).await?;
         handler_task.await.std_context("join")??;
