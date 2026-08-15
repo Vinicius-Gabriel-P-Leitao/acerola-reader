@@ -4,18 +4,14 @@
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import FolderIcon from '@lucide/svelte/icons/folder';
 	import PaletteIcon from '@lucide/svelte/icons/palette';
-	import DockIcon from '@lucide/svelte/icons/dock';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useTheme, type ThemeColor } from '$lib/hooks/theme/use-theme.svelte';
-	import { useNavDockMode } from '$lib/hooks/preferences/use-nav-dock-mode.svelte';
 	import ThemePicker from '../../config/components/theme-picker.svelte';
-	import DockModePicker from '../../config/components/dock-mode-picker.svelte';
 
 	import { onMount } from 'svelte';
 
 	const themeCtx = useTheme();
 	const folder = useSelectFolder();
-	const dockMode = useNavDockMode();
 
 	onMount(() => {
 		folder.loadSavedPath();
@@ -45,18 +41,6 @@
 					data={{ theme: themeCtx.theme, mode: themeCtx.resolved }}
 					ui={{ showHeader: false }}
 					events={{ onSelect: (name: ThemeColor) => themeCtx.setTheme(name) }}
-				/>
-			</div>
-
-			<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
-				<div class="mb-4 flex items-center gap-3">
-					<DockIcon class="text-chart-1" size={24} />
-					<h2 class="text-xl font-semibold text-foreground">{m['onboarding.settings.dock']()}</h2>
-				</div>
-				<DockModePicker
-					data={{ mode: dockMode.mode }}
-					ui={{ showHeader: false }}
-					events={{ onSelect: dockMode.setMode }}
 				/>
 			</div>
 

@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { AcerolaSelectOption } from '$lib/components/acerola-select/acerola-select.svelte';
-	import type { DockItem } from '$lib/components/acerola-dock/acerola-dock.svelte';
+	import type { SidebarItem } from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
 	import type { Locale } from '$lib/paraglide/runtime.js';
 
 	import { m } from '$lib/paraglide/messages';
@@ -25,7 +25,7 @@
 		label: localeLabels[locale] || locale.toUpperCase()
 	}));
 
-	const navItems: DockItem[] = $derived([
+	const navItems: SidebarItem[] = $derived([
 		{ label: m['routes.home'](), href: '/home', icon: HouseIcon },
 		{ label: m['routes.history'](), href: '/history', icon: HistoryIcon },
 		{ label: m['routes.config'](), href: '/config', icon: SettingsIcon }
@@ -39,7 +39,6 @@
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useOnboarding } from '$lib/hooks/onboarding/use-onboarding.svelte';
-	import { useNavDockMode } from '$lib/hooks/preferences/use-nav-dock-mode.svelte';
 	import { setComicContext } from '$lib/state/comic-context.svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
@@ -51,7 +50,7 @@
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
-	import AcerolaDock from '$lib/components/acerola-dock/acerola-dock.svelte';
+	import AcerolaSidebar from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
 	import AcerolaSonner from '$lib/components/acerola-sonner/acerola-sonner.svelte';
 	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
 	import AcerolaCommand from '$lib/components/acerola-command/acerola-command.svelte';
@@ -77,7 +76,6 @@
 	const summary = useComicSummary();
 	const bookmarkStore = useBookmarks();
 	const onboarding = useOnboarding();
-	const dockMode = useNavDockMode();
 
 	const incrementalScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.incrementalScan,
@@ -191,7 +189,15 @@
 	<div class="relative flex flex-1 overflow-hidden">
 		<AcerolaSonner />
 
-		<main class="h-full flex-1 overflow-y-auto {dockMode.mode === 'fixed' ? 'pb-24' : ''}">
+		{#if onboarding.isCompleted}
+			<AcerolaSidebar data={{ items: navItems }}>
+				{#snippet brand()}
+					<AcerolaLogo class="h-full w-full" />
+				{/snippet}
+			</AcerolaSidebar>
+		{/if}
+
+		<main class="h-full flex-1 overflow-y-auto">
 			{#if onboarding.isLoading}
 				<div class="flex h-full w-full items-center justify-center text-muted-foreground">
 					Loading...
@@ -268,14 +274,6 @@
 		</main>
 	</div>
 </div>
-
-{#if onboarding.isCompleted}
-	<AcerolaDock data={{ items: navItems }} state={{ mode: dockMode.mode }}>
-		{#snippet brand()}
-			<AcerolaLogo class="h-full w-full" />
-		{/snippet}
-	</AcerolaDock>
-{/if}
 
 <AcerolaDialog
 	state={{ open: isSearchDialogOpen }}
