@@ -12,9 +12,7 @@ use noq_proto::{
 
 /// Possible frame types during handshaking
 #[repr(u32)]
-#[derive(
-    Copy, Clone, PartialEq, Eq, Debug, num_enum::IntoPrimitive, num_enum::TryFromPrimitive,
-)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, num_enum::IntoPrimitive, strum::FromRepr)]
 // needs to be pub due to being exposed in error types
 #[non_exhaustive]
 pub enum FrameType {
@@ -41,8 +39,7 @@ pub enum FrameType {
     ///
     /// 32B pub key of peer that's gone
     EndpointGone = 8,
-    /// Messages with these frames will be ignored.
-    /// 8 byte ping payload, to be echoed back in FrameType::Pong
+    /// 8 byte ping payload, to be echoed back in a [`FrameType::Pong`].
     Ping = 9,
     /// 8 byte payload, the contents of ping being replied to
     Pong = 10,
@@ -108,8 +105,8 @@ impl FrameType {
         let tag = VarInt::decode(buf).map_err(|err| e!(FrameTypeError::UnexpectedEnd, err))?;
         let tag_u32 = u32::try_from(u64::from(tag))
             .map_err(|_| e!(FrameTypeError::UnknownFrameType { tag }))?;
-        let frame_type = FrameType::try_from(tag_u32)
-            .map_err(|_| e!(FrameTypeError::UnknownFrameType { tag }))?;
+        let frame_type = FrameType::from_repr(tag_u32)
+            .ok_or_else(|| e!(FrameTypeError::UnknownFrameType { tag }))?;
         Ok(frame_type)
     }
 }
