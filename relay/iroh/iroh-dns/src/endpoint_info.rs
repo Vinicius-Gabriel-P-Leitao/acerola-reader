@@ -3,6 +3,13 @@
 //! Dialing by [`EndpointId`] is supported by iroh endpoints publishing [Pkarr] records to DNS
 //! servers or the Mainline DHT.  This module supports creating and parsing these records.
 //!
+//! [`EndpointInfo`] combines an [`iroh_base::EndpointId`] with [`EndpointData`]:
+//! the addressing and metadata that discovery services publish and resolve.
+//! Discovery services use [`AddrFilter`] to control which addresses are published.
+//!
+//! This module also provides serialization to and from pkarr signed packets and
+//! DNS TXT records.
+//!
 //! DNS records are published under the following names:
 //!
 //! `_iroh.<z32-endpoint-id>.<origin-domain> TXT`
@@ -29,6 +36,7 @@
 //! [z-base-32]: https://philzimmermann.com/docs/human-oriented-base-32-encoding.txt
 //! [RFC1464]: https://www.rfc-editor.org/rfc/rfc1464
 //! [`RelayUrl`]: iroh_base::RelayUrl
+//! [`IROH_TXT_NAME`]: crate::IROH_TXT_NAME
 //! [`N0_DNS_ENDPOINT_ORIGIN_PROD`]: crate::dns::N0_DNS_ENDPOINT_ORIGIN_PROD
 //! [`N0_DNS_ENDPOINT_ORIGIN_STAGING`]: crate::dns::N0_DNS_ENDPOINT_ORIGIN_STAGING
 
@@ -43,11 +51,13 @@ use std::{
 };
 
 use iroh_base::{EndpointAddr, EndpointId, RelayUrl, SecretKey, TransportAddr};
-pub use iroh_dns::attrs::{EncodingError, IROH_TXT_NAME, ParseError};
-pub(crate) use iroh_dns::attrs::{IrohAttr, TxtAttrs};
-use iroh_dns::pkarr;
 use n0_error::{ensure, stack_error};
 use url::Url;
+
+use crate::{
+    attrs::{EncodingError, IrohAttr, ParseError, TxtAttrs},
+    pkarr,
+};
 
 /// Data about an endpoint that may be published to and resolved from discovery services.
 ///
@@ -110,7 +120,7 @@ impl EndpointData {
         self.add_addrs(addresses.into_iter().map(TransportAddr::Ip))
     }
 
-    /// Adds addresses to the endpoint data in the given ordered, but with duplicates filtered.
+    /// Adds addresses to the endpoint data in the given order, but with duplicates filtered.
     pub fn add_addrs(&mut self, addrs: impl IntoIterator<Item = TransportAddr>) {
         let mut addr_set = dedup(&mut self.addrs);
         for addr in addrs.into_iter() {
@@ -121,7 +131,7 @@ impl EndpointData {
         }
     }
 
-    /// Sets the user-defined data and returns the updated endpoint data.
+    /// Sets the user-defined data.
     pub fn set_user_data(&mut self, user_data: Option<UserData>) {
         self.user_data = user_data;
     }
@@ -132,7 +142,7 @@ impl EndpointData {
             .retain(|addr| !matches!(addr, TransportAddr::Ip(_)));
     }
 
-    /// Removes all direct addresses from the endpoint data.
+    /// Removes all relay URLs from the endpoint data.
     pub fn clear_relay_urls(&mut self) {
         self.addrs
             .retain(|addr| !matches!(addr, TransportAddr::Relay(_)));
@@ -159,12 +169,12 @@ impl EndpointData {
         })
     }
 
-    /// Returns the full list of all known addresses
+    /// Returns the full list of all known addresses.
     pub fn addrs(&self) -> impl Iterator<Item = &TransportAddr> {
         self.addrs.iter()
     }
 
-    /// Does this have any addresses?
+    /// Returns whether this has any addresses.
     pub fn has_addrs(&self) -> bool {
         !self.addrs.is_empty()
     }
@@ -284,9 +294,9 @@ impl From<EndpointAddr> for EndpointData {
     }
 }
 
-// User-defined data that can be published and resolved through endpoint discovery.
+/// User-defined data that can be published and resolved through endpoint discovery.
 ///
-/// Under the hood this is a UTF-8 String is no longer than [`UserData::MAX_LENGTH`] bytes.
+/// Under the hood this is a UTF-8 string no longer than [`UserData::MAX_LENGTH`] bytes.
 ///
 /// Iroh does not keep track of or examine the user-defined data.
 ///
