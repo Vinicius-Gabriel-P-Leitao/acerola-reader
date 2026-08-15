@@ -91,13 +91,13 @@ describe('useLibraryScanner', () => {
 
 		callbacks.get(LIBRARY_EVENTS.scanProgress)?.({ payload: undefined });
 
-		expect(toast.info).toHaveBeenCalledWith('Scan em andamento...');
+		expect(toast.info).not.toHaveBeenCalled();
 		expect(notificationStore.notifications[0]?.message).toBe('Scan em andamento...');
 
 		callbacks.get(LIBRARY_EVENTS.scanComplete)?.({ payload: undefined });
 
 		expect(hook.scanning).toBe(false);
-		expect(toast.success).toHaveBeenCalledWith('Scan concluído!');
+		expect(toast.success).not.toHaveBeenCalled();
 		expect(notificationStore.notifications.at(-1)?.message).toBe('Scan concluído!');
 		expect(unlisteners.get(LIBRARY_EVENTS.scanProgress)).toHaveBeenCalledOnce();
 		expect(unlisteners.get(LIBRARY_EVENTS.scanComplete)).toHaveBeenCalledOnce();
@@ -115,7 +115,7 @@ describe('useLibraryScanner', () => {
 		});
 
 		expect(hook.scanning).toBe(false);
-		expect(toast.error).toHaveBeenCalledWith('falha no scan');
+		expect(toast.error).not.toHaveBeenCalled();
 		expect(
 			notificationStore.notifications.some((item) => item.message === 'Scan em andamento...')
 		).toBe(false);
