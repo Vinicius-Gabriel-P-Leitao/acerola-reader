@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "acerola-p2p"
 version = "0.0.5"
-source = "git+https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git?rev=780f11dcf0365fade77b1ec505be48bb4506c178#780f11dcf0365fade77b1ec505be48bb4506c178"
+source = "git+https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git?branch=main#f3df6629819af28c819b861db4835f48181cd496"
 dependencies = [
  "async-trait",
  "blake3",
