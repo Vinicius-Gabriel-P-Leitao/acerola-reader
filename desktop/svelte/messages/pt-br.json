@@ -609,6 +609,8 @@
       "title": "Rede",
       "subtitle": "Conecte outro dispositivo Acerola pra levar seu histórico de leitura e seus quadrinhos com você.",
       "copied": "Copiado!",
+      "keyring_unavailable": "O keyring seguro do seu sistema não está disponível, então a chave que protege a identidade do dispositivo e os peers confiáveis foi salva num arquivo local em vez disso — ainda criptografada, mas sem a proteção extra do sistema operacional. Isso pode acontecer no Linux sem um serviço de keyring (como o gnome-keyring) rodando.",
+      "dismiss": "Dispensar",
       "my_device": {
         "title": "Este dispositivo",
         "mode_local": "Rede local",

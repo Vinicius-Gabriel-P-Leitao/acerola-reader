@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { error } from '@tauri-apps/plugin-log';
+	import { invoke } from '@tauri-apps/api/core';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import QRCode from 'qrcode';
 
 	import { m } from '$lib/paraglide/messages';
@@ -10,6 +13,8 @@
 	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
 	import { useNetworkSync, type TransferLogEntry } from '$lib/hooks/store/use-network-sync.svelte';
 	import { useRelaySettings } from '$lib/hooks/preferences/use-relay-settings.svelte';
+	import { NETWORK_COMMANDS } from '$lib/contracts/network/network.commands';
+	import { NETWORK_EVENTS } from '$lib/contracts/network/network.events';
 	import { InvalidConnectionCodeError, shortId } from '$lib/utils/connection-code.utils';
 
 	import Share2Icon from '@lucide/svelte/icons/share-2';
@@ -25,18 +30,41 @@
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 	import ShieldAlertIcon from '@lucide/svelte/icons/shield-alert';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+	import XIcon from '@lucide/svelte/icons/x';
 
 	const peers = usePeerConnection();
 	const sync = useNetworkSync();
 	const relay = useRelaySettings();
 
 	let qrDataUrl = $state<string | undefined>(undefined);
+	let qrError = $state(false);
 	let showRawCode = $state(false);
 	let pasteValue = $state('');
 	let connectError = $state<string | undefined>(undefined);
+	// Não é um toast: enquanto verdadeiro, a chave mestra que protege identidade/peers/confiança
+	// está sem a proteção do keyring do SO (ver `security:keyring_unavailable` no backend,
+	// `infra::security::MasterKeySource::FallbackFile`) — precisa ficar visível até o usuário
+	// dispensar, não sumir sozinho como um toast.
+	let keyringUnavailable = $state(false);
+	let keyringWarningDismissed = $state(false);
 
 	onMount(() => {
+		let unlistenKeyringWarning: UnlistenFn | undefined;
+
 		(async () => {
+			// `setup_network` (backend) roda numa task assíncrona à parte e pode terminar antes
+			// desta tela montar — um listener sozinho perderia o evento. Consulta o estado atual
+			// sob demanda; o listener abaixo cobre o caso do backend ainda não ter terminado.
+			try {
+				keyringUnavailable = await invoke<boolean>(NETWORK_COMMANDS.getSecurityStatus);
+			} catch (err) {
+				error(`failed to query security status: ${err}`);
+			}
+
+			unlistenKeyringWarning = await listen(NETWORK_EVENTS.keyringUnavailable, () => {
+				keyringUnavailable = true;
+			});
+
 			await Promise.all([
 				peers.loadLocalInfo(),
 				peers.startListening(),
@@ -46,6 +74,7 @@
 		})();
 
 		return () => {
+			unlistenKeyringWarning?.();
 			peers.stopListening();
 			sync.stopListening();
 		};
@@ -55,9 +84,19 @@
 		const code = peers.connectionCode();
 		if (!code) {
 			qrDataUrl = undefined;
+			qrError = false;
 			return;
 		}
-		QRCode.toDataURL(code, { margin: 1, width: 220 }).then((url) => (qrDataUrl = url));
+		QRCode.toDataURL(code, { margin: 4, width: 280, errorCorrectionLevel: 'L' })
+			.then((url) => {
+				qrDataUrl = url;
+				qrError = false;
+			})
+			.catch((err) => {
+				error(`failed to generate QR code: ${err}`);
+				qrDataUrl = undefined;
+				qrError = true;
+			});
 	});
 
 	const uniquePeers = $derived(
@@ -95,6 +134,12 @@
 
 	function peerAddrFor(peerId: string) {
 		return peers.getKnownAddr(peerId);
+	}
+
+	function lastSyncedLabel(peerId: string): string {
+		const timestamp = sync.lastSyncedAt(peerId);
+		if (!timestamp) return m['pages.network.peers.never_synced']();
+		return m['pages.network.peers.last_synced']({ when: new Date(timestamp).toLocaleString() });
 	}
 
 	async function withSync(action: (peerId: string, addrs: number[]) => Promise<void>, peerId: string) {
@@ -148,6 +193,21 @@
 			{m['pages.network.subtitle']()}
 		</p>
 	</div>
+
+	{#if keyringUnavailable && !keyringWarningDismissed}
+		<div class="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+			<ShieldAlertIcon size={18} class="mt-0.5 shrink-0 text-destructive" />
+			<p class="flex-1 text-sm text-foreground">{m['pages.network.keyring_unavailable']()}</p>
+			<button
+				type="button"
+				class="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+				onclick={() => (keyringWarningDismissed = true)}
+				aria-label={m['pages.network.dismiss']()}
+			>
+				<XIcon size={14} />
+			</button>
+		</div>
+	{/if}
 
 	<!-- Meu dispositivo -->
 	<section class="space-y-4">
@@ -207,9 +267,13 @@
 			<p class="mb-4 text-sm text-muted-foreground">{m['pages.network.pairing.desc']()}</p>
 
 			<div class="flex flex-col items-center gap-4">
-				<div class="flex h-56 w-56 shrink-0 items-center justify-center rounded-xl bg-white p-3">
+				<div class="flex h-72 w-72 shrink-0 items-center justify-center rounded-xl bg-white p-3">
 					{#if qrDataUrl}
 						<img src={qrDataUrl} alt={m['pages.network.pairing.title']()} class="h-full w-full" />
+					{:else if qrError}
+						<span class="px-4 text-center text-xs text-destructive">
+							{m['pages.network.pairing.qr_error']()}
+						</span>
 					{:else}
 						<span class="text-xs text-muted-foreground">{m['pages.network.pairing.loading']()}</span>
 					{/if}
@@ -317,6 +381,9 @@
 							<p class="mt-0.5 truncate font-mono text-xs text-muted-foreground">
 								{shortId(peer.peerId)}
 							</p>
+							<p class="mt-0.5 truncate text-xs text-muted-foreground">
+								{lastSyncedLabel(peer.peerId)}
+							</p>
 						</div>
 
 						<div class="flex shrink-0 gap-2">
@@ -324,10 +391,14 @@
 								variant="outline"
 								size="sm"
 								class="gap-2"
-								disabled={!peerAddrFor(peer.peerId)}
+								disabled={!peerAddrFor(peer.peerId) || sync.isSyncing(peer.peerId, 'history')}
 								onclick={() => withSync((id, addrs) => sync.syncHistory(id, addrs), peer.peerId)}
 							>
-								<HistoryIcon size={14} />
+								{#if sync.isSyncing(peer.peerId, 'history')}
+									<RefreshCwIcon size={14} class="animate-spin" />
+								{:else}
+									<HistoryIcon size={14} />
+								{/if}
 								{m['pages.network.peers.sync_history']()}
 							</Button>
 
@@ -335,20 +406,31 @@
 								variant="outline"
 								size="sm"
 								class="gap-2"
-								disabled={!peerAddrFor(peer.peerId)}
+								disabled={!peerAddrFor(peer.peerId) || sync.isSyncing(peer.peerId, 'files')}
 								onclick={() => withSync((id, addrs) => sync.syncFiles(id, addrs), peer.peerId)}
 							>
-								<FolderSyncIcon size={14} />
+								{#if sync.isSyncing(peer.peerId, 'files')}
+									<RefreshCwIcon size={14} class="animate-spin" />
+								{:else}
+									<FolderSyncIcon size={14} />
+								{/if}
 								{m['pages.network.peers.sync_files']()}
 							</Button>
 
 							<Button
 								size="sm"
 								class="gap-2"
-								disabled={!peerAddrFor(peer.peerId)}
+								disabled={!peerAddrFor(peer.peerId) ||
+									sync.isSyncing(peer.peerId, 'history') ||
+									sync.isSyncing(peer.peerId, 'files')}
 								onclick={() => withSync((id, addrs) => sync.syncAll(id, addrs), peer.peerId)}
 							>
-								<RefreshCwIcon size={14} />
+								<RefreshCwIcon
+									size={14}
+									class={sync.isSyncing(peer.peerId, 'history') || sync.isSyncing(peer.peerId, 'files')
+										? 'animate-spin'
+										: ''}
+								/>
 								{m['pages.network.peers.sync_all']()}
 							</Button>
 						</div>

@@ -10,5 +10,6 @@ export const NETWORK_COMMANDS = {
 	syncHistory: 'sync_history',
 	syncFiles: 'sync_files',
 	syncAll: 'sync_all',
-	getSyncHistoryLog: 'get_sync_history_log'
+	getSyncHistoryLog: 'get_sync_history_log',
+	getSecurityStatus: 'get_security_status'
 } as const;

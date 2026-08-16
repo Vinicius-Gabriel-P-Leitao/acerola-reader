@@ -609,6 +609,8 @@
       "title": "Network",
       "subtitle": "Connect another Acerola device to bring your reading history and comics with you.",
       "copied": "Copied!",
+      "keyring_unavailable": "Your system's secure keyring isn't available, so the encryption key protecting your device identity and trusted peers is stored in a local file instead — still encrypted, but without OS-level protection. This can happen on Linux without a keyring service (like gnome-keyring) running.",
+      "dismiss": "Dismiss",
       "my_device": {
         "title": "This device",
         "mode_local": "Local network",

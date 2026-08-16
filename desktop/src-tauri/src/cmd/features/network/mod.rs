@@ -10,7 +10,10 @@ use crate::{
         models::sync::sync_history_log::SyncHistoryLogEntry,
         repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
     },
-    infra::sync::protocol::{FILE_SYNC_ALPN, HISTORY_SYNC_ALPN},
+    infra::{
+        security::MasterKeySource,
+        sync::protocol::{FILE_SYNC_ALPN, HISTORY_SYNC_ALPN},
+    },
 };
 
 const SYNC_HISTORY_LOG_LIMIT: i64 = 200;
@@ -140,4 +143,14 @@ pub async fn get_sync_history_log(
     repo: State<'_, SyncHistoryLogRepository>,
 ) -> Result<Vec<SyncHistoryLogEntry>, String> {
     repo.find_recent(SYNC_HISTORY_LOG_LIMIT).await.map_err(|error| error.to_string())
+}
+
+/// Se `true`, a chave mestra que criptografa identidade/peers/confiança caiu pro fallback
+/// em arquivo local por falta de um keyring do SO utilizável — ver
+/// `infra::security::get_or_create_master_key`. Consultado sob demanda (em vez de só
+/// confiar no evento `security:keyring_unavailable`) porque `setup_network` roda numa task
+/// separada que pode terminar antes do frontend montar e começar a ouvir eventos.
+#[tauri::command]
+pub async fn get_security_status(source: State<'_, MasterKeySource>) -> Result<bool, String> {
+    Ok(*source == MasterKeySource::FallbackFile)
 }
