@@ -8,6 +8,7 @@
 
 	import HistoryIcon from '@lucide/svelte/icons/history';
 	import HouseIcon from '@lucide/svelte/icons/house';
+	import Share2Icon from '@lucide/svelte/icons/share-2';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 
 	import AcerolaLogo from '$lib/assets/icons/acerola.svg?component';
@@ -28,6 +29,7 @@
 	const navItems: SidebarItem[] = $derived([
 		{ label: m['routes.home'](), href: '/home', icon: HouseIcon },
 		{ label: m['routes.history'](), href: '/history', icon: HistoryIcon },
+		{ label: m['routes.network'](), href: '/network', icon: Share2Icon },
 		{ label: m['routes.config'](), href: '/config', icon: SettingsIcon }
 	]);
 </script>

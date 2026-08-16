@@ -14,6 +14,8 @@ pub type ConnectedPeerInfo = (PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>
 #[async_trait]
 pub trait NetworkServiceApi: Send + Sync + 'static {
     fn local_id(&self) -> Result<String, String>;
+    fn local_addr(&self) -> Result<PeerAddr, String>;
+    fn local_device_info(&self) -> Result<DeviceInfo, String>;
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String>;
     async fn switch_to_local(&self) -> Result<(), String>;
     async fn switch_to_relay(&self) -> Result<(), String>;
@@ -36,6 +38,18 @@ impl NetworkService {
 impl NetworkServiceApi for NetworkService {
     fn local_id(&self) -> Result<String, String> {
         Ok(self.node.local_id().to_string())
+    }
+
+    /// Endereço completo (id + bytes de endereçamento) usado pra gerar o código/QR de
+    /// pareamento — é o que o outro dispositivo precisa pra nos alcançar via `connect()`.
+    fn local_addr(&self) -> Result<PeerAddr, String> {
+        Ok(self.node.local_addr().clone())
+    }
+
+    /// Nome/OS/versão deste dispositivo — usado na tela de Rede pra exibir algo mais
+    /// legível que o peer id cru (ex: "Notebook do Vinicius" em vez de um hex de 64 chars).
+    fn local_device_info(&self) -> Result<DeviceInfo, String> {
+        Ok(self.node.local_device_info().clone())
     }
 
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String> {

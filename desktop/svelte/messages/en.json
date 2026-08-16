@@ -123,7 +123,8 @@
   "routes": {
     "home": "Home",
     "history": "History",
-    "config": "Settings"
+    "config": "Settings",
+    "network": "Network"
   },
   "pages": {
     "home": {
@@ -602,6 +603,55 @@
           "delete_error": "Could not remove the template: {msg}",
           "load_error": "Could not load templates: {msg}"
         }
+      }
+    },
+    "network": {
+      "title": "Network",
+      "subtitle": "Connect another Acerola device to bring your reading history and comics with you.",
+      "copied": "Copied!",
+      "my_device": {
+        "title": "This device",
+        "mode_local": "Local network",
+        "mode_relay": "Relay",
+        "relay_label": "Relay",
+        "relay_default": "default",
+        "relay_custom": "custom",
+        "copy_id": "Copy ID"
+      },
+      "pairing": {
+        "title": "Connection code",
+        "desc": "Scan this QR code on the other device, or copy the code below.",
+        "security_note": "Only pair with devices you trust — the first connection permanently grants access to your library.",
+        "copy": "Copy code",
+        "show_code": "Show code as text",
+        "hide_code": "Hide code",
+        "loading": "Generating code..."
+      },
+      "connect": {
+        "title": "Connect to a device",
+        "placeholder": "Paste the connection code here",
+        "button": "Connect",
+        "success": "Connected!",
+        "error": "Couldn't connect. Make sure the code is correct and the other device has Acerola open.",
+        "invalid_code": "Invalid code. Make sure you copied the full code from the other device."
+      },
+      "peers": {
+        "title": "Connected devices",
+        "empty": "No devices connected yet. Share your code or paste one above to pair.",
+        "sync_history": "Sync history",
+        "sync_files": "Sync files",
+        "sync_all": "Sync all"
+      },
+      "transfers": {
+        "title": "Transfers",
+        "empty": "No transfers in progress.",
+        "history_started": "Syncing reading history with {peer}...",
+        "history_complete": "Reading history synced with {peer}.",
+        "history_error": "History sync failed: {msg}",
+        "files_started": "Syncing files with {peer}...",
+        "files_progress": "Transferring {item}...",
+        "files_complete": "Files synced with {peer}.",
+        "files_error": "File sync error: {msg}"
       }
     }
   },

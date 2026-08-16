@@ -101,6 +101,22 @@ impl ChapterReadRepository {
         Ok(rows_affected as usize)
     }
 
+    /// Retorna todos os marcadores de "lido" já traduzidos pra chave natural (nome do
+    /// quadrinho + rótulo do capítulo), usado pelo sync P2P pra montar o manifesto local —
+    /// os IDs autoincrement não são comparáveis entre bases SQLite de devices diferentes.
+    pub async fn find_all_with_natural_keys(&self) -> Result<Vec<(String, String, i64)>, DbError> {
+        let rows = sqlx::query_as::<_, (String, String, i64)>(
+            "SELECT c.name, ca.chapter, cr.created_at
+             FROM chapter_read cr
+             JOIN comic_directory c  ON cr.comic_directory_id = c.id
+             JOIN chapter_archive ca ON cr.chapter_archive_id = ca.id",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows)
+    }
+
     /// Remove o registro de leitura de múltiplos capítulos em batch.
     pub async fn delete_batch(
         &self, comic_directory_id: i64, chapter_ids: &[i64],

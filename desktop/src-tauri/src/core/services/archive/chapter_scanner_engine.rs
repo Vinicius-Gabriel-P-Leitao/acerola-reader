@@ -69,13 +69,15 @@ impl ChapterScannerService {
             .map(|(chapter, decimal)| ChapterArchive::format_sort(chapter, decimal))
             .unwrap_or_else(|| ChapterArchive::fallback_sort(&chapter_name, index));
 
+        let checksum = compute_checksum(file).await.ok();
+
         let chapter = ChapterArchive {
             id: path_hash(file),
             chapter: chapter_name.clone(),
             path: file.to_string_lossy().to_string(),
             chapter_sort,
             is_special: is_special_name(&chapter_name),
-            checksum: None,
+            checksum,
             comic_directory_fk: comic_id,
             volume_id_fk: volume_id,
             last_modified: file_modified,
@@ -99,6 +101,24 @@ impl ChapterScannerService {
 #[rustfmt::skip]
 fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     meta.modified().map(|time| time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64).unwrap_or(0)
+}
+
+/// Calcula o blake3 do arquivo em streaming (sem carregar o cbz/cbr inteiro em memória),
+/// rodando em `spawn_blocking` pois é I/O síncrono de CPU-bound hashing.
+///
+/// Usado tanto pra verificar integridade após transferências P2P quanto pra dedup best-effort.
+async fn compute_checksum(path: &Path) -> Result<String, ComicError> {
+    let owned_path = path.to_path_buf();
+
+    tokio::task::spawn_blocking(move || {
+        let file = std::fs::File::open(&owned_path)?;
+        let mut hasher = blake3::Hasher::new();
+        hasher.update_reader(file)?;
+        Ok::<String, std::io::Error>(hasher.finalize().to_hex().to_string())
+    })
+    .await
+    .map_err(|join_error| ComicError::SystemFailure(format!("Checksum task panicked: {join_error}")))?
+    .map_err(ComicError::Io)
 }
 
 #[cfg(test)]

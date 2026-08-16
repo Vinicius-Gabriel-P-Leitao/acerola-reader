@@ -88,6 +88,25 @@ impl NetworkServiceApi for MockNetworkService {
         Ok(state.local_id.clone())
     }
 
+    fn local_addr(&self) -> Result<PeerAddr, String> {
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
+        Self::take_failure(&mut state)?;
+        Ok(PeerAddr {
+            id: PeerIdentity { id: state.local_id.clone(), device_id: None },
+            addrs: vec![],
+        })
+    }
+
+    fn local_device_info(&self) -> Result<DeviceInfo, String> {
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
+        Self::take_failure(&mut state)?;
+        Ok(DeviceInfo {
+            name: "mock-device".to_string(),
+            os: "test-os".to_string(),
+            version: "0.0.0".to_string(),
+        })
+    }
+
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String> {
         let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;

@@ -6,7 +6,10 @@ use crate::{
     data::{
         models::{
             archive::chapter_archive::ChapterArchive,
-            relations::chapter_with_volume::ChapterArchiveWithVolume,
+            relations::{
+                chapter_with_comic::ChapterArchiveWithComic,
+                chapter_with_volume::ChapterArchiveWithVolume,
+            },
         },
         repositories::Repository,
     },
@@ -22,6 +25,7 @@ pub enum ChapterSortCriteria {
     ModifiedDesc,
 }
 
+#[derive(Clone)]
 pub struct ChapterRepository {
     pub base: Repository<ChapterArchive>,
     pool: SqlitePool,
@@ -152,6 +156,39 @@ impl ChapterRepository {
                 .await?;
 
         Ok(rows.into_iter().map(|(id,)| id).collect())
+    }
+
+    /// Busca um capítulo pela chave natural (nome do quadrinho + rótulo do capítulo),
+    /// já garantida única pelo `UNIQUE(comic_directory_fk, chapter)` da tabela. Usado pelo
+    /// sync P2P pra resolver entradas recebidas de outro device, que não compartilha os
+    /// mesmos IDs autoincrement locais.
+    pub async fn find_by_comic_and_chapter(
+        &self, comic_directory_fk: i64, chapter: &str,
+    ) -> Result<Option<ChapterArchive>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchive>(
+            "SELECT id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified
+             FROM chapter_archive WHERE comic_directory_fk = ? AND chapter = ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(chapter)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Retorna todos os capítulos indexados junto do nome do quadrinho, usado pelo sync de
+    /// arquivos pra montar o manifesto local sem depender de N+1 queries por quadrinho.
+    pub async fn find_all_with_comic_name(&self) -> Result<Vec<ChapterArchiveWithComic>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchiveWithComic>(
+            "SELECT ca.id, ca.chapter, ca.path, ca.checksum, ca.last_modified, c.name AS comic_name
+             FROM chapter_archive ca
+             JOIN comic_directory c ON ca.comic_directory_fk = c.id",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
     }
 
     pub async fn get_chapters_by_volume(

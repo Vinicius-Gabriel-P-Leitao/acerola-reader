@@ -58,3 +58,10 @@ impl NetworkStatusPayload {
         Self { mode: mode_str.to_string(), peers: peer_list }
     }
 }
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RelayInfo {
+    pub default_relay: String,
+    pub active_relay: String,
+}

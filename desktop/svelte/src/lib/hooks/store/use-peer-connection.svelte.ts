@@ -1,0 +1,125 @@
+import { invoke } from '@tauri-apps/api/core';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { NETWORK_COMMANDS } from '$lib/contracts/network/network.commands';
+import { NETWORK_EVENTS } from '$lib/contracts/network/network.events';
+import type {
+	DeviceInfoPayload,
+	NetworkStatusPayload,
+	RelayInfo
+} from '$lib/contracts/network/network.payloads';
+import {
+	decodeConnectionCode,
+	encodeConnectionCode,
+	InvalidConnectionCodeError,
+	shortId,
+	type LocalPeerAddr
+} from '$lib/utils/connection-code.utils';
+
+export { InvalidConnectionCodeError, shortId } from '$lib/utils/connection-code.utils';
+
+const HANDSHAKE_ALPN = 'acerola/handshake/1';
+
+/// Estado de pareamento: identidade local (pro QR/código), status da rede (peers
+/// conectados via evento `network:status`) e a ação de conectar em um peer colando um
+/// código gerado por esse mesmo hook em outro dispositivo.
+export function usePeerConnection() {
+	let localId = $state<string | undefined>(undefined);
+	let localAddr = $state<LocalPeerAddr | undefined>(undefined);
+	let localDeviceInfo = $state<DeviceInfoPayload | undefined>(undefined);
+	let relayInfo = $state<RelayInfo | undefined>(undefined);
+	let status = $state<NetworkStatusPayload | undefined>(undefined);
+	let connecting = $state(false);
+
+	// `network:status` só traz peerId/alpn/device — não os bytes de endereço, que a lib
+	// exige de novo pra abrir uma conexão em outro ALPN (ex: disparar um sync depois do
+	// pareamento inicial). Guardamos aqui os `addrs` de cada peer que pareamos nesta sessão
+	// via código colado, pra reusar sem pedir o código de novo.
+	const knownAddrs = new Map<string, number[]>();
+
+	let unlistenStatus: UnlistenFn | undefined;
+
+	async function loadLocalInfo() {
+		[localId, localAddr, localDeviceInfo, relayInfo] = await Promise.all([
+			invoke<string>(NETWORK_COMMANDS.getLocalId),
+			invoke<LocalPeerAddr>(NETWORK_COMMANDS.getLocalAddr),
+			invoke<DeviceInfoPayload>(NETWORK_COMMANDS.getLocalDeviceInfo),
+			invoke<RelayInfo>(NETWORK_COMMANDS.getRelayInfo)
+		]);
+	}
+
+	async function refreshStatus() {
+		await invoke(NETWORK_COMMANDS.getNetworkStatus);
+	}
+
+	async function startListening() {
+		unlistenStatus = await listen<NetworkStatusPayload>(NETWORK_EVENTS.status, (event) => {
+			status = event.payload;
+		});
+		await refreshStatus();
+	}
+
+	function stopListening() {
+		unlistenStatus?.();
+		unlistenStatus = undefined;
+	}
+
+	/// O código/QR que o outro dispositivo precisa escanear ou colar pra nos alcançar.
+	function connectionCode(): string | undefined {
+		if (!localAddr) return undefined;
+		return encodeConnectionCode(localAddr);
+	}
+
+	async function connectWithCode(code: string) {
+		const parsed = decodeConnectionCode(code);
+
+		connecting = true;
+		try {
+			await invoke(NETWORK_COMMANDS.connectToPeer, {
+				peerId: parsed.id.id,
+				addrs: parsed.addrs,
+				alpn: HANDSHAKE_ALPN
+			});
+			knownAddrs.set(parsed.id.id, parsed.addrs);
+			await refreshStatus();
+		} finally {
+			connecting = false;
+		}
+	}
+
+	function getKnownAddr(peerId: string): number[] | undefined {
+		return knownAddrs.get(peerId);
+	}
+
+	/// Nome amigável de um peer conectado (a partir do `network:status`), com fallback pro
+	/// id truncado quando o dispositivo ainda não trocou `DeviceInfo` (ex: logo após conectar).
+	function peerLabel(peerId: string): string {
+		const device = status?.peers.find((peer) => peer.peerId === peerId)?.device;
+		return device?.name ?? shortId(peerId);
+	}
+
+	return {
+		loadLocalInfo,
+		startListening,
+		stopListening,
+		refreshStatus,
+		connectionCode,
+		connectWithCode,
+		getKnownAddr,
+		peerLabel,
+		get localId() {
+			return localId;
+		},
+		get localDeviceInfo() {
+			return localDeviceInfo;
+		},
+		get relayInfo() {
+			return relayInfo;
+		},
+		get status() {
+			return status;
+		},
+		get connecting() {
+			return connecting;
+		}
+	};
+}

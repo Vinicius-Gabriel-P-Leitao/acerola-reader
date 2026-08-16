@@ -13,9 +13,23 @@ use rand::RngCore;
 use tauri::{Emitter, Manager};
 
 use crate::{
-    core::services::network::{NetworkService, NetworkServiceApi},
-    infra::error::ComicError,
+    bios::scopes::{read_library_path, read_relay_url_override},
+    core::services::{
+        network::{NetworkService, NetworkServiceApi},
+        sync::{file_sync::FileSyncService, history_sync::HistorySyncService},
+    },
+    infra::{
+        error::ComicError,
+        sync::protocol::{
+            file_handler::{FileSyncInbound, FileSyncOutbound},
+            history_handler::{HistorySyncInbound, HistorySyncOutbound},
+            FILE_SYNC_ALPN, HISTORY_SYNC_ALPN,
+        },
+    },
 };
+
+/// Relay oficial do Acerola — default sempre disponível, sem exigir nenhuma configuração.
+pub const DEFAULT_RELAY_URL: &str = "https://relay.acerola-comic.com";
 
 /// Obtém ou gera um seed de 32 bytes dinamicamente e o persiste em `p2p-seed.key`
 fn get_or_create_p2p_seed(app_data_directory: &Path) -> Result<[u8; 32], ComicError> {
@@ -62,20 +76,61 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
         app_handle.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
     let p2p_seed = get_or_create_p2p_seed(&app_data_directory)?;
 
-    let transport_builder =
-        IrohTransportBuilder::default().seed(p2p_seed).relay("https://relay.acerola-comic.com");
+    // O relay próprio (`relay.acerola-comic.com`) é o default; usuários avançados podem
+    // apontar pra outro relay via a tela de Rede, persistido em `settings.json` como
+    // `relay_url`. Só é lido na inicialização — trocar em runtime não é suportado.
+    let relay_url =
+        read_relay_url_override(&app_data_directory).unwrap_or(DEFAULT_RELAY_URL.to_string());
+    tracing::info!("[Bios::Network] Using relay: {}", relay_url);
+
+    let transport_builder = IrohTransportBuilder::default().seed(p2p_seed).relay(&relay_url);
 
     let device_information =
         DefaultDeviceInfoProvider::new("0.0.1-beta").provide().map_err(|device_error| {
             ComicError::SystemFailure(format!("Failed to read device info: {:?}", device_error))
         })?;
 
+    // Recursos que os protocolos de sync precisam já existem neste ponto: o pool SQLite é
+    // gerenciado por `db::setup_database`, que roda (via block_on) antes desta função ser
+    // disparada em `bios/mod.rs::setup_runtime`.
+    let database_pool = app_handle.state::<sqlx::SqlitePool>().inner().clone();
+    let library_root = read_library_path(&app_data_directory)
+        .unwrap_or_else(|| app_data_directory.join("library"));
+
+    let history_sync_service = HistorySyncService::new(database_pool.clone());
+    let file_sync_service = FileSyncService::new(database_pool, library_root);
+
     let p2p_node = match tokio::time::timeout(
         std::time::Duration::from_secs(10),
-        AcerolaP2p::builder(event_emitter, transport_builder, device_information)
+        AcerolaP2p::builder(Arc::clone(&event_emitter), transport_builder, device_information)
             .guard(
                 TofuGuard::new(Arc::clone(&trusted_store) as Arc<dyn TrustedPeerStore>)
                     .into_validator(),
+            )
+            .inbound(
+                HISTORY_SYNC_ALPN,
+                Arc::new(HistorySyncInbound::new(
+                    Arc::clone(&event_emitter),
+                    history_sync_service.clone(),
+                )),
+            )
+            .outbound(
+                HISTORY_SYNC_ALPN,
+                Arc::new(HistorySyncOutbound::new(
+                    Arc::clone(&event_emitter),
+                    history_sync_service,
+                )),
+            )
+            .inbound(
+                FILE_SYNC_ALPN,
+                Arc::new(FileSyncInbound::new(
+                    Arc::clone(&event_emitter),
+                    file_sync_service.clone(),
+                )),
+            )
+            .outbound(
+                FILE_SYNC_ALPN,
+                Arc::new(FileSyncOutbound::new(Arc::clone(&event_emitter), file_sync_service)),
             )
             .build(),
     )

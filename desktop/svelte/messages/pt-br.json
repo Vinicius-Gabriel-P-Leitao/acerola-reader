@@ -123,7 +123,8 @@
   "routes": {
     "home": "Início",
     "history": "Histórico",
-    "config": "Configurações"
+    "config": "Configurações",
+    "network": "Rede"
   },
   "pages": {
     "home": {
@@ -602,6 +603,55 @@
           "delete_error": "Não foi possível remover o template: {msg}",
           "load_error": "Não foi possível carregar os templates: {msg}"
         }
+      }
+    },
+    "network": {
+      "title": "Rede",
+      "subtitle": "Conecte outro dispositivo Acerola pra levar seu histórico de leitura e seus quadrinhos com você.",
+      "copied": "Copiado!",
+      "my_device": {
+        "title": "Este dispositivo",
+        "mode_local": "Rede local",
+        "mode_relay": "Relay",
+        "relay_label": "Relay",
+        "relay_default": "padrão",
+        "relay_custom": "customizado",
+        "copy_id": "Copiar ID"
+      },
+      "pairing": {
+        "title": "Código de conexão",
+        "desc": "Escaneie este QR Code no outro dispositivo, ou copie o código abaixo.",
+        "security_note": "Só pareie com dispositivos que você confia — a primeira conexão dá acesso permanente à sua biblioteca.",
+        "copy": "Copiar código",
+        "show_code": "Mostrar código como texto",
+        "hide_code": "Ocultar código",
+        "loading": "Gerando código..."
+      },
+      "connect": {
+        "title": "Conectar a um dispositivo",
+        "placeholder": "Cole o código de conexão aqui",
+        "button": "Conectar",
+        "success": "Conectado!",
+        "error": "Não foi possível conectar. Confira se o código está certo e se o outro dispositivo está com o Acerola aberto.",
+        "invalid_code": "Código inválido. Confira se você copiou o código completo do outro dispositivo."
+      },
+      "peers": {
+        "title": "Dispositivos conectados",
+        "empty": "Nenhum dispositivo conectado ainda. Compartilhe seu código ou cole um acima pra parear.",
+        "sync_history": "Sincronizar histórico",
+        "sync_files": "Sincronizar arquivos",
+        "sync_all": "Sincronizar tudo"
+      },
+      "transfers": {
+        "title": "Transferências",
+        "empty": "Nenhuma transferência em andamento.",
+        "history_started": "Sincronizando histórico com {peer}...",
+        "history_complete": "Histórico sincronizado com {peer}.",
+        "history_error": "Falha ao sincronizar histórico: {msg}",
+        "files_started": "Sincronizando arquivos com {peer}...",
+        "files_progress": "Transferindo {item}...",
+        "files_complete": "Arquivos sincronizados com {peer}.",
+        "files_error": "Erro na sincronização de arquivos: {msg}"
       }
     }
   },
