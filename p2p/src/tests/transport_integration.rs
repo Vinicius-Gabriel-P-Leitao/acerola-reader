@@ -168,6 +168,114 @@ mod run_in_isolation {
     }
 
     #[tokio::test]
+    async fn real_transfer_completes_and_status_reflects_it_right_after() {
+        crate::tests::init_tracing();
+        let received = Arc::new(Mutex::new(Vec::new()));
+        let payload = b"acerola sync payload".to_vec();
+
+        let node_a: AcerolaP2p =
+            AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("a"))
+                .outbound(b"test/status-check", Arc::new(SenderHandler { payload: payload.clone() }))
+                .build()
+                .await
+                .unwrap();
+
+        let node_b: AcerolaP2p =
+            AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("b"))
+                .inbound(
+                    b"test/status-check",
+                    Arc::new(ReceiverHandler { received: Arc::clone(&received) }),
+                )
+                .build()
+                .await
+                .unwrap();
+
+        let id_a = node_a.local_id().to_string();
+
+        node_a.connect(node_b.local_addr().clone(), b"test/status-check").await.unwrap();
+
+        // Espera de verdade a transferência acontecer (poll no buffer recebido, com timeout) —
+        // um sleep fixo arbitrário mascararia uma transferência que trava no meio.
+        let start = std::time::Instant::now();
+        loop {
+            if *received.lock().await == payload {
+                break;
+            }
+            assert!(start.elapsed() < Duration::from_secs(5), "transfer did not complete in time");
+            sleep(Duration::from_millis(20)).await;
+        }
+
+        // Checa o status LOGO depois da transferência confirmada. A sessão desse ALPN é
+        // one-shot por design (o manager derruba a conexão assim que o handler termina —
+        // ver `NetworkManager::handle_connect_command`), então o peer NÃO deve continuar
+        // "conectado" pra sempre depois disso — se aparecer, é vazamento de estado.
+        let peers_on_b = node_b.connected_peers().await;
+        assert!(
+            !peers_on_b.keys().any(|p| p.id == id_a),
+            "peer should not remain connected after a one-shot ALPN session completes"
+        );
+
+        let _ = node_a.shutdown().await;
+        let _ = node_b.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn simultaneous_bidirectional_connect_same_alpn_does_not_silently_drop_either_side() {
+        crate::tests::init_tracing();
+        let received_a = Arc::new(Mutex::new(Vec::new()));
+        let received_b = Arc::new(Mutex::new(Vec::new()));
+
+        // Os dois nós registram handler outbound E inbound pro MESMO alpn, pra poder discar
+        // um pro outro ao mesmo tempo — simula dois devices dando "Sync History" quase
+        // simultaneamente, o cenário mais plausível pra explicar uma conexão fechando sem
+        // nenhuma troca visível no log (glare: os dois lados abrindo stream um pro outro
+        // pro mesmo par (peer, alpn) na mesma janela de tempo).
+        let node_a: AcerolaP2p =
+            AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("a"))
+                .outbound(b"test/glare", Arc::new(SenderHandler { payload: b"from-a".to_vec() }))
+                .inbound(b"test/glare", Arc::new(ReceiverHandler { received: Arc::clone(&received_a) }))
+                .build()
+                .await
+                .unwrap();
+
+        let node_b: AcerolaP2p =
+            AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("b"))
+                .outbound(b"test/glare", Arc::new(SenderHandler { payload: b"from-b".to_vec() }))
+                .inbound(b"test/glare", Arc::new(ReceiverHandler { received: Arc::clone(&received_b) }))
+                .build()
+                .await
+                .unwrap();
+
+        let addr_a = node_a.local_addr().clone();
+        let addr_b = node_b.local_addr().clone();
+
+        // Dispara os dois connect()s o mais simultâneo possível.
+        let (result_a, result_b) = tokio::join!(
+            node_a.connect(addr_b, b"test/glare"),
+            node_b.connect(addr_a, b"test/glare"),
+        );
+        assert!(result_a.is_ok(), "node_a.connect() failed: {result_a:?}");
+        assert!(result_b.is_ok(), "node_b.connect() failed: {result_b:?}");
+
+        let start = std::time::Instant::now();
+        loop {
+            let a_done = *received_a.lock().await == b"from-b".to_vec();
+            let b_done = *received_b.lock().await == b"from-a".to_vec();
+            if a_done && b_done {
+                break;
+            }
+            assert!(
+                start.elapsed() < Duration::from_secs(5),
+                "glare: pelo menos um lado não recebeu dados (a_done={a_done}, b_done={b_done})"
+            );
+            sleep(Duration::from_millis(20)).await;
+        }
+
+        let _ = node_a.shutdown().await;
+        let _ = node_b.shutdown().await;
+    }
+
+    #[tokio::test]
     async fn real_iroh_nodes_latency_monitoring_integration() {
         crate::tests::init_tracing();
 
