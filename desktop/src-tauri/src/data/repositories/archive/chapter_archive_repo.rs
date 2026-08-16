@@ -177,6 +177,27 @@ impl ChapterRepository {
         Ok(result)
     }
 
+    /// Busca um capítulo por `chapter_sort` em vez do rótulo — usado pelo sync P2P de
+    /// **histórico**, não de arquivos. O rótulo (`chapter`) não é comparável entre devices
+    /// (cada um nomeia o arquivo como quiser), mas `chapter_sort` é derivado do mesmo jeito
+    /// nos dois apps a partir do nome, então funciona como chave natural cross-device — é
+    /// também o que o Android usa pra resolver `chapter_archive_id` depois de receber um
+    /// manifesto (via `updateHistoryChapterIdBySort`).
+    pub async fn find_by_comic_and_chapter_sort(
+        &self, comic_directory_fk: i64, chapter_sort: &str,
+    ) -> Result<Option<ChapterArchive>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchive>(
+            "SELECT id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified
+             FROM chapter_archive WHERE comic_directory_fk = ? AND chapter_sort = ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(chapter_sort)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     /// Retorna todos os capítulos indexados junto do nome do quadrinho, usado pelo sync de
     /// arquivos pra montar o manifesto local sem depender de N+1 queries por quadrinho.
     pub async fn find_all_with_comic_name(&self) -> Result<Vec<ChapterArchiveWithComic>, DbError> {

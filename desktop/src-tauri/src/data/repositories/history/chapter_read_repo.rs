@@ -102,11 +102,13 @@ impl ChapterReadRepository {
     }
 
     /// Retorna todos os marcadores de "lido" já traduzidos pra chave natural (nome do
-    /// quadrinho + rótulo do capítulo), usado pelo sync P2P pra montar o manifesto local —
-    /// os IDs autoincrement não são comparáveis entre bases SQLite de devices diferentes.
+    /// quadrinho + `chapter_sort` do capítulo), usado pelo sync P2P pra montar o manifesto
+    /// local — os IDs autoincrement não são comparáveis entre bases SQLite de devices
+    /// diferentes. Usa `chapter_sort`, não o rótulo (`chapter`): o rótulo não é comparável
+    /// entre devices (cada um nomeia o arquivo como quiser), `chapter_sort` sim.
     pub async fn find_all_with_natural_keys(&self) -> Result<Vec<(String, String, i64)>, DbError> {
         let rows = sqlx::query_as::<_, (String, String, i64)>(
-            "SELECT c.name, ca.chapter, cr.created_at
+            "SELECT c.name, ca.chapter_sort, cr.created_at
              FROM chapter_read cr
              JOIN comic_directory c  ON cr.comic_directory_id = c.id
              JOIN chapter_archive ca ON cr.chapter_archive_id = ca.id",

@@ -21,9 +21,14 @@ use crate::{
 
 /// Monta e aplica manifestos de histórico de leitura entre dois devices.
 ///
-/// A identidade cross-device é a chave natural `(comic.name, chapter.chapter)` — já
-/// garantida única pelo schema — em vez de um UUID novo, já que os IDs autoincrement
-/// locais não são comparáveis entre duas bases SQLite independentes.
+/// A identidade cross-device é a chave natural `(comic.name, chapter.chapter_sort)` —
+/// **não** o rótulo do capítulo (`chapter`). O rótulo é texto livre por device (cada um
+/// nomeia o arquivo como quiser: "Cap 1", "Capítulo 01", etc.), então não serve como
+/// chave entre dois devices independentes; `chapter_sort` é o valor normalizado que os
+/// dois lados derivam do nome do arquivo, e é também o que o Android usa pra resolver o
+/// `chapter_archive_id` local depois de aplicar um manifesto recebido — usar outra coisa
+/// aqui faz o histórico sincronizar "com sucesso" mas gravar no capítulo errado (ou em
+/// nenhum).
 #[derive(Clone)]
 pub struct HistorySyncService {
     comic_repo: ComicRepository,
@@ -51,7 +56,7 @@ impl HistorySyncService {
             .into_iter()
             .map(|payload| HistoryEntry {
                 comic_name: payload.comic_name,
-                chapter: payload.chapter_name,
+                chapter: payload.chapter_sort,
                 last_page: payload.last_page,
                 is_completed: payload.is_completed,
                 updated_at: payload.updated_at,
@@ -85,7 +90,7 @@ impl HistorySyncService {
                 continue;
             };
             let Some(chapter) =
-                self.chapter_repo.find_by_comic_and_chapter(comic.id, &entry.chapter).await?
+                self.chapter_repo.find_by_comic_and_chapter_sort(comic.id, &entry.chapter).await?
             else {
                 continue;
             };
@@ -118,7 +123,7 @@ impl HistorySyncService {
                 continue;
             };
             let Some(chapter) =
-                self.chapter_repo.find_by_comic_and_chapter(comic.id, &marker.chapter).await?
+                self.chapter_repo.find_by_comic_and_chapter_sort(comic.id, &marker.chapter).await?
             else {
                 continue;
             };
@@ -174,7 +179,8 @@ mod tests {
         let manifest = service.build_manifest().await.unwrap();
         assert_eq!(manifest.entries.len(), 1);
         assert_eq!(manifest.entries[0].comic_name, "Test");
-        assert_eq!(manifest.entries[0].chapter, "Cap 1");
+        // Carrega chapter_sort ("1"), não o rótulo ("Cap 1") — é a chave cross-device.
+        assert_eq!(manifest.entries[0].chapter, "1");
     }
 
     #[tokio::test]
@@ -194,7 +200,7 @@ mod tests {
         let peer_manifest = HistoryManifest {
             entries: vec![HistoryEntry {
                 comic_name: "Test".into(),
-                chapter: "Cap 1".into(),
+                chapter: "1".into(),
                 last_page: 1,
                 is_completed: false,
                 updated_at: 100,
@@ -226,7 +232,7 @@ mod tests {
         let peer_manifest = HistoryManifest {
             entries: vec![HistoryEntry {
                 comic_name: "Test".into(),
-                chapter: "Cap 1".into(),
+                chapter: "1".into(),
                 last_page: 30,
                 is_completed: true,
                 updated_at: 9000,
@@ -249,7 +255,7 @@ mod tests {
         let peer_manifest = HistoryManifest {
             entries: vec![HistoryEntry {
                 comic_name: "Nao Existe Aqui".into(),
-                chapter: "Cap 1".into(),
+                chapter: "1".into(),
                 last_page: 1,
                 is_completed: false,
                 updated_at: 100,
@@ -272,8 +278,8 @@ mod tests {
         let peer_manifest = HistoryManifest {
             entries: vec![],
             read_markers: vec![
-                ReadMarker { comic_name: "Test".into(), chapter: "Cap 1".into(), created_at: 1 },
-                ReadMarker { comic_name: "Test".into(), chapter: "Cap 2".into(), created_at: 2 },
+                ReadMarker { comic_name: "Test".into(), chapter: "1".into(), created_at: 1 },
+                ReadMarker { comic_name: "Test".into(), chapter: "2".into(), created_at: 2 },
             ],
         };
 
