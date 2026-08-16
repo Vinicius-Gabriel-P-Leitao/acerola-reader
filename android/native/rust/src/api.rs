@@ -14,15 +14,15 @@ use acerola_p2p::api::{
 
 #[cfg(target_os = "android")]
 use crate::{
-    callbacks::{FileSyncProvider, HistorySyncProvider},
+    callbacks::{FileSyncProvider, HistorySyncProvider, SecureBlobStore},
     mode::FfiNetworkMode,
     protocol::{
         files::{FileSyncInbound, FileSyncOutbound, FILE_SYNC_ALPN},
         history::{HistorySyncInbound, HistorySyncOutbound, HISTORY_SYNC_ALPN},
     },
     singleton::TOKIO_RUNTIME,
-    storage::{FileP2pStorage, SharedFileP2pStorage},
-    trust_store::FileTrustedStore,
+    storage::{SecureP2pStorage, SharedSecureP2pStorage},
+    trust_store::SecureTrustedStore,
 };
 
 #[cfg(target_os = "android")]
@@ -58,9 +58,9 @@ pub struct P2PNode {
     node: Arc<AcerolaP2p>,
     runtime: Arc<Runtime>,
     #[cfg(target_os = "android")]
-    trust_store: Arc<FileTrustedStore>,
+    trust_store: Arc<SecureTrustedStore>,
     #[cfg(target_os = "android")]
-    storage: Arc<FileP2pStorage>,
+    storage: Arc<SecureP2pStorage>,
 }
 
 #[uniffi::export]
@@ -68,9 +68,9 @@ pub struct P2PNode {
 impl P2PNode {
     #[uniffi::constructor]
     pub fn new(
-        callback: Arc<dyn P2PCallback>, data_dir: String, relay_url: Option<String>, device_name: String,
-        device_version: String, history_provider: Arc<dyn HistorySyncProvider>,
-        file_provider: Arc<dyn FileSyncProvider>,
+        callback: Arc<dyn P2PCallback>, legacy_data_dir: Option<String>, relay_url: Option<String>,
+        device_name: String, device_version: String, secure_store: Arc<dyn SecureBlobStore>,
+        history_provider: Arc<dyn HistorySyncProvider>, file_provider: Arc<dyn FileSyncProvider>,
     ) -> Self {
         let runtime = TOKIO_RUNTIME.clone();
 
@@ -79,14 +79,17 @@ impl P2PNode {
             cb_clone.on_event(event.to_string(), data);
         });
 
-        let trust_store = Arc::new(
-            FileTrustedStore::open(&data_dir, Arc::clone(&emit))
-                .expect("Failed to open persistent trust store"),
-        );
+        // Só usado pra migrar `identity.seed`/`peers.json`/`trusted.txt`/`blocked.txt` (formato
+        // antigo, texto puro, de antes do `SecureBlobStore`) — ver `storage.rs`/`trust_store.rs`.
+        let legacy_dir = legacy_data_dir.as_deref().map(std::path::Path::new);
 
-        let storage = Arc::new(
-            FileP2pStorage::open(&data_dir).expect("Failed to open persistent p2p storage"),
-        );
+        let trust_store = Arc::new(SecureTrustedStore::open(
+            Arc::clone(&secure_store),
+            Arc::clone(&emit),
+            legacy_dir,
+        ));
+
+        let storage = Arc::new(SecureP2pStorage::open(Arc::clone(&secure_store), legacy_dir));
 
         let node = {
             let trust_store = Arc::clone(&trust_store);
@@ -106,7 +109,7 @@ impl P2PNode {
                             TofuGuard::new(trust_store as Arc<dyn acerola_p2p::api::guard::TrustedPeerStore>)
                                 .into_validator(),
                         )
-                        .storage(SharedFileP2pStorage(storage_for_builder))
+                        .storage(SharedSecureP2pStorage(storage_for_builder))
                         .inbound(
                             HISTORY_SYNC_ALPN,
                             Arc::new(HistorySyncInbound::new(

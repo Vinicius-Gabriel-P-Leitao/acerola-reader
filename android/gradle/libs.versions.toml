@@ -11,6 +11,7 @@ coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.2"
 documentfile = "1.1.0"
+securityCrypto = "1.1.0-alpha06"
 datastore = "1.2.0"
 sqlite = "2.6.2"
 
@@ -110,6 +111,7 @@ junrar = { group = "com.github.junrar", name = "junrar", version.ref = "junrar" 
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 # --- QR / Camera ---
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCore" }

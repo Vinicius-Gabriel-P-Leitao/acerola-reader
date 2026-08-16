@@ -9,6 +9,7 @@ import p2p.FileSyncProvider
 import p2p.HistorySyncProvider
 import p2p.P2pCallback
 import p2p.P2pNode
+import p2p.SecureBlobStore
 import java.io.Closeable
 
 enum class NetworkMode {
@@ -31,6 +32,7 @@ data class ConnectedPeerInfo(
 class P2pService(
     context: Context,
     relayUrlOverride: String?,
+    secureStore: SecureBlobStore,
     historyProvider: HistorySyncProvider,
     fileProvider: FileSyncProvider,
     private val eventListener: (event: String, data: String) -> Unit,
@@ -49,13 +51,24 @@ class P2pService(
         }
 
     init {
-        val dataDir = context.filesDir.resolve("p2p").absolutePath
+        // Only used by Rust to migrate identity/peers/trust from the old plain-text format
+        // into `SecureBlobStore` once — see `storage.rs`/`trust_store.rs`.
+        val legacyDataDir = context.filesDir.resolve("p2p").absolutePath
         val appVersion =
             runCatching {
                 context.packageManager.getPackageInfo(context.packageName, 0).versionName
             }.getOrNull() ?: "unknown"
         p2pNode =
-            P2pNode(callbackHandler, dataDir, relayUrlOverride, Build.MODEL, appVersion, historyProvider, fileProvider)
+            P2pNode(
+                callbackHandler,
+                legacyDataDir,
+                relayUrlOverride,
+                Build.MODEL,
+                appVersion,
+                secureStore,
+                historyProvider,
+                fileProvider,
+            )
     }
 
     fun getLocalId(): String = p2pNode.getLocalId()

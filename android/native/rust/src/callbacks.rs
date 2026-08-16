@@ -78,6 +78,31 @@ pub trait FileSyncProvider: Send + Sync {
     fn abort_chapter_write(&self, handle: i64);
 }
 
+/// Armazenamento criptografado (Android Keystore, via `EncryptedSharedPreferences`) usado por
+/// `SecureP2pStorage`/`SecureTrustedStore` (ver `storage.rs`/`trust_store.rs`) pra persistir
+/// identidade do nó, cache de peers e lista de confiança TOFU sem tocar texto puro em disco.
+/// Chave/valor puros — todo o layout (quais chaves existem, formato JSON de cada uma) é
+/// decidido do lado Rust, o Kotlin só faz o armazenamento opaco.
+#[uniffi::export(with_foreign)]
+pub trait SecureBlobStore: Send + Sync {
+    /// `Err` só em falha real de backend (ex.: `EncryptedSharedPreferences`/Keystore
+    /// indisponível ou corrompido) — nunca usado pra "chave não existe ainda", que não é
+    /// um erro. Distinguir os dois importa: se `load_identity` tratasse falha real como
+    /// "identidade nunca existiu", o node mintaria uma identidade nova silenciosamente e
+    /// quebraria todo o pareamento já feito sem avisar ninguém.
+    fn save_blob(&self, key: String, value: Vec<u8>) -> Result<(), SecureBlobStoreError>;
+
+    /// `Ok(None)` se a chave nunca foi salva (estado normal). `Err` só em falha real de
+    /// backend — ver `save_blob`.
+    fn load_blob(&self, key: String) -> Result<Option<Vec<u8>>, SecureBlobStoreError>;
+}
+
+#[derive(uniffi::Error, thiserror::Error, Debug)]
+pub enum SecureBlobStoreError {
+    #[error("secure blob store access failed: {reason}")]
+    AccessFailed { reason: String },
+}
+
 #[derive(uniffi::Record, Debug, Clone, Serialize, Deserialize)]
 pub struct FfiFileManifestEntry {
     pub comic_name: String,
