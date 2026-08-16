@@ -16,19 +16,28 @@ use crate::{
     },
 };
 
-/// Embalagem da estrutura de conexão transitória `iroh::endpoint::Connection`.
+/// Um stream bidirecional já aceito numa conexão, aguardando ser entregue ao `NetworkManager`.
+///
+/// Diferente da versão anterior, `send`/`recv` já foram obtidos via `Connection::accept_bi()`
+/// *antes* deste valor existir — quem aceita repetidamente novos streams numa mesma conexão
+/// (para permitir reaproveitamento, ver `IrohTransport`) é um loop de fundo dedicado por conexão,
+/// não o `NetworkManager`. `accept_bi()` aqui só desempacota o que já foi aceito.
 pub struct IrohIncoming {
-    pub(crate) conn: endpoint::Connection,
-    pub(crate) addr: PeerAddr,
-    pub(crate) peer: PeerId,
-    pub(crate) alpn: Vec<u8>,
+    send: endpoint::SendStream,
+    recv: endpoint::RecvStream,
+    conn: Arc<endpoint::Connection>,
+    addr: PeerAddr,
+    peer: PeerId,
+    alpn: Vec<u8>,
 }
 
 impl IrohIncoming {
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        conn: endpoint::Connection, peer: PeerId, addr: PeerAddr, alpn: Vec<u8>,
+        send: endpoint::SendStream, recv: endpoint::RecvStream, conn: Arc<endpoint::Connection>,
+        peer: PeerId, addr: PeerAddr, alpn: Vec<u8>,
     ) -> Self {
-        Self { conn, peer, addr, alpn }
+        Self { send, recv, conn, peer, addr, alpn }
     }
 }
 
@@ -110,12 +119,9 @@ impl IncomingConnection for IrohIncoming {
         (Box<dyn AsyncWrite + Send + Unpin>, Box<dyn AsyncRead + Send + Unpin>),
         ConnectionError,
     > {
-        let (send, recv) = self.conn.accept_bi().await?;
-        let shared_conn = Arc::new(self.conn);
-
         Ok((
-            Box::new(ConnectionWriter::new(send, Arc::clone(&shared_conn))),
-            Box::new(ConnectionReader::new(recv, shared_conn)),
+            Box::new(ConnectionWriter::new(self.send, Arc::clone(&self.conn))),
+            Box::new(ConnectionReader::new(self.recv, self.conn)),
         ))
     }
 }
