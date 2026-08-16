@@ -8,6 +8,10 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::{
     core::services::sync::file_sync::FileSyncService,
+    data::{
+        models::sync::sync_history_log::SyncHistoryLogEntry,
+        repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
+    },
     infra::{
         error::RpcError,
         sync::{
@@ -19,6 +23,8 @@ use crate::{
         },
     },
 };
+
+const LOG_KIND: &str = "files";
 
 /// Envia, em sequência, os arquivos de `wanted` (o que o peer pediu de nós). Se um item não
 /// existir mais localmente (corrida com uma deleção concorrente), envia um header
@@ -120,11 +126,12 @@ async fn receive_files(
 pub struct FileSyncOutbound {
     emit: EventEmitter,
     service: FileSyncService,
+    log_repo: SyncHistoryLogRepository,
 }
 
 impl FileSyncOutbound {
-    pub fn new(emit: EventEmitter, service: FileSyncService) -> Self {
-        Self { emit, service }
+    pub fn new(emit: EventEmitter, service: FileSyncService, log_repo: SyncHistoryLogRepository) -> Self {
+        Self { emit, service, log_repo }
     }
 
     async fn run(&self, writer: &mut FramedWriter, reader: &mut FramedReader) -> Result<(), P2pError> {
@@ -162,10 +169,24 @@ impl Handler for FileSyncOutbound {
         match self.run(&mut writer, &mut reader).await {
             Ok(()) => {
                 (self.emit)("sync:files:complete", peer.id.clone());
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "complete", None))
+                    .await
+                    .ok();
                 Ok(())
             },
             Err(error) => {
-                (self.emit)("sync:files:error", error.to_string());
+                let message = error.to_string();
+                (self.emit)(
+                    "sync:files:error",
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
                 Err(error)
             },
         }
@@ -177,11 +198,12 @@ impl Handler for FileSyncOutbound {
 pub struct FileSyncInbound {
     emit: EventEmitter,
     service: FileSyncService,
+    log_repo: SyncHistoryLogRepository,
 }
 
 impl FileSyncInbound {
-    pub fn new(emit: EventEmitter, service: FileSyncService) -> Self {
-        Self { emit, service }
+    pub fn new(emit: EventEmitter, service: FileSyncService, log_repo: SyncHistoryLogRepository) -> Self {
+        Self { emit, service, log_repo }
     }
 
     async fn run(&self, writer: &mut FramedWriter, reader: &mut FramedReader) -> Result<(), P2pError> {
@@ -219,10 +241,24 @@ impl Handler for FileSyncInbound {
         match self.run(&mut writer, &mut reader).await {
             Ok(()) => {
                 (self.emit)("sync:files:complete", peer.id.clone());
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "complete", None))
+                    .await
+                    .ok();
                 Ok(())
             },
             Err(error) => {
-                (self.emit)("sync:files:error", error.to_string());
+                let message = error.to_string();
+                (self.emit)(
+                    "sync:files:error",
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
                 Err(error)
             },
         }

@@ -12,6 +12,7 @@ pub mod archive;
 pub mod category;
 pub mod history;
 pub mod metadata;
+pub mod sync;
 pub mod views;
 
 pub trait Entity {

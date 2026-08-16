@@ -8,8 +8,14 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::{
     core::services::sync::history_sync::HistorySyncService,
+    data::{
+        models::sync::sync_history_log::SyncHistoryLogEntry,
+        repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
+    },
     infra::sync::framing::{framed_reader, framed_writer, read_json, write_json, FramedReader, FramedWriter},
 };
+
+const LOG_KIND: &str = "history";
 
 /// Lado que INICIA a sessão (papel "outbound": ativado quando este device chama
 /// `connect()` no ALPN de histórico). Escreve o manifesto local primeiro, depois lê o do
@@ -18,11 +24,12 @@ use crate::{
 pub struct HistorySyncOutbound {
     emit: EventEmitter,
     service: HistorySyncService,
+    log_repo: SyncHistoryLogRepository,
 }
 
 impl HistorySyncOutbound {
-    pub fn new(emit: EventEmitter, service: HistorySyncService) -> Self {
-        Self { emit, service }
+    pub fn new(emit: EventEmitter, service: HistorySyncService, log_repo: SyncHistoryLogRepository) -> Self {
+        Self { emit, service, log_repo }
     }
 
     async fn run(&self, writer: &mut FramedWriter, reader: &mut FramedReader) -> Result<(), P2pError> {
@@ -50,10 +57,24 @@ impl Handler for HistorySyncOutbound {
         match self.run(&mut writer, &mut reader).await {
             Ok(()) => {
                 (self.emit)("sync:history:complete", peer.id.clone());
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "complete", None))
+                    .await
+                    .ok();
                 Ok(())
             },
             Err(error) => {
-                (self.emit)("sync:history:error", error.to_string());
+                let message = error.to_string();
+                (self.emit)(
+                    "sync:history:error",
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
                 Err(error)
             },
         }
@@ -65,11 +86,12 @@ impl Handler for HistorySyncOutbound {
 pub struct HistorySyncInbound {
     emit: EventEmitter,
     service: HistorySyncService,
+    log_repo: SyncHistoryLogRepository,
 }
 
 impl HistorySyncInbound {
-    pub fn new(emit: EventEmitter, service: HistorySyncService) -> Self {
-        Self { emit, service }
+    pub fn new(emit: EventEmitter, service: HistorySyncService, log_repo: SyncHistoryLogRepository) -> Self {
+        Self { emit, service, log_repo }
     }
 
     async fn run(&self, writer: &mut FramedWriter, reader: &mut FramedReader) -> Result<(), P2pError> {
@@ -98,10 +120,24 @@ impl Handler for HistorySyncInbound {
         match self.run(&mut writer, &mut reader).await {
             Ok(()) => {
                 (self.emit)("sync:history:complete", peer.id.clone());
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "complete", None))
+                    .await
+                    .ok();
                 Ok(())
             },
             Err(error) => {
-                (self.emit)("sync:history:error", error.to_string());
+                let message = error.to_string();
+                (self.emit)(
+                    "sync:history:error",
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
                 Err(error)
             },
         }

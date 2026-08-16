@@ -625,7 +625,8 @@
         "copy": "Copy code",
         "show_code": "Show code as text",
         "hide_code": "Hide code",
-        "loading": "Generating code..."
+        "loading": "Generating code...",
+        "qr_error": "Couldn't generate the QR code. Use the text code below instead."
       },
       "connect": {
         "title": "Connect to a device",
@@ -640,7 +641,9 @@
         "empty": "No devices connected yet. Share your code or paste one above to pair.",
         "sync_history": "Sync history",
         "sync_files": "Sync files",
-        "sync_all": "Sync all"
+        "sync_all": "Sync all",
+        "last_synced": "Last sync: {when}",
+        "never_synced": "Never synced"
       },
       "transfers": {
         "title": "Transfers",

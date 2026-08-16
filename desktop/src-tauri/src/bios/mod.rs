@@ -48,6 +48,7 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         network_cmd::sync_history,
         network_cmd::sync_files,
         network_cmd::sync_all,
+        network_cmd::get_sync_history_log,
         reader_cmd::reader_open_chapter,
         reader_cmd::reader_load_page,
         reader_cmd::reader_set_current_page,

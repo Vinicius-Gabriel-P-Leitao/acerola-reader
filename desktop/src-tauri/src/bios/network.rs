@@ -18,6 +18,7 @@ use crate::{
         network::{NetworkService, NetworkServiceApi},
         sync::{file_sync::FileSyncService, history_sync::HistorySyncService},
     },
+    data::repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
     infra::{
         error::ComicError,
         sync::protocol::{
@@ -98,7 +99,9 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
         .unwrap_or_else(|| app_data_directory.join("library"));
 
     let history_sync_service = HistorySyncService::new(database_pool.clone());
-    let file_sync_service = FileSyncService::new(database_pool, library_root);
+    let file_sync_service = FileSyncService::new(database_pool.clone(), library_root);
+    let sync_log_repo = SyncHistoryLogRepository::new(database_pool);
+    app_handle.manage(sync_log_repo.clone());
 
     let p2p_node = match tokio::time::timeout(
         std::time::Duration::from_secs(10),
@@ -112,6 +115,7 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                 Arc::new(HistorySyncInbound::new(
                     Arc::clone(&event_emitter),
                     history_sync_service.clone(),
+                    sync_log_repo.clone(),
                 )),
             )
             .outbound(
@@ -119,6 +123,7 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                 Arc::new(HistorySyncOutbound::new(
                     Arc::clone(&event_emitter),
                     history_sync_service,
+                    sync_log_repo.clone(),
                 )),
             )
             .inbound(
@@ -126,11 +131,16 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                 Arc::new(FileSyncInbound::new(
                     Arc::clone(&event_emitter),
                     file_sync_service.clone(),
+                    sync_log_repo.clone(),
                 )),
             )
             .outbound(
                 FILE_SYNC_ALPN,
-                Arc::new(FileSyncOutbound::new(Arc::clone(&event_emitter), file_sync_service)),
+                Arc::new(FileSyncOutbound::new(
+                    Arc::clone(&event_emitter),
+                    file_sync_service,
+                    sync_log_repo,
+                )),
             )
             .build(),
     )

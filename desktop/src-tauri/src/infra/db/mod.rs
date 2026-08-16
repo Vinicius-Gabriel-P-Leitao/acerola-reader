@@ -8,6 +8,7 @@ pub fn get_migrations() -> Vec<Migration> {
     migrations.extend(history_migrations());
     migrations.extend(view_migrations());
     migrations.extend(seed_migrations());
+    migrations.extend(sync_migrations());
     migrations
 }
 
@@ -135,6 +136,15 @@ fn seed_migrations() -> Vec<Migration> {
         version: 16,
         description: "seed_archive_template",
         sql: include_str!("./migrations/seeds/001_seed_chapter_template.sql"),
+        kind: MigrationKind::Up,
+    }]
+}
+
+fn sync_migrations() -> Vec<Migration> {
+    vec![Migration {
+        version: 18,
+        description: "create_sync_history_log",
+        sql: include_str!("./migrations/models/sync/001_create_sync_history_log.sql"),
         kind: MigrationKind::Up,
     }]
 }

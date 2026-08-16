@@ -625,7 +625,8 @@
         "copy": "Copiar código",
         "show_code": "Mostrar código como texto",
         "hide_code": "Ocultar código",
-        "loading": "Gerando código..."
+        "loading": "Gerando código...",
+        "qr_error": "Não foi possível gerar o QR Code. Use o código de texto abaixo."
       },
       "connect": {
         "title": "Conectar a um dispositivo",
@@ -640,7 +641,9 @@
         "empty": "Nenhum dispositivo conectado ainda. Compartilhe seu código ou cole um acima pra parear.",
         "sync_history": "Sincronizar histórico",
         "sync_files": "Sincronizar arquivos",
-        "sync_all": "Sincronizar tudo"
+        "sync_all": "Sincronizar tudo",
+        "last_synced": "Última sync: {when}",
+        "never_synced": "Nunca sincronizado"
       },
       "transfers": {
         "title": "Transferências",

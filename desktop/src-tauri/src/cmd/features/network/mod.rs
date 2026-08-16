@@ -6,8 +6,14 @@ use crate::{
     bios::{network::DEFAULT_RELAY_URL, scopes::read_relay_url_override},
     cmd::events::network::{DeviceInfoPayload, NetworkStatusPayload, RelayInfo},
     core::services::network::NetworkServiceApi,
+    data::{
+        models::sync::sync_history_log::SyncHistoryLogEntry,
+        repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
+    },
     infra::sync::protocol::{FILE_SYNC_ALPN, HISTORY_SYNC_ALPN},
 };
+
+const SYNC_HISTORY_LOG_LIMIT: i64 = 200;
 
 #[tauri::command]
 pub async fn get_network_status<R: Runtime>(
@@ -124,4 +130,14 @@ pub async fn sync_all(
     service.connect(files_addr, FILE_SYNC_ALPN.to_vec()).await?;
 
     Ok(())
+}
+
+/// Últimas sessões de sync (histórico e arquivos) persistidas — sobrevive a restart,
+/// diferente do log ao vivo em memória do frontend (`use-network-sync.svelte.ts`), que só
+/// tem os eventos da sessão atual do app.
+#[tauri::command]
+pub async fn get_sync_history_log(
+    repo: State<'_, SyncHistoryLogRepository>,
+) -> Result<Vec<SyncHistoryLogEntry>, String> {
+    repo.find_recent(SYNC_HISTORY_LOG_LIMIT).await.map_err(|error| error.to_string())
 }

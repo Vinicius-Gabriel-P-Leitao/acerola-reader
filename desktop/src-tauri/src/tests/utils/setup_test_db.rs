@@ -111,6 +111,14 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
         .await
         .unwrap();
 
+    // sync
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/sync/001_create_sync_history_log.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
     pool
 }
 

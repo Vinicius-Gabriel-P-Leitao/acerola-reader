@@ -9,5 +9,6 @@ export const NETWORK_COMMANDS = {
 	connectToPeer: 'connect_to_peer',
 	syncHistory: 'sync_history',
 	syncFiles: 'sync_files',
-	syncAll: 'sync_all'
+	syncAll: 'sync_all',
+	getSyncHistoryLog: 'get_sync_history_log'
 } as const;
