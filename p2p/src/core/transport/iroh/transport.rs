@@ -7,7 +7,7 @@ use iroh::{
 };
 use tokio::{
     io::{AsyncRead, AsyncWrite},
-    sync::RwLock,
+    sync::{mpsc, Mutex, RwLock},
 };
 
 use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
@@ -19,15 +19,51 @@ use crate::{
     },
 };
 
+/// Chave de cache: uma conexão física é específica de um par (peer, ALPN), já que o ALPN é
+/// negociado uma única vez no handshake TLS/QUIC — dois protocolos distintos para o mesmo peer
+/// sempre habitam conexões QUIC diferentes, mesmo que simultâneas.
+type ConnectionKey = (PeerId, Vec<u8>);
+
 /// Interface concreta que gerencia o Endpoint UDP local e a configuração de chaves usando a suite Iroh.
+///
+/// `connections` é um pool de conexões físicas vivas, reaproveitadas entre chamadas — não um
+/// registro passivo. QUIC (e o iroh) é feito para isso: o handshake (que envolve NAT-traversal e
+/// pode negociar multipath) é a parte cara; abrir/fechar streams em cima de uma conexão já
+/// estabelecida é essencialmente grátis. Por isso guardamos aqui uma referência *forte* de
+/// propósito — ela é o que mantém a conexão viva entre uma sessão de protocolo e a próxima, para
+/// `open_bi` reaproveitar em vez de discar do zero a cada chamada.
+///
+/// Como QUIC é full-duplex, uma entrada pode vir tanto de um `open_bi` (nós discamos) quanto de
+/// um `accept` (o peer discou) — para efeito de reaproveitamento futuro tanto faz quem iniciou.
+///
+/// Entradas mortas (peer caiu, idle timeout do próprio iroh expirou) só são removidas
+/// preguiçosamente, na próxima vez que `open_bi`/`latency` tocarem naquela chave. Isso é
+/// aceitável: uma conexão já fechada não segura nenhum path de NAT-traversal nem handshake
+/// ativo — o resíduo é só a entrada do HashMap em si, não o vazamento de recurso de rede que
+/// existia antes (quando cada chamada deixava uma conexão física inteira presa para sempre).
 pub struct IrohTransport {
     endpoint: Endpoint,
-    connections: Arc<RwLock<HashMap<PeerId, Connection>>>,
+    connections: Arc<RwLock<HashMap<ConnectionKey, Connection>>>,
+    /// Streams inbound já aceitas, entregues por `drive_incoming_connections`/`drive_incoming_streams`
+    /// (tasks de fundo). `accept()` só consome este canal — ver o doc dessas funções para o motivo
+    /// de existirem: uma conexão reaproveitada pode receber várias streams ao longo da vida dela,
+    /// não só uma, então algo precisa continuar escutando cada conexão depois do primeiro stream.
+    incoming_rx: Mutex<mpsc::UnboundedReceiver<Box<dyn IncomingConnection>>>,
 }
 
 impl IrohTransport {
     pub(crate) fn new(endpoint: Endpoint) -> Self {
-        Self { endpoint, connections: Arc::new(RwLock::new(HashMap::new())) }
+        let connections: Arc<RwLock<HashMap<ConnectionKey, Connection>>> =
+            Arc::new(RwLock::new(HashMap::new()));
+        let (incoming_tx, incoming_rx) = mpsc::unbounded_channel();
+
+        tokio::spawn(drive_incoming_connections(
+            endpoint.clone(),
+            Arc::clone(&connections),
+            incoming_tx,
+        ));
+
+        Self { endpoint, connections, incoming_rx: Mutex::new(incoming_rx) }
     }
 
     /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
@@ -35,20 +71,6 @@ impl IrohTransport {
     fn peer_to_addr(&self, peer: &PeerId) -> Result<EndpointAddr, ConnectionError> {
         let id: EndpointId = peer.id.parse().map_err(|_| ConnectionError::PeerNotFound(PeerId { id: peer.id.clone(), device_id: None }))?;
         Ok(EndpointAddr::from(id))
-    }
-
-    /// Converte um ID nativo do Iroh para o PeerId da nossa abstração.
-    fn to_peer_id(&self, node_id: EndpointId) -> PeerId {
-        PeerId::from_public_key(node_id.to_string(), node_id.as_bytes())
-    }
-
-    /// Converte um par ID+Endereço do Iroh para o PeerAddr da nossa abstração.
-    fn to_peer_addr(
-        &self, node_id: EndpointId, addr: EndpointAddr,
-    ) -> Result<PeerAddr, ConnectionError> {
-        let addrs = serde_json::to_vec(&addr)
-            .map_err(|error| ConnectionError::StreamFailed(error.to_string()))?;
-        Ok(PeerAddr { id: self.to_peer_id(node_id), addrs })
     }
 
     pub async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
@@ -59,38 +81,15 @@ impl IrohTransport {
 #[async_trait]
 impl P2pTransport for IrohTransport {
     fn local_id(&self) -> PeerId {
-        self.to_peer_id(self.endpoint.id())
+        to_peer_id(self.endpoint.id())
     }
 
     fn local_addr(&self) -> Result<PeerAddr, ConnectionError> {
-        self.to_peer_addr(self.endpoint.id(), self.endpoint.addr())
+        to_peer_addr(self.endpoint.id(), self.endpoint.addr())
     }
 
     async fn accept(&self) -> Result<Box<dyn IncomingConnection>, ConnectionError> {
-        let incoming = self.endpoint.accept().await.ok_or(ConnectionError::Shutdown)?;
-        let incoming_addr = incoming.remote_addr();
-
-        tracing::trace!(layer = "iroh_transport", "incoming connection request received");
-
-        let conn = incoming.await?;
-        let remote_id = conn.remote_id();
-        let alpn = conn.alpn();
-
-        let endpoint_addr = resolve_endpoint_addr(remote_id, &incoming_addr);
-
-        let peer = self.to_peer_id(remote_id);
-        let addr = self.to_peer_addr(remote_id, endpoint_addr)?;
-
-        self.connections.write().await.insert(peer.clone(), conn.clone());
-
-        tracing::debug!(
-            peer = %remote_id,
-            layer = "iroh_transport",
-            alpn = ?String::from_utf8_lossy(alpn),
-            "inbound connection established"
-        );
-
-        Ok(Box::new(IrohIncoming::new(conn.clone(), peer, addr, alpn.to_vec())))
+        self.incoming_rx.lock().await.recv().await.ok_or(ConnectionError::Shutdown)
     }
 
     async fn open_bi(
@@ -106,42 +105,79 @@ impl P2pTransport for IrohTransport {
                 .map_err(|_| ConnectionError::PeerNotFound(peer.id.clone()))?
         };
 
-        tracing::debug!(
-            peer = %peer.id,
-            layer = "iroh_transport",
-            alpn = ?String::from_utf8_lossy(alpn),
-            "initiating outbound connection"
-        );
+        let key = (peer.id.clone(), alpn.to_vec());
 
-        let conn = self.endpoint.connect(addr, alpn).await?;
-        self.connections.write().await.insert(peer.id.clone(), conn.clone());
+        // Até duas tentativas: a primeira reaproveita uma conexão viva já cacheada para este
+        // peer+ALPN (discada por uma chamada anterior, ou aceita via `accept` — QUIC é
+        // full-duplex, então tanto faz quem iniciou). Se essa conexão já estiver morta sem que
+        // `close_reason()` ainda reflita isso (ex: peer caiu sem handshake de fechamento), a
+        // segunda tentativa descarta a entrada e disca do zero.
+        let mut retried = false;
+        loop {
+            let cached = self.connections.read().await.get(&key).cloned();
 
-        let (send, recv) = conn.open_bi().await?;
+            let conn = match cached {
+                Some(conn) if conn.close_reason().is_none() => conn,
+                _ => {
+                    tracing::debug!(
+                        peer = %peer.id,
+                        layer = "iroh_transport",
+                        alpn = ?String::from_utf8_lossy(alpn),
+                        "initiating outbound connection"
+                    );
 
-        tracing::trace!(
-            peer = %peer.id,
-            layer = "iroh_transport",
-            "outbound bi-stream opened"
-        );
+                    let conn = self.endpoint.connect(addr.clone(), alpn).await?;
+                    self.connections.write().await.insert(key.clone(), conn.clone());
+                    conn
+                },
+            };
 
-        let shared_conn = Arc::new(conn);
+            match conn.open_bi().await {
+                Ok((send, recv)) => {
+                    tracing::trace!(
+                        peer = %peer.id,
+                        layer = "iroh_transport",
+                        "outbound bi-stream opened"
+                    );
 
-        Ok((
-            Box::new(ConnectionWriter::new(send, Arc::clone(&shared_conn))),
-            Box::new(ConnectionReader::new(recv, shared_conn)),
-        ))
+                    let shared_conn = Arc::new(conn);
+
+                    return Ok((
+                        Box::new(ConnectionWriter::new(send, Arc::clone(&shared_conn))),
+                        Box::new(ConnectionReader::new(recv, shared_conn)),
+                    ));
+                },
+                Err(_) if !retried => {
+                    tracing::debug!(
+                        peer = %peer.id,
+                        layer = "iroh_transport",
+                        "cached connection is dead, discarding and dialing fresh"
+                    );
+                    self.connections.write().await.remove(&key);
+                    retried = true;
+                },
+                Err(err) => return Err(err.into()),
+            }
+        }
     }
 
     async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration> {
-        let conn = {
-            let guard = self.connections.read().await;
-            guard.get(peer).cloned()
-        }?;
+        // Um peer pode ter mais de uma conexão física cacheada (uma por ALPN em uso). Descarta
+        // no caminho quaisquer entradas já mortas (peer caiu, idle timeout expirou) e usa a
+        // primeira ainda viva encontrada.
+        let mut guard = self.connections.write().await;
 
-        if conn.close_reason().is_some() {
-            self.connections.write().await.remove(peer);
-            return None;
+        let dead_keys: Vec<ConnectionKey> = guard
+            .iter()
+            .filter(|(key, conn)| key.0 == *peer && conn.close_reason().is_some())
+            .map(|(key, _)| key.clone())
+            .collect();
+
+        for key in &dead_keys {
+            guard.remove(key);
         }
+
+        let conn = guard.iter().find(|(key, _)| key.0 == *peer).map(|(_, conn)| conn.clone())?;
 
         let path_list = conn.paths();
 
@@ -161,6 +197,117 @@ impl P2pTransport for IrohTransport {
     async fn shutdown(&self) -> Result<(), ConnectionError> {
         self.endpoint.close().await;
         Ok(())
+    }
+}
+
+/// Converte um ID nativo do Iroh para o PeerId da nossa abstração.
+fn to_peer_id(node_id: EndpointId) -> PeerId {
+    PeerId::from_public_key(node_id.to_string(), node_id.as_bytes())
+}
+
+/// Converte um par ID+Endereço do Iroh para o PeerAddr da nossa abstração.
+fn to_peer_addr(node_id: EndpointId, addr: EndpointAddr) -> Result<PeerAddr, ConnectionError> {
+    let addrs = serde_json::to_vec(&addr)
+        .map_err(|error| ConnectionError::StreamFailed(error.to_string()))?;
+    Ok(PeerAddr { id: to_peer_id(node_id), addrs })
+}
+
+/// Task de fundo (uma por `IrohTransport`): aceita conexões físicas novas do endpoint e, para
+/// cada uma, dispara um loop próprio (`drive_incoming_streams`) que continua aceitando streams
+/// naquela conexão enquanto ela estiver viva.
+///
+/// Isso existe porque uma conexão pode ser reaproveitada (ver o cache em `open_bi`/`accept`) e
+/// receber várias streams ao longo da vida dela — se só reagíssemos ao primeiro `accept_bi`,
+/// como antes, o `NetworkManager` nunca ficaria sabendo de uma segunda stream aberta pelo peer
+/// numa conexão já estabelecida.
+async fn drive_incoming_connections(
+    endpoint: Endpoint, connections: Arc<RwLock<HashMap<ConnectionKey, Connection>>>,
+    incoming_tx: mpsc::UnboundedSender<Box<dyn IncomingConnection>>,
+) {
+    loop {
+        let Some(incoming) = endpoint.accept().await else { break };
+        let incoming_addr = incoming.remote_addr();
+
+        tracing::trace!(layer = "iroh_transport", "incoming connection request received");
+
+        let conn = match incoming.await {
+            Ok(conn) => conn,
+            Err(err) => {
+                tracing::debug!(layer = "iroh_transport", error = ?err, "inbound handshake failed");
+                continue;
+            },
+        };
+
+        let remote_id = conn.remote_id();
+        let alpn = conn.alpn().to_vec();
+        let endpoint_addr = resolve_endpoint_addr(remote_id, &incoming_addr);
+
+        let peer = to_peer_id(remote_id);
+        let addr = match to_peer_addr(remote_id, endpoint_addr) {
+            Ok(addr) => addr,
+            Err(err) => {
+                tracing::debug!(
+                    peer = %remote_id,
+                    layer = "iroh_transport",
+                    error = ?err,
+                    "failed to resolve inbound peer address"
+                );
+                continue;
+            },
+        };
+
+        // Guarda para reaproveitamento futuro: se depois discarmos (open_bi) para este mesmo
+        // peer+ALPN, reaproveitamos esta conexão em vez de abrir uma nova — QUIC é full-duplex,
+        // então não importa que tenha sido o peer quem iniciou.
+        connections.write().await.insert((peer.clone(), alpn.clone()), conn.clone());
+
+        tracing::debug!(
+            peer = %remote_id,
+            layer = "iroh_transport",
+            alpn = ?String::from_utf8_lossy(&alpn),
+            "inbound connection established"
+        );
+
+        tokio::spawn(drive_incoming_streams(conn, peer, addr, alpn, incoming_tx.clone()));
+    }
+}
+
+/// Aceita repetidamente novos streams bidirecionais nesta conexão específica, um por um,
+/// enquanto ela estiver viva, encaminhando cada um para o `NetworkManager` via o canal que
+/// alimenta `IrohTransport::accept`. Termina quando a conexão fecha (peer caiu, idle timeout,
+/// ou nosso lado desligou) ou quando ninguém mais está lendo do canal (`NetworkManager` parado).
+async fn drive_incoming_streams(
+    conn: Connection, peer: PeerId, addr: PeerAddr, alpn: Vec<u8>,
+    incoming_tx: mpsc::UnboundedSender<Box<dyn IncomingConnection>>,
+) {
+    let shared_conn = Arc::new(conn);
+
+    loop {
+        match shared_conn.accept_bi().await {
+            Ok((send, recv)) => {
+                let item: Box<dyn IncomingConnection> = Box::new(IrohIncoming::new(
+                    send,
+                    recv,
+                    Arc::clone(&shared_conn),
+                    peer.clone(),
+                    addr.clone(),
+                    alpn.clone(),
+                ));
+
+                if incoming_tx.send(item).is_err() {
+                    break;
+                }
+            },
+            Err(err) => {
+                tracing::debug!(
+                    peer = %peer.id,
+                    layer = "iroh_transport",
+                    error = ?err,
+                    "connection closed, stopping stream acceptor"
+                );
+                break;
+            },
+        }
     }
 }
 
@@ -314,5 +461,101 @@ mod tests {
         let unknown_peer = PeerId { id: "unknown-peer-id".to_string(), device_id: None };
         assert!(transport.latency(&unknown_peer).await.is_none());
         assert!(P2pTransport::latency(&transport, &unknown_peer).await.is_none());
+    }
+
+    /// Regressão: uma tentativa anterior desta correção guardava só um handle *fraco* na cache,
+    /// o que fazia a conexão fechar (`implicit_close`) assim que as últimas referências fortes
+    /// locais (writer/reader) saíam de escopo — exatamente o momento em que `handler.handle()`
+    /// retorna em `NetworkManager`. Isso corria contra o outro lado, que podia ainda estar no
+    /// meio de `accept_bi()`. Provado empiricamente: essa versão do teste falhava 5/5 vezes com
+    /// handle fraco (`PeerDisconnected("connection closed by application")` no lado que aceita)
+    /// e passava 3/3 com um clone forte independente por conexão. O pool de conexões
+    /// reaproveitadas mantém esse clone forte deliberadamente vivo além do escopo de qualquer
+    /// stream individual, então o outro lado sempre tem tempo de terminar sem corrida.
+    #[tokio::test]
+    async fn scoped_write_and_drop_does_not_race_receivers_accept_bi() {
+        for _ in 0..5 {
+            let transport_a = Arc::new(build_transport().await);
+            let transport_b = Arc::new(build_transport().await);
+
+            let addr_b = transport_b.local_addr().unwrap();
+
+            let t_b = Arc::clone(&transport_b);
+            let accept_handle = tokio::spawn(async move {
+                let incoming = t_b.accept().await.unwrap();
+                let (mut out_writer, mut in_reader) = incoming.accept_bi().await.unwrap();
+                let mut buf = [0u8; 4];
+                tokio::io::AsyncReadExt::read_exact(&mut in_reader, &mut buf).await.unwrap();
+                out_writer.shutdown().await.unwrap();
+            });
+
+            {
+                let (mut writer, _reader) =
+                    transport_a.open_bi(b"test/proto", &addr_b).await.unwrap();
+                writer.write_all(b"ping").await.unwrap();
+                writer.flush().await.unwrap();
+                writer.shutdown().await.unwrap();
+                // `writer`/`_reader` somem no fim deste escopo — é exatamente o que acontece
+                // hoje quando `handler.handle()` retorna em `NetworkManager`, bem antes de
+                // sabermos se o outro lado já terminou de ler.
+            }
+
+            accept_handle.await.unwrap();
+
+            transport_a.shutdown().await.unwrap();
+            transport_b.shutdown().await.unwrap();
+        }
+    }
+
+    /// O ganho principal do pool: evita discar uma conexão QUIC nova a cada `open_bi` para o
+    /// mesmo peer+ALPN — que é o que causava as colisões de multipath/handshake observadas em
+    /// produção (`MultipathNotNegotiated`, `handshake failed`) quando duas sessões discavam para
+    /// o mesmo peer em sequência rápida.
+    #[tokio::test]
+    async fn open_bi_reuses_cached_connection_across_calls() {
+        let transport_a = Arc::new(build_transport().await);
+        let transport_b = Arc::new(build_transport().await);
+
+        let addr_b = transport_b.local_addr().unwrap();
+
+        async fn round_trip(
+            transport_a: &Arc<IrohTransport>, transport_b: &Arc<IrohTransport>, addr_b: &PeerAddr,
+        ) {
+            let t_b = Arc::clone(transport_b);
+            let accept_handle = tokio::spawn(async move {
+                let incoming = t_b.accept().await.unwrap();
+                let (_out_writer, mut in_reader) = incoming.accept_bi().await.unwrap();
+                let mut buf = [0u8; 4];
+                let _ = tokio::io::AsyncReadExt::read_exact(&mut in_reader, &mut buf).await;
+            });
+
+            let (mut writer, _reader) =
+                transport_a.open_bi(b"test/proto", addr_b).await.unwrap();
+            writer.write_all(b"ping").await.unwrap();
+            writer.flush().await.unwrap();
+
+            accept_handle.await.unwrap();
+        }
+
+        round_trip(&transport_a, &transport_b, &addr_b).await;
+
+        let key = (addr_b.id.clone(), b"test/proto".to_vec());
+        let first_stable_id =
+            transport_a.connections.read().await.get(&key).map(|conn| conn.stable_id());
+        assert!(first_stable_id.is_some(), "connection should be cached after the first open_bi");
+
+        round_trip(&transport_a, &transport_b, &addr_b).await;
+
+        let second_stable_id =
+            transport_a.connections.read().await.get(&key).map(|conn| conn.stable_id());
+
+        assert_eq!(
+            first_stable_id, second_stable_id,
+            "second open_bi to the same peer+ALPN should reuse the cached connection, not dial \
+             a fresh one"
+        );
+
+        transport_a.shutdown().await.unwrap();
+        transport_b.shutdown().await.unwrap();
     }
 }
