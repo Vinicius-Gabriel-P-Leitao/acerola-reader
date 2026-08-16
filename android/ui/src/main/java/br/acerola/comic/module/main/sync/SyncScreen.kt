@@ -1,0 +1,761 @@
+package br.acerola.comic.module.main.sync
+
+import android.content.res.Configuration
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.Dialog
+import br.acerola.comic.common.ux.component.DialogButton
+import br.acerola.comic.common.ux.component.SnackbarVariant
+import br.acerola.comic.common.ux.component.showSnackbar
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.common.ux.tokens.ShapeTokens
+import br.acerola.comic.common.ux.tokens.SpacingTokens
+import br.acerola.comic.logging.AcerolaLogger
+import br.acerola.comic.logging.LogSource
+import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.sync.state.ConnectError
+import br.acerola.comic.module.main.sync.state.LogState
+import br.acerola.comic.module.main.sync.state.PairedPeer
+import br.acerola.comic.module.main.sync.state.SyncAction
+import br.acerola.comic.module.main.sync.state.SyncUiState
+import br.acerola.comic.module.main.sync.state.TransferLogEntry
+import br.acerola.comic.service.NetworkMode
+import br.acerola.comic.ui.R
+import br.acerola.comic.util.p2p.PairingCode
+import br.acerola.comic.util.p2p.QrBitmapGenerator
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlinx.coroutines.launch
+
+@Composable
+fun Main.Sync.Template.Screen(
+    viewModel: SyncViewModel = hiltViewModel(),
+    onBack: () -> Unit,
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    SyncLayout(
+        uiState = uiState,
+        onAction = viewModel::onAction,
+        onBack = onBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SyncLayout(
+    uiState: SyncUiState,
+    onAction: (SyncAction) -> Unit,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scanFailedMessage = stringResource(id = R.string.error_sync_scan_failed)
+    val scanEmptyMessage = stringResource(id = R.string.error_sync_scan_empty)
+    var pasteValue by remember { mutableStateOf("") }
+
+    fun startScan(onResult: (String) -> Unit) {
+        val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+        GmsBarcodeScanning.getClient(context, options)
+            .startScan()
+            .addOnSuccessListener { barcode ->
+                val value = barcode.rawValue
+                if (value != null) {
+                    onResult(value)
+                } else {
+                    AcerolaLogger.w("SyncScreen", "QR scan succeeded but rawValue was null", LogSource.UI)
+                    scope.launch { snackbarHostState.showSnackbar(scanEmptyMessage, SnackbarVariant.Error) }
+                }
+            }
+            .addOnFailureListener { error ->
+                AcerolaLogger.e("SyncScreen", "QR scan failed", LogSource.UI, error)
+                scope.launch { snackbarHostState.showSnackbar(scanFailedMessage, SnackbarVariant.Error) }
+            }
+    }
+
+    LaunchedEffect(uiState.connectError) {
+        val message =
+            when (uiState.connectError) {
+                ConnectError.INVALID_CODE -> context.getString(R.string.error_sync_connect_invalid_code)
+                ConnectError.CONNECTION_FAILED -> context.getString(R.string.error_sync_connect_failed)
+                null -> return@LaunchedEffect
+            }
+        snackbarHostState.showSnackbar(message, SnackbarVariant.Error)
+    }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.label_sync_activity),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = stringResource(id = R.string.description_icon_navigation_back),
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            )
+        },
+    ) { paddingValues ->
+        Column(
+            modifier =
+                Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(SpacingTokens.Large),
+            verticalArrangement = Arrangement.spacedBy(SpacingTokens.Large),
+        ) {
+            Text(
+                text = stringResource(id = R.string.description_sync_activity),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            ThisDeviceCard(uiState = uiState)
+
+            PairingCard(
+                uiState = uiState,
+                onScan = { startScan { value -> onAction(SyncAction.ProposeConnect(value)) } },
+            )
+
+            ConnectCard(
+                uiState = uiState,
+                pasteValue = pasteValue,
+                onPasteValueChange = { pasteValue = it },
+                onConnect = { onAction(SyncAction.ProposeConnect(pasteValue)) },
+                onScan = { startScan { value -> onAction(SyncAction.ProposeConnect(value)) } },
+                onDismissError = { onAction(SyncAction.DismissConnectError) },
+            )
+
+            PeersCard(uiState = uiState, onAction = onAction)
+
+            ActivityLogCard(uiState = uiState)
+        }
+
+        if (uiState.pendingConnect != null) {
+            ConfirmConnectDialog(
+                peerId = uiState.pendingConnect.peerId,
+                onConfirm = { onAction(SyncAction.ConfirmConnect) },
+                onCancel = { onAction(SyncAction.CancelConnect) },
+            )
+        }
+
+        if (uiState.trustedPeerDialogPeerId != null) {
+            TofuDialog(
+                peerId = uiState.trustedPeerDialogPeerId,
+                onDismiss = { onAction(SyncAction.DismissTrustDialog) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThisDeviceCard(uiState: SyncUiState) {
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = LocalSnackbarHostState.current
+    val copiedMessage = stringResource(id = R.string.label_sync_copied)
+
+    SectionCard(title = stringResource(id = R.string.title_sync_this_device)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = uiState.localDeviceName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = uiState.localId,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(SpacingTokens.ExtraSmall))
+                Text(
+                    text = buildString {
+                        append(
+                            when (uiState.mode) {
+                                NetworkMode.LOCAL -> context.getString(R.string.label_sync_mode_local)
+                                NetworkMode.RELAY -> context.getString(R.string.label_sync_mode_relay)
+                            },
+                        )
+                        append(" · ")
+                        append(context.getString(R.string.label_sync_relay_label))
+                        append(": ")
+                        append(uiState.relayUrl)
+                        append(" (")
+                        append(
+                            context.getString(
+                                if (uiState.isRelayOverridden) R.string.label_sync_relay_custom else R.string.label_sync_relay_default,
+                            ),
+                        )
+                        append(")")
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            OutlinedButton(onClick = {
+                clipboardManager.setText(AnnotatedString(uiState.localId))
+                scope.launch { snackbarHostState.showSnackbar(copiedMessage, SnackbarVariant.Success) }
+            }) {
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(SpacingTokens.ExtraSmall))
+                Text(text = stringResource(id = R.string.action_sync_copy_id))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PairingCard(
+    uiState: SyncUiState,
+    onScan: () -> Unit,
+) {
+    val clipboardManager = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = LocalSnackbarHostState.current
+    val copiedMessage = stringResource(id = R.string.label_sync_copied)
+    var showRawCode by remember { mutableStateOf(false) }
+
+    SectionCard(title = stringResource(id = R.string.title_sync_pairing)) {
+        Text(
+            text = stringResource(id = R.string.description_sync_pairing),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Medium))
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            val code = uiState.pairingCode
+            if (code != null) {
+                val bitmap = remember(code) { QrBitmapGenerator.generate(code) }
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = stringResource(id = R.string.title_sync_pairing),
+                    modifier = Modifier.size(220.dp),
+                )
+            } else {
+                Box(modifier = Modifier.size(220.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(id = R.string.label_sync_generating_code),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(SpacingTokens.Medium))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small)) {
+                OutlinedButton(
+                    onClick = {
+                        code?.let {
+                            clipboardManager.setText(AnnotatedString(it))
+                            scope.launch { snackbarHostState.showSnackbar(copiedMessage, SnackbarVariant.Success) }
+                        }
+                    },
+                    enabled = code != null,
+                ) {
+                    Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(SpacingTokens.ExtraSmall))
+                    Text(text = stringResource(id = R.string.action_sync_copy_code))
+                }
+
+                Button(onClick = onScan) {
+                    Icon(imageVector = Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(SpacingTokens.ExtraSmall))
+                    Text(text = stringResource(id = R.string.action_sync_scan_code))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
+
+            TextButton(onClick = { showRawCode = !showRawCode }) {
+                Text(
+                    text =
+                        stringResource(
+                            id = if (showRawCode) R.string.action_sync_hide_code else R.string.action_sync_show_code,
+                        ),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+                Icon(imageVector = Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(14.dp))
+            }
+
+            if (showRawCode && code != null) {
+                Text(
+                    text = code,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, ShapeTokens.Small)
+                            .padding(SpacingTokens.Small),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Medium))
+
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f), ShapeTokens.Small)
+                    .padding(SpacingTokens.Small),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(modifier = Modifier.width(SpacingTokens.Small))
+            Text(
+                text = stringResource(id = R.string.description_sync_security_note),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConnectCard(
+    uiState: SyncUiState,
+    pasteValue: String,
+    onPasteValueChange: (String) -> Unit,
+    onConnect: () -> Unit,
+    onScan: () -> Unit,
+    onDismissError: () -> Unit,
+) {
+    SectionCard(title = stringResource(id = R.string.title_sync_connect)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(SpacingTokens.Small)) {
+            OutlinedTextField(
+                value = pasteValue,
+                onValueChange = {
+                    onPasteValueChange(it)
+                    if (uiState.connectError != null) onDismissError()
+                },
+                placeholder = { Text(text = stringResource(id = R.string.hint_sync_connect_code)) },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+
+            IconButton(onClick = onScan) {
+                Icon(imageVector = Icons.Default.QrCodeScanner, contentDescription = stringResource(id = R.string.action_sync_scan_code))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(SpacingTokens.Small))
+
+        Button(
+            onClick = onConnect,
+            enabled = pasteValue.isNotBlank() && !uiState.connecting,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            if (uiState.connecting) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+            } else {
+                Text(text = stringResource(id = R.string.action_sync_connect))
+            }
+        }
+
+        if (uiState.connectError != null) {
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
+            Text(
+                text =
+                    stringResource(
+                        id =
+                            when (uiState.connectError) {
+                                ConnectError.INVALID_CODE -> R.string.error_sync_connect_invalid_code
+                                ConnectError.CONNECTION_FAILED -> R.string.error_sync_connect_failed
+                            },
+                    ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PeersCard(
+    uiState: SyncUiState,
+    onAction: (SyncAction) -> Unit,
+) {
+    SectionCard(title = stringResource(id = R.string.title_sync_peers)) {
+        if (uiState.pairedPeers.isEmpty()) {
+            Text(
+                text = stringResource(id = R.string.label_sync_no_peers),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            uiState.pairedPeers.forEach { peer ->
+                PeerRow(
+                    peer = peer,
+                    syncingKeys = uiState.syncingKeys,
+                    lastSyncedAt = uiState.lastSyncedByPeer[peer.peerId],
+                    onAction = onAction,
+                )
+                Spacer(modifier = Modifier.height(SpacingTokens.Small))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PeerRow(
+    peer: PairedPeer,
+    syncingKeys: Set<String>,
+    lastSyncedAt: Long?,
+    onAction: (SyncAction) -> Unit,
+) {
+    val historySyncing = syncKey(peer.peerId, SYNC_KIND_HISTORY) in syncingKeys
+    val filesSyncing = syncKey(peer.peerId, SYNC_KIND_FILES) in syncingKeys
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        shape = ShapeTokens.Small,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(SpacingTokens.Medium)) {
+            Text(
+                text = peer.deviceName ?: PairingCode.shortId(peer.peerId),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text =
+                    if (lastSyncedAt != null) {
+                        stringResource(id = R.string.label_sync_last_synced, formatLogTimestamp(lastSyncedAt))
+                    } else {
+                        stringResource(id = R.string.label_sync_never_synced)
+                    },
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(SpacingTokens.ExtraSmall))
+            Row(horizontalArrangement = Arrangement.spacedBy(SpacingTokens.ExtraSmall)) {
+                OutlinedButton(
+                    onClick = { onAction(SyncAction.SyncHistory(peer.peerId)) },
+                    enabled = !historySyncing,
+                ) {
+                    if (historySyncing) {
+                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(imageVector = Icons.Default.History, contentDescription = null, modifier = Modifier.size(14.dp))
+                    }
+                    Spacer(modifier = Modifier.width(SpacingTokens.ExtraSmall))
+                    Text(text = stringResource(id = R.string.action_sync_history), style = MaterialTheme.typography.labelSmall)
+                }
+
+                OutlinedButton(
+                    onClick = { onAction(SyncAction.SyncFiles(peer.peerId)) },
+                    enabled = !filesSyncing,
+                ) {
+                    if (filesSyncing) {
+                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(SpacingTokens.ExtraSmall))
+                    }
+                    Text(text = stringResource(id = R.string.action_sync_files), style = MaterialTheme.typography.labelSmall)
+                }
+
+                Button(
+                    onClick = { onAction(SyncAction.SyncAll(peer.peerId)) },
+                    enabled = !historySyncing && !filesSyncing,
+                ) {
+                    if (historySyncing || filesSyncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Icon(imageVector = Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
+                    }
+                    Spacer(modifier = Modifier.width(SpacingTokens.ExtraSmall))
+                    Text(text = stringResource(id = R.string.action_sync_all), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityLogCard(uiState: SyncUiState) {
+    SectionCard(title = stringResource(id = R.string.title_sync_activity_log)) {
+        if (uiState.transferLog.isEmpty()) {
+            Text(
+                text = stringResource(id = R.string.label_sync_activity_log_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            uiState.transferLog.forEach { entry ->
+                LogRow(entry = entry)
+            }
+        }
+    }
+}
+
+/** Turns a raw [TransferLogEntry] into display text — the only place doing that resolution,
+ *  so [SyncViewModel] never needs an Android [android.content.Context]-flavored dependency
+ *  just to pre-render a string. */
+@Composable
+private fun describeEntry(entry: TransferLogEntry): String =
+    when ("${entry.kind}:${entry.status}") {
+        "history:started" -> stringResource(id = R.string.log_sync_history_started)
+        "history:complete" -> stringResource(id = R.string.log_sync_history_complete)
+        "history:error" -> stringResource(id = R.string.log_sync_history_error, entry.message.orEmpty())
+        "files:started" -> stringResource(id = R.string.log_sync_files_started)
+        "files:progress" ->
+            stringResource(id = R.string.log_sync_files_progress, entry.comicName.orEmpty(), entry.chapter.orEmpty())
+        "files:chapterFailed" ->
+            stringResource(
+                id = R.string.log_sync_files_chapter_failed,
+                entry.comicName.orEmpty(),
+                entry.chapter.orEmpty(),
+            )
+        "files:error" -> stringResource(id = R.string.log_sync_files_error, entry.message.orEmpty())
+        "files:complete" -> stringResource(id = R.string.log_sync_files_complete)
+        else -> entry.message ?: entry.status
+    }
+
+@Composable
+private fun LogRow(entry: TransferLogEntry) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = SpacingTokens.ExtraSmall)) {
+        when (entry.state) {
+            LogState.IN_PROGRESS ->
+                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+            LogState.SUCCESS ->
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp),
+                )
+            LogState.ERROR ->
+                Icon(
+                    imageVector = Icons.Default.Error,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(14.dp),
+                )
+        }
+        Spacer(modifier = Modifier.width(SpacingTokens.Small))
+        Text(text = describeEntry(entry), style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.width(SpacingTokens.Small))
+        Text(
+            text = formatLogTimestamp(entry.timestamp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun ConfirmConnectDialog(
+    peerId: String,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Acerola.Component.Dialog(
+        show = true,
+        onDismiss = onCancel,
+        title = stringResource(id = R.string.title_sync_confirm_connect),
+        confirmButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = R.string.action_sync_connect),
+                onClick = onConfirm,
+            )
+        },
+        dismissButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = R.string.action_cancel),
+                onClick = onCancel,
+            )
+        },
+    ) {
+        Text(text = stringResource(id = R.string.description_sync_confirm_connect, PairingCode.shortId(peerId)))
+    }
+}
+
+@Composable
+private fun TofuDialog(
+    peerId: String,
+    onDismiss: () -> Unit,
+) {
+    Acerola.Component.Dialog(
+        show = true,
+        onDismiss = onDismiss,
+        title = stringResource(id = R.string.title_sync_trust_dialog),
+        confirmButtonContent = {
+            Acerola.Component.DialogButton(
+                text = stringResource(id = R.string.action_confirm),
+                onClick = onDismiss,
+            )
+        },
+    ) {
+        Text(text = stringResource(id = R.string.description_sync_trust_dialog, peerId))
+    }
+}
+
+/** Same formatting used both in the activity log and in "last synced" per peer. */
+private fun formatLogTimestamp(timestampMillis: Long): String =
+    SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(timestampMillis))
+
+@Composable
+private fun SectionCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(shape = ShapeTokens.Medium, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(SpacingTokens.Large)) {
+            Text(
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Spacer(modifier = Modifier.height(SpacingTokens.Small))
+            content()
+        }
+    }
+}
+
+private fun previewUiState() =
+    SyncUiState(
+        localId = "z6MkfriRLZTX4GC93z2XFqEmaXbXPPnvVQpEEeCQBDGGeMSw",
+        localDeviceName = "Pixel 8",
+        pairingCode = "acerola1:eyJpIjoiZGVtbyJ9",
+        mode = NetworkMode.LOCAL,
+        relayUrl = "relay.acerola-comic.com",
+        isRelayOverridden = false,
+        pairedPeers =
+            listOf(
+                PairedPeer(peerId = "z6Mkabc123def456ghi789", deviceName = "Desktop-Vinicius"),
+                PairedPeer(peerId = "z6Mkxyz789ghi012jkl345", deviceName = null),
+            ),
+        syncingKeys = setOf(syncKey("z6Mkabc123def456ghi789", SYNC_KIND_HISTORY)),
+        lastSyncedByPeer = mapOf("z6Mkxyz789ghi012jkl345" to System.currentTimeMillis()),
+        transferLog =
+            listOf(
+                TransferLogEntry(id = 3, kind = SYNC_KIND_FILES, status = "progress", state = LogState.IN_PROGRESS, comicName = "Berserk", chapter = "42"),
+                TransferLogEntry(id = 2, kind = SYNC_KIND_FILES, status = "error", state = LogState.ERROR, message = "connection reset"),
+                TransferLogEntry(id = 1, kind = SYNC_KIND_HISTORY, status = "complete", state = LogState.SUCCESS),
+            ),
+    )
+
+/** [SyncLayout] reads [LocalSnackbarHostState] unconditionally, which has no default and
+ *  throws if unprovided — every preview needs one, even ones that never actually show a
+ *  snackbar. */
+@Composable
+private fun PreviewSyncLayout(uiState: SyncUiState) {
+    AcerolaTheme {
+        CompositionLocalProvider(LocalSnackbarHostState provides remember { SnackbarHostState() }) {
+            SyncLayout(uiState = uiState, onAction = {}, onBack = {})
+        }
+    }
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SyncLayoutPreview() {
+    PreviewSyncLayout(uiState = previewUiState())
+}
+
+@Preview(name = "Empty state", showBackground = true)
+@Composable
+private fun SyncLayoutEmptyPreview() {
+    PreviewSyncLayout(uiState = SyncUiState())
+}
+
+@Preview(name = "Connect error", showBackground = true)
+@Composable
+private fun SyncLayoutConnectErrorPreview() {
+    PreviewSyncLayout(uiState = previewUiState().copy(connectError = ConnectError.INVALID_CODE))
+}

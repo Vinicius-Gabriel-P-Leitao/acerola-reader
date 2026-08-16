@@ -37,4 +37,6 @@ sealed interface ConfigAction {
     ) : ConfigAction
 
     data object NavigateToTemplateConfig : ConfigAction
+
+    data object NavigateToSync : ConfigAction
 }

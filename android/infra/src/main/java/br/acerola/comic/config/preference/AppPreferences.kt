@@ -97,3 +97,27 @@ object ComicDirectoryPreference {
 
     fun tutorialShownFlow(context: Context): Flow<Boolean> = context.dataStore.data.map { prefs -> prefs[TUTORIAL_SHOWN] ?: false }
 }
+
+object RelayPreference {
+    const val DEFAULT_RELAY_URL = "https://relay.acerola-comic.com/"
+
+    private val Context.dataStore by preferencesDataStore(name = "relay_prefs")
+    private val RELAY_URL_OVERRIDE = stringPreferencesKey(name = "relay_url_override")
+
+    suspend fun saveOverride(
+        context: Context,
+        url: String,
+    ) {
+        context.dataStore.edit { prefs ->
+            prefs[RELAY_URL_OVERRIDE] = url
+        }
+    }
+
+    suspend fun clearOverride(context: Context) {
+        context.dataStore.edit { prefs ->
+            prefs.remove(key = RELAY_URL_OVERRIDE)
+        }
+    }
+
+    fun relayUrlOverrideFlow(context: Context): Flow<String?> = context.dataStore.data.map { prefs -> prefs[RELAY_URL_OVERRIDE] }
+}

@@ -31,6 +31,7 @@ import br.acerola.comic.module.main.config.Screen
 import br.acerola.comic.module.main.history.Screen
 import br.acerola.comic.module.main.home.Screen
 import br.acerola.comic.module.main.pattern.FilePatternScreen
+import br.acerola.comic.module.main.sync.Screen
 import br.acerola.comic.module.main.tutorial.Screen
 import br.acerola.comic.ui.R
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,10 +81,18 @@ class MainActivity(
                 onNavigateToTemplates = {
                     navController.navigate(context.getString(Destination.PATTERN.route))
                 },
+                onNavigateToSync = {
+                    navController.navigate(context.getString(Destination.SYNC.route))
+                },
             )
         }
         defaultComposable(context, Destination.PATTERN) {
             Main.Pattern.Template.FilePatternScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+        defaultComposable(context, Destination.SYNC) {
+            Main.Sync.Template.Screen(
                 onBack = { navController.popBackStack() },
             )
         }
@@ -105,6 +114,7 @@ class MainActivity(
                 getString(R.string.navigation_launcher),
                 getString(Destination.TUTORIAL.route),
                 getString(Destination.PATTERN.route),
+                getString(Destination.SYNC.route),
             )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.BottomBar(navController, hazeState)
@@ -120,6 +130,7 @@ class MainActivity(
                 getString(R.string.navigation_launcher),
                 getString(Destination.TUTORIAL.route),
                 getString(Destination.PATTERN.route),
+                getString(Destination.SYNC.route),
             )
         if (currentRoute !in hiddenRoutes) {
             Acerola.Component.SideBar(navController)

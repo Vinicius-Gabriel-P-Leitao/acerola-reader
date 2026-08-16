@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.ui.graphics.vector.ImageVector
 import br.acerola.comic.ui.R
 
@@ -57,5 +58,11 @@ enum class Destination(
         label = R.string.label_tutorial_activity,
         route = R.string.navigation_tutorial_activity,
         contentDescriptionRes = R.string.description_tutorial_activity,
+    ),
+    SYNC(
+        icon = Icons.Default.Sync,
+        label = R.string.label_sync_activity,
+        route = R.string.navigation_sync_activity,
+        contentDescriptionRes = R.string.description_sync_activity,
     ),
 }

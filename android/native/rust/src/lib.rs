@@ -4,6 +4,12 @@ pub(crate) mod mode;
 #[path = "lib/singleton.rs"]
 pub(crate) mod singleton;
 
+pub(crate) mod callbacks;
+pub(crate) mod fsutil;
+pub(crate) mod protocol;
+pub(crate) mod storage;
+pub(crate) mod trust_store;
+
 pub mod api;
 
 uniffi::setup_scaffolding!();

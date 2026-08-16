@@ -10,6 +10,7 @@
     <string name="navigation_chapters_activity">chapters</string>
     <string name="navigation_reader_activity">reader</string>
     <string name="navigation_template_config_activity">file_pattern</string>
+    <string name="navigation_sync_activity">sync</string>
 
     <!-- Screen label -->
     <string name="label_tutorial_activity">Tutorial</string>
@@ -20,6 +21,7 @@
     <string name="label_chapters_activity">Capítulos</string>
     <string name="label_reader_activity">Leitor</string>
     <string name="label_template_config_activity">Padrões de arquivos</string>
+    <string name="label_sync_activity">Rede</string>
 
     <!-- Screen content description -->
     <string name="description_home_activity">Tela de início que lista os quadrinhos.</string>
@@ -28,6 +30,60 @@
     <string name="description_chapters_activity">Tela de listagem dos capítulos</string>
     <string name="description_reader_activity">Tela de leitura do capítulo</string>
     <string name="description_template_config_activity">Gerencie como o app identifica números de capítulos nos arquivos</string>
+    <string name="description_sync_activity">Conecte outro dispositivo Acerola pra levar seu histórico de leitura e seus quadrinhos com você.</string>
+
+    <!-- Sync screen -->
+    <string name="label_sync_copied">Copiado!</string>
+    <string name="title_sync_this_device">Este dispositivo</string>
+    <string name="label_sync_mode_local">Rede local</string>
+    <string name="label_sync_mode_relay">Relay</string>
+    <string name="label_sync_relay_label">Relay</string>
+    <string name="label_sync_relay_default">padrão</string>
+    <string name="label_sync_relay_custom">customizado</string>
+    <string name="action_sync_copy_id">Copiar ID</string>
+
+    <string name="title_sync_pairing">Código de conexão</string>
+    <string name="description_sync_pairing">Escaneie este QR Code no outro dispositivo, ou copie o código abaixo.</string>
+    <string name="description_sync_security_note">Só pareie com dispositivos que você confia — a primeira conexão dá acesso permanente à sua biblioteca.</string>
+    <string name="action_sync_copy_code">Copiar código</string>
+    <string name="action_sync_scan_code">Escanear QR Code</string>
+    <string name="action_sync_show_code">Mostrar código como texto</string>
+    <string name="action_sync_hide_code">Ocultar código</string>
+    <string name="label_sync_generating_code">Gerando código…</string>
+
+    <string name="title_sync_connect">Conectar a um dispositivo</string>
+    <string name="hint_sync_connect_code">Cole o código de conexão aqui</string>
+    <string name="action_sync_connect">Conectar</string>
+    <string name="error_sync_connect_invalid_code">Código inválido. Confira se você copiou o código completo do outro dispositivo.</string>
+    <string name="error_sync_connect_failed">Não foi possível conectar. Confira se o código está certo e se o outro dispositivo está com o Acerola aberto.</string>
+    <string name="error_sync_scan_failed">Não foi possível abrir o leitor de QR Code. Tente novamente ou cole o código manualmente.</string>
+    <string name="error_sync_scan_empty">O QR Code escaneado não contém texto legível.</string>
+
+    <string name="title_sync_peers">Dispositivos pareados</string>
+    <string name="label_sync_no_peers">Nenhum dispositivo pareado ainda. Compartilhe seu código ou cole um acima pra parear.</string>
+    <string name="action_sync_history">Sincronizar histórico</string>
+    <string name="action_sync_files">Sincronizar arquivos</string>
+    <string name="action_sync_all">Sincronizar tudo</string>
+    <string name="label_sync_last_synced">Última sync: %1$s</string>
+    <string name="label_sync_never_synced">Nunca sincronizado</string>
+
+    <string name="title_sync_activity_log">Transferências</string>
+    <string name="label_sync_activity_log_empty">Nenhuma transferência em andamento.</string>
+
+    <string name="log_sync_history_started">Sincronizando histórico…</string>
+    <string name="log_sync_history_complete">Histórico sincronizado.</string>
+    <string name="log_sync_history_error">Falha ao sincronizar histórico: %1$s</string>
+    <string name="log_sync_files_started">Sincronizando arquivos…</string>
+    <string name="log_sync_files_progress">Transferindo %1$s · %2$s…</string>
+    <string name="log_sync_files_chapter_failed">Falha ao transferir %1$s · %2$s</string>
+    <string name="log_sync_files_error">Falha ao transferir arquivos: %1$s</string>
+    <string name="log_sync_files_complete">Arquivos sincronizados.</string>
+
+    <string name="title_sync_confirm_connect">Parear com este dispositivo?</string>
+    <string name="description_sync_confirm_connect">%1$s\n\nA primeira conexão dá acesso permanente à sua biblioteca. Só confirme se você reconhece esse dispositivo.</string>
+
+    <string name="title_sync_trust_dialog">Novo dispositivo confiado</string>
+    <string name="description_sync_trust_dialog">Você conectou com o dispositivo \"%1$s\" pela primeira vez. Esse acesso agora é permanente até que ele seja removido.</string>
 
     <!-- Icons -->
     <string name="description_icon_navigation_back">Ícone do botão que volta na pilha da navegação.</string>

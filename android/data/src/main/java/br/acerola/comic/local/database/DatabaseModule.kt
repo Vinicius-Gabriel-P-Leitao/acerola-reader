@@ -15,10 +15,12 @@ import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
+import br.acerola.comic.local.dao.sync.SyncHistoryLogDao
 import br.acerola.comic.local.dao.view.ComicSummaryDao
 import br.acerola.comic.local.database.migrations.MIGRATION_1_2
 import br.acerola.comic.local.database.migrations.MIGRATION_2_3
 import br.acerola.comic.local.database.migrations.MIGRATION_3_4
+import br.acerola.comic.local.database.migrations.MIGRATION_4_5
 import br.acerola.comic.local.database.seeds.seedArchiveTemplates
 import dagger.Module
 import dagger.Provides
@@ -47,7 +49,7 @@ object DatabaseModule {
                         seedArchiveTemplates(db)
                     }
                 },
-            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
 
     @Provides
@@ -85,4 +87,7 @@ object DatabaseModule {
 
     @Provides
     fun provideMangaSummaryDao(db: AcerolaDatabase): ComicSummaryDao = db.comicSummaryDao()
+
+    @Provides
+    fun provideSyncHistoryLogDao(db: AcerolaDatabase): SyncHistoryLogDao = db.syncHistoryLogDao()
 }
