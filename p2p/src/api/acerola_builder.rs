@@ -90,14 +90,30 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
     }
 
     /// Sincroniza a chave/seed de identidade entre o transport e o storage configurado.
+    ///
+    /// Distingue "nunca foi salvo" (`Ok(None)` — primeira execução legítima, gera uma
+    /// identidade nova normalmente) de "falha real ao carregar" (`Err` — ex: a chave mestra
+    /// mudou e o blob não descriptografa mais). O segundo caso NUNCA pode cair no mesmo
+    /// caminho do primeiro: gerar e salvar uma identidade nova ali sobrescreveria
+    /// silenciosamente `identity.enc` na primeira falha transitória de storage/keyring,
+    /// destruindo a identidade (e todo pareamento associado a ela) sem nenhum aviso.
     async fn resolve_identity(&mut self) -> Result<(), ConnectionError> {
         let Some(storage) = &self.storage else { return Ok(()) };
 
-        if let Ok(Some(bytes)) = storage.load_identity().await {
-            if let Ok(seed) = bytes.try_into() {
-                self.transport.set_seed(seed);
-                return Ok(());
-            }
+        match storage.load_identity().await {
+            Ok(Some(bytes)) => {
+                if let Ok(seed) = bytes.try_into() {
+                    self.transport.set_seed(seed);
+                    return Ok(());
+                }
+                // Tamanho inesperado (não 32 bytes): dado corrompido num nível diferente de
+                // uma falha de descriptografia — mantém o comportamento já existente de
+                // regenerar, coberto por `resolve_identity_regenerates_seed_when_storage_returns_invalid_bytes`.
+            },
+            Ok(None) => {
+                // Storage respondeu, e não há identidade salva ainda — primeira execução.
+            },
+            Err(err) => return Err(err),
         }
 
         let seed = match self.transport.get_seed() {
@@ -492,5 +508,55 @@ mod tests {
         assert_eq!(persisted_bytes.len(), 32);
         assert_ne!(persisted_bytes.as_slice(), &[1, 2, 3, 4, 5]);
         assert_eq!(persisted_bytes.as_slice(), resolved_seed_bytes.as_slice());
+    }
+
+    struct FailingIdentityLoadStorage {
+        save_identity_called: Arc<std::sync::atomic::AtomicBool>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::core::storage::P2PStorage for FailingIdentityLoadStorage {
+        async fn save_identity(&self, _secret: &[u8]) -> Result<(), ConnectionError> {
+            self.save_identity_called.store(true, std::sync::atomic::Ordering::SeqCst);
+            Ok(())
+        }
+        async fn load_identity(&self) -> Result<Option<Vec<u8>>, ConnectionError> {
+            Err(ConnectionError::StreamFailed("decrypt failed: wrong master key".to_string()))
+        }
+        async fn save_peer(
+            &self, _peer: &crate::infra::peer::PeerAddr,
+        ) -> Result<(), ConnectionError> {
+            Ok(())
+        }
+        async fn load_peers(&self) -> Result<Vec<crate::infra::peer::PeerAddr>, ConnectionError> {
+            Ok(vec![])
+        }
+    }
+
+    /// Regressão: uma falha real ao carregar a identidade (ex: chave mestra trocou e o blob
+    /// não descriptografa mais) não pode terminar em "gera identidade nova e sobrescreve" —
+    /// esse foi exatamente o bug que apagou o pareamento de um usuário em produção. O erro
+    /// tem que propagar, e `save_identity` nunca pode ser chamado nesse caminho.
+    #[tokio::test]
+    async fn resolve_identity_propagates_error_instead_of_silently_regenerating() {
+        let save_identity_called = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let failing_storage =
+            FailingIdentityLoadStorage { save_identity_called: Arc::clone(&save_identity_called) };
+
+        let mut builder = AcerolaP2pBuilder::new(
+            no_op_emitter(),
+            IrohTransportBuilder::default(),
+            test_device_info(),
+        )
+        .storage(failing_storage);
+
+        let resolution_result = builder.resolve_identity().await;
+
+        assert!(resolution_result.is_err(), "falha de carregamento precisa propagar, não ser engolida");
+        assert!(builder.transport.get_seed().is_none(), "nenhuma seed nova deveria ter sido atribuída");
+        assert!(
+            !save_identity_called.load(std::sync::atomic::Ordering::SeqCst),
+            "save_identity nunca deveria ser chamado quando load_identity falhou de verdade"
+        );
     }
 }
