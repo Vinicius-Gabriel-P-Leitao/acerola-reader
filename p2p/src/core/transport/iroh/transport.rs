@@ -190,6 +190,14 @@ impl P2pTransport for IrohTransport {
             .next()
     }
 
+    async fn is_connected(&self, peer: &PeerId) -> bool {
+        self.connections
+            .read()
+            .await
+            .iter()
+            .any(|(key, conn)| key.0 == *peer && conn.close_reason().is_none())
+    }
+
     /// Executa o teardown forçado do componente iroh.
     ///
     /// Warn: O endpoint é compartilhado em formato Arc no backend do crate `iroh`.
@@ -529,8 +537,7 @@ mod tests {
                 let _ = tokio::io::AsyncReadExt::read_exact(&mut in_reader, &mut buf).await;
             });
 
-            let (mut writer, _reader) =
-                transport_a.open_bi(b"test/proto", addr_b).await.unwrap();
+            let (mut writer, _reader) = transport_a.open_bi(b"test/proto", addr_b).await.unwrap();
             writer.write_all(b"ping").await.unwrap();
             writer.flush().await.unwrap();
 
@@ -557,5 +564,44 @@ mod tests {
 
         transport_a.shutdown().await.unwrap();
         transport_b.shutdown().await.unwrap();
+    }
+
+    /// `is_connected` é a base da visão "peer online agora": deve refletir o cache de conexões
+    /// físicas vivas, não nenhuma sessão de protocolo de aplicação (que pode já ter terminado).
+    #[tokio::test]
+    async fn is_connected_reflects_live_physical_connection() {
+        let transport_a = Arc::new(build_transport().await);
+        let transport_b = Arc::new(build_transport().await);
+
+        let addr_b = transport_b.local_addr().unwrap();
+        let peer_b_id = transport_b.local_id();
+
+        let t_b = Arc::clone(&transport_b);
+        let accept_handle = tokio::spawn(async move {
+            let incoming = t_b.accept().await.unwrap();
+            let (_out_writer, mut in_reader) = incoming.accept_bi().await.unwrap();
+            let mut buf = [0u8; 4];
+            let _ = tokio::io::AsyncReadExt::read_exact(&mut in_reader, &mut buf).await;
+        });
+
+        let (mut writer, _reader) = transport_a.open_bi(b"test/proto", &addr_b).await.unwrap();
+        writer.write_all(b"ping").await.unwrap();
+        writer.flush().await.unwrap();
+        accept_handle.await.unwrap();
+
+        assert!(
+            P2pTransport::is_connected(&*transport_a, &peer_b_id).await,
+            "dialing side should see a live connection right after open_bi"
+        );
+
+        transport_a.shutdown().await.unwrap();
+        transport_b.shutdown().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn is_connected_returns_false_for_unknown_peer() {
+        let transport = build_transport().await;
+        let unknown_peer = PeerId { id: "unknown-peer-id".to_string(), device_id: None };
+        assert!(!P2pTransport::is_connected(&transport, &unknown_peer).await);
     }
 }

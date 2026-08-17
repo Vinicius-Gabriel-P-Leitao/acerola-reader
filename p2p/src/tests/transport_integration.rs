@@ -133,7 +133,11 @@ mod run_in_isolation {
     }
 
     #[tokio::test]
-    async fn peer_appears_in_node_b_state_after_real_connection() {
+    async fn peer_appears_in_node_b_known_peers_after_real_connection() {
+        // O handshake (`acerola/handshake/1`) é uma troca pontual — o handler retorna assim que
+        // termina, então `connected_peers()` (sessões de protocolo ativas) já está vazio de novo
+        // logo em seguida. `known_peers()` é quem deve continuar mostrando o peer: é o cache de
+        // "quem eu já vi", sobrevivendo ao fim da sessão de handshake em si.
         let node_a = build_node("a").await;
         let node_b = build_node("b").await;
 
@@ -141,8 +145,11 @@ mod run_in_isolation {
         node_a.connect(node_b.local_addr().clone(), b"acerola/handshake/1").await.unwrap();
         sleep(Duration::from_millis(500)).await;
 
-        let peers = node_b.connected_peers().await;
-        assert!(peers.keys().any(|p| p.id == id_a), "node A did not appear in node B state");
+        let known = node_b.known_peers().await;
+        assert!(
+            known.iter().any(|(p, _, _)| p.id == id_a),
+            "node A did not appear in node B's known peers"
+        );
     }
 
     #[tokio::test]
@@ -175,7 +182,10 @@ mod run_in_isolation {
 
         let node_a: AcerolaP2p =
             AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("a"))
-                .outbound(b"test/status-check", Arc::new(SenderHandler { payload: payload.clone() }))
+                .outbound(
+                    b"test/status-check",
+                    Arc::new(SenderHandler { payload: payload.clone() }),
+                )
                 .build()
                 .await
                 .unwrap();
@@ -233,7 +243,10 @@ mod run_in_isolation {
         let node_a: AcerolaP2p =
             AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("a"))
                 .outbound(b"test/glare", Arc::new(SenderHandler { payload: b"from-a".to_vec() }))
-                .inbound(b"test/glare", Arc::new(ReceiverHandler { received: Arc::clone(&received_a) }))
+                .inbound(
+                    b"test/glare",
+                    Arc::new(ReceiverHandler { received: Arc::clone(&received_a) }),
+                )
                 .build()
                 .await
                 .unwrap();
@@ -241,7 +254,10 @@ mod run_in_isolation {
         let node_b: AcerolaP2p =
             AcerolaP2p::builder(emitter(), IrohTransportBuilder::default(), device("b"))
                 .outbound(b"test/glare", Arc::new(SenderHandler { payload: b"from-b".to_vec() }))
-                .inbound(b"test/glare", Arc::new(ReceiverHandler { received: Arc::clone(&received_b) }))
+                .inbound(
+                    b"test/glare",
+                    Arc::new(ReceiverHandler { received: Arc::clone(&received_b) }),
+                )
                 .build()
                 .await
                 .unwrap();
@@ -295,8 +311,13 @@ mod run_in_isolation {
         node_a.connect(node_b.local_addr().clone(), b"acerola/handshake/1").await.unwrap();
         sleep(Duration::from_millis(1500)).await;
 
-        let peers = node_a.connected_peers().await;
-        assert!(peers.keys().any(|p| p.id == id_b), "node B did not appear in node A state");
+        // O handshake é pontual (ver comentário em `peer_appears_in_node_b_known_peers_...`) —
+        // `known_peers()` é quem reflete "já vi esse peer", não `connected_peers()`.
+        let known = node_a.known_peers().await;
+        assert!(
+            known.iter().any(|(p, _, _)| p.id == id_b),
+            "node B did not appear in node A known peers"
+        );
 
         let mut events = Vec::new();
         while let Ok(evt) = rx.try_recv() {

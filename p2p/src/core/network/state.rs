@@ -118,18 +118,28 @@ impl NetworkState {
         self.peer_device_info.get(peer)
     }
 
-    /// Remove o registro de uma conexão do estado.
+    /// Todos os peers já vistos nesta sessão (endereço + device info, se um handshake já
+    /// aconteceu), independente de terem uma sessão ativa neste instante. Base para uma visão
+    /// persistente de "dispositivos conhecidos" — quem está online agora é uma pergunta
+    /// separada, respondida pelo transporte (ver `P2pTransport::is_connected`).
+    pub fn known_peers(&self) -> impl Iterator<Item = (&PeerId, &PeerAddr, Option<&DeviceInfo>)> {
+        self.peer_addresses.iter().map(|(peer, addr)| (peer, addr, self.peer_device_info.get(peer)))
+    }
+
+    /// Remove o registro de uma sessão ativa do estado.
     ///
-    /// Retira a stream com a respectiva tag ALPN associada àquele nó.
-    /// Caso seja o último ALPN em uso, remove todo o estado do Peer da memória.
+    /// Retira a stream com a respectiva tag ALPN associada àquele nó. Caso seja o último ALPN
+    /// em uso, o peer some de `peers()`/`is_connected()` — mas o endereço e o device info
+    /// aprendidos permanecem no cache (ver `get_addr`/`get_device_info`), já que representam
+    /// conhecimento sobre o peer, não o ciclo de vida de uma sessão de protocolo em particular.
+    /// Um handshake completo dura só o tempo da troca (ver `RpcClientHandler`/`RpcServerHandler`)
+    /// — se esses campos fossem apagados junto, o peer nunca ficaria visível por tempo algum.
     pub fn disconnect(&mut self, peer: &PeerId, alpn: &[u8]) {
         if let Some(alpns) = self.connected_peers.get_mut(peer) {
             alpns.remove(alpn);
 
             if alpns.is_empty() {
                 self.connected_peers.remove(peer);
-                self.peer_device_info.remove(peer);
-                self.peer_addresses.remove(peer);
             }
         }
     }
@@ -244,7 +254,9 @@ mod tests {
     }
 
     #[test]
-    fn device_info_removed_when_peer_disconnects_completely() {
+    fn device_info_persists_after_peer_disconnects_completely() {
+        // O handshake dura só a troca inicial (ver RpcClientHandler/RpcServerHandler) — se o
+        // device info sumisse junto com a sessão, o peer nunca ficaria visível tempo algum.
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -252,7 +264,8 @@ mod tests {
         state.store_device_info(peer.clone(), make_device_info("meu-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
 
-        assert!(state.get_device_info(&peer).is_none());
+        assert!(!state.is_connected(&peer));
+        assert_eq!(state.get_device_info(&peer).unwrap().name, "meu-pc");
     }
 
     #[test]
@@ -269,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn device_info_removed_after_all_alpns_disconnect() {
+    fn device_info_persists_after_all_alpns_disconnect() {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
@@ -279,7 +292,8 @@ mod tests {
         state.disconnect(&peer, b"acerola/handshake/1");
         state.disconnect(&peer, b"acerola/blob/1");
 
-        assert!(state.get_device_info(&peer).is_none());
+        assert!(!state.is_connected(&peer));
+        assert_eq!(state.get_device_info(&peer).unwrap().name, "meu-pc");
     }
 
     #[test]
@@ -291,5 +305,38 @@ mod tests {
         state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(state.get_device_info(&peer).is_none());
+    }
+
+    #[test]
+    fn known_peers_includes_peer_after_disconnect() {
+        let mut state = NetworkState::new();
+        let peer = make_peer("peer-1");
+
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.store_device_info(peer.clone(), make_device_info("meu-pc"));
+        state.disconnect(&peer, b"acerola/handshake/1");
+
+        let known: Vec<_> = state.known_peers().collect();
+        assert_eq!(known.len(), 1);
+        assert_eq!(known[0].0, &peer);
+        assert_eq!(known[0].2.unwrap().name, "meu-pc");
+    }
+
+    #[test]
+    fn known_peers_empty_when_no_peer_ever_seen() {
+        let state = NetworkState::new();
+        assert_eq!(state.known_peers().count(), 0);
+    }
+
+    #[test]
+    fn addr_persists_after_peer_disconnects_completely() {
+        let mut state = NetworkState::new();
+        let peer = make_peer("peer-1");
+
+        state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
+        state.disconnect(&peer, b"acerola/handshake/1");
+
+        assert!(!state.is_connected(&peer));
+        assert!(state.get_addr(&peer).is_some());
     }
 }

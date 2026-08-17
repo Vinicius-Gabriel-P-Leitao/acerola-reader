@@ -4,9 +4,7 @@ use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use super::{
-    read_byte, read_device_info, write_byte, write_device_info, Recv, Writer, GOODBYE, PING, PONG,
-};
+use super::{read_byte, read_device_info, write_byte, write_device_info, Recv, Writer, PING, PONG};
 use crate::{
     data::{
         identity::device_info::DeviceInfo,
@@ -32,7 +30,6 @@ impl ProtocolHandler for RpcServerHandler {
 
         self.perform_handshake(peer, &mut framed_send, &mut framed_recv).await?;
         self.exchange_device_info(peer, &mut framed_send, &mut framed_recv).await?;
-        self.protocol_loop(&mut framed_send, &mut framed_recv).await?;
 
         Ok(())
     }
@@ -70,26 +67,6 @@ impl RpcServerHandler {
 
         (self.emit)("rpc:device_info_exchanged", peer.id.clone());
         self.state.store_device_info(peer.clone(), device_info).await;
-
-        Ok(())
-    }
-
-    async fn protocol_loop(
-        &self, send: &mut Writer, recv: &mut Recv,
-    ) -> Result<(), ConnectionError> {
-        loop {
-            match read_byte(recv).await {
-                Ok(PING) => {
-                    write_byte(send, PONG).await?;
-                },
-                Ok(GOODBYE) => {
-                    tracing::info!("rpc_server: goodbye received, closing connection");
-                    break;
-                },
-                Ok(_) => break,
-                Err(err) => return Err(ConnectionError::from(err)),
-            }
-        }
 
         Ok(())
     }
@@ -226,5 +203,40 @@ mod tests {
         drop(client_side);
         sleep(Duration::from_millis(20)).await;
         assert!(server_task.is_finished());
+    }
+
+    /// Regressão: o handshake é uma troca pontual, não uma sessão que precisa ficar viva.
+    /// A liveness da conexão física já é responsabilidade do keepalive nativo do QUIC/iroh, não
+    /// deste RPC — então `handle()` deve retornar assim que a troca de device info terminar, sem
+    /// esperar por nenhum PING/GOODBYE adicional.
+    #[tokio::test]
+    async fn handle_returns_ok_immediately_after_device_info_exchange() {
+        let (client_side, server_side) = tokio::io::duplex(4096);
+        let (emit, _) = capture_emitter();
+        let server = RpcServerHandler::new(emit, make_device_info("server"), make_state());
+
+        let peer = make_peer("peer-1");
+        let server_task = tokio::spawn(async move {
+            let (read, write) = tokio::io::split(server_side);
+            server.handle(&peer, Box::new(write), Box::new(read)).await
+        });
+
+        let (read, write) = tokio::io::split(client_side);
+        let mut recv = FramedRead::new(
+            Box::new(read) as Box<dyn tokio::io::AsyncRead + Send + Unpin>,
+            LengthDelimitedCodec::new(),
+        );
+        let mut send = FramedWrite::new(
+            Box::new(write) as Box<dyn tokio::io::AsyncWrite + Send + Unpin>,
+            LengthDelimitedCodec::new(),
+        );
+
+        write_byte(&mut send, PING).await.unwrap();
+        read_byte(&mut recv).await.unwrap();
+        write_device_info(&mut send, &make_device_info("client")).await.unwrap();
+
+        let result = tokio::time::timeout(Duration::from_millis(200), server_task).await;
+        assert!(result.is_ok(), "handle() should return promptly, not hang waiting for GOODBYE");
+        assert!(result.unwrap().unwrap().is_ok());
     }
 }
