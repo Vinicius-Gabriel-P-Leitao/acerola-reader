@@ -70,6 +70,16 @@ pub trait P2pTransport: Send + Sync {
     /// Retorna a estimativa de latência (RTT) para um par específico, se houver conexão ativa.
     async fn latency(&self, peer: &PeerId) -> Option<std::time::Duration>;
 
+    /// Retorna `true` se existe uma conexão física viva com este peer neste momento (qualquer ALPN).
+    ///
+    /// Reflete o estado do transporte, não de uma sessão de protocolo de aplicação: o QUIC do
+    /// iroh mantém a conexão viva sozinho via keepalive nativo de transporte, então isso não
+    /// depende de nenhum handler de RPC estar rodando. É a fonte de verdade para "este peer está
+    /// online agora", separada de `NetworkState` (que rastreia sessões de protocolo pontuais).
+    async fn is_connected(&self, _peer: &PeerId) -> bool {
+        false
+    }
+
     /// Realiza a destruição graciosa das portas e threads ocupadas pelo driver físico.
     async fn shutdown(&self) -> Result<(), ConnectionError>;
 }

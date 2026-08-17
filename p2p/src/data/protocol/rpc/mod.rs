@@ -12,7 +12,6 @@ use crate::{data::identity::device_info::DeviceInfo, infra::error::RpcError};
 
 pub(crate) const PING: u8 = 0x01;
 pub(crate) const PONG: u8 = 0x02;
-pub(crate) const GOODBYE: u8 = 0x03;
 
 pub(crate) type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
 pub(crate) type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;

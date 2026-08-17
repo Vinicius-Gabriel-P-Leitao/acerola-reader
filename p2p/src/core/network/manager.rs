@@ -7,13 +7,7 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use futures::SinkExt;
-use tokio::{
-    io::AsyncWriteExt,
-    sync::{mpsc, RwLock},
-    task::JoinSet,
-};
-use tokio_util::codec::{FramedWrite, LengthDelimitedCodec};
+use tokio::sync::{mpsc, RwLock};
 use tracing::Instrument;
 
 use crate::{
@@ -32,9 +26,6 @@ use crate::{
 
 /// Limite de comandos simultâneos não processados na fila do loop principal.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
-
-/// Byte constante enviado no handshake de encerramento da conexão.
-const GOODBYE: u8 = 0x03;
 
 /// Sinais de controle enviados ao Event Loop da rede.
 ///
@@ -161,7 +152,6 @@ impl NetworkManager {
                             self.handle_switch_guard(validator, mode).await;
                         }
                         Some(NetworkCommand::Shutdown) => {
-                            self.broadcast_goodbye().await;
                             break;
                         }
                         None => {
@@ -310,50 +300,6 @@ impl NetworkManager {
         *self.validator.write().await = validator;
         self.state.write().await.switch_mode(mode);
     }
-
-    /// Envia o sinal de GOODBYE para todos os peers conectados antes de desligar.
-    async fn broadcast_goodbye(&self) {
-        let addrs: Vec<PeerAddr> = {
-            let state = self.state.read().await;
-            state.peers().keys().filter_map(|peer_id| state.get_addr(peer_id).cloned()).collect()
-        };
-
-        if addrs.is_empty() {
-            return;
-        }
-
-        tracing::info!(count = addrs.len(), "broadcasting goodbye to all peers");
-
-        let mut set = JoinSet::new();
-
-        for addr in addrs {
-            let transport = Arc::clone(&self.transport);
-
-            set.spawn(async move {
-                if let Err(err) = Self::send_goodbye_to_peer(transport, addr.clone()).await {
-                    tracing::warn!(peer = %addr.id, ?err, "failed to send goodbye");
-                }
-            });
-        }
-
-        // Aguarda todas as tarefas de sinalização concluírem antes de prosseguir com o shutdown físico.
-        while set.join_next().await.is_some() {}
-    }
-
-    /// Lógica atômica para abrir uma stream temporária e sinalizar a saída.
-    async fn send_goodbye_to_peer(
-        transport: Arc<dyn P2pTransport>, addr: PeerAddr,
-    ) -> Result<(), ConnectionError> {
-        let (send, _recv) = transport.open_bi(b"acerola/handshake/1", &addr).await?;
-        let mut writer = FramedWrite::new(send, LengthDelimitedCodec::new());
-
-        writer.send(vec![GOODBYE].into()).await?;
-        writer.flush().await?;
-        writer.get_mut().shutdown().await?;
-
-        tracing::debug!(peer = %addr.id, "goodbye sent gracefully");
-        Ok(())
-    }
 }
 
 /// Utilitário funcional para persistir peer apenas se o storage estiver configurado.
@@ -370,10 +316,7 @@ async fn save_peer_if_present(
 mod tests {
     use std::sync::Mutex;
 
-    use tokio::{
-        io::AsyncReadExt,
-        time::{sleep, Duration},
-    };
+    use tokio::time::{sleep, Duration};
 
     use super::*;
     use crate::{infra::peer::PeerId, tests::mock_transport::mock_transport};
@@ -616,9 +559,13 @@ mod tests {
         assert!(!state.read().await.is_connected(&make_peer("peer-storage-fail")));
     }
 
+    /// A liveness da conexão física é responsabilidade do keepalive nativo do QUIC/iroh, não de
+    /// um sinal de GOODBYE de aplicação (removido — nunca disparava de verdade em produção, e
+    /// mesmo quando disparava era rejeitado pelo lado receptor por pular a etapa de handshake).
+    /// O shutdown deve terminar o loop prontamente mesmo com peers conectados, sem tentar
+    /// notificá-los individualmente.
     #[tokio::test]
-    async fn shutdown_with_connected_peers_broadcasts_goodbye() {
-        // Testa se o shutdown com peers conectados dispara a transmissão de goodbye sem travar o loop
+    async fn shutdown_terminates_promptly_with_connected_peers() {
         let (transport, transport_handle) = mock_transport();
         let transport: Arc<dyn P2pTransport> = Arc::new(transport);
 
@@ -628,71 +575,25 @@ mod tests {
         network_manager.register_inbound(b"acerola/handshake/1", Arc::new(SlowHandler));
 
         let peer_alpha = make_peer("peer-alpha");
-        let peer_beta = make_peer("peer-beta");
-
         let (client_alpha, server_alpha) = tokio::io::duplex(1024);
-        let (client_beta, server_beta) = tokio::io::duplex(1024);
-
         transport_handle.inject(
             b"acerola/handshake/1",
             peer_alpha.clone(),
             client_alpha,
             server_alpha,
         );
-        transport_handle.inject(
-            b"acerola/handshake/1",
-            peer_beta.clone(),
-            client_beta,
-            server_beta,
-        );
 
         let manager_task_handle = tokio::spawn(network_manager.run());
         sleep(Duration::from_millis(30)).await;
 
-        // Garante que os dois pares foram registrados no estado nominal da rede
         assert!(network_state.read().await.is_connected(&peer_alpha));
-        assert!(network_state.read().await.is_connected(&peer_beta));
 
-        // Pré-aloca os buffers para as duas transmissões de goodbye no open_bi
-        let (outbound_client_first, mut outbound_server_first) = tokio::io::duplex(1024);
-        let (outbound_client_second, mut outbound_server_second) = tokio::io::duplex(1024);
-        let (_dummy_client_first, dummy_server_first) = tokio::io::duplex(1024);
-        let (_dummy_client_second, dummy_server_second) = tokio::io::duplex(1024);
-
-        transport_handle.expect_open(outbound_client_first, dummy_server_first);
-        transport_handle.expect_open(outbound_client_second, dummy_server_second);
-
-        // Dispara a sinalização de Shutdown
         let send_result = command_sender.send(NetworkCommand::Shutdown).await;
         assert!(send_result.is_ok());
 
-        // Confirma encerramento do event loop dentro do tempo limite
         let timeout_result =
-            tokio::time::timeout(Duration::from_millis(500), manager_task_handle).await;
-        assert!(timeout_result.is_ok());
-
-        // Valida que a mensagem de GOODBYE foi efetivamente transmitida pelos canais outbound
-        let mut buffer_alpha = [0u8; 16];
-        let mut buffer_beta = [0u8; 16];
-        let read_alpha_result = tokio::time::timeout(
-            Duration::from_millis(100),
-            outbound_server_first.read(&mut buffer_alpha),
-        )
-        .await;
-        let read_beta_result = tokio::time::timeout(
-            Duration::from_millis(100),
-            outbound_server_second.read(&mut buffer_beta),
-        )
-        .await;
-
-        assert!(
-            read_alpha_result.is_ok() && read_alpha_result.unwrap().unwrap_or(0) > 0,
-            "Should transmit goodbye payload to peer-alpha"
-        );
-        assert!(
-            read_beta_result.is_ok() && read_beta_result.unwrap().unwrap_or(0) > 0,
-            "Should transmit goodbye payload to peer-beta"
-        );
+            tokio::time::timeout(Duration::from_millis(200), manager_task_handle).await;
+        assert!(timeout_result.is_ok(), "shutdown should not hang with peers connected");
     }
 
     #[tokio::test]

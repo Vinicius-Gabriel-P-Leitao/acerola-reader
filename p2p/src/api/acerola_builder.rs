@@ -177,7 +177,14 @@ impl<TB: TransportP2pBuilder> AcerolaP2pBuilder<TB> {
         });
 
         tokio::spawn(manager.run());
-        Ok(AcerolaP2p { command_tx, local_id, local_addr, state, device_info: self.device_info })
+        Ok(AcerolaP2p {
+            command_tx,
+            local_id,
+            local_addr,
+            state,
+            device_info: self.device_info,
+            transport: transport as Arc<dyn P2pTransport>,
+        })
     }
 }
 
