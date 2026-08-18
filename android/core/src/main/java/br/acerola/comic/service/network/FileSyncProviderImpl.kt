@@ -11,6 +11,9 @@ import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.network.RegisterSyncedChapterUseCase
 import br.acerola.comic.util.file.sha256
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import p2p.FfiFileManifestEntry
@@ -69,28 +72,30 @@ class FileSyncProviderImpl
             return root
         }
 
+        // Checksum é calculado no scan da biblioteca (`ChapterIndexer.buildEntity`), não aqui —
+        // ler o arquivo inteiro pra hashear na hora do handshake P2P é o pior momento possível
+        // pra isso (era o que estourava o timeout de 30s do outro lado numa biblioteca grande
+        // ou recém-escaneada). Um capítulo sem checksum cacheado (biblioteca escaneada antes
+        // dessa mudança, ainda sem rescan) fica de fora do manifesto — melhor omitir do que
+        // bloquear a sessão inteira; o próximo rescan preenche.
         override fun getFileManifest(): List<FfiFileManifestEntry> =
             runBlocking {
                 comicDirectoryDao.getAllDirectories().first().flatMap { comic ->
-                    chapterArchiveDao.getChaptersListByDirectoryId(comic.id).mapNotNull { chapter ->
-                        val file = DocumentFile.fromSingleUri(context, Uri.parse(chapter.path))
-                        if (file == null || !file.exists()) return@mapNotNull null
+                    chapterArchiveDao.getChaptersListByDirectoryId(comic.id).map { chapter ->
+                        async(Dispatchers.IO) {
+                            val checksum = chapter.checksum ?: return@async null
+                            val file = DocumentFile.fromSingleUri(context, Uri.parse(chapter.path))
+                            if (file == null || !file.exists()) return@async null
 
-                        val checksum =
-                            chapter.checksum ?: run {
-                                val computed = file.sha256(context)
-                                chapterArchiveDao.update(chapter.copy(checksum = computed))
-                                computed
-                            }
-
-                        FfiFileManifestEntry(
-                            comicName = comic.name,
-                            chapter = chapter.chapter,
-                            fileName = file.name ?: chapter.chapter,
-                            checksum = checksum,
-                            sizeBytes = file.length().toULong(),
-                        )
-                    }
+                            FfiFileManifestEntry(
+                                comicName = comic.name,
+                                chapter = chapter.chapter,
+                                fileName = file.name ?: chapter.chapter,
+                                checksum = checksum,
+                                sizeBytes = file.length().toULong(),
+                            )
+                        }
+                    }.awaitAll().filterNotNull()
                 }
             }
 
@@ -116,8 +121,18 @@ class FileSyncProviderImpl
         ): ByteArray {
             val readHandle = readHandles[handle] ?: return ByteArray(0)
             val buffer = ByteArray(chunkSize.toInt())
-            val read = readHandle.stream.read(buffer)
-            if (read <= 0) return ByteArray(0)
+
+            // `InputStream.read()` só sinaliza fim de arquivo com -1 — 0 é "nenhum byte
+            // disponível agora, mas não acabou" (possível num stream cross-process via SAF).
+            // Tratar 0 como fim (como estava antes) fazia o remetente parar de mandar bytes
+            // NO MEIO do capítulo — o lado que recebe fica esperando o resto, e a stream
+            // desalinha: os próximos bytes que chegam são o header JSON do PRÓXIMO capítulo,
+            // interpretado por engano como mais conteúdo binário do capítulo atual.
+            var read = readHandle.stream.read(buffer)
+            while (read == 0) {
+                read = readHandle.stream.read(buffer)
+            }
+            if (read == -1) return ByteArray(0)
             return if (read == buffer.size) buffer else buffer.copyOf(read)
         }
 

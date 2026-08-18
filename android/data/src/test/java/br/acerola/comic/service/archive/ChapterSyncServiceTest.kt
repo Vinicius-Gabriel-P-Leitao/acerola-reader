@@ -87,7 +87,7 @@ class ChapterSyncServiceTest {
             coEvery { chapterArchiveDao.getChaptersListByDirectoryId(comicId) } returns listOf(oldChapter)
 
             val newChapter = ChapterArchive(id = 0, chapter = "cap1.cbz", path = "new/path", folderPathFk = comicId, chapterSort = "1")
-            every { chapterIndexer.buildEntity(any(), any(), any(), any(), any(), any()) } returns newChapter
+            coEvery { chapterIndexer.buildEntity(any(), any(), any(), any(), any(), any()) } returns newChapter
 
             coEvery { chapterArchiveDao.delete(any()) } returns Unit
             coEvery { chapterArchiveDao.insert(any()) } returns 100L
@@ -126,7 +126,7 @@ class ChapterSyncServiceTest {
             every { archiveValidator.isDuplicateSort(any(), "1") } returnsMany listOf(false, true)
 
             coEvery { chapterArchiveDao.getChaptersListByDirectoryId(comicId) } returns emptyList()
-            every { chapterIndexer.buildEntity(any(), any(), any(), any(), any(), any()) } returns mockk(relaxed = true)
+            coEvery { chapterIndexer.buildEntity(any(), any(), any(), any(), any(), any()) } returns mockk(relaxed = true)
             coEvery { chapterArchiveDao.insert(any()) } returns 1L
             coEvery { readingHistoryDao.updateHistoryChapterIdBySort(any(), any(), any()) } returns Unit
             coEvery { readingHistoryDao.updateChapterReadIdBySort(any(), any(), any()) } returns Unit
