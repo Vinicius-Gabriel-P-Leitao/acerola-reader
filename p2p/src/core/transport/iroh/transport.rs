@@ -44,6 +44,15 @@ type ConnectionKey = (PeerId, Vec<u8>);
 pub struct IrohTransport {
     endpoint: Endpoint,
     connections: Arc<RwLock<HashMap<ConnectionKey, Connection>>>,
+    /// Um mutex por `(peer, alpn)` que ainda está sendo discado, usado para serializar a
+    /// sequência `check cache → dial → insert cache` em `open_bi`. Sem isso, duas chamadas
+    /// concorrentes para a mesma chave podem ver o cache vazio simultaneamente (o `.await` de
+    /// `endpoint.connect` não segura nenhum lock) e disparar duas conexões QUIC físicas
+    /// distintas para o mesmo peer. Com o lock por chave, a segunda chamada aguarda a primeira
+    /// terminar de discar e reaproveita o resultado dela via o double-check após adquirir o
+    /// lock. Entradas não são removidas depois de usadas — mesmo racional de limpeza
+    /// preguiçosa que `connections` já usa.
+    dial_locks: Mutex<HashMap<ConnectionKey, Arc<tokio::sync::Mutex<()>>>>,
     /// Streams inbound já aceitas, entregues por `drive_incoming_connections`/`drive_incoming_streams`
     /// (tasks de fundo). `accept()` só consome este canal — ver o doc dessas funções para o motivo
     /// de existirem: uma conexão reaproveitada pode receber várias streams ao longo da vida dela,
@@ -63,7 +72,46 @@ impl IrohTransport {
             incoming_tx,
         ));
 
-        Self { endpoint, connections, incoming_rx: Mutex::new(incoming_rx) }
+        Self {
+            endpoint,
+            connections,
+            dial_locks: Mutex::new(HashMap::new()),
+            incoming_rx: Mutex::new(incoming_rx),
+        }
+    }
+
+    /// Disca (ou reaproveita) a conexão física para `key`, garantindo que no máximo um
+    /// `endpoint.connect()` esteja em voo por vez para essa chave. Chamadas concorrentes para a
+    /// mesma `key` esperam no mutex por-chave e, ao adquiri-lo, primeiro reconferem o cache —
+    /// a chamada que discou primeiro já pode ter inserido a conexão enquanto esta esperava.
+    async fn dial_or_reuse(
+        &self, key: &ConnectionKey, addr: &EndpointAddr, alpn: &[u8], peer: &PeerId,
+    ) -> Result<Connection, ConnectionError> {
+        let key_lock = {
+            let mut locks = self.dial_locks.lock().await;
+            Arc::clone(
+                locks.entry(key.clone()).or_insert_with(|| Arc::new(tokio::sync::Mutex::new(()))),
+            )
+        };
+
+        let _dial_guard = key_lock.lock().await;
+
+        if let Some(conn) = self.connections.read().await.get(key).cloned() {
+            if conn.close_reason().is_none() {
+                return Ok(conn);
+            }
+        }
+
+        tracing::debug!(
+            peer = %peer.id,
+            layer = "iroh_transport",
+            alpn = ?String::from_utf8_lossy(alpn),
+            "initiating outbound connection"
+        );
+
+        let conn = self.endpoint.connect(addr.clone(), alpn).await?;
+        self.connections.write().await.insert(key.clone(), conn.clone());
+        Ok(conn)
     }
 
     /// Trata a conversão sintática das Strings em NodeIds estritos nativos do iroh.
@@ -118,18 +166,7 @@ impl P2pTransport for IrohTransport {
 
             let conn = match cached {
                 Some(conn) if conn.close_reason().is_none() => conn,
-                _ => {
-                    tracing::debug!(
-                        peer = %peer.id,
-                        layer = "iroh_transport",
-                        alpn = ?String::from_utf8_lossy(alpn),
-                        "initiating outbound connection"
-                    );
-
-                    let conn = self.endpoint.connect(addr.clone(), alpn).await?;
-                    self.connections.write().await.insert(key.clone(), conn.clone());
-                    conn
-                },
+                _ => self.dial_or_reuse(&key, &addr, alpn, &peer.id).await?,
             };
 
             match conn.open_bi().await {
@@ -560,6 +597,57 @@ mod tests {
             first_stable_id, second_stable_id,
             "second open_bi to the same peer+ALPN should reuse the cached connection, not dial \
              a fresh one"
+        );
+
+        transport_a.shutdown().await.unwrap();
+        transport_b.shutdown().await.unwrap();
+    }
+
+    /// Regressão da race em `open_bi`/`dial_or_reuse`: sem lock por chave, o trecho
+    /// `check cache → dial → insert cache` não é atômico — entre o `read().await` e o
+    /// `write().await.insert(...)` existe um `.await` inteiro (`endpoint.connect`) sem nenhum
+    /// lock segurando a chave, então chamadas concorrentes para o mesmo `(peer, alpn)` podiam
+    /// todas ver o cache vazio e discar conexões físicas duplicadas. Dispara `N` chamadas
+    /// concorrentes de `dial_or_reuse` para a mesma chave (via `tokio::spawn`, não sequenciais)
+    /// e confere que todas resolvem para a mesma conexão física (`stable_id` idêntico) — se a
+    /// race reaparecer, cada chamada perdedora do lock discaria sua própria conexão e os
+    /// `stable_id`s divergiriam.
+    #[tokio::test]
+    async fn dial_or_reuse_serializes_concurrent_dials_for_same_key() {
+        let transport_a = Arc::new(build_transport().await);
+        let transport_b = Arc::new(build_transport().await);
+
+        let addr_b = transport_b.local_addr().unwrap();
+        let addr: EndpointAddr = serde_json::from_slice(&addr_b.addrs).unwrap();
+        let key: ConnectionKey = (addr_b.id.clone(), b"test/proto".to_vec());
+
+        const N: usize = 8;
+
+        let handles: Vec<_> = (0..N)
+            .map(|_| {
+                let transport_a = Arc::clone(&transport_a);
+                let addr = addr.clone();
+                let key = key.clone();
+                tokio::spawn(async move {
+                    transport_a
+                        .dial_or_reuse(&key, &addr, b"test/proto", &key.0)
+                        .await
+                        .unwrap()
+                        .stable_id()
+                })
+            })
+            .collect();
+
+        let mut stable_ids = Vec::with_capacity(N);
+        for handle in handles {
+            stable_ids.push(handle.await.unwrap());
+        }
+
+        let first = stable_ids[0];
+        assert!(
+            stable_ids.iter().all(|id| *id == first),
+            "all concurrent dials for the same (peer, alpn) must resolve to a single physical \
+             connection, got {stable_ids:?}"
         );
 
         transport_a.shutdown().await.unwrap();
