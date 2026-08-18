@@ -44,6 +44,7 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         network_cmd::get_local_id,
         network_cmd::get_local_addr,
         network_cmd::get_local_device_info,
+        network_cmd::get_paired_peers,
         network_cmd::get_relay_info,
         network_cmd::sync_history,
         network_cmd::sync_files,

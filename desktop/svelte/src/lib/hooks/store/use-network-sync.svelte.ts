@@ -109,16 +109,62 @@ export function useNetworkSync() {
 		return { message: payload };
 	}
 
+	/// Uma sessão de sync tem UMA linha no log, que transiciona de estado (started -> progress
+	/// -> complete/error) em vez de empilhar uma linha nova por evento — sem isso, "started"
+	/// fica pra sempre como uma linha separada com spinner girando ao lado da linha "complete"
+	/// que já resolveu a mesma sessão. Chave `peerId:kind` (mesma granularidade de
+	/// `syncingKeys`). `files:progress` não carrega peer id no payload (ver o comentário do
+	/// tipo `TransferLogEntry`), então não dá pra correlacionar com a linha `started` de um
+	/// peer específico — continua criando linha própria, é limitação do protocolo, não bug
+	/// desta função.
+	const inFlightEntryId = new Map<string, number>();
+
+	function isTerminalStatus(status: TransferLogEntry['status']): boolean {
+		return status === 'complete' || status === 'error';
+	}
+
+	function isOpenStatus(status: TransferLogEntry['status']): boolean {
+		return status === 'started' || status === 'progress';
+	}
+
+	function updateInFlightEntry(
+		index: number,
+		key: string,
+		status: TransferLogEntry['status'],
+		message: string
+	) {
+		log[index] = { ...log[index], status, message, timestamp: Date.now() };
+		if (isTerminalStatus(status)) inFlightEntryId.delete(key);
+	}
+
+	function appendNewEntry(
+		peerId: string,
+		kind: SyncKind,
+		key: string,
+		status: TransferLogEntry['status'],
+		message: string
+	) {
+		const entry: TransferLogEntry = { id: nextId++, peerId, kind, status, message, timestamp: Date.now() };
+		log = [entry, ...log].slice(0, MAX_LOG_ENTRIES);
+		if (peerId && isOpenStatus(status)) inFlightEntryId.set(key, entry.id);
+	}
+
 	function push(
 		peerId: string,
 		kind: SyncKind,
 		status: TransferLogEntry['status'],
 		message: string
 	) {
-		log = [{ id: nextId++, peerId, kind, status, message, timestamp: Date.now() }, ...log].slice(
-			0,
-			MAX_LOG_ENTRIES
-		);
+		const key = syncKey(peerId, kind);
+		const existingId = peerId ? inFlightEntryId.get(key) : undefined;
+		const existingIndex =
+			existingId !== undefined ? log.findIndex((entry) => entry.id === existingId) : -1;
+
+		if (existingIndex !== -1) {
+			updateInFlightEntry(existingIndex, key, status, message);
+		} else {
+			appendNewEntry(peerId, kind, key, status, message);
+		}
 	}
 
 	/// Carrega as sessões persistidas (mais recente primeiro) pra dar contexto histórico
@@ -172,6 +218,7 @@ export function useNetworkSync() {
 		unlisten.length = 0;
 		inFlightTimeouts.forEach((timeout) => clearTimeout(timeout));
 		inFlightTimeouts.clear();
+		inFlightEntryId.clear();
 	}
 
 	/// Chama o comando Tauri de sync marcando/limpando a(s) chave(s) `peerId:kind` ao redor

@@ -29,6 +29,7 @@ struct MockNetworkState {
     local_id: String,
     mode: NetworkMode,
     peers: Vec<ConnectedPeerInfo>,
+    paired_peers: Vec<PeerAddr>,
     last_connection: Option<(String, Vec<u8>)>,
     failure: Option<String>,
 }
@@ -40,6 +41,7 @@ impl MockNetworkService {
                 local_id: "local-peer-id".to_string(),
                 mode: NetworkMode::Local,
                 peers: Vec::new(),
+                paired_peers: Vec::new(),
                 last_connection: None,
                 failure: None,
             })),
@@ -57,6 +59,10 @@ impl MockNetworkService {
 
     fn set_peers(&self, peers: Vec<ConnectedPeerInfo>) {
         self.state.lock().expect("network mock mutex should not be poisoned").peers = peers;
+    }
+
+    fn set_paired_peers(&self, paired_peers: Vec<PeerAddr>) {
+        self.state.lock().expect("network mock mutex should not be poisoned").paired_peers = paired_peers;
     }
 
     fn mode(&self) -> NetworkMode {
@@ -113,6 +119,12 @@ impl NetworkServiceApi for MockNetworkService {
         Ok(state.peers.clone())
     }
 
+    async fn paired_peers(&self) -> Result<Vec<PeerAddr>, String> {
+        let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
+        Self::take_failure(&mut state)?;
+        Ok(state.paired_peers.clone())
+    }
+
     async fn switch_to_local(&self) -> Result<(), String> {
         let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
@@ -163,6 +175,7 @@ fn build_network_app(
             network_cmd::switch_to_relay,
             network_cmd::get_local_id,
             network_cmd::connect_to_peer,
+            network_cmd::get_paired_peers,
         ],
     ))
 }
@@ -287,6 +300,38 @@ async fn get_local_id_serializa_erro_do_servico() -> Result<()> {
     let error = invoke_err(&webview, "get_local_id", json!({}))?;
 
     assert_eq!(error, json!("id failure"));
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn get_paired_peers_retorna_peers_persistidos_independente_de_conexao_ativa() -> Result<()> {
+    let service = mock_network_service();
+    service.set_paired_peers(vec![PeerAddr {
+        id: PeerIdentity { id: "paired-offline-peer".to_string(), device_id: None },
+        addrs: vec![9, 9, 9],
+    }]);
+    // Nenhum peer conectado agora (`set_peers` não chamado) — a lista de pareados não
+    // depende disso, ao contrário de `get_network_status`.
+    let (_app, webview) = build_network_app(service)?;
+
+    let paired: Value = invoke_ok(&webview, "get_paired_peers", json!({}))?;
+
+    assert_eq!(paired[0]["peerId"], "paired-offline-peer");
+    assert_eq!(paired[0]["addrs"], json!([9, 9, 9]));
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn get_paired_peers_serializa_erro_do_servico() -> Result<()> {
+    let service = mock_network_service();
+    service.fail_next("paired peers failure");
+    let (_app, webview) = build_network_app(service)?;
+
+    let error = invoke_err(&webview, "get_paired_peers", json!({}))?;
+
+    assert_eq!(error, json!("paired peers failure"));
 
     Ok(())
 }

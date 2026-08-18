@@ -639,8 +639,8 @@
         "invalid_code": "Código inválido. Confira se você copiou o código completo do outro dispositivo."
       },
       "peers": {
-        "title": "Dispositivos conectados",
-        "empty": "Nenhum dispositivo conectado ainda. Compartilhe seu código ou cole um acima pra parear.",
+        "title": "Dispositivos pareados",
+        "empty": "Nenhum dispositivo pareado ainda. Compartilhe seu código ou cole um acima pra parear.",
         "sync_history": "Sincronizar histórico",
         "sync_files": "Sincronizar arquivos",
         "sync_all": "Sincronizar tudo",

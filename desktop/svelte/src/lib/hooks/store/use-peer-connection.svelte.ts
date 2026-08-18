@@ -5,6 +5,7 @@ import { NETWORK_EVENTS } from '$lib/contracts/network/network.events';
 import type {
 	DeviceInfoPayload,
 	NetworkStatusPayload,
+	PairedPeerPayload,
 	RelayInfo
 } from '$lib/contracts/network/network.payloads';
 import {
@@ -28,12 +29,15 @@ export function usePeerConnection() {
 	let localDeviceInfo = $state<DeviceInfoPayload | undefined>(undefined);
 	let relayInfo = $state<RelayInfo | undefined>(undefined);
 	let status = $state<NetworkStatusPayload | undefined>(undefined);
+	let pairedPeers = $state<PairedPeerPayload[]>([]);
 	let connecting = $state(false);
 
 	// `network:status` só traz peerId/alpn/device — não os bytes de endereço, que a lib
 	// exige de novo pra abrir uma conexão em outro ALPN (ex: disparar um sync depois do
-	// pareamento inicial). Guardamos aqui os `addrs` de cada peer que pareamos nesta sessão
-	// via código colado, pra reusar sem pedir o código de novo.
+	// pareamento inicial). Guardamos aqui os `addrs` de cada peer conhecido — populado tanto
+	// ao parear via código colado quanto (principalmente) por `loadPairedPeers()`, que é o
+	// que faz o botão de sync existir pra um peer que não está conectado agora (a conexão do
+	// protocolo em si dura só segundos — ver `NetworkServiceApi::paired_peers`).
 	const knownAddrs = new Map<string, number[]>();
 
 	let unlistenStatus: UnlistenFn | undefined;
@@ -51,11 +55,21 @@ export function usePeerConnection() {
 		await invoke(NETWORK_COMMANDS.getNetworkStatus);
 	}
 
+	/// Carrega a lista de peers já pareados (persistida, independe de conexão ativa) e
+	/// alimenta `knownAddrs` com os endereços de cada um — sem isso, os botões de sync ficam
+	/// desabilitados pra qualquer peer que não esteja conectado neste exato instante.
+	async function loadPairedPeers() {
+		pairedPeers = await invoke<PairedPeerPayload[]>(NETWORK_COMMANDS.getPairedPeers);
+		for (const peer of pairedPeers) {
+			knownAddrs.set(peer.peerId, peer.addrs);
+		}
+	}
+
 	async function startListening() {
 		unlistenStatus = await listen<NetworkStatusPayload>(NETWORK_EVENTS.status, (event) => {
 			status = event.payload;
 		});
-		await refreshStatus();
+		await Promise.all([refreshStatus(), loadPairedPeers()]);
 	}
 
 	function stopListening() {
@@ -80,7 +94,9 @@ export function usePeerConnection() {
 				alpn: HANDSHAKE_ALPN
 			});
 			knownAddrs.set(parsed.id.id, parsed.addrs);
-			await refreshStatus();
+			// O handshake já persiste esse peer no backend (`save_peer_if_present`) — recarrega
+			// pra ele aparecer na lista de pareados sem esperar o próximo restart do app.
+			await Promise.all([refreshStatus(), loadPairedPeers()]);
 		} finally {
 			connecting = false;
 		}
@@ -117,6 +133,9 @@ export function usePeerConnection() {
 		},
 		get status() {
 			return status;
+		},
+		get pairedPeers() {
+			return pairedPeers;
 		},
 		get connecting() {
 			return connecting;

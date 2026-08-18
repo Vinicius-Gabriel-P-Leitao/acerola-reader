@@ -12,6 +12,7 @@
 
 	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
 	import { useNetworkSync, type TransferLogEntry } from '$lib/hooks/store/use-network-sync.svelte';
+	import type { DeviceInfoPayload } from '$lib/contracts/network/network.payloads';
 	import { useRelaySettings } from '$lib/hooks/preferences/use-relay-settings.svelte';
 	import { NETWORK_COMMANDS } from '$lib/contracts/network/network.commands';
 	import { NETWORK_EVENTS } from '$lib/contracts/network/network.events';
@@ -99,11 +100,23 @@
 			});
 	});
 
-	const uniquePeers = $derived(
-		peers.status
-			? [...new Map(peers.status.peers.map((peer) => [peer.peerId, peer])).values()]
-			: []
-	);
+	type DisplayPeer = { peerId: string; device: DeviceInfoPayload | null };
+
+	// Une os pareados persistidos (sobrevivem a restart, mas sem `DeviceInfo` — a conexão do
+	// protocolo em si dura só segundos, ver `NetworkServiceApi::paired_peers`) com os
+	// conectados agora (`network:status`, tem nome/OS quando disponível). Sem os pareados,
+	// o botão de sync só existiria no instante exato em que o peer está conectado — quase
+	// nunca, já que a conexão fecha assim que a troca termina.
+	const uniquePeers = $derived.by(() => {
+		const byId = new Map<string, DisplayPeer>();
+		for (const peer of peers.pairedPeers) {
+			byId.set(peer.peerId, { peerId: peer.peerId, device: null });
+		}
+		for (const peer of peers.status?.peers ?? []) {
+			byId.set(peer.peerId, { peerId: peer.peerId, device: peer.device });
+		}
+		return [...byId.values()];
+	});
 
 	async function copyCode() {
 		const code = peers.connectionCode();

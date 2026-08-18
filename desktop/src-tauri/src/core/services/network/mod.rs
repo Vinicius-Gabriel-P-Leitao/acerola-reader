@@ -5,6 +5,7 @@ use acerola_p2p::api::{
     identity::DeviceInfo,
     network::NetworkMode,
     peer::{PeerAddr, PeerIdentity},
+    storage::P2PStorage,
     AcerolaP2p,
 };
 use async_trait::async_trait;
@@ -17,6 +18,12 @@ pub trait NetworkServiceApi: Send + Sync + 'static {
     fn local_addr(&self) -> Result<PeerAddr, String>;
     fn local_device_info(&self) -> Result<DeviceInfo, String>;
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String>;
+    /// Todo peer já pareado (TOFU) alguma vez, com o último endereço conhecido — persiste
+    /// entre reinícios e independe de conexão ativa agora, diferente de
+    /// [`NetworkServiceApi::connected_peers_with_info`] (sessão de protocolo, dura só
+    /// segundos). É essa lista que deve alimentar "disparar sync com X" na UI, já que o peer
+    /// quase nunca está conectado no exato instante em que o usuário clica o botão.
+    async fn paired_peers(&self) -> Result<Vec<PeerAddr>, String>;
     async fn switch_to_local(&self) -> Result<(), String>;
     async fn switch_to_relay(&self) -> Result<(), String>;
     async fn mode(&self) -> Result<NetworkMode, String>;
@@ -26,11 +33,15 @@ pub trait NetworkServiceApi: Send + Sync + 'static {
 
 pub struct NetworkService {
     node: Arc<AcerolaP2p>,
+    /// Mesmo storage passado ao builder (`.storage(...)`) — clonado antes por
+    /// `bios::network::setup_network` pra sobreviver aqui como fonte de "peers pareados"
+    /// persistidos, já que a lib não devolve o storage de volta depois do `build()`.
+    storage: Arc<dyn P2PStorage>,
 }
 
 impl NetworkService {
-    pub fn new(node: Arc<AcerolaP2p>) -> Self {
-        Self { node }
+    pub fn new(node: Arc<AcerolaP2p>, storage: Arc<dyn P2PStorage>) -> Self {
+        Self { node, storage }
     }
 }
 
@@ -54,6 +65,10 @@ impl NetworkServiceApi for NetworkService {
 
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String> {
         Ok(self.node.connected_peers_with_info().await)
+    }
+
+    async fn paired_peers(&self) -> Result<Vec<PeerAddr>, String> {
+        self.storage.load_peers().await.map_err(|err| err.to_string())
     }
 
     async fn switch_to_local(&self) -> Result<(), String> {

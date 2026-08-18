@@ -33,12 +33,26 @@ impl SecureTrustedStore {
         })
     }
 
+    /// Diferente da versão anterior, decrypt/parse falhando vira `Err` — não pode virar
+    /// "conjunto vazio" em silêncio, porque `insert` reescreve o arquivo inteiro com o que
+    /// estiver em memória: um cache vazio por engano apaga toda a lista de confiança (TOFU)
+    /// anterior assim que o próximo peer conhecido reconectar.
     fn read_set(path: &std::path::Path, master_key: &[u8; 32]) -> std::io::Result<HashSet<String>> {
         match std::fs::read(path) {
-            Ok(encrypted) => Ok(decrypt(master_key, &encrypted)
-                .ok()
-                .and_then(|json| serde_json::from_slice(&json).ok())
-                .unwrap_or_default()),
+            Ok(encrypted) => {
+                let json = decrypt(master_key, &encrypted).map_err(|err| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!("failed to decrypt {} (wrong master key or corrupted file): {err}", path.display()),
+                    )
+                })?;
+                serde_json::from_slice(&json).map_err(|err| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!("failed to parse {}: {err}", path.display()),
+                    )
+                })
+            },
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(HashSet::new()),
             Err(err) => Err(err),
         }
@@ -103,5 +117,22 @@ mod tests {
         store.insert("peer-x").await;
         store.insert("peer-x").await;
         assert!(store.contains("peer-x").await);
+    }
+
+    #[tokio::test]
+    async fn reopen_with_wrong_key_fails_loudly_instead_of_silently_dropping_trust() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = SecureTrustedStore::open(dir.path(), [1u8; 32]).unwrap();
+        store.insert("trusted-peer").await;
+
+        // Regressão: chave errada (keyring resolveu outra chave nessa execução) tinha que
+        // falhar aqui, não abrir com uma lista de confiança vazia como se ninguém nunca
+        // tivesse sido aprovado — TOFU voltaria a "confiar automaticamente" em qualquer um
+        // de novo, e o próximo `insert` apagaria a lista antiga do disco.
+        let reopen_result = SecureTrustedStore::open(dir.path(), [2u8; 32]);
+        assert!(reopen_result.is_err(), "abrir com a chave errada deveria falhar, não degradar em silêncio");
+
+        let reopened_with_correct_key = SecureTrustedStore::open(dir.path(), [1u8; 32]).unwrap();
+        assert!(reopened_with_correct_key.contains("trusted-peer").await);
     }
 }

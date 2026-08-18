@@ -4,7 +4,7 @@ use tauri::{AppHandle, Emitter, Manager, Runtime, State};
 
 use crate::{
     bios::{network::DEFAULT_RELAY_URL, scopes::read_relay_url_override},
-    cmd::events::network::{DeviceInfoPayload, NetworkStatusPayload, RelayInfo},
+    cmd::events::network::{DeviceInfoPayload, NetworkStatusPayload, PairedPeerPayload, RelayInfo},
     core::services::network::NetworkServiceApi,
     data::{
         models::sync::sync_history_log::SyncHistoryLogEntry,
@@ -88,6 +88,16 @@ pub async fn connect_to_peer(
     let peer_addr = PeerAddr { id: peer_identity, addrs };
     service.connect(peer_addr, alpn.into_bytes()).await?;
     Ok(())
+}
+
+/// Todo peer já pareado alguma vez, com o último endereço conhecido — sobrevive a restart e
+/// independe de conexão ativa agora (ver [`NetworkServiceApi::paired_peers`]). É essa lista,
+/// não `get_network_status`, que deve alimentar "disparar sync com X" na UI.
+#[tauri::command]
+pub async fn get_paired_peers(
+    service: State<'_, Arc<dyn NetworkServiceApi>>,
+) -> Result<Vec<PairedPeerPayload>, String> {
+    Ok(service.paired_peers().await?.into_iter().map(PairedPeerPayload::from).collect())
 }
 
 /// Dispara uma sessão de sync de histórico com um peer já pareado. O progresso e a

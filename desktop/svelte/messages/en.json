@@ -639,8 +639,8 @@
         "invalid_code": "Invalid code. Make sure you copied the full code from the other device."
       },
       "peers": {
-        "title": "Connected devices",
-        "empty": "No devices connected yet. Share your code or paste one above to pair.",
+        "title": "Paired devices",
+        "empty": "No devices paired yet. Share your code or paste one above to pair.",
         "sync_history": "Sync history",
         "sync_files": "Sync files",
         "sync_all": "Sync all",

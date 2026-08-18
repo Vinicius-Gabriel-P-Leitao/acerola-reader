@@ -71,6 +71,19 @@ pub struct FileHeader {
     pub checksum: Option<String>,
 }
 
+/// Mensagem enviada no lugar do manifesto quando `FileSyncSessionGuard` já rejeitou a sessão
+/// localmente (peer já tem uma sessão ativa) — schema espelhado no Android
+/// (`protocol/files/model.rs::SessionBusy`), único jeito dos dois lados falarem a mesma coisa
+/// mesmo sem compartilhar código. O campo `error` é o discriminador: nenhuma outra mensagem
+/// do protocolo de arquivos usa essa chave (`FileManifest` usa `comics`, `FileWantList` usa
+/// `wanted`), então quem lê pode detectar isso antes de tentar desserializar como
+/// `FileManifest`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionBusy {
+    pub error: String,
+    pub reason: String,
+}
+
 #[cfg(test)]
 mod wire_contract_tests {
     use super::*;

@@ -5,6 +5,7 @@ export const NETWORK_COMMANDS = {
 	getLocalId: 'get_local_id',
 	getLocalAddr: 'get_local_addr',
 	getLocalDeviceInfo: 'get_local_device_info',
+	getPairedPeers: 'get_paired_peers',
 	getRelayInfo: 'get_relay_info',
 	connectToPeer: 'connect_to_peer',
 	syncHistory: 'sync_history',

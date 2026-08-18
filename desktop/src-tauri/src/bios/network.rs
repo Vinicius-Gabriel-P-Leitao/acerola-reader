@@ -22,11 +22,14 @@ use crate::{
     infra::{
         error::ComicError,
         security::{
-            get_or_create_master_key, p2p_storage::SecureP2pStorage,
-            trusted_store::SecureTrustedStore, MasterKeySource,
+            get_or_create_master_key,
+            p2p_storage::{SecureP2pStorage, SharedP2pStorage},
+            trusted_store::SecureTrustedStore,
+            MasterKeySource,
         },
         sync::protocol::{
             file_handler::{FileSyncInbound, FileSyncOutbound},
+            file_session_guard::FileSyncSessionGuard,
             history_handler::{HistorySyncInbound, HistorySyncOutbound},
             FILE_SYNC_ALPN, HISTORY_SYNC_ALPN,
         },
@@ -103,11 +106,20 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
         app_handle.emit("security:keyring_unavailable", ()).ok();
     }
 
+    // Registrado ANTES de abrir trust/peer storage de propósito: `get_sync_history_log` é
+    // um recurso independente da identidade/confiança P2P (é só o log local de sessões de
+    // sync já ocorridas) — se ele ficasse depois, uma falha real de decrypt em
+    // `trusted.enc`/`peers.enc` (`?` abaixo) derrubaria esse comando também como dano
+    // colateral, mesmo sem relação nenhuma com o motivo real da falha.
+    let database_pool = app_handle.state::<sqlx::SqlitePool>().inner().clone();
+    let sync_log_repo = SyncHistoryLogRepository::new(database_pool.clone());
+    app_handle.manage(sync_log_repo.clone());
+
     let trusted_store = Arc::new(
         SecureTrustedStore::open(&app_data_directory, master_key).map_err(ComicError::Io)?,
     );
     let secure_p2p_storage =
-        SecureP2pStorage::open(&app_data_directory, master_key).map_err(ComicError::Io)?;
+        Arc::new(SecureP2pStorage::open(&app_data_directory, master_key).map_err(ComicError::Io)?);
     migrate_plaintext_seed_if_present(&app_data_directory, &secure_p2p_storage).await?;
 
     // O relay próprio (`relay.acerola-comic.com`) é o default; usuários avançados podem
@@ -127,17 +139,16 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
             ComicError::SystemFailure(format!("Failed to read device info: {:?}", device_error))
         })?;
 
-    // Recursos que os protocolos de sync precisam já existem neste ponto: o pool SQLite é
-    // gerenciado por `db::setup_database`, que roda (via block_on) antes desta função ser
-    // disparada em `bios/mod.rs::setup_runtime`.
-    let database_pool = app_handle.state::<sqlx::SqlitePool>().inner().clone();
+    // `database_pool`/`sync_log_repo` já resolvidos mais acima, antes da abertura do
+    // trust/peer storage.
     let library_root = read_library_path(&app_data_directory)
         .unwrap_or_else(|| app_data_directory.join("library"));
 
     let history_sync_service = HistorySyncService::new(database_pool.clone());
-    let file_sync_service = FileSyncService::new(database_pool.clone(), library_root);
-    let sync_log_repo = SyncHistoryLogRepository::new(database_pool);
-    app_handle.manage(sync_log_repo.clone());
+    let file_sync_service = FileSyncService::new(database_pool, library_root);
+    // Compartilhado entre inbound e outbound: garante que só uma sessão de sync-files por
+    // peer rode por vez, nos dois sentidos (ver `file_session_guard.rs`).
+    let file_sync_session_guard = FileSyncSessionGuard::new();
 
     let p2p_node = match tokio::time::timeout(
         std::time::Duration::from_secs(10),
@@ -146,7 +157,7 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                 TofuGuard::new(Arc::clone(&trusted_store) as Arc<dyn TrustedPeerStore>)
                     .into_validator(),
             )
-            .storage(secure_p2p_storage)
+            .storage(SharedP2pStorage(Arc::clone(&secure_p2p_storage)))
             .inbound(
                 HISTORY_SYNC_ALPN,
                 Arc::new(HistorySyncInbound::new(
@@ -169,6 +180,7 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                     Arc::clone(&event_emitter),
                     file_sync_service.clone(),
                     sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
                 )),
             )
             .outbound(
@@ -177,6 +189,7 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                     Arc::clone(&event_emitter),
                     file_sync_service,
                     sync_log_repo,
+                    file_sync_session_guard,
                 )),
             )
             .build(),
@@ -203,7 +216,7 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
     };
 
     let network_service: Arc<dyn NetworkServiceApi> =
-        Arc::new(NetworkService::new(Arc::new(p2p_node)));
+        Arc::new(NetworkService::new(Arc::new(p2p_node), secure_p2p_storage));
     app_handle.manage(network_service);
 
     tracing::info!("[Bios::Network] P2P network service initialized successfully");

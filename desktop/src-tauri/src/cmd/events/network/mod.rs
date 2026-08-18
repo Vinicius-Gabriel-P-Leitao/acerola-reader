@@ -59,6 +59,22 @@ impl NetworkStatusPayload {
     }
 }
 
+/// Peer já pareado (TOFU) alguma vez, com o último endereço conhecido pra disparar `connect`
+/// — não carrega `DeviceInfo` (esse só existe pra sessões conectadas agora, ver
+/// `ConnectedPeerPayload`); o frontend cai pro id truncado quando o peer não está conectado.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PairedPeerPayload {
+    pub peer_id: String,
+    pub addrs: Vec<u8>,
+}
+
+impl From<peer::PeerAddr> for PairedPeerPayload {
+    fn from(addr: peer::PeerAddr) -> Self {
+        Self { peer_id: addr.id.id, addrs: addr.addrs }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RelayInfo {
