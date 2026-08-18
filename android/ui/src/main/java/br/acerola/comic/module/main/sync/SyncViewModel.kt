@@ -237,11 +237,21 @@ class SyncViewModel
             _uiState.update { it.copy(syncingKeys = it.syncingKeys - key) }
         }
 
+        /**
+         * [refreshLocalInfo] faz 5 chamadas síncronas bloqueantes pro Rust (`runtime.block_on`
+         * do lado nativo — ver comentário lá) — disparar isso incondicionalmente pra TODO
+         * evento (inclusive `network:latency`, que chega periodicamente e cai em
+         * `P2pEvent.Unknown`) competia pelo mesmo runtime Tokio compartilhado que uma sessão de
+         * sync-files ativa precisa pra progredir. Só chamamos explicitamente nos eventos que de
+         * fato mudam o que essa função busca (peer pareado/conectado, sessão terminada).
+         */
         private suspend fun handleEvent(event: P2pEvent) {
             when (event) {
                 is P2pEvent.PeerTrustedFirstTime -> {
                     _uiState.update { it.copy(trustedPeerDialogPeerId = event.peerId) }
+                    refreshLocalInfo()
                 }
+                is P2pEvent.HandshakeCompleted -> refreshLocalInfo()
 
                 is P2pEvent.HistorySyncStarted ->
                     pushLog(SYNC_KIND_HISTORY, "started", LogState.IN_PROGRESS)
@@ -249,11 +259,13 @@ class SyncViewModel
                     clearSyncing(event.peerId, SYNC_KIND_HISTORY)
                     recordSyncResult(event.peerId, SYNC_KIND_HISTORY, "complete", null)
                     pushLog(SYNC_KIND_HISTORY, "complete", LogState.SUCCESS)
+                    refreshLocalInfo()
                 }
                 is P2pEvent.HistorySyncError -> {
                     clearSyncing(event.peerId, SYNC_KIND_HISTORY)
                     recordSyncResult(event.peerId, SYNC_KIND_HISTORY, "error", event.message)
                     pushLog(SYNC_KIND_HISTORY, "error", LogState.ERROR, message = event.message)
+                    refreshLocalInfo()
                 }
 
                 is P2pEvent.FileSyncManifestExchanged ->
@@ -274,6 +286,7 @@ class SyncViewModel
                     if (event.comicName.isEmpty() && event.chapter.isEmpty()) {
                         clearSyncing(event.peerId, SYNC_KIND_FILES)
                         recordSyncResult(event.peerId, SYNC_KIND_FILES, "error", event.reason)
+                        refreshLocalInfo()
                     }
                     pushLog(
                         SYNC_KIND_FILES,
@@ -287,14 +300,98 @@ class SyncViewModel
                     clearSyncing(event.peerId, SYNC_KIND_FILES)
                     recordSyncResult(event.peerId, SYNC_KIND_FILES, "complete", null)
                     pushLog(SYNC_KIND_FILES, "complete", LogState.SUCCESS)
+                    refreshLocalInfo()
                 }
 
                 else -> Unit
             }
-
-            refreshLocalInfo()
         }
 
+        private fun isSessionStatus(status: String) =
+            status == "started" || status == "progress" || status == "complete" || status == "error"
+
+        private fun isTerminalStatus(status: String) = status == "complete" || status == "error"
+
+        private fun isOpenStatus(status: String) = status == "started" || status == "progress"
+
+        private fun replaceInFlightEntry(
+            log: List<TransferLogEntry>,
+            index: Int,
+            status: String,
+            state: LogState,
+            comicName: String?,
+            chapter: String?,
+            message: String?,
+        ) = log.mapIndexed { position, entry ->
+            if (position != index) {
+                entry
+            } else {
+                entry.copy(
+                    status = status,
+                    state = state,
+                    comicName = comicName ?: entry.comicName,
+                    chapter = chapter ?: entry.chapter,
+                    message = message,
+                    timestamp = System.currentTimeMillis(),
+                )
+            }
+        }
+
+        /** Atualiza a linha em andamento pro `kind` no lugar, em vez de empilhar uma nova. */
+        private fun updateInFlightLog(
+            current: SyncUiState,
+            kind: String,
+            index: Int,
+            status: String,
+            state: LogState,
+            comicName: String?,
+            chapter: String?,
+            message: String?,
+        ): SyncUiState {
+            val updatedLog = replaceInFlightEntry(current.transferLog, index, status, state, comicName, chapter, message)
+            val inFlight =
+                if (isTerminalStatus(status)) current.inFlightLogEntryByKind - kind else current.inFlightLogEntryByKind
+            return current.copy(transferLog = updatedLog, inFlightLogEntryByKind = inFlight)
+        }
+
+        /** Empilha uma linha nova — só chega aqui quando não há sessão em andamento pra `kind`
+         *  (primeiro evento) ou o status não participa da transição (`"chapterFailed"`). */
+        private fun appendNewLog(
+            current: SyncUiState,
+            kind: String,
+            status: String,
+            state: LogState,
+            comicName: String?,
+            chapter: String?,
+            message: String?,
+        ): SyncUiState {
+            val entry =
+                TransferLogEntry(
+                    id = nextLogId.getAndIncrement(),
+                    kind = kind,
+                    status = status,
+                    state = state,
+                    comicName = comicName,
+                    chapter = chapter,
+                    message = message,
+                )
+            val inFlight =
+                if (isOpenStatus(status)) current.inFlightLogEntryByKind + (kind to entry.id) else current.inFlightLogEntryByKind
+            return current.copy(
+                transferLog = (listOf(entry) + current.transferLog).take(MAX_LOG_ENTRIES),
+                inFlightLogEntryByKind = inFlight,
+            )
+        }
+
+        /**
+         * Uma sessão de sync tem UMA linha no log, que transiciona de estado (started ->
+         * progress -> complete/error) em vez de empilhar uma linha nova por evento — sem isso,
+         * "started" ficava pra sempre como uma linha separada com spinner girando ao lado da
+         * linha "complete" que já resolveu a mesma sessão. `"chapterFailed"` (falha de UM
+         * capítulo, não da sessão inteira — ver comentário em `handleEvent`) fica de fora dessa
+         * transição de propósito: cada capítulo que falha é seu próprio evento permanente, sem
+         * interromper a linha de progresso agregada da sessão.
+         */
         private fun pushLog(
             kind: String,
             status: String,
@@ -303,18 +400,15 @@ class SyncViewModel
             chapter: String? = null,
             message: String? = null,
         ) {
-            _uiState.update {
-                val entry =
-                    TransferLogEntry(
-                        id = nextLogId.getAndIncrement(),
-                        kind = kind,
-                        status = status,
-                        state = state,
-                        comicName = comicName,
-                        chapter = chapter,
-                        message = message,
-                    )
-                it.copy(transferLog = (listOf(entry) + it.transferLog).take(MAX_LOG_ENTRIES))
+            _uiState.update { current ->
+                val trackedId = current.inFlightLogEntryByKind[kind].takeIf { isSessionStatus(status) }
+                val index = trackedId?.let { id -> current.transferLog.indexOfFirst { it.id == id } }?.takeIf { it >= 0 }
+
+                if (index != null) {
+                    updateInFlightLog(current, kind, index, status, state, comicName, chapter, message)
+                } else {
+                    appendNewLog(current, kind, status, state, comicName, chapter, message)
+                }
             }
         }
 

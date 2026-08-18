@@ -16,6 +16,13 @@ data class SyncUiState(
     val trustedPeerDialogPeerId: String? = null,
     val transferLog: List<TransferLogEntry> = emptyList(),
     /**
+     * `kind` -> id da linha de [transferLog] atualmente em andamento pra esse protocolo
+     * (spinner girando). Permite [TransferLogEntry] transicionar no lugar (started -> progress
+     * -> complete/error) em vez de empilhar uma linha nova por evento, o que deixava a linha
+     * "started" presa pra sempre como se ainda estivesse rodando.
+     */
+    val inFlightLogEntryByKind: Map<String, Long> = emptyMap(),
+    /**
      * `"$peerId:$kind"` keys (kind = "history"/"files") with a sync session in flight —
      * disables that peer/protocol's buttons to avoid firing a second concurrent session for
      * the same (peer, ALPN) pair. Granularity is per kind, not just per peer: "Sync All"
