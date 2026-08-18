@@ -38,3 +38,6 @@ tracing-android = "0.2.0"
 
 [build-dependencies]
 uniffi = {version = "0.28.0", features = ["build"]}
+
+[dev-dependencies]
+blake3 = "1.5"

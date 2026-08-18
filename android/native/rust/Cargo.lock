@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "acerola-p2p"
 version = "0.0.5"
-source = "git+https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git?branch=main#f3df6629819af28c819b861db4835f48181cd496"
+source = "git+https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git?branch=main#5a95be1f7bb5d9af62f8b8639024b5b3cb69708a"
 dependencies = [
  "async-trait",
  "blake3",
@@ -34,6 +34,7 @@ version = "0.0.1"
 dependencies = [
  "acerola-p2p",
  "async-trait",
+ "blake3",
  "futures",
  "jni 0.21.1",
  "ndk-context",

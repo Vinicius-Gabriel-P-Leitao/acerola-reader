@@ -17,7 +17,7 @@ use crate::{
     callbacks::{FileSyncProvider, HistorySyncProvider, SecureBlobStore},
     mode::FfiNetworkMode,
     protocol::{
-        files::{FileSyncInbound, FileSyncOutbound, FILE_SYNC_ALPN},
+        files::{FileSyncInbound, FileSyncOutbound, FileSyncSessionGuard, FILE_SYNC_ALPN},
         history::{HistorySyncInbound, HistorySyncOutbound, HISTORY_SYNC_ALPN},
     },
     singleton::TOKIO_RUNTIME,
@@ -95,6 +95,7 @@ impl P2PNode {
             let trust_store = Arc::clone(&trust_store);
             let storage_for_builder = Arc::clone(&storage);
             let emit_for_handlers = Arc::clone(&emit);
+            let file_sync_guard = Arc::new(FileSyncSessionGuard::default());
             runtime.block_on(async move {
                 let transport = IrohTransportBuilder::default()
                     .relay(relay_url.as_deref().unwrap_or(DEFAULT_RELAY_URL));
@@ -126,9 +127,16 @@ impl P2PNode {
                         )
                         .inbound(
                             FILE_SYNC_ALPN,
-                            Arc::new(FileSyncInbound::new(Arc::clone(&emit_for_handlers), Arc::clone(&file_provider))),
+                            Arc::new(FileSyncInbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                Arc::clone(&file_provider),
+                                Arc::clone(&file_sync_guard),
+                            )),
                         )
-                        .outbound(FILE_SYNC_ALPN, Arc::new(FileSyncOutbound::new(emit_for_handlers, file_provider)))
+                        .outbound(
+                            FILE_SYNC_ALPN,
+                            Arc::new(FileSyncOutbound::new(emit_for_handlers, file_provider, file_sync_guard)),
+                        )
                         .build()
                         .await
                         .expect("Failed to start P2P node"),

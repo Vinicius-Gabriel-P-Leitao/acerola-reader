@@ -44,6 +44,18 @@ pub(crate) struct FileHeader {
     pub checksum: Option<String>,
 }
 
+/// Mensagem enviada no lugar do manifesto quando o `FileSyncSessionGuard` já rejeitou a
+/// sessão localmente (peer já tem uma sessão ativa) — schema espelhado no Desktop
+/// (`file_handler.rs`), único jeito dos dois lados falarem a mesma coisa mesmo sem
+/// compartilhar código. O campo `error` é o discriminador: nenhuma outra mensagem do
+/// protocolo usa essa chave (`FileManifest` usa `comics`, `FileWantList` usa `wanted`), então
+/// quem lê pode detectar isso antes de tentar desserializar como `FileManifest`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct SessionBusy {
+    pub error: String,
+    pub reason: String,
+}
+
 #[derive(Debug, Clone, Default)]
 pub(crate) struct FileSyncStats {
     pub received_count: u32,
