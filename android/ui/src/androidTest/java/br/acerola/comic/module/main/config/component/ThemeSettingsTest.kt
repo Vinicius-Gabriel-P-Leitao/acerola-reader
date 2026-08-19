@@ -20,7 +20,7 @@ class ThemeSettingsTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun deve_exibir_lista_de_temas_e_permitir_selecao() {
+    fun should_display_theme_list_and_allow_selection() {
         var selectedTheme: AppTheme? = null
 
         composeTestRule.setContent {

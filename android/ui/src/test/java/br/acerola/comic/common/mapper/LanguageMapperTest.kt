@@ -6,20 +6,20 @@ import org.junit.Test
 
 class LanguageMapperTest {
     @Test
-    fun `deve retornar o recurso de string correto para cada codigo de idioma`() {
+    fun `should return correct string resource for each language code`() {
         assertThat(LanguageMapper.getLabelRes("pt-br")).isEqualTo(R.string.lang_pt_br)
         assertThat(LanguageMapper.getLabelRes("en")).isEqualTo(R.string.lang_en)
         assertThat(LanguageMapper.getLabelRes("ja")).isEqualTo(R.string.lang_ja)
     }
 
     @Test
-    fun `deve retornar desconhecido quando o codigo de idioma for invalido ou nulo`() {
+    fun `should return unknown when language code is invalid or null`() {
         assertThat(LanguageMapper.getLabelRes("invalid")).isEqualTo(R.string.comic_header_unknown)
         assertThat(LanguageMapper.getLabelRes("")).isEqualTo(R.string.comic_header_unknown)
     }
 
     @Test
-    fun `deve retornar todos os codigos de idiomas suportados`() {
+    fun `should return all supported language codes`() {
         val codes = LanguageMapper.getAllCodes()
         assertThat(codes).contains("pt-br")
         assertThat(codes).contains("en")

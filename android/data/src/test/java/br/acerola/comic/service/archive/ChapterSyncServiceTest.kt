@@ -67,7 +67,7 @@ class ChapterSyncServiceTest {
     }
 
     @Test
-    fun `sync deve deletar capitulos antigos e inserir novos corretamente`() =
+    fun `sync should delete old chapters and insert new ones correctly`() =
         runTest {
             val comicId = 1L
             val file = FastFileMetadata("id", 100L, "cap1.cbz", "mime", 1000L)
@@ -109,7 +109,7 @@ class ChapterSyncServiceTest {
         }
 
     @Test
-    fun `sync deve ignorar capitulos duplicados baseados no sort`() =
+    fun `sync should ignore duplicate chapters based on sort`() =
         runTest {
             val comicId = 1L
             val file1 = FastFileMetadata("id1", 100L, "cap1.cbz", "mime", 1000L)

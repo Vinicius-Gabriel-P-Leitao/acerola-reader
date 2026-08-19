@@ -26,7 +26,7 @@ class UpdateComicSettingsUseCaseTest {
 
     // Caminho feliz — sync externo habilitado
     @Test
-    fun `invoke deve retornar sucesso e chamar gateway exatamente uma vez ao habilitar sync`() =
+    fun `invoke should return success and call gateway exactly once when enabling sync`() =
         runTest {
             coEvery { gateway.updateMangaSettings(any(), any()) } returns Either.Right(Unit)
 
@@ -38,7 +38,7 @@ class UpdateComicSettingsUseCaseTest {
 
     // Caminho feliz — sync externo desabilitado
     @Test
-    fun `invoke deve retornar sucesso e chamar gateway exatamente uma vez ao desabilitar sync`() =
+    fun `invoke should return success and call gateway exactly once when disabling sync`() =
         runTest {
             coEvery { gateway.updateMangaSettings(any(), any()) } returns Either.Right(Unit)
 
@@ -50,7 +50,7 @@ class UpdateComicSettingsUseCaseTest {
 
     // Erro de banco de dados → retorna Left sem lançar exceção
     @Test
-    fun `invoke deve retornar erro tipado quando gateway falha sem lançar exceção`() =
+    fun `invoke should return typed error when gateway fails without throwing exception`() =
         runTest {
             coEvery { gateway.updateMangaSettings(any(), any()) } returns
                 Either.Left(LibrarySyncError.DatabaseError())

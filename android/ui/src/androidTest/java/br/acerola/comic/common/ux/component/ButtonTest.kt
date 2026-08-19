@@ -17,42 +17,42 @@ class ButtonTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_renderizar_botao_com_label_e_executar_clique() {
+    fun should_render_button_with_label_and_execute_click() {
         var clicked = false
         composeTestRule.setContent {
             Acerola.Component.Button(
-                text = "Clique Aqui",
+                text = "Click Here",
                 onClick = { clicked = true },
             )
         }
 
-        composeTestRule.onNodeWithText("Clique Aqui").assertIsDisplayed().performClick()
+        composeTestRule.onNodeWithText("Click Here").assertIsDisplayed().performClick()
         assert(clicked)
     }
 
     @Test
-    fun deve_renderizar_icon_button_com_content_description() {
+    fun should_render_icon_button_with_content_description() {
         composeTestRule.setContent {
             Acerola.Component.IconButton(
                 onClick = {},
-                icon = { Icon(Icons.Default.Add, contentDescription = "Adicionar") },
+                icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Adicionar").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Add").assertIsDisplayed()
     }
 
     @Test
-    fun deve_exibir_icone_e_texto_no_botao_misto() {
+    fun should_display_icon_and_text_in_mixed_button() {
         composeTestRule.setContent {
             Acerola.Component.Button(
-                text = "Salvar",
+                text = "Save",
                 onClick = {},
-                icon = { Icon(Icons.Default.Add, contentDescription = "Icone") },
+                icon = { Icon(Icons.Default.Add, contentDescription = "Icon") },
             )
         }
 
-        composeTestRule.onNodeWithText("Salvar").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Icone").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Save").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Icon").assertIsDisplayed()
     }
 }

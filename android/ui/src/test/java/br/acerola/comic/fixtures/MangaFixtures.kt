@@ -51,7 +51,7 @@ object MangaFixtures {
 
     fun createChapterFileDto(
         id: Long = 1L,
-        name: String = "Capítulo 1",
+        name: String = "Chapter 1",
         path: String = "/path/to/cap1",
         chapterSort: String = "0001",
     ) = ChapterFileDto(
@@ -65,7 +65,7 @@ object MangaFixtures {
         (1..count).map {
             createChapterFileDto(
                 id = it.toLong(),
-                name = "Capítulo $it",
+                name = "Chapter $it",
                 chapterSort = it.toString().padStart(4, '0'),
             )
         }

@@ -13,7 +13,7 @@ class SelectComicDirectoryTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_configuracao_de_selecao_de_pasta_de_quadrinhos() {
+    fun should_display_comic_directory_selection_configuration() {
         composeTestRule.setContent {
             Main.Config.Component.SelectComicDirectory(
                 folderName = "Downloads/Manga",

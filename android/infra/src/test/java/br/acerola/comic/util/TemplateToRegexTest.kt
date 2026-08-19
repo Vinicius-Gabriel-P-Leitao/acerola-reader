@@ -18,7 +18,7 @@ class TemplateToRegexTest {
         )
 
     @Test
-    fun `deve converter um padrao de template para regex corretamente`() {
+    fun `should convert template pattern to regex correctly`() {
         val template = "Cap. {chapter}{decimal}*{extension}"
         val regex = templateToRegex(template)
 
@@ -28,7 +28,7 @@ class TemplateToRegexTest {
     }
 
     @Test
-    fun `deve lidar com caracteres especiais escapados na regex`() {
+    fun `should handle escaped special characters in regex`() {
         val template = "[{chapter}] * .{extension}"
         val regex = templateToRegex(template)
 
@@ -39,7 +39,7 @@ class TemplateToRegexTest {
     }
 
     @Test
-    fun `deve evitar erros de sintaxe com variacoes de asterisco e ponto`() {
+    fun `should avoid syntax errors with asterisk and dot variations`() {
         // Valida que o erro de .*?? nao ocorre mais
         val template1 = "Ch. {chapter}.*.{extension}"
         val regex1 = templateToRegex(template1)
@@ -51,7 +51,7 @@ class TemplateToRegexTest {
     }
 
     @Test
-    fun `detectArchiveTemplate deve identificar corretamente o melhor preset`() {
+    fun `detectArchiveTemplate should identify best preset correctly`() {
         val fallback = "{chapter}{decimal}.*.{extension}"
 
         val preset = detectArchiveTemplate("Cap. 01 - O Início.cbz", chapterTemplates, fallback)

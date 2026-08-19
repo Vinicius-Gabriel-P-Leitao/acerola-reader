@@ -10,7 +10,7 @@ class ScrimTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_renderizar_scrim_sem_falhas() {
+    fun should_render_scrim_without_errors() {
         composeTestRule.setContent {
             Acerola.Component.Scrim()
         }

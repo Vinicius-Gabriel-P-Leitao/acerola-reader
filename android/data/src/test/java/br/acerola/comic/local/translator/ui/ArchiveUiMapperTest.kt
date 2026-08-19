@@ -8,7 +8,7 @@ import org.junit.Test
 
 class ArchiveUiMapperTest {
     @Test
-    fun `toCombinedRegularDto deve fatiar lista de capitulos locais por pagina`() {
+    fun `toCombinedRegularDto should slice local chapters list by page`() {
         val localChapters =
             listOf(
                 ChapterFileDto(id = 1, name = "Ch 1", path = "", chapterSort = "1"),

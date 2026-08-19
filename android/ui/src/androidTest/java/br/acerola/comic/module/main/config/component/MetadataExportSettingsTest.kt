@@ -17,7 +17,7 @@ class MetadataExportSettingsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `MetadataExportSettings_deve_exibir_switch_de_geracao_de_ComicInfo`() {
+    fun `MetadataExportSettings_should_display_ComicInfo_generation_switch`() {
         var checked = true
         composeTestRule.setContent {
             AcerolaTheme {

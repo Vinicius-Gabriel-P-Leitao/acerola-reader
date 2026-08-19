@@ -14,7 +14,7 @@ class ComicCategorySelectorTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_categorias_disponiveis_como_chips() {
+    fun should_display_available_categories_as_chips() {
         val categories =
             listOf(
                 CategoryDto(1L, "Shonen", 0xFF0000),
@@ -34,9 +34,9 @@ class ComicCategorySelectorTest {
     }
 
     @Test
-    fun deve_chamar_callback_ao_selecionar_uma_categoria() {
+    fun should_call_callback_when_selecting_a_category() {
         var selectedId: Long? = -1L
-        val categories = listOf(CategoryDto(10L, "Teste", 0xFFFFFF))
+        val categories = listOf(CategoryDto(10L, "Test", 0xFFFFFF))
 
         composeTestRule.setContent {
             Comic.Component.ComicCategorySelector(
@@ -46,7 +46,7 @@ class ComicCategorySelectorTest {
             )
         }
 
-        composeTestRule.onNodeWithText("Teste").performClick()
+        composeTestRule.onNodeWithText("Test").performClick()
         assert(selectedId == 10L)
     }
 }

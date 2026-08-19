@@ -8,7 +8,7 @@ class AcerolaTypeConvertersTest {
     private val converter = AcerolaTypeConverters()
 
     @Test
-    fun list_converters_devem_serializar_e_deserializar_corretamente() {
+    fun list_converters_should_serialize_and_deserialize_correctly() {
         val list = listOf("action", "adventure", "comedy")
         val joined = converter.fromStringList(list)
         assertEquals("action,adventure,comedy", joined)
@@ -18,7 +18,7 @@ class AcerolaTypeConvertersTest {
     }
 
     @Test
-    fun type_author_converter_deve_ser_bidirecional() {
+    fun type_author_converter_should_be_bidirectional() {
         val type = TypeAuthor.ARTIST
         val stringValue = converter.fromStatusChat(type)
         assertEquals("artist", stringValue)

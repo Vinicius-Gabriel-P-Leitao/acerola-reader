@@ -62,7 +62,7 @@ class ComicInfoSourceMangaEngineTest {
     }
 
     @Test
-    fun `refreshManga deve buscar info local e salvar no banco`() =
+    fun `refreshManga should fetch local info and save to database`() =
         runTest {
             val comicId = 1L
             val directory = MangaDirectoryFixtures.createMangaDirectory(id = 1L, name = "Local Comic")
@@ -90,7 +90,7 @@ class ComicInfoSourceMangaEngineTest {
 
             val result = repository.refreshManga(comicId)
 
-            assertTrue("Deveria ser sucesso mas foi: $result", result.isRight())
+            assertTrue("Should be success but was: $result", result.isRight())
             coVerify { comicInfoSourceService.searchInfo(eq("Local Comic"), any(), any(), any(), *anyVararg()) }
         }
 }

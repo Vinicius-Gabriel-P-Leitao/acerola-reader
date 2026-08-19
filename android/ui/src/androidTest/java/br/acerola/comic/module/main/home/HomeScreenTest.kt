@@ -45,7 +45,7 @@ class HomeScreenTest {
     }
 
     @Test
-    fun `HomeScreen_deve_exibir_SearchBar_quando_carregada`() {
+    fun `HomeScreen_should_display_SearchBar_when_loaded`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {

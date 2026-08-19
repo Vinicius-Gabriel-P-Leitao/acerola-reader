@@ -13,9 +13,9 @@ class RadioGroupTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `RadioGroup_deve_selecionar_a_opcao_corretamente_ao_clicar`() {
+    fun `RadioGroup_should_select_option_correctly_when_clicked`() {
         var selectedIndex = 0
-        val options = listOf("Opção A", "Opção B", "Opção C")
+        val options = listOf("Option A", "Option B", "Option C")
 
         composeTestRule.setContent {
             AcerolaTheme {
@@ -27,8 +27,8 @@ class RadioGroupTest {
             }
         }
 
-        // Clica na \"Opção B\" (índice 1)
-        composeTestRule.onNodeWithText("Opção B").performClick()
+        // Clica na "Option B" (índice 1)
+        composeTestRule.onNodeWithText("Option B").performClick()
 
         assert(selectedIndex == 1)
     }

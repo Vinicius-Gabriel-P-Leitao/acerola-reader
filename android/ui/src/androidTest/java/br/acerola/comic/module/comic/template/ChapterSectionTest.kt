@@ -21,7 +21,7 @@ class ChapterSectionTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve_exibir_lista_de_capitulos`() {
+    fun `should_display_chapter_list`() {
         val chapters =
             ChapterDto(
                 archive =
@@ -48,7 +48,7 @@ class ChapterSectionTest {
     }
 
     @Test
-    fun `deve_exibir_cards_colapsaveis_por_volume`() {
+    fun `should_display_collapsible_cards_by_volume`() {
         val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
         val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = true)
         val chapters =
@@ -103,7 +103,7 @@ class ChapterSectionTest {
     }
 
     @Test
-    fun `nao_deve_exibir_header_quando_showVolumeHeaders_for_falso`() {
+    fun `should_not_display_header_when_showVolumeHeaders_is_false`() {
         val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
         val chapters =
             ChapterDto(

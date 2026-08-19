@@ -20,13 +20,13 @@ class P2pViewModelTest {
     }
 
     @Test
-    fun `deve retornar id local do use case`() {
+    fun `should return local id from use case`() {
         every { p2pUseCase.getLocalId() } returns "my-id"
         assertThat(viewModel.getLocalId()).isEqualTo("my-id")
     }
 
     @Test
-    fun `deve delegar conexao para o use case`() {
+    fun `should delegate connection to use case`() {
         val peerAddress =
             PeerAddress(
                 id = "peer-1",
@@ -39,19 +39,19 @@ class P2pViewModelTest {
     }
 
     @Test
-    fun `deve alternar para modo local`() {
+    fun `should switch to local mode`() {
         viewModel.switchToLocal()
         verify { p2pUseCase.switchToLocal() }
     }
 
     @Test
-    fun `deve alternar para modo relay`() {
+    fun `should switch to relay mode`() {
         viewModel.switchToRelay()
         verify { p2pUseCase.switchToRelay() }
     }
 
     @Test
-    fun `deve retornar modo atual`() {
+    fun `should return current mode`() {
         every { p2pUseCase.getMode() } returns NetworkMode.LOCAL
         assertThat(viewModel.getMode()).isEqualTo(NetworkMode.LOCAL)
     }

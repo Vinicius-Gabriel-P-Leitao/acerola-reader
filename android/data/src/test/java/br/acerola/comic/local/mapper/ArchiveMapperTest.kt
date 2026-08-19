@@ -31,7 +31,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `MangaDirectory toViewDto deve mapear todos os campos corretamente`() {
+    fun `MangaDirectory toViewDto should map all fields correctly`() {
         val entity =
             MangaDirectoryFixtures.createMangaDirectory(
                 cover = "content://cover",
@@ -49,7 +49,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `MangaDirectory toViewDto deve tratar campos nulos`() {
+    fun `MangaDirectory toViewDto should handle null fields`() {
         val entity = MangaDirectoryFixtures.createMangaDirectory(cover = null, banner = null)
 
         val dto = entity.toViewDto()
@@ -59,7 +59,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `ChapterArchive toViewDto deve mapear campos corretamente`() {
+    fun `ChapterArchive toViewDto should map fields correctly`() {
         val entity =
             ChapterArchive(
                 id = 1,
@@ -80,7 +80,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `MangaDirectoryDto toEntity deve mapear para entidade`() {
+    fun `MangaDirectoryDto toEntity should map to entity`() {
         val coverUri = mockk<Uri>()
         val bannerUri = mockk<Uri>()
         val dto =
@@ -99,7 +99,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `List ChapterVolumeJoin toChapterPageDto deve criar objeto de paginação correto`() {
+    fun `List ChapterVolumeJoin toChapterPageDto should create correct pagination object`() {
         val list =
             listOf(
                 ChapterVolumeJoin(
@@ -137,7 +137,7 @@ class ArchiveMapperTest {
     }
 
     @Test
-    fun `DocumentFile toMangaDirectoryEntity deve mapear metadados do arquivo`() {
+    fun `DocumentFile toMangaDirectoryEntity should map file metadata`() {
         val folder = mockk<DocumentFile>()
         val cover = mockk<DocumentFile>()
         val banner = mockk<DocumentFile>()

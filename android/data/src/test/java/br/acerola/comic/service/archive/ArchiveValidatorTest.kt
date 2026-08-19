@@ -14,7 +14,7 @@ class ArchiveValidatorTest {
     }
 
     @Test
-    fun `isPdfConversionEligible deve retornar verdadeiro se o CBZ de destino nao existir e corresponder ao regex`() {
+    fun `isPdfConversionEligible should return true if target CBZ does not exist and matches regex`() {
         val targetCbzName = "Chapter 01.cbz"
         val existingNames = setOf("Chapter 01.pdf")
         val chapterRegex = Regex("Chapter \\d+\\.cbz")
@@ -23,7 +23,7 @@ class ArchiveValidatorTest {
     }
 
     @Test
-    fun `isPdfConversionEligible deve retornar falso se o CBZ de destino ja existir`() {
+    fun `isPdfConversionEligible should return false if target CBZ already exists`() {
         val targetCbzName = "Chapter 01.cbz"
         val existingNames = setOf("Chapter 01.cbz", "Chapter 01.pdf")
         val chapterRegex = Regex("Chapter \\d+\\.cbz")
@@ -32,7 +32,7 @@ class ArchiveValidatorTest {
     }
 
     @Test
-    fun `isPdfConversionEligible deve retornar falso se o CBZ de destino nao corresponder ao regex`() {
+    fun `isPdfConversionEligible should return false if target CBZ does not match regex`() {
         val targetCbzName = "Random File.cbz"
         val existingNames = setOf("Random File.pdf")
         val chapterRegex = Regex("Chapter \\d+\\.cbz")
@@ -41,7 +41,7 @@ class ArchiveValidatorTest {
     }
 
     @Test
-    fun `isDuplicateSort deve retornar verdadeiro se o sort normalizado ja foi processado`() {
+    fun `isDuplicateSort should return true if normalized sort was already processed`() {
         val processedSorts = setOf("1", "2")
         val normalizedSort = "1"
 
@@ -49,7 +49,7 @@ class ArchiveValidatorTest {
     }
 
     @Test
-    fun `isDuplicateSort deve retornar falso se o sort normalizado nao foi processado`() {
+    fun `isDuplicateSort should return false if normalized sort was not processed`() {
         val processedSorts = setOf("1", "2")
         val normalizedSort = "3"
 

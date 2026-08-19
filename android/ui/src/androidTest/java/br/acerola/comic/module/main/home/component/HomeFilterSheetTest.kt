@@ -17,7 +17,7 @@ class HomeFilterSheetTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_folha_de_filtros_e_secoes_principais() {
+    fun should_display_filter_sheet_and_main_sections() {
         val sortSettings = HomeSortPreference(ComicSortType.TITLE, SortDirection.ASCENDING)
         val filterSettings = FilterSettings()
 
@@ -40,7 +40,7 @@ class HomeFilterSheetTest {
     }
 
     @Test
-    fun deve_exibir_opcoes_de_ordenacao_de_quadrinhos() {
+    fun should_display_comic_sorting_options() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Main.Home.Component.HomeFilterSheet(

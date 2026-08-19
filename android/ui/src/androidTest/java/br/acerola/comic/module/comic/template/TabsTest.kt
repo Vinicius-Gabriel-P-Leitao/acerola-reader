@@ -15,7 +15,7 @@ class TabsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `MangaTabs_deve_exibir_o_número_total_de_capítulos_na_tab_correspondente`() {
+    fun `ComicTabs_should_display_total_number_of_chapters_in_corresponding_tab`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Template.Tabs(
@@ -32,7 +32,7 @@ class TabsTest {
     }
 
     @Test
-    fun `MangaTabs_deve_chamar_onTabSelected_ao_clicar_em_uma_aba`() {
+    fun `ComicTabs_should_call_onTabSelected_when_clicking_a_tab`() {
         var selectedTab: MainTab? = null
         composeTestRule.setContent {
             AcerolaTheme {

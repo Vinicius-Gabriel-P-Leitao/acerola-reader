@@ -101,7 +101,7 @@ class MangadexSourceMangaEngineTest {
     }
 
     @Test
-    fun `refreshManga deve buscar metadados e atualizar se encontrar match`() =
+    fun `refreshManga should fetch metadata and update if match is found`() =
         runTest {
             val comicId = 1L
             val dir = MangaDirectoryFixtures.createMangaDirectory(id = comicId, name = "Berserk")
@@ -134,7 +134,7 @@ class MangadexSourceMangaEngineTest {
 
             val result = repository.refreshManga(comicId)
 
-            assertTrue("Refresh falhou: $result", result.isRight())
+            assertTrue("Refresh failed: $result", result.isRight())
             coVerify { mangadexMangaInfoService.searchInfo(any(), any(), any(), any(), *anyVararg()) }
         }
 }

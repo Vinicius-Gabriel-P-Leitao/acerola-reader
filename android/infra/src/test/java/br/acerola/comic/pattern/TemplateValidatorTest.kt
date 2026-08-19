@@ -10,21 +10,21 @@ import org.junit.Test
 
 class TemplateValidatorTest {
     @Test
-    fun `deve validar com sucesso um padrao perfeito de capitulo`() {
+    fun `should validate successfully a perfect chapter pattern`() {
         val input = "Cap. {chapter}{decimal} - {extension}"
         val result = TemplateValidator.validateCustomTemplate(input, SortType.CHAPTER)
         assertTrue(result.isRight())
     }
 
     @Test
-    fun `deve validar com sucesso um padrao perfeito de volume`() {
+    fun `should validate successfully a perfect volume pattern`() {
         val input = "Vol. {volume} - {extension}"
         val result = TemplateValidator.validateCustomTemplate(input, SortType.VOLUME)
         assertTrue(result.isRight())
     }
 
     @Test
-    fun `deve falhar se nao houver macro chapter no modo capitulo`() {
+    fun `should fail if there is no chapter macro in chapter mode`() {
         val input = "Cap. {decimal} - {extension}"
         val result = TemplateValidator.validateCustomTemplate(input, SortType.CHAPTER)
 
@@ -35,7 +35,7 @@ class TemplateValidatorTest {
     }
 
     @Test
-    fun `deve falhar se nao houver macro volume no modo volume`() {
+    fun `should fail if there is no volume macro in volume mode`() {
         val input = "Vol. {extension}"
         val result = TemplateValidator.validateCustomTemplate(input, SortType.VOLUME)
 
@@ -46,7 +46,7 @@ class TemplateValidatorTest {
     }
 
     @Test
-    fun `deve falhar se houver chapter no modo volume`() {
+    fun `should fail if there is chapter in volume mode`() {
         // Agora chapter no modo volume deve falhar pois volume é o obrigatório
         val input = "Vol. {chapter} - {extension}"
         val result = TemplateValidator.validateCustomTemplate(input, SortType.VOLUME)
@@ -58,7 +58,7 @@ class TemplateValidatorTest {
     }
 
     @Test
-    fun `deve falhar se houver mais de um sub`() {
+    fun `should fail if there is more than one decimal`() {
         val input = "{chapter}{decimal}{decimal}{extension}"
         val result = TemplateValidator.validateCustomTemplate(input, SortType.CHAPTER)
 
@@ -69,7 +69,7 @@ class TemplateValidatorTest {
     }
 
     @Test
-    fun `deve falhar se a extensao nao for a ultima macro ou estiver ausente`() {
+    fun `should fail if extension is not the last macro or is absent`() {
         val input = "{chapter}{decimal}"
         val result1 = TemplateValidator.validateCustomTemplate(input, SortType.CHAPTER)
 
@@ -88,7 +88,7 @@ class TemplateValidatorTest {
     }
 
     @Test
-    fun `deve falhar se a ordem estiver incorreta`() {
+    fun `should fail if order is incorrect`() {
         val wrongSub = "{decimal}{chapter}{extension}"
         val res1 = TemplateValidator.validateCustomTemplate(wrongSub, SortType.CHAPTER)
         assertTrue(res1.isLeft())
@@ -101,7 +101,7 @@ class TemplateValidatorTest {
     }
 
     @Test
-    fun `deve falhar com macros malformadas ou invalidas`() {
+    fun `should fail with malformed or invalid macros`() {
         val malformed = "{value"
         val res1 = TemplateValidator.validateCustomTemplate(malformed, SortType.CHAPTER)
         assertTrue(res1.isLeft())

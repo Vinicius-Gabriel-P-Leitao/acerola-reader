@@ -31,7 +31,7 @@ class HistoryScreenTest {
     }
 
     @Test
-    fun `HistoryScreen_deve_exibir_estado_vazio_quando_sem_historico`() {
+    fun `HistoryScreen_should_display_empty_state_when_no_history`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {

@@ -20,25 +20,25 @@ class LanguagePickerTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun deve_abrir_o_seletor_de_idiomas_ao_clicar_no_gatilho() {
+    fun should_open_language_selector_when_clicking_trigger() {
         composeTestRule.setContent {
             Acerola.Component.LanguagePicker(
                 selectedLanguage = "pt-br",
                 onLanguageSelected = {},
                 trigger = { onClick ->
-                    Text("Selecionar Idioma", modifier = Modifier.clickable { onClick() })
+                    Text("Select Language", modifier = Modifier.clickable { onClick() })
                 },
             )
         }
 
-        composeTestRule.onNodeWithText("Selecionar Idioma").performClick()
+        composeTestRule.onNodeWithText("Select Language").performClick()
 
         composeTestRule.onNodeWithText(context.getString(R.string.lang_pt_br)).assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.lang_en)).assertIsDisplayed()
     }
 
     @Test
-    fun deve_chamar_o_callback_ao_selecionar_um_novo_idioma() {
+    fun should_call_callback_when_selecting_new_language() {
         var selected: String? = null
         composeTestRule.setContent {
             Acerola.Component.LanguagePicker(

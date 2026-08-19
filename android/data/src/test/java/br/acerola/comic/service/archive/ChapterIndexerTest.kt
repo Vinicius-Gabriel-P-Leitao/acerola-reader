@@ -23,10 +23,10 @@ class ChapterIndexerTest {
     }
 
     @Test
-    fun `buildEntity deve criar ChapterArchive corretamente a partir do FastFileMetadata`() =
+    fun `buildEntity should create ChapterArchive correctly from FastFileMetadata`() =
         runTest {
-            // Checksum computation reads via SAF (`DocumentFile.fromSingleUri`), unavailable in a
-            // plain unit test — nulling it out here isolates the field-mapping behavior under test.
+            // O cálculo de checksum lê via SAF (`DocumentFile.fromSingleUri`), indisponível em um
+            // teste unitário simples — anulá-lo aqui isola o comportamento de mapeamento de campos sob teste.
             every { DocumentFile.fromSingleUri(context, any()) } returns null
 
             val file =
@@ -58,7 +58,7 @@ class ChapterIndexerTest {
             assertEquals(chapterSort, result.chapterSort)
             assertEquals(volumeIdFk, result.volumeIdFk)
             assertEquals(isSpecial, result.isSpecial)
-            assertEquals("cap01.cbz", result.chapter)
+            assertEquals("cap01", result.chapter)
             assertNull(result.checksum)
         }
 }

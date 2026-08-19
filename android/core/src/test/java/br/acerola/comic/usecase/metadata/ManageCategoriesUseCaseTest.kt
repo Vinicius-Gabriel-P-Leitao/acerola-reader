@@ -29,7 +29,7 @@ class ManageCategoriesUseCaseTest {
 
     // getAllCategories — observa lista
     @Test
-    fun `getAllCategories deve retornar o fluxo do manager exatamente uma vez`() =
+    fun `getAllCategories should return manager flow exactly once`() =
         runTest {
             val categories = listOf(mockk<CategoryDto>())
             every { categoryManager.getAllCategories() } returns MutableStateFlow(categories)
@@ -42,7 +42,7 @@ class ManageCategoriesUseCaseTest {
 
     // createCategory — delega ao manager
     @Test
-    fun `createCategory deve chamar o manager exatamente uma vez`() =
+    fun `createCategory should call manager exactly once`() =
         runTest {
             coJustRun { categoryManager.createCategory(any(), any()) }
 
@@ -53,7 +53,7 @@ class ManageCategoriesUseCaseTest {
 
     // deleteCategory — delega ao manager
     @Test
-    fun `deleteCategory deve chamar o manager exatamente uma vez`() =
+    fun `deleteCategory should call manager exactly once`() =
         runTest {
             coJustRun { categoryManager.deleteCategory(any()) }
 
@@ -64,7 +64,7 @@ class ManageCategoriesUseCaseTest {
 
     // updateComicCategory — associa categoria a comic
     @Test
-    fun `updateComicCategory deve chamar o manager exatamente uma vez`() =
+    fun `updateComicCategory should call manager exactly once`() =
         runTest {
             coJustRun { categoryManager.updateComicCategory(any(), any()) }
 
@@ -75,7 +75,7 @@ class ManageCategoriesUseCaseTest {
 
     // updateComicCategory — desassocia quando categoryId é null
     @Test
-    fun `updateComicCategory com categoryId null deve chamar o manager com null`() =
+    fun `updateComicCategory with null categoryId should call manager with null`() =
         runTest {
             coJustRun { categoryManager.updateComicCategory(any(), isNull()) }
 

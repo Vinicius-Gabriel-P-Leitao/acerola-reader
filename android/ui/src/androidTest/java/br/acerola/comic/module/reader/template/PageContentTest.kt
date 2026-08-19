@@ -13,7 +13,7 @@ class PageContentTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve_renderizar_conteudo_do_leitor_sem_erros`() {
+    fun `should_render_reader_content_without_errors`() {
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
             val listState = rememberLazyListState()

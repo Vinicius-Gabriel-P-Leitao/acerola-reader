@@ -13,12 +13,12 @@ class ScaffoldTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_conteudo() {
+    fun should_display_content() {
         composeTestRule.setContent {
             Acerola.Component.Scaffold {
-                Text("Conteúdo")
+                Text("Content")
             }
         }
-        composeTestRule.onNodeWithText("Conteúdo").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Content").assertIsDisplayed()
     }
 }

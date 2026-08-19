@@ -42,7 +42,7 @@ class SyncMetadataUseCaseTest {
     }
 
     @Test
-    fun `execute com directoryId deve chamar syncComicMetadataUseCase`() =
+    fun `execute with directoryId should call syncComicMetadataUseCase`() =
         runTest {
             coEvery { syncComicMetadataUseCase.syncFromMangadex(42L) } returns Either.Right(Unit)
 
@@ -53,7 +53,7 @@ class SyncMetadataUseCaseTest {
         }
 
     @Test
-    fun `execute SYNC da biblioteca para Mangadex deve chamar mangadexSyncUseCase sync`() =
+    fun `execute SYNC for library on Mangadex should call mangadexSyncUseCase sync`() =
         runTest {
             coEvery { mangadexSyncUseCase.sync(null) } returns Either.Right(Unit)
 
@@ -64,7 +64,7 @@ class SyncMetadataUseCaseTest {
         }
 
     @Test
-    fun `execute RESCAN da biblioteca para Anilist deve chamar anilistSyncUseCase rescan`() =
+    fun `execute RESCAN for library on Anilist should call anilistSyncUseCase rescan`() =
         runTest {
             coEvery { anilistSyncUseCase.rescan(null) } returns Either.Right(Unit)
 

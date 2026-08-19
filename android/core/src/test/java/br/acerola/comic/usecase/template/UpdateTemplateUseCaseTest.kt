@@ -26,7 +26,7 @@ class UpdateTemplateUseCaseTest {
     }
 
     @Test
-    fun `delega para o service com os parametros corretos`() =
+    fun `delegates to service with correct parameters`() =
         runTest {
             coEvery { service.updateTemplate(1L, "Label", "{chapter}", SortType.CHAPTER) } returns Either.Right(Unit)
 
@@ -36,7 +36,7 @@ class UpdateTemplateUseCaseTest {
         }
 
     @Test
-    fun `retorna Right quando service tem sucesso`() =
+    fun `returns Right when service succeeds`() =
         runTest {
             coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Right(Unit)
 
@@ -46,7 +46,7 @@ class UpdateTemplateUseCaseTest {
         }
 
     @Test
-    fun `propaga Left quando service retorna Duplicate`() =
+    fun `propagates Left when service returns Duplicate`() =
         runTest {
             coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Left(TemplateError.Duplicate)
 
@@ -57,7 +57,7 @@ class UpdateTemplateUseCaseTest {
         }
 
     @Test
-    fun `propaga Left quando service retorna SystemProtected`() =
+    fun `propagates Left when service returns SystemProtected`() =
         runTest {
             coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Left(TemplateError.SystemProtected)
 

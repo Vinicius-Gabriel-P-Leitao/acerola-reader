@@ -28,7 +28,7 @@ class ObserveLibraryUseCaseTest {
     }
 
     @Test
-    fun `invoke deve retornar fluxo da biblioteca`() =
+    fun `invoke should return library flow`() =
         runTest {
             val list = listOf(mockk<ComicDirectoryDto>())
             every { repository.observeLibrary() } returns MutableStateFlow(value = list)

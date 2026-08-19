@@ -43,35 +43,35 @@ class FilePatternScreenTest {
     }
 
     @Test
-    fun deve_exibir_lista_de_templates_no_layout() {
+    fun should_display_templates_list_in_layout() {
         val templates =
             listOf(
-                ArchiveTemplateDto(id = 1L, label = "Padrão Teste 1", pattern = "{chapter}", type = SortType.CHAPTER, isDefault = true),
-                ArchiveTemplateDto(id = 2L, label = "Padrão Teste 2", pattern = "Cap. {chapter}", type = SortType.CHAPTER, isDefault = false),
+                ArchiveTemplateDto(id = 1L, label = "Test Pattern 1", pattern = "{chapter}", type = SortType.CHAPTER, isDefault = true),
+                ArchiveTemplateDto(id = 2L, label = "Test Pattern 2", pattern = "Cap. {chapter}", type = SortType.CHAPTER, isDefault = false),
             )
 
         setScreen(buildViewModel(templates))
 
-        composeTestRule.onNodeWithText("Padrão Teste 1").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Padrão Teste 2").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test Pattern 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test Pattern 2").assertIsDisplayed()
     }
 
     @Test
-    fun deve_exibir_estado_vazio_quando_lista_esta_vazia() {
+    fun should_display_empty_state_when_list_is_empty() {
         setScreen(buildViewModel(emptyList()))
 
-        composeTestRule.onNodeWithText("Padrão Teste 1").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Test Pattern 1").assertDoesNotExist()
     }
 
     @Test
-    fun deve_exibir_badge_de_sistema_para_template_padrao() {
+    fun should_display_system_badge_for_default_template() {
         val templates =
             listOf(
-                ArchiveTemplateDto(id = 1L, label = "Template Sistema", pattern = "{chapter}", type = SortType.CHAPTER, isDefault = true),
+                ArchiveTemplateDto(id = 1L, label = "System Template", pattern = "{chapter}", type = SortType.CHAPTER, isDefault = true),
             )
 
         setScreen(buildViewModel(templates))
 
-        composeTestRule.onNodeWithText("Template Sistema").assertIsDisplayed()
+        composeTestRule.onNodeWithText("System Template").assertIsDisplayed()
     }
 }

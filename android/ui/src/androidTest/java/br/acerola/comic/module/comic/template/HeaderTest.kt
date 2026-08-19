@@ -16,13 +16,13 @@ class HeaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `MangaHeader_deve_exibir_o_titulo_remoto_quando_disponivel`() {
+    fun `Header_should_display_remote_title_when_available`() {
         val comic =
             ComicDto(
                 directory =
                     ComicDirectoryDto(
                         id = 1L,
-                        name = "Pasta",
+                        name = "Folder",
                         path = "",
                         coverUri = null,
                         bannerUri = null,
@@ -31,9 +31,9 @@ class HeaderTest {
                     ),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Comic Fantástico",
-                        description = "Uma sinopse qualquer",
-                        status = "Lançando",
+                        title = "Fantastic Comic",
+                        description = "Some random synopsis",
+                        status = "Ongoing",
                     ),
             )
 
@@ -48,9 +48,9 @@ class HeaderTest {
         }
 
         // Verifica se o título remoto é exibido com prioridade
-        composeTestRule.onNodeWithText("Comic Fantástico").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Fantastic Comic").assertIsDisplayed()
 
         // Verifica se a sinopse aparece
-        composeTestRule.onNodeWithText("Uma sinopse qualquer").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Some random synopsis").assertIsDisplayed()
     }
 }

@@ -13,15 +13,15 @@ class AdaptiveSheetTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_conteudo_dentro_do_sheet_adaptativo() {
+    fun should_display_content_inside_adaptive_sheet() {
         composeTestRule.setContent {
             Acerola.Component.AdaptiveSheet(
                 onDismissRequest = {},
             ) {
-                Text("Conteudo Adaptativo")
+                Text("Adaptive Content")
             }
         }
 
-        composeTestRule.onNodeWithText("Conteudo Adaptativo").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Adaptive Content").assertIsDisplayed()
     }
 }

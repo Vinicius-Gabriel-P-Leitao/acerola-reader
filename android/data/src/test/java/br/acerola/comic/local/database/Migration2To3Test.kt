@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class Migration2To3Test {
     @Test
-    fun `migration2To3 deve executar comandos DDL e migrar esquema sem erros`() {
+    fun `migration2To3 should execute DDL commands and migrate schema without errors`() {
         val helperFactory = FrameworkSQLiteOpenHelperFactory()
         val config = SupportSQLiteDatabase::class.java
         assertNotNull(MIGRATION_2_3)

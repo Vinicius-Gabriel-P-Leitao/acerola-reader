@@ -70,7 +70,7 @@ class LibrarySyncWorkerTest {
     // SYNC_TYPE_SPECIFIC
 
     @Test
-    fun `doWork deve retornar falha quando comicId é -1 em SYNC_TYPE_SPECIFIC`() =
+    fun `doWork should return failure when comicId is -1 in SYNC_TYPE_SPECIFIC`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -94,7 +94,7 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando SYNC_TYPE_SPECIFIC com comicId válido`() =
+    fun `doWork should return success when SYNC_TYPE_SPECIFIC with valid comicId`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -125,7 +125,7 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_SPECIFIC`() =
+    fun `doWork should return failure when repository fails in SYNC_TYPE_SPECIFIC`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -151,7 +151,7 @@ class LibrarySyncWorkerTest {
     // SYNC_TYPE_INCREMENTAL
 
     @Test
-    fun `doWork deve retornar sucesso em SYNC_TYPE_INCREMENTAL`() =
+    fun `doWork should return success in SYNC_TYPE_INCREMENTAL`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -172,7 +172,7 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_INCREMENTAL`() =
+    fun `doWork should return failure when repository fails in SYNC_TYPE_INCREMENTAL`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -195,7 +195,7 @@ class LibrarySyncWorkerTest {
     // SYNC_TYPE_REFRESH
 
     @Test
-    fun `doWork deve retornar sucesso em SYNC_TYPE_REFRESH`() =
+    fun `doWork should return success in SYNC_TYPE_REFRESH`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -216,7 +216,7 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_REFRESH`() =
+    fun `doWork should return failure when repository fails in SYNC_TYPE_REFRESH`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -239,7 +239,7 @@ class LibrarySyncWorkerTest {
     // SYNC_TYPE_REBUILD
 
     @Test
-    fun `doWork deve retornar sucesso em SYNC_TYPE_REBUILD`() =
+    fun `doWork should return success in SYNC_TYPE_REBUILD`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -260,7 +260,7 @@ class LibrarySyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar falha quando repositório falha em SYNC_TYPE_REBUILD`() =
+    fun `doWork should return failure when repository fails in SYNC_TYPE_REBUILD`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(
@@ -280,10 +280,10 @@ class LibrarySyncWorkerTest {
             assertTrue(result is Result.Failure)
         }
 
-    // Fallback / default sync type
+    // Fallback / tipo de sincronização padrão
 
     @Test
-    fun `doWork deve usar incrementalScan como fallback para tipo desconhecido`() =
+    fun `doWork should use incrementalScan as fallback for unknown type`() =
         runTest {
             coEvery {
                 syncLibraryUseCase.execute(

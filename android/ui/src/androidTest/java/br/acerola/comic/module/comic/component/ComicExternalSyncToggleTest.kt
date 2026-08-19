@@ -14,7 +14,7 @@ class ComicExternalSyncToggleTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_alternar_estado_de_sincronizacao_externa_ao_clicar() {
+    fun should_toggle_external_sync_state_when_clicked() {
         var enabled = false
         composeTestRule.setContent {
             Comic.Component.ComicExternalSyncToggle(
