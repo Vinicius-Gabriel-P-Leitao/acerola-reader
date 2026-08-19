@@ -73,7 +73,7 @@ Adicione ao seu `Cargo.toml`:
 
 ```toml
 [dependencies]
-acerola-p2p = { git = "https://github.com/your-org/acerola-p2p" }
+acerola-p2p = { git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p" }
 ```
 
 ---
