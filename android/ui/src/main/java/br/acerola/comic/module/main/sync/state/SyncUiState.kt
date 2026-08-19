@@ -32,6 +32,17 @@ data class SyncUiState(
     val syncingKeys: Set<String> = emptySet(),
     /** `peerId` -> timestamp (epoch ms) of the last successfully completed session. */
     val lastSyncedByPeer: Map<String, Long> = emptyMap(),
+    /** `peerId`s currently reachable in this session (subset of [pairedPeers]) — presence, not pairing. */
+    val connectedPeerIds: Set<String> = emptySet(),
+    /** `peerId` -> outcome of the most recent sync attempt (either kind), for inline feedback on [PeerRow]. */
+    val lastSyncResultByPeer: Map<String, SyncResult> = emptyMap(),
+)
+
+data class SyncResult(
+    val kind: String,
+    val state: LogState,
+    val message: String?,
+    val timestamp: Long,
 )
 
 data class PairedPeer(

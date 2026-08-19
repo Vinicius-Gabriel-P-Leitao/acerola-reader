@@ -25,4 +25,8 @@ sealed interface SyncAction {
     data object DismissTrustDialog : SyncAction
 
     data object DismissConnectError : SyncAction
+
+    data class RemovePeer(
+        val peerId: String,
+    ) : SyncAction
 }

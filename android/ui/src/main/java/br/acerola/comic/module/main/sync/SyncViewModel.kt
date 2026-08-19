@@ -12,6 +12,7 @@ import br.acerola.comic.module.main.sync.state.LogState
 import br.acerola.comic.module.main.sync.state.PairedPeer
 import br.acerola.comic.module.main.sync.state.PendingConnect
 import br.acerola.comic.module.main.sync.state.SyncAction
+import br.acerola.comic.module.main.sync.state.SyncResult
 import br.acerola.comic.module.main.sync.state.SyncUiState
 import br.acerola.comic.module.main.sync.state.TransferLogEntry
 import br.acerola.comic.service.PeerAddress
@@ -116,7 +117,9 @@ class SyncViewModel
             _uiState.update { it.copy(transferLog = entries, lastSyncedByPeer = lastSynced) }
         }
 
-        /** Records a session's terminal result and, if successful, updates "last synced". */
+        /** Records a session's terminal result — updates "last synced" only on success, but
+         *  [SyncUiState.lastSyncResultByPeer] always, so [SyncScreen] can surface a failure
+         *  inline on the peer row without digging through the aggregate log. */
         private suspend fun recordSyncResult(
             peerId: String,
             kind: String,
@@ -124,9 +127,22 @@ class SyncViewModel
             message: String?,
         ) {
             syncHistoryLogUseCase.record(peerId, kind, status, message)
-            if (status == "complete") {
-                val now = System.currentTimeMillis()
-                _uiState.update { it.copy(lastSyncedByPeer = it.lastSyncedByPeer + (peerId to now)) }
+            val now = System.currentTimeMillis()
+            _uiState.update {
+                it.copy(
+                    lastSyncedByPeer = if (status == "complete") it.lastSyncedByPeer + (peerId to now) else it.lastSyncedByPeer,
+                    lastSyncResultByPeer =
+                        it.lastSyncResultByPeer +
+                            (
+                                peerId to
+                                    SyncResult(
+                                        kind = kind,
+                                        state = if (status == "complete") LogState.SUCCESS else LogState.ERROR,
+                                        message = message,
+                                        timestamp = now,
+                                    )
+                            ),
+                )
             }
         }
 
@@ -144,6 +160,25 @@ class SyncViewModel
 
                 SyncAction.DismissTrustDialog -> _uiState.update { it.copy(trustedPeerDialogPeerId = null) }
                 SyncAction.DismissConnectError -> _uiState.update { it.copy(connectError = null) }
+                is SyncAction.RemovePeer -> removePeer(action.peerId)
+            }
+        }
+
+        /** Desempareia um peer — some da confiança e do cache nativo, e limpa todo estado
+         *  local ligado a ele (senão o peer some da lista mas deixa lixo em
+         *  [SyncUiState.lastSyncedByPeer]/[SyncUiState.lastSyncResultByPeer]/[SyncUiState.syncingKeys]). */
+        private fun removePeer(peerId: String) {
+            viewModelScope.launch(Dispatchers.IO) {
+                p2pUseCase.removePairedPeer(peerId)
+                _uiState.update {
+                    it.copy(
+                        pairedPeers = it.pairedPeers.filterNot { peer -> peer.peerId == peerId },
+                        connectedPeerIds = it.connectedPeerIds - peerId,
+                        lastSyncedByPeer = it.lastSyncedByPeer - peerId,
+                        lastSyncResultByPeer = it.lastSyncResultByPeer - peerId,
+                        syncingKeys = it.syncingKeys.filterNot { key -> key.startsWith("$peerId:") }.toSet(),
+                    )
+                }
             }
         }
 
@@ -432,6 +467,7 @@ class SyncViewModel
                         pairingCode = pairingCode,
                         mode = mode,
                         pairedPeers = paired,
+                        connectedPeerIds = liveDeviceNames.keys,
                     )
                 }
             }

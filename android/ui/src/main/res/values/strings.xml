@@ -42,6 +42,10 @@
     <string name="label_sync_relay_custom">customizado</string>
     <string name="action_sync_copy_id">Copiar ID</string>
 
+    <string name="action_sync_add_device">Adicionar dispositivo</string>
+    <string name="tab_sync_my_code">Meu código</string>
+    <string name="tab_sync_connect">Conectar</string>
+
     <string name="title_sync_pairing">Código de conexão</string>
     <string name="description_sync_pairing">Escaneie este QR Code no outro dispositivo, ou copie o código abaixo.</string>
     <string name="description_sync_security_note">Só pareie com dispositivos que você confia — a primeira conexão dá acesso permanente à sua biblioteca.</string>
@@ -54,18 +58,25 @@
     <string name="title_sync_connect">Conectar a um dispositivo</string>
     <string name="hint_sync_connect_code">Cole o código de conexão aqui</string>
     <string name="action_sync_connect">Conectar</string>
+    <string name="action_sync_paste">Colar</string>
     <string name="error_sync_connect_invalid_code">Código inválido. Confira se você copiou o código completo do outro dispositivo.</string>
     <string name="error_sync_connect_failed">Não foi possível conectar. Confira se o código está certo e se o outro dispositivo está com o Acerola aberto.</string>
     <string name="error_sync_scan_failed">Não foi possível abrir o leitor de QR Code. Tente novamente ou cole o código manualmente.</string>
     <string name="error_sync_scan_empty">O QR Code escaneado não contém texto legível.</string>
 
     <string name="title_sync_peers">Dispositivos pareados</string>
-    <string name="label_sync_no_peers">Nenhum dispositivo pareado ainda. Compartilhe seu código ou cole um acima pra parear.</string>
+    <string name="label_sync_no_peers">Nenhum dispositivo pareado ainda. Toque em \"Adicionar dispositivo\" pra parear um.</string>
     <string name="action_sync_history">Sincronizar histórico</string>
     <string name="action_sync_files">Sincronizar arquivos</string>
     <string name="action_sync_all">Sincronizar tudo</string>
     <string name="label_sync_last_synced">Última sync: %1$s</string>
     <string name="label_sync_never_synced">Nunca sincronizado</string>
+    <string name="label_sync_peer_online">Online agora</string>
+    <string name="error_sync_last_attempt_failed">Última tentativa falhou: %1$s</string>
+    <string name="description_icon_sync_peer_more_actions">Mais ações de sincronização pra esse dispositivo.</string>
+    <string name="action_sync_remove_peer">Remover dispositivo</string>
+    <string name="title_sync_remove_peer_confirm">Remover \"%1$s\"?</string>
+    <string name="description_sync_remove_peer_confirm">Esse dispositivo deixa de ter acesso à sua biblioteca. Se ele tentar se conectar de novo depois, vai passar pela mesma confirmação de um dispositivo nunca pareado.</string>
 
     <string name="title_sync_activity_log">Transferências</string>
     <string name="label_sync_activity_log_empty">Nenhuma transferência em andamento.</string>
