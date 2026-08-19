@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
+    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -46,15 +47,24 @@ fn sanitize_folder_name(name: &str) -> String {
 pub struct FileSyncService {
     comic_repo: ComicRepository,
     chapter_repo: ChapterRepository,
-    library_root: PathBuf,
+    /// Resolvido sob demanda (nunca guardado como `PathBuf` fixo) porque `FileSyncService`
+    /// é construído uma única vez, numa task em background, no boot do app
+    /// (`bios::network::setup_network`) — se guardássemos um `PathBuf` já resolvido aqui,
+    /// qualquer troca de `library_path` feita pelo usuário depois do boot (em
+    /// `settings.json`) seria ignorada até o próximo restart, e o sync continuaria
+    /// gravando no destino antigo (foi exatamente o bug: arquivos indo pro fallback
+    /// `<app_data>/library` mesmo com o path certo já configurado).
+    library_root: Arc<dyn Fn() -> PathBuf + Send + Sync>,
 }
 
 impl FileSyncService {
-    pub fn new(pool: SqlitePool, library_root: PathBuf) -> Self {
+    pub fn new(
+        pool: SqlitePool, library_root: impl Fn() -> PathBuf + Send + Sync + 'static,
+    ) -> Self {
         Self {
             comic_repo: ComicRepository::new(pool.clone()),
             chapter_repo: ChapterRepository::new(pool),
-            library_root,
+            library_root: Arc::new(library_root),
         }
     }
 
@@ -149,6 +159,23 @@ impl FileSyncService {
     /// Move o arquivo já recebido (e verificado) de `temp_path` pro destino final dentro da
     /// biblioteca, criando o quadrinho no banco se ainda não existir, e indexa o capítulo
     /// reaproveitando o mesmo padrão de insert/update do scanner.
+    ///
+    /// **Contrato pro rótulo do capítulo** (o mesmo que qualquer peer, incluindo o Android,
+    /// precisa seguir pro `chapter` recebido bater com o que esse desktop já produz no scan
+    /// local via `Path::file_stem` — ver `chapter_scanner_engine.rs::scan_chapter`):
+    /// o rótulo exibido é o nome do arquivo **sem a última extensão** — tudo antes do
+    /// último `.`, exceto quando esse `.` é o primeiro caractere do nome (dotfile sem
+    /// extensão de verdade, ex: `.gitignore`, que fica igual). `"Ch. 1.cbz"` → `"Ch. 1"`;
+    /// `"archive.tar.gz"` → `"archive.tar"` (só a ÚLTIMA extensão sai).
+    ///
+    /// Por isso ignoramos o `chapter` que veio no `FileHeader` pra montar o rótulo — ele é
+    /// só a chave natural que o peer usou pra decidir QUAL capítulo mandar (via
+    /// `resolve_local_file`/`find_by_comic_and_chapter`), não necessariamente já vem nesse
+    /// formato. Um peer com esse contrato quebrado (era o caso: o Android manda o
+    /// `DocumentsContract` `DISPLAY_NAME` cru, com extensão, sem passar por um `file_stem`
+    /// equivalente) não devia contaminar a biblioteca local — recalculamos aqui a partir do
+    /// `file_name` real do arquivo, que é sempre confiável (é literalmente o nome do arquivo
+    /// que acabamos de gravar em disco).
     pub async fn persist_received_chapter(
         &self, comic_name: &str, chapter: &str, file_name: &str, temp_path: &Path,
         checksum: String,
@@ -164,12 +191,17 @@ impl FileSyncService {
         let dest_path = comic_dir.join(file_name);
         tokio::fs::rename(temp_path, &dest_path).await.map_err(ComicError::Io)?;
 
+        let display_chapter = Path::new(file_name)
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .unwrap_or(chapter);
+
         let chapter_row = ChapterArchive {
             id: path_hash(&dest_path),
-            chapter: chapter.to_string(),
+            chapter: display_chapter.to_string(),
             path: dest_path.to_string_lossy().to_string(),
-            chapter_sort: ChapterArchive::fallback_sort(chapter, 0),
-            is_special: is_special_name(chapter),
+            chapter_sort: ChapterArchive::fallback_sort(display_chapter, 0),
+            is_special: is_special_name(display_chapter),
             checksum: Some(checksum),
             comic_directory_fk: comic.id,
             volume_id_fk: None,
@@ -185,7 +217,7 @@ impl FileSyncService {
     /// Cria um novo `comic_directory` sob `<library_root>/synced/<nome>` — usado quando um
     /// capítulo recebido pertence a um quadrinho que ainda não existe localmente.
     async fn create_synced_comic(&self, comic_name: &str) -> Result<ComicDirectory, ComicError> {
-        let comic_dir = self.library_root.join("synced").join(sanitize_folder_name(comic_name));
+        let comic_dir = self.library_root().join("synced").join(sanitize_folder_name(comic_name));
 
         let comic = ComicDirectory {
             id: path_hash(&comic_dir),
@@ -208,8 +240,10 @@ impl FileSyncService {
         }
     }
 
-    pub fn library_root(&self) -> &Path {
-        &self.library_root
+    /// Resolvido a cada chamada — nunca cacheado — pra sempre refletir o `library_path`
+    /// atual em `settings.json`, mesmo que o usuário tenha trocado depois do boot.
+    pub fn library_root(&self) -> PathBuf {
+        (self.library_root)()
     }
 }
 
@@ -226,7 +260,8 @@ mod tests {
             .unwrap();
 
         let temp_dir = tempfile::tempdir().unwrap();
-        let service = FileSyncService::new(pool.clone(), temp_dir.path().to_path_buf());
+        let root = temp_dir.path().to_path_buf();
+        let service = FileSyncService::new(pool.clone(), move || root.clone());
         (pool, temp_dir, service)
     }
 
@@ -323,5 +358,38 @@ mod tests {
         assert_eq!(chapter.0, 1);
 
         assert!(!temp_path.exists(), "temp file should have been moved, not copied");
+    }
+
+    /// Trava o contrato do rótulo de capítulo: mesmo que o peer mande `chapter` sujo (com
+    /// extensão, exatamente o bug reproduzido com o Android — `DocumentsContract`
+    /// `DISPLAY_NAME` cru), o desktop nunca grava a extensão. O rótulo persistido é sempre
+    /// recalculado a partir do `file_name` real do arquivo, via `file_stem`.
+    #[tokio::test]
+    async fn persist_received_chapter_ignora_extensao_no_chapter_sujo_do_peer() {
+        let (pool, dir, service) = setup().await;
+
+        let temp_path = dir.path().join("incoming.tmp");
+        tokio::fs::write(&temp_path, b"fake cbz bytes").await.unwrap();
+
+        service
+            .persist_received_chapter(
+                "Mato Seihei no Slave",
+                "Ch. 1.cbz", // <- rótulo sujo, exatamente como veio no log real do Android
+                "Ch. 1.cbz",
+                &temp_path,
+                "checksum456".to_string(),
+            )
+            .await
+            .unwrap();
+
+        let chapter: (String, String) = sqlx::query_as(
+            "SELECT chapter, chapter_sort FROM chapter_archive WHERE comic_directory_fk = (SELECT id FROM comic_directory WHERE name = 'Mato Seihei no Slave')",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        assert_eq!(chapter.0, "Ch. 1", "chapter não pode carregar a extensão do arquivo");
+        assert_eq!(chapter.1, "1");
     }
 }

@@ -41,6 +41,8 @@ export function usePeerConnection() {
 	const knownAddrs = new Map<string, number[]>();
 
 	let unlistenStatus: UnlistenFn | undefined;
+	let unlistenDeviceInfoReceived: UnlistenFn | undefined;
+	let unlistenDeviceInfoExchanged: UnlistenFn | undefined;
 
 	async function loadLocalInfo() {
 		[localId, localAddr, localDeviceInfo, relayInfo] = await Promise.all([
@@ -65,16 +67,32 @@ export function usePeerConnection() {
 		}
 	}
 
+	/// Handshake concluído (de qualquer lado, ver `NETWORK_EVENTS.deviceInfoReceived` /
+	/// `.deviceInfoExchanged`) — só re-consulta o status atual em vez de tentar montar o
+	/// peer a partir do payload do evento (que é só o `peerId` cru, sem `device`/`alpn`).
+	async function handlePeerHandshake() {
+		await Promise.all([refreshStatus(), loadPairedPeers()]);
+	}
+
 	async function startListening() {
 		unlistenStatus = await listen<NetworkStatusPayload>(NETWORK_EVENTS.status, (event) => {
 			status = event.payload;
 		});
+		unlistenDeviceInfoReceived = await listen(NETWORK_EVENTS.deviceInfoReceived, handlePeerHandshake);
+		unlistenDeviceInfoExchanged = await listen(
+			NETWORK_EVENTS.deviceInfoExchanged,
+			handlePeerHandshake
+		);
 		await Promise.all([refreshStatus(), loadPairedPeers()]);
 	}
 
 	function stopListening() {
 		unlistenStatus?.();
 		unlistenStatus = undefined;
+		unlistenDeviceInfoReceived?.();
+		unlistenDeviceInfoReceived = undefined;
+		unlistenDeviceInfoExchanged?.();
+		unlistenDeviceInfoExchanged = undefined;
 	}
 
 	/// O código/QR que o outro dispositivo precisa escanear ou colar pra nos alcançar.

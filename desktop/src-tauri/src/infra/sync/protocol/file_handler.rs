@@ -130,7 +130,7 @@ async fn send_files(
 }
 
 /// Recebe, em sequência, `expected_count` arquivos, gravando em streaming num arquivo
-/// temporário e só movendo pro destino final depois de verificar o blake3 contra o
+/// temporário e só movendo pro destino final depois de verificar o SHA-256 contra o
 /// anunciado no header. Descarta silenciosamente headers "indisponíveis" (`size: 0`) ou
 /// arquivos que falharem a verificação de integridade, sem abortar a sessão.
 async fn receive_files(
@@ -142,6 +142,16 @@ async fn receive_files(
 
     for _ in 0..expected_count {
         let header: FileHeader = read_json(reader).await?;
+
+        // TEMP DEBUG: rastreia o `chapter` exatamente como chegou pelo fio, antes de
+        // qualquer gravação — prova se um rótulo com extensão (ex: "1.cbz") já vem assim
+        // do peer ou se é introduzido depois, no lado que recebe.
+        tracing::debug!(
+            comic_name = %header.comic_name,
+            chapter = %header.chapter,
+            file_name = %header.file_name,
+            "[FileSync] header recebido pelo fio"
+        );
 
         if header.size == 0 {
             continue;
@@ -365,7 +375,8 @@ mod tests {
     async fn setup() -> (SyncHistoryLogRepository, FileSyncService, tempfile::TempDir) {
         let pool = crate::tests::utils::setup_test_db::setup_test_db().await;
         let temp_dir = tempfile::tempdir().unwrap();
-        let service = FileSyncService::new(pool.clone(), temp_dir.path().to_path_buf());
+        let root = temp_dir.path().to_path_buf();
+        let service = FileSyncService::new(pool.clone(), move || root.clone());
         let log_repo = SyncHistoryLogRepository::new(pool);
         (log_repo, service, temp_dir)
     }

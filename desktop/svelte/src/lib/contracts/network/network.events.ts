@@ -1,5 +1,13 @@
 export const NETWORK_EVENTS = {
 	status: 'network:status',
+	/** Emitidos pela lib `acerola_p2p` (não pelo Acerola) no exato momento em que um
+	 *  handshake de conexão termina — `deviceInfoReceived` do lado que conectou,
+	 *  `deviceInfoExchanged` do lado que aceitou. `network:status` nunca é emitido sozinho
+	 *  quando isso acontece (só quando o comando `get_network_status` é chamado
+	 *  explicitamente), então sem escutar esses dois a UI fica parada até um refresh manual
+	 *  (F5) mesmo com um peer já conectado. */
+	deviceInfoReceived: 'rpc:device_info_received',
+	deviceInfoExchanged: 'rpc:device_info_exchanged',
 	historyStarted: 'sync:history:started',
 	historyComplete: 'sync:history:complete',
 	historyError: 'sync:history:error',

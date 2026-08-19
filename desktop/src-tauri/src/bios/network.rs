@@ -141,11 +141,16 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
 
     // `database_pool`/`sync_log_repo` já resolvidos mais acima, antes da abertura do
     // trust/peer storage.
-    let library_root = read_library_path(&app_data_directory)
-        .unwrap_or_else(|| app_data_directory.join("library"));
-
+    //
+    // O resolver é reavaliado a cada chamada (não resolvido uma vez aqui) porque
+    // `setup_network` roda uma única vez, numa task em background disparada no boot — se
+    // `library_root` fosse um `PathBuf` fixo, trocar `library_path` em `settings.json`
+    // depois do boot (sem reiniciar o app) faria o sync continuar gravando no destino
+    // antigo indefinidamente.
     let history_sync_service = HistorySyncService::new(database_pool.clone());
-    let file_sync_service = FileSyncService::new(database_pool, library_root);
+    let file_sync_service = FileSyncService::new(database_pool, move || {
+        read_library_path(&app_data_directory).unwrap_or_else(|| app_data_directory.join("library"))
+    });
     // Compartilhado entre inbound e outbound: garante que só uma sessão de sync-files por
     // peer rode por vez, nos dois sentidos (ver `file_session_guard.rs`).
     let file_sync_session_guard = FileSyncSessionGuard::new();
