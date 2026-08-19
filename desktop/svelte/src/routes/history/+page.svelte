@@ -121,7 +121,7 @@
 							class="flex h-64 w-48 items-center justify-center rounded-xl bg-surface text-muted-foreground transition-transform hover:scale-105"
 							onclick={() => openComic(heroItem)}
 						>
-							<PlaceholderManga class="h-24 w-24" />
+							<PlaceholderManga class="h-full w-full" preserveAspectRatio="none" />
 						</button>
 					{/if}
 
