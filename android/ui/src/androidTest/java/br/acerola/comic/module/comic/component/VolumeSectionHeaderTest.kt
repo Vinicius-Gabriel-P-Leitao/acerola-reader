@@ -35,7 +35,7 @@ class VolumeSectionHeaderTest {
     )
 
     @Test
-    fun `deve_exibir_titulo_e_resumo_de_capitulos_carregados`() {
+    fun `should_display_title_and_summary_of_loaded_chapters`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Component.VolumeSectionHeader(
@@ -51,7 +51,7 @@ class VolumeSectionHeaderTest {
     }
 
     @Test
-    fun `deve_derivar_o_numero_do_volume_a_partir_do_volumeSort`() {
+    fun `should_derive_volume_number_from_volumeSort`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Component.VolumeSectionHeader(
@@ -66,7 +66,7 @@ class VolumeSectionHeaderTest {
     }
 
     @Test
-    fun `deve_exibir_selo_especial_mesmo_quando_colapsado`() {
+    fun `should_display_special_badge_even_when_collapsed`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Component.VolumeSectionHeader(
@@ -81,7 +81,7 @@ class VolumeSectionHeaderTest {
     }
 
     @Test
-    fun `nao_deve_exibir_selo_especial_em_volume_normal`() {
+    fun `should_not_display_special_badge_on_normal_volume`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Component.VolumeSectionHeader(
@@ -96,7 +96,7 @@ class VolumeSectionHeaderTest {
     }
 
     @Test
-    fun `clique_no_cabecalho_deve_chamar_onToggleExpanded`() {
+    fun `click_on_header_should_call_onToggleExpanded`() {
         var toggled = false
 
         composeTestRule.setContent {
@@ -115,7 +115,7 @@ class VolumeSectionHeaderTest {
     }
 
     @Test
-    fun `modo_capa_deve_exibir_titulo_e_resumo_de_capitulos_mesmo_sem_capa`() {
+    fun `cover_mode_should_display_title_and_summary_of_chapters_even_without_cover`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Comic.Component.CoverVolumeSectionHeader(
@@ -131,7 +131,7 @@ class VolumeSectionHeaderTest {
     }
 
     @Test
-    fun `modo_capa_pressionar_e_segurar_deve_chamar_onExtractCover`() {
+    fun `cover_mode_long_press_should_call_onExtractCover`() {
         var extracted = false
 
         composeTestRule.setContent {

@@ -110,7 +110,7 @@ class ChapterArchiveEngineTest {
     }
 
     @Test
-    fun `refreshComicChapters deve orquestrar o sync corretamente`() =
+    fun `refreshComicChapters should orchestrate sync correctly`() =
         runTest {
             val comicId = 1L
             val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId, lastModified = 1000L)
@@ -130,26 +130,26 @@ class ChapterArchiveEngineTest {
 
             val result = repository.refreshComicChapters(comicId)
 
-            assertTrue("Deveria ser Right mas foi $result", result.isRight())
+            assertTrue("Should be Right but was $result", result.isRight())
             coVerify { volumeSyncService.sync(eq(comicId), any(), any(), any(), any()) }
             coVerify { chapterSyncService.sync(eq(comicId), any(), any(), any(), any(), any()) }
             coVerify { directoryDao.update(match { it.lastModified == 2000L }) }
         }
 
     @Test
-    fun `refreshComicChapters deve retornar Left quando comic nao existe no banco`() =
+    fun `refreshComicChapters should return Left when comic does not exist in database`() =
         runTest {
             val comicId = 999L
             coEvery { directoryDao.getDirectoryById(comicId = comicId) } returns null
 
             val result = repository.refreshComicChapters(comicId)
 
-            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            assertTrue("Expected Left, but was $result", result.isLeft())
             coVerify(exactly = 0) { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
-    fun `refreshComicChapters deve retornar Left quando a pasta nao pode ser aberta`() =
+    fun `refreshComicChapters should return Left when directory cannot be opened`() =
         runTest {
             val comicId = 1L
             val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
@@ -162,12 +162,12 @@ class ChapterArchiveEngineTest {
 
             val result = repository.refreshComicChapters(comicId)
 
-            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            assertTrue("Expected Left, but was $result", result.isLeft())
             coVerify(exactly = 0) { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
-    fun `refreshComicChapters deve retornar Left quando falha ao listar arquivos via SAF`() =
+    fun `refreshComicChapters should return Left when listing files via SAF fails`() =
         runTest {
             val comicId = 1L
             val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
@@ -183,12 +183,12 @@ class ChapterArchiveEngineTest {
 
             val result = repository.refreshComicChapters(comicId, baseUriMock)
 
-            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            assertTrue("Expected Left, but was $result", result.isLeft())
             coVerify(exactly = 0) { chapterSyncService.sync(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
-    fun `observeChapters deve emitir PageDto corretamente`() =
+    fun `observeChapters should emit PageDto correctly`() =
         runTest {
             val comicId = 1L
             val chapters =
@@ -207,7 +207,7 @@ class ChapterArchiveEngineTest {
         }
 
     @Test
-    fun `getChapterPage deve retornar pagina de capitulos corretamente`() =
+    fun `getChapterPage should return chapter page correctly`() =
         runTest {
             val comicId = 1L
             coEvery { chapterArchiveDao.countByDirectoryId(comicId) } returns 10

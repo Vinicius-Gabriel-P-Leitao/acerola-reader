@@ -51,7 +51,7 @@ class MetadataExporterTest {
     }
 
     @Test
-    fun `exportMangaMetadata deve escrever ComicInfo se pasta existir e tiver permissao`() =
+    fun `exportMangaMetadata should write ComicInfo if directory exists and has permission`() =
         runTest {
             val comicId = 1L
             val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId, path = "content://comic")
@@ -81,12 +81,12 @@ class MetadataExporterTest {
 
             val result = service.exportMangaMetadata(comicId, remoteInfo)
 
-            assertTrue("Deveria retornar sucesso mas foi $result", result.isRight())
+            assertTrue("Should return success but was $result", result.isRight())
             coVerify { remoteInfoDao.update(match { it.hasComicInfo }) }
         }
 
     @Test
-    fun `exportMangaMetadata deve retornar DiskIOFailure se falhar ao criar arquivo`() =
+    fun `exportMangaMetadata should return DiskIOFailure if creating file fails`() =
         runTest {
             val comicId = 1L
             val directory = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
@@ -106,7 +106,7 @@ class MetadataExporterTest {
 
             val result = service.exportMangaMetadata(comicId, remoteInfo)
 
-            assertTrue("Deveria retornar erro de disco mas foi $result", result.isLeft())
+            assertTrue("Should return disk error but was $result", result.isLeft())
             result.onLeft { assertTrue(it is LibrarySyncError.DiskIOFailure) }
         }
 }

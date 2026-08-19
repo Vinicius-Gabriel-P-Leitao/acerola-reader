@@ -13,7 +13,7 @@ class SyncMangaArchiveTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_opcoes_de_sincronizacao_de_arquivos_do_manga() {
+    fun should_display_manga_archive_sync_options() {
         composeTestRule.setContent {
             Comic.Component.SyncMangaArchive(
                 onSyncChapters = {},
@@ -27,7 +27,7 @@ class SyncMangaArchiveTest {
     }
 
     @Test
-    fun deve_chamar_onSyncChapters_ao_clicar_na_opcao() {
+    fun should_call_onSyncChapters_when_clicking_option() {
         var clicked = false
         composeTestRule.setContent {
             Comic.Component.SyncMangaArchive(

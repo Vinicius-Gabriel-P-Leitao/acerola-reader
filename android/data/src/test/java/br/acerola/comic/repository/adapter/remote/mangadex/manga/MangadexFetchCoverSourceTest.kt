@@ -27,7 +27,7 @@ class MangadexFetchCoverSourceTest {
     }
 
     @Test
-    fun `searchCover deve baixar bytes corretamente`() =
+    fun `searchCover should download bytes correctly`() =
         runTest {
             val url = "http://cover.jpg"
             val bytes = byteArrayOf(1, 2, 3)
@@ -46,7 +46,7 @@ class MangadexFetchCoverSourceTest {
         }
 
     @Test
-    fun `searchCover deve retornar ConnectionFailed em erro de rede`() =
+    fun `searchCover should return ConnectionFailed on network error`() =
         runTest {
             coEvery { api.downloadFile(any()) } throws IOException("Net error")
 

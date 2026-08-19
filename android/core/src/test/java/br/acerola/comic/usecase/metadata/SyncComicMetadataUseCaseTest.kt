@@ -32,7 +32,7 @@ class SyncComicMetadataUseCaseTest {
     }
 
     @Test
-    fun syncFromMangadex_deve_chamar_refreshManga() =
+    fun syncFromMangadex_should_call_refreshManga() =
         runTest {
             val comicId = 1L
             coEvery { mangadexMangaRepo.refreshManga(comicId) } returns Either.Right(Unit)
@@ -44,7 +44,7 @@ class SyncComicMetadataUseCaseTest {
         }
 
     @Test
-    fun syncFromComicInfo_deve_chamar_refreshManga() =
+    fun syncFromComicInfo_should_call_refreshManga() =
         runTest {
             val comicId = 1L
             coEvery { comicInfoMangaRepo.refreshManga(comicId) } returns Either.Right(Unit)
@@ -56,7 +56,7 @@ class SyncComicMetadataUseCaseTest {
         }
 
     @Test
-    fun syncFromAnilist_deve_chamar_refreshManga_no_repositorio_anilist() =
+    fun syncFromAnilist_should_call_refreshManga_on_anilist_repository() =
         runTest {
             val comicId = 1L
             coEvery { anilistMangaRepo.refreshManga(comicId) } returns Either.Right(Unit)

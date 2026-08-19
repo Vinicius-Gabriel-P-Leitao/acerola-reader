@@ -100,7 +100,7 @@ class ComicDirectoryEngineTest {
     }
 
     @Test
-    fun `refreshManga deve atualizar metadados quando pasta foi modificada`() =
+    fun `refreshManga should update metadata when directory was modified`() =
         runTest {
             val comicId = 1L
             val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId, lastModified = 1000L)
@@ -124,24 +124,24 @@ class ComicDirectoryEngineTest {
 
             val result = repository.refreshManga(comicId)
 
-            assertTrue("Esperado Right, mas foi $result", result.isRight())
+            assertTrue("Expected Right, but was $result", result.isRight())
             coVerify(exactly = 1) { directoryDao.update(any()) }
         }
 
     @Test
-    fun `refreshManga deve retornar Left quando comic nao existe no banco`() =
+    fun `refreshManga should return Left when comic does not exist in database`() =
         runTest {
             val comicId = 999L
             coEvery { directoryDao.getDirectoryById(comicId) } returns null
 
             val result = repository.refreshManga(comicId)
 
-            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            assertTrue("Expected Left, but was $result", result.isLeft())
             coVerify(exactly = 0) { directoryDao.update(any()) }
         }
 
     @Test
-    fun `refreshManga deve retornar Left quando a pasta do comic nao e acessivel`() =
+    fun `refreshManga should return Left when comic directory is not accessible`() =
         runTest {
             val comicId = 1L
             val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
@@ -155,12 +155,12 @@ class ComicDirectoryEngineTest {
 
             val result = repository.refreshManga(comicId)
 
-            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            assertTrue("Expected Left, but was $result", result.isLeft())
             coVerify(exactly = 0) { directoryDao.update(any()) }
         }
 
     @Test
-    fun `refreshManga deve retornar Left quando falha ao listar arquivos da pasta via SAF`() =
+    fun `refreshManga should return Left when listing files in directory via SAF fails`() =
         runTest {
             val comicId = 1L
             val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
@@ -176,12 +176,12 @@ class ComicDirectoryEngineTest {
 
             val result = repository.refreshManga(comicId)
 
-            assertTrue("Esperado Left, mas foi $result", result.isLeft())
+            assertTrue("Expected Left, but was $result", result.isLeft())
             coVerify(exactly = 0) { directoryDao.update(any()) }
         }
 
     @Test
-    fun `deve realizar scan incremental e encontrar comics`() =
+    fun `should perform incremental scan and find comics`() =
         runTest {
             val rootUri = mockk<Uri>()
             val comic = MangaDirectoryFixtures.createMangaDirectory(name = "BPRD")
@@ -196,7 +196,7 @@ class ComicDirectoryEngineTest {
         }
 
     @Test
-    fun `incrementalScan deve reprocessar pasta existente mesmo quando lastModified nao aumentou`() =
+    fun `incrementalScan should reprocess existing directory even when lastModified did not increase`() =
         runTest {
             val rootUri = mockk<Uri>()
             val discovered =
@@ -221,7 +221,7 @@ class ComicDirectoryEngineTest {
         }
 
     @Test
-    fun `observeLibrary deve emitir lista de DTOs corretamente`() =
+    fun `observeLibrary should emit list of DTOs correctly`() =
         runTest {
             val entityList = listOf(MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "Comic A"))
             every { directoryDao.getAllDirectories() } returns flowOf(entityList)

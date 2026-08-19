@@ -18,48 +18,48 @@ class GroupedHeroButtonTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_titulo_e_descricao_no_botao_agrupado() {
+    fun should_display_title_and_description_in_grouped_button() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.GroupedHeroButton(
-                    title = "Configurações",
-                    description = "Ajuste as preferências",
+                    title = "Settings",
+                    description = "Adjust preferences",
                     icon = Icons.Default.Settings,
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Configurações").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Ajuste as preferências").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Adjust preferences").assertIsDisplayed()
     }
 
     @Test
-    fun deve_executar_callback_de_clique_ao_pressionar_o_botao() {
+    fun should_execute_click_callback_when_pressing_button() {
         var clicked = false
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.GroupedHeroButton(
-                    title = "Item Clicável",
+                    title = "Clickable Item",
                     icon = Icons.Default.Settings,
                     onClick = { clicked = true },
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Item Clicável").performClick()
+        composeTestRule.onNodeWithText("Clickable Item").performClick()
         assertTrue(clicked)
     }
 
     @Test
-    fun deve_exibir_conteudo_aninhado_quando_fornecido() {
+    fun should_display_nested_content_when_provided() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.GroupedHeroButton(
-                    title = "Item Principal",
+                    title = "Main Item",
                     icon = Icons.Default.Settings,
                     nestedItem = {
                         Acerola.Component.HeroNestedButton(
-                            title = "Item Aninhado",
+                            title = "Nested Item",
                             icon = Icons.Default.Sync,
                             onClick = {},
                         )
@@ -68,6 +68,6 @@ class GroupedHeroButtonTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Item Aninhado").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nested Item").assertIsDisplayed()
     }
 }

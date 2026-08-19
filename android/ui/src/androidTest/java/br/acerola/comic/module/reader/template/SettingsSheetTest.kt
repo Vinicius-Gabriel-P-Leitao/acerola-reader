@@ -14,7 +14,7 @@ class SettingsSheetTest {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Test
-    fun deve_exibir_opcoes_de_modo_de_leitura() {
+    fun should_display_reading_mode_options() {
         composeTestRule.setContent {
             Reader.Template.SettingsSheet(
                 onDismissRequest = {},

@@ -39,7 +39,7 @@ class CoverFromChapterUseCaseTest {
 
     // Caminho feliz — extração e refresh funcionam
     @Test
-    fun `invoke deve retornar sucesso quando extração e refresh do comic funcionam`() =
+    fun `invoke should return success when extraction and comic refresh succeed`() =
         runTest {
             coEvery { coverExtractor.extractFirstPageAsCover(42L) } returns Either.Right(Unit)
             coEvery { comicGateway.refreshManga(42L) } returns Either.Right(Unit)
@@ -53,7 +53,7 @@ class CoverFromChapterUseCaseTest {
 
     // Arquivo inexistente → FileNotFound mapeado para LibrarySyncError sem crash
     @Test
-    fun `invoke deve retornar erro tipado quando arquivo não existe sem lançar exceção`() =
+    fun `invoke should return typed error when file does not exist without throwing exception`() =
         runTest {
             coEvery { coverExtractor.extractFirstPageAsCover(42L) } returns
                 Either.Left(IoError.FileNotFound("comics/mistery-comic"))
@@ -67,7 +67,7 @@ class CoverFromChapterUseCaseTest {
 
     // Leitura do arquivo falha → FileReadError mapeado para LibrarySyncError sem cast forçado
     @Test
-    fun `invoke deve retornar erro tipado quando leitura de arquivo falha sem cast forçado`() =
+    fun `invoke should return typed error when file read fails without forced cast`() =
         runTest {
             val cause = Exception("Disk read error")
             coEvery { coverExtractor.extractFirstPageAsCover(42L) } returns

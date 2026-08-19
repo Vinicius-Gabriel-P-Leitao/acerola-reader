@@ -38,7 +38,7 @@ class VolumeArchiveEngineTest {
     }
 
     @Test
-    fun `observeVolumeGroups deve emitir grupos corretamente`() =
+    fun `observeVolumeGroups should emit groups correctly`() =
         runTest {
             val comicId = 1L
             val summaries =
@@ -74,7 +74,7 @@ class VolumeArchiveEngineTest {
         }
 
     @Test
-    fun `getVolumeChapterPage deve retornar lista de capitulos`() =
+    fun `getVolumeChapterPage should return chapters list`() =
         runTest {
             val comicId = 1L
             val volumeId = 101L
@@ -103,7 +103,7 @@ class VolumeArchiveEngineTest {
         }
 
     @Test
-    fun `observeHasRootChapters deve emitir true se houver capitulos na raiz`() =
+    fun `observeHasRootChapters should emit true if there are chapters in root`() =
         runTest {
             val comicId = 1L
             every { chapterArchiveDao.observeRootChaptersCountByDirectoryId(comicId) } returns flowOf(1)

@@ -228,29 +228,29 @@ class FileSyncFfiIntegrationTest {
 
             val completed = latch.await(60, TimeUnit.SECONDS)
             assertTrue(
-                "sync não completou nos dois lados dentro de 60s. Eventos A: $eventsA | Eventos B: $eventsB",
+                "sync did not complete on both sides within 60s. Events A: $eventsA | Events B: $eventsB",
                 completed,
             )
 
-            assertEquals("A deveria ter recebido exatamente 1 capítulo de B", 1, providerA.finalized.size)
+            assertEquals("A should have received exactly 1 chapter from B", 1, providerA.finalized.size)
             val receivedByA = providerA.finalized[0]
             assertEquals("Comic B", receivedByA.comicName)
             assertEquals(
-                "checksum declarado por B não bate com o recalculado por A após receber",
+                "checksum declared by B does not match recalculated by A after receiving",
                 receivedByA.expectedChecksum,
                 receivedByA.actualChecksum,
             )
-            assertArrayEquals("bytes recebidos por A não batem byte-a-byte com o que B enviou", payloadB, receivedByA.bytes)
+            assertArrayEquals("bytes received by A do not match byte-by-byte with what B sent", payloadB, receivedByA.bytes)
 
-            assertEquals("B deveria ter recebido exatamente 1 capítulo de A", 1, providerB.finalized.size)
+            assertEquals("B should have received exactly 1 chapter from A", 1, providerB.finalized.size)
             val receivedByB = providerB.finalized[0]
             assertEquals("Comic A", receivedByB.comicName)
             assertEquals(
-                "checksum declarado por A não bate com o recalculado por B após receber",
+                "checksum declared by A does not match recalculated by B after receiving",
                 receivedByB.expectedChecksum,
                 receivedByB.actualChecksum,
             )
-            assertArrayEquals("bytes recebidos por B não batem byte-a-byte com o que A enviou", payloadA, receivedByB.bytes)
+            assertArrayEquals("bytes received by B do not match byte-by-byte with what A sent", payloadA, receivedByB.bytes)
         } finally {
             nodeA.shutdown()
             nodeB.shutdown()
@@ -299,23 +299,23 @@ class FileSyncFfiIntegrationTest {
             nodeSender.connect(nodeReceiver.getLocalAddr(), FILE_SYNC_ALPN)
 
             val completed = latch.await(120, TimeUnit.SECONDS)
-            assertTrue("sync não completou dentro de 120s. Eventos: $events", completed)
+            assertTrue("sync did not complete within 120s. Events: $events", completed)
 
-            assertEquals("nem todos os capítulos chegaram", chapterCount, receiver.finalized.size)
+            assertEquals("not all chapters arrived", chapterCount, receiver.finalized.size)
 
             val byChapter = receiver.finalized.associateBy { it.chapter }
             entries.forEach { (key, value) ->
                 val (comicName, chapter) = key
                 val (_, expectedBytes) = value
-                val got = byChapter[chapter] ?: error("capítulo $chapter nunca chegou do lado que recebeu")
-                assertEquals("capítulo $chapter: comic_name divergiu", comicName, got.comicName)
+                val got = byChapter[chapter] ?: error("chapter $chapter never arrived at the receiving side")
+                assertEquals("chapter $chapter: comic_name diverged", comicName, got.comicName)
                 assertEquals(
-                    "capítulo $chapter: checksum declarado não bate com o recalculado",
+                    "chapter $chapter: declared checksum does not match recalculated",
                     got.expectedChecksum,
                     got.actualChecksum,
                 )
                 assertArrayEquals(
-                    "capítulo $chapter: bytes recebidos divergem do original (possível vazamento de estado entre handles)",
+                    "chapter $chapter: received bytes diverge from original (possible state leak between handles)",
                     expectedBytes,
                     got.bytes,
                 )

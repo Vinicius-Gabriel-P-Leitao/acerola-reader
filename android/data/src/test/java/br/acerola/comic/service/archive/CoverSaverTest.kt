@@ -45,9 +45,9 @@ class CoverSaverTest {
     fun tearDown() = unmockkStatic(DocumentFile::class)
 
     @Test
-    fun `processCover deve salvar imagem no disco e atualizar base de dados com sucesso`() =
+    fun `processCover should save image to disk and update database successfully`() =
         runTest {
-            // Arrange
+            // Preparação
             val rootUri = mockk<Uri>()
             val coverDto = LookupFixtures.createCoverDto()
             val bytes = byteArrayOf(0, 1, 2)
@@ -70,10 +70,10 @@ class CoverSaverTest {
             coEvery { directoryDao.getDirectoryById(1) } returns comicDir
             coEvery { directoryDao.update(any()) } returns Unit
 
-            // Act
+            // Ação
             val result = service.processCover(rootUri, 1, bytes, coverDto.url, "One Piece", 100)
 
-            // Assert
+            // Verificação
             assertTrue(result.isRight())
             result.onRight { assertEquals(1L, it) }
             coVerify { fileStorageHandler.saveFile(comicDoc, "cover.jpg", "image/jpeg", bytes) }
@@ -81,9 +81,9 @@ class CoverSaverTest {
         }
 
     @Test
-    fun `processCover deve retornar FileNotFound se nao conseguir acessar FS`() =
+    fun `processCover should return FileNotFound if unable to access FS`() =
         runTest {
-            // Arrange
+            // Preparação
             val rootUri = mockk<Uri>()
             val bytes = byteArrayOf(0, 1, 2)
             val coverUrl = "https://mangadex.org/covers/1/a.jpg"
@@ -92,10 +92,10 @@ class CoverSaverTest {
             coEvery { directoryDao.getDirectoryById(1) } returns comicDir
             every { DocumentFile.fromTreeUri(context, any()) } returns null
 
-            // Act
+            // Ação
             val result = service.processCover(rootUri, 1, bytes, coverUrl, "One Piece", 100)
 
-            // Assert
+            // Verificação
             assertTrue(result.isLeft())
             result.onLeft { assertTrue(it is IoError.FileNotFound) }
         }

@@ -35,7 +35,7 @@ class ObserveChaptersUseCaseTest {
     }
 
     @Test
-    fun `observeByComic deve delegar para o repositorio`() =
+    fun `observeByComic should delegate to repository`() =
         runTest {
             val dto = mockk<ChapterPageDto>()
             every { readGateway.observeChapters(comicId = 1L) } returns MutableStateFlow(value = dto)
@@ -47,7 +47,7 @@ class ObserveChaptersUseCaseTest {
         }
 
     @Test
-    fun `loadPage deve delegar para o repositorio com parametros corretos`() =
+    fun `loadPage should delegate to repository with correct parameters`() =
         runTest {
             val dto = mockk<ChapterPageDto>()
             coEvery { readGateway.getChapterPage(comicId = 1L, total = 100, page = 2, pageSize = 20) } returns dto

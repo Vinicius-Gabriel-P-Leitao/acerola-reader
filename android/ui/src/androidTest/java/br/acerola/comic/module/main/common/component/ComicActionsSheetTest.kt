@@ -18,7 +18,7 @@ class ComicActionsSheetTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun deve_exibir_acoes_principais_ao_abrir_o_sheet() {
+    fun should_display_main_actions_when_opening_sheet() {
         val comic = ComicFixtures.createMangaUiState().comic
 
         composeTestRule.setContent {
@@ -38,7 +38,7 @@ class ComicActionsSheetTest {
     }
 
     @Test
-    fun deve_exibir_dialogo_de_confirmacao_ao_clicar_em_ocultar() {
+    fun should_display_confirmation_dialog_when_clicking_hide() {
         composeTestRule.setContent {
             Main.Common.Component.ComicActionsSheet(
                 comic = ComicFixtures.createMangaUiState().comic,
@@ -58,7 +58,7 @@ class ComicActionsSheetTest {
     }
 
     @Test
-    fun deve_exibir_dialogo_de_confirmacao_ao_clicar_em_deletar() {
+    fun should_display_confirmation_dialog_when_clicking_delete() {
         composeTestRule.setContent {
             Main.Common.Component.ComicActionsSheet(
                 comic = ComicFixtures.createMangaUiState().comic,

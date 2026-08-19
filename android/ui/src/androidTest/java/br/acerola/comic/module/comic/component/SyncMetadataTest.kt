@@ -14,7 +14,7 @@ class SyncMetadataTest {
     val composeTestRule = createComposeRule()
 
     private fun setContent(
-        remoteInfo: ComicMetadataDto? = ComicMetadataDto(title = "Comic Teste", description = "Desc", status = "Ongoing"),
+        remoteInfo: ComicMetadataDto? = ComicMetadataDto(title = "Test Comic", description = "Desc", status = "Ongoing"),
         externalSyncEnabled: Boolean = true,
     ) {
         composeTestRule.setContent {
@@ -31,7 +31,7 @@ class SyncMetadataTest {
     }
 
     @Test
-    fun deve_exibir_secoes_de_mangadex_anilist_e_comicinfo_quando_sync_externo_ativado() {
+    fun should_display_mangadex_anilist_and_comicinfo_sections_when_external_sync_enabled() {
         setContent(externalSyncEnabled = true)
 
         composeTestRule.onNodeWithText("MangaDex", substring = true).assertIsDisplayed()
@@ -40,7 +40,7 @@ class SyncMetadataTest {
     }
 
     @Test
-    fun nao_deve_exibir_mangadex_e_anilist_quando_sync_externo_desativado() {
+    fun should_not_display_mangadex_and_anilist_when_external_sync_disabled() {
         setContent(externalSyncEnabled = false)
 
         composeTestRule.onNodeWithText("MangaDex", substring = true).assertDoesNotExist()

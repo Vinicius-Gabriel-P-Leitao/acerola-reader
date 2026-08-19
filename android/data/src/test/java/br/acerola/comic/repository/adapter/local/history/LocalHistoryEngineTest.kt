@@ -26,7 +26,7 @@ class LocalHistoryEngineTest {
     }
 
     @Test
-    fun `Deve retornar historico por comic id`() =
+    fun `Should return history by comic id`() =
         runTest {
             val comicId = 1L
             val historyEntity = ReadingHistory(comicId, "10", 10L, 5, false, 123456L)
@@ -40,7 +40,7 @@ class LocalHistoryEngineTest {
         }
 
     @Test
-    fun `Deve salvar historico`() =
+    fun `Should save history`() =
         runTest {
             val dto = ReadingHistoryDto(1L, 10L, "10", 5, false, 123456L)
             coEvery { readingHistoryDao.upsertHistory(any()) } returns Unit
@@ -51,7 +51,7 @@ class LocalHistoryEngineTest {
         }
 
     @Test
-    fun `Deve marcar capitulo como lido`() =
+    fun `Should mark chapter as read`() =
         runTest {
             val comicId = 1L
             val chapterSort = "10"
@@ -64,7 +64,7 @@ class LocalHistoryEngineTest {
         }
 
     @Test
-    fun `Deve desmarcar capitulo como lido`() =
+    fun `Should unmark chapter as read`() =
         runTest {
             val comicId = 1L
             val chapterSort = "10"

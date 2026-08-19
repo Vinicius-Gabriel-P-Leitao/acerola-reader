@@ -18,12 +18,12 @@ class FabGroupTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_itens_do_grupo_ao_expandir_o_fab_principal() {
+    fun should_display_group_items_when_expanding_main_fab() {
         var itemClicked = false
         val items =
             listOf(
                 FabGroupItem(
-                    label = "Ação 1",
+                    label = "Action 1",
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     onClick = { itemClicked = true },
                 ),
@@ -32,15 +32,15 @@ class FabGroupTest {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.FabGroup(
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Abrir") },
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Open") },
                     items = items,
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Ação 1").assertDoesNotExist()
-        composeTestRule.onNodeWithContentDescription("Abrir").performClick()
-        composeTestRule.onNodeWithText("Ação 1").assertIsDisplayed().performClick()
+        composeTestRule.onNodeWithText("Action 1").assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription("Open").performClick()
+        composeTestRule.onNodeWithText("Action 1").assertIsDisplayed().performClick()
 
         assert(itemClicked)
     }

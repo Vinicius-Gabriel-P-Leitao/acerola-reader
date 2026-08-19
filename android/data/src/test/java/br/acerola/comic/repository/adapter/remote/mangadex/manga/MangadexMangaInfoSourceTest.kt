@@ -40,7 +40,7 @@ class MangadexMangaInfoSourceTest {
     }
 
     @Test
-    fun `searchInfo deve buscar comic e mapear DTO corretamente`() =
+    fun `searchInfo should fetch comic and map DTO correctly`() =
         runTest {
             val title = "Naruto"
             val languages = listOf(Language.PT_BR.code)
@@ -86,7 +86,7 @@ class MangadexMangaInfoSourceTest {
         }
 
     @Test
-    fun `searchInfo deve retornar ConnectionFailed em caso de erro de IO`() =
+    fun `searchInfo should return ConnectionFailed on IO error`() =
         runTest {
             val languages = listOf(Language.PT_BR.code)
             coEvery { api.searchMangaByName(any(), any(), any(), any(), languages) } throws IOException("Connection Reset")

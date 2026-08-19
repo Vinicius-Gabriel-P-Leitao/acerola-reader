@@ -17,7 +17,7 @@ class SearchBarTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun deve_exibir_placeholder_e_reagir_a_entrada_de_texto() {
+    fun should_display_placeholder_and_react_to_text_input() {
         composeTestRule.setContent {
             Acerola.Component.SearchBar<String>(
                 query = "",
@@ -26,26 +26,26 @@ class SearchBarTest {
                 expanded = false,
                 onExpandedChange = {},
                 items = emptyList(),
-                placeholder = "Buscar...",
+                placeholder = "Search...",
                 itemKey = { it },
                 itemContent = {},
             )
         }
 
-        composeTestRule.onNodeWithText("Buscar...").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Search...").assertIsDisplayed()
     }
 
     @Test
-    fun deve_mostrar_botao_de_limpar_quando_houver_texto_e_estiver_expandido() {
+    fun should_show_clear_button_when_there_is_text_and_expanded() {
         composeTestRule.setContent {
             Acerola.Component.SearchBar<String>(
-                query = "Texto de teste",
+                query = "Test text",
                 onQueryChange = {},
                 onSearch = {},
                 expanded = true,
                 onExpandedChange = {},
                 items = emptyList(),
-                placeholder = "Buscar...",
+                placeholder = "Search...",
                 itemKey = { it },
                 itemContent = {},
             )
@@ -55,7 +55,7 @@ class SearchBarTest {
     }
 
     @Test
-    fun deve_mostrar_mensagem_de_nenhum_resultado_quando_a_lista_estiver_vazia_e_houver_query() {
+    fun should_show_no_results_message_when_list_is_empty_and_there_is_query() {
         composeTestRule.setContent {
             Acerola.Component.SearchBar<String>(
                 query = "NadaEncontrado",
@@ -64,7 +64,7 @@ class SearchBarTest {
                 expanded = true,
                 onExpandedChange = {},
                 items = emptyList(),
-                placeholder = "Buscar...",
+                placeholder = "Search...",
                 itemKey = { it },
                 itemContent = {},
             )

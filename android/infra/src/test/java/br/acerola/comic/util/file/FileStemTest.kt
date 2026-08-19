@@ -5,23 +5,23 @@ import org.junit.Test
 
 class FileStemTest {
     @Test
-    fun `fileStem remove apenas a ultima extensao`() {
+    fun `fileStem removes only the last extension`() {
         assertEquals("Ch. 1", "Ch. 1.cbz".fileStem())
         assertEquals("archive.tar", "archive.tar.gz".fileStem())
     }
 
     @Test
-    fun `fileStem preserva dotfiles sem extensao real`() {
+    fun `fileStem preserves dotfiles without real extension`() {
         assertEquals(".gitignore", ".gitignore".fileStem())
     }
 
     @Test
-    fun `fileStem preserva nomes sem extensao`() {
+    fun `fileStem preserves names without extension`() {
         assertEquals("sem_extensao", "sem_extensao".fileStem())
     }
 
     @Test
-    fun `fileStem remove a ultima extensao mesmo em dotfiles com extensao adicional`() {
+    fun `fileStem removes the last extension even on dotfiles with additional extension`() {
         assertEquals(".gitignore", ".gitignore.bak".fileStem())
     }
 }

@@ -74,7 +74,7 @@ class ObserveCombinedChaptersUseCaseTest {
     }
 
     @Test
-    fun `deve observar capitulos locais e grupos de volume com sucesso`() =
+    fun `should observe local chapters and volume groups successfully`() =
         runTest {
             val localChapter =
                 ChapterFileDto(
@@ -119,7 +119,7 @@ class ObserveCombinedChaptersUseCaseTest {
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
-    fun `nao deve retornar resultado desatualizado do cache quando novos capitulos chegam`() =
+    fun `should not return stale cache result when new chapters arrive`() =
         runTest {
             val sort = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING)
             val volumeGroupsFlow = MutableStateFlow<List<VolumeChapterGroupDto>>(emptyList())

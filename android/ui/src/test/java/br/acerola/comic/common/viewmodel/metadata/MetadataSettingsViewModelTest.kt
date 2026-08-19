@@ -48,7 +48,7 @@ class MetadataSettingsViewModelTest {
     }
 
     @Test
-    fun `deve emitir preferencia de comicinfo ao inicializar`() =
+    fun `should emit comicinfo preference on initialization`() =
         runTest {
             viewModel.generateComicInfo.test {
                 assertThat(awaitItem()).isTrue()
@@ -56,7 +56,7 @@ class MetadataSettingsViewModelTest {
         }
 
     @Test
-    fun `deve chamar saveGenerateComicInfo ao alterar configuracao`() =
+    fun `should call saveGenerateComicInfo when changing configuration`() =
         runTest {
             viewModel.setGenerateComicInfo(false)
             io.mockk.coVerify { MetadataPreference.saveGenerateComicInfo(any(), false) }

@@ -28,7 +28,7 @@ class RescanComicChaptersUseCaseTest {
     }
 
     @Test
-    fun invokeDeveChamarRefreshMangaChapters() =
+    fun invokeShouldCallRefreshMangaChapters() =
         runTest {
             coEvery { repository.refreshComicChapters(comicId = 1L) } returns Either.Right(value = Unit)
 

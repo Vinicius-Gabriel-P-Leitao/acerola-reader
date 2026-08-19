@@ -42,7 +42,7 @@ class ThemeViewModelTest {
     }
 
     @Test
-    fun `deve emitir tema atual ao inicializar`() =
+    fun `should emit current theme on initialization`() =
         runTest {
             viewModel.currentTheme.test {
                 assertThat(awaitItem()).isEqualTo(AppTheme.CATPPUCCIN)
@@ -50,7 +50,7 @@ class ThemeViewModelTest {
         }
 
     @Test
-    fun `deve chamar saveTheme ao alterar configuracao`() =
+    fun `should call saveTheme when changing configuration`() =
         runTest {
             viewModel.setTheme(AppTheme.NORD)
             io.mockk.coVerify { ThemePreference.saveTheme(any(), AppTheme.NORD) }

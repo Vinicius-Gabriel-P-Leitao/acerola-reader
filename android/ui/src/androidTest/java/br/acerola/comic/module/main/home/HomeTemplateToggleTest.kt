@@ -57,7 +57,7 @@ class HomeTemplateToggleTest {
     }
 
     @Test
-    fun `clique_no_botão_de_layout_deve_alternar_entre_lista_e_grade`() {
+    fun `clicking_layout_button_should_toggle_between_list_and_grid`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {

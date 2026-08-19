@@ -89,12 +89,12 @@ class ComicDirectoryViewModelTest {
     }
 
     @Test
-    fun `deve sincronizar biblioteca ao inicializar`() {
+    fun `should synchronize library on initialization`() {
         verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
     }
 
     @Test
-    fun `deve emitir lista de diretorios da biblioteca`() =
+    fun `should emit library directory list`() =
         runTest {
             val directories = listOf(mockk<ComicDirectoryDto>())
             every { comicRepo.observeLibrary() } returns MutableStateFlow(directories)
@@ -107,7 +107,7 @@ class ComicDirectoryViewModelTest {
         }
 
     @Test
-    fun `deve refletir progresso do WorkManager`() =
+    fun `should reflect WorkManager progress`() =
         runTest {
             val workInfo = mockk<WorkInfo>()
             every { workInfo.state } returns WorkInfo.State.RUNNING

@@ -21,7 +21,7 @@ class BaseActivityIntegrationTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_snackbar_de_erro_quando_solicitado_via_LocalSnackbarHostState() {
+    fun should_display_error_snackbar_when_requested_via_LocalSnackbarHostState() {
         val snackbarHostState = SnackbarHostState()
 
         composeTestRule.setContent {
@@ -36,17 +36,17 @@ class BaseActivityIntegrationTest {
                     ) { _ -> }
 
                     LaunchedEffect(Unit) {
-                        snackbarHostState.showSnackbar("Erro de teste", SnackbarVariant.Error)
+                        snackbarHostState.showSnackbar("Test error", SnackbarVariant.Error)
                     }
                 }
             }
         }
 
-        composeTestRule.onNodeWithText("Erro de teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test error").assertIsDisplayed()
     }
 
     @Test
-    fun deve_exibir_snackbar_de_sucesso_quando_solicitado() {
+    fun should_display_success_snackbar_when_requested() {
         val snackbarHostState = SnackbarHostState()
 
         composeTestRule.setContent {
@@ -61,12 +61,12 @@ class BaseActivityIntegrationTest {
                     ) { _ -> }
 
                     LaunchedEffect(Unit) {
-                        snackbarHostState.showSnackbar("Sucesso!", SnackbarVariant.Success)
+                        snackbarHostState.showSnackbar("Success!", SnackbarVariant.Success)
                     }
                 }
             }
         }
 
-        composeTestRule.onNodeWithText("Sucesso!").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Success!").assertIsDisplayed()
     }
 }

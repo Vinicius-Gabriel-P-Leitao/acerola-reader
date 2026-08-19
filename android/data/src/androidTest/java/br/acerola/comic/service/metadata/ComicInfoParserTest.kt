@@ -22,7 +22,7 @@ class ComicInfoParserTest {
     }
 
     @Test
-    fun parseMangaInfo_deve_retornar_sucesso_com_xml_valido() {
+    fun parseMangaInfo_should_return_success_with_valid_xml() {
         val xml =
             """
             <?xml version="1.0"?>
@@ -39,7 +39,7 @@ class ComicInfoParserTest {
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseMangaInfo(inputStream)
 
-        assertTrue("Deveria ser um sucesso", result.isRight())
+        assertTrue("Should be a success", result.isRight())
         result.onRight { info ->
             assertEquals("One Piece Series", info.title) // Series tem prioridade sobre Title
             assertEquals("Pirates adventure", info.description)
@@ -51,7 +51,7 @@ class ComicInfoParserTest {
     }
 
     @Test
-    fun parseMangaInfo_deve_retornar_MissingRootElement_se_xml_nao_for_comicinfo() {
+    fun parseMangaInfo_should_return_MissingRootElement_if_xml_is_not_comicinfo() {
         val xml =
             """
             <?xml version="1.0"?>
@@ -63,14 +63,14 @@ class ComicInfoParserTest {
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseMangaInfo(inputStream)
 
-        assertTrue("Deveria falhar", result.isLeft())
+        assertTrue("Should fail", result.isLeft())
         result.onLeft { error ->
             assertTrue(error is ComicInfoError.MissingRootElement)
         }
     }
 
     @Test
-    fun parseMangaInfo_deve_retornar_InvalidXmlFormat_se_xml_estiver_quebrado() {
+    fun parseMangaInfo_should_return_InvalidXmlFormat_if_xml_is_broken() {
         val xml =
             """
             <?xml version="1.0"?>
@@ -82,14 +82,14 @@ class ComicInfoParserTest {
         val inputStream = ByteArrayInputStream(xml.toByteArray())
         val result = service.parseMangaInfo(inputStream)
 
-        assertTrue("Deveria falhar com formato inválido", result.isLeft())
+        assertTrue("Should fail with invalid format", result.isLeft())
         result.onLeft { error ->
             assertTrue(error is ComicInfoError.InvalidXmlFormat)
         }
     }
 
     @Test
-    fun serialize_deve_gerar_xml_valido() {
+    fun serialize_should_generate_valid_xml() {
         val info =
             ComicMetadataDto(
                 title = "Berserk",

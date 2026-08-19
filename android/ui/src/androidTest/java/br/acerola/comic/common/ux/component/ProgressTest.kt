@@ -13,7 +13,7 @@ class ProgressTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_porcentagem_quando_informada() {
+    fun should_display_percentage_when_provided() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.Progress(
@@ -27,7 +27,7 @@ class ProgressTest {
     }
 
     @Test
-    fun deve_exibir_texto_padrao_de_sincronizacao_quando_carregando_sem_progresso() {
+    fun should_display_default_sync_text_when_loading_without_progress() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.Progress(

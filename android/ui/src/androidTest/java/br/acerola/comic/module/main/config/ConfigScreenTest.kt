@@ -62,7 +62,7 @@ class ConfigScreenTest {
     }
 
     @Test
-    fun `ConfigScreen_deve_exibir_todas_as_seções_de_configuração`() {
+    fun `ConfigScreen_should_display_all_configuration_sections`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides SnackbarHostState()) {

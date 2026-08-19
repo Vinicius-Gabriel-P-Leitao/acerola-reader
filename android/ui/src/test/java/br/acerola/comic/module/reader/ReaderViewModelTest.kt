@@ -88,7 +88,7 @@ class ReaderViewModelTest {
     }
 
     @Test
-    fun `deve atualizar o estado ao abrir um capitulo`() =
+    fun `should update state when opening a chapter`() =
         runTest {
             coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
             coEvery { processor.pageCount() } returns 10
@@ -104,7 +104,7 @@ class ReaderViewModelTest {
         }
 
     @Test
-    fun `deve marcar capitulo como lido ao atingir 70 por cento das paginas`() =
+    fun `should mark chapter as read upon reaching 70 percent of pages`() =
         runTest {
             coEvery { processor.pageCount() } returns 10
             coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
@@ -124,7 +124,7 @@ class ReaderViewModelTest {
         }
 
     @Test
-    fun `deve salvar progresso no historico ao mudar de pagina`() =
+    fun `should save progress in history when changing page`() =
         runTest {
             coEvery { processor.pageCount() } returns 10
             coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
@@ -136,7 +136,7 @@ class ReaderViewModelTest {
         }
 
     @Test
-    fun `deve identificar capitulos adjacentes corretamente`() =
+    fun `should identify adjacent chapters correctly`() =
         runTest {
             coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
 
@@ -150,7 +150,7 @@ class ReaderViewModelTest {
         }
 
     @Test
-    fun `deve respeitar ordenacao ascendente ao navegar entre capitulos`() =
+    fun `should respect ascending sort when navigating between chapters`() =
         runTest {
             coEvery { processor.openChapter(any()) } returns Either.Right(Unit)
 
@@ -163,7 +163,7 @@ class ReaderViewModelTest {
         }
 
     @Test
-    fun `deve respeitar ordenacao descendente ao navegar entre capitulos`() =
+    fun `should respect descending sort when navigating between chapters`() =
         runTest {
             unmockkObject(ChapterSortPreference)
             mockkObject(ChapterSortPreference)
@@ -192,7 +192,7 @@ class ReaderViewModelTest {
         }
 
     @Test
-    fun `deve ordenar capitulos decimais corretamente`() =
+    fun `should sort decimal chapters correctly`() =
         runTest {
             val chapter001 = ChapterFileDto(1L, "Cap 0.01", "/path/1", "0.01")
             val chapter010 = ChapterFileDto(10L, "Cap 0.10", "/path/10", "0.10")

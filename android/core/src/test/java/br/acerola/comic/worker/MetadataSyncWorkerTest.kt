@@ -76,9 +76,9 @@ class MetadataSyncWorkerTest {
             ).build()
     }
 
-    // Test for directoryId != -1L (Single comic sync)
+    // Teste para directoryId != -1L (sincronização de comic individual)
     @Test
-    fun `doWork deve retornar sucesso quando sincronizacao para um unico comic tem sucesso`() =
+    fun `doWork should return success when single comic synchronization succeeds`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -109,7 +109,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar falha quando sincronizacao para um unico comic falha`() =
+    fun `doWork should return failure when single comic synchronization fails`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -133,7 +133,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando sincronizacao para um unico comic com Anilist tem sucesso`() =
+    fun `doWork should return success when single comic synchronization with Anilist succeeds`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -157,7 +157,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando sincronizacao para um unico comic com ComicInfo tem sucesso`() =
+    fun `doWork should return success when single comic synchronization with ComicInfo succeeds`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -180,9 +180,9 @@ class MetadataSyncWorkerTest {
             assertTrue(result is Result.Success)
         }
 
-    // Test for Library-wide sync
+    // Teste para sincronização de toda a biblioteca
     @Test
-    fun `doWork deve retornar sucesso quando sincronizacao da biblioteca Mangadex tem sucesso`() =
+    fun `doWork should return success when Mangadex library synchronization succeeds`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -206,7 +206,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar falha quando sincronizacao da biblioteca Mangadex falha`() =
+    fun `doWork should return failure when Mangadex library synchronization fails`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -230,7 +230,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando rescan da biblioteca Anilist tem sucesso`() =
+    fun `doWork should return success when Anilist library rescan succeeds`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -254,7 +254,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve retornar sucesso quando sincronizacao da biblioteca ComicInfo tem sucesso`() =
+    fun `doWork should return success when ComicInfo library synchronization succeeds`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(
@@ -278,7 +278,7 @@ class MetadataSyncWorkerTest {
         }
 
     @Test
-    fun `doWork deve lidar com excecoes graciosamente e retornar falha`() =
+    fun `doWork should handle exceptions gracefully and return failure`() =
         runTest {
             coEvery {
                 syncMetadataUseCase.execute(any(), any(), any())

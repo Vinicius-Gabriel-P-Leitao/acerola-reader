@@ -17,13 +17,13 @@ class ComicListItemTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `MangaListItem_deve_exibir_o_título_do_quadrinho_corretamente`() {
+    fun `ComicListItem_should_display_comic_title_correctly`() {
         val comic =
             ComicDto(
                 directory =
                     ComicDirectoryDto(
                         id = 1L,
-                        name = "Pasta Comic",
+                        name = "Comic Folder",
                         path = "",
                         coverUri = null,
                         bannerUri = null,
@@ -32,7 +32,7 @@ class ComicListItemTest {
                     ),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Título do Comic",
+                        title = "Comic Title",
                         description = "",
                         status = "",
                     ),
@@ -45,6 +45,6 @@ class ComicListItemTest {
         }
 
         // Valida se o título é renderizado corretamente
-        composeTestRule.onNodeWithText("Título do Comic").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Comic Title").assertIsDisplayed()
     }
 }

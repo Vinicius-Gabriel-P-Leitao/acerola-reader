@@ -73,7 +73,7 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `deve inicializar com lista vazia`() =
+    fun `should initialize with empty list`() =
         runTest {
             viewModel.historyItems.test {
                 assertThat(awaitItem()).isEmpty()

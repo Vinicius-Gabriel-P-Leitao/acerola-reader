@@ -17,7 +17,7 @@ class VolumeStylePreferenceTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun deve_permitir_trocar_o_estilo_de_visualizacao_de_volumes() {
+    fun should_allow_changing_volume_view_style() {
         var selectedMode = VolumeViewType.VOLUME
 
         composeTestRule.setContent {

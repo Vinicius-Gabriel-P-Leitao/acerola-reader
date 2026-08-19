@@ -12,7 +12,7 @@ class SyncMangadexDataTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_sincronizar_metadados_mangadex() {
+    fun should_display_sync_mangadex_metadata() {
         composeTestRule.setContent {
             Main.Config.Component.SyncMangadexData(
                 onRescan = {},

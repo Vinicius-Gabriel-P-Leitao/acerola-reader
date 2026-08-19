@@ -7,7 +7,7 @@ import org.junit.Test
 
 class MediaFileTest {
     @Test
-    fun `isCover deve identificar corretamente arquivos de capa`() {
+    fun `isCover should identify cover files correctly`() {
         assertTrue(MediaFile.isCover("cover.jpg"))
         assertTrue(MediaFile.isCover("COVER.PNG"))
         assertTrue(MediaFile.isCover("folder.webp"))
@@ -21,7 +21,7 @@ class MediaFileTest {
     }
 
     @Test
-    fun `isBanner deve identificar corretamente arquivos de banner`() {
+    fun `isBanner should identify banner files correctly`() {
         assertTrue(MediaFile.isBanner("banner.jpg"))
         assertTrue(MediaFile.isBanner("BANNER.PNG"))
         assertTrue(MediaFile.isBanner("meu_banner_customizado.webp"))
@@ -32,7 +32,7 @@ class MediaFileTest {
     }
 
     @Test
-    fun `isImage deve validar extensoes de imagem`() {
+    fun `isImage should validate image extensions`() {
         assertTrue(MediaFile.isImage("file.jpg"))
         assertTrue(MediaFile.isImage("file.jpeg"))
         assertTrue(MediaFile.isImage("file.png"))
@@ -45,7 +45,7 @@ class MediaFileTest {
     }
 
     @Test
-    fun `matches deve validar se o nome bate com o enum de banner ou cover`() {
+    fun `matches should validate if name matches banner or cover enum`() {
         assertTrue(MediaFile.COVER.matches("cover.jpg"))
         assertTrue(MediaFile.BANNER.matches("banner.png"))
 

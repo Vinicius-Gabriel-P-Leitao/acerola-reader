@@ -10,7 +10,7 @@ class DividerTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_renderizar_divider() {
+    fun should_render_divider() {
         composeTestRule.setContent {
             Acerola.Component.Divider()
         }
