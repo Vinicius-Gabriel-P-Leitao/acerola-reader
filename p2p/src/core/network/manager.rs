@@ -772,14 +772,14 @@ mod tests {
             .await
             .unwrap();
 
-        // Advance virtual time by 1500ms (100 + 200 + 400 + 800ms retry backoffs)
+        // Avança o tempo virtual em 1500ms (backoffs de retry de 100 + 200 + 400 + 800ms)
         tokio::time::sleep(Duration::from_millis(1500)).await;
         tokio::task::yield_now().await;
 
-        // At 1500ms, all 5 attempts have failed.
-        // If attempt < max_retries was used, no sleep occurred after the 5th attempt and the task finished,
-        // reducing network_state strong_count back to 2 (manager + test body).
-        // If attempt <= max_retries was used, the task is currently sleeping for 1600ms, keeping strong_count at 3.
+        // Em 1500ms, todas as 5 tentativas falharam.
+        // Se attempt < max_retries foi usado, nenhum sleep ocorreu após a 5ª tentativa e a tarefa terminou,
+        // reduzindo o strong_count de network_state de volta para 2 (manager + corpo do teste).
+        // Se attempt <= max_retries foi usado, a tarefa estaria dormindo por 1600ms, mantendo o strong_count em 3.
         assert_eq!(
             Arc::strong_count(&network_state),
             2,

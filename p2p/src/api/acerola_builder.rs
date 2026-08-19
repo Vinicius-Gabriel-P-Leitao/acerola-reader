@@ -272,8 +272,8 @@ mod tests {
             IrohTransportBuilder::default(),
             test_device_info(),
         )
-        .inbound(b"meu/protocolo", Arc::new(NoOpHandler))
-        .outbound(b"meu/protocolo", Arc::new(NoOpHandler))
+        .inbound(b"my/protocol", Arc::new(NoOpHandler))
+        .outbound(b"my/protocol", Arc::new(NoOpHandler))
         .build()
         .await;
 
@@ -552,11 +552,11 @@ mod tests {
 
         let resolution_result = builder.resolve_identity().await;
 
-        assert!(resolution_result.is_err(), "falha de carregamento precisa propagar, não ser engolida");
-        assert!(builder.transport.get_seed().is_none(), "nenhuma seed nova deveria ter sido atribuída");
+        assert!(resolution_result.is_err(), "loading failure must propagate, not be swallowed");
+        assert!(builder.transport.get_seed().is_none(), "no new seed should have been assigned");
         assert!(
             !save_identity_called.load(std::sync::atomic::Ordering::SeqCst),
-            "save_identity nunca deveria ser chamado quando load_identity falhou de verdade"
+            "save_identity should never be called when load_identity truly failed"
         );
     }
 }

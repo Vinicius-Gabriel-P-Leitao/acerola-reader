@@ -282,7 +282,7 @@ mod run_in_isolation {
             }
             assert!(
                 start.elapsed() < Duration::from_secs(5),
-                "glare: pelo menos um lado não recebeu dados (a_done={a_done}, b_done={b_done})"
+                "glare: at least one side did not receive data (a_done={a_done}, b_done={b_done})"
             );
             sleep(Duration::from_millis(20)).await;
         }

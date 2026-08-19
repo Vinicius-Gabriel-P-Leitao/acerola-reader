@@ -150,39 +150,39 @@ mod tests {
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
-        assert!(validator(&make_ctx("novo-peer")).await.is_ok());
-        assert!(store.contains("novo-peer").await);
+        assert!(validator(&make_ctx("new-peer")).await.is_ok());
+        assert!(store.contains("new-peer").await);
     }
 
     #[tokio::test]
     async fn already_known_peer_is_accepted() {
         let store = make_store();
-        store.insert("peer-antigo").await;
+        store.insert("old-peer").await;
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
-        assert!(validator(&make_ctx("peer-antigo")).await.is_ok());
+        assert!(validator(&make_ctx("old-peer")).await.is_ok());
     }
 
     #[tokio::test]
     async fn blocked_peer_is_rejected() {
         let store = make_store();
-        store.block("peer-malicioso").await;
+        store.block("malicious-peer").await;
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
-        let result = validator(&make_ctx("peer-malicioso")).await;
+        let result = validator(&make_ctx("malicious-peer")).await;
         assert!(matches!(result, Err(ConnectionError::AuthDenied(_))));
     }
 
     #[tokio::test]
     async fn blocked_peer_is_not_inserted_into_trusted() {
         let store = make_store();
-        store.block("peer-malicioso").await;
+        store.block("malicious-peer").await;
         let validator =
             TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator();
 
-        let _ = validator(&make_ctx("peer-malicioso")).await;
-        assert!(!store.contains("peer-malicioso").await);
+        let _ = validator(&make_ctx("malicious-peer")).await;
+        assert!(!store.contains("malicious-peer").await);
     }
 }

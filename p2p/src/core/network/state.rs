@@ -232,14 +232,14 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.store_device_info(peer.clone(), make_device_info("meu-pc"));
-        assert_eq!(state.get_device_info(&peer).unwrap().name, "meu-pc");
+        state.store_device_info(peer.clone(), make_device_info("my-pc"));
+        assert_eq!(state.get_device_info(&peer).unwrap().name, "my-pc");
     }
 
     #[test]
     fn get_device_info_returns_none_for_unknown_peer() {
         let state = NetworkState::new();
-        assert!(state.get_device_info(&make_peer("fantasma")).is_none());
+        assert!(state.get_device_info(&make_peer("ghost")).is_none());
     }
 
     #[test]
@@ -247,10 +247,10 @@ mod tests {
         let mut state = NetworkState::new();
         let peer = make_peer("peer-1");
 
-        state.store_device_info(peer.clone(), make_device_info("nome-antigo"));
-        state.store_device_info(peer.clone(), make_device_info("nome-novo"));
+        state.store_device_info(peer.clone(), make_device_info("old-name"));
+        state.store_device_info(peer.clone(), make_device_info("new-name"));
 
-        assert_eq!(state.get_device_info(&peer).unwrap().name, "nome-novo");
+        assert_eq!(state.get_device_info(&peer).unwrap().name, "new-name");
     }
 
     #[test]
@@ -261,11 +261,11 @@ mod tests {
         let peer = make_peer("peer-1");
 
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
-        state.store_device_info(peer.clone(), make_device_info("meu-pc"));
+        state.store_device_info(peer.clone(), make_device_info("my-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(!state.is_connected(&peer));
-        assert_eq!(state.get_device_info(&peer).unwrap().name, "meu-pc");
+        assert_eq!(state.get_device_info(&peer).unwrap().name, "my-pc");
     }
 
     #[test]
@@ -275,7 +275,7 @@ mod tests {
 
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/blob/1".to_vec());
-        state.store_device_info(peer.clone(), make_device_info("meu-pc"));
+        state.store_device_info(peer.clone(), make_device_info("my-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
 
         assert!(state.get_device_info(&peer).is_some());
@@ -288,12 +288,12 @@ mod tests {
 
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/blob/1".to_vec());
-        state.store_device_info(peer.clone(), make_device_info("meu-pc"));
+        state.store_device_info(peer.clone(), make_device_info("my-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
         state.disconnect(&peer, b"acerola/blob/1");
 
         assert!(!state.is_connected(&peer));
-        assert_eq!(state.get_device_info(&peer).unwrap().name, "meu-pc");
+        assert_eq!(state.get_device_info(&peer).unwrap().name, "my-pc");
     }
 
     #[test]
@@ -313,13 +313,13 @@ mod tests {
         let peer = make_peer("peer-1");
 
         state.connect(peer.clone(), make_addr("peer-1"), b"acerola/handshake/1".to_vec());
-        state.store_device_info(peer.clone(), make_device_info("meu-pc"));
+        state.store_device_info(peer.clone(), make_device_info("my-pc"));
         state.disconnect(&peer, b"acerola/handshake/1");
 
         let known: Vec<_> = state.known_peers().collect();
         assert_eq!(known.len(), 1);
         assert_eq!(known[0].0, &peer);
-        assert_eq!(known[0].2.unwrap().name, "meu-pc");
+        assert_eq!(known[0].2.unwrap().name, "my-pc");
     }
 
     #[test]

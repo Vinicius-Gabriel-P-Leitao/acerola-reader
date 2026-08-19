@@ -276,7 +276,7 @@ mod tests {
     #[tokio::test]
     async fn device_info_name_accessible_after_build() {
         let info = DeviceInfo {
-            name: "meu-pc".to_string(),
+            name: "my-pc".to_string(),
             os: "linux".to_string(),
             version: "1.0.0".to_string(),
         };
@@ -284,13 +284,13 @@ mod tests {
             .build()
             .await
             .unwrap();
-        assert_eq!(node.local_device_info().name, "meu-pc");
+        assert_eq!(node.local_device_info().name, "my-pc");
     }
 
     #[tokio::test]
     async fn device_info_os_accessible_after_build() {
         let info = DeviceInfo {
-            name: "meu-pc".to_string(),
+            name: "my-pc".to_string(),
             os: "windows".to_string(),
             version: "1.0.0".to_string(),
         };
@@ -304,7 +304,7 @@ mod tests {
     #[tokio::test]
     async fn device_info_version_accessible_after_build() {
         let info = DeviceInfo {
-            name: "meu-pc".to_string(),
+            name: "my-pc".to_string(),
             os: "linux".to_string(),
             version: "2.3.1".to_string(),
         };
