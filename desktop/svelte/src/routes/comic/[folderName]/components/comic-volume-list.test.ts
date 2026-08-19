@@ -8,7 +8,7 @@ vi.mock('svelte/transition', () => ({
 	slide: () => ({ duration: 0 })
 }));
 
-// Mock animate for Svelte transitions in JSDOM
+// Mock do animate para transições do Svelte no JSDOM
 if (typeof window !== 'undefined' && !window.HTMLElement.prototype.animate) {
 	window.HTMLElement.prototype.animate = vi.fn().mockReturnValue({
 		finished: Promise.resolve(),
@@ -58,7 +58,7 @@ describe('ComicVolumeList', () => {
 		}
 	];
 
-	it('renderiza a lista de volumes quando fornecida', () => {
+	it('renders volume list when provided', () => {
 		render(ComicVolumeList, {
 			props: {
 				data: { volumes, pagesData },
@@ -70,7 +70,7 @@ describe('ComicVolumeList', () => {
 		expect(screen.getByText('1 capítulos inclusos')).toBeInTheDocument();
 	});
 
-	it('expande o volume ao clicar para mostrar os capítulos', async () => {
+	it('expands volume on click to show chapters', async () => {
 		const user = userEvent.setup();
 		render(ComicVolumeList, {
 			props: {
@@ -97,7 +97,7 @@ describe('ComicVolumeList', () => {
 		}
 	});
 
-	it('colapsa o volume expandido', async () => {
+	it('collapses expanded volume', async () => {
 		const user = userEvent.setup();
 		const onExpand = vi.fn();
 		render(ComicVolumeList, {
@@ -126,7 +126,7 @@ describe('ComicVolumeList', () => {
 		});
 	});
 
-	it('exibe mensagem quando volume expandido não possui capítulos', async () => {
+	it('displays message when expanded volume has no chapters', async () => {
 		const user = userEvent.setup();
 		render(ComicVolumeList, {
 			props: {
@@ -151,7 +151,7 @@ describe('ComicVolumeList', () => {
 		expect(screen.getByText('Nenhum capítulo disponível.')).toBeInTheDocument();
 	});
 
-	it('desmonta o conteúdo real ao sair da janela de renderização', async () => {
+	it('unmounts real content when leaving rendering window', async () => {
 		const user = userEvent.setup();
 		render(ComicVolumeList, {
 			props: {
@@ -190,7 +190,7 @@ describe('ComicVolumeList', () => {
 		expect(screen.queryByText('Capítulo 1')).not.toBeInTheDocument();
 	});
 
-	it('abre capítulo ao clicar no item expandido', async () => {
+	it('opens chapter when clicking expanded item', async () => {
 		const user = userEvent.setup();
 		const onOpenChapter = vi.fn();
 		render(ComicVolumeList, {
@@ -213,7 +213,7 @@ describe('ComicVolumeList', () => {
 		expect(onOpenChapter).toHaveBeenCalledWith(pagesData[0].items[0]);
 	});
 
-	it('renderiza empty state quando a lista está vazia', () => {
+	it('renders empty state when list is empty', () => {
 		render(ComicVolumeList, {
 			props: {
 				data: { volumes: [] },

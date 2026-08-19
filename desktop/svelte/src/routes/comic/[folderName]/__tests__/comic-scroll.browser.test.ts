@@ -6,7 +6,7 @@ import { LIBRARY_COMMANDS } from '$lib/contracts/library/chapter.commands';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
-// Mock Tauri APIs functionally
+// Mock das APIs do Tauri funcionalmente
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn(),
 	convertFileSrc: vi.fn((path) => `asset://${path}`)
@@ -249,7 +249,7 @@ describe('ComicPage Scroll Integration', () => {
 		return view;
 	}
 
-	it('busca todos os capítulos numa única chamada, independente de quanto se rola', async () => {
+	it('fetches all chapters in a single call regardless of scroll depth', async () => {
 		const { container } = await renderLoadedComicPage();
 
 		expect(getChapterFetchCallCount()).toBe(1);
@@ -264,7 +264,7 @@ describe('ComicPage Scroll Integration', () => {
 		expect(getChapterFetchCallCount()).toBe(1);
 	});
 
-	it('desmonta o bloco que saiu da janela e remonta ao voltar sem refazer o fetch', async () => {
+	it('unmounts the block leaving viewport and remounts when returning without refetching', async () => {
 		const { container } = await renderLoadedComicPage();
 
 		await waitForTrackedPage(1);
@@ -286,7 +286,7 @@ describe('ComicPage Scroll Integration', () => {
 		expect(getChapterFetchCallCount()).toBe(1);
 	});
 
-	it('renderiza os titulos dos capitulos usando o nome limpo vindo do Rust', async () => {
+	it('renders chapter titles using clean name coming from Rust', async () => {
 		const { container } = await renderLoadedComicPage();
 
 		await vi.waitFor(

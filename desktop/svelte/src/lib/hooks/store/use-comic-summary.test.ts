@@ -95,7 +95,7 @@ describe('useComicSummary', () => {
 		invokeMock.mockResolvedValue(undefined);
 	});
 
-	it('exibe loading até receber evento de dados', async () => {
+	it('displays loading until data event is received', async () => {
 		const { callbacks, unlisteners } = setupListeners();
 		const hook = await renderHook();
 
@@ -121,7 +121,7 @@ describe('useComicSummary', () => {
 		expect(unlisteners.get(HOME_EVENTS.homeError)).toHaveBeenCalledOnce();
 	});
 
-	it('ignora nova busca enquanto loading está ativo', async () => {
+	it('ignores new fetch while loading is active', async () => {
 		const { callbacks } = setupListeners();
 		const hook = await renderHook();
 
@@ -141,7 +141,7 @@ describe('useComicSummary', () => {
 		await fetchPromise2;
 	});
 
-	it('exibe erro quando evento de erro é recebido', async () => {
+	it('displays error when error event is received', async () => {
 		const { callbacks } = setupListeners();
 		const hook = await renderHook();
 

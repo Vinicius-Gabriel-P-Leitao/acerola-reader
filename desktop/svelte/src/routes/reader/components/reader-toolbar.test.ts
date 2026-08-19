@@ -32,7 +32,7 @@ function props(overrides = {}) {
 }
 
 describe('ReaderToolbar', () => {
-	it('renderiza titulo, subtitulo e controles paginados', () => {
+	it('renders title, subtitle and paginated controls', () => {
 		render(ReaderToolbar, { props: props() });
 
 		expect(screen.getByText('Chapter 12')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('ReaderToolbar', () => {
 		expect(screen.getAllByRole('button')).toHaveLength(6);
 	});
 
-	it('nao renderiza subtitulo quando nao informado', () => {
+	it('does not render subtitle when not provided', () => {
 		render(ReaderToolbar, {
 			props: props({
 				data: {
@@ -54,7 +54,7 @@ describe('ReaderToolbar', () => {
 		expect(screen.queryByText('Volume 2')).not.toBeInTheDocument();
 	});
 
-	it('chama eventos dos botoes principais', async () => {
+	it('calls events of main buttons', async () => {
 		const user = userEvent.setup();
 		const toolbarProps = props();
 
@@ -75,7 +75,7 @@ describe('ReaderToolbar', () => {
 		expect(toolbarProps.events.onNextPage).toHaveBeenCalledOnce();
 	});
 
-	it('chama mudanca de modo de leitura pelo toggle desktop', async () => {
+	it('calls reading mode change through desktop toggle', async () => {
 		const user = userEvent.setup();
 		const toolbarProps = props();
 
@@ -88,7 +88,7 @@ describe('ReaderToolbar', () => {
 		expect(toolbarProps.events.onReadingModeChange).toHaveBeenCalledWith('webtoon');
 	});
 
-	it('mostra acao de reset quando zoom esta ativo', async () => {
+	it('shows reset action when zoom is active', async () => {
 		const user = userEvent.setup();
 		const toolbarProps = props({
 			data: {
@@ -105,7 +105,7 @@ describe('ReaderToolbar', () => {
 		expect(screen.queryByTitle(/Aplicar zoom/)).not.toBeInTheDocument();
 	});
 
-	it('oculta navegacao de paginas fora do modo paginado', () => {
+	it('hides page navigation outside paginated mode', () => {
 		render(ReaderToolbar, {
 			props: props({
 				data: {
@@ -119,7 +119,7 @@ describe('ReaderToolbar', () => {
 		expect(screen.queryByTitle(/Próxima página/)).not.toBeInTheDocument();
 	});
 
-	it('desabilita navegacao quando paginas estao travadas por zoom', () => {
+	it('disables navigation when pages are locked by zoom', () => {
 		render(ReaderToolbar, {
 			props: props({
 				data: {
@@ -134,7 +134,7 @@ describe('ReaderToolbar', () => {
 		expect(screen.getAllByTitle('Desative o zoom para trocar de página')[1]).toBeDisabled();
 	});
 
-	it('desabilita apenas botoes sem pagina anterior ou proxima', () => {
+	it('disables only buttons without previous or next page', () => {
 		render(ReaderToolbar, {
 			props: props({
 				data: {

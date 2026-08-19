@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_upsert_insert() {
+    async fn test_upsert_insert() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_upsert_atualiza_existente() {
+    async fn test_upsert_updates_existing() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_find_by_comic_id() {
+    async fn test_find_by_comic_id() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -235,14 +235,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_find_by_comic_id_inexistente() {
+    async fn test_find_by_comic_id_nonexistent() {
         let (_, repo) = setup().await;
         let result = repo.find_by_comic_id(999).await.unwrap();
         assert!(result.is_none());
     }
 
     #[tokio::test]
-    async fn teste_delete_all() {
+    async fn test_delete_all() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")

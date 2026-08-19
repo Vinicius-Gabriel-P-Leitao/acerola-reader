@@ -24,8 +24,8 @@ async function openReaderWithFixture(title = 'Acerola WDIO Reader') {
 	return fixture;
 }
 
-describe('reader nativo', () => {
-	it('exibe fallback seguro quando não há capítulo no estado da navegação', async () => {
+describe('native reader', () => {
+	it('displays safe fallback when there is no chapter in navigation state', async () => {
 		await waitForAppReady();
 		await navigateTo('/reader');
 
@@ -53,7 +53,7 @@ describe('reader nativo', () => {
 		expect(await next.isEnabled()).toBe(false);
 	});
 
-	it('abre command palette, alterna modos e aplica zoom sem capítulo aberto', async () => {
+	it('opens command palette, toggles modes and applies zoom without open chapter', async () => {
 		await waitForAppReady();
 		await navigateTo('/reader');
 
@@ -75,10 +75,10 @@ describe('reader nativo', () => {
 		await waitForTextContaining('Zoom 100%');
 	});
 
-	it('abre capítulo fixture, navega páginas e bloqueia paginação enquanto zoom está ativo', async () => {
+	it('opens fixture chapter, navigates pages and locks pagination while zoom is active', async () => {
 		const fixture = await openReaderWithFixture();
 
-		// Ensure we are in Paginated mode (in case a previous test left it in Webtoon)
+		// Garante que estamos no modo Paginado (caso um teste anterior o tenha deixado em Webtoon)
 		try {
 			const paginadoBtn = await firstDisplayed('[title="Paginado horizontal"]', 2000);
 			if ((await paginadoBtn.getAttribute('data-state')) !== 'on') {

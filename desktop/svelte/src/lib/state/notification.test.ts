@@ -10,7 +10,7 @@ describe('createNotifications', () => {
 		vi.useRealTimers();
 	});
 
-	it('adiciona notificação pela variante e retorna id', () => {
+	it('adds notification by variant and returns id', () => {
 		const store = createNotifications(['success', 'error'] as const);
 
 		const id = store.notify.success('Scan concluído', { duration: 0 });
@@ -25,7 +25,7 @@ describe('createNotifications', () => {
 		});
 	});
 
-	it('remove notificação pelo id', () => {
+	it('removes notification by id', () => {
 		const store = createNotifications(['info'] as const);
 		const id = store.notify.info('Em andamento', { duration: 0 });
 
@@ -34,7 +34,7 @@ describe('createNotifications', () => {
 		expect(store.notifications).toEqual([]);
 	});
 
-	it('mantém lista quando remove id inexistente', () => {
+	it('maintains list when removing non-existent id', () => {
 		const store = createNotifications(['info'] as const);
 		store.notify.info('Em andamento', { duration: 0 });
 
@@ -43,7 +43,7 @@ describe('createNotifications', () => {
 		expect(store.notifications).toHaveLength(1);
 	});
 
-	it('limpa todas as notificações', () => {
+	it('clears all notifications', () => {
 		const store = createNotifications(['info', 'error'] as const);
 		store.notify.info('Primeira', { duration: 0 });
 		store.notify.error('Segunda', { duration: 0 });
@@ -53,7 +53,7 @@ describe('createNotifications', () => {
 		expect(store.notifications).toEqual([]);
 	});
 
-	it('remove automaticamente após duração configurada', () => {
+	it('removes automatically after configured duration', () => {
 		const store = createNotifications(['info'] as const);
 		store.notify.info('Temporária', { duration: 1000 });
 

@@ -17,7 +17,7 @@ import {
 	mockedTauriResponse
 } from '../../svelte/tests/mocks/tauri-playwright';
 
-test.describe('navegação biblioteca comic reader', () => {
+test.describe('library comic reader navigation', () => {
 	let consoleErrors: string[];
 
 	test.beforeEach(async ({ page }) => {
@@ -40,7 +40,7 @@ test.describe('navegação biblioteca comic reader', () => {
 		});
 	});
 
-	test('abre o card do comic, escolhe o primeiro capítulo e renderiza a primeira página', async ({
+	test('opens comic card, chooses first chapter and renders first page', async ({
 		page
 	}) => {
 		test.setTimeout(10_000);

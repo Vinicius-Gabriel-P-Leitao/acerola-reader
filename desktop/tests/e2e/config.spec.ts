@@ -14,7 +14,7 @@ import {
 	mockedTauriResponse
 } from '../../svelte/tests/mocks/tauri-playwright';
 
-test.describe('configuração de biblioteca', () => {
+test.describe('library configuration', () => {
 	let consoleErrors: string[];
 
 	test.beforeEach(async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('configuração de biblioteca', () => {
 		});
 	});
 
-	test('seleciona pasta, executa sincronização rápida e volta para a biblioteca', async ({
+	test('selects folder, executes quick sync and returns to library', async ({
 		page
 	}) => {
 		test.setTimeout(10_000);

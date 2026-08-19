@@ -14,14 +14,14 @@ const items = [
 ];
 
 describe('AcerolaSidebar', () => {
-	it('renderiza os itens sempre visíveis com o href correto', () => {
+	it('renders items always visible with the correct href', () => {
 		render(AcerolaSidebar, { props: { data: { items } } });
 
 		expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/home');
 		expect(screen.getByRole('link', { name: 'History' })).toHaveAttribute('href', '/history');
 	});
 
-	it('destaca o item ativo pela rota atual', () => {
+	it('highlights the active item based on the current route', () => {
 		render(AcerolaSidebar, { props: { data: { items } } });
 
 		expect(screen.getByRole('link', { name: 'Home' }).className).toContain('bg-primary');
@@ -30,7 +30,7 @@ describe('AcerolaSidebar', () => {
 		expect(screen.getByRole('link', { name: 'History' })).not.toHaveAttribute('aria-current');
 	});
 
-	it('renderiza a navegação sempre visível, sem estado colapsado', () => {
+	it('renders navigation always visible, without collapsed state', () => {
 		render(AcerolaSidebar, { props: { data: { items } } });
 
 		expect(screen.getByRole('navigation')).toBeInTheDocument();

@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir_e_buscar_todos() {
+    async fn test_insert_and_find_all() {
         let repo = setup().await;
 
         let inserted = repo.base.insert(&berserk()).await.unwrap();
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_buscar_por_nome() {
+    async fn test_find_by_name() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -234,7 +234,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualizar() {
+    async fn test_update() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -246,7 +246,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_deletar() {
+    async fn test_delete() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_buscar_por_nome_inexistente() {
+    async fn test_find_by_nonexistent_name() {
         let repo = setup().await;
 
         let result = repo.find_by_name("Inexistente").await.unwrap();
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_inserir_duplicado() {
+    async fn test_error_on_duplicate_insert() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_atualizar_inexistente() {
+    async fn test_error_on_updating_nonexistent() {
         let repo = setup().await;
 
         let result = repo.base.update(&berserk()).await;
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualizar_status_visibilidade() {
+    async fn test_update_visibility_status() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualizar_status_visibilidade_batch() {
+    async fn test_update_visibility_status_batch() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -347,7 +347,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_deletar_batch() {
+    async fn test_delete_batch() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();
@@ -374,7 +374,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_buscar_por_status_visibilidade() {
+    async fn test_find_by_visibility_status() {
         let repo = setup().await;
 
         repo.base.insert(&berserk()).await.unwrap();

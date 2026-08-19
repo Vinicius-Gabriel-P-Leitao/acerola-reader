@@ -8,7 +8,7 @@ import { LIBRARY_EVENTS } from '$lib/contracts/library/chapter.events';
 import { mockIPC, mockWindows } from '@tauri-apps/api/mocks';
 import { listen } from '@tauri-apps/api/event';
 
-// Mock Tauri event tools
+// Mock das ferramentas de eventos do Tauri
 vi.mock('@tauri-apps/api/event', () => ({
 	listen: vi.fn()
 }));
@@ -53,7 +53,7 @@ describe('useComicChapters (Hook Integration)', () => {
 			return;
 		});
 
-		// Capture the listener callback to simulate Rust events functionally
+		// Captura o callback do ouvinte para simular eventos do Rust funcionalmente
 		(listen as any).mockImplementation((event: string, callback: Function) => {
 			if (event === LIBRARY_EVENTS.comicChapters) {
 				eventCallback = callback;
@@ -91,7 +91,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.loading).toBe(false);
 	});
 
-	it('busca e armazena todos os capítulos numa única resposta', async () => {
+	it('fetches and stores all chapters in a single response', async () => {
 		const chapterHook = await renderComicChaptersHook();
 		const fetchOperation = chapterHook.fetch('directory-id-1', 'number_asc');
 
@@ -102,7 +102,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.chapters?.archive.total).toBe(400);
 	});
 
-	it('pede a página 0 com um pageSize bem alto — sem paginação client-side', async () => {
+	it('requests page 0 with a high pageSize - no client-side pagination', async () => {
 		const chapterHook = await renderComicChaptersHook();
 		const fetchOperation = chapterHook.fetch('directory-id-1', 'number_asc');
 
@@ -117,7 +117,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect((ipcCalls[0].args as any).pageSize).toBeGreaterThan(10000);
 	});
 
-	it('não solicita novamente após uma falha de IPC', async () => {
+	it('does not request again after an IPC failure', async () => {
 		mockIPC(async (command, args) => {
 			ipcCalls.push({ command, args });
 			throw new Error('falha parcial');
@@ -132,7 +132,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(ipcCalls).toHaveLength(1);
 	});
 
-	it('reutiliza dado já carregado sem novo IPC', async () => {
+	it('reuses already loaded data without new IPC', async () => {
 		const chapterHook = await renderComicChaptersHook();
 		const fetchOperation = chapterHook.fetch('directory-id-1', 'number_asc');
 
@@ -158,7 +158,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.chapters?.archive.items.length).toBe(0);
 	});
 
-	it('mantém archive.volumes disponível enquanto um clear(true) refaz a busca', async () => {
+	it('keeps archive.volumes available while a clear(true) refetches', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
 		const fetchOperation = chapterHook.fetch('directory-id-1', 'number_asc');
@@ -186,7 +186,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.chapters?.archive.items).toEqual([]);
 	});
 
-	it('clear() descarta o estado em tela mas não o cache — dado ainda em memória volta sem IPC', async () => {
+	it('clear() discards screen state but not cache - data still in memory returns without IPC', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
 		const fetchOperation = chapterHook.fetch('directory-id-1', 'number_asc');
@@ -208,7 +208,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.chapters?.archive.items.length).toBe(10);
 	});
 
-	it('busca de novo via IPC quando a chave muda (volume diferente)', async () => {
+	it('fetches again via IPC when the key changes (different volume)', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
 		const fetchOperation = chapterHook.fetch('directory-id-1', 'number_asc', 'volume-a');
@@ -225,7 +225,7 @@ describe('useComicChapters (Hook Integration)', () => {
 		expect(chapterHook.chapters?.archive.items.length).toBe(20);
 	});
 
-	it('reabrir um volume já visto aplica do cache sem round-trip', async () => {
+	it('reopening an already seen volume applies from cache without round-trip', async () => {
 		const chapterHook = await renderComicChaptersHook();
 
 		const fetchA = chapterHook.fetch('directory-id-1', 'number_asc', 'volume-a');

@@ -56,7 +56,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn segunda_tentativa_pro_mesmo_peer_e_rejeitada_enquanto_a_primeira_esta_ativa() {
+    fn test_second_attempt_for_same_peer_is_rejected_while_first_is_active() {
         let guard = FileSyncSessionGuard::new();
 
         let first_lease = guard.try_acquire("peer-1").expect("primeira aquisição deveria suceder");
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn peers_diferentes_nao_se_bloqueiam() {
+    fn test_different_peers_do_not_block_each_other() {
         let guard = FileSyncSessionGuard::new();
 
         let _lease_a = guard.try_acquire("peer-a").expect("peer-a deveria adquirir");

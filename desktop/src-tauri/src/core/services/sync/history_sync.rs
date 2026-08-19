@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn build_manifest_reflete_historico_local() {
+    async fn build_manifest_reflects_local_history() {
         let (pool, service) = setup().await;
         ReadingHistoryRepository::new(pool)
             .upsert(&ReadingHistory {
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn apply_manifest_ignora_entrada_mais_antiga() {
+    async fn apply_manifest_ignores_older_entry() {
         let (pool, service) = setup().await;
         ReadingHistoryRepository::new(pool)
             .upsert(&ReadingHistory {
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn apply_manifest_aplica_entrada_mais_nova() {
+    async fn apply_manifest_applies_newer_entry() {
         let (pool, service) = setup().await;
         ReadingHistoryRepository::new(pool)
             .upsert(&ReadingHistory {
@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn apply_manifest_ignora_quadrinho_inexistente_localmente() {
+    async fn apply_manifest_ignores_comic_not_present_locally() {
         let (_, service) = setup().await;
 
         let peer_manifest = HistoryManifest {
@@ -268,7 +268,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn apply_manifest_uniao_marcadores_de_lido() {
+    async fn apply_manifest_merges_read_markers() {
         let (pool, service) = setup().await;
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (2, 'Cap 2', 'p', '2', 0, 1, 0)")
             .execute(&pool)

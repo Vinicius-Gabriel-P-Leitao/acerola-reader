@@ -22,7 +22,7 @@ function mockMatchMedia(matches = false) {
 }
 
 describe('IsMobile', () => {
-	it('usa breakpoint padrão abaixo de 768px', () => {
+	it('uses default breakpoint below 768px', () => {
 		const matchMedia = mockMatchMedia();
 
 		new IsMobile();
@@ -30,7 +30,7 @@ describe('IsMobile', () => {
 		expect(matchMedia).toHaveBeenCalledWith('(max-width: 767px)');
 	});
 
-	it('usa breakpoint customizado subtraindo um pixel', () => {
+	it('uses custom breakpoint subtracting one pixel', () => {
 		const matchMedia = mockMatchMedia(true);
 
 		const query = new IsMobile(1024);

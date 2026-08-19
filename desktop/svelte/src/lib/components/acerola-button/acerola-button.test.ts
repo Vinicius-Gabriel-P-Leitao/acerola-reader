@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import AcerolaButton from './acerola-button.svelte';
 
 describe('AcerolaButton', () => {
-	it('renderiza o conteúdo passado via slot', () => {
+	it('renders the content passed via slot', () => {
 		const children = createRawSnippet(() => ({
 			render: () => `<span>Clique aqui</span>`
 		}));
@@ -13,7 +13,7 @@ describe('AcerolaButton', () => {
 		expect(screen.getByText('Clique aqui')).toBeInTheDocument();
 	});
 
-	it('chama onclick ao ser clicado', async () => {
+	it('calls onclick when clicked', async () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 
@@ -23,7 +23,7 @@ describe('AcerolaButton', () => {
 		expect(onclick).toHaveBeenCalledOnce();
 	});
 
-	it('não chama onclick quando disabled', async () => {
+	it('does not call onclick when disabled', async () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 

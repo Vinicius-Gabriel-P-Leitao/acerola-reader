@@ -70,7 +70,7 @@ describe('useSelectFolder', () => {
 		notificationStore.clearAll();
 	});
 
-	it('seleciona pasta, salva no store e expõe caminho', async () => {
+	it('selects folder, saves to store and exposes path', async () => {
 		const store = mockStore();
 		invokeMock.mockResolvedValue('C:/Comics');
 		const hook = await renderHook();
@@ -85,7 +85,7 @@ describe('useSelectFolder', () => {
 		expect(notificationStore.notifications).toHaveLength(1);
 	});
 
-	it('não salva quando seleção de pasta retorna vazia', async () => {
+	it('does not save when folder selection returns empty', async () => {
 		const store = mockStore();
 		invokeMock.mockResolvedValue('');
 		const hook = await renderHook();
@@ -97,7 +97,7 @@ describe('useSelectFolder', () => {
 		expect(toast.success).not.toHaveBeenCalled();
 	});
 
-	it('carrega caminho salvo do store', async () => {
+	it('loads saved path from store', async () => {
 		mockStore({ [STORE_KEYS.libraryPath]: 'D:/Library' });
 		const hook = await renderHook();
 

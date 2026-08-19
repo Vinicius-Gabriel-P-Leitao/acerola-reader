@@ -76,7 +76,7 @@ function findInvokeCalls(): InvokeCall[] {
 }
 
 describe('IPC contract sync (Svelte contracts vs. Rust commands)', () => {
-	it('todo invoke() estático resolve para um command registrado em bios::build()', () => {
+	it('every static invoke() resolves to a command registered in bios::build()', () => {
 		const rustCommands = extractRustCommands();
 		const contractMap = extractContractCommandMap();
 		const invokeCalls = findInvokeCalls();

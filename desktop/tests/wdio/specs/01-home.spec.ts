@@ -8,8 +8,8 @@ import {
 	waitForText
 } from '../helpers/app';
 
-describe('home nativa', () => {
-	it('renderiza navegação, busca e estado da biblioteca sem travar', async () => {
+describe('native home', () => {
+	it('renders navigation, search and library state without freezing', async () => {
 		await waitForAppReady();
 		await navigateTo('/home');
 
@@ -59,7 +59,7 @@ describe('home nativa', () => {
 		);
 	});
 
-	it('navega entre Home e Configurações pela sidebar', async () => {
+	it('navigates between Home and Settings via sidebar', async () => {
 		await waitForAppReady();
 		await navigateTo('/home');
 

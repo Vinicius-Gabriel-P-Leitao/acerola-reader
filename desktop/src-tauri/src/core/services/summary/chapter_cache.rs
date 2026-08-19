@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_page_e_page_size_diferentes_nao_colidem_no_cache() {
+    fn test_different_page_and_page_size_do_not_collide_in_cache() {
         let service = ChapterCacheService::new();
 
         let full_list_key = key(1, None);
@@ -125,13 +125,13 @@ mod tests {
     }
 
     #[test]
-    fn teste_get_retorna_none_quando_nao_ha_entrada() {
+    fn test_get_returns_none_when_no_entry_exists() {
         let service = ChapterCacheService::new();
         assert!(service.get(&key(1, None)).is_none());
     }
 
     #[test]
-    fn teste_put_e_get_retornam_o_mesmo_valor() {
+    fn test_put_and_get_return_same_value() {
         let service = ChapterCacheService::new();
         let cache_key = key(1, None);
 
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_invalidate_comic_remove_so_as_entradas_daquele_comic() {
+    fn test_invalidate_comic_removes_only_entries_for_that_comic() {
         let service = ChapterCacheService::new();
         let key_comic_1 = key(1, None);
         let key_comic_2 = key(2, None);

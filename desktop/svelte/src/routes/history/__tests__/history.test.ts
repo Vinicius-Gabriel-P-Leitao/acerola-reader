@@ -58,7 +58,7 @@ describe('HistoryPage', () => {
 		vi.resetAllMocks();
 	});
 
-	it('renderiza o empty state quando não há histórico', async () => {
+	it('renders empty state when there is no history', async () => {
 		// Renderiza o empty state quando não houver histórico
 		mockInvoke.mockResolvedValueOnce([]);
 		render(HistoryPage);
@@ -70,7 +70,7 @@ describe('HistoryPage', () => {
 		expect(screen.getByText(/Nenhum histórico encontrado/i)).toBeInTheDocument();
 	});
 
-	it('renderiza itens de historico com sucesso', async () => {
+	it('renders history items successfully', async () => {
 		// Renderiza os itens de histórico com sucesso
 		mockInvoke.mockResolvedValueOnce(mockHistoryData);
 		render(HistoryPage);
@@ -81,7 +81,7 @@ describe('HistoryPage', () => {
 		});
 	});
 
-	it('limpa historico ao clicar no botao', async () => {
+	it('clears history when clicking the button', async () => {
 		// Limpa o histórico ao clicar no botão de limpar
 		const user = userEvent.setup();
 		mockInvoke.mockResolvedValueOnce(mockHistoryData);
@@ -91,12 +91,12 @@ describe('HistoryPage', () => {
 			expect(screen.getByText('Comic 1')).toBeInTheDocument();
 		});
 
-		// bits-ui AlertDialog.Trigger wraps the child in its own <button>, so two buttons
-		// with the same accessible name are rendered. We take the outermost trigger (index 0).
+		// bits-ui AlertDialog.Trigger envolve o elemento filho em seu próprio <button>, portanto dois botões
+		// com o mesmo nome acessível são renderizados. Pegamos o gatilho mais externo (índice 0).
 		const clearButtons = screen.getAllByRole('button', { name: /Limpar Histórico/i });
 		await user.click(clearButtons[0]);
 
-		// After opening the dialog, click the confirm action button ("Sim, limpar tudo")
+		// Após abrir o diálogo, clica no botão de ação de confirmação ("Sim, limpar tudo")
 		mockInvoke.mockResolvedValueOnce(undefined);
 		const confirmButton = await screen.findByRole('button', { name: /Sim, limpar tudo/i });
 		await user.click(confirmButton);

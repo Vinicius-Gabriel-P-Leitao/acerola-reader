@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import AcerolaCardImage from './acerola-card-image.svelte';
 
 describe('AcerolaCardImage', () => {
-	it('renderiza o título', () => {
+	it('renders the title', () => {
 		render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk'
@@ -14,7 +14,7 @@ describe('AcerolaCardImage', () => {
 		expect(screen.getByText('Berserk')).toBeInTheDocument();
 	});
 
-	it('renderiza a imagem quando cover é passado', () => {
+	it('renders the image when cover is provided', () => {
 		render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk',
@@ -30,7 +30,7 @@ describe('AcerolaCardImage', () => {
 		expect(img).toHaveAttribute('src', '/capas/berserk.jpg');
 	});
 
-	it('renderiza fallback quando cover é null', () => {
+	it('renders fallback when cover is null', () => {
 		render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk',
@@ -45,7 +45,7 @@ describe('AcerolaCardImage', () => {
 		).not.toBeInTheDocument();
 	});
 
-	it('renderiza a barra de progresso quando progress é passado', () => {
+	it('renders progress bar when progress is provided', () => {
 		const { container } = render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk',
@@ -59,7 +59,7 @@ describe('AcerolaCardImage', () => {
 		expect(bar).toHaveStyle('width: 50%');
 	});
 
-	it('não renderiza a barra de progresso quando progress não é passado', () => {
+	it('does not render progress bar when progress is not provided', () => {
 		const { container } = render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk'
@@ -71,7 +71,7 @@ describe('AcerolaCardImage', () => {
 		expect(bar).not.toBeInTheDocument();
 	});
 
-	it('clipa o progresso entre 0 e 100', () => {
+	it('clamps progress between 0 and 100', () => {
 		const { container } = render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk',
@@ -84,7 +84,7 @@ describe('AcerolaCardImage', () => {
 		expect(bar).toHaveStyle('width: 100%');
 	});
 
-	it('aplica w-36 por default', () => {
+	it('applies w-36 by default', () => {
 		const { container } = render(AcerolaCardImage, {
 			data: {
 				title: 'Berserk'

@@ -172,7 +172,7 @@ mod tests {
 
     /// INFO: Casos de sucesso, testes perfeitos
     #[tokio::test]
-    async fn teste_buscar_todos() {
+    async fn test_find_all() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk'), (2, 'Vinland')")
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir() {
+    async fn test_insert() {
         let (_, repo) = setup().await;
 
         let entity = FakeEntity { id: 1, name: "Berserk".to_string() };
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualizar() {
+    async fn test_update() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_deletar() {
+    async fn test_delete() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO fake_entity VALUES (1, 'Berserk')").execute(&pool).await.unwrap();
@@ -225,7 +225,7 @@ mod tests {
 
     /// INFO: Casos de erros
     #[tokio::test]
-    async fn teste_erro_ao_inserir_duplicado() {
+    async fn test_error_on_duplicate_insert() {
         let (_, repo) = setup().await;
 
         let entity = FakeEntity { id: 1, name: "Berserk".to_string() };
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_atualizar_inexistente() {
+    async fn test_error_on_updating_nonexistent() {
         let (_, repo) = setup().await;
 
         let entity = FakeEntity { id: 999, name: "Inexistente".to_string() };

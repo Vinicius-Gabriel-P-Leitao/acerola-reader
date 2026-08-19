@@ -154,28 +154,28 @@ mod tests {
     // NOTE: extract_tags
 
     #[test]
-    fn extrai_tags_validas() {
+    fn test_extracts_valid_tags() {
         let result = extract_tags("{chapter}{decimal}.*.{extension}");
         assert_eq!(result.unwrap(), vec!["chapter", "decimal", "extension"]);
     }
 
     #[test]
-    fn extrai_sem_macros() {
+    fn test_extracts_without_macros() {
         assert_eq!(extract_tags("arquivo.cbz").unwrap(), Vec::<String>::new());
     }
 
     #[test]
-    fn erro_chave_sem_fechamento() {
+    fn test_error_unclosed_brace() {
         assert!(matches!(extract_tags("{chapter"), Err(PatternError::MalformedMacro)));
     }
 
     #[test]
-    fn erro_chave_dupla_abertura() {
+    fn test_error_double_opening_brace() {
         assert!(matches!(extract_tags("{{chapter}"), Err(PatternError::MalformedMacro)));
     }
 
     #[test]
-    fn tag_vazia_e_unknown_macro() {
+    fn test_empty_tag_is_unknown_macro() {
         assert!(matches!(
             validate_chapter_template("{}.{extension}"),
             Err(PatternError::UnknownMacro(tag)) if tag.is_empty()
@@ -185,17 +185,17 @@ mod tests {
     // NOTE: validate_chapter_template
 
     #[test]
-    fn template_valido_completo() {
+    fn test_full_valid_template() {
         assert!(validate_chapter_template("Ch. {chapter}{decimal}.*.{extension}").is_ok());
     }
 
     #[test]
-    fn template_valido_sem_decimal() {
+    fn test_valid_template_without_decimal() {
         assert!(validate_chapter_template("Ch. {chapter}.*.{extension}").is_ok());
     }
 
     #[test]
-    fn erro_sem_chapter() {
+    fn test_error_missing_chapter() {
         assert!(matches!(
             validate_chapter_template("{decimal}.*.{extension}"),
             Err(PatternError::ChapterRequired)
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_chapter_duplicado() {
+    fn test_error_duplicate_chapter() {
         assert!(matches!(
             validate_chapter_template("{chapter}{chapter}.*.{extension}"),
             Err(PatternError::ChapterRequired)
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_decimal_duplicado() {
+    fn test_error_duplicate_decimal() {
         assert!(matches!(
             validate_chapter_template("{chapter}{decimal}{decimal}.*.{extension}"),
             Err(PatternError::DecimalDuplicate)
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_sem_extension() {
+    fn test_error_missing_extension() {
         assert!(matches!(
             validate_chapter_template("{chapter}{decimal}.*"),
             Err(PatternError::ExtensionRequired)
@@ -227,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_decimal_antes_de_chapter() {
+    fn test_error_decimal_before_chapter() {
         assert!(matches!(
             validate_chapter_template("{decimal}{chapter}.*.{extension}"),
             Err(PatternError::DecimalBeforeChapter)
@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_extension_antes_de_chapter() {
+    fn test_error_extension_before_chapter() {
         // Só uma extension: ordem é verificada depois da contagem
         assert!(matches!(
             validate_chapter_template("{extension}{chapter}.*"),
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_extension_antes_de_decimal() {
+    fn test_error_extension_before_decimal() {
         assert!(matches!(
             validate_chapter_template("{chapter}{extension}{decimal}"),
             Err(PatternError::ExtensionBeforeDecimal)
@@ -252,7 +252,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_extension_nao_encerra() {
+    fn test_error_extension_not_at_end() {
         assert!(matches!(
             validate_chapter_template("{chapter}.*.{extension}.extra"),
             Err(PatternError::ExtensionNotAtEnd)
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_macro_desconhecida_chapter() {
+    fn test_error_unknown_macro_chapter() {
         assert!(matches!(
             validate_chapter_template("{titulo}.*.{extension}"),
             Err(PatternError::UnknownMacro(tag)) if tag == "titulo"
@@ -268,24 +268,24 @@ mod tests {
     }
 
     #[test]
-    fn erro_macro_malformada_chapter() {
+    fn test_error_malformed_macro_chapter() {
         assert!(matches!(validate_chapter_template("{chapter"), Err(PatternError::MalformedMacro)));
     }
 
     // NOTE: validate_volume_template
 
     #[test]
-    fn volume_template_valido() {
+    fn test_valid_volume_template() {
         assert!(validate_volume_template("Vol. {volume}{decimal}").is_ok());
     }
 
     #[test]
-    fn volume_template_valido_sem_decimal() {
+    fn test_valid_volume_template_without_decimal() {
         assert!(validate_volume_template("Vol. {volume}").is_ok());
     }
 
     #[test]
-    fn erro_volume_ausente() {
+    fn test_error_missing_volume() {
         assert!(matches!(
             validate_volume_template("Vol. {decimal}"),
             Err(PatternError::VolumeRequired)
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_volume_duplicado() {
+    fn test_error_duplicate_volume() {
         assert!(matches!(
             validate_volume_template("{volume}{volume}"),
             Err(PatternError::VolumeRequired)
@@ -301,7 +301,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_decimal_duplicado_volume() {
+    fn test_error_duplicate_decimal_volume() {
         assert!(matches!(
             validate_volume_template("{volume}{decimal}{decimal}"),
             Err(PatternError::DecimalDuplicate)
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn erro_macro_desconhecida_volume() {
+    fn test_error_unknown_macro_volume() {
         assert!(matches!(
             validate_volume_template("{titulo}"),
             Err(PatternError::UnknownMacro(tag)) if tag == "titulo"

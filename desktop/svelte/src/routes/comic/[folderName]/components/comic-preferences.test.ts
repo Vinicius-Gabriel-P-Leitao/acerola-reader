@@ -19,20 +19,20 @@ describe('ComicPreferences', () => {
 		};
 	}
 
-	it('renderiza as opções de preferência', () => {
+	it('renders preference options', () => {
 		render(ComicPreferences, { props: defaultProps() });
 
 		expect(screen.getByText('Leitura')).toBeInTheDocument();
 	});
 
-	it('oculta preferência de volume quando não existe estrutura de volume', () => {
+	it('hides volume preference when there is no volume structure', () => {
 		render(ComicPreferences, { props: defaultProps() });
 
 		expect(screen.queryByText('Destaque do Volume')).not.toBeInTheDocument();
 		expect(screen.queryByRole('radio', { name: 'Capa' })).not.toBeInTheDocument();
 	});
 
-	it('exibe preferência de volume quando existe estrutura de volume', () => {
+	it('displays volume preference when volume structure exists', () => {
 		render(ComicPreferences, {
 			props: {
 				...defaultProps(),
@@ -45,7 +45,7 @@ describe('ComicPreferences', () => {
 		expect(screen.getByRole('radio', { name: 'Banner' })).toBeInTheDocument();
 	});
 
-	it('altera destaque de volume ao clicar em banner', async () => {
+	it('changes volume highlight when clicking banner', async () => {
 		const user = userEvent.setup();
 		const props = defaultProps();
 		render(ComicPreferences, {

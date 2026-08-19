@@ -46,7 +46,7 @@ describe('useOnboarding', () => {
 		useOnboarding().setStep(0);
 	});
 
-	it('inicia com o passo 0 e gerencia o avanço e recuo de passos', async () => {
+	it('starts with step 0 and manages step forward and backward', async () => {
 		const hook = await renderHook();
 
 		expect(hook.currentStep).toBe(0);
@@ -64,7 +64,7 @@ describe('useOnboarding', () => {
 		expect(hook.currentStep).toBe(4);
 	});
 
-	it('marca o onboarding como concluído e salva na store', async () => {
+	it('marks onboarding as completed and saves to store', async () => {
 		const hook = await renderHook();
 
 		await hook.complete();

@@ -65,7 +65,7 @@ describe('useVolumeViewMode', () => {
 		vi.clearAllMocks();
 	});
 
-	it('carrega modo de volume salvo', async () => {
+	it('loads saved volume view mode', async () => {
 		mockStore({ [STORE_KEYS.volumeViewMode]: 'banner' });
 		const hook = await renderHook(useVolumeViewMode);
 
@@ -74,7 +74,7 @@ describe('useVolumeViewMode', () => {
 		expect(hook.volumeViewMode).toBe('banner');
 	});
 
-	it('usa capa como modo padrão quando não há valor salvo', async () => {
+	it('uses cover as default mode when there is no saved value', async () => {
 		mockStore();
 		const hook = await renderHook(useVolumeViewMode);
 
@@ -83,7 +83,7 @@ describe('useVolumeViewMode', () => {
 		expect(hook.volumeViewMode).toBe('cover');
 	});
 
-	it('salva modo de volume e atualiza estado visível', async () => {
+	it('saves volume view mode and updates visible state', async () => {
 		const store = mockStore();
 		const hook = await renderHook(useVolumeViewMode);
 
@@ -100,7 +100,7 @@ describe('useComicInfoPreference', () => {
 		vi.clearAllMocks();
 	});
 
-	it('salva preferência com valor explícito', async () => {
+	it('saves preference with explicit value', async () => {
 		const store = mockStore();
 		const hook = await renderHook(useComicInfoPreference);
 
@@ -111,7 +111,7 @@ describe('useComicInfoPreference', () => {
 		expect(store.save).toHaveBeenCalledOnce();
 	});
 
-	it('alterna preferência quando valor não é passado', async () => {
+	it('toggles preference when value is not passed', async () => {
 		const store = mockStore();
 		const hook = await renderHook(useComicInfoPreference);
 
@@ -122,7 +122,7 @@ describe('useComicInfoPreference', () => {
 		expect(store.save).toHaveBeenCalledOnce();
 	});
 
-	it('carrega preferência salva de comic info', async () => {
+	it('loads saved comic info preference', async () => {
 		mockStore({ [STORE_KEYS.comicInfoPreference]: true });
 		const hook = await renderHook(useComicInfoPreference);
 

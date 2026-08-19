@@ -388,7 +388,7 @@ mod tests {
     /// só o evento de "busy" foi emitido — nunca "started" — é a prova de que `run()` (e,
     /// portanto, o `FileSyncService`) nunca chegou a ser tocado.
     #[tokio::test]
-    async fn inbound_rejeita_segunda_sessao_pro_mesmo_peer_sem_tocar_o_service() {
+    async fn inbound_rejects_second_session_for_same_peer_without_touching_the_service() {
         let (log_repo, service, _dir) = setup().await;
         let guard = FileSyncSessionGuard::new();
         let (emit, events) = mock_emitter();
@@ -412,7 +412,7 @@ mod tests {
     /// sessão inbound e a segunda tentativa é outbound — prova que o guard é compartilhado
     /// entre os dois papéis, não só entre sessões do mesmo tipo.
     #[tokio::test]
-    async fn outbound_e_inbound_compartilham_o_mesmo_guard_por_peer() {
+    async fn outbound_and_inbound_share_the_same_guard_per_peer() {
         let (log_repo, service, _dir) = setup().await;
         let guard = FileSyncSessionGuard::new();
         let (emit, events) = mock_emitter();
@@ -435,7 +435,7 @@ mod tests {
     /// Sem nenhuma lease pré-existente, `handle()` deve seguir normalmente até `run()` —
     /// confirma que o guard não bloqueia sessões novas depois que a anterior é liberada.
     #[tokio::test]
-    async fn inbound_segue_pra_run_quando_nenhuma_sessao_esta_ativa() {
+    async fn inbound_proceeds_to_run_when_no_session_is_active() {
         let (log_repo, service, _dir) = setup().await;
         let guard = FileSyncSessionGuard::new();
         let (emit, events) = mock_emitter();

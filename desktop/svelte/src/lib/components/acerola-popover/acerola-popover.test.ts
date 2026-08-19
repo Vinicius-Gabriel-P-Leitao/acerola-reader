@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import AcerolaPopover from './acerola-popover.svelte';
 
 describe('AcerolaPopover', () => {
-	it('renderiza o trigger e abre o conteudo ao clicar', async () => {
+	it('renders the trigger and opens content on click', async () => {
 		const trigger = createRawSnippet(() => ({
 			render: () => '<button>Abrir Popover</button>'
 		}));

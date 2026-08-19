@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir_e_buscar_todos() {
+    async fn test_insert_and_find_all() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -285,7 +285,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_contagens() {
+    async fn test_counts() {
         let pool = setup_test_db_with_volumes().await;
         let repo = ChapterRepository::new(pool);
         repo.base.insert(&chapter(1, "1")).await.unwrap();
@@ -301,7 +301,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_numero_asc() {
+    async fn test_sorting_by_number_asc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -321,7 +321,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_numero_desc() {
+    async fn test_sorting_by_number_desc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -343,7 +343,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_modificado_asc() {
+    async fn test_sorting_by_modified_asc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -370,7 +370,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_modificado_desc() {
+    async fn test_sorting_by_modified_desc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -397,7 +397,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_inserir_duplicado() {
+    async fn test_error_on_duplicate_insert() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_atualizar_inexistente() {
+    async fn test_error_on_updating_nonexistent() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_delete_by_comic_remove_apenas_capitulos_do_comic() {
+    async fn test_delete_by_comic_removes_only_chapters_from_that_comic() {
         let pool = setup_test_db_with_comic().await;
         sqlx::query(
             "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
@@ -453,7 +453,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_find_all_ids_by_directory() {
+    async fn test_find_all_ids_by_directory() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -467,7 +467,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_fk_invalida_ao_inserir() {
+    async fn test_error_on_invalid_fk_insert() {
         let pool = setup_test_db_with_comic().await;
         sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await.unwrap();
         let repo = ChapterRepository::new(pool);

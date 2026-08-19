@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_obter_capitulos_da_hq() {
+    async fn test_get_comic_chapters() {
         let pool = setup_test_db_with_volumes().await;
         popular_dados(&pool).await;
 
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_obter_todos_ids_de_capitulos() {
+    async fn test_get_all_chapter_ids() {
         let pool = setup_test_db_with_volumes().await;
         popular_dados(&pool).await;
 

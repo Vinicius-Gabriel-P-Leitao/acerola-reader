@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn scan_chapter_insere_no_banco() {
+    async fn scan_chapter_inserts_into_database() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 1.cbz").await;
         service.scan_chapter(&file, 0, 1, None, None).await.unwrap();
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn scan_chapter_com_template_gera_sort_correto() {
+    async fn scan_chapter_with_template_generates_correct_sort() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 10.cbz").await;
         service
@@ -205,7 +205,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn scan_chapter_duplicado_e_ignorado() {
+    async fn scan_chapter_duplicate_is_ignored() {
         let (service, pool, dir) = setup().await;
         let file = create_file(&dir, "Ch. 1.cbz").await;
         service.scan_chapter(&file, 0, 1, None, None).await.unwrap();
@@ -214,7 +214,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn scan_chapter_arquivo_inexistente_retorna_erro() {
+    async fn scan_chapter_nonexistent_file_returns_error() {
         let (service, _, _) = setup().await;
         let fake = PathBuf::from("/nao/existe/Ch. 1.cbz");
         assert!(service.scan_chapter(&fake, 0, 1, None, None).await.is_err());

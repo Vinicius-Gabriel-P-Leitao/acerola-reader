@@ -35,7 +35,7 @@ mod tests {
     use super::ImageFileFormat;
 
     #[test]
-    fn aceita_apenas_jpg_jpeg_e_png() {
+    fn test_accepts_only_jpg_jpeg_and_png() {
         assert_eq!(ImageFileFormat::from_extension("jpg"), Some(ImageFileFormat::Jpeg));
         assert_eq!(ImageFileFormat::from_extension("jpeg"), Some(ImageFileFormat::Jpeg));
         assert_eq!(ImageFileFormat::from_extension("png"), Some(ImageFileFormat::Png));
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn detecta_formato_por_path() {
+    fn test_detects_format_by_path() {
         assert_eq!(
             ImageFileFormat::from_path(Path::new("pages/001.JPG")),
             Some(ImageFileFormat::Jpeg)

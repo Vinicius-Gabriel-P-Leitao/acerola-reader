@@ -41,7 +41,7 @@ describe('ComicChapterList', () => {
 		}
 	];
 
-	it('renderiza a lista de capítulos quando fornecida', async () => {
+	it('renders chapter list when provided', async () => {
 		render(ComicChapterList, {
 			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
 		});
@@ -62,7 +62,7 @@ describe('ComicChapterList', () => {
 		expect(screen.getByText('002.cbz')).toBeInTheDocument();
 	});
 
-	it('renderiza empty state quando a lista está vazia', () => {
+	it('renders empty state when list is empty', () => {
 		render(ComicChapterList, {
 			props: { data: { pagesData: [], totalChapters: 0, pageSize: 2 } }
 		});
@@ -70,7 +70,7 @@ describe('ComicChapterList', () => {
 		expect(screen.getByText('Carregando...')).toBeInTheDocument();
 	});
 
-	it('monta o conteúdo real só quando a página entra na janela de renderização', async () => {
+	it('mounts real content only when page enters rendering window', async () => {
 		render(ComicChapterList, {
 			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
 		});
@@ -87,7 +87,7 @@ describe('ComicChapterList', () => {
 		expect(screen.getByText('Capítulo 1: Test')).toBeInTheDocument();
 	});
 
-	it('desmonta o conteúdo real ao sair da janela de renderização', async () => {
+	it('unmounts real content when leaving rendering window', async () => {
 		render(ComicChapterList, {
 			props: { data: { pagesData, totalChapters: 2, pageSize: 2 } }
 		});
@@ -109,7 +109,7 @@ describe('ComicChapterList', () => {
 		expect(screen.queryByText('Capítulo 1: Test')).not.toBeInTheDocument();
 	});
 
-	it('abre capítulo ao clicar no item', async () => {
+	it('opens chapter when clicking item', async () => {
 		const user = userEvent.setup();
 		const onOpenChapter = vi.fn();
 		render(ComicChapterList, {

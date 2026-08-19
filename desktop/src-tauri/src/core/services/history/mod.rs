@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualiza_progresso_de_leitura() {
+    async fn test_updates_reading_progress() {
         let (pool, service) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_marca_e_desmarca_capitulo_como_lido() {
+    async fn test_marks_and_unmarks_chapter_as_read() {
         let (pool, service) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_marca_e_desmarca_capitulos_em_batch() {
+    async fn test_marks_and_unmarks_chapters_in_batch() {
         let (pool, service) = setup().await;
 
         for id in 1..=3 {
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_limpa_historico() {
+    async fn test_clears_history() {
         let (pool, service) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")

@@ -125,7 +125,7 @@ mod tests {
     use crate::infra::error::FileError;
 
     #[test]
-    fn teste_comic_extensao_valida() {
+    fn test_comic_valid_extension() {
         let guard = SupportedFileGuard;
         assert!(guard.is_allowed(Path::new("berserk.cbz")).is_ok());
         assert!(guard.is_allowed(Path::new("berserk.cbr")).is_ok());
@@ -133,33 +133,33 @@ mod tests {
     }
 
     #[test]
-    fn teste_comic_extensao_invalida() {
+    fn test_comic_invalid_extension() {
         let guard = SupportedFileGuard;
         let result = guard.is_allowed(Path::new("berserk.exe"));
         assert!(matches!(result, Err(FileError::ExtensionNotAllowed(ext)) if ext == "exe"));
     }
 
     #[test]
-    fn teste_comic_sem_extensao() {
+    fn test_comic_missing_extension() {
         let guard = SupportedFileGuard;
         assert!(matches!(guard.is_allowed(Path::new("berserk")), Err(FileError::MissingExtension)));
     }
 
     #[test]
-    fn teste_metadata_nome_valido() {
+    fn test_metadata_valid_name() {
         let guard = MetadataFileGuard;
         assert!(guard.is_allowed(Path::new("ComicInfo.xml")).is_ok());
     }
 
     #[test]
-    fn teste_metadata_nome_invalido() {
+    fn test_metadata_invalid_name() {
         let guard = MetadataFileGuard;
         let result = guard.is_allowed(Path::new("info.xml"));
         assert!(matches!(result, Err(FileError::FileNameNotAllowed(name)) if name == "info.xml"));
     }
 
     #[test]
-    fn teste_artwork_nomes_validos() {
+    fn test_artwork_valid_names() {
         let guard = ArtworkFileGuard;
         assert!(guard.is_allowed(Path::new("cover.png")).is_ok());
         assert!(guard.is_allowed(Path::new("cover.jpg")).is_ok());
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_artwork_nome_invalido() {
+    fn test_artwork_invalid_name() {
         let guard = ArtworkFileGuard;
         let result = guard.is_allowed(Path::new("thumbnail.png"));
         assert!(
@@ -179,25 +179,25 @@ mod tests {
     }
 
     #[test]
-    fn teste_scanner_aceita_comic() {
+    fn test_scanner_accepts_comic() {
         let guard = ScannerGuard::new();
         assert!(guard.is_allowed(Path::new("berserk.cbz")).is_ok());
     }
 
     #[test]
-    fn teste_scanner_aceita_metadata() {
+    fn test_scanner_accepts_metadata() {
         let guard = ScannerGuard::new();
         assert!(guard.is_allowed(Path::new("ComicInfo.xml")).is_ok());
     }
 
     #[test]
-    fn teste_scanner_aceita_artwork() {
+    fn test_scanner_accepts_artwork() {
         let guard = ScannerGuard::new();
         assert!(guard.is_allowed(Path::new("cover.png")).is_ok());
     }
 
     #[test]
-    fn teste_scanner_rejeita_arquivo_desconhecido() {
+    fn test_scanner_rejects_unknown_file() {
         let guard = ScannerGuard::new();
         let result = guard.is_allowed(Path::new("script.sh"));
         assert!(matches!(result, Err(FileError::NotAllowed(_))));

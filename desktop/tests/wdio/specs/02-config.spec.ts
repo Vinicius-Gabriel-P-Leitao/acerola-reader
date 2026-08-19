@@ -17,8 +17,8 @@ async function openConfig() {
 	await waitForText('Configurações');
 }
 
-describe('config nativa', () => {
-	it('renderiza seções e controles principais', async () => {
+describe('native config', () => {
+	it('renders main sections and controls', async () => {
 		await openConfig();
 
 		await waitForText('Personalize sua experiência de leitura.');
@@ -39,7 +39,7 @@ describe('config nativa', () => {
 		await waitForText('Sincronização com AniList');
 	});
 
-	it('troca tema visual e mantém o app na tela de configurações', async () => {
+	it('switches visual theme and keeps the app on settings screen', async () => {
 		await openConfig();
 
 		await (await waitForText('Nord')).click();
@@ -68,7 +68,7 @@ describe('config nativa', () => {
 		await (await waitForText('Catppuccin')).click();
 	});
 
-	it('abre seletor de idioma da sidebar sem alterar a rota', async () => {
+	it('opens sidebar language selector without changing route', async () => {
 		await openConfig();
 
 		// O select fica dentro do popover do ícone de globo no header — só
@@ -85,7 +85,7 @@ describe('config nativa', () => {
 		expect(await getPathname()).toBe('/config');
 	});
 
-	it('abre popover de idiomas de metadados', async () => {
+	it('opens metadata languages popover', async () => {
 		await openConfig();
 
 		const languageButton = await firstDisplayed(

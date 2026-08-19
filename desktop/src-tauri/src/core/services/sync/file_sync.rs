@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn diff_wanted_ignora_capitulo_com_mesmo_checksum() {
+    async fn diff_wanted_ignores_chapter_with_same_checksum() {
         let (_, _dir, service) = setup().await;
 
         let peer_manifest = FileManifest {
@@ -286,7 +286,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn diff_wanted_quer_capitulo_com_checksum_diferente() {
+    async fn diff_wanted_wants_chapter_with_different_checksum() {
         let (_, _dir, service) = setup().await;
 
         let peer_manifest = FileManifest {
@@ -306,7 +306,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn diff_wanted_quer_quadrinho_inexistente_localmente() {
+    async fn diff_wanted_wants_comic_not_present_locally() {
         let (_, _dir, service) = setup().await;
 
         let peer_manifest = FileManifest {
@@ -326,7 +326,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn persist_received_chapter_cria_quadrinho_novo_e_indexa_capitulo() {
+    async fn persist_received_chapter_creates_new_comic_and_indexes_chapter() {
         let (pool, dir, service) = setup().await;
 
         let temp_path = dir.path().join("incoming.tmp");
@@ -365,7 +365,7 @@ mod tests {
     /// `DISPLAY_NAME` cru), o desktop nunca grava a extensão. O rótulo persistido é sempre
     /// recalculado a partir do `file_name` real do arquivo, via `file_stem`.
     #[tokio::test]
-    async fn persist_received_chapter_ignora_extensao_no_chapter_sujo_do_peer() {
+    async fn persist_received_chapter_ignores_extension_in_dirty_chapter_from_peer() {
         let (pool, dir, service) = setup().await;
 
         let temp_path = dir.path().join("incoming.tmp");

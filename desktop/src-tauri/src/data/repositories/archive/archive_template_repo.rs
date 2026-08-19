@@ -48,7 +48,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir_chapter_template() {
+    async fn test_insert_chapter_template() {
         let repo = setup().await;
         let inserted = repo.base.insert(&chapter_template()).await.unwrap();
         assert_eq!(inserted.id, 1);
@@ -56,14 +56,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir_volume_template() {
+    async fn test_insert_volume_template() {
         let repo = setup().await;
         let inserted = repo.base.insert(&volume_template()).await.unwrap();
         assert_eq!(inserted.sort_type, SortType::Volume);
     }
 
     #[tokio::test]
-    async fn teste_buscar_todos() {
+    async fn test_find_all() {
         let repo = setup().await;
         repo.base.insert(&chapter_template()).await.unwrap();
         repo.base.insert(&volume_template()).await.unwrap();
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualizar() {
+    async fn test_update() {
         let repo = setup().await;
         repo.base.insert(&chapter_template()).await.unwrap();
         let updated = ArchiveTemplate { label: "Updated".to_string(), ..chapter_template() };
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_deletar() {
+    async fn test_delete() {
         let repo = setup().await;
         repo.base.insert(&chapter_template()).await.unwrap();
         repo.base.delete(1).await.unwrap();
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_inserir_duplicado() {
+    async fn test_error_on_duplicate_insert() {
         let repo = setup().await;
         repo.base.insert(&chapter_template()).await.unwrap();
         let result = repo.base.insert(&chapter_template()).await;
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_atualizar_inexistente() {
+    async fn test_error_on_updating_nonexistent() {
         let repo = setup().await;
         let result = repo.base.update(&chapter_template()).await;
         assert!(matches!(result, Err(DbError::NotFound)));

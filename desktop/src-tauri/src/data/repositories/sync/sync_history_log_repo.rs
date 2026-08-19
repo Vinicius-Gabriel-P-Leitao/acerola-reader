@@ -47,7 +47,7 @@ mod tests {
     };
 
     #[tokio::test]
-    async fn insert_e_find_recent_ordena_do_mais_novo_pro_mais_velho() {
+    async fn insert_and_find_recent_orders_newest_to_oldest() {
         let pool = setup_test_db_with_comic().await;
         let repo = SyncHistoryLogRepository::new(pool);
 
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn find_recent_respeita_o_limit() {
+    async fn find_recent_respects_the_limit() {
         let pool = setup_test_db_with_comic().await;
         let repo = SyncHistoryLogRepository::new(pool);
 

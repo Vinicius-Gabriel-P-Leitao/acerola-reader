@@ -36,7 +36,7 @@ describe('useTheme', () => {
 		document.documentElement.classList.remove('dark');
 	});
 
-	it('aplica tema e modo claro no documento', async () => {
+	it('applies theme and light mode to the document', async () => {
 		const hook = await renderHook();
 
 		await hook.setMode('light');
@@ -50,7 +50,7 @@ describe('useTheme', () => {
 		expect(document.documentElement.classList.contains('dark')).toBe(false);
 	});
 
-	it('resolve modo system a partir da janela atual', async () => {
+	it('resolves system mode from current window', async () => {
 		const hook = await renderHook();
 
 		await hook.setMode('system');

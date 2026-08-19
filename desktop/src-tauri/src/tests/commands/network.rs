@@ -196,7 +196,7 @@ fn peer(peer_id: &str, alpn: &[u8]) -> ConnectedPeerInfo {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_network_status_emite_modo_e_peers() -> Result<()> {
+async fn test_get_network_status_emits_mode_and_peers() -> Result<()> {
     let service = mock_network_service();
     service.set_mode(NetworkMode::Relay);
     service.set_peers(vec![peer("peer-1", b"acerola/handshake/1")]);
@@ -216,7 +216,7 @@ async fn get_network_status_emite_modo_e_peers() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_network_status_serializa_erro_do_servico() -> Result<()> {
+async fn test_get_network_status_serializes_service_error() -> Result<()> {
     let service = mock_network_service();
     service.fail_next("status failure");
     let (_app, webview) = build_network_app(service)?;
@@ -229,7 +229,7 @@ async fn get_network_status_serializa_erro_do_servico() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn switch_to_local_troca_modo() -> Result<()> {
+async fn test_switch_to_local_changes_mode() -> Result<()> {
     let service = mock_network_service();
     service.set_mode(NetworkMode::Relay);
     let (_app, webview) = build_network_app(service.clone())?;
@@ -242,7 +242,7 @@ async fn switch_to_local_troca_modo() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn switch_to_local_serializa_erro_do_servico() -> Result<()> {
+async fn test_switch_to_local_serializes_service_error() -> Result<()> {
     let service = mock_network_service();
     service.fail_next("local failure");
     let (_app, webview) = build_network_app(service)?;
@@ -255,7 +255,7 @@ async fn switch_to_local_serializa_erro_do_servico() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn switch_to_relay_troca_modo() -> Result<()> {
+async fn test_switch_to_relay_changes_mode() -> Result<()> {
     let service = mock_network_service();
     let (_app, webview) = build_network_app(service.clone())?;
 
@@ -267,7 +267,7 @@ async fn switch_to_relay_troca_modo() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn switch_to_relay_serializa_erro_do_servico() -> Result<()> {
+async fn test_switch_to_relay_serializes_service_error() -> Result<()> {
     let service = mock_network_service();
     service.fail_next("relay failure");
     let (_app, webview) = build_network_app(service)?;
@@ -280,7 +280,7 @@ async fn switch_to_relay_serializa_erro_do_servico() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_local_id_retorna_id_local() -> Result<()> {
+async fn test_get_local_id_returns_local_id() -> Result<()> {
     let service = mock_network_service();
     let (_app, webview) = build_network_app(service)?;
 
@@ -292,7 +292,7 @@ async fn get_local_id_retorna_id_local() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_local_id_serializa_erro_do_servico() -> Result<()> {
+async fn test_get_local_id_serializes_service_error() -> Result<()> {
     let service = mock_network_service();
     service.fail_next("id failure");
     let (_app, webview) = build_network_app(service)?;
@@ -305,7 +305,7 @@ async fn get_local_id_serializa_erro_do_servico() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_paired_peers_retorna_peers_persistidos_independente_de_conexao_ativa() -> Result<()> {
+async fn test_get_paired_peers_returns_persisted_peers_regardless_of_active_connection() -> Result<()> {
     let service = mock_network_service();
     service.set_paired_peers(vec![PeerAddr {
         id: PeerIdentity { id: "paired-offline-peer".to_string(), device_id: None },
@@ -324,7 +324,7 @@ async fn get_paired_peers_retorna_peers_persistidos_independente_de_conexao_ativ
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_paired_peers_serializa_erro_do_servico() -> Result<()> {
+async fn test_get_paired_peers_serializes_service_error() -> Result<()> {
     let service = mock_network_service();
     service.fail_next("paired peers failure");
     let (_app, webview) = build_network_app(service)?;
@@ -337,7 +337,7 @@ async fn get_paired_peers_serializa_erro_do_servico() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn connect_to_peer_repassa_peer_id_e_alpn_bytes() -> Result<()> {
+async fn test_connect_to_peer_forwards_peer_id_and_alpn_bytes() -> Result<()> {
     let service = mock_network_service();
     let (_app, webview) = build_network_app(service.clone())?;
 
@@ -356,7 +356,7 @@ async fn connect_to_peer_repassa_peer_id_e_alpn_bytes() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn connect_to_peer_serializa_erro_do_servico() -> Result<()> {
+async fn test_connect_to_peer_serializes_service_error() -> Result<()> {
     let service = mock_network_service();
     service.fail_next("connect failure");
     let (_app, webview) = build_network_app(service)?;

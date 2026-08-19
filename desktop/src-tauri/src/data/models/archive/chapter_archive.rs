@@ -116,44 +116,44 @@ mod tests {
     // NOTE: Format sort
 
     #[test]
-    fn formatacao_template_detectado() {
+    fn test_formatting_detected_template() {
         assert_eq!(ChapterArchive::format_sort(10, Some("1".to_string())), "10.1");
     }
 
     #[test]
-    fn formatacao_sem_decimal() {
+    fn test_formatting_without_decimal() {
         assert_eq!(ChapterArchive::format_sort(10, None), "10");
     }
 
     #[test]
-    fn formatacao_so_com_decimal() {
+    fn test_formatting_with_decimal_only() {
         assert_eq!(ChapterArchive::format_sort(0, Some("10".to_string())), "0.10");
     }
 
     #[test]
-    fn formatacao_preserva_zero_a_esquerda_no_decimal() {
+    fn test_formatting_preserves_leading_zero_in_decimal() {
         assert_eq!(ChapterArchive::format_sort(0, Some("01".to_string())), "0.01");
     }
 
     // NOTE: Fallback sort
 
     #[test]
-    fn fallback_sem_template_detectado() {
+    fn test_fallback_without_detected_template() {
         assert_eq!(ChapterArchive::fallback_sort("10,5", 0), "10.5");
     }
 
     #[test]
-    fn fallback_arquivo_com_letras() {
+    fn test_fallback_file_with_letters() {
         assert_eq!(ChapterArchive::fallback_sort("abc", 0), "1");
     }
 
     #[test]
-    fn fallback_arquivo_sem_decimal() {
+    fn test_fallback_file_without_decimal() {
         assert_eq!(ChapterArchive::fallback_sort("10", 0), "10");
     }
 
     #[test]
-    fn fallback_arquivo_so_com_decimal() {
+    fn test_fallback_file_with_decimal_only() {
         assert_eq!(ChapterArchive::fallback_sort("0,10", 0), "0.10");
     }
 }

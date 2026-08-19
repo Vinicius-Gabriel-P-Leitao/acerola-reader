@@ -106,7 +106,7 @@ async fn wait_for_cache_keys(
 
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_abre_capitulo_rejeita_formato_invalido() -> Result<()> {
+async fn test_reader_open_chapter_rejects_invalid_format() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let path = dir.path().join("chapter.txt");
@@ -120,7 +120,7 @@ async fn reader_abre_capitulo_rejeita_formato_invalido() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_carrega_pagina_com_bytes_mime_e_cache_hit() -> Result<()> {
+async fn test_reader_loads_page_with_bytes_mime_and_cache_hit() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let cbz = create_cbz(&dir, "chapter.cbz", &[("001.jpg", &[1, 2, 3])])?;
@@ -143,7 +143,7 @@ async fn reader_carrega_pagina_com_bytes_mime_e_cache_hit() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_carrega_pagina_fora_do_limite_retorna_erro() -> Result<()> {
+async fn test_reader_load_page_out_of_bounds_returns_error() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let cbz = create_cbz(&dir, "chapter.cbz", &[("001.jpg", &[1])])?;
@@ -158,7 +158,7 @@ async fn reader_carrega_pagina_fora_do_limite_retorna_erro() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_seta_pagina_atual_e_atualiza_status() -> Result<()> {
+async fn test_reader_sets_current_page_and_updates_status() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let cbz = create_cbz(
@@ -179,7 +179,7 @@ async fn reader_seta_pagina_atual_e_atualiza_status() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_seta_pagina_sem_sessao_retorna_erro() -> Result<()> {
+async fn test_reader_set_page_without_session_returns_error() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
 
     let error = invoke_err(&webview, "reader_set_current_page", json!({ "index": 0 }))?;
@@ -190,7 +190,7 @@ async fn reader_seta_pagina_sem_sessao_retorna_erro() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_status_retorna_fechado_e_aberto() -> Result<()> {
+async fn test_reader_status_returns_closed_and_opened() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let cbz = create_cbz(&dir, "chapter.cbz", &[("001.jpg", &[1])])?;
@@ -209,7 +209,7 @@ async fn reader_status_retorna_fechado_e_aberto() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_status_sem_estado_gerenciado_retorna_erro() -> Result<()> {
+async fn test_reader_status_without_managed_state_returns_error() -> Result<()> {
     let (_app, webview) = build_reader_app(false)?;
 
     let error = invoke_err(&webview, "reader_status", json!({}))?;
@@ -220,7 +220,7 @@ async fn reader_status_sem_estado_gerenciado_retorna_erro() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_fecha_capitulo_limpa_sessao_cache_e_status() -> Result<()> {
+async fn test_reader_close_chapter_clears_session_cache_and_status() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let cbz = create_cbz(&dir, "chapter.cbz", &[("001.jpg", &[1])])?;
@@ -240,7 +240,7 @@ async fn reader_fecha_capitulo_limpa_sessao_cache_e_status() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_fecha_sem_estado_gerenciado_retorna_erro() -> Result<()> {
+async fn test_reader_close_without_managed_state_returns_error() -> Result<()> {
     let (_app, webview) = build_reader_app(false)?;
 
     let error = invoke_err(&webview, "reader_close_chapter", json!({}))?;
@@ -251,7 +251,7 @@ async fn reader_fecha_sem_estado_gerenciado_retorna_erro() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_prefetch_window_default_e_custom_carrega_cache() -> Result<()> {
+async fn test_reader_prefetch_window_default_and_custom_loads_cache() -> Result<()> {
     let (_app, webview) = build_reader_app(true)?;
     let dir = TempDir::new()?;
     let cbz = create_cbz(
@@ -281,7 +281,7 @@ async fn reader_prefetch_window_default_e_custom_carrega_cache() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reader_prefetch_sem_estado_gerenciado_retorna_erro() -> Result<()> {
+async fn test_reader_prefetch_without_managed_state_returns_error() -> Result<()> {
     let (_app, webview) = build_reader_app(false)?;
 
     let error =

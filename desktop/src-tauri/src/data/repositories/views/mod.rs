@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_busca_por_titulo_lower_e_upper() {
+    async fn test_search_by_title_lower_and_upper() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO comic_directory (id, name, path, last_modified) VALUES (1, 'One Piece', '/mangas/one piece', 0)")
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_titulo_asc() {
+    async fn test_sorting_by_title_asc() {
         let (pool, repo) = setup().await;
 
         insert_comic_with_chapters(&pool, 1, "Zatch Bell", "Zatch Bell", 1).await;
@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_titulo_desc() {
+    async fn test_sorting_by_title_desc() {
         let (pool, repo) = setup().await;
 
         insert_comic_with_chapters(&pool, 1, "Zatch Bell", "Zatch Bell", 1).await;
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_contagem_capitulos_asc() {
+    async fn test_sorting_by_chapter_count_asc() {
         let (pool, repo) = setup().await;
 
         insert_comic_with_chapters(&pool, 1, "Manga A", "Manga A", 5).await;
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_contagem_capitulos_desc() {
+    async fn test_sorting_by_chapter_count_desc() {
         let (pool, repo) = setup().await;
 
         insert_comic_with_chapters(&pool, 1, "Manga A", "Manga A", 5).await;

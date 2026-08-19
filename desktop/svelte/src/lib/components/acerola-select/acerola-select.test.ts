@@ -10,7 +10,7 @@ describe('AcerolaSelect', () => {
 		{ value: 'en', label: 'Inglês' }
 	];
 
-	it('renderiza o select com o placeholder', () => {
+	it('renders the select with the placeholder', () => {
 		render(AcerolaSelect, {
 			props: {
 				data: { options },
@@ -18,18 +18,18 @@ describe('AcerolaSelect', () => {
 			}
 		});
 
-		// the underlying component from bits-ui uses a button with combobox role,
-		// but without JS full mount sometimes it's just a button
+		// o componente subjacente do bits-ui usa um botão com a role combobox,
+		// mas sem a montagem completa de JS às vezes é apenas um botão
 		const trigger = screen.getByText('Escolha o idioma');
 		expect(trigger).toBeInTheDocument();
 	});
 
-	it('exibe o label correto de acordo com o valor', () => {
+	it('displays the correct label according to the value', () => {
 		render(AcerolaSelect, { props: { data: { options }, state: { value: 'pt-br' } } });
 		expect(screen.getByText('Português')).toBeInTheDocument();
 	});
 
-	it('abre as opções ao clicar e permite selecionar uma opção', async () => {
+	it('opens options on click and allows selecting an option', async () => {
 		const user = userEvent.setup();
 		render(AcerolaSelect, {
 			props: {
@@ -41,14 +41,14 @@ describe('AcerolaSelect', () => {
 		const trigger = screen.getByText('Selecione...');
 		await user.click(trigger);
 
-		// bits-ui select option roles can sometimes be hard to query in JSDom
-		// Let's query by text instead to be safe since it's definitely rendered
+		// roles de opções do bits-ui select às vezes podem ser difíceis de consultar no JSDom
+		// Vamos consultar por texto para garantir, já que está definitivamente renderizado
 		const option = await screen.findByText('Inglês');
 		expect(option).toBeInTheDocument();
 
 		await user.click(option);
 
-		// After clicking the option, the trigger should now show "Inglês"
+		// Após clicar na opção, o gatilho deve agora exibir "Inglês"
 		expect(screen.getByText('Inglês')).toBeInTheDocument();
 	});
 });

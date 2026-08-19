@@ -34,7 +34,7 @@ async fn setup() -> Result<(
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn teste_atualiza_historico_leitura_com_sucesso() -> Result<()> {
+async fn test_updates_reading_history_successfully() -> Result<()> {
     // Atualiza o historico de leitura com sucesso
     let (_pool, _app, webview) = setup().await?;
 
@@ -59,7 +59,7 @@ async fn teste_atualiza_historico_leitura_com_sucesso() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn teste_obtem_historico_completo() -> Result<()> {
+async fn test_gets_full_history() -> Result<()> {
     // Obtem todos os itens de historico corretamente
     let (_pool, _app, webview) = setup().await?;
 
@@ -83,7 +83,7 @@ async fn teste_obtem_historico_completo() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn teste_limpa_historico_de_leitura() -> Result<()> {
+async fn test_clears_reading_history() -> Result<()> {
     // Limpa o historico de leitura
     let (_pool, _app, webview) = setup().await?;
 

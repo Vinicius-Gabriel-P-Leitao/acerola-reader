@@ -4,12 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import AcerolaSwitch from './acerola-switch.svelte';
 
 describe('AcerolaSwitch', () => {
-	it('renderiza corretamente', () => {
+	it('renders correctly', () => {
 		render(AcerolaSwitch);
 		expect(screen.getByRole('switch')).toBeInTheDocument();
 	});
 
-	it('muda de estado ao ser clicado', async () => {
+	it('changes state when clicked', async () => {
 		const user = userEvent.setup();
 		let checked = false;
 		render(AcerolaSwitch, {

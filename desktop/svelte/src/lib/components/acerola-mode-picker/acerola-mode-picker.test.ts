@@ -3,23 +3,23 @@ import { describe, expect, it, vi } from 'vitest';
 import AcerolaModePicker from './acerola-mode-picker.svelte';
 
 describe('AcerolaModePicker', () => {
-	it('renderiza um botão', () => {
+	it('renders a button', () => {
 		render(AcerolaModePicker);
 		expect(screen.getByRole('button')).toBeInTheDocument();
 	});
 
-	it('renderiza um ícone SVG', () => {
+	it('renders an SVG icon', () => {
 		render(AcerolaModePicker);
 		expect(screen.getByRole('button').querySelector('svg')).toBeInTheDocument();
 	});
 
-	it('responde ao clique sem erros', async () => {
+	it('responds to click without errors', async () => {
 		render(AcerolaModePicker);
 		await fireEvent.click(screen.getByRole('button'));
 		expect(screen.getByRole('button')).toBeInTheDocument();
 	});
 
-	it('chama setMode ao clicar', async () => {
+	it('calls setMode when clicked', async () => {
 		const setModeSpy = vi.fn();
 
 		vi.doMock('$lib/hooks/use-theme.svelte', () => ({

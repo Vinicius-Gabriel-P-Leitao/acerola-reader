@@ -51,7 +51,7 @@ test.describe('reader', () => {
 		});
 	});
 
-	test('navega páginas, abre a command palette e aplica zoom', async ({ page }) => {
+	test('navigates pages, opens command palette and applies zoom', async ({ page }) => {
 		test.setTimeout(10_000);
 
 		await openReader(page);

@@ -835,7 +835,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn atualizar_biblioteca_indexa_todas_as_hqs() {
+    async fn refresh_library_indexes_all_comics() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -847,7 +847,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn atualizar_biblioteca_indexa_capitulos_de_cada_hq() {
+    async fn refresh_library_indexes_chapters_of_each_comic() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -857,7 +857,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn atualizar_biblioteca_ignora_pasta_sem_cbz() {
+    async fn refresh_library_ignores_folder_without_cbz() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
         let empty = root.path().join("NoFiles");
@@ -868,7 +868,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn atualizar_biblioteca_nao_duplica_ao_executar_duas_vezes() {
+    async fn refresh_library_does_not_duplicate_when_run_twice() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
         create_comic_dir(&root, "Berserk", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
@@ -879,13 +879,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn atualizar_biblioteca_indexa_volumes() {
+    async fn refresh_library_indexes_volumes() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
         create_volume_dir(&root, "Berserk", "Vol. 01", &["Ch. 1.cbz", "Ch. 2.cbz"]).await;
         create_volume_dir(&root, "Berserk", "Vol. 02", &["Ch. 3.cbz"]).await;
 
-        // Seed volume templates
+        // Popula os templates de volume
         let pool_ref = &pool;
         sqlx::query(include_str!(
             "../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"
@@ -902,7 +902,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn atualizar_biblioteca_capitulos_da_raiz_sem_id_de_volume() {
+    async fn refresh_library_root_chapters_without_volume_id() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -914,7 +914,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn escaneamento_incremental_nao_processa_hq_sem_alteracao() {
+    async fn incremental_scan_does_not_process_unchanged_comic() {
         let root = tempfile::tempdir().unwrap();
         let (service, _) = setup(&root).await;
         create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
@@ -935,7 +935,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn escaneamento_incremental_processa_nova_pasta() {
+    async fn incremental_scan_processes_new_folder() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -949,7 +949,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn escaneamento_incremental_remove_pasta_deletada() {
+    async fn incremental_scan_removes_deleted_folder() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -966,7 +966,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn escaneamento_incremental_atualiza_capa_em_pasta_modificada() {
+    async fn incremental_scan_updates_cover_in_modified_folder() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
         let dir = create_comic_dir(&root, "Berserk", &["Ch. 1.cbz"]).await;
@@ -984,7 +984,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn recriar_biblioteca_nao_duplica_capitulos() {
+    async fn rebuild_library_does_not_duplicate_chapters() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -998,7 +998,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore = "requires pdfium DLL which is not available in CI"]
-    async fn atualizar_biblioteca_pre_converte_pdfs() {
+    async fn refresh_library_pre_converts_pdfs() {
         let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
 
         let root = tempfile::tempdir().unwrap();
@@ -1009,7 +1009,7 @@ mod tests {
             .unwrap()
             .join("tests/wdio/comic/pdf/witchcraft.pdf");
 
-        // Set up directory with PDFs
+        // Configura o diretório com PDFs
         let comic_dir = root.path().join("PdfComic");
         fs::create_dir_all(&comic_dir).await.unwrap();
         fs::copy(&fixture_pdf, comic_dir.join("root.pdf")).await.unwrap();
@@ -1018,7 +1018,7 @@ mod tests {
         fs::create_dir_all(&vol_dir).await.unwrap();
         fs::copy(&fixture_pdf, vol_dir.join("vol.pdf")).await.unwrap();
 
-        // Seed templates so volume is detected
+        // Popula os templates para que o volume seja detectado
         sqlx::query(include_str!(
             "../../../infra/db/migrations/seeds/001_seed_chapter_template.sql"
         ))
@@ -1028,11 +1028,11 @@ mod tests {
 
         service.refresh_library(root.path().to_path_buf(), |_| {}, |_| {}).await.unwrap();
 
-        // Check if the CBZs were generated
+        // Verifica se os CBZs foram gerados
         assert!(comic_dir.join("root.cbz").exists(), "root.cbz should have been generated");
         assert!(vol_dir.join("vol.cbz").exists(), "vol.cbz should have been generated");
 
-        // Verify indexing
+        // Verifica a indexação
         assert_eq!(count_comics(&pool).await, 1, "Comic should be indexed");
         assert_eq!(count_chapters(&pool).await, 2, "Both CBZs should be indexed as chapters");
         assert_eq!(count_volumes(&pool).await, 1, "Volume should be indexed");
@@ -1058,7 +1058,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn rescan_comic_nao_afeta_outros_comics_da_biblioteca() {
+    async fn rescan_comic_does_not_affect_other_comics_in_library() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -1077,7 +1077,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn deep_rescan_comic_remove_capitulo_apagado_do_disco() {
+    async fn deep_rescan_comic_removes_chapter_deleted_from_disk() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -1098,7 +1098,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn deep_rescan_comic_nao_afeta_outros_comics_da_biblioteca() {
+    async fn deep_rescan_comic_does_not_affect_other_comics_in_library() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -1113,7 +1113,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn process_entry_nao_gera_capa_automaticamente_quando_pasta_nao_tem_capa() {
+    async fn process_entry_does_not_auto_generate_cover_when_folder_has_no_cover() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 
@@ -1131,7 +1131,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn process_entry_nao_sobrescreve_capa_existente() {
+    async fn process_entry_does_not_overwrite_existing_cover() {
         let root = tempfile::tempdir().unwrap();
         let (service, pool) = setup(&root).await;
 

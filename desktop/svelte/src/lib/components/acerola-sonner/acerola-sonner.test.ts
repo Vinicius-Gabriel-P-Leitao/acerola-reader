@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import AcerolaSonner from './acerola-sonner.svelte';
 
 describe('AcerolaSonner', () => {
-	it('renderiza o toaster', () => {
+	it('renders the toaster', () => {
 		const { container } = render(AcerolaSonner);
 		expect(container).toBeInTheDocument();
 	});
