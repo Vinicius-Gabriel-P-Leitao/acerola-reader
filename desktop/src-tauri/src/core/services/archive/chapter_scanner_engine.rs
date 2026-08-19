@@ -40,8 +40,10 @@ impl ChapterScannerService {
     /// Extrai nome, hash rápido (`nome|tamanho|modificado`) e `chapter_sort` a partir do
     /// template detectado. Se nenhum template for fornecido, usa [`ChapterArchive::fallback_sort`].
     ///
-    /// Duplicatas são silenciosamente ignoradas via `UNIQUE` constraint — o mesmo arquivo
-    /// pode ser escaneado múltiplas vezes sem criar registros duplicados.
+    /// O checksum só é (re)calculado no scan — nunca no sync — e só quando necessário:
+    /// capítulo novo, capítulo com `last_modified` alterado, ou capítulo já indexado mas
+    /// ainda sem checksum (backfill de bibliotecas escaneadas antes dessa lógica existir).
+    /// Um capítulo inalterado com checksum já em cache nem toca o banco de novo.
     #[rustfmt::skip]
     pub async fn scan_chapter(
         &self,
@@ -59,6 +61,15 @@ impl ChapterScannerService {
             .ok_or_else(|| ComicError::SystemFailure("File name is invalid".into()))?;
 
         let file_modified = modified_secs(&meta);
+        let id = path_hash(file);
+
+        let existing = self.chapter_repo.find_by_id(id).await?;
+
+        if let Some(row) = &existing {
+            if row.last_modified == file_modified && row.checksum.is_some() {
+                return Ok(());
+            }
+        }
 
         let chapter_name = file.file_stem().and_then(|it| it.to_str()).unwrap_or("unknown").to_string();
 
@@ -72,7 +83,7 @@ impl ChapterScannerService {
         let checksum = compute_checksum(file).await.ok();
 
         let chapter = ChapterArchive {
-            id: path_hash(file),
+            id,
             chapter: chapter_name.clone(),
             path: file.to_string_lossy().to_string(),
             chapter_sort,
@@ -82,6 +93,11 @@ impl ChapterScannerService {
             volume_id_fk: volume_id,
             last_modified: file_modified,
         };
+
+        if existing.is_some() {
+            self.chapter_repo.base.update(&chapter).await?;
+            return Ok(());
+        }
 
         match self.chapter_repo.base.insert(&chapter).await {
             Ok(_) => {}
@@ -103,18 +119,33 @@ fn modified_secs(meta: &std::fs::Metadata) -> i64 {
     meta.modified().map(|time| time.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64).unwrap_or(0)
 }
 
-/// Calcula o blake3 do arquivo em streaming (sem carregar o cbz/cbr inteiro em memória),
-/// rodando em `spawn_blocking` pois é I/O síncrono de CPU-bound hashing.
+/// Calcula o SHA-256 do arquivo em streaming, em buffer de 8KB (sem carregar o cbz/cbr
+/// inteiro em memória), rodando em `spawn_blocking` pois é I/O síncrono de CPU-bound hashing.
+/// Mesmo algoritmo e formato de saída do Android (`FileHash.kt::sha256()`), pra bater
+/// string-a-string entre os dois lados do protocolo P2P: hex minúsculo, sem separador.
 ///
 /// Usado tanto pra verificar integridade após transferências P2P quanto pra dedup best-effort.
 async fn compute_checksum(path: &Path) -> Result<String, ComicError> {
+    use std::io::Read;
+
+    use sha2::{Digest, Sha256};
+
     let owned_path = path.to_path_buf();
 
     tokio::task::spawn_blocking(move || {
-        let file = std::fs::File::open(&owned_path)?;
-        let mut hasher = blake3::Hasher::new();
-        hasher.update_reader(file)?;
-        Ok::<String, std::io::Error>(hasher.finalize().to_hex().to_string())
+        let mut file = std::fs::File::open(&owned_path)?;
+        let mut hasher = Sha256::new();
+        let mut buffer = [0u8; 8192];
+
+        loop {
+            let read = file.read(&mut buffer)?;
+            if read == 0 {
+                break;
+            }
+            hasher.update(&buffer[..read]);
+        }
+
+        Ok::<String, std::io::Error>(format!("{:x}", hasher.finalize()))
     })
     .await
     .map_err(|join_error| ComicError::SystemFailure(format!("Checksum task panicked: {join_error}")))?

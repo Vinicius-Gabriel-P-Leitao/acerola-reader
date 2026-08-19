@@ -158,6 +158,21 @@ impl ChapterRepository {
         Ok(rows.into_iter().map(|(id,)| id).collect())
     }
 
+    /// Busca um capítulo pelo id determinístico (`path_hash` do arquivo) — usado pelo
+    /// scanner pra decidir, antes de tocar o disco, se um capítulo é novo, mudou
+    /// (`last_modified` diferente) ou só precisa de backfill de checksum.
+    pub async fn find_by_id(&self, id: i64) -> Result<Option<ChapterArchive>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchive>(
+            "SELECT id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified
+             FROM chapter_archive WHERE id = ?",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     /// Busca um capítulo pela chave natural (nome do quadrinho + rótulo do capítulo),
     /// já garantida única pelo `UNIQUE(comic_directory_fk, chapter)` da tabela. Usado pelo
     /// sync P2P pra resolver entradas recebidas de outro device, que não compartilha os

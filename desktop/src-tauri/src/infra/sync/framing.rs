@@ -84,14 +84,18 @@ pub async fn send_file_bytes(
     Ok(())
 }
 
-/// Recebe um arquivo em streaming direto pro disco (`dest`), calculando o blake3 no
-/// caminho pra não precisar reler o arquivo depois só pra verificar integridade.
+/// Recebe um arquivo em streaming direto pro disco (`dest`), calculando o SHA-256 no
+/// caminho pra não precisar reler o arquivo depois só pra verificar integridade. Mesmo
+/// algoritmo e formato do Android (hex minúsculo, sem separador), já que o resultado é
+/// comparado string-a-string contra o checksum anunciado no header pelo peer.
 /// Retorna o checksum calculado, que o chamador compara contra o anunciado no manifesto.
 pub async fn receive_file_to_disk(
     reader: &mut FramedReader, dest: &Path, expected_size: u64,
 ) -> Result<String, RpcError> {
+    use sha2::{Digest, Sha256};
+
     let mut file = tokio::fs::File::create(dest).await?;
-    let mut hasher = blake3::Hasher::new();
+    let mut hasher = Sha256::new();
     let mut received: u64 = 0;
 
     while received < expected_size {
@@ -106,5 +110,5 @@ pub async fn receive_file_to_disk(
     }
 
     file.flush().await?;
-    Ok(hasher.finalize().to_hex().to_string())
+    Ok(format!("{:x}", hasher.finalize()))
 }
