@@ -645,7 +645,10 @@
         "sync_files": "Sincronizar arquivos",
         "sync_all": "Sincronizar tudo",
         "last_synced": "Última sync: {when}",
-        "never_synced": "Nunca sincronizado"
+        "never_synced": "Nunca sincronizado",
+        "online": "Online agora",
+        "offline_hint": "Este dispositivo não está acessível agora — reconecte-o pra sincronizar.",
+        "more_actions": "Mais ações de sincronização pra esse dispositivo."
       },
       "transfers": {
         "title": "Transferências",

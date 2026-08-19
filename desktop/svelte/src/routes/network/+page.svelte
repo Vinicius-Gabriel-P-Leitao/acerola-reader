@@ -7,8 +7,11 @@
 	import QRCode from 'qrcode';
 
 	import { m } from '$lib/paraglide/messages';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import AcerolaHeroButton from '$lib/components/acerola-hero-button/acerola-hero-button.svelte';
+	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
+	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
+	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
+	import AcerolaInput from '$lib/components/acerola-input/acerola-input.svelte';
 
 	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
 	import { useNetworkSync, type TransferLogEntry } from '$lib/hooks/store/use-network-sync.svelte';
@@ -32,6 +35,8 @@
 	import ShieldAlertIcon from '@lucide/svelte/icons/shield-alert';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import XIcon from '@lucide/svelte/icons/x';
+	import MonitorIcon from '@lucide/svelte/icons/monitor';
+	import MoreVerticalIcon from '@lucide/svelte/icons/more-vertical';
 
 	const peers = usePeerConnection();
 	const sync = useNetworkSync();
@@ -42,6 +47,11 @@
 	let showRawCode = $state(false);
 	let pasteValue = $state('');
 	let connectError = $state<string | undefined>(undefined);
+	let openPeerMenuId = $state<string | null>(null);
+	// Feedback visual dos botões de copiar — além do toast, o próprio ícone vira um check
+	// por um instante, pra quem não pegar o toast a tempo perceber que a cópia aconteceu.
+	let idJustCopied = $state(false);
+	let codeJustCopied = $state(false);
 	// Não é um toast: enquanto verdadeiro, a chave mestra que protege identidade/peers/confiança
 	// está sem a proteção do keyring do SO (ver `security:keyring_unavailable` no backend,
 	// `infra::security::MasterKeySource::FallbackFile`) — precisa ficar visível até o usuário
@@ -100,20 +110,21 @@
 			});
 	});
 
-	type DisplayPeer = { peerId: string; device: DeviceInfoPayload | null };
+	type DisplayPeer = { peerId: string; device: DeviceInfoPayload | null; connected: boolean };
 
 	// Une os pareados persistidos (sobrevivem a restart, mas sem `DeviceInfo` — a conexão do
 	// protocolo em si dura só segundos, ver `NetworkServiceApi::paired_peers`) com os
 	// conectados agora (`network:status`, tem nome/OS quando disponível). Sem os pareados,
 	// o botão de sync só existiria no instante exato em que o peer está conectado — quase
-	// nunca, já que a conexão fecha assim que a troca termina.
+	// nunca, já que a conexão fecha assim que a troca termina. `connected` é derivado da
+	// presença em `status.peers`, independente de `device` já ter chegado ou não.
 	const uniquePeers = $derived.by(() => {
 		const byId = new Map<string, DisplayPeer>();
 		for (const peer of peers.pairedPeers) {
-			byId.set(peer.peerId, { peerId: peer.peerId, device: null });
+			byId.set(peer.peerId, { peerId: peer.peerId, device: null, connected: false });
 		}
 		for (const peer of peers.status?.peers ?? []) {
-			byId.set(peer.peerId, { peerId: peer.peerId, device: peer.device });
+			byId.set(peer.peerId, { peerId: peer.peerId, device: peer.device, connected: true });
 		}
 		return [...byId.values()];
 	});
@@ -123,12 +134,16 @@
 		if (!code) return;
 		await navigator.clipboard.writeText(code);
 		toast.success(m['pages.network.copied']());
+		codeJustCopied = true;
+		setTimeout(() => (codeJustCopied = false), 2000);
 	}
 
 	async function copyLocalId() {
 		if (!peers.localId) return;
 		await navigator.clipboard.writeText(peers.localId);
 		toast.success(m['pages.network.copied']());
+		idJustCopied = true;
+		setTimeout(() => (idJustCopied = false), 2000);
 	}
 
 	async function handleConnect() {
@@ -149,8 +164,9 @@
 		return peers.getKnownAddr(peerId);
 	}
 
-	function lastSyncedLabel(peerId: string): string {
-		const timestamp = sync.lastSyncedAt(peerId);
+	function peerStatusLabel(peer: DisplayPeer): string {
+		if (peer.connected) return m['pages.network.peers.online']();
+		const timestamp = sync.lastSyncedAt(peer.peerId);
 		if (!timestamp) return m['pages.network.peers.never_synced']();
 		return m['pages.network.peers.last_synced']({ when: new Date(timestamp).toLocaleString() });
 	}
@@ -211,14 +227,16 @@
 		<div class="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
 			<ShieldAlertIcon size={18} class="mt-0.5 shrink-0 text-destructive" />
 			<p class="flex-1 text-sm text-foreground">{m['pages.network.keyring_unavailable']()}</p>
-			<button
-				type="button"
-				class="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-				onclick={() => (keyringWarningDismissed = true)}
-				aria-label={m['pages.network.dismiss']()}
+			<AcerolaButtonIcon
+				events={{ onClick: () => (keyringWarningDismissed = true) }}
+				ui={{
+					variant: 'ghost',
+					class: 'size-8 shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground',
+					'aria-label': m['pages.network.dismiss']()
+				}}
 			>
 				<XIcon size={14} />
-			</button>
+			</AcerolaButtonIcon>
 		</div>
 	{/if}
 
@@ -231,40 +249,42 @@
 			{m['pages.network.my_device.title']()}
 		</div>
 
-		<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
-			<div class="flex flex-wrap items-center justify-between gap-4">
-				<div class="min-w-0">
-					<p class="truncate text-sm font-semibold text-foreground">
-						{peers.localDeviceInfo?.name ?? '...'}
-					</p>
-					<p class="mt-1 truncate font-mono text-xs text-muted-foreground">
-						{peers.localId ? shortId(peers.localId) : '...'}
-					</p>
-					<p class="mt-1 text-xs text-muted-foreground">
-						{peers.status?.mode === 'relay'
-							? m['pages.network.my_device.mode_relay']()
-							: m['pages.network.my_device.mode_local']()}
-						· {m['pages.network.my_device.relay_label']()}: {relay.relayInfo?.activeRelay ?? '...'}
-						{#if relay.isOverridden}
-							<span class="text-chart-4">({m['pages.network.my_device.relay_custom']()})</span>
-						{:else}
-							<span>({m['pages.network.my_device.relay_default']()})</span>
-						{/if}
-					</p>
-				</div>
+		<AcerolaHeroButton
+			data={{
+				title: peers.localDeviceInfo?.name ?? '...',
+				description: peers.localId ? shortId(peers.localId) : '...'
+			}}
+		>
+			{#snippet icon()}
+				<MonitorIcon size={22} />
+			{/snippet}
 
-				<Button
-					variant="outline"
-					size="sm"
-					class="gap-2"
-					onclick={copyLocalId}
-					disabled={!peers.localId}
+			{#snippet action()}
+				<AcerolaButton
+					events={{ onClick: copyLocalId }}
+					ui={{ variant: 'outline', size: 'sm', class: 'gap-2', disabled: !peers.localId }}
 				>
-					<CopyIcon size={14} />
+					{#if idJustCopied}
+						<CheckIcon size={14} class="text-chart-3" />
+					{:else}
+						<CopyIcon size={14} />
+					{/if}
 					{m['pages.network.my_device.copy_id']()}
-				</Button>
-			</div>
-		</div>
+				</AcerolaButton>
+			{/snippet}
+		</AcerolaHeroButton>
+
+		<p class="px-2 text-xs text-muted-foreground">
+			{peers.status?.mode === 'relay'
+				? m['pages.network.my_device.mode_relay']()
+				: m['pages.network.my_device.mode_local']()}
+			· {m['pages.network.my_device.relay_label']()}: {relay.relayInfo?.activeRelay ?? '...'}
+			{#if relay.isOverridden}
+				<span class="text-chart-4">({m['pages.network.my_device.relay_custom']()})</span>
+			{:else}
+				<span>({m['pages.network.my_device.relay_default']()})</span>
+			{/if}
+		</p>
 	</section>
 
 	<!-- Código de conexão / QR -->
@@ -282,7 +302,7 @@
 			<div class="flex flex-col items-center gap-4">
 				<div class="flex h-72 w-72 shrink-0 items-center justify-center rounded-xl bg-white p-3">
 					{#if qrDataUrl}
-						<img src={qrDataUrl} alt={m['pages.network.pairing.title']()} class="h-full w-full" />
+						<img src={qrDataUrl} alt={m['pages.network.pairing.desc']()} class="h-full w-full" />
 					{:else if qrError}
 						<span class="px-4 text-center text-xs text-destructive">
 							{m['pages.network.pairing.qr_error']()}
@@ -292,21 +312,24 @@
 					{/if}
 				</div>
 
-				<Button
-					variant="outline"
-					size="sm"
-					class="gap-2"
-					onclick={copyCode}
-					disabled={!peers.connectionCode()}
+				<AcerolaButton
+					events={{ onClick: copyCode }}
+					ui={{ variant: 'outline', size: 'sm', class: 'gap-2', disabled: !peers.connectionCode() }}
 				>
-					<CopyIcon size={14} />
+					{#if codeJustCopied}
+						<CheckIcon size={14} class="text-chart-3" />
+					{:else}
+						<CopyIcon size={14} />
+					{/if}
 					{m['pages.network.pairing.copy']()}
-				</Button>
+				</AcerolaButton>
 
 				<button
 					type="button"
 					class="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
 					onclick={() => (showRawCode = !showRawCode)}
+					aria-expanded={showRawCode}
+					aria-controls="pairing-raw-code"
 				>
 					{showRawCode ? m['pages.network.pairing.hide_code']() : m['pages.network.pairing.show_code']()}
 					<ChevronDownIcon
@@ -317,7 +340,9 @@
 
 				{#if showRawCode}
 					<textarea
+						id="pairing-raw-code"
 						readonly
+						aria-label={m['pages.network.pairing.title']()}
 						value={peers.connectionCode() ?? ''}
 						class="h-24 w-full resize-none rounded-xl border border-border/60 bg-background/70 p-3 font-mono text-xs break-all text-muted-foreground"
 					></textarea>
@@ -342,19 +367,18 @@
 
 		<div class="rounded-2xl border border-border/40 bg-card/50 p-6 backdrop-blur-sm">
 			<div class="flex flex-col gap-3 sm:flex-row">
-				<Input
-					bind:value={pasteValue}
-					placeholder={m['pages.network.connect.placeholder']()}
-					class="h-10 flex-1 bg-background font-mono text-xs"
+				<AcerolaInput
+					state={{ value: pasteValue }}
+					events={{ onValueChange: (value) => (pasteValue = value) }}
+					ui={{ placeholder: m['pages.network.connect.placeholder'](), class: 'h-10 flex-1 bg-background font-mono text-xs' }}
 				/>
-				<Button
-					class="h-10 gap-2 px-6"
-					disabled={!pasteValue.trim() || peers.connecting}
-					onclick={handleConnect}
+				<AcerolaButton
+					events={{ onClick: handleConnect }}
+					ui={{ class: 'h-10 gap-2 px-6', disabled: !pasteValue.trim() || peers.connecting }}
 				>
 					<PlugIcon size={16} />
 					{m['pages.network.connect.button']()}
-				</Button>
+				</AcerolaButton>
 			</div>
 
 			{#if connectError}
@@ -384,70 +408,116 @@
 				</div>
 			{:else}
 				{#each uniquePeers as peer (peer.peerId)}
-					<div
-						class="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/50 p-4 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between"
+					{@const addrs = peerAddrFor(peer.peerId)}
+					{@const historySyncing = sync.isSyncing(peer.peerId, 'history')}
+					{@const filesSyncing = sync.isSyncing(peer.peerId, 'files')}
+					{@const anySyncing = historySyncing || filesSyncing}
+
+					<AcerolaHeroButton
+						data={{
+							title: peer.device?.name ?? shortId(peer.peerId),
+							description: peerStatusLabel(peer)
+						}}
 					>
-						<div class="min-w-0">
-							<p class="truncate text-sm font-semibold text-foreground">
-								{peer.device?.name ?? shortId(peer.peerId)}
-							</p>
-							<p class="mt-0.5 truncate font-mono text-xs text-muted-foreground">
-								{shortId(peer.peerId)}
-							</p>
-							<p class="mt-0.5 truncate text-xs text-muted-foreground">
-								{lastSyncedLabel(peer.peerId)}
-							</p>
-						</div>
+						{#snippet icon()}
+							<div class="relative flex h-full w-full items-center justify-center">
+								<MonitorIcon size={22} />
+								<span
+									aria-hidden="true"
+									class="absolute right-0 bottom-0 size-3 rounded-full border-2 border-muted {peer.connected
+										? 'bg-chart-3'
+										: 'bg-muted-foreground/40'}"
+								></span>
+							</div>
+						{/snippet}
 
-						<div class="flex shrink-0 gap-2">
-							<Button
-								variant="outline"
-								size="sm"
-								class="gap-2"
-								disabled={!peerAddrFor(peer.peerId) || sync.isSyncing(peer.peerId, 'history')}
-								onclick={() => withSync((id, addrs) => sync.syncHistory(id, addrs), peer.peerId)}
-							>
-								{#if sync.isSyncing(peer.peerId, 'history')}
-									<RefreshCwIcon size={14} class="animate-spin" />
-								{:else}
-									<HistoryIcon size={14} />
-								{/if}
-								{m['pages.network.peers.sync_history']()}
-							</Button>
+						{#snippet action()}
+							<div class="flex items-center gap-2">
+								<AcerolaPopover
+									state={{ open: openPeerMenuId === peer.peerId }}
+									events={{
+										onOpenChange: (open) => (openPeerMenuId = open ? peer.peerId : null)
+									}}
+									ui={{
+										align: 'end',
+										contentClass:
+											'w-56 overflow-hidden rounded-2xl border-border/40 bg-card/95 p-1.5 shadow-2xl backdrop-blur-md'
+									}}
+								>
+									{#snippet trigger()}
+										<span
+											class="text-overlay flex size-8 items-center justify-center rounded-xl transition-colors hover:bg-surface/60 hover:text-primary"
+										>
+											<MoreVerticalIcon size={16} />
+											<span class="sr-only">{m['pages.network.peers.more_actions']()}</span>
+										</span>
+									{/snippet}
 
-							<Button
-								variant="outline"
-								size="sm"
-								class="gap-2"
-								disabled={!peerAddrFor(peer.peerId) || sync.isSyncing(peer.peerId, 'files')}
-								onclick={() => withSync((id, addrs) => sync.syncFiles(id, addrs), peer.peerId)}
-							>
-								{#if sync.isSyncing(peer.peerId, 'files')}
-									<RefreshCwIcon size={14} class="animate-spin" />
-								{:else}
-									<FolderSyncIcon size={14} />
-								{/if}
-								{m['pages.network.peers.sync_files']()}
-							</Button>
+									{#snippet content()}
+										<div class="flex flex-col gap-0.5">
+											<AcerolaButton
+												events={{
+													onClick: () => {
+														openPeerMenuId = null;
+														withSync((id, addrs) => sync.syncHistory(id, addrs), peer.peerId);
+													}
+												}}
+												ui={{
+													variant: 'ghost',
+													disabled: !addrs || historySyncing,
+													class: 'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+												}}
+											>
+												{#if historySyncing}
+													<RefreshCwIcon size={16} class="shrink-0 animate-spin" />
+												{:else}
+													<HistoryIcon size={16} class="shrink-0" />
+												{/if}
+												{m['pages.network.peers.sync_history']()}
+											</AcerolaButton>
 
-							<Button
-								size="sm"
-								class="gap-2"
-								disabled={!peerAddrFor(peer.peerId) ||
-									sync.isSyncing(peer.peerId, 'history') ||
-									sync.isSyncing(peer.peerId, 'files')}
-								onclick={() => withSync((id, addrs) => sync.syncAll(id, addrs), peer.peerId)}
-							>
-								<RefreshCwIcon
-									size={14}
-									class={sync.isSyncing(peer.peerId, 'history') || sync.isSyncing(peer.peerId, 'files')
-										? 'animate-spin'
-										: ''}
-								/>
-								{m['pages.network.peers.sync_all']()}
-							</Button>
-						</div>
-					</div>
+											<AcerolaButton
+												events={{
+													onClick: () => {
+														openPeerMenuId = null;
+														withSync((id, addrs) => sync.syncFiles(id, addrs), peer.peerId);
+													}
+												}}
+												ui={{
+													variant: 'ghost',
+													disabled: !addrs || filesSyncing,
+													class: 'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+												}}
+											>
+												{#if filesSyncing}
+													<RefreshCwIcon size={16} class="shrink-0 animate-spin" />
+												{:else}
+													<FolderSyncIcon size={16} class="shrink-0" />
+												{/if}
+												{m['pages.network.peers.sync_files']()}
+											</AcerolaButton>
+										</div>
+									{/snippet}
+								</AcerolaPopover>
+
+								<AcerolaButton
+									events={{
+										onClick: () => withSync((id, addrs) => sync.syncAll(id, addrs), peer.peerId)
+									}}
+									ui={{ size: 'sm', class: 'gap-2', disabled: !addrs || anySyncing }}
+								>
+									<RefreshCwIcon size={14} class={anySyncing ? 'animate-spin' : ''} />
+									{m['pages.network.peers.sync_all']()}
+								</AcerolaButton>
+							</div>
+						{/snippet}
+					</AcerolaHeroButton>
+
+					{#if !addrs}
+						<p class="-mt-2 px-2 text-xs text-muted-foreground">
+							{m['pages.network.peers.offline_hint']()}
+						</p>
+					{/if}
 				{/each}
 			{/if}
 		</div>

@@ -645,7 +645,10 @@
         "sync_files": "Sync files",
         "sync_all": "Sync all",
         "last_synced": "Last sync: {when}",
-        "never_synced": "Never synced"
+        "never_synced": "Never synced",
+        "online": "Online now",
+        "offline_hint": "This device isn't reachable right now — reconnect it to sync.",
+        "more_actions": "More sync actions for this device."
       },
       "transfers": {
         "title": "Transfers",
