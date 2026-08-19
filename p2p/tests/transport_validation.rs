@@ -1,7 +1,7 @@
-//! Transport Layer Stress and Validation Tests (Stage 3.2)
+//! Testes de estresse e validação da camada de transporte (Etapa 3.2)
 //!
-//! Validates data integrity, basic throughput, and stability
-//! under stress conditions for Iroh and Mock transports.
+//! Valida a integridade dos dados, throughput básico e estabilidade
+//! sob condições de estresse para os transportes Iroh e Mock.
 
 use std::{
     sync::{
@@ -161,7 +161,7 @@ async fn validate_iroh_data_integrity_and_throughput() {
 #[tokio::test]
 async fn validate_iroh_concurrent_transport_stress() {
     let stream_count = 5;
-    let payload = vec![0x99u8; 32 * 1024]; // 32KB per stream
+    let payload = vec![0x99u8; 32 * 1024]; // 32KB por stream
 
     let buffer = Arc::new(Mutex::new(Vec::new()));
     let counter = Arc::new(AtomicUsize::new(0));

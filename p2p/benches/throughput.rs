@@ -148,7 +148,7 @@ fn bench_mock_transport_throughput(criterion_instance: &mut Criterion) {
 fn bench_iroh_transport_throughput(criterion_instance: &mut Criterion) {
     let tokio_runtime = Runtime::new().expect("Failed to initialize Tokio Runtime");
 
-    let payload_size_bytes = 1024 * 1024; // 1 MB payload
+    let payload_size_bytes = 1024 * 1024; // Carga útil de 1 MB
     let test_payload: Vec<u8> =
         (0..payload_size_bytes).map(|byte_index| (byte_index % 256) as u8).collect();
 

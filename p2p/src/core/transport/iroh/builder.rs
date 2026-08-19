@@ -117,7 +117,7 @@ mod tests {
     #[tokio::test]
     async fn validate_build_invalid_relay_returns_error() {
         let transport = IrohTransportBuilder::default()
-            .relay("nao-sou-uma-url-valida")
+            .relay("not-a-valid-url")
             .build(vec![b"test/proto".to_vec()]);
         assert!(transport.await.is_err());
     }

@@ -436,13 +436,13 @@ mod tests {
 
         let (mut writer, _reader) = transport_a.open_bi(b"test/proto", &addr_b).await.unwrap();
 
-        // Write and flush data on active ConnectionWriter (exercises poll_flush)
+        // Escreve e descarrega dados no ConnectionWriter ativo (exercita poll_flush)
         writer.write_all(b"ping").await.unwrap();
         writer.flush().await.unwrap();
 
         accept_handle.await.unwrap();
 
-        // Latency check: must return Some(duration) when connected
+        // Checagem de latência: deve retornar Some(duration) quando conectado
         let mut latency_inherent = None;
         for _ in 0..30 {
             if let Some(l) = transport_a.latency(&peer_b_id).await {
@@ -464,7 +464,7 @@ mod tests {
         assert!(latency_inherent.is_some(), "Inherent latency should return Some(Duration)");
         assert!(latency_trait.is_some(), "Trait latency should return Some(Duration)");
 
-        // Shutdown both transports
+        // Encerra ambos os transportes
         transport_a.shutdown().await.unwrap();
         transport_b.shutdown().await.unwrap();
         assert!(transport_a.endpoint.is_closed());
@@ -476,7 +476,7 @@ mod tests {
         // Verifica que o branch IncomingAddr::Relay associa a URL do Relay ao EndpointAddr
         let node_id = iroh::SecretKey::generate().public();
         let relay_url: iroh::RelayUrl =
-            "https://relay.example.com.".parse().expect("Relay URL válida");
+            "https://relay.example.com.".parse().expect("Valid relay URL");
         let incoming_relay_address =
             IncomingAddr::Relay { url: relay_url.clone(), endpoint_id: node_id };
 
@@ -491,7 +491,7 @@ mod tests {
         // Verifica que o branch IncomingAddr::Ip associa o SocketAddr ao EndpointAddr
         let node_id = iroh::SecretKey::generate().public();
         let socket_address: std::net::SocketAddr =
-            "127.0.0.1:8080".parse().expect("SocketAddr válido");
+            "127.0.0.1:8080".parse().expect("Valid SocketAddr");
         let incoming_ip_address = IncomingAddr::Ip(socket_address);
 
         let resolved_endpoint_address = resolve_endpoint_addr(node_id, &incoming_ip_address);

@@ -1,7 +1,7 @@
-//! Transport stress and validation tests (Mock and Iroh).
+//! Testes de estresse e validação do transporte (Mock e Iroh).
 //!
-//! Guarantees transport layer stability under high concurrency,
-//! heavy payloads, and strict data integrity validation using Blake3.
+//! Garante a estabilidade da camada de transporte sob alta concorrência,
+//! cargas pesadas e validação estrita de integridade de dados usando Blake3.
 
 use std::{
     sync::{
@@ -42,7 +42,7 @@ fn create_device(device_name: &str) -> DeviceInfo {
     }
 }
 
-/// Generic protocol handler for sending data with graceful stream shutdown.
+/// Manipulador de protocolo genérico para envio de dados com encerramento gracioso de stream.
 #[allow(dead_code)]
 struct BulkSenderHandler {
     payload: Vec<u8>,
@@ -59,14 +59,14 @@ impl ProtocolHandler for BulkSenderHandler {
             .map_err(|err| ConnectionError::StreamFailed(err.to_string()))?;
         send.shutdown().await.map_err(|err| ConnectionError::StreamFailed(err.to_string()))?;
 
-        // Wait for remote closing signal to ensure full stream drain.
+        // Aguarda o sinal de fechamento remoto para garantir o esvaziamento completo da stream.
         let mut drain_sink = Vec::new();
         let _ = recv.read_to_end(&mut drain_sink).await;
         Ok(())
     }
 }
 
-/// Generic protocol handler for receiving data and storing consumed buffer.
+/// Manipulador de protocolo genérico para recebimento de dados e armazenamento do buffer consumido.
 #[allow(dead_code)]
 struct BulkReceiverHandler {
     received_buffer: Arc<Mutex<Vec<u8>>>,
@@ -94,7 +94,7 @@ impl ProtocolHandler for BulkReceiverHandler {
 }
 
 // ============================================================================
-// MockTransport Tests (Validation without physical network driver)
+// Testes do MockTransport (Validação sem driver físico de rede)
 // ============================================================================
 
 #[tokio::test]
@@ -164,7 +164,7 @@ async fn mock_transport_blake3_data_integrity_validation() {
     manager.register_inbound(b"test/blake3", handler);
     tokio::spawn(manager.run());
 
-    // Reproducible 100KB payload
+    // Carga útil reproduzível de 100KB
     let payload: Vec<u8> = (0..102_400).map(|byte_index| (byte_index % 256) as u8).collect();
     let expected_hash = blake3::hash(&payload);
 
@@ -194,7 +194,7 @@ async fn mock_transport_blake3_data_integrity_validation() {
 }
 
 // ============================================================================
-// Stress Tests with Iroh Transport (Real QUIC Driver)
+// Testes de estresse com Iroh Transport (Driver QUIC real)
 // ============================================================================
 
 #[cfg(feature = "iroh")]
@@ -239,7 +239,7 @@ async fn iroh_transport_throughput_and_large_payload_integrity() {
 
     node_a.connect(node_b.local_addr().clone(), b"test/throughput").await.unwrap();
 
-    // Wait for transfer completion
+    // Aguarda a conclusão da transferência
     let elapsed_secs = loop {
         if completed_counter.load(Ordering::SeqCst) > 0 {
             break start_time.elapsed().as_secs_f64();
@@ -281,7 +281,7 @@ async fn iroh_transport_multiple_concurrent_streams_stress() {
     crate::tests::init_tracing();
 
     let stream_count = 10;
-    let payload_per_stream = 64 * 1024; // 64KB per stream
+    let payload_per_stream = 64 * 1024; // 64KB por stream
     let payload: Vec<u8> = vec![0x37u8; payload_per_stream];
 
     let received_buffer = Arc::new(Mutex::new(Vec::new()));
